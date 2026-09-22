@@ -3,9 +3,9 @@ import './App.css'
 import AppRoutes from './routes/AppRoutes'
 import { ToastProvider } from './services/toast'
 import { setupInterceptors } from './services/api/interceptors';
-import useAuth from './context/Auth/useAuth';
+import useAuth from './app/context/Auth/useAuth';
 import { useNavigate } from 'react-router';
-import { authenticatedApi } from './services/api/api';
+import { authenticatedApi } from './services/api/client';
 
 function App(){
 

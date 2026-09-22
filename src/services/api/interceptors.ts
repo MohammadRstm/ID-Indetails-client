@@ -1,5 +1,5 @@
 import type { NavigateFunction } from "react-router";
-import { authenticatedApi } from "./api";
+import { authenticatedApi } from "./client";
 import { routes } from "../../config/routes";
 import { notify } from "../toast";
 
