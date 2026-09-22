@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
 import './App.css'
-import AppRoutes from './routes/AppRoutes'
+import { useEffect } from 'react';
+import AppRoutes from './app/router/AppRoutes';
 import { ToastProvider } from './services/toast'
 import { setupInterceptors } from './services/api/interceptors';
 import useAuth from './app/context/Auth/useAuth';

@@ -1,6 +1,6 @@
 import z, { ZodType } from "zod";
 import type { Dispatch, SetStateAction } from "react";
-import type { FormErrors } from "../../shared/types/generalTypes";
+import type { FormErrors } from "../../types/generalTypes";
 
 interface validateFormParamType<T>{
     schema : ZodType<T>,

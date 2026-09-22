@@ -1,7 +1,7 @@
 import "./Header.css";
 import { Link } from "react-router";
 import { IoSearch } from "react-icons/io5";
-import { routes } from "../../config/routes";
+import { routes } from "../../../config/routes";
 
 const Header = () =>{
 

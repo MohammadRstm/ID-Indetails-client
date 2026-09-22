@@ -1,6 +1,6 @@
 import { ErrorBoundary } from "react-error-boundary";
 import { Outlet } from "react-router";
-import ErrorFallback from "../shared/components/ErrorFallBack/ErrorFallBack";
+import ErrorFallback from "../../shared/components/ErrorFallBack/ErrorFallBack";
 
 
 const ErrorBoundaryRoutes = () =>{

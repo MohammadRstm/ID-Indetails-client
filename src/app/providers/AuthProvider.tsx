@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { User } from "../shared/types/generalTypes";
 import AuthContext from "../context/Auth/AuthContext";
+import type { User } from "../../shared/types/generalTypes";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) =>{
     const [user, setUser] = useState<User | null>(null);

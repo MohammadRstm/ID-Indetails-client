@@ -1,4 +1,4 @@
-import { routes } from "../../config/routes";
+import { routes } from "../../../config/routes";
 import "./Footer.css";
 import { Link } from "react-router";
 

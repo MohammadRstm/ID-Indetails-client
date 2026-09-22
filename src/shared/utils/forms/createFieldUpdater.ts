@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import type { FormErrors } from "../../shared/types/generalTypes";
+import type { FormErrors } from "../../types/generalTypes";
 
 /**
  * 
