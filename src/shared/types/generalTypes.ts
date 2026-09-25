@@ -3,7 +3,8 @@ export interface User{
     lastname: string,
 
     username: string,
-    id: number
+    id: number,
+    role: string
 };
 
 export type FormErrors<T> = Partial<Record<keyof T, string>>;

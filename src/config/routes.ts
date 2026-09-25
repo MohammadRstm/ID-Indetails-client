@@ -3,4 +3,10 @@ export const routes = {
     SIGNUP: "/register",
     HOME: "/",
     ABOUTUS: "/aboutus",
+
+
+    /** COMPANY */
+    COMPANY_OVERVIEW : "/overview",
+    COMPANY_EXECUTION : "/execution",
+    COMPANY_DESIGN : "/design",
 };
