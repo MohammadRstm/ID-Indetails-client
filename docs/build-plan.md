@@ -160,7 +160,7 @@ Decisions made along the way, and anything skipped because it needs the user's i
 
 ### Waiting for the user
 
-Nothing at the moment.
+- **The length of a colleague's last work on an employee's project cards.** The prototype says "Sarah logged 2h · 3 hours ago". The API gives employees who logged last and when, but deliberately not how long ("Other people's hours stay private"), so the card says "Sarah logged work · 3 hours ago". Showing the length would let every employee see part of their colleagues' hours; that is a privacy call, not a technical one.
 
 ### Decided
 
@@ -169,8 +169,7 @@ Nothing at the moment.
 
 ### API follow-ups
 
-Small API changes the screens would use. Until they're made, the client works around them.
+None open. Done since:
 
-- **Hours logged this quarter.** The prototype's project list says "… · 6,907h logged this quarter"; no cheap endpoint gives that total, so the line stops at the project counts.
-- **The last activity on an employee's project cards lacks its length.** The prototype says "Sarah logged 2h · 3 hours ago"; `/api/me/projects` gives who and when, so the card says "Sarah logged work · 3 hours ago".
-- **The meetings list has no domain filter.** Someone who sees both domains gets both domains' meetings; the Meetings page keeps its own domain's by project.
+- **Hours logged this quarter** on the projects list: read from the dashboard's own quarter overview (`/api/reports/overview`, report:view), so no new endpoint was needed and the two share one cached request.
+- **The meetings list takes a domain** (MohammadRstm/ID-Indetails-api#42), so the Meetings page asks for its own domain's meetings instead of filtering them by project.
