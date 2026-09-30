@@ -1,0 +1,30 @@
+{
+  "items": [
+    {
+      "id": 4,
+      "label": "Fabric swatches",
+      "amount": 95,
+      "currency": "USD",
+      "category": "assets",
+      "spentOn": "2026-09-19",
+      "note": null,
+      "createdAt": "2026-09-30T04:52:52.706Z"
+    },
+    {
+      "id": 3,
+      "label": "Site visit transport",
+      "amount": 60,
+      "currency": "USD",
+      "category": "travel",
+      "spentOn": "2026-09-11",
+      "note": null,
+      "createdAt": "2026-09-30T04:52:52.684Z"
+    }
+  ],
+  "totals": [
+    {
+      "currency": "USD",
+      "total": 155
+    }
+  ]
+}

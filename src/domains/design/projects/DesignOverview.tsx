@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { Delta, RankBars, Spark } from "@/shared/components/Charts/Bars";
@@ -29,6 +30,9 @@ import { companyNow } from "../work/day";
 import ContributorDrawer, { type WorkRange } from "./ContributorDrawer";
 import EntryModal from "./EntryModal";
 import { useLatestEntry, useProjectTimeline, useProjectWork, type Contributor, type ProjectWork } from "./projectWorkApi";
+import FinancialBreakdown, { CostFigures } from "./money/FinancialBreakdown";
+import MoneyBand from "./money/MoneyBand";
+import { useProjectExpenses } from "./money/moneyApi";
 import WorkTimeline from "./WorkTimeline";
 
 type RangeKey = "all" | "quarter" | "d30" | "d7";
@@ -64,16 +68,41 @@ export default function DesignOverview({ project }: { project: Project }) {
     const all = useProjectWork(project.id);
     const filtered = useProjectWork(project.id, { from: range.from, to: range.to, search: text || undefined });
 
-    if (!seesWork) return <Kpis project={project} work={undefined} />;
+    const m = permissions.has(P.FINANCIAL_VIEW) ? project.money : null;
+    const expenses = useProjectExpenses(project.id, !!m);
+    const [params, setParams] = useSearchParams();
+    const open = (key: string, value: string) => () => { params.set(key, value); setParams(params); };
+    const closed = project.status === "completed" || project.status === "archived";
+    const moneyActions = {
+        onEditPayment: permissions.has(P.PROJECT_EDIT) ? open("money", "payment") : undefined,
+        onAddExpense: permissions.has(P.EXPENSE_MANAGE) ? open("money", "expense") : undefined,
+    };
+    const band = m && (
+        <div className="mt">
+            <MoneyBand project={project} money={m} contributors={all.data?.contributorCount} expenseCount={expenses.data?.items.length} {...moneyActions}
+                onCloseProject={permissions.has(P.PROJECT_CHANGE_STATUS) && !closed ? open("complete", "1") : undefined} />
+        </div>
+    );
+    const breakdown = m && (
+        <FinancialBreakdown project={project} money={m} contributors={seesWork ? all.data?.contributors : undefined} entryCount={all.data?.entryCount}
+            expenses={expenses.data?.items} onPerson={seesWork ? setDrawer : undefined} onAddExpense={moneyActions.onAddExpense}
+            canRemoveExpenses={permissions.has(P.EXPENSE_MANAGE)} />
+    );
+
+    if (!seesWork) return <><Kpis project={project} work={undefined} />{band}{breakdown}{m && <CostFigures project={project} money={m} />}</>;
     return (
         <>
             {all.isError ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="the project's work" /></div></div>
                 : <Kpis project={project} work={all.data} />}
 
+            {band}
+
             <div className="mt">
                 <Contributors work={filtered.data} error={filtered.error} retry={() => filtered.refetch()} range={range} rangeKey={rangeKey} ranges={ranges}
                     setRangeKey={setRangeKey} search={search} setSearch={setSearch} workQ={workQ} setWorkQ={setWorkQ} onPerson={setDrawer} />
             </div>
+
+            {breakdown}
 
             <div className="mt">
                 <WorkTimeline project={project} onPerson={setDrawer} onEntry={setEntry} />
@@ -256,6 +285,8 @@ function Contributors({ work, error, retry, range, rangeKey, ranges, setRangeKey
 
 /** The analytics that close the page, collapsed until asked for. */
 function Analytics({ project, work: w, contributors, onPerson }: { project: Project; work: ProjectWork | undefined; contributors: Contributor[]; onPerson: (id: number) => void }) {
+    const permissions = usePermissions();
+    const m = permissions.has(P.FINANCIAL_VIEW) ? project.money : null;
     const [open, setOpen] = useState(false);
     const total = contributors.reduce((s, c) => s + c.minutes, 0);
     const top3 = contributors.slice().sort((a, b) => b.minutes - a.minutes).slice(0, 3).reduce((s, c) => s + c.minutes, 0);
@@ -268,7 +299,7 @@ function Analytics({ project, work: w, contributors, onPerson }: { project: Proj
         <>
             <div className="analytics-head">
                 <h2 className="page-title" style={{ fontSize: 16 }}>Analytics</h2>
-                {!open && <span className="muted" style={{ fontSize: 12 }}>4 charts: hours per week, contribution share, when work happens, hours vs plan</span>}
+                {!open && <span className="muted" style={{ fontSize: 12 }}>{m ? 6 : 4} charts: hours per week, contribution share, when work happens, hours vs plan{m ? ", cost over time" : ""}</span>}
                 <span className="grow" />
                 <button className="link analytics-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
                     <Icon name={open ? "chevronUp" : "chevronDown"} />{open ? "Hide analytics" : "Show analytics"}
@@ -300,6 +331,7 @@ function Analytics({ project, work: w, contributors, onPerson }: { project: Proj
                             <BurnUp project={project} />
                         </Figure>
                     </div>
+                    {m && <CostFigures project={project} money={m} />}
                 </>
             )}
         </>

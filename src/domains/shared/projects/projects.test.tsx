@@ -74,6 +74,16 @@ describe("a project", () => {
         await screen.findByRole("heading", { name: "Haddad Holdings HQ fit-out" });
         expect(screen.queryByRole("button", { name: /mark as done/i })).toBeNull();
         expect(screen.queryByRole("button", { name: "Project status" })).toBeNull();
+        // the menu keeps the money actions they may still take, without the status ones
+        await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+        expect(screen.queryByRole("button", { name: "Put on hold" })).toBeNull();
+        expect(screen.queryByRole("button", { name: "Archive project" })).toBeNull();
+        expect(screen.getByRole("button", { name: "Add project expense" })).toBeInTheDocument();
+    });
+
+    it("has no menu at all for someone who can change neither the status nor the money", async () => {
+        renderApp("/design/projects/1", withPermissions(admin, { revoke: [P.PROJECT_CHANGE_STATUS, P.PROJECT_EDIT, P.EXPENSE_MANAGE] }), ...projectHandlers);
+        await screen.findByRole("heading", { name: "Haddad Holdings HQ fit-out" });
         expect(screen.queryByRole("button", { name: "More actions" })).toBeNull();
     });
 

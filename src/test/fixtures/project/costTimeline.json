@@ -1,0 +1,69 @@
+{
+  "weeks": [
+    {
+      "weekStart": "2026-08-10",
+      "minutes": 0,
+      "labour": 0,
+      "spent": 0,
+      "costToDate": 0,
+      "collectedToDate": 0
+    },
+    {
+      "weekStart": "2026-08-17",
+      "minutes": 0,
+      "labour": 0,
+      "spent": 0,
+      "costToDate": 0,
+      "collectedToDate": 0
+    },
+    {
+      "weekStart": "2026-08-24",
+      "minutes": 0,
+      "labour": 0,
+      "spent": 0,
+      "costToDate": 0,
+      "collectedToDate": 0
+    },
+    {
+      "weekStart": "2026-08-31",
+      "minutes": 1860,
+      "labour": 379.88,
+      "spent": 379.88,
+      "costToDate": 379.88,
+      "collectedToDate": 0
+    },
+    {
+      "weekStart": "2026-09-07",
+      "minutes": 1860,
+      "labour": 358.8,
+      "spent": 418.8,
+      "costToDate": 798.68,
+      "collectedToDate": 0
+    },
+    {
+      "weekStart": "2026-09-14",
+      "minutes": 2130,
+      "labour": 449.15,
+      "spent": 544.15,
+      "costToDate": 1342.83,
+      "collectedToDate": 0
+    },
+    {
+      "weekStart": "2026-09-21",
+      "minutes": 2080,
+      "labour": 413.76,
+      "spent": 413.76,
+      "costToDate": 1756.59,
+      "collectedToDate": 0
+    },
+    {
+      "weekStart": "2026-09-28",
+      "minutes": 1580,
+      "labour": 313.89,
+      "spent": 313.89,
+      "costToDate": 2070.48,
+      "collectedToDate": 0
+    }
+  ],
+  "currency": "USD"
+}
