@@ -103,7 +103,9 @@ export default function ScheduleModal({ person, companyWeek, onClose }: Schedule
             </div>
             <div className="hint mt-s">
                 {from === today ? "Applies from today - past days keep the hours they had." : `A change already starts today, so this one applies from ${fmtDate(from)}.`}
-                {person.nextChangeOn ? ` The change already set for ${fmtDate(person.nextChangeOn)} still applies from then.` : ""}
+                {!person.nextChangeOn ? ""
+                    : person.nextChangeOn === from ? ` It replaces the change already set for ${fmtDate(from)}.`
+                        : ` The change already set for ${fmtDate(person.nextChangeOn)} still applies from then.`}
             </div>
         </Modal>
     );

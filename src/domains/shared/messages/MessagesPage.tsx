@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { AREAS } from "@/app/routing/areas";
@@ -41,7 +41,16 @@ export default function MessagesPage() {
     const list = conversations.data ?? [];
     const recent = list.filter((c) => c.lastMessage).sort((a, b) => b.lastMessage!.createdAt.localeCompare(a.lastMessage!.createdAt));
     const asked = chatFrom(params);
-    const chat = asked ?? (recent[0] ? chatOf(recent[0]) : null);
+    const fallback = !asked && recent[0] ? chatOf(recent[0]) : null;
+    const fallbackKey = fallback ? chatKey(fallback) : null;
+    const chat = asked ?? fallback;
+    // the newest chat opens when none is asked for, and goes into the link, so a message arriving in another
+    // chat doesn't switch away from the one being read (or written in)
+    useEffect(() => {
+        if (!fallbackKey) return;
+        const [kind, id] = fallbackKey.split("-");
+        setParams(kind === "group" ? { group: id } : { with: id }, { replace: true });
+    }, [fallbackKey, setParams]);
     const byChat = new Map(list.flatMap((c) => { const k = chatOf(c); return k ? [[chatKey(k), c] as const] : []; }));
     const open = chat ? byChat.get(chatKey(chat)) : undefined;
     const q = search.trim().toLowerCase();
@@ -64,7 +73,8 @@ export default function MessagesPage() {
                         <Icon name="search" />
                         <input className="input" placeholder="Find people or groups" aria-label="Find people or groups" value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
-                    {conversations.isError ? <LoadError error={conversations.error} retry={() => conversations.refetch()} what="your chats" />
+                    {conversations.isError || contacts.isError
+                        ? <LoadError error={conversations.error ?? contacts.error} retry={() => { void conversations.refetch(); void contacts.refetch(); }} what="your chats" />
                         : !conversations.data || !contacts.data ? <SkeletonLines lines={8} /> : (
                             <>
                                 {groups.length > 0 && <div className="msg-sec-label">Groups</div>}

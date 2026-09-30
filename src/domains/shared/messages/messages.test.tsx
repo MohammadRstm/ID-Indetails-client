@@ -32,6 +32,21 @@ describe("Messages", () => {
         await waitFor(() => expect(read).toEqual(["teams/13"]));
     });
 
+    it("keep the chat they opened on, whatever arrives elsewhere", async () => {
+        renderApp("/design/messages", rana, ...messageHandlers);
+        await screen.findByText("Morning! The Villa Mounir samples arrived.");
+        // the newest chat went into the link, so a newer message in another chat doesn't switch away
+        await waitFor(() => expect(window.location.search).toBe("?group=13"));
+    });
+
+    it("say so when the people to message can't be loaded", async () => {
+        renderApp("/design/messages", rana,
+            http.get("/api/messages/contacts", () => HttpResponse.json({ code: "forbidden", message: "You can't see that." }, { status: 403 })),
+            ...messageHandlers);
+        const retry = await screen.findByRole("button", { name: "Try again" });
+        expect(retry.closest(".msg-sidebar")).not.toBeNull();
+    });
+
     it("show a group's messages by day, each run under its sender, with mentions and shared task comments", async () => {
         renderApp("/design/messages?group=13", rana, ...messageHandlers);
         const t = await screen.findByText("Morning! The Villa Mounir samples arrived.").then(() => thread());
