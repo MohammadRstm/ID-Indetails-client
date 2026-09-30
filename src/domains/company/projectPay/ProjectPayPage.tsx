@@ -19,7 +19,7 @@ import { companyToday, fmtDate, fmtH, fmtNumber } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
-import { useMySchedule } from "@/domains/design/work/workApi";
+import { policyOn, useWorkingTime } from "@/domains/shared/settings/settingsApi";
 import { useProjects } from "@/domains/shared/projects/projectsApi";
 import { periodDates, periodLabel, periodOf, stepPeriod, type PayPeriod, type PayUnit } from "./payPeriod";
 import { useProjectPay, type ProjectPayPerson, type ProjectPayProject } from "./projectPayApi";
@@ -46,7 +46,8 @@ export default function ProjectPayPage() {
     const [projectId, setProjectId] = useState("all");
     const pay = useProjectPay({ unit, date: period.from, projectId: projectId === "all" ? null : +projectId });
     const projects = useProjects({ domain: "design", pageSize: 100 }).data?.items ?? [];
-    const multiplier = useMySchedule(today).data?.companyWeek.overtimeMultiplier;
+    // the company's overtime rate for the period shown
+    const multiplier = policyOn(useWorkingTime().data, period.from)?.overtimeMultiplier;
     const r = pay.data;
     const current = today >= period.from && today < period.to;
     const word = unit;

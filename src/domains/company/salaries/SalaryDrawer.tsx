@@ -14,7 +14,8 @@ import { money } from "@/shared/format/money";
 import { companyToday, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
 import { HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
-import { useMyOvertime, useMySchedule } from "@/domains/design/work/workApi";
+import { useMyOvertime } from "@/domains/design/work/workApi";
+import { policyOn, useWorkingTime } from "@/domains/shared/settings/settingsApi";
 import ExcuseHours from "./ExcuseHours";
 import { useSalary, type SalaryDetail, type SalaryRow } from "./salariesApi";
 import { loadFailed } from "@/api/queryState";
@@ -121,7 +122,7 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork }: BodyP
                             <span className="mono">{cash(s.basePay + s.deduction, cur)}</span>
                         </div>
                     ) : (
-                        <HourlyLines detail={d} />
+                        <HourlyLines detail={d} month={month} />
                     )}
                     {s.deduction > 0 && (
                         <div className="down">
@@ -153,10 +154,11 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork }: BodyP
 }
 
 /** Hours at the rate of the day they were worked, and the paid break of each working day worked. */
-function HourlyLines({ detail: d }: { detail: SalaryDetail }) {
+function HourlyLines({ detail: d, month }: { detail: SalaryDetail; month: string }) {
     const s = d.salary;
     const cur = s.currency;
-    const breakMinutes = useMySchedule(companyToday()).data?.companyWeek.breakMinutes ?? 0;
+    // the company's break that month (not the viewer's own schedule, which a salary:view holder may not have)
+    const breakMinutes = policyOn(useWorkingTime().data, `${month.slice(0, 7)}-01`)?.breakMinutes ?? 0;
     return (
         <>
             <div>

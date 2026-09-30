@@ -20,10 +20,20 @@ export function useCompanyOverview(range: { from: string; to: string }) {
 }
 
 /** Revenue, costs and company expenses month by month, this one included (company:view). */
-export function useCompanyMonths(months: number) {
+export function useCompanyMonths(months: number, enabled = true) {
     return useQuery({
         queryKey: ["company", "months", months],
         queryFn: async () => (await http.get<CompanyMonth[]>("/company/overview/monthly", { params: { months } })).data,
+        enabled,
+    });
+}
+
+/** Company expenses alone, month by month and per currency (company:view or overhead:manage). */
+export function useOverheadMonths(months: number, enabled = true) {
+    return useQuery({
+        queryKey: ["company", "overhead", "months", months],
+        queryFn: async () => (await http.get<Schemas["OverheadMonthResponse"][]>("/company/overhead/monthly", { params: { months } })).data,
+        enabled,
     });
 }
 
@@ -76,7 +86,8 @@ export function useChangeOverhead(id: number) {
 export function useCancelOverhead() {
     const refresh = useRefreshCompany();
     return useMutation({
-        mutationFn: async ({ id, resume }: { id: number; resume: boolean }) => { await http.post(`/company/overhead/${id}/${resume ? "resume" : "cancel"}`); },
+        // true when a line that hadn't started was removed rather than cancelled (the API answers 204)
+        mutationFn: async ({ id, resume }: { id: number; resume: boolean }) => (await http.post(`/company/overhead/${id}/${resume ? "resume" : "cancel"}`)).status === 204,
         onSuccess: refresh,
     });
 }

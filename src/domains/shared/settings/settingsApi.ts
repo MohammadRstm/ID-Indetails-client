@@ -63,6 +63,12 @@ export function useSetLogo() {
 const workingTimeKey = ["company", "working-time"] as const;
 
 /** The company week, break and overtime rate in force, and every version of them. */
+/** The working-time policy in force on a day: the newest one from that day or before. */
+export function policyOn(wt: WorkingTime | undefined, day: string): WorkingTimePolicy | undefined {
+    if (!wt) return undefined;
+    return [...wt.policies].sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom)).find((p) => p.effectiveFrom <= day) ?? wt.current;
+}
+
 export function useWorkingTime() {
     return useQuery({
         queryKey: workingTimeKey,

@@ -14,9 +14,9 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
 import { money } from "@/shared/format/money";
-import { companyToday, fmtDate, fmtDateY, fmtMonthY, MONTHS } from "@/shared/format/time";
+import { addDays, companyToday, fmtDate, fmtDateY, fmtMonthY, MONTHS } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import { useCancelOverhead, useCompanyMonths, useOverhead, type OverheadGroup, type OverheadLine } from "./companyApi";
+import { useCancelOverhead, useCompanyMonths, useOverhead, useOverheadMonths, type OverheadGroup, type OverheadLine } from "./companyApi";
 import OverheadModal from "./OverheadModal";
 import { GROUP_LABEL } from "./overheadGroups";
 import { loadFailed } from "@/api/queryState";
@@ -34,24 +34,36 @@ export default function CompanyExpensesPage() {
     const permissions = usePermissions();
     const canEdit = permissions.has(P.OVERHEAD_MANAGE);
     const overhead = useOverhead();
-    const months = useCompanyMonths(13);
+    // the company's profit and total cost need company:view; overhead:manage alone sees the expenses themselves
+    const seesCompany = permissions.has(P.COMPANY_VIEW);
+    const months = useCompanyMonths(13, seesCompany);
+    const overheadMonths = useOverheadMonths(13, !seesCompany);
+    const monthsQuery = seesCompany ? months : overheadMonths;
     const cancel = useCancelOverhead();
     const [editing, setEditing] = useState<OverheadLine | true | null>(null);
     const o = overhead.data;
     const list = months.data ?? [];
+    // company expenses per month, from whichever the person may see
+    const perMonthRows = seesCompany ? months.data?.map((m) => ({ month: m.month, overhead: m.overhead }))
+        : overheadMonths.data?.map((m) => ({ month: m.month, overhead: usd(m.totals) }));
     const active = (o?.lines ?? []).filter((l) => !l.isCancelled);
-    // a cancelled line can be taken back until the end of the month it stops after
-    const canResume = (l: OverheadLine) => l.isCancelled && l.endedOn != null && l.endedOn >= companyToday();
+    // a cancelled line can be taken back until the end of the month it stops after, unless another line with
+    // its name carries on from the next day (a change of currency, or it was added again): both would charge
+    const carriedOn = (l: OverheadLine) => (o?.lines ?? []).some((x) => x.id !== l.id && x.name === l.name && x.costGroup === l.costGroup
+        && l.endedOn != null && x.startedOn === addDays(l.endedOn, 1));
+    const canResume = (l: OverheadLine) => l.isCancelled && l.endedOn != null && l.endedOn >= companyToday() && !carriedOn(l);
     const perMonth = usd(o?.monthTotals ?? []);
     const groups = (["software", "operating"] as OverheadGroup[]).map((g) => ({ group: g, total: usd((o?.groupTotals ?? []).filter((t) => t.costGroup === g)) }));
-    const year = list.reduce((t, m) => t + m.overhead, 0);
+    const year = (perMonthRows ?? []).reduce((t, m) => t + m.overhead, 0);
     const current = list[list.length - 1];
     const currentCost = current ? current.labour + current.expenses + current.materials + current.groundLabour + current.overhead : 0;
 
     function toggle(line: OverheadLine) {
         const resume = line.isCancelled;
         cancel.mutate({ id: line.id, resume }, {
-            onSuccess: () => toast({ text: `${line.name} ${resume ? "reactivated" : "cancelled"}`, sub: resume ? "Charged every month again." : "Charged until the end of this month. Past months are unchanged.", icon: "checkCircle" }),
+            onSuccess: (removed) => toast(removed
+                ? { text: `${line.name} removed`, sub: "It hadn't started yet, so it was never charged.", icon: "trash" }
+                : { text: `${line.name} ${resume ? "reactivated" : "cancelled"}`, sub: resume ? "Charged every month again." : "Charged until the end of this month. Past months are unchanged.", icon: "checkCircle" }),
             onError: (e) => toast({ text: `${line.name} wasn't ${resume ? "reactivated" : "cancelled"}`, sub: errorMessage(e), icon: "alert" }),
         });
     }
@@ -71,7 +83,7 @@ export default function CompanyExpensesPage() {
 
             {loadFailed(overhead) ? <div className="panel"><div className="panel-body"><LoadError error={overhead.error} retry={() => overhead.refetch()} what="the company's expenses" /></div></div> : (
                 <>
-                    <KpiStrip loading={!o || !months.data} items={[
+                    <KpiStrip loading={!o || (!perMonthRows && !loadFailed(monthsQuery))} items={[
                         {
                             key: "month", label: "Company expenses per month", value: money.fmt(perMonth),
                             sub: <span>{active.length} recurring lines{others(o?.monthTotals ?? []).length > 0 && <> · <MixedCurrency amounts={others(o!.monthTotals)} /></>}</span>,
@@ -81,14 +93,15 @@ export default function CompanyExpensesPage() {
                             sub: <span>{Math.round((g.total / (perMonth || 1)) * 100)}% of company expenses</span>,
                         })),
                         { key: "year", label: "Last 13 months", value: money.short(year), sub: <span>charged to the company</span> },
-                        {
+                        ...(seesCompany ? [{
                             key: "share", label: "Share of this month's cost", value: currentCost ? `${Math.round(((current?.overhead ?? 0) / currentCost) * 100)}%` : "-",
                             sub: <span>of {money.short(currentCost)} total cost</span>,
-                        },
+                        }] : []),
                     ]} />
+                    {loadFailed(monthsQuery) && <div className="mt-s"><LoadError error={monthsQuery.error} retry={() => monthsQuery.refetch()} what="the months" /></div>}
 
-                    <div className="grid g-8-4 mt">
-                        <Figure title="What company expenses do to each month" sub="Company profit with company expenses taken out, against what it would have been without it."
+                    <div className={seesCompany ? "grid g-8-4 mt" : "mt"}>
+                        {seesCompany && <Figure title="What company expenses do to each month" sub="Company profit with company expenses taken out, against what it would have been without it."
                             table={{
                                 cols: [{ label: "Month" }, { label: "Company expenses", right: true }, { label: "Profit before", right: true }, { label: "Profit after", right: true }],
                                 rows: list.map((m) => [fmtMonthY(m.month), money.fmt(m.overhead), money.fmt(m.profitBeforeOverhead), money.fmt(m.profitAfterOverhead)]),
@@ -104,15 +117,15 @@ export default function CompanyExpensesPage() {
                                     </div>
                                 </>
                             )}
-                        </Figure>
+                        </Figure>}
                         <div className="stack">
                             <Figure title="Company expenses per month" sub="Moves as subscriptions start and stop.">
-                                {!months.data ? <SkeletonLines lines={4} /> : year === 0 ? <p className="muted" style={{ padding: "8px 0" }}>No company expenses in the last 13 months.</p> : (
+                                {!perMonthRows ? <SkeletonLines lines={4} /> : year === 0 ? <p className="muted" style={{ padding: "8px 0" }}>No company expenses in the last 13 months.</p> : (
                                     <Columns height={150} labelEvery={3} format={(v) => money.short(v)} seriesLabel="Company expenses"
-                                        data={list.map((m) => ({ label: monthLabel(m.month), tip: fmtMonthY(m.month), value: m.overhead }))} />
+                                        data={perMonthRows.map((m) => ({ label: monthLabel(m.month), tip: fmtMonthY(m.month), value: m.overhead }))} />
                                 )}
                             </Figure>
-                            <Figure title="What it is made of" sub={current ? fmtMonthY(current.month) : ""}>
+                            <Figure title="What it is made of" sub={perMonthRows?.length ? fmtMonthY(perMonthRows[perMonthRows.length - 1].month) : ""}>
                                 <CompositionBar height={18} parts={groups.map((g, i) => ({ label: GROUP_LABEL[g.group], value: g.total, color: i === 0 ? "var(--heat-3)" : "var(--cost)" }))} />
                                 <div className="chart-note">Company expenses are company-wide - they are never charged to a project or a client.</div>
                             </Figure>
