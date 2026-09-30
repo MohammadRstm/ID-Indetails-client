@@ -20,7 +20,6 @@ import { SearchInput, Segmented } from "@/shared/components/Forms/Filters";
 import { Avatars, PersonAvatar, PersonLine } from "@/shared/components/Identity/People";
 import useDebounce from "@/shared/hooks/useDebounce";
 import { money } from "@/shared/format/money";
-import { quarterEnd, quarterLabel, quarterOf, quarterStart } from "@/shared/format/periods";
 import { addDays, dayKey, daysBetween, fmtDate, fmtDateY, fmtDur, fmtDurShort, fmtH, fmtNumber, relDay, startOfWeek } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
@@ -28,6 +27,7 @@ import { useDomainPeople } from "../../shared/people/peopleApi";
 import type { Project } from "../../shared/projects/projectsApi";
 import { companyNow } from "../work/day";
 import ContributorDrawer, { type WorkRange } from "./ContributorDrawer";
+import { rangeOptions, type RangeKey } from "./ranges";
 import EntryModal from "./EntryModal";
 import { useLatestEntry, useProjectTimeline, useProjectWork, type Contributor, type ProjectWork } from "./projectWorkApi";
 import BillingBand from "../../shared/billing/BillingBand";
@@ -36,19 +36,8 @@ import MoneyBand from "./money/MoneyBand";
 import { useProjectExpenses } from "./money/moneyApi";
 import WorkTimeline from "./WorkTimeline";
 
-type RangeKey = "all" | "quarter" | "d30" | "d7";
 const ACTIVITY = ["No activity", "Quiet", "Steady", "Busy"];
 const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-
-function rangeOptions(project: Project, today: string): Record<RangeKey, WorkRange> {
-    const q = quarterOf(today);
-    return {
-        all: { label: "Entire project", from: project.startDate, to: project.completedAt ? dayKey(project.completedAt) : today },
-        quarter: { label: quarterLabel(q.year, q.quarter), from: quarterStart(q.year, q.quarter), to: quarterEnd(q.year, q.quarter) },
-        d30: { label: "Last 30 days", from: addDays(today, -29), to: today },
-        d7: { label: "Last 7 days", from: addDays(today, -6), to: today },
-    };
-}
 
 /**
  * A Design project's Overview tab, for admins (the prototype's AdminProject): the work KPIs, who put the
