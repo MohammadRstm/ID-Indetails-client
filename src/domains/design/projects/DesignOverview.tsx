@@ -30,6 +30,7 @@ import { companyNow } from "../work/day";
 import ContributorDrawer, { type WorkRange } from "./ContributorDrawer";
 import EntryModal from "./EntryModal";
 import { useLatestEntry, useProjectTimeline, useProjectWork, type Contributor, type ProjectWork } from "./projectWorkApi";
+import BillingBand from "../../shared/billing/BillingBand";
 import FinancialBreakdown, { CostFigures } from "./money/FinancialBreakdown";
 import MoneyBand from "./money/MoneyBand";
 import { useProjectExpenses } from "./money/moneyApi";
@@ -81,6 +82,7 @@ export default function DesignOverview({ project }: { project: Project }) {
         <div className="mt">
             <MoneyBand project={project} money={m} contributors={all.data?.contributorCount} expenseCount={expenses.data?.items.length} {...moneyActions}
                 onCloseProject={permissions.has(P.PROJECT_CHANGE_STATUS) && !closed ? open("complete", "1") : undefined} />
+            {project.billingType === "client" && <BillingBand project={project} />}
         </div>
     );
     const breakdown = m && (

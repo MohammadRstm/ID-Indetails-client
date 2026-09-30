@@ -15,13 +15,16 @@ import { money } from "@/shared/format/money";
 import { quarterLabel, quarterOf, quarterStart } from "@/shared/format/periods";
 import { companyToday, fmtNumber } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import BillingModalHost from "../../shared/billing/BillingModalHost";
+import BillingTab from "../../shared/billing/BillingTab";
+import { useInvoices } from "../../shared/billing/billingApi";
 import { useFinanceClients, useFinanceCosts, useFinanceMonthly, useFinanceProjects, useFinanceSummary } from "../../shared/finance/financeApi";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { ClientsTab, CostsTab, OverviewTab, ProjectsTab, type Tile } from "./FinanceTabs";
 
 type PeriodKey = "quarter" | "year" | "all";
-type Tab = "overview" | "projects" | "clients" | "costs";
-const TABS: Tab[] = ["overview", "projects", "clients", "costs"];
+type Tab = "overview" | "projects" | "clients" | "billing" | "costs";
+const TABS: Tab[] = ["overview", "projects", "clients", "billing", "costs"];
 
 /** "All time" asks from a day before any project; the API's own default is this quarter. */
 const ALL_TIME = "2000-01-01";
@@ -56,6 +59,7 @@ function FinancialsPage() {
     const projects = useFinanceProjects("design", true);
     const clients = useFinanceClients("design", true);
     const costs = useFinanceCosts("design", range, tab === "costs");
+    const invoiceCount = useInvoices({ domain: "design", pageSize: 1 }).data?.totalCount;
     const tiles = new Map<number, Tile>((useProjects({ domain: "design", pageSize: 100 }).data?.items ?? []).map((p) => [p.id, { icon: p.icon, tint: p.tint }]));
     const s = summary.data;
 
@@ -93,6 +97,7 @@ function FinancialsPage() {
                         { key: "overview", label: "Overview" },
                         { key: "projects", label: "Projects", count: projects.data?.projects.length ?? null },
                         { key: "clients", label: "Clients", count: clients.data?.length ?? null },
+                        { key: "billing", label: "Billing", count: invoiceCount ?? null },
                         { key: "costs", label: "Costs" },
                     ]} />
 
@@ -100,9 +105,11 @@ function FinancialsPage() {
                         : <div className="panel"><div className="panel-body"><SkeletonLines lines={8} /></div></div>)}
                     {tab === "projects" && <ProjectsTab projects={projects.data} tiles={tiles} />}
                     {tab === "clients" && <ClientsTab clients={clients.data} projects={projects.data} />}
+                    {tab === "billing" && <BillingTab domain="design" tiles={tiles} />}
                     {tab === "costs" && <CostsTab costs={costs.data} error={costs.isError ? costs.error : null} retry={() => costs.refetch()} tiles={tiles} />}
                 </>
             )}
+            <BillingModalHost />
         </div>
     );
 }

@@ -1,0 +1,174 @@
+{
+  "position": {
+    "value": 136500,
+    "invoiced": 31800,
+    "issuedCount": 3,
+    "received": 18400,
+    "onAccount": 0,
+    "outstanding": 13400,
+    "overdue": 7800,
+    "overdueCount": 1,
+    "oldestOverdueDays": 10,
+    "notYetInvoiced": 104700,
+    "drafts": 10500,
+    "paymentCount": 2
+  },
+  "aging": [
+    {
+      "fromDays": 0,
+      "toDays": 0,
+      "amount": 5600,
+      "count": 1
+    },
+    {
+      "fromDays": 1,
+      "toDays": 30,
+      "amount": 7800,
+      "count": 1
+    },
+    {
+      "fromDays": 31,
+      "toDays": 60,
+      "amount": 0,
+      "count": 0
+    },
+    {
+      "fromDays": 61,
+      "toDays": 90,
+      "amount": 0,
+      "count": 0
+    },
+    {
+      "fromDays": 91,
+      "toDays": null,
+      "amount": 0,
+      "count": 0
+    }
+  ],
+  "monthly": [
+    {
+      "month": "2025-10-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2025-11-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2025-12-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2026-01-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2026-02-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2026-03-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2026-04-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2026-05-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2026-06-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2026-07-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2026-08-01",
+      "invoiced": 7800,
+      "collected": 0
+    },
+    {
+      "month": "2026-09-01",
+      "invoiced": 24000,
+      "collected": 18400
+    }
+  ],
+  "byClient": [
+    {
+      "clientId": 2,
+      "name": "Mounir Aoun",
+      "value": 26000,
+      "invoiced": 7800,
+      "received": 0,
+      "outstanding": 7800,
+      "overdue": 7800
+    },
+    {
+      "clientId": 1,
+      "name": "Haddad Holdings",
+      "value": 48000,
+      "invoiced": 24000,
+      "received": 18400,
+      "outstanding": 5600,
+      "overdue": 0
+    },
+    {
+      "clientId": 3,
+      "name": "Cedar Bank SAL",
+      "value": 35000,
+      "invoiced": 0,
+      "received": 0,
+      "outstanding": 0,
+      "overdue": 0
+    }
+  ],
+  "byMethod": [
+    {
+      "method": "bank",
+      "amount": 14400
+    },
+    {
+      "method": "cheque",
+      "amount": 4000
+    }
+  ],
+  "openInvoices": [
+    {
+      "id": 3,
+      "number": "ID-2026-003",
+      "projectId": 2,
+      "projectTitle": "Villa Mounir interiors",
+      "clientName": "Mounir Aoun",
+      "dueOn": "2026-09-20",
+      "balance": 7800,
+      "isOverdue": true,
+      "daysOverdue": 10
+    },
+    {
+      "id": 2,
+      "number": "ID-2026-002",
+      "projectId": 1,
+      "projectTitle": "Haddad Holdings HQ fit-out",
+      "clientName": "Haddad Holdings",
+      "dueOn": "2026-10-24",
+      "balance": 5600,
+      "isOverdue": false,
+      "daysOverdue": 0
+    }
+  ],
+  "unconvertedInvoices": []
+}

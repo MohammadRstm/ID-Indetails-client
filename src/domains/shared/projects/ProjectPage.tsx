@@ -26,6 +26,8 @@ import { personName, useDomainPeople } from "../people/peopleApi";
 import { ProjectRequirementsTab } from "../requirements/Requirements";
 import { useRequirements } from "../requirements/requirementsApi";
 import ExpenseModal from "../../design/projects/money/ExpenseModal";
+import BillingModalHost from "../billing/BillingModalHost";
+import { useBillingLinks } from "../billing/billingLinks";
 import PaymentModal from "../../design/projects/money/PaymentModal";
 import CompleteProjectModal from "./CompleteProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
@@ -97,6 +99,10 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const canAddExpense = !site && !!m && !m.isLocked && permissions.has(P.EXPENSE_MANAGE);
     const openMoney = (action: "payment" | "expense") => { params.set("money", action); setParams(params); };
     const closeMoney = () => { params.delete("money"); setParams(params, { replace: true }); };
+    const billing = useBillingLinks();
+    const bill = m?.billing;
+    const canNewInvoice = !site && !!m && !!project.client && project.billingType === "client" && permissions.has(P.INVOICE_CREATE) && (bill?.notYetInvoiced ?? 0) - (bill?.drafts ?? 0) > 0.5;
+    const canRecordPayment = !site && !!m && !!project.client && permissions.has(P.PAYMENT_RECORD) && ((bill?.invoiced ?? 0) > 0 || (bill?.drafts ?? 0) > 0);
 
     function switchTab(k: TabKey) {
         if (k === "overview") params.delete("tab");
@@ -177,7 +183,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     ) : (
                         <button className="btn btn-primary" onClick={() => setShowDone(true)}><Icon name="check" />Mark as done</button>
                     ))}
-                    {((canChangeStatus && !closed) || canAddExpense || canEditPayment) && (
+                    {((canChangeStatus && !closed) || canAddExpense || canEditPayment || canNewInvoice || canRecordPayment) && (
                         <MenuButton icon="dots" label="More actions">
                             {(close) => (
                                 <div>
@@ -189,13 +195,15 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                             <button className="pop-item" onClick={() => { close(); run("archive", `${project.title} is now archived`); }}><Icon name="archive" />Archive project</button>
                                         </>
                                     )}
-                                    {canChangeStatus && !closed && (canAddExpense || canEditPayment) && <div className="pop-sep" />}
+                                    {canChangeStatus && !closed && (canAddExpense || canEditPayment || canNewInvoice || canRecordPayment) && <div className="pop-sep" />}
                                     {canAddExpense && <button className="pop-item" onClick={() => { close(); openMoney("expense"); }}><Icon name="plus" />Add project expense</button>}
                                     {canEditPayment && (
                                         <button className="pop-item" onClick={() => { close(); openMoney("payment"); }}>
                                             <Icon name="card" />{project.billingType === "internal" ? "Set a customer payment" : "Edit customer payment"}
                                         </button>
                                     )}
+                                    {canNewInvoice && <button className="pop-item" onClick={() => { close(); billing.newInvoice(); }}><Icon name="file" />New invoice</button>}
+                                    {canRecordPayment && <button className="pop-item" onClick={() => { close(); billing.recordPayment(); }}><Icon name="card" />Record a client payment</button>}
                                 </div>
                             )}
                         </MenuButton>
@@ -244,6 +252,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             )}
             {moneyAction === "payment" && canEditPayment && <PaymentModal project={project} onClose={closeMoney} />}
             {moneyAction === "expense" && canAddExpense && <ExpenseModal project={project} onClose={closeMoney} />}
+            {!site && <BillingModalHost project={project} />}
         </div>
     );
 }

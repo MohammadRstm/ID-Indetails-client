@@ -1,0 +1,59 @@
+{
+  "items": [
+    {
+      "id": 5,
+      "domain": "design",
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out"
+      },
+      "client": {
+        "id": 1,
+        "displayName": "Haddad Holdings"
+      },
+      "invoiceId": 2,
+      "invoiceNumber": "ID-2026-002",
+      "isInitial": false,
+      "amount": 4000,
+      "currency": "USD",
+      "fxRate": 1,
+      "amountUsd": 4000,
+      "receivedOn": "2026-09-28",
+      "method": "cheque",
+      "reference": "CHQ 55120",
+      "note": null,
+      "recordedAt": "2026-09-30T04:52:54.627Z",
+      "voidedAt": null,
+      "voidReason": null
+    },
+    {
+      "id": 4,
+      "domain": "design",
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out"
+      },
+      "client": {
+        "id": 1,
+        "displayName": "Haddad Holdings"
+      },
+      "invoiceId": 1,
+      "invoiceNumber": "ID-2026-001",
+      "isInitial": false,
+      "amount": 14400,
+      "currency": "USD",
+      "fxRate": 1,
+      "amountUsd": 14400,
+      "receivedOn": "2026-09-12",
+      "method": "bank",
+      "reference": "TRF-2231",
+      "note": null,
+      "recordedAt": "2026-09-30T04:52:54.564Z",
+      "voidedAt": null,
+      "voidReason": null
+    }
+  ],
+  "page": 1,
+  "pageSize": 14,
+  "totalCount": 2
+}

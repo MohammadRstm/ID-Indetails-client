@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "id": 3,
+      "domain": "design",
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors"
+      },
+      "client": {
+        "id": 2,
+        "displayName": "Mounir Aoun"
+      },
+      "number": "ID-2026-003",
+      "status": "sent",
+      "isOverdue": true,
+      "currency": "USD",
+      "total": 7800,
+      "paid": 0,
+      "balance": 7800,
+      "issuedAt": "2026-08-21T12:00:00Z",
+      "dueOn": "2026-09-20",
+      "createdAt": "2026-09-30T04:52:54.428Z"
+    }
+  ],
+  "page": 1,
+  "pageSize": 100,
+  "totalCount": 1
+}
