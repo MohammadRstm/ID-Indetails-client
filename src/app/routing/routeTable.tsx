@@ -10,6 +10,8 @@ import { MeetingsPage } from "@/domains/shared/meetings/Meetings";
 import { EmployeeProjectRoute, EmployeeProjectsRoute } from "@/domains/shared/projects/EmployeeProjectRoutes";
 import ProjectRoute from "@/domains/shared/projects/ProjectRoute";
 import ProjectsPage from "@/domains/shared/projects/ProjectsPage";
+import MyWorkRoute from "@/domains/shared/requirements/MyWorkRoute";
+import MyPayPage from "@/domains/design/pay/MyPayPage";
 
 /*
  * Every screen, once. A route names the page an admin sees and the page an employee sees, what each needs,
@@ -118,14 +120,14 @@ export const domainRoutes: DomainRoute[] = [
         path: "my-work",
         nav: { label: "My work", icon: "clock" },
         employee: {
-            element: soon("My work"),
+            element: <MyWorkRoute />,
             access: (ctx) => (ctx.domain === "design" ? ctx.p.has(P.WORK_ENTRY_VIEW_OWN) : ctx.p.has(P.REQUIREMENT_VIEW)),
         },
     },
     {
         path: "pay",
         nav: { label: "My pay", icon: "card" },
-        employee: { element: soon("My pay"), access: designOnly(all(P.WORK_ENTRY_VIEW_OWN)) },
+        employee: { element: <MyPayPage />, access: designOnly(all(P.WORK_ENTRY_VIEW_OWN)) },
     },
     {
         path: "meetings",

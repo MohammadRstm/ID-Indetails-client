@@ -53,7 +53,7 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - the search palette.
 - [ ] **4. Design work**, in four parts:
   - [x] 4a-1: the employee home, log work with the drag timeline and the overtime preview, the timer, an employee's project;
-  - [ ] 4a-2: my work, my pay and the hours balance;
+  - [x] 4a-2: my work (both domains), my pay, the hours balance and the behind-on-hours notice;
   - [ ] 4b: the admin project overview, analytics and timeline, entries and comments;
   - [ ] 4c: people and profiles, activity, reports, the overview board.
 - [ ] **5. Money:**

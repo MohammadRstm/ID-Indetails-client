@@ -15,6 +15,7 @@ import { Avatars } from "@/shared/components/Identity/People";
 import { tip } from "@/shared/components/Overlays/tip";
 import { addDays, DAYS, dayKey, daysBetween, fmtDate, fmtDayDate, fmtDayDateY, fmtDur, fmtH, monthKey, partsOf, relTime, startOfWeek } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import { BehindNotice, MyHoursBalance } from "../pay/HoursBalance";
 import { companyNow, workHoursOf } from "./day";
 import { openLogWork } from "./logWorkStore";
 import OvertimePanel from "./OvertimePanel";
@@ -89,8 +90,10 @@ export default function EmployeeHome() {
                     <div className="grow"><b>Nothing logged today yet.</b> Add what you worked on before you finish - it takes a few seconds on the timeline below.</div>
                 </div>
             )}
+            {permissions.has(P.WORK_ENTRY_VIEW_OWN) && <BehindNotice />}
             {canLog && <TodayPanel />}
             {permissions.has(P.WORK_ENTRY_VIEW_OWN) && <OvertimePanel />}
+            {permissions.has(P.WORK_ENTRY_VIEW_OWN) && <MyHoursBalance />}
 
             <div className="row wrap" style={{ gap: 10, margin: "22px 0 10px", alignItems: "baseline" }}>
                 <h2 className="page-title" style={{ fontSize: 15 }}>Active projects</h2>

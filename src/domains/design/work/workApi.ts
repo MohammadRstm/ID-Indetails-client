@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
-import type { Schemas } from "@/api/types";
+import type { Paged, Schemas } from "@/api/types";
 import type { Domain } from "@/app/permissions/permissions";
 import useDebounce from "@/shared/hooks/useDebounce";
 
@@ -61,6 +61,26 @@ export function useMyWorkSummary(params: { from?: string; to?: string; projectId
         queryKey: keys.work.summary(params),
         queryFn: async () => (await http.get<Schemas["WorkSummaryResponse"]>("/me/work-summary", { params })).data,
         placeholderData: keepPreviousData,
+    });
+}
+
+/** Their entries, newest first: a date range, a project and a search narrow them. */
+export function useMyEntries(params: { from?: string; to?: string; projectId?: number; search?: string; page?: number; pageSize?: number }) {
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ""));
+    return useQuery({
+        queryKey: keys.work.entries(p),
+        queryFn: async () => (await http.get<Paged<WorkEntry>>("/me/work-entries", { params: p })).data,
+        placeholderData: keepPreviousData,
+    });
+}
+
+/** What they have earned in a month ("yyyy-MM"), day by day, and how their hours stand. */
+export function useMyPay(month: string, enabled = true) {
+    return useQuery({
+        queryKey: keys.work.pay(month),
+        queryFn: async () => (await http.get<Schemas["MyPayResponse"]>("/me/pay", { params: { month } })).data,
+        placeholderData: keepPreviousData,
+        enabled,
     });
 }
 

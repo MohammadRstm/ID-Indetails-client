@@ -1,12 +1,15 @@
 import { http, HttpResponse } from "msw";
-import type { Schemas } from "@/api/types";
+import type { Paged, Schemas } from "@/api/types";
 import dayJson from "./work/day.json";
+import entriesJson from "./work/entries.json";
 import hoursJson from "./work/hours.json";
 import myProjectsJson from "./work/myProjects.json";
 import overtimeJson from "./work/overtime.json";
+import payJson from "./work/pay.json";
 import previewJson from "./work/preview.json";
 import projectJson from "./work/project.json";
 import projectWorkJson from "./work/projectWork.json";
+import requirementsJson from "./work/requirements.json";
 import scheduleJson from "./work/schedule.json";
 import settingsJson from "./work/settings.json";
 import summaryJson from "./work/summary.json";
@@ -27,6 +30,11 @@ export const work = {
     project: projectJson as unknown as Schemas["ProjectResponse"],
     hours: hoursJson as unknown as Schemas["MyHoursResponse"],
     preview: previewJson as unknown as Schemas["OvertimePreviewResponse"],
+    /** Her entries from 21 to 30 September. */
+    entries: entriesJson as unknown as Paged<Schemas["WorkEntryResponse"]>,
+    /** September's pay: salaried, in progress, on track. */
+    pay: payJson as unknown as Schemas["MyPayResponse"],
+    requirements: requirementsJson as unknown as Schemas["MyRequirementsResponse"],
 };
 
 /** The fixture's day, or an empty one for any other date. */
@@ -43,6 +51,9 @@ export const workHandlers = [
     }),
     http.get("/api/me/overtime", () => HttpResponse.json(work.overtime)),
     http.get("/api/me/hours", () => HttpResponse.json(work.hours)),
+    http.get("/api/me/work-entries", () => HttpResponse.json(work.entries)),
+    http.get("/api/me/pay", () => HttpResponse.json(work.pay)),
+    http.get("/api/me/requirements", () => HttpResponse.json(work.requirements)),
     http.post("/api/me/overtime-preview", () => HttpResponse.json(work.preview)),
     http.get("/api/domain-settings/:domain", () => HttpResponse.json(work.settings)),
     http.get("/api/projects/:id", () => HttpResponse.json(work.project)),
