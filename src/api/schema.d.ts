@@ -9745,6 +9745,8 @@ export interface components {
             nextChangeOn: null | string;
             /** Format: date */
             ownSince: null | string;
+            /** Format: int64 */
+            photoFileId: null | number;
             position: null | string;
             /** Format: int32 */
             requiredMinutesPerWeek: number;
@@ -9989,6 +9991,8 @@ export interface components {
             entries: number;
             /** Format: double */
             hourlyRate: number;
+            /** Format: double */
+            monthlySalary: null | number;
             name: string;
             /** Format: int32 */
             normalMinutes: number;
@@ -9996,6 +10000,9 @@ export interface components {
             overtimeMinutes: number;
             /** Format: double */
             pay: number;
+            /** Format: int64 */
+            photoFileId: null | number;
+            position: null | string;
             priced: boolean;
             rateChanged: boolean;
             team: null | components["schemas"]["TeamSummaryResponse"];
@@ -10311,6 +10318,12 @@ export interface components {
             summary: components["schemas"]["SalarySummaryResponse"];
             totals: components["schemas"]["SalaryTotalResponse"][];
         };
+        SalaryDayResponse: {
+            /** Format: date */
+            date: string;
+            /** Format: int32 */
+            requiredMinutes: number;
+        };
         SalaryDetailResponse: {
             /** Format: int32 */
             deductionMinutes: number;
@@ -10323,6 +10336,7 @@ export interface components {
             /** Format: double */
             paidBreakPay: number;
             salary: components["schemas"]["SalaryRowResponse"];
+            workingDays: components["schemas"]["SalaryDayResponse"][];
         };
         SalaryRowResponse: {
             /** Format: double */
@@ -10354,6 +10368,9 @@ export interface components {
             overtimeMinutes: number;
             /** Format: double */
             overtimePay: number;
+            /** Format: int64 */
+            photoFileId: null | number;
+            position: null | string;
             proRated: boolean;
             role: string;
             /** Format: int32 */
@@ -10370,6 +10387,8 @@ export interface components {
             workingDaysPaid: number;
         };
         SalarySummaryResponse: {
+            /** Format: int32 */
+            expectedMinutes: null | number;
             /** Format: int32 */
             madeUpMinutes: number;
             /** Format: int32 */
