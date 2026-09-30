@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { http } from "@/api/http";
 import type { Paged, Schemas } from "@/api/types";
 import { P } from "@/app/permissions/codes";
@@ -16,14 +15,15 @@ export function useCompanySettings() {
         staleTime: 10 * 60_000,
     });
 
-    useEffect(() => {
-        if (!query.data) return;
+    // set while rendering, not after: the page under the shell waits for these (AppShell) and must render with
+    // the company's clock and week from its very first render
+    if (query.data) {
         setFormatSettings({
             timeZone: query.data.timeZone,
             use24HourTime: query.data.use24HourTime,
             weekStart: query.data.weekStart,
         });
-    }, [query.data]);
+    }
 
     return query;
 }

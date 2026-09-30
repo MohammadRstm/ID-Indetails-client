@@ -6,6 +6,7 @@ import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { AREAS, hasSeveralAreas } from "@/app/routing/areas";
 import { domainHome, homePath } from "@/app/routing/home";
+import { companyNav } from "@/app/routing/routeTable";
 import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
 import ThemeToggle from "@/shared/components/Buttons/ThemeToggle";
 import Logo from "@/shared/components/Identity/Logo";
@@ -23,6 +24,7 @@ type Overview = Schemas["CompanyOverviewResponse"];
 export default function CompanyLauncher() {
     const navigate = useNavigate();
     const permissions = usePermissions();
+    const companyPages = companyNav(permissions);
     const user = useCurrentUser();
     const { signOut } = useSession();
     const company = useCompanySettings();
@@ -76,6 +78,17 @@ export default function CompanyLauncher() {
                             </button>
                         );
                     })}
+                    {!permissions.has(P.COMPANY_VIEW) && companyPages.length > 0 && (
+                        // some company pages without the overview (salaries, schedules or expenses granted alone)
+                        <button className="launch-tile wide" onClick={() => navigate(`/company/${companyPages[0].path}`)}>
+                            <span className="launch-ic"><Icon name="chartTile" /></span>
+                            <span className="launch-body">
+                                <span className="launch-name">Company</span>
+                                <span className="launch-sub">{companyPages.map((c) => c.label).join(" · ")}</span>
+                            </span>
+                            <Icon name="chevronRight" />
+                        </button>
+                    )}
                     {permissions.has(P.COMPANY_VIEW) && (
                         <button className="launch-tile wide" onClick={() => navigate("/company/overview")}>
                             <span className="launch-ic"><Icon name="chartTile" /></span>

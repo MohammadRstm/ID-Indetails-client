@@ -13,14 +13,25 @@ const RELOADED = "hourline-reloaded-for-update";
  */
 export function load<M>(importer: () => Promise<M>, reload = () => window.location.reload()): () => Promise<M> {
     return () => importer().then(
-        (m) => { sessionStorage.removeItem(RELOADED); return m; },
+        (m) => { forget(); return m; },
         (error: unknown) => {
-            if (sessionStorage.getItem(RELOADED)) throw error;
-            sessionStorage.setItem(RELOADED, "1");
+            // without session storage (blocked site data) it can't tell a second failure, so it doesn't reload
+            if (reloaded() || !remember()) throw error;
             reload();
             return new Promise<M>(() => {});
         },
     );
+}
+
+// Session storage throws when the browser blocks site data.
+function reloaded() {
+    try { return !!sessionStorage.getItem(RELOADED); } catch { return false; }
+}
+function remember() {
+    try { sessionStorage.setItem(RELOADED, "1"); return true; } catch { return false; }
+}
+function forget() {
+    try { sessionStorage.removeItem(RELOADED); } catch { /* nothing to forget */ }
 }
 
 const page = <M extends { default: ComponentType }>(importer: () => Promise<M>) => lazy(load(importer));

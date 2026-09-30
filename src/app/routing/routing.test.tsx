@@ -113,4 +113,12 @@ describe("the guards", () => {
         expect(await screen.findByRole("heading", { name: "What would you like to manage?" })).toBeInTheDocument();
         expect(screen.getByText("Company overview")).toBeInTheDocument();
     });
+    it("gives the launcher a way into the company pages someone was granted without the overview", async () => {
+        // a design admin given salary:view alone
+        renderApp("/", withPermissions(personas.designAdmin, { grant: [P.SALARY_VIEW] }));
+        expect(await screen.findByRole("heading", { name: "What would you like to manage?" })).toBeInTheDocument();
+        expect(screen.queryByText("Company overview")).not.toBeInTheDocument();
+        const tile = screen.getByText("Company").closest("button") as HTMLElement;
+        expect(within(tile).getByText(/Salaries/)).toBeInTheDocument();
+    });
 });
