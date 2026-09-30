@@ -5,7 +5,7 @@ import { server } from "./server";
 import { clearToasts } from "@/shared/components/Feedback/toast";
 
 // Pages load on demand, so the first test to open one waits for its code as well as its data.
-configure({ asyncUtilTimeout: 3000 });
+configure({ asyncUtilTimeout: 5000 });
 
 // The live connection talks to a stand-in hub: tests send its signals with live.emit.
 vi.mock("@microsoft/signalr", () => import("./liveHub"));
