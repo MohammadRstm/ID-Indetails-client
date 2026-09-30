@@ -190,12 +190,24 @@ describe("Someone's profile", () => {
         expect(pays).toEqual([{ basis: "monthly", amount: 1800, currency: "USD", effectiveFrom: "2026-09-30" }]);
     });
 
-    it("lets pay be changed without the rest of the profile", async () => {
-        renderApp("/design/people/9", withPermissions(nadia, { revoke: [P.EMPLOYEE_MANAGE] }), ...peopleHandlers);
+    it("lets pay be changed without the rest of the profile, which it doesn't send", async () => {
+        let updated = false;
+        const pays: unknown[] = [];
+        renderApp("/design/people/9", withPermissions(nadia, { revoke: [P.EMPLOYEE_MANAGE] }),
+            http.put("/api/employees/9", () => { updated = true; return HttpResponse.json(yara); }),
+            http.post("/api/employees/9/pay", async ({ request }) => { pays.push(await request.json()); return HttpResponse.json(people.payHistory[0]); }),
+            ...peopleHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
-        expect(await within(dialog).findByLabelText("Pay")).toBeInTheDocument();
+        const pay = await within(dialog).findByLabelText("Pay");
         expect(within(dialog).queryByLabelText("Position")).not.toBeInTheDocument();
+        await userEvent.clear(pay);
+        await userEvent.type(pay, "1800");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+
+        await waitFor(() => expect(pays).toHaveLength(1));
+        // the profile itself needs employee:manage
+        expect(updated).toBe(false);
     });
 });
 
