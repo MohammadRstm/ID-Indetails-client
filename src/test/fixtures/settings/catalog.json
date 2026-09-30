@@ -1,0 +1,441 @@
+[
+  {
+    "code": "activity:view",
+    "description": "View the domain activity feed",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "billing_settings:manage",
+    "description": "Edit invoice prefix, terms and bank details",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "client:create",
+    "description": "Add clients",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "client:manage",
+    "description": "Edit, archive, restore and delete clients",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "client:view",
+    "description": "View clients",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "company_settings:manage",
+    "description": "Edit company-wide settings",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
+    "code": "company:view",
+    "description": "View the company overview across both domains",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
+    "code": "domain_settings:manage",
+    "description": "Edit the domain's time-tracking and notification settings",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "employee:invite",
+    "description": "Invite new people",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "employee:invite_super_admin",
+    "description": "Invite super admins",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
+    "code": "employee:manage",
+    "description": "Edit employee profiles, teams and status",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "employee:pay_manage",
+    "description": "Set and change employee pay",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "employee:view",
+    "description": "View employees and their work",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "exchange_rate:manage",
+    "description": "Set the company-wide exchange rates used for payments",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
+    "code": "expense:manage",
+    "description": "Add and remove project expenses",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "financial:view",
+    "description": "See revenue, cost, profit, margin and rates",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "hours:excuse",
+    "description": "Excuse hours and days off in the hours ledger",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
+    "code": "invoice:create",
+    "description": "Create and edit draft invoices",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "invoice:send",
+    "description": "Issue and resend invoices",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "invoice:void",
+    "description": "Void issued invoices",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "labour_report:create",
+    "description": "Submit weekly ground-labour reports",
+    "domain": "execution",
+    "defaultFor": [
+      "super_admin",
+      "admin",
+      "employee"
+    ]
+  },
+  {
+    "code": "labour_report:manage",
+    "description": "Edit anyone's labour reports and labour defaults",
+    "domain": "execution",
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "material:create",
+    "description": "Record materials on a site project",
+    "domain": "execution",
+    "defaultFor": [
+      "super_admin",
+      "admin",
+      "employee"
+    ]
+  },
+  {
+    "code": "material:manage",
+    "description": "Edit or remove anyone's material records",
+    "domain": "execution",
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "meeting:create",
+    "description": "Set project meetings, and move or remove the ones you set",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin",
+      "employee"
+    ]
+  },
+  {
+    "code": "meeting:manage",
+    "description": "Record and remove project meetings",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "overhead:manage",
+    "description": "Manage company overhead",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
+    "code": "payment:record",
+    "description": "Record client payments",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "payment:void",
+    "description": "Void recorded payments",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "permission:manage",
+    "description": "Grant and revoke other people's permissions",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
+    "code": "project:change_status",
+    "description": "Put projects on hold, complete, reopen or archive them",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "project:create",
+    "description": "Create projects",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "project:edit",
+    "description": "Edit project details, owner, client and revenue",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "project:pricing_manage",
+    "description": "Set the project fee, default material markup and material client prices",
+    "domain": "execution",
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "project:view",
+    "description": "View projects",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin",
+      "employee"
+    ]
+  },
+  {
+    "code": "report:view",
+    "description": "View domain reports",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "requirement:complete_own",
+    "description": "Tick requirements assigned to you, and untick the ones you ticked",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin",
+      "employee"
+    ]
+  },
+  {
+    "code": "requirement:manage",
+    "description": "Add, edit, assign, tick and remove requirements",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "requirement:view",
+    "description": "View project requirements",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin",
+      "employee"
+    ]
+  },
+  {
+    "code": "salary:view",
+    "description": "View what each employee is owed",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
+    "code": "schedule:manage",
+    "description": "Set personal work schedules",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
+    "code": "statement:create",
+    "description": "Create client statements of materials supplied",
+    "domain": "execution",
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "statement:send",
+    "description": "Send client statements",
+    "domain": "execution",
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "team:manage",
+    "description": "Create, rename and delete teams",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "work_entry:comment",
+    "description": "Comment on work entries",
+    "domain": "design",
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "work_entry:create",
+    "description": "Log, edit and delete own work entries",
+    "domain": "design",
+    "defaultFor": [
+      "super_admin",
+      "admin",
+      "employee"
+    ]
+  },
+  {
+    "code": "work_entry:view_all",
+    "description": "View everyone's work entries",
+    "domain": "design",
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "work_entry:view_own",
+    "description": "View own work entries",
+    "domain": "design",
+    "defaultFor": [
+      "super_admin",
+      "admin",
+      "employee"
+    ]
+  },
+  {
+    "code": "working_time:manage",
+    "description": "Set the company working week, break and overtime multiplier",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  }
+]

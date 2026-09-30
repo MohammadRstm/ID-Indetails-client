@@ -1,0 +1,12 @@
+{
+  "isSetUp": true,
+  "name": "ID-Indetails",
+  "address": "Beirut, Lebanon",
+  "website": "id-indetails.test",
+  "logoFileId": null,
+  "timeZone": "Asia/Beirut",
+  "weekStart": 1,
+  "use24HourTime": false,
+  "defaultCurrency": "USD",
+  "updatedAt": "2026-09-30T04:51:22.215Z"
+}

@@ -1,0 +1,16 @@
+{
+  "domainCode": "design",
+  "editWindow": "unlimited",
+  "allowOverlap": false,
+  "allowFutureEntries": false,
+  "requireDescription": true,
+  "timerEnabled": true,
+  "logReminder": true,
+  "notifyEntry": "off",
+  "notifyProject": true,
+  "notifyIdle": true,
+  "weeklySummary": true,
+  "holdLogging": false,
+  "autoArchive": false,
+  "updatedAt": "2026-09-30T04:51:22.515Z"
+}
