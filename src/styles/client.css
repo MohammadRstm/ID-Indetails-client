@@ -6,6 +6,11 @@
    the prototype draws them. */
 table { line-height: normal; font-weight: normal; }
 
+/* The account menu sits at the foot of the sidebar, which stays on screen. The prototype opened it
+   downwards, so on any page longer than the window it was drawn below the screen and Sign out was out
+   of reach. It opens upwards instead. */
+.side-foot .pop { top: auto; bottom: calc(100% + 6px); }
+
 /* loading skeletons */
 .skel {
   display: block; border-radius: 5px;
