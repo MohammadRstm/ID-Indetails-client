@@ -8,14 +8,14 @@ import { fmtDayDate, fmtDur, fmtH, fmtRange, minutesOfDay } from "@/shared/forma
 import Icon from "@/shared/icons/Icon";
 import { useAttachment } from "./attachments";
 import { AttachmentChip } from "./AttachmentField";
-import { breakText, checkLog, companyNow, defaultSlot, DEFAULT_START, hoursText, isoAt, movesFor, rangeFor, spanOn, trackEntry, workHoursOf, type Moves } from "./day";
+import { breakText, checkLog, companyNow, defaultSlot, DEFAULT_START, hoursText, isoAt, movesFor, rangeFor, restoreOf, spanOn, trackEntry, workHoursOf, type Moves } from "./day";
 import DayChips from "./DayChips";
 import DayTrack from "./DayTrack";
 import DragDay from "./DragDay";
 import OvertimeWarning from "./OvertimeWarning";
 import TimeRange from "./TimeRange";
 import {
-    loggableProjects, useDeleteEntry, useDomainSettings, useMyDay, useMyProjects, useMySchedule, useOvertimeFor, useSaveEntry,
+    loggableProjects, useDomainSettings, useMyDay, useMyProjects, useMySchedule, useOvertimeFor, useSaveEntry, useUndoLog,
 } from "./workApi";
 
 /** Today at a glance on the employee home: a strip of the day that opens into the day composer. */
@@ -86,7 +86,7 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
     const [swaps, setSwaps] = useState<Moves>({});
     const attachment = useAttachment();
     const save = useSaveEntry();
-    const remove = useDeleteEntry();
+    const undo = useUndoLog();
     const isToday = date === today;
 
     // the first free time of the day, once the day has loaded
@@ -117,12 +117,14 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
         setTouched(true);
         if (blocked || pid == null) return;
         const title = choices.find((p) => p.id === pid)?.title ?? "the project";
+        // what Undo puts back, worked out before the day reloads with the entries moved
+        const restore = restoreOf(list, date, swaps);
         save.mutate({ body: { projectId: pid, description: desc, startedAt: startAt, endedAt: endAt, attachmentFileId: attachment.file?.id ?? null, moves: movesFor(date, swaps) } }, {
             onSuccess: (entry) => {
                 toast({
                     text: `${fmtDur(entry.minutes)} logged on ${title}`,
                     sub: `${fmtRange(entry.startedAt, entry.endedAt)}${entry.overtimeMinutes ? ` · ${fmtDur(entry.overtimeMinutes)} overtime` : ""}`,
-                    icon: "checkCircle", actionLabel: "Undo", action: () => remove.mutate(entry.id),
+                    icon: "checkCircle", actionLabel: "Undo", action: () => undo.mutate({ id: entry.id, restore }),
                 });
                 // stay here, ready for the next one: it starts where this one ended
                 const end = minutesOfDay(entry.endedAt);

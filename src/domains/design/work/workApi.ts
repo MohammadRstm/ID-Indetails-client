@@ -173,6 +173,21 @@ export function useDeleteEntry() {
     });
 }
 
+/**
+ * Undoes a new log: deletes it, then puts back the entries it moved. One step, so it finishes even though the
+ * form it came from has closed (a per-call callback on a closed form never runs).
+ */
+export function useUndoLog() {
+    const changed = useWorkChanged();
+    return useMutation({
+        mutationFn: async ({ id, restore }: { id: number; restore: { id: number; body: SaveEntryBody } | null }) => {
+            await http.delete(`/work-entries/${id}`);
+            if (restore) await http.put<WorkEntry>(`/work-entries/${restore.id}`, restore.body);
+        },
+        onSuccess: changed,
+    });
+}
+
 /** Puts a deleted entry back, exactly as it was (Undo). */
 export function useRestoreEntry() {
     const changed = useWorkChanged();

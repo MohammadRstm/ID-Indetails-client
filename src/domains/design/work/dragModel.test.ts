@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { work } from "@/test/fixtures/work";
-import { checkLog, defaultSlot, spanOn, type Span } from "./day";
+import { checkLog, defaultSlot, isoAt, restoreOf, spanOn, type Span } from "./day";
 import { BOX, dayModel, type DayTask } from "./dragModel";
 
 const task = (id: number, s: number, e: number, locked = false): DayTask => ({ id, span: { s, e }, whole: true, locked });
@@ -83,5 +83,25 @@ describe("a log's checks", () => {
         // today, up to now, rounded down so it never ends in the future
         expect(defaultSlot(spans, 540, true, 18 * 60 + 23)).toEqual({ s: 18 * 60, d: 20 });
         expect(defaultSlot([], 540, false, 0)).toEqual({ s: 540, d: 60 });
+    });
+});
+
+describe("undoing a log that moved other tasks", () => {
+    const day = work.day.date;
+    const [a, b] = work.day.entries;
+
+    it("puts every moved task back where it was, in one save", () => {
+        const was = { a: spanOn(a, day), b: spanOn(b, day) };
+        const restore = restoreOf(work.day.entries, day, { [a.id]: { s: was.a.s + 30, e: was.a.e + 30 }, [b.id]: { s: was.b.s + 30, e: was.b.e + 30 } });
+        expect(restore?.id).toBe(a.id);
+        expect(restore?.body).toMatchObject({
+            startedAt: isoAt(day, was.a.s),
+            endedAt: isoAt(day, was.a.e),
+            moves: [{ id: b.id, startedAt: isoAt(day, was.b.s), endedAt: isoAt(day, was.b.e) }],
+        });
+    });
+
+    it("has nothing to restore when nothing moved", () => {
+        expect(restoreOf(work.day.entries, day, {})).toBeNull();
     });
 });

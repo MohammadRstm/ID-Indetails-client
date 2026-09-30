@@ -43,9 +43,11 @@ describe("the Design employee home", () => {
 });
 
 describe("logging work", () => {
-    it("opens after the day's last entry, previews the overtime and saves the entry", async () => {
+    it("opens after the day's last entry, previews the overtime, saves the entry and undoes it", async () => {
         let body: Record<string, unknown> | null = null;
+        const deleted: string[] = [];
         renderApp("/design/projects", sarah,
+            http.delete("/api/work-entries/:id", ({ params }) => { deleted.push(String(params.id)); return new HttpResponse(null, { status: 204 }); }),
             http.post("/api/work-entries", async ({ request }) => {
                 body = (await request.json()) as Record<string, unknown>;
                 return HttpResponse.json({ ...work.day.entries[0], id: 999, minutes: 60, startedAt: body.startedAt, endedAt: body.endedAt });
@@ -71,8 +73,11 @@ describe("logging work", () => {
             endedAt: "2026-09-28T16:00:00.000Z",
             moves: [],
         });
-        expect(await screen.findByText(`1h 00m logged on ${work.myProjects[0].title}`)).toBeInTheDocument();
+        const logged = (await screen.findByText(`1h 00m logged on ${work.myProjects[0].title}`)).closest(".toast") as HTMLElement;
         expect(screen.queryByRole("dialog", { name: /log work/i })).toBeNull();
+        // Undo still works with the form gone
+        await userEvent.click(within(logged).getByRole("button", { name: "Undo" }));
+        await waitFor(() => expect(deleted).toEqual(["999"]));
     });
 
     it("says what is wrong next to the button, not in a toast", async () => {
