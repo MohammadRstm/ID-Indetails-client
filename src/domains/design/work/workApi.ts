@@ -209,8 +209,9 @@ export function useResizeMeeting() {
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async ({ id, body }: { id: number; body: Schemas["SaveMeetingRequest"] }) =>
-            (await http.put(`/meetings/${id}`, body)).data,
-        onSuccess: () => invalidate(keys.meetings.all, keys.work.all),
+            (await http.put<Schemas["MeetingResponse"]>(`/meetings/${id}`, body)).data,
+        // it shows on its project's timeline too
+        onSuccess: (meeting) => { void invalidate(keys.meetings.all, keys.work.all, keys.projects.detail(meeting.project.id)); },
     });
 }
 

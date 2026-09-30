@@ -35,21 +35,22 @@ export function useProjectMeetings(projectId: number) {
     });
 }
 
+// a meeting shows in the day it falls on and on its project's timeline, so both refresh with it
 export function useCreateMeeting() {
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async ({ projectId, body }: { projectId: number; body: Schemas["SaveMeetingRequest"] }) =>
             (await http.post<Meeting>(`/projects/${projectId}/meetings`, body)).data,
-        onSuccess: () => invalidate(keys.meetings.all, keys.activity.all),
+        onSuccess: (_, { projectId }) => { void invalidate(keys.meetings.all, keys.activity.all, keys.work.all, keys.projects.detail(projectId)); },
     });
 }
 
 export function useDeleteMeeting() {
     const invalidate = useInvalidate();
     return useMutation({
-        mutationFn: async (id: number) => {
+        mutationFn: async ({ id }: { id: number; projectId: number }) => {
             await http.delete(`/meetings/${id}`);
         },
-        onSuccess: () => invalidate(keys.meetings.all),
+        onSuccess: (_, { projectId }) => { void invalidate(keys.meetings.all, keys.work.all, keys.projects.detail(projectId)); },
     });
 }
