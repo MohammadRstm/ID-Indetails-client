@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { Outlet, useLocation } from "react-router";
+import CrashScreen from "@/app/pages/CrashScreen";
 import Skeleton, { SkeletonKpis, SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { cx } from "@/shared/utils/cx";
 import { LogWorkHost } from "@/domains/design/work/LogWorkHost";
@@ -60,9 +62,12 @@ export default function AppShell() {
             <Sidebar area={area} />
             <div className="main">
                 <TopBar area={area} onMenu={() => setNavOpen(!navOpen)} onSearch={() => setPalette(true)} />
-                <Suspense fallback={<PageLoading />}>
-                    <Outlet />
-                </Suspense>
+                {/* a page that fails keeps the shell around it, and moving to another page clears it */}
+                <ErrorBoundary FallbackComponent={CrashScreen} resetKeys={[location.pathname]}>
+                    <Suspense fallback={<PageLoading />}>
+                        <Outlet />
+                    </Suspense>
+                </ErrorBoundary>
             </div>
             {palette && <Suspense fallback={null}><CommandPalette area={area} onClose={() => setPalette(false)} /></Suspense>}
             <LogWorkHost />
