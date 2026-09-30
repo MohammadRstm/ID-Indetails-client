@@ -9376,14 +9376,18 @@ export interface components {
         };
         NotificationProjectResponse: {
             domain: string;
+            icon: null | string;
             /** Format: int64 */
             id: number;
+            tint: null | string;
             title: string;
         };
         NotificationRefResponse: {
             /** Format: int64 */
             id: number;
             name: string;
+            /** Format: int64 */
+            photoFileId: null | number;
         };
         NotificationResponse: {
             actor: null | components["schemas"]["NotificationRefResponse"];
