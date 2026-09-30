@@ -1,0 +1,17 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "number": "ST-2026-001",
+      "createdAt": "2026-09-30T04:52:53.772Z",
+      "mode": "detail",
+      "count": 4,
+      "total": 6941.4,
+      "deliveryCount": 0,
+      "lastDelivery": null
+    }
+  ],
+  "page": 1,
+  "pageSize": 10,
+  "totalCount": 1
+}

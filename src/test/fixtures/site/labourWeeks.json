@@ -1,0 +1,140 @@
+{
+  "weeks": [
+    {
+      "weekStart": "2026-09-28",
+      "isReported": false,
+      "total": null,
+      "workerDays": null,
+      "submittedBy": null,
+      "submittedAt": null
+    },
+    {
+      "weekStart": "2026-09-21",
+      "isReported": true,
+      "total": 725,
+      "workerDays": 29,
+      "submittedBy": {
+        "id": 12,
+        "name": "Joe Hanna"
+      },
+      "submittedAt": "2026-09-30T04:52:53.204Z"
+    },
+    {
+      "weekStart": "2026-09-14",
+      "isReported": true,
+      "total": 800,
+      "workerDays": 32,
+      "submittedBy": {
+        "id": 12,
+        "name": "Joe Hanna"
+      },
+      "submittedAt": "2026-09-30T04:52:53.165Z"
+    },
+    {
+      "weekStart": "2026-09-07",
+      "isReported": true,
+      "total": 850,
+      "workerDays": 34,
+      "submittedBy": {
+        "id": 12,
+        "name": "Joe Hanna"
+      },
+      "submittedAt": "2026-09-30T04:52:53.119Z"
+    },
+    {
+      "weekStart": "2026-08-31",
+      "isReported": true,
+      "total": 625,
+      "workerDays": 25,
+      "submittedBy": {
+        "id": 12,
+        "name": "Joe Hanna"
+      },
+      "submittedAt": "2026-09-30T04:52:53.002Z"
+    },
+    {
+      "weekStart": "2026-08-24",
+      "isReported": false,
+      "total": null,
+      "workerDays": null,
+      "submittedBy": null,
+      "submittedAt": null
+    },
+    {
+      "weekStart": "2026-08-17",
+      "isReported": false,
+      "total": null,
+      "workerDays": null,
+      "submittedBy": null,
+      "submittedAt": null
+    },
+    {
+      "weekStart": "2026-08-10",
+      "isReported": false,
+      "total": null,
+      "workerDays": null,
+      "submittedBy": null,
+      "submittedAt": null
+    },
+    {
+      "weekStart": "2026-08-03",
+      "isReported": false,
+      "total": null,
+      "workerDays": null,
+      "submittedBy": null,
+      "submittedAt": null
+    },
+    {
+      "weekStart": "2026-07-27",
+      "isReported": false,
+      "total": null,
+      "workerDays": null,
+      "submittedBy": null,
+      "submittedAt": null
+    },
+    {
+      "weekStart": "2026-07-20",
+      "isReported": false,
+      "total": null,
+      "workerDays": null,
+      "submittedBy": null,
+      "submittedAt": null
+    },
+    {
+      "weekStart": "2026-07-13",
+      "isReported": false,
+      "total": null,
+      "workerDays": null,
+      "submittedBy": null,
+      "submittedAt": null
+    },
+    {
+      "weekStart": "2026-07-06",
+      "isReported": false,
+      "total": null,
+      "workerDays": null,
+      "submittedBy": null,
+      "submittedAt": null
+    },
+    {
+      "weekStart": "2026-06-29",
+      "isReported": false,
+      "total": null,
+      "workerDays": null,
+      "submittedBy": null,
+      "submittedAt": null
+    },
+    {
+      "weekStart": "2026-06-22",
+      "isReported": false,
+      "total": null,
+      "workerDays": null,
+      "submittedBy": null,
+      "submittedAt": null
+    }
+  ],
+  "total": 3000,
+  "reportedWeeks": 4,
+  "currency": "USD",
+  "canReport": true
+}

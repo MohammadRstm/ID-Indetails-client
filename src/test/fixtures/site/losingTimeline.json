@@ -1,0 +1,161 @@
+{
+  "weeks": [
+    {
+      "weekStart": "2026-06-15",
+      "received": 0,
+      "spent": 0,
+      "groundLabour": 0,
+      "profit": 0,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 0
+    },
+    {
+      "weekStart": "2026-06-22",
+      "received": 0,
+      "spent": 0,
+      "groundLabour": 0,
+      "profit": 0,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 0
+    },
+    {
+      "weekStart": "2026-06-29",
+      "received": 0,
+      "spent": 0,
+      "groundLabour": 0,
+      "profit": 0,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 0
+    },
+    {
+      "weekStart": "2026-07-06",
+      "received": 0,
+      "spent": 0,
+      "groundLabour": 0,
+      "profit": 0,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 0
+    },
+    {
+      "weekStart": "2026-07-13",
+      "received": 0,
+      "spent": 0,
+      "groundLabour": 0,
+      "profit": 0,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 0
+    },
+    {
+      "weekStart": "2026-07-20",
+      "received": 0,
+      "spent": 0,
+      "groundLabour": 0,
+      "profit": 0,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 0
+    },
+    {
+      "weekStart": "2026-07-27",
+      "received": 0,
+      "spent": 0,
+      "groundLabour": 0,
+      "profit": 0,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 0
+    },
+    {
+      "weekStart": "2026-08-03",
+      "received": 0,
+      "spent": 0,
+      "groundLabour": 0,
+      "profit": 0,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 0
+    },
+    {
+      "weekStart": "2026-08-10",
+      "received": 0,
+      "spent": 0,
+      "groundLabour": 0,
+      "profit": 0,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 0
+    },
+    {
+      "weekStart": "2026-08-17",
+      "received": 0,
+      "spent": 0,
+      "groundLabour": 0,
+      "profit": 0,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 0
+    },
+    {
+      "weekStart": "2026-08-24",
+      "received": 0,
+      "spent": 0,
+      "groundLabour": 0,
+      "profit": 0,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 0
+    },
+    {
+      "weekStart": "2026-08-31",
+      "received": 5000,
+      "spent": 650,
+      "groundLabour": 650,
+      "profit": 4350,
+      "receivedInWeek": 5000,
+      "groundLabourInWeek": 650
+    },
+    {
+      "weekStart": "2026-09-07",
+      "received": 5000,
+      "spent": 1450,
+      "groundLabour": 1450,
+      "profit": 3550,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 800
+    },
+    {
+      "weekStart": "2026-09-14",
+      "received": 5000,
+      "spent": 2225,
+      "groundLabour": 2225,
+      "profit": 2775,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 775
+    },
+    {
+      "weekStart": "2026-09-21",
+      "received": 5000,
+      "spent": 3125,
+      "groundLabour": 3125,
+      "profit": 1875,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 900
+    },
+    {
+      "weekStart": "2026-09-28",
+      "received": 5000,
+      "spent": 9851,
+      "groundLabour": 3125,
+      "profit": -4851,
+      "receivedInWeek": 0,
+      "groundLabourInWeek": 0
+    }
+  ],
+  "projection": {
+    "state": "losing",
+    "workers": 6,
+    "dailyPay": 25,
+    "dailyCost": 150,
+    "cashProfit": -4851,
+    "expectedProfit": 6220.2,
+    "zeroOn": null,
+    "workingDays": null,
+    "zeroOnOncePaid": null,
+    "workingDaysOncePaid": null
+  },
+  "currency": "USD"
+}

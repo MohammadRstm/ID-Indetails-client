@@ -1,0 +1,161 @@
+{
+  "items": [
+    {
+      "id": 4,
+      "name": "Paint",
+      "quantity": 30,
+      "unit": "gallon",
+      "unitCost": 28,
+      "cost": 840,
+      "currency": "USD",
+      "supplier": "Sipes",
+      "note": null,
+      "addedAt": "2026-09-30T04:52:52.845Z",
+      "addedOn": "2026-09-30",
+      "addedBy": {
+        "id": 11,
+        "name": "Tarek Salem"
+      },
+      "updatedAt": null,
+      "isStated": true,
+      "canEdit": true,
+      "clientPrice": 966,
+      "priceSource": "stated",
+      "markup": 0.15
+    },
+    {
+      "id": 3,
+      "name": "Porcelain tiles",
+      "quantity": 180,
+      "unit": "m²",
+      "unitCost": 22,
+      "cost": 3960,
+      "currency": "USD",
+      "supplier": "Tile House",
+      "note": null,
+      "addedAt": "2026-09-30T04:52:52.845Z",
+      "addedOn": "2026-09-30",
+      "addedBy": {
+        "id": 11,
+        "name": "Tarek Salem"
+      },
+      "updatedAt": null,
+      "isStated": true,
+      "canEdit": true,
+      "clientPrice": 4554,
+      "priceSource": "stated",
+      "markup": 0.15
+    },
+    {
+      "id": 2,
+      "name": "Rebar 12mm",
+      "quantity": 1.2,
+      "unit": "ton",
+      "unitCost": 780,
+      "cost": 936,
+      "currency": "USD",
+      "supplier": "Steel Co",
+      "note": null,
+      "addedAt": "2026-09-30T04:52:52.845Z",
+      "addedOn": "2026-09-30",
+      "addedBy": {
+        "id": 11,
+        "name": "Tarek Salem"
+      },
+      "updatedAt": null,
+      "isStated": true,
+      "canEdit": true,
+      "clientPrice": 1076.4,
+      "priceSource": "stated",
+      "markup": 0.15
+    },
+    {
+      "id": 1,
+      "name": "Cement",
+      "quantity": 40,
+      "unit": "bag",
+      "unitCost": 7.5,
+      "cost": 300,
+      "currency": "USD",
+      "supplier": "Holcim",
+      "note": null,
+      "addedAt": "2026-09-30T04:52:52.81Z",
+      "addedOn": "2026-09-30",
+      "addedBy": {
+        "id": 11,
+        "name": "Tarek Salem"
+      },
+      "updatedAt": null,
+      "isStated": true,
+      "canEdit": true,
+      "clientPrice": 345,
+      "priceSource": "stated",
+      "markup": 0.15
+    }
+  ],
+  "page": 1,
+  "pageSize": 30,
+  "totalCount": 4,
+  "matching": {
+    "count": 4,
+    "cost": 6036,
+    "charge": 6941.4
+  },
+  "all": {
+    "count": 4,
+    "cost": 6036,
+    "charge": 6941.4
+  },
+  "types": [
+    {
+      "key": "cement",
+      "label": "Cement",
+      "count": 1,
+      "cost": 300
+    },
+    {
+      "key": "paint",
+      "label": "Paint",
+      "count": 1,
+      "cost": 840
+    },
+    {
+      "key": "porcelain tiles",
+      "label": "Porcelain tiles",
+      "count": 1,
+      "cost": 3960
+    },
+    {
+      "key": "rebar 12mm",
+      "label": "Rebar 12mm",
+      "count": 1,
+      "cost": 936
+    }
+  ],
+  "suppliers": [
+    {
+      "key": "holcim",
+      "label": "Holcim"
+    },
+    {
+      "key": "sipes",
+      "label": "Sipes"
+    },
+    {
+      "key": "steel co",
+      "label": "Steel Co"
+    },
+    {
+      "key": "tile house",
+      "label": "Tile House"
+    }
+  ],
+  "addedBy": [
+    {
+      "id": 11,
+      "name": "Tarek Salem"
+    }
+  ],
+  "canAdd": true,
+  "defaultMarkup": 0.15
+}

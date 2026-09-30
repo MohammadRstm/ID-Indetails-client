@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "id": 5,
+      "domain": "execution",
+      "project": {
+        "id": 7,
+        "title": "Achrafieh Towers lobby"
+      },
+      "client": {
+        "id": 6,
+        "displayName": "Achrafieh Towers SAL"
+      },
+      "number": "EX-2026-001",
+      "status": "sent",
+      "isOverdue": false,
+      "currency": "USD",
+      "total": 6500,
+      "paid": 0,
+      "balance": 6500,
+      "issuedAt": "2026-09-21T12:00:00Z",
+      "dueOn": "2026-10-21",
+      "createdAt": "2026-09-30T04:52:54.655Z"
+    }
+  ],
+  "page": 1,
+  "pageSize": 100,
+  "totalCount": 1
+}

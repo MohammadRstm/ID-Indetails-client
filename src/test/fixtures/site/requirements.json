@@ -1,0 +1,62 @@
+{
+  "items": [
+    {
+      "id": 26,
+      "text": "Electrical first fix inspection",
+      "deadline": "2026-09-29",
+      "isOverdue": true,
+      "isDone": false,
+      "doneAt": null,
+      "doneBy": null,
+      "autoDone": false,
+      "assignees": [
+        {
+          "id": 12,
+          "name": "Joe Hanna"
+        }
+      ],
+      "createdAt": "2026-09-30T04:52:51.868Z"
+    },
+    {
+      "id": 27,
+      "text": "Snag list walk-through",
+      "deadline": "2026-10-08",
+      "isOverdue": false,
+      "isDone": false,
+      "doneAt": null,
+      "doneBy": null,
+      "autoDone": false,
+      "assignees": [
+        {
+          "id": 14,
+          "name": "Walid Chami"
+        }
+      ],
+      "createdAt": "2026-09-30T04:52:51.919Z"
+    },
+    {
+      "id": 25,
+      "text": "Order the lobby stone",
+      "deadline": "2026-09-20",
+      "isOverdue": false,
+      "isDone": true,
+      "doneAt": "2026-09-30T04:52:51.823Z",
+      "doneBy": {
+        "id": 10,
+        "name": "Karim Jaber"
+      },
+      "autoDone": false,
+      "assignees": [
+        {
+          "id": 11,
+          "name": "Tarek Salem"
+        }
+      ],
+      "createdAt": "2026-09-30T04:52:51.778Z"
+    }
+  ],
+  "total": 3,
+  "done": 1,
+  "overdue": 1,
+  "progressPct": 33
+}

@@ -1,0 +1,31 @@
+{
+  "weekStart": "2026-09-28",
+  "isReported": false,
+  "days": [
+    {
+      "date": "2026-09-28",
+      "workers": 6,
+      "dailyPay": 25,
+      "cost": 150
+    },
+    {
+      "date": "2026-09-29",
+      "workers": 6,
+      "dailyPay": 25,
+      "cost": 150
+    },
+    {
+      "date": "2026-09-30",
+      "workers": 6,
+      "dailyPay": 25,
+      "cost": 150
+    }
+  ],
+  "total": 450,
+  "currency": "USD",
+  "note": null,
+  "submittedBy": null,
+  "submittedAt": null,
+  "updatedAt": null,
+  "canEdit": true
+}
