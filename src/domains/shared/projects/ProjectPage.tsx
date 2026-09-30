@@ -30,7 +30,10 @@ import BillingModalHost from "../billing/BillingModalHost";
 import { useBillingLinks } from "../billing/billingLinks";
 import PaymentModal from "../../design/projects/money/PaymentModal";
 import ReportModal from "../../design/projects/report/ReportModal";
+import { useMaterials } from "../../execution/materials/materialsApi";
 import PricingModal from "../../execution/projects/PricingModal";
+import StatementHost from "../../execution/statements/StatementHost";
+import { useStatementLinks } from "../../execution/statements/statementLinks";
 import CompleteProjectModal from "./CompleteProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
@@ -110,7 +113,10 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const canNewInvoice = client && permissions.has(P.INVOICE_CREATE) && (bill?.notYetInvoiced ?? 0) - (bill?.drafts ?? 0) > 0.5;
     // an Execution site takes payments on account, without an invoice
     const canRecordPayment = client && permissions.has(P.PAYMENT_RECORD) && (site || (bill?.invoiced ?? 0) > 0 || (bill?.drafts ?? 0) > 0);
-    const moneyItems = canAddExpense || canEditPayment || canEditPricing || canNewInvoice || canRecordPayment;
+    const materialCount = useMaterials(project.id, {}, site && client && permissions.has(P.STATEMENT_CREATE)).data?.all.count ?? 0;
+    const canStatement = site && client && permissions.has(P.STATEMENT_CREATE) && materialCount > 0;
+    const statements = useStatementLinks();
+    const moneyItems = canAddExpense || canEditPayment || canEditPricing || canStatement || canNewInvoice || canRecordPayment;
 
     function switchTab(k: TabKey) {
         if (k === "overview") params.delete("tab");
@@ -214,6 +220,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                         </button>
                                     )}
                                     {canEditPricing && <button className="pop-item" onClick={() => { close(); openMoney("pricing"); }}><Icon name="card" />Fee & material profit</button>}
+                                    {canStatement && <button className="pop-item" onClick={() => { close(); statements.newStatement(); }}><Icon name="file" />Client statement</button>}
                                     {canNewInvoice && <button className="pop-item" onClick={() => { close(); billing.newInvoice(); }}><Icon name="file" />New invoice</button>}
                                     {canRecordPayment && <button className="pop-item" onClick={() => { close(); billing.recordPayment(); }}><Icon name="card" />Record a client payment</button>}
                                 </div>
@@ -266,6 +273,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {moneyAction === "pricing" && canEditPricing && <PricingModal project={project} onClose={closeMoney} />}
             {moneyAction === "expense" && canAddExpense && <ExpenseModal project={project} onClose={closeMoney} />}
             <BillingModalHost project={project} />
+            {site && <StatementHost project={project} />}
             {showReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}
         </div>
     );

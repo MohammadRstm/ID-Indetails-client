@@ -1,0 +1,66 @@
+{
+  "id": null,
+  "number": "ST-2026-002",
+  "isPreview": true,
+  "projectId": 8,
+  "projectTitle": "Mar Mikhael loft renovation",
+  "client": {
+    "id": 7,
+    "displayName": "Mar Mikhael Lofts"
+  },
+  "mode": "detail",
+  "includesEarlier": false,
+  "since": null,
+  "createdAt": "2026-09-30T10:30:01.8885769Z",
+  "date": "2026-09-30",
+  "createdBy": null,
+  "types": [
+    {
+      "key": "paint",
+      "label": "Paint",
+      "quantity": "30 gallon",
+      "deliveries": 1,
+      "earlier": 0,
+      "new": 1008,
+      "total": 1008
+    },
+    {
+      "key": "plasterboard",
+      "label": "Plasterboard",
+      "quantity": "90 sheet",
+      "deliveries": 1,
+      "earlier": 0,
+      "new": 1188,
+      "total": 1188
+    },
+    {
+      "key": "porcelain tiles",
+      "label": "Porcelain tiles",
+      "quantity": "180 m²",
+      "deliveries": 1,
+      "earlier": 0,
+      "new": 4752,
+      "total": 4752
+    },
+    {
+      "key": "rebar 12mm",
+      "label": "Rebar 12mm",
+      "quantity": "1.2 ton",
+      "deliveries": 1,
+      "earlier": 0,
+      "new": 1123.2,
+      "total": 1123.2
+    }
+  ],
+  "hiddenTypes": null,
+  "earlierTotal": 0,
+  "newTotal": 8071.2,
+  "total": 8071.2,
+  "count": 4,
+  "currency": "USD",
+  "received": 5000,
+  "agreed": 16071.2,
+  "remaining": 11071.2,
+  "paidAhead": 0,
+  "deliveries": []
+}

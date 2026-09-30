@@ -25,7 +25,8 @@ const moneyPanel = async () => (await screen.findByText("Project money")).closes
 describe("an Execution site's overview", () => {
     it("shows its progress, materials and labour, and what the client paid against what it cost", async () => {
         renderApp(path, karim, ...siteHandlers);
-        const kpis = (await screen.findByText("4 weeks reported")).closest(".kpis") as HTMLElement;
+        const kpis = (await screen.findByText("Ground labour", { selector: ".kpi-label" })).closest(".kpis") as HTMLElement;
+        expect(await within(kpis).findByText("4 weeks reported")).toBeInTheDocument();
         expect(within(kpis).getByText("1 / 3")).toBeInTheDocument();
         expect(within(kpis).getByText(money.short(site.materials.all.cost))).toBeInTheDocument();
         expect(within(kpis).getByText("4 records")).toBeInTheDocument();
@@ -59,7 +60,7 @@ describe("an Execution site's overview", () => {
             http.get("/api/projects/:id/site-money/timeline", () => { asked.push("timeline"); return HttpResponse.json(site.timeline); }),
             http.get("/api/payments", () => { asked.push("payments"); return HttpResponse.json(site.payments); }),
             ...siteHandlers);
-        expect(await screen.findByText("4 weeks reported")).toBeInTheDocument();
+        expect(await screen.findByText("4 weeks reported", { selector: ".kpi-delta span" })).toBeInTheDocument();
         expect(screen.queryByText("Client owes")).not.toBeInTheDocument();
         expect(screen.queryByText("Project money")).not.toBeInTheDocument();
         expect(screen.queryByText("Client payments")).not.toBeInTheDocument();
