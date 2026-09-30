@@ -149,6 +149,13 @@ export function fmtMinutes(minutes: number): string {
     return clockTime(Math.floor(m / 60), m % 60);
 }
 
+/** "9 AM" (or "09:00"): an hour on a timeline's scale. */
+export function fmtHourLabel(minutes: number): string {
+    const hour = Math.floor(minutes / 60) % 24;
+    if (settings.use24HourTime) return `${pad(hour)}:00`;
+    return `${hour % 12 === 0 ? 12 : hour % 12} ${hour < 12 ? "AM" : "PM"}`;
+}
+
 function clockTime(hour: number, minute: number): string {
     if (settings.use24HourTime) return `${pad(hour)}:${pad(minute)}`;
     const ap = hour >= 12 ? "PM" : "AM";

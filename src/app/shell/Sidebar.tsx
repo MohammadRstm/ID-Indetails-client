@@ -9,6 +9,7 @@ import Avatar from "@/shared/components/Identity/Avatar";
 import Logo from "@/shared/components/Identity/Logo";
 import Popover from "@/shared/components/Overlays/Popover";
 import Icon from "@/shared/icons/Icon";
+import { openLogWork } from "@/domains/design/work/logWorkStore";
 import { cx } from "@/shared/utils/cx";
 import { useCompanySettings, useNavCounts } from "./shellQueries";
 import type { ShellArea } from "./useArea";
@@ -29,7 +30,7 @@ export default function Sidebar({ area }: { area: ShellArea }) {
     const me = { name: fullName(user), photoFileId: user.photoFileId, online: true };
     const label = accessLabel(permissions, user.position);
 
-    // Log work opens with the timer and the log form in phase 4; until then it goes to My work.
+    // Design employees log work from anywhere
     const canLog = domain === "design" && !permissions.isAdmin && permissions.has(P.WORK_ENTRY_CREATE);
     const peopleItem = items.find((item) => item.key === "people");
     const profileItem = items.find((item) => item.key === "profile");
@@ -63,7 +64,7 @@ export default function Sidebar({ area }: { area: ShellArea }) {
 
             {canLog && (
                 <div className="side-cta">
-                    <button className="btn btn-primary btn-block" onClick={() => navigate(`/${domain}/my-work?log=1`)}>
+                    <button className="btn btn-primary btn-block" onClick={() => openLogWork()}>
                         <Icon name="plus" />
                         <span className="side-cta-label">Log work</span>
                     </button>

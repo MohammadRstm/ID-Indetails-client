@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { cx } from "@/shared/utils/cx";
+import { LogWorkHost } from "@/domains/design/work/LogWork";
 import CommandPalette from "./CommandPalette";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
@@ -43,6 +44,7 @@ export default function AppShell() {
                 <Outlet />
             </div>
             {palette && <CommandPalette area={area} onClose={() => setPalette(false)} />}
+            <LogWorkHost />
         </div>
     );
 }

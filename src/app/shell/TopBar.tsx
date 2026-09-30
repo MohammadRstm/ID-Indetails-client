@@ -6,6 +6,7 @@ import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
 import ThemeToggle from "@/shared/components/Buttons/ThemeToggle";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Popover from "@/shared/components/Overlays/Popover";
+import TimerControl from "@/domains/design/work/TimerControl";
 import Icon from "@/shared/icons/Icon";
 import { useUnreadBadges } from "./shellQueries";
 import type { ShellArea } from "./useArea";
@@ -32,6 +33,9 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
             </button>
 
             <div className="top-actions">
+                {/* Design employees log work; the timer is one way to do it */}
+                {area.kind === "domain" && area.domain === "design" && !permissions.isAdmin && permissions.has(P.WORK_ENTRY_CREATE) && <TimerControl />}
+
                 {area.kind === "domain" && permissions.isAdmin && permissions.has(P.PROJECT_CREATE) && (
                     <button className="btn btn-sm" onClick={() => navigate(`/${area.domain}/projects?new=1`)}>
                         <Icon name="plus" />New project
