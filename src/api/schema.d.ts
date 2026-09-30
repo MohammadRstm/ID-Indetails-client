@@ -7834,6 +7834,8 @@ export interface components {
         };
         BrandingResponse: {
             hasLogo: boolean;
+            /** Format: int64 */
+            logoFileId: null | number;
             name: null | string;
         };
         CashWeekResponse: {
@@ -8300,6 +8302,8 @@ export interface components {
             /** Format: int64 */
             id: number;
             isJoker: boolean;
+            /** Format: date */
+            joinedOn: null | string;
             lastName: string;
             mustChangePassword: boolean;
             permissions: string[];

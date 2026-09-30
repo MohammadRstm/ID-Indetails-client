@@ -1,0 +1,36 @@
+[
+  {
+    "id": 10,
+    "email": "karim@id-indetails.test",
+    "firstName": "Karim",
+    "lastName": "Jaber",
+    "role": "admin",
+    "domain": "execution",
+    "team": null,
+    "position": "Operations manager",
+    "photoFileId": null,
+    "status": "active",
+    "isJoker": false,
+    "joinedOn": "2023-09-15",
+    "leftOn": null,
+    "lastSeenAt": "2026-09-30T11:32:16.835Z",
+    "online": false
+  },
+  {
+    "id": 2,
+    "email": "nadia@id-indetails.test",
+    "firstName": "Nadia",
+    "lastName": "Karam",
+    "role": "admin",
+    "domain": "design",
+    "team": null,
+    "position": "Design director",
+    "photoFileId": null,
+    "status": "active",
+    "isJoker": false,
+    "joinedOn": "2025-01-15",
+    "leftOn": null,
+    "lastSeenAt": "2026-09-30T09:39:42.276Z",
+    "online": false
+  }
+]

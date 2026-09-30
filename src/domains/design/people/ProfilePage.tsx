@@ -35,10 +35,11 @@ import EntryRow from "../work/EntryRow";
 import OvertimePanel from "../work/OvertimePanel";
 import type { WorkEntry } from "../work/workApi";
 import SiteWork from "../../execution/staff/SiteWork";
+import PermissionsModal from "../../shared/settings/PermissionsModal";
 import EditProfileModal, { type ProfilePerson } from "./EditProfileModal";
 import { useEmployee, useLabourCost, usePayHistory, usePersonEntries, usePersonHours, usePersonWorkSummary } from "./peopleWorkApi";
 
-type Extra = { online?: boolean; lastSeenAt?: string | null; joinedOn?: string | null; status?: string };
+type Extra = { online?: boolean; lastSeenAt?: string | null; joinedOn?: string | null; status?: string; role?: string; isJoker?: boolean };
 
 /** Someone's profile, for admins (the prototype's P.Profile). */
 export function PersonProfilePage() {
@@ -53,7 +54,7 @@ export function PersonProfilePage() {
     if (!e) return <ProfileSkeleton />;
     return (
         <Profile self={false} person={{ id: e.id, firstName: e.firstName, lastName: e.lastName, email: e.email, phone: e.phone, photoFileId: e.photoFileId, position: e.position, team: e.team, domain: e.domain }}
-            extra={{ online: e.online, lastSeenAt: e.lastSeenAt, joinedOn: e.joinedOn, status: e.status }} />
+            extra={{ online: e.online, lastSeenAt: e.lastSeenAt, joinedOn: e.joinedOn, status: e.status, role: e.role, isJoker: e.isJoker }} />
     );
 }
 
@@ -62,7 +63,7 @@ export function MyProfilePage() {
     const me = useCurrentUser();
     return (
         <Profile self person={{ id: me.id, firstName: me.firstName, lastName: me.lastName, email: me.email, phone: me.phone, photoFileId: me.photoFileId, position: me.position, team: me.team, domain: me.domain }}
-            extra={{ online: true }} />
+            extra={{ online: true, joinedOn: me.joinedOn }} />
     );
 }
 
@@ -84,6 +85,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
     const domain = useDomain();
     const [params, setParams] = useSearchParams();
     const [editing, setEditing] = useState(false);
+    const [permissionsOpen, setPermissionsOpen] = useState(false);
     const name = fullNameOf(person);
     const first = name.split(" ")[0];
     const execution = person.domain === "execution";
@@ -122,6 +124,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                             {person.phone && <span className="row" style={{ gap: 6 }}><Icon name="phone" style={{ width: 14, height: 14 }} />{person.phone}</span>}
                             {extra.joinedOn && <span className="row" style={{ gap: 6 }}><Icon name="calendar" style={{ width: 14, height: 14 }} />Joined {fmtDateY(extra.joinedOn)}</span>}
                             {extra.status === "invited" && <StatusBadge status="invited" />}
+                            {extra.isJoker && <span className="badge" title="Holds a different set of permissions from the role's">Custom access</span>}
                         </div>
                     </div>
                 </div>
@@ -132,6 +135,9 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                         <div className="row" style={{ gap: 8 }}>
                             <button className="btn" onClick={() => navigate(`/${domain}/messages?to=${person.id}`)}><Icon name="chat" />Send message</button>
                             {permissions.hasAny(P.EMPLOYEE_MANAGE, P.EMPLOYEE_PAY_MANAGE) && <button className="btn" onClick={() => setEditing(true)}><Icon name="edit" />Edit profile</button>}
+                            {permissions.has(P.PERMISSION_MANAGE) && extra.role !== "super_admin" && extra.status !== "deactivated" && (
+                                <button className="btn" onClick={() => setPermissionsOpen(true)}><Icon name="shield" />Permissions</button>
+                            )}
                             {!execution && permissions.has(P.WORK_ENTRY_VIEW_ALL) && <button className="btn" onClick={exportTimesheet}><Icon name="download" />Export timesheet</button>}
                         </div>
                     )}
@@ -145,6 +151,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
             ) : null}
 
             {editing && <EditProfileModal person={person} self={self} onClose={() => setEditing(false)} />}
+            {permissionsOpen && <PermissionsModal person={{ id: person.id, name, domain: person.domain }} onClose={() => setPermissionsOpen(false)} />}
         </div>
     );
 }

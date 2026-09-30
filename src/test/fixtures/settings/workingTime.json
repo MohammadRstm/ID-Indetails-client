@@ -1,0 +1,38 @@
+{
+  "current": {
+    "id": 1,
+    "effectiveFrom": "2000-01-01",
+    "workDays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "startMinute": 540,
+    "endMinute": 1020,
+    "breakMinutes": 60,
+    "overtimeMultiplier": 1,
+    "requiredMinutesPerDay": 420,
+    "requiredMinutesPerWeek": 2100
+  },
+  "policies": [
+    {
+      "id": 1,
+      "effectiveFrom": "2000-01-01",
+      "workDays": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "startMinute": 540,
+      "endMinute": 1020,
+      "breakMinutes": 60,
+      "overtimeMultiplier": 1,
+      "requiredMinutesPerDay": 420,
+      "requiredMinutesPerWeek": 2100
+    }
+  ]
+}

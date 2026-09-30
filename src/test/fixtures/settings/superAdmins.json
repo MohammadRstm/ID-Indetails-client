@@ -1,0 +1,19 @@
+[
+  {
+    "id": 1,
+    "email": "rana@id-indetails.test",
+    "firstName": "Rana",
+    "lastName": "Khoury",
+    "role": "super_admin",
+    "domain": null,
+    "team": null,
+    "position": "Managing director",
+    "photoFileId": null,
+    "status": "active",
+    "isJoker": false,
+    "joinedOn": "2023-03-01",
+    "leftOn": null,
+    "lastSeenAt": "2026-09-30T11:36:21.811Z",
+    "online": false
+  }
+]

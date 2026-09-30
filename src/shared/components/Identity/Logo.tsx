@@ -7,7 +7,8 @@ export default function Logo({ size = 27 }: { size?: number }) {
         return (
             <img
                 className="logo-mark"
-                src="/api/company/logo"
+                // the file changes with every new logo, so a cached old one is never shown
+                src={`/api/company/logo?v=${branding.data.logoFileId ?? ""}`}
                 width={size}
                 height={size}
                 alt=""

@@ -11,6 +11,7 @@ import { EmployeeProjectRoute, EmployeeProjectsRoute } from "@/domains/shared/pr
 import ProjectRoute from "@/domains/shared/projects/ProjectRoute";
 import ProjectsPage from "@/domains/shared/projects/ProjectsPage";
 import MyWorkRoute from "@/domains/shared/requirements/MyWorkRoute";
+import SettingsPage from "@/domains/shared/settings/SettingsPage";
 import MyPayPage from "@/domains/design/pay/MyPayPage";
 import ActivityPage from "@/domains/design/activity/ActivityPage";
 import OverviewRoute from "@/domains/design/dashboard/OverviewPage";
@@ -159,7 +160,7 @@ export const domainRoutes: DomainRoute[] = [
     {
         path: "settings",
         nav: { label: "Settings", icon: "settings", section: "workspace" },
-        admin: { element: soon("Settings"), access: any(...SETTINGS_CODES) },
+        admin: { element: <SettingsPage />, access: any(...SETTINGS_CODES) },
     },
     {
         path: "notifications",
