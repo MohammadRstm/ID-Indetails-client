@@ -1,0 +1,98 @@
+{
+  "projects": [
+    {
+      "projectId": 9,
+      "title": "Dbayeh marina villa",
+      "clientName": "Samir Ghosn",
+      "status": "active",
+      "billingType": "client",
+      "revenue": 27112,
+      "recognisedToDate": 8946.96,
+      "hours": 0,
+      "cost": {
+        "labour": 0,
+        "expenses": 0,
+        "materials": 6350,
+        "groundLabour": 3225,
+        "total": 9575,
+        "unconverted": [],
+        "unpricedLabourMinutes": 0
+      },
+      "profit": 17537,
+      "margin": 0.6468,
+      "marginKnown": true,
+      "projected": {
+        "cost": 29015.15,
+        "profit": -1903.15,
+        "margin": -0.0702
+      },
+      "costPerHour": 0
+    },
+    {
+      "projectId": 7,
+      "title": "Achrafieh Towers lobby",
+      "clientName": "Achrafieh Towers SAL",
+      "status": "active",
+      "billingType": "client",
+      "revenue": 18941.4,
+      "recognisedToDate": 6250.66,
+      "hours": 0,
+      "cost": {
+        "labour": 0,
+        "expenses": 0,
+        "materials": 6036,
+        "groundLabour": 3000,
+        "total": 9036,
+        "unconverted": [],
+        "unpricedLabourMinutes": 0
+      },
+      "profit": 9905.4,
+      "margin": 0.5229,
+      "marginKnown": true,
+      "projected": {
+        "cost": 27381.82,
+        "profit": -8440.42,
+        "margin": -0.4456
+      },
+      "costPerHour": 0
+    },
+    {
+      "projectId": 8,
+      "title": "Mar Mikhael loft renovation",
+      "clientName": "Mar Mikhael Lofts",
+      "status": "active",
+      "billingType": "client",
+      "revenue": 16071.2,
+      "recognisedToDate": 5303.5,
+      "hours": 0,
+      "cost": {
+        "labour": 0,
+        "expenses": 0,
+        "materials": 6726,
+        "groundLabour": 3125,
+        "total": 9851,
+        "unconverted": [],
+        "unpricedLabourMinutes": 0
+      },
+      "profit": 6220.2,
+      "margin": 0.387,
+      "marginKnown": true,
+      "projected": {
+        "cost": 29851.52,
+        "profit": -13780.32,
+        "margin": -0.8575
+      },
+      "costPerHour": 0
+    }
+  ],
+  "totals": {
+    "clientProjects": 3,
+    "internalProjects": 0,
+    "clientRevenue": 62124.6,
+    "clientCost": 28462,
+    "clientProfit": 33662.6,
+    "internalCost": 0,
+    "cost": 28462,
+    "unconverted": []
+  }
+}

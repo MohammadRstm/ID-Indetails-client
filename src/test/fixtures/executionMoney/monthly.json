@@ -1,0 +1,68 @@
+[
+  {
+    "month": "2026-04-01",
+    "revenue": 0,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 0,
+    "profit": 0,
+    "unconverted": []
+  },
+  {
+    "month": "2026-05-01",
+    "revenue": 0,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 0,
+    "profit": 0,
+    "unconverted": []
+  },
+  {
+    "month": "2026-06-01",
+    "revenue": 0,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 0,
+    "profit": 0,
+    "unconverted": []
+  },
+  {
+    "month": "2026-07-01",
+    "revenue": 0,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 0,
+    "profit": 0,
+    "unconverted": []
+  },
+  {
+    "month": "2026-08-01",
+    "revenue": 0,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 0,
+    "profit": 0,
+    "unconverted": []
+  },
+  {
+    "month": "2026-09-01",
+    "revenue": 20501.12,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 19112,
+    "groundLabour": 9350,
+    "cost": 28462,
+    "profit": -7960.88,
+    "unconverted": []
+  }
+]

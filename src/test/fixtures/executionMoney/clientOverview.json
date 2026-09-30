@@ -1,0 +1,95 @@
+{
+  "clients": 3,
+  "archived": 0,
+  "withActiveWork": 3,
+  "withoutProjects": 0,
+  "addedThisMonth": 3,
+  "newest": {
+    "id": 8,
+    "name": "Samir Ghosn",
+    "addedAt": "2026-09-30T04:52:27.085Z"
+  },
+  "growth": [
+    {
+      "month": "2025-09-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2025-10-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2025-11-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2025-12-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-01-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-02-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-03-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-04-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-05-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-06-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-07-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-08-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-09-01",
+      "total": 3,
+      "added": [
+        {
+          "id": 6,
+          "name": "Fadi Saliba",
+          "addedAt": "2026-09-30T04:52:26.978Z"
+        },
+        {
+          "id": 7,
+          "name": "Joanna Karam",
+          "addedAt": "2026-09-30T04:52:27.029Z"
+        },
+        {
+          "id": 8,
+          "name": "Samir Ghosn",
+          "addedAt": "2026-09-30T04:52:27.085Z"
+        }
+      ]
+    }
+  ]
+}

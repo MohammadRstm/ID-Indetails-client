@@ -1,0 +1,31 @@
+{
+  "domain": "execution",
+  "activeProjects": 3,
+  "clients": 3,
+  "projectsByStatus": [
+    {
+      "status": "active",
+      "count": 3
+    }
+  ],
+  "longestRunning": [
+    {
+      "projectId": 9,
+      "title": "Dbayeh marina villa",
+      "startDate": "2026-06-09",
+      "days": 113
+    },
+    {
+      "projectId": 8,
+      "title": "Mar Mikhael loft renovation",
+      "startDate": "2026-06-18",
+      "days": 104
+    },
+    {
+      "projectId": 7,
+      "title": "Achrafieh Towers lobby",
+      "startDate": "2026-06-27",
+      "days": 95
+    }
+  ]
+}

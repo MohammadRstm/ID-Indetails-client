@@ -1,0 +1,15 @@
+{
+  "from": "2026-01-01",
+  "to": "2026-09-30",
+  "bySource": {
+    "labour": 0,
+    "expenses": 0,
+    "materials": 19112,
+    "groundLabour": 9350,
+    "total": 28462
+  },
+  "labourByPerson": [],
+  "expensesByCategory": [],
+  "biggestExpenses": [],
+  "unconverted": []
+}

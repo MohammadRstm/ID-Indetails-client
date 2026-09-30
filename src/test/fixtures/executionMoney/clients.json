@@ -1,0 +1,116 @@
+[
+  {
+    "clientId": 8,
+    "name": "Samir Ghosn",
+    "label": "Residential",
+    "isArchived": false,
+    "money": {
+      "projects": 1,
+      "activeProjects": 1,
+      "completedProjects": 0,
+      "hours": 0,
+      "revenue": 27112,
+      "recognisedToDate": 8946.96,
+      "cost": {
+        "labour": 0,
+        "expenses": 0,
+        "materials": 6350,
+        "groundLabour": 3225,
+        "total": 9575,
+        "unconverted": [],
+        "unpricedLabourMinutes": 0
+      },
+      "profit": 17537,
+      "margin": 0.6468,
+      "marginKnown": true,
+      "activeRevenue": 27112,
+      "completedRevenue": 0,
+      "completedMargin": null,
+      "billing": {
+        "invoiced": 0,
+        "received": 15000,
+        "outstanding": 0,
+        "overdue": 0,
+        "notYetInvoiced": 27112,
+        "drafts": 0
+      },
+      "unconvertedInvoices": []
+    }
+  },
+  {
+    "clientId": 6,
+    "name": "Achrafieh Towers SAL",
+    "label": "Commercial",
+    "isArchived": false,
+    "money": {
+      "projects": 1,
+      "activeProjects": 1,
+      "completedProjects": 0,
+      "hours": 0,
+      "revenue": 18941.4,
+      "recognisedToDate": 6250.66,
+      "cost": {
+        "labour": 0,
+        "expenses": 0,
+        "materials": 6036,
+        "groundLabour": 3000,
+        "total": 9036,
+        "unconverted": [],
+        "unpricedLabourMinutes": 0
+      },
+      "profit": 9905.4,
+      "margin": 0.5229,
+      "marginKnown": true,
+      "activeRevenue": 18941.4,
+      "completedRevenue": 0,
+      "completedMargin": null,
+      "billing": {
+        "invoiced": 6500,
+        "received": 10000,
+        "outstanding": 6500,
+        "overdue": 0,
+        "notYetInvoiced": 12441.4,
+        "drafts": 0
+      },
+      "unconvertedInvoices": []
+    }
+  },
+  {
+    "clientId": 7,
+    "name": "Mar Mikhael Lofts",
+    "label": "Residential",
+    "isArchived": false,
+    "money": {
+      "projects": 1,
+      "activeProjects": 1,
+      "completedProjects": 0,
+      "hours": 0,
+      "revenue": 16071.2,
+      "recognisedToDate": 5303.5,
+      "cost": {
+        "labour": 0,
+        "expenses": 0,
+        "materials": 6726,
+        "groundLabour": 3125,
+        "total": 9851,
+        "unconverted": [],
+        "unpricedLabourMinutes": 0
+      },
+      "profit": 6220.2,
+      "margin": 0.387,
+      "marginKnown": true,
+      "activeRevenue": 16071.2,
+      "completedRevenue": 0,
+      "completedMargin": null,
+      "billing": {
+        "invoiced": 0,
+        "received": 5000,
+        "outstanding": 0,
+        "overdue": 0,
+        "notYetInvoiced": 16071.2,
+        "drafts": 0
+      },
+      "unconvertedInvoices": []
+    }
+  }
+]

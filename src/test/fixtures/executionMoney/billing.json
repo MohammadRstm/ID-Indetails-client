@@ -1,0 +1,111 @@
+{
+  "position": {
+    "value": 62124.6,
+    "invoiced": 6500,
+    "issuedCount": 1,
+    "received": 30000,
+    "onAccount": 30000,
+    "outstanding": 6500,
+    "overdue": 0,
+    "overdueCount": 0,
+    "oldestOverdueDays": null,
+    "notYetInvoiced": 55624.6,
+    "drafts": 0,
+    "paymentCount": 3
+  },
+  "aging": [
+    {
+      "fromDays": 0,
+      "toDays": 0,
+      "amount": 6500,
+      "count": 1
+    },
+    {
+      "fromDays": 1,
+      "toDays": 30,
+      "amount": 0,
+      "count": 0
+    },
+    {
+      "fromDays": 31,
+      "toDays": 60,
+      "amount": 0,
+      "count": 0
+    },
+    {
+      "fromDays": 61,
+      "toDays": 90,
+      "amount": 0,
+      "count": 0
+    },
+    {
+      "fromDays": 91,
+      "toDays": null,
+      "amount": 0,
+      "count": 0
+    }
+  ],
+  "monthly": [
+    {
+      "month": "2026-04-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2026-05-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2026-06-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2026-07-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2026-08-01",
+      "invoiced": 0,
+      "collected": 0
+    },
+    {
+      "month": "2026-09-01",
+      "invoiced": 6500,
+      "collected": 30000
+    }
+  ],
+  "byClient": [
+    {
+      "clientId": 6,
+      "name": "Achrafieh Towers SAL",
+      "value": 18941.4,
+      "invoiced": 6500,
+      "received": 10000,
+      "outstanding": 6500,
+      "overdue": 0
+    }
+  ],
+  "byMethod": [
+    {
+      "method": "bank",
+      "amount": 30000
+    }
+  ],
+  "openInvoices": [
+    {
+      "id": 5,
+      "number": "EX-2026-001",
+      "projectId": 7,
+      "projectTitle": "Achrafieh Towers lobby",
+      "clientName": "Achrafieh Towers SAL",
+      "dueOn": "2026-10-21",
+      "balance": 6500,
+      "isOverdue": false,
+      "daysOverdue": 0
+    }
+  ],
+  "unconvertedInvoices": []
+}
