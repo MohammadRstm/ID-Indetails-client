@@ -19,6 +19,12 @@ import { useAddMaterials, useAllMaterials } from "./materialsApi";
 const r2 = (n: number) => Math.round(n * 100) / 100;
 /** Every row in use: ten more. */
 const grow = (list: Row[]) => (list.filter(rowUsed).length >= list.length ? list.concat(blankRows(BLOCK)) : list);
+/** The rows a saved batch took off the top, with blank rows to keep the sheet a block long. */
+function dropSaved(list: Row[], count: number) {
+    let left = count;
+    const next = list.filter((r) => !(left > 0 && rowUsed(r) && left--));
+    return next.length < BLOCK ? next.concat(blankRows(BLOCK - next.length)) : next;
+}
 
 /**
  * The Add materials sheet (the prototype's EX.MaterialSheet): rows typed like a spreadsheet, or pasted straight
@@ -29,12 +35,13 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
     const saved = useAllMaterials(project.id);
     const markup = saved.data?.defaultMarkup ?? project.money?.materialMarkup ?? 0;
     const permissions = usePermissions();
-    const add = useAddMaterials(project.id);
     const client = project.billingType === "client" && !!project.client;
     const canPrice = client && permissions.has(P.PROJECT_PRICING_MANAGE);
     const x = client && permissions.has(P.FINANCIAL_VIEW) && project.money ? siteMoneyOf(project.money) : null;
     const cols = canPrice ? COLS_PRICED : COLS;
     const [rows, setRows] = useState(() => blankRows(BLOCK));
+    // a saved batch leaves the sheet at once, so a failure further on never sends it twice
+    const add = useAddMaterials(project.id, (count) => setRows((current) => dropSaved(current, count)));
     const [tried, setTried] = useState(false);
 
     // the recorded materials, oldest first
@@ -44,6 +51,8 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
     const used = rows.filter(rowUsed);
     const problems = rows.map(rowProblems);
     const nBad = problems.filter(Boolean).length;
+    // the prototype's words are about a missing type or cost; anything else is explained on its red cell
+    const otherBad = problems.some((p) => p && Object.values(p).some((m) => m?.startsWith("At most")));
     const total = r2(used.reduce((t, r) => t + costOf(r), 0));
     // a new row's client price: its own once typed, otherwise its cost at the project's markup
     const autoPrice = (r: Row) => { const c = costOf(r); return c > 0 ? String(r2(c * (1 + markup))) : ""; };
@@ -93,7 +102,7 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
                     <div className="grow">
                         {used.length ? <><b className="mono" style={{ color: "var(--ink)" }}>{money.exact(total)}</b> · {used.length} new material{used.length === 1 ? "" : "s"}</> : "Nothing new typed yet"}
                         {N > 0 && <span className="muted"> · {used.length ? `${money.exact(recordedTotal + total)} for the project with them` : `${money.exact(recordedTotal)} recorded so far`}</span>}
-                        {tried && nBad > 0 && <span className="sh-warn"> · {nBad} row{nBad === 1 ? " needs" : "s need"} a type and a cost - quantity × unit cost, or a total</span>}
+                        {tried && nBad > 0 && <span className="sh-warn"> · {nBad} row{nBad === 1 ? " needs" : "s need"} {otherBad ? "fixing - point at a red cell to see why" : "a type and a cost - quantity × unit cost, or a total"}</span>}
                         {add.error && <span className="sh-warn"> · {errorMessage(add.error)}</span>}
                     </div>
                     <button className="btn" onClick={close}>Cancel</button>
