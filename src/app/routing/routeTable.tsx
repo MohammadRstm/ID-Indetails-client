@@ -7,6 +7,7 @@ import ComingSoon from "@/app/pages/ComingSoon";
 import ClientPage from "@/domains/shared/clients/ClientPage";
 import ClientsPage from "@/domains/shared/clients/ClientsPage";
 import { MeetingsPage } from "@/domains/shared/meetings/Meetings";
+import { EmployeeProjectRoute, EmployeeProjectsRoute } from "@/domains/shared/projects/EmployeeProjectRoutes";
 import ProjectRoute from "@/domains/shared/projects/ProjectRoute";
 import ProjectsPage from "@/domains/shared/projects/ProjectsPage";
 
@@ -79,13 +80,13 @@ export const domainRoutes: DomainRoute[] = [
         path: "projects",
         nav: { label: "Projects", icon: "projects", count: "projects" },
         admin: { element: <ProjectsPage />, access: all(P.PROJECT_VIEW) },
-        employee: { element: soon("Projects"), access: all(P.PROJECT_VIEW) },
+        employee: { element: <EmployeeProjectsRoute />, access: all(P.PROJECT_VIEW) },
     },
     {
         path: "projects/:id",
         navKey: "projects",
         admin: { element: <ProjectRoute />, access: all(P.PROJECT_VIEW) },
-        employee: { element: soon("Project"), access: all(P.PROJECT_VIEW) },
+        employee: { element: <EmployeeProjectRoute />, access: all(P.PROJECT_VIEW) },
     },
     {
         path: "clients",

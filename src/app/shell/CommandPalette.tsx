@@ -8,6 +8,7 @@ import { P } from "@/app/permissions/codes";
 import type { Domain, Permissions } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { canOpen, companyNav } from "@/app/routing/routeTable";
+import { openLogWork } from "@/domains/design/work/logWorkStore";
 import { ProjectTile } from "@/shared/components/Data/Bits";
 import { PROJECT_STATUS } from "@/shared/components/Data/status";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -22,8 +23,9 @@ import type { ShellArea } from "./useArea";
 
 type SearchResponse = Schemas["SearchResponse"];
 
-type Item = { key: string; kind: string; label: string; sub?: string | null; node: ReactNode; go: string };
-type Action = { label: string; icon: IconName; path: string; when?: boolean };
+type Item = { key: string; kind: string; label: string; sub?: string | null; node: ReactNode; go?: string; act?: () => void };
+/** A quick action: a page to open, or something to do (open Log work). */
+type Action = { label: string; icon: IconName; path?: string; act?: () => void; when?: boolean };
 
 const MAX = 12;
 
@@ -51,7 +53,8 @@ export default function CommandPalette({ area, onClose }: { area: ShellArea; onC
 
     function run(item: Item) {
         onClose();
-        navigate(item.go);
+        if (item.act) item.act();
+        else if (item.go) navigate(item.go);
     }
 
     return (
@@ -139,11 +142,11 @@ function actionItems(p: Permissions, area: ShellArea): Item[] {
             { label: "Settings", icon: "settings", path: "settings" },
         ]
         : [
-            { label: "Log work", icon: "plus", path: "my-work?log=1", when: d === "design" && p.has(P.WORK_ENTRY_CREATE) },
+            { label: "Log work", icon: "plus", act: () => openLogWork(), when: d === "design" && p.has(P.WORK_ENTRY_CREATE) },
             { label: "My work", icon: "clock", path: "my-work" },
             { label: "My profile", icon: "user", path: "profile" },
         ];
     return actions
-        .filter((a) => a.when !== false && canOpen(p, d, a.path))
-        .map((a) => ({ key: `a${a.path}`, kind: "Action", label: a.label, node: <Icon name={a.icon} />, go: `/${d}/${a.path}` }));
+        .filter((a) => a.when !== false && (a.act ? p.canSeeDomain(d) : canOpen(p, d, a.path!)))
+        .map((a) => ({ key: `a${a.label}`, kind: "Action", label: a.label, node: <Icon name={a.icon} />, go: a.path && `/${d}/${a.path}`, act: a.act }));
 }
