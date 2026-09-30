@@ -59,11 +59,11 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - [x] 4c-1: employees, Add employee, someone's profile and your own, Edit profile with pay from a date;
   - [x] 4c-2: activity and reports;
   - [x] 4c-3: the overview board and the client page's recent activity.
-- [ ] **5. Money:**
-  - financials, project money, expenses;
-  - invoices, payments;
-  - billing settings, exchange rates;
-  - the project report.
+- [ ] **5. Money**, in parts:
+  - [x] 5a: Design's financials: overview, projects, clients and costs;
+  - [ ] 5b: a project's money: the money band, cost curve, customer payment, expenses and closing out;
+  - [ ] 5c: invoices and payments, and the Financials billing tab;
+  - [ ] 5d: billing settings, exchange rates and the project report.
 - [ ] **6. Execution:**
   - sites, materials, labour weeks, pricing, site money;
   - statements;
@@ -121,6 +121,7 @@ Decisions made along the way, and anything skipped because it needs the user's i
   - Client events now name their client (API PR #29), and the feed, the report and the timesheet export name clients by their display name, as the rest of the API does (API PR #30).
   - A quarter that hasn't started yet reports on its first day; the prototype asked for a range ending before it began.
   - The entries tab loads 50 at a time; the prototype showed 25 first.
+- **Financials.** "All time" asks from 1 January 2000, since the API's default period is this quarter. The hours behind the labour cost come from the API (API PR #32). The export is the API's CSV of the period's projects. Execution's financials arrive with phase 6.
 - **The overview board.** Each person's card order is saved on the server (`/api/me/board-layouts/overview-design`) instead of the prototype's browser storage, so it follows them to any browser; the prototype's "Export JSON" button, there to hand the layouts over while it had no server, is left out. Whether "Needs attention & deadlines" is folded stays in the browser, as in the prototype. The period's people, projects and this week's hours come from the API (API PR #31). Execution's dashboard arrives with phase 6.
 - **The account menu opens upwards.** The prototype opened it downwards from the foot of the sidebar, so on any page longer than the window it was drawn below the screen and Sign out was out of reach.
 - **Your own phone** (API PR #28). The session now carries the phone, so editing your own name no longer sends an empty phone back.
