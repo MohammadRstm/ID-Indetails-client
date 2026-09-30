@@ -34,6 +34,7 @@ function user(id: number, first: string, role: string, domain: string | null, pe
         team: null,
         position,
         phone: null,
+        joinedOn: "2025-09-01",
         photoFileId: null,
         mustChangePassword: false,
         permissions: [...permissions].sort(),
