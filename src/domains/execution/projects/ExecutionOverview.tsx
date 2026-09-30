@@ -12,6 +12,8 @@ import { useLabourWeeks } from "../labour/labourApi";
 import LabourPanel from "../labour/LabourPanel";
 import { useMaterials } from "../materials/materialsApi";
 import MaterialsPanel from "../materials/MaterialsPanel";
+import { useStatementLinks } from "../statements/statementLinks";
+import StatementList from "../statements/StatementList";
 import LabourHealth from "./LabourHealth";
 import SiteMoneyPanel from "./SiteMoneyPanel";
 
@@ -23,6 +25,7 @@ import SiteMoneyPanel from "./SiteMoneyPanel";
 export default function ExecutionOverview({ project }: { project: Project }) {
     const permissions = usePermissions();
     const links = useBillingLinks();
+    const statements = useStatementLinks();
     const [params, setParams] = useSearchParams();
     const m = permissions.has(P.FINANCIAL_VIEW) ? project.money : null;
     const client = project.billingType === "client" && !!project.client;
@@ -34,9 +37,11 @@ export default function ExecutionOverview({ project }: { project: Project }) {
             {m && (
                 <SiteMoneyPanel project={project}
                     onRecordPayment={client && permissions.has(P.PAYMENT_RECORD) ? () => links.recordPayment() : undefined}
+                    onStatement={client && permissions.has(P.STATEMENT_CREATE) ? statements.newStatement : undefined}
                     onEditPricing={permissions.has(P.PROJECT_PRICING_MANAGE) ? openPricing : undefined} />
             )}
             {m && client && <BillingBand project={project} />}
+            {m && client && <StatementList project={project} />}
             <MaterialsPanel project={project} />
             <LabourPanel project={project} />
             {m && client && <LabourHealth project={project} />}

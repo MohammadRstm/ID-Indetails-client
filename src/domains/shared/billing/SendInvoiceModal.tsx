@@ -11,11 +11,7 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useClient } from "../clients/clientsApi";
 import { useSendInvoice, type Invoice } from "./billingApi";
-
-type Channel = { key: string; channel: "email" | "whatsapp"; value: string; label: string | null };
-
-/** "wa.me/96170123456?text=…": opens the chat with the message ready. */
-const waLink = (phone: string, text: string) => `https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(text)}`;
+import { channelsOf, waLink } from "./channels";
 
 /**
  * Sending an invoice (the prototype's P.SendModal): by email, which Hourline sends with the PDF attached,
@@ -27,9 +23,7 @@ export default function SendInvoiceModal({ invoice: inv, onClose }: { invoice: I
     const company = useCompanySettings().data;
     const client = useClient(inv.client.id).data;
     const send = useSendInvoice();
-    const channels: Channel[] = (client?.contacts ?? []).flatMap((c): Channel[] =>
-        c.kind === "email" ? [{ key: `email:${c.id}`, channel: "email", value: c.value, label: c.label }]
-            : c.kind === "phone" && c.isWhatsapp ? [{ key: `whatsapp:${c.id}`, channel: "whatsapp", value: c.value, label: c.label }] : []);
+    const channels = channelsOf(client?.contacts);
     const [pick, setPick] = useState<string | null>(null);
     const chosenKey = pick ?? channels[0]?.key ?? "download";
     const chosen = channels.find((c) => c.key === chosenKey) ?? null;
