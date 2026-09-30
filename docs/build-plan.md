@@ -51,12 +51,11 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - requirements and meetings;
   - clients;
   - the search palette.
-- [ ] **4. Design work:**
-  - employee home, log work with the overtime preview, the timer;
-  - my work, my pay, entries and comments;
-  - project overview, analytics and timeline;
-  - people and profiles;
-  - activity, reports, the overview board.
+- [ ] **4. Design work**, in four parts:
+  - [x] 4a-1: the employee home, log work with the drag timeline and the overtime preview, the timer, an employee's project;
+  - [ ] 4a-2: my work, my pay and the hours balance;
+  - [ ] 4b: the admin project overview, analytics and timeline, entries and comments;
+  - [ ] 4c: people and profiles, activity, reports, the overview board.
 - [ ] **5. Money:**
   - financials, project money, expenses;
   - invoices, payments;
@@ -103,9 +102,13 @@ Decisions made along the way, and anything skipped because it needs the user's i
 - **Screens that link ahead.** A few phase 3 screens point at pages from later phases:
   - a project's Overview tab says "On its way" until Design's (phase 4) and Execution's (phase 6) panels arrive, and so does the Timeline tab;
   - an employee's project page arrives with phase 4, and so does the client page's recent activity feed;
-  - the search palette's "Log work" opens `my-work?log=1` and "Add employee" opens `people?invite=1`, which those pages will handle.
+  - the search palette's "Add employee" opens `people?invite=1`, which the people page will handle;
+  - an overtime entry opens `profile?entry=`, the employee's profile (4c);
+  - an Execution employee's projects and project page arrive with phase 6, with the rest of Execution.
 - **Project margin filter.** The prototype's "Any margin" filter isn't there: filtering and sorting by money stay on the server's list (decision M7).
 - **Export report for Execution.** The API's project report is Design-only, so Execution's row menu and header leave it out for now. Phase 6 decides whether it becomes the client statement.
+- **Overtime is the API's.** The client never works out overtime itself: every log form and the drag timeline ask `/api/me/overtime-preview`, a moment after the time stops changing, so the rule lives in one place.
+- **The timer** remembers when it started in the browser (per person), so a reload keeps it running; stopping it opens Log work with the times filled in.
 - **Strict numbers in the API** (API PR #27). JSON numbers are strict there, so the generated types say `number`, not `number | string`.
 
 ### API follow-ups
@@ -114,4 +117,5 @@ Small API changes the screens would use. Until they're made, the client works ar
 
 - **Project list rows lack the description.** The prototype shows it under each project's name; the client shows the owner instead.
 - **Hours logged this quarter.** The prototype's project list says "… · 6,907h logged this quarter"; no cheap endpoint gives that total, so the line stops at the project counts.
+- **The last activity on an employee's project cards lacks its length.** The prototype says "Sarah logged 2h · 3 hours ago"; `/api/me/projects` gives who and when, so the card says "Sarah logged work · 3 hours ago".
 - **The meetings list has no domain filter.** Someone who sees both domains gets both domains' meetings; the Meetings page keeps its own domain's by project.
