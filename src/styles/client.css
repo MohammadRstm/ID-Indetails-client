@@ -1,0 +1,19 @@
+/* Additions the client needs and the prototype never did: it had no network, so nothing ever loaded or
+   failed to load. Built only from the prototype's tokens, so they sit in its design. */
+
+/* loading skeletons */
+.skel {
+  display: block; border-radius: 5px;
+  background: linear-gradient(90deg, var(--surface-3) 0%, var(--line) 50%, var(--surface-3) 100%);
+  background-size: 200% 100%; animation: skel 1.4s ease-in-out infinite;
+}
+@keyframes skel { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+.skel-lines { display: flex; flex-direction: column; gap: 9px; padding: 4px 0; }
+.skel-row td { padding-top: 12px; padding-bottom: 12px; }
+
+/* an inline load error with its retry link */
+.load-err { padding: 8px 0; }
+.load-err .link { border: 0; background: none; padding: 0; font: inherit; color: var(--accent-ink); }
+
+/* a whole page that couldn't load, or isn't there */
+.page-state { min-height: 50vh; display: grid; place-items: center; }
