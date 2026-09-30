@@ -42,6 +42,7 @@ export const keys = {
         projects: (domain: string) => ["finance", domain, "projects"] as const,
         billing: (domain: string, months: number) => ["finance", domain, "billing", months] as const,
         attention: (domain: string) => ["finance", domain, "attention"] as const,
+        costs: (domain: string, params: object) => ["finance", domain, "costs", params] as const,
     },
     /** A person's own work: their day, entries, summaries, overtime, hours and pay. */
     work: {

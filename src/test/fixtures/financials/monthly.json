@@ -1,0 +1,101 @@
+[
+  {
+    "month": "2026-01-01",
+    "revenue": 0,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 0,
+    "profit": 0,
+    "unconverted": []
+  },
+  {
+    "month": "2026-02-01",
+    "revenue": 0,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 0,
+    "profit": 0,
+    "unconverted": []
+  },
+  {
+    "month": "2026-03-01",
+    "revenue": 0,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 0,
+    "profit": 0,
+    "unconverted": []
+  },
+  {
+    "month": "2026-04-01",
+    "revenue": 0,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 0,
+    "profit": 0,
+    "unconverted": []
+  },
+  {
+    "month": "2026-05-01",
+    "revenue": 0,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 0,
+    "profit": 0,
+    "unconverted": []
+  },
+  {
+    "month": "2026-06-01",
+    "revenue": 0,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 0,
+    "profit": 0,
+    "unconverted": []
+  },
+  {
+    "month": "2026-07-01",
+    "revenue": 0,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 0,
+    "profit": 0,
+    "unconverted": []
+  },
+  {
+    "month": "2026-08-01",
+    "revenue": 0,
+    "labour": 0,
+    "expenses": 0,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 0,
+    "profit": 0,
+    "unconverted": []
+  },
+  {
+    "month": "2026-09-01",
+    "revenue": 34125,
+    "labour": 12394.97,
+    "expenses": 1645,
+    "materials": 0,
+    "groundLabour": 0,
+    "cost": 14039.97,
+    "profit": 20085.03,
+    "unconverted": []
+  }
+]

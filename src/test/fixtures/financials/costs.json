@@ -1,0 +1,149 @@
+{
+  "from": "2026-01-01",
+  "to": "2026-09-30",
+  "bySource": {
+    "labour": 12394.97,
+    "expenses": 1645,
+    "materials": 0,
+    "groundLabour": 0,
+    "total": 14039.97
+  },
+  "labourByPerson": [
+    {
+      "userId": 6,
+      "name": "Rami Aoun",
+      "usd": 2118.67,
+      "unconverted": [],
+      "minutes": 8000
+    },
+    {
+      "userId": 5,
+      "name": "Lina Saad",
+      "usd": 2044,
+      "unconverted": [],
+      "minutes": 8960
+    },
+    {
+      "userId": 4,
+      "name": "Omar Fares",
+      "usd": 1976.96,
+      "unconverted": [],
+      "minutes": 9020
+    },
+    {
+      "userId": 3,
+      "name": "Sarah Haddad",
+      "usd": 1756.76,
+      "unconverted": [],
+      "minutes": 8950
+    },
+    {
+      "userId": 7,
+      "name": "Maya Nassar",
+      "usd": 1636.5,
+      "unconverted": [],
+      "minutes": 9650
+    },
+    {
+      "userId": 9,
+      "name": "Yara Mansour",
+      "usd": 1515.41,
+      "unconverted": [],
+      "minutes": 8710
+    },
+    {
+      "userId": 8,
+      "name": "Elie Khalil",
+      "usd": 1346.67,
+      "unconverted": [],
+      "minutes": 8900
+    }
+  ],
+  "expensesByCategory": [
+    {
+      "category": "assets",
+      "usd": 1155
+    },
+    {
+      "category": "hardware",
+      "usd": 250
+    },
+    {
+      "category": "services",
+      "usd": 180
+    },
+    {
+      "category": "travel",
+      "usd": 60
+    }
+  ],
+  "biggestExpenses": [
+    {
+      "id": 6,
+      "projectId": 4,
+      "projectTitle": "Beit Misk show apartment",
+      "label": "Styling props",
+      "category": "assets",
+      "spentOn": "2026-09-25",
+      "amount": 640,
+      "currency": "USD",
+      "usd": 640
+    },
+    {
+      "id": 2,
+      "projectId": 1,
+      "projectTitle": "Haddad Holdings HQ fit-out",
+      "label": "Material samples",
+      "category": "assets",
+      "spentOn": "2026-09-29",
+      "amount": 420,
+      "currency": "USD",
+      "usd": 420
+    },
+    {
+      "id": 5,
+      "projectId": 3,
+      "projectTitle": "Cedar Bank branch refresh",
+      "label": "Survey equipment rental",
+      "category": "hardware",
+      "spentOn": "2026-09-15",
+      "amount": 250,
+      "currency": "USD",
+      "usd": 250
+    },
+    {
+      "id": 1,
+      "projectId": 1,
+      "projectTitle": "Haddad Holdings HQ fit-out",
+      "label": "Printing of drawing sets",
+      "category": "services",
+      "spentOn": "2026-09-23",
+      "amount": 180,
+      "currency": "USD",
+      "usd": 180
+    },
+    {
+      "id": 4,
+      "projectId": 2,
+      "projectTitle": "Villa Mounir interiors",
+      "label": "Fabric swatches",
+      "category": "assets",
+      "spentOn": "2026-09-19",
+      "amount": 95,
+      "currency": "USD",
+      "usd": 95
+    },
+    {
+      "id": 3,
+      "projectId": 2,
+      "projectTitle": "Villa Mounir interiors",
+      "label": "Site visit transport",
+      "category": "travel",
+      "spentOn": "2026-09-11",
+      "amount": 60,
+      "currency": "USD",
+      "usd": 60
+    }
+  ],
+  "unconverted": []
+}
