@@ -85,7 +85,7 @@ export function useTeams(domain: string, enabled = true) {
 
 function usePeopleChanged() {
     const invalidate = useInvalidate();
-    return () => invalidate(keys.employees.all, ME_KEY, keys.work.all);
+    return () => { void invalidate(keys.employees.all, ME_KEY, keys.work.all); };
 }
 
 export function useInvite() {
@@ -174,8 +174,13 @@ export function useSetPhoto(userId: number | "me") {
 
 export function useChangePay(userId: number) {
     const changed = usePeopleChanged();
+    const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async (body: Schemas["ChangePayRequest"]) => (await http.post<Pay>(`/employees/${userId}/pay`, body)).data,
-        onSuccess: changed,
+        onSuccess: () => {
+            changed();
+            // pay from a past day re-costs the hours already logged, so every money figure follows
+            void invalidate(keys.projects.all, keys.finance.all, keys.dashboard.all, keys.clients.all, ["company"]);
+        },
     });
 }

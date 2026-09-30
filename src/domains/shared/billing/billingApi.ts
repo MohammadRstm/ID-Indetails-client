@@ -45,7 +45,7 @@ function useInvalidateBilling() {
     const invalidate = useInvalidate();
     // not awaited: a window's own onSuccess (its toast, closing it) runs at once, before the lists reload and
     // perhaps drop the row it was opened from
-    return () => { void invalidate(["invoices"], ["payments"], keys.projects.all, keys.finance.all, keys.clients.all, keys.dashboard.all, keys.activity.all); };
+    return () => { void invalidate(["invoices"], ["payments"], keys.projects.all, keys.finance.all, keys.clients.all, keys.dashboard.all, keys.activity.all, ["company"]); };
 }
 
 /** One invoice with its lines, deliveries and balance (financial:view). */

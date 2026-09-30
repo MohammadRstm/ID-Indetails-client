@@ -19,6 +19,6 @@ export function useSetPricing(projectId: number) {
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async (body: Schemas["UpdateProjectPricingRequest"]) => (await http.put<Schemas["ProjectResponse"]>(`/projects/${projectId}/pricing`, body)).data,
-        onSuccess: () => invalidate(keys.projects.all, keys.finance.all, keys.dashboard.all, keys.activity.all, keys.clients.all),
+        onSuccess: () => { void invalidate(keys.projects.all, keys.finance.all, keys.dashboard.all, keys.activity.all, keys.clients.all, ["company"]); },
     });
 }

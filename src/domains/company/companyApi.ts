@@ -40,7 +40,7 @@ export function useOverhead() {
 /** A change to the company's expenses moves its overview, its months and the launcher's figures. */
 function useRefreshCompany() {
     const invalidate = useInvalidate();
-    return () => invalidate(["company"]);
+    return () => { void invalidate(["company"]); };
 }
 
 export function useAddOverhead() {

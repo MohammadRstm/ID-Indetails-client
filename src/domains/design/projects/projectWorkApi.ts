@@ -87,7 +87,8 @@ export function useAddComment(entryId: number) {
     return useMutation({
         mutationFn: async (body: Schemas["AddWorkEntryCommentRequest"]) =>
             (await http.post<Schemas["WorkEntryCommentResponse"]>(`/work-entries/${entryId}/comments`, body)).data,
-        onSuccess: () => invalidate(["work", "entry", entryId], ["work", "comments", entryId], keys.work.all, keys.projects.all, keys.activity.all),
+        // a profile's recent work shows comment counts too
+        onSuccess: () => { void invalidate(["work", "entry", entryId], ["work", "comments", entryId], keys.work.all, keys.projects.all, keys.activity.all, keys.employees.all); },
     });
 }
 

@@ -52,7 +52,7 @@ export function useAllMaterials(projectId: number, enabled = true) {
 function useRefreshSite() {
     const invalidate = useInvalidate();
     // a client's page shows what their sites charge them
-    return () => invalidate(keys.projects.all, keys.finance.all, keys.dashboard.all, keys.activity.all, keys.clients.all);
+    return () => { void invalidate(keys.projects.all, keys.finance.all, keys.dashboard.all, keys.activity.all, keys.clients.all, ["company"]); };
 }
 
 // The API takes at most this many materials at once.
@@ -89,7 +89,7 @@ function useSaved(projectId: number) {
     return (saved: Material) => {
         queryClient.setQueriesData<MaterialList>({ queryKey: materialsKey(projectId) }, (list) =>
             list && { ...list, items: list.items.map((m) => (m.id === saved.id ? saved : m)) });
-        return refresh();
+        refresh();
     };
 }
 

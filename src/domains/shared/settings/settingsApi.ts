@@ -108,7 +108,7 @@ export function useAddExchangeRate() {
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async (body: Schemas["AddExchangeRateRequest"]) => (await http.post<ExchangeRate>("/exchange-rates", body)).data,
-        onSuccess: () => invalidate(["exchange-rates"]),
+        onSuccess: () => { void invalidate(["exchange-rates"]); },
     });
 }
 
@@ -169,6 +169,6 @@ export function useUpdateUserPermissions(userId: number) {
     return useMutation({
         mutationFn: async (changes: Schemas["PermissionChangeRequest"][]) =>
             (await http.put<UserPermissions>(`/users/${userId}/permissions`, { changes })).data,
-        onSuccess: () => invalidate(["permissions", "user", userId], keys.employees.all),
+        onSuccess: () => { void invalidate(["permissions", "user", userId], keys.employees.all); },
     });
 }

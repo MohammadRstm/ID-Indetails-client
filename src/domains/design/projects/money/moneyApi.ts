@@ -11,7 +11,7 @@ const expensesKey = (projectId: number) => [...keys.projects.detail(projectId), 
 /** Everything a change to a project's money moves: the project, the domain's figures, the dashboards, the feed. */
 function useInvalidateMoney() {
     const invalidate = useInvalidate();
-    return () => invalidate(keys.projects.all, keys.finance.all, keys.dashboard.all, keys.activity.all, keys.clients.all);
+    return () => { void invalidate(keys.projects.all, keys.finance.all, keys.dashboard.all, keys.activity.all, keys.clients.all, ["company"]); };
 }
 
 /** A project's expenses, newest first (expense:manage or financial:view). */

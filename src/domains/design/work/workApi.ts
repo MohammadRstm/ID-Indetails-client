@@ -151,7 +151,8 @@ export function useOvertimeFor(body: OvertimePreviewBody | null, delay = 150) {
 /** What a saved or deleted entry changes: every total and list built on work. */
 function useWorkChanged() {
     const invalidate = useInvalidate();
-    return () => invalidate(keys.work.all, keys.projects.all, keys.clients.all, keys.activity.all, keys.dashboard.all);
+    // logged work is labour cost too: the money screens and the company figures follow
+    return () => { void invalidate(keys.work.all, keys.projects.all, keys.clients.all, keys.activity.all, keys.dashboard.all, keys.finance.all, ["company"]); };
 }
 
 export function useSaveEntry() {
