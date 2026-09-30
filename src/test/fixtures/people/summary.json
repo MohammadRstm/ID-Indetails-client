@@ -1,0 +1,246 @@
+{
+  "person": {
+    "id": 9,
+    "name": "Yara Mansour"
+  },
+  "today": "2026-09-30",
+  "firstDayOfWeek": "monday",
+  "todayMinutes": 0,
+  "week": [
+    {
+      "day": "2026-09-28",
+      "minutes": 490
+    },
+    {
+      "day": "2026-09-29",
+      "minutes": 480
+    },
+    {
+      "day": "2026-09-30",
+      "minutes": 0
+    },
+    {
+      "day": "2026-10-01",
+      "minutes": 0
+    },
+    {
+      "day": "2026-10-02",
+      "minutes": 0
+    },
+    {
+      "day": "2026-10-03",
+      "minutes": 0
+    },
+    {
+      "day": "2026-10-04",
+      "minutes": 0
+    }
+  ],
+  "thisWeekMinutes": 970,
+  "lastWeekMinutes": 1770,
+  "thisMonthMinutes": 8710,
+  "thisQuarterMinutes": 8710,
+  "lastQuarterSameSpanMinutes": 0,
+  "totalMinutes": 8710,
+  "totalOvertimeMinutes": 790,
+  "entryCount": 75,
+  "firstEntryDay": "2026-09-01",
+  "projectCount": 3,
+  "activeDaysLastYear": 19,
+  "longestStreakLastYear": 5,
+  "weekly": [
+    {
+      "weekStart": "2026-06-15",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-06-22",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-06-29",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-07-06",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-07-13",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-07-20",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-07-27",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-03",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-10",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-17",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-24",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-31",
+      "minutes": 1800,
+      "entries": 16
+    },
+    {
+      "weekStart": "2026-09-07",
+      "minutes": 2380,
+      "entries": 19
+    },
+    {
+      "weekStart": "2026-09-14",
+      "minutes": 1790,
+      "entries": 18
+    },
+    {
+      "weekStart": "2026-09-21",
+      "minutes": 1770,
+      "entries": 14
+    },
+    {
+      "weekStart": "2026-09-28",
+      "minutes": 970,
+      "entries": 8
+    }
+  ],
+  "daily": [
+    {
+      "day": "2026-09-01",
+      "minutes": 440
+    },
+    {
+      "day": "2026-09-02",
+      "minutes": 450
+    },
+    {
+      "day": "2026-09-03",
+      "minutes": 450
+    },
+    {
+      "day": "2026-09-04",
+      "minutes": 460
+    },
+    {
+      "day": "2026-09-07",
+      "minutes": 460
+    },
+    {
+      "day": "2026-09-08",
+      "minutes": 470
+    },
+    {
+      "day": "2026-09-09",
+      "minutes": 540
+    },
+    {
+      "day": "2026-09-10",
+      "minutes": 450
+    },
+    {
+      "day": "2026-09-11",
+      "minutes": 460
+    },
+    {
+      "day": "2026-09-15",
+      "minutes": 450
+    },
+    {
+      "day": "2026-09-16",
+      "minutes": 450
+    },
+    {
+      "day": "2026-09-17",
+      "minutes": 420
+    },
+    {
+      "day": "2026-09-18",
+      "minutes": 470
+    },
+    {
+      "day": "2026-09-21",
+      "minutes": 450
+    },
+    {
+      "day": "2026-09-22",
+      "minutes": 530
+    },
+    {
+      "day": "2026-09-23",
+      "minutes": 430
+    },
+    {
+      "day": "2026-09-24",
+      "minutes": 360
+    },
+    {
+      "day": "2026-09-28",
+      "minutes": 490
+    },
+    {
+      "day": "2026-09-29",
+      "minutes": 480
+    }
+  ],
+  "byProject": [
+    {
+      "projectId": 4,
+      "title": "Beit Misk show apartment",
+      "icon": "target",
+      "tint": "#6C5CE7",
+      "status": "active",
+      "minutes": 3420,
+      "overtimeMinutes": 330,
+      "entries": 30,
+      "lastStartedAt": "2026-09-29T10:00:00Z"
+    },
+    {
+      "projectId": 6,
+      "title": "Portfolio and competition entries",
+      "icon": "folder",
+      "tint": "#697572",
+      "status": "active",
+      "minutes": 3060,
+      "overtimeMinutes": 120,
+      "entries": 27,
+      "lastStartedAt": "2026-09-29T06:00:00Z"
+    },
+    {
+      "projectId": 2,
+      "title": "Villa Mounir interiors",
+      "icon": "palette",
+      "tint": "#8A5A2B",
+      "status": "active",
+      "minutes": 2230,
+      "overtimeMinutes": 340,
+      "entries": 18,
+      "lastStartedAt": "2026-09-29T12:00:00Z"
+    }
+  ]
+}

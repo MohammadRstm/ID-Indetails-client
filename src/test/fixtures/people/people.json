@@ -1,0 +1,335 @@
+[
+  {
+    "id": 9,
+    "name": "Yara Mansour",
+    "email": "yara@id-indetails.test",
+    "position": "Visualisation lead",
+    "teamName": "Visualisation",
+    "role": "employee",
+    "status": "active",
+    "photoFileId": null,
+    "online": false,
+    "lastSeenAt": "2026-09-30T04:52:43.405Z",
+    "weekMinutes": 970,
+    "quarterMinutes": 8710,
+    "totalMinutes": 8710,
+    "entries": 75,
+    "lastStartedAt": "2026-09-29T12:00:00Z",
+    "focus": {
+      "projectId": 2,
+      "title": "Villa Mounir interiors"
+    },
+    "weekly": [
+      0,
+      0,
+      0,
+      1800,
+      2380,
+      1790,
+      1770,
+      970
+    ],
+    "minutesLast30Days": 8710,
+    "overtimeMinutesThisMonth": 790,
+    "hourlyRate": {
+      "currency": "USD",
+      "amount": 9.2309
+    },
+    "labourCost": {
+      "usd": 1515.41,
+      "unconverted": [],
+      "unpricedMinutes": 0
+    }
+  },
+  {
+    "id": 3,
+    "name": "Sarah Haddad",
+    "email": "sarah@id-indetails.test",
+    "position": "Senior interior designer",
+    "teamName": "Interiors",
+    "role": "employee",
+    "status": "active",
+    "photoFileId": null,
+    "online": false,
+    "lastSeenAt": "2026-09-30T06:41:09.634Z",
+    "weekMinutes": 940,
+    "quarterMinutes": 8950,
+    "totalMinutes": 8950,
+    "entries": 82,
+    "lastStartedAt": "2026-09-29T12:40:00Z",
+    "focus": {
+      "projectId": 1,
+      "title": "Haddad Holdings HQ fit-out"
+    },
+    "weekly": [
+      0,
+      0,
+      0,
+      1710,
+      2220,
+      1860,
+      2220,
+      940
+    ],
+    "minutesLast30Days": 8950,
+    "overtimeMinutesThisMonth": 780,
+    "hourlyRate": {
+      "currency": "USD",
+      "amount": 10.3848
+    },
+    "labourCost": {
+      "usd": 1756.76,
+      "unconverted": [],
+      "unpricedMinutes": 0
+    }
+  },
+  {
+    "id": 5,
+    "name": "Lina Saad",
+    "email": "lina@id-indetails.test",
+    "position": "Interior designer",
+    "teamName": "Interiors",
+    "role": "employee",
+    "status": "active",
+    "photoFileId": null,
+    "online": false,
+    "lastSeenAt": "2026-09-30T04:52:40.507Z",
+    "weekMinutes": 900,
+    "quarterMinutes": 8960,
+    "totalMinutes": 8960,
+    "entries": 79,
+    "lastStartedAt": "2026-09-29T11:30:00Z",
+    "focus": {
+      "projectId": 2,
+      "title": "Villa Mounir interiors"
+    },
+    "weekly": [
+      0,
+      0,
+      0,
+      1780,
+      2100,
+      2080,
+      2100,
+      900
+    ],
+    "minutesLast30Days": 8960,
+    "overtimeMinutesThisMonth": 270,
+    "hourlyRate": {
+      "currency": "USD",
+      "amount": 12
+    },
+    "labourCost": {
+      "usd": 2044,
+      "unconverted": [],
+      "unpricedMinutes": 0
+    }
+  },
+  {
+    "id": 8,
+    "name": "Elie Khalil",
+    "email": "elie@id-indetails.test",
+    "position": "Draughtsman",
+    "teamName": "Architecture",
+    "role": "employee",
+    "status": "active",
+    "photoFileId": null,
+    "online": false,
+    "lastSeenAt": "2026-09-30T04:52:37.681Z",
+    "weekMinutes": 870,
+    "quarterMinutes": 8900,
+    "totalMinutes": 8900,
+    "entries": 78,
+    "lastStartedAt": "2026-09-29T13:00:00Z",
+    "focus": {
+      "projectId": 3,
+      "title": "Cedar Bank branch refresh"
+    },
+    "weekly": [
+      0,
+      0,
+      0,
+      1340,
+      2170,
+      2250,
+      2270,
+      870
+    ],
+    "minutesLast30Days": 8900,
+    "overtimeMinutesThisMonth": 660,
+    "hourlyRate": {
+      "currency": "USD",
+      "amount": 8
+    },
+    "labourCost": {
+      "usd": 1346.67,
+      "unconverted": [],
+      "unpricedMinutes": 0
+    }
+  },
+  {
+    "id": 7,
+    "name": "Maya Nassar",
+    "email": "maya@id-indetails.test",
+    "position": "Junior architect",
+    "teamName": "Architecture",
+    "role": "employee",
+    "status": "active",
+    "photoFileId": null,
+    "online": false,
+    "lastSeenAt": "2026-09-30T04:52:46.224Z",
+    "weekMinutes": 870,
+    "quarterMinutes": 9650,
+    "totalMinutes": 9650,
+    "entries": 84,
+    "lastStartedAt": "2026-09-29T13:00:00Z",
+    "focus": {
+      "projectId": 6,
+      "title": "Portfolio and competition entries"
+    },
+    "weekly": [
+      0,
+      0,
+      0,
+      1820,
+      2500,
+      2160,
+      2300,
+      870
+    ],
+    "minutesLast30Days": 9650,
+    "overtimeMinutesThisMonth": 870,
+    "hourlyRate": {
+      "currency": "USD",
+      "amount": 9
+    },
+    "labourCost": {
+      "usd": 1636.5,
+      "unconverted": [],
+      "unpricedMinutes": 0
+    }
+  },
+  {
+    "id": 4,
+    "name": "Omar Fares",
+    "email": "omar@id-indetails.test",
+    "position": "Architect",
+    "teamName": "Architecture",
+    "role": "employee",
+    "status": "active",
+    "photoFileId": null,
+    "online": false,
+    "lastSeenAt": "2026-09-30T04:52:31.812Z",
+    "weekMinutes": 860,
+    "quarterMinutes": 9020,
+    "totalMinutes": 9020,
+    "entries": 80,
+    "lastStartedAt": "2026-09-29T13:10:00Z",
+    "focus": {
+      "projectId": 3,
+      "title": "Cedar Bank branch refresh"
+    },
+    "weekly": [
+      0,
+      0,
+      0,
+      1700,
+      2130,
+      2160,
+      2170,
+      860
+    ],
+    "minutesLast30Days": 9020,
+    "overtimeMinutesThisMonth": 400,
+    "hourlyRate": {
+      "currency": "USD",
+      "amount": 11.5387
+    },
+    "labourCost": {
+      "usd": 1976.96,
+      "unconverted": [],
+      "unpricedMinutes": 0
+    }
+  },
+  {
+    "id": 6,
+    "name": "Rami Aoun",
+    "email": "rami@id-indetails.test",
+    "position": "3D visualiser",
+    "teamName": "Visualisation",
+    "role": "employee",
+    "status": "active",
+    "photoFileId": null,
+    "online": false,
+    "lastSeenAt": "2026-09-30T04:52:34.908Z",
+    "weekMinutes": 430,
+    "quarterMinutes": 8000,
+    "totalMinutes": 8000,
+    "entries": 73,
+    "lastStartedAt": "2026-09-29T12:20:00Z",
+    "focus": {
+      "projectId": 1,
+      "title": "Haddad Holdings HQ fit-out"
+    },
+    "weekly": [
+      0,
+      0,
+      0,
+      1730,
+      1760,
+      1820,
+      2260,
+      430
+    ],
+    "minutesLast30Days": 8000,
+    "overtimeMinutesThisMonth": 540,
+    "hourlyRate": {
+      "currency": "USD",
+      "amount": 14
+    },
+    "labourCost": {
+      "usd": 2118.67,
+      "unconverted": [],
+      "unpricedMinutes": 0
+    }
+  },
+  {
+    "id": 2,
+    "name": "Nadia Karam",
+    "email": "nadia@id-indetails.test",
+    "position": "Design director",
+    "teamName": null,
+    "role": "admin",
+    "status": "active",
+    "photoFileId": null,
+    "online": false,
+    "lastSeenAt": "2026-09-30T07:24:36.52Z",
+    "weekMinutes": 0,
+    "quarterMinutes": 0,
+    "totalMinutes": 0,
+    "entries": 0,
+    "lastStartedAt": null,
+    "focus": null,
+    "weekly": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "minutesLast30Days": 0,
+    "overtimeMinutesThisMonth": 0,
+    "hourlyRate": {
+      "currency": "USD",
+      "amount": 18.4619
+    },
+    "labourCost": {
+      "usd": 0,
+      "unconverted": [],
+      "unpricedMinutes": 0
+    }
+  }
+]

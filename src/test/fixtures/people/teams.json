@@ -1,0 +1,56 @@
+[
+  {
+    "id": 12,
+    "name": "Architecture",
+    "domain": "design",
+    "memberCount": 3
+  },
+  {
+    "id": 3,
+    "name": "Data",
+    "domain": "design",
+    "memberCount": 0
+  },
+  {
+    "id": 2,
+    "name": "Design",
+    "domain": "design",
+    "memberCount": 0
+  },
+  {
+    "id": 1,
+    "name": "Engineering",
+    "domain": "design",
+    "memberCount": 0
+  },
+  {
+    "id": 13,
+    "name": "Interiors",
+    "domain": "design",
+    "memberCount": 2
+  },
+  {
+    "id": 4,
+    "name": "Marketing",
+    "domain": "design",
+    "memberCount": 0
+  },
+  {
+    "id": 5,
+    "name": "Operations",
+    "domain": "design",
+    "memberCount": 0
+  },
+  {
+    "id": 6,
+    "name": "Platform",
+    "domain": "design",
+    "memberCount": 0
+  },
+  {
+    "id": 14,
+    "name": "Visualisation",
+    "domain": "design",
+    "memberCount": 2
+  }
+]

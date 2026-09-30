@@ -1,0 +1,421 @@
+{
+  "items": [
+    {
+      "id": 467,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "description": "Living room concept",
+      "startedAt": "2026-09-29T12:00:00Z",
+      "endedAt": "2026-09-29T14:00:00Z",
+      "minutes": 120,
+      "overtimeMinutes": 60,
+      "createdAt": "2026-09-30T04:52:46.194Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 466,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 4,
+        "title": "Beit Misk show apartment",
+        "icon": "target",
+        "tint": "#6C5CE7"
+      },
+      "description": "Show apartment layout",
+      "startedAt": "2026-09-29T10:00:00Z",
+      "endedAt": "2026-09-29T12:00:00Z",
+      "minutes": 120,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:46.157Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 465,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 4,
+        "title": "Beit Misk show apartment",
+        "icon": "target",
+        "tint": "#6C5CE7"
+      },
+      "description": "Soft furnishings selection",
+      "startedAt": "2026-09-29T08:30:00Z",
+      "endedAt": "2026-09-29T10:00:00Z",
+      "minutes": 90,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:46.114Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 464,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 6,
+        "title": "Portfolio and competition entries",
+        "icon": "folder",
+        "tint": "#697572"
+      },
+      "description": "Competition boards",
+      "startedAt": "2026-09-29T06:00:00Z",
+      "endedAt": "2026-09-29T08:30:00Z",
+      "minutes": 150,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:46.066Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 463,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "description": "Client revisions to the lounge",
+      "startedAt": "2026-09-28T14:20:00Z",
+      "endedAt": "2026-09-28T15:30:00Z",
+      "minutes": 70,
+      "overtimeMinutes": 70,
+      "createdAt": "2026-09-30T04:52:46.023Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 462,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "description": "Bathroom tiling layout",
+      "startedAt": "2026-09-28T10:50:00Z",
+      "endedAt": "2026-09-28T13:50:00Z",
+      "minutes": 180,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:45.985Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 461,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "description": "Client revisions to the lounge",
+      "startedAt": "2026-09-28T08:20:00Z",
+      "endedAt": "2026-09-28T10:20:00Z",
+      "minutes": 120,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:45.949Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 460,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 6,
+        "title": "Portfolio and competition entries",
+        "icon": "folder",
+        "tint": "#697572"
+      },
+      "description": "Competition boards",
+      "startedAt": "2026-09-28T06:20:00Z",
+      "endedAt": "2026-09-28T08:20:00Z",
+      "minutes": 120,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:45.915Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 459,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 6,
+        "title": "Portfolio and competition entries",
+        "icon": "folder",
+        "tint": "#697572"
+      },
+      "description": "Competition boards",
+      "startedAt": "2026-09-24T11:20:00Z",
+      "endedAt": "2026-09-24T12:50:00Z",
+      "minutes": 90,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:45.877Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 458,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "description": "Master bedroom mood board",
+      "startedAt": "2026-09-24T07:50:00Z",
+      "endedAt": "2026-09-24T10:50:00Z",
+      "minutes": 180,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:45.838Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 457,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 6,
+        "title": "Portfolio and competition entries",
+        "icon": "folder",
+        "tint": "#697572"
+      },
+      "description": "Portfolio photography edit",
+      "startedAt": "2026-09-24T06:20:00Z",
+      "endedAt": "2026-09-24T07:50:00Z",
+      "minutes": 90,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:45.803Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 456,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 4,
+        "title": "Beit Misk show apartment",
+        "icon": "target",
+        "tint": "#6C5CE7"
+      },
+      "description": "Lighting scenes",
+      "startedAt": "2026-09-23T12:20:00Z",
+      "endedAt": "2026-09-23T14:00:00Z",
+      "minutes": 100,
+      "overtimeMinutes": 10,
+      "createdAt": "2026-09-30T04:52:45.761Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 455,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 4,
+        "title": "Beit Misk show apartment",
+        "icon": "target",
+        "tint": "#6C5CE7"
+      },
+      "description": "Photo-ready renders",
+      "startedAt": "2026-09-23T09:20:00Z",
+      "endedAt": "2026-09-23T11:50:00Z",
+      "minutes": 150,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:45.716Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 454,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 6,
+        "title": "Portfolio and competition entries",
+        "icon": "folder",
+        "tint": "#697572"
+      },
+      "description": "Portfolio photography edit",
+      "startedAt": "2026-09-23T06:20:00Z",
+      "endedAt": "2026-09-23T09:20:00Z",
+      "minutes": 180,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:45.67Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 453,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "description": "Furniture schedule",
+      "startedAt": "2026-09-22T13:10:00Z",
+      "endedAt": "2026-09-22T15:30:00Z",
+      "minutes": 140,
+      "overtimeMinutes": 110,
+      "createdAt": "2026-09-30T04:52:45.635Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 452,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 6,
+        "title": "Portfolio and competition entries",
+        "icon": "folder",
+        "tint": "#697572"
+      },
+      "description": "Portfolio photography edit",
+      "startedAt": "2026-09-22T11:40:00Z",
+      "endedAt": "2026-09-22T13:10:00Z",
+      "minutes": 90,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:45.6Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 451,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 4,
+        "title": "Beit Misk show apartment",
+        "icon": "target",
+        "tint": "#6C5CE7"
+      },
+      "description": "Photo-ready renders",
+      "startedAt": "2026-09-22T09:40:00Z",
+      "endedAt": "2026-09-22T11:40:00Z",
+      "minutes": 120,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:45.566Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    },
+    {
+      "id": 450,
+      "person": {
+        "id": 9,
+        "name": "Yara Mansour"
+      },
+      "project": {
+        "id": 4,
+        "title": "Beit Misk show apartment",
+        "icon": "target",
+        "tint": "#6C5CE7"
+      },
+      "description": "Show apartment layout",
+      "startedAt": "2026-09-22T08:10:00Z",
+      "endedAt": "2026-09-22T09:40:00Z",
+      "minutes": 90,
+      "overtimeMinutes": 0,
+      "createdAt": "2026-09-30T04:52:45.532Z",
+      "updatedAt": null,
+      "canEdit": false,
+      "commentCount": 0,
+      "attachment": null
+    }
+  ],
+  "page": 1,
+  "pageSize": 18,
+  "totalCount": 75
+}
