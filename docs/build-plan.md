@@ -55,7 +55,7 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - [x] 4a-1: the employee home, log work with the drag timeline and the overtime preview, the timer, an employee's project;
   - [x] 4a-2: my work (both domains), my pay, the hours balance and the behind-on-hours notice;
   - [x] 4b-1: a Design project's overview for admins: work KPIs, contributors and their drawer, the work timeline, analytics, the entry window and comments;
-  - [ ] 4b-2: the project Timeline tab (the project's history);
+  - [x] 4b-2: the project Timeline tab: the project at any moment, progress and status over time, the history day by day, and a day as cards;
   - [ ] 4c: people and profiles, activity, reports, the overview board.
 - [ ] **5. Money:**
   - financials, project money, expenses;
@@ -107,6 +107,9 @@ Decisions made along the way, and anything skipped because it needs the user's i
   - an overtime entry opens `profile?entry=`, the employee's profile (4c);
   - an Execution employee's projects and project page arrive with phase 6, with the rest of Execution.
 - **The project overview's money** (money band, billing, financial breakdown, cost curves, Export report) arrives with phase 5; the work parts and the payment KPI are there now.
+- **The project history** is rebuilt in the client from the API's timeline, entries and events (`history.ts`), as the prototype's engine did. People's "role" there is their team.
+  - Its earliest moment is the earliest of the project's creation, start and first work. The sample data records "project created" when it was seeded, after the backdated work.
+  - In a day's cards each team keeps one colour for the whole project; the prototype's hashing gave two teams the same colour.
 - **Demo-only words.** The burn-up chart's note drops the prototype's "this prototype has no hour budgets yet. Ask for them…".
 - **Project margin filter.** The prototype's "Any margin" filter isn't there: filtering and sorting by money stay on the server's list (decision M7).
 - **Export report for Execution.** The API's project report is Design-only, so Execution's row menu and header leave it out for now. Phase 6 decides whether it becomes the client statement.
