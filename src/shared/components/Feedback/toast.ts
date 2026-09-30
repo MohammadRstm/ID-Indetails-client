@@ -37,6 +37,12 @@ export function dismissToast(id: number) {
     emit();
 }
 
+/** Drops every toast (a sign-out: an Undo must not act for the next person). */
+export function clearToasts() {
+    toasts = [];
+    emit();
+}
+
 export function useToasts(): Toast[] {
     return useSyncExternalStore(
         (listener) => {

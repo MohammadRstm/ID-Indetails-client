@@ -26,6 +26,11 @@ type SessionHandlers = {
 
 let handlers: SessionHandlers = { onRefreshed: () => {}, onExpired: () => {} };
 
+/** The session is over (a refresh found no session): the app signs out, as a 401 on a request would. */
+export function sessionExpired() {
+    handlers.onExpired();
+}
+
 export function configureSession(next: SessionHandlers) {
     handlers = next;
 }
@@ -72,6 +77,14 @@ type RetriableConfig = InternalAxiosRequestConfig & { _retried?: boolean };
 http.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
+        // a file request's error body arrives as a Blob: read it, so the API's message and code come through
+        if (error.response?.data instanceof Blob) {
+            try {
+                error.response.data = JSON.parse(await error.response.data.text());
+            } catch {
+                // not the API's JSON; the status still says what happened
+            }
+        }
         const config = error.config as RetriableConfig | undefined;
         if (error.response?.status === 401 && config && !config._retried) {
             config._retried = true;
@@ -101,13 +114,22 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
     }
 }
 
-/** Ends the session on the server (and its refresh cookie); works with an expired access token too. */
+/**
+ * Ends the session on the server (and its refresh cookie); works with an expired access token too. Throws when
+ * the server couldn't be reached or refused for now (offline, 5xx, rate limit): the session is still alive then.
+ * It runs under the refresh lock, as a refresh in flight would otherwise race it for the same cookie.
+ */
 export async function signOut(): Promise<void> {
-    try {
-        await bare.post("/auth/logout");
-    } finally {
+    await withRefreshLock(async () => {
+        try {
+            await bare.post("/auth/logout");
+        } catch (error) {
+            const apiError = toApiError(error);
+            // any other 4xx means there is no session left to end
+            if (apiError.status <= 0 || apiError.status >= 500 || apiError.status === 429) throw apiError;
+        }
         tokenStore.set(null);
-    }
+    });
 }
 
 /** Anonymous calls (invitations, password reset) that must not try to refresh. */

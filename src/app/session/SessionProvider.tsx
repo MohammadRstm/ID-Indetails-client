@@ -4,13 +4,22 @@ import { configureSession, http, refreshSession, signIn as apiSignIn, signOut as
 import { tokenStore } from "@/api/tokenStore";
 import type { AuthResponse, CurrentUser } from "@/api/types";
 import { ME_KEY, SessionContext, type SessionValue, type SessionStatus } from "./sessionContext";
-import { resetSessionState } from "./sessionReset";
+import { clearToasts, toast } from "@/shared/components/Feedback/toast";
+import { forgetFileUrls } from "@/shared/files/useFileUrl";
+import { onSessionReset, resetSessionState } from "./sessionReset";
 
 // Permissions aren't pushed by the API, so the signed-in user is read again now and then (and when the tab
 // comes back into focus), which is how a change of permissions reaches an open app.
 const ME_REFRESH_MS = 5 * 60_000;
 
 const CHANNEL = "hourline-session";
+
+/** Tries at restoring the session on load before saying the server can't be reached. */
+const RESTORE_ATTEMPTS = 3;
+
+// what the shared layer keeps outside React Query goes with the person too
+onSessionReset(clearToasts);
+onSessionReset(forgetFileUrls);
 
 /**
  * Holds who is signed in. On load it restores the session from the refresh cookie, once. A sign-out in one tab
@@ -30,6 +39,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }, [queryClient]);
 
     const end = useCallback((message: string | null) => {
+        // signed out in another tab too: its access token must not outlive the session here
+        tokenStore.set(null);
         queryClient.clear();
         resetSessionState();
         setNotice(message);
@@ -51,13 +62,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         });
 
         let cancelled = false;
-        refreshSession()
+        let retry: ReturnType<typeof setTimeout> | undefined;
+        // a rate limit or a server restarting says nothing about the cookie: try again a few times before
+        // sending the person to sign in
+        const restore = (attempt: number) => refreshSession()
             .then((auth) => {
                 if (cancelled) return;
                 if (auth) start(auth);
                 else setStatus("signedOut");
             })
-            .catch(() => !cancelled && end("The server can't be reached right now. Try again in a moment."));
+            .catch(() => {
+                if (cancelled) return;
+                if (attempt < RESTORE_ATTEMPTS) retry = setTimeout(() => void restore(attempt + 1), attempt * 2000);
+                else end("The server can't be reached right now. Try again in a moment.");
+            });
+        void restore(1);
 
         if (typeof BroadcastChannel !== "undefined") {
             channel.current = new BroadcastChannel(CHANNEL);
@@ -68,6 +87,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
         return () => {
             cancelled = true;
+            clearTimeout(retry);
             channel.current?.close();
         };
     }, [queryClient, start, end]);
@@ -85,7 +105,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }, [start]);
 
     const signOut = useCallback(async () => {
-        await apiSignOut().catch(() => undefined);
+        try {
+            await apiSignOut();
+        } catch {
+            // the session is still valid on the server: saying otherwise would leave it to the next person here
+            toast({ text: "You're still signed in", sub: "The server couldn't end your session just now. Try signing out again in a moment.", icon: "alert" });
+            return;
+        }
         channel.current?.postMessage("signed-out");
         end(null);
     }, [end]);

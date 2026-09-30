@@ -1,7 +1,7 @@
 import { HubConnectionBuilder, HubConnectionState, LogLevel } from "@microsoft/signalr";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { refreshSession } from "@/api/http";
+import { refreshSession, sessionExpired } from "@/api/http";
 import { tokenStore } from "@/api/tokenStore";
 
 /** Which chat changed: a team's, or the direct chat with a person. */
@@ -23,7 +23,15 @@ function secondsLeft(token: string): number {
 async function freshToken(): Promise<string> {
     const token = tokenStore.get();
     if (token && secondsLeft(token) > 60) return token;
-    return (await refreshSession().catch(() => null))?.accessToken ?? "";
+    try {
+        const auth = await refreshSession();
+        // no session left: sign out, rather than retry (and spend the sign-in rate limit) forever
+        if (!auth) sessionExpired();
+        return auth?.accessToken ?? "";
+    } catch {
+        // offline or refused for now: the connection tries again later
+        return "";
+    }
 }
 
 /**
@@ -31,9 +39,11 @@ async function freshToken(): Promise<string> {
  * ("notifications") or a chat ("messages"), and the pages then reload it through the API. An open
  * connection is also what shows the person as online.
  */
-export function useLiveUpdates() {
+export function useLiveUpdates(userId: number) {
     const queryClient = useQueryClient();
 
+    // one connection per person: when another tab signs in as someone else, this one starts again as them,
+    // since the hub knows who is online, and whose signals to send, by the connection
     useEffect(() => {
         const connection = new HubConnectionBuilder()
             .withUrl("/hubs/live", { accessTokenFactory: freshToken })
@@ -69,5 +79,5 @@ export function useLiveUpdates() {
             clearTimeout(retry);
             void connection.stop();
         };
-    }, [queryClient]);
+    }, [queryClient, userId]);
 }

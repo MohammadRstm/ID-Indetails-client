@@ -19,6 +19,12 @@ function load(id: number): Promise<string> {
     return url;
 }
 
+/** Forgets every file loaded so far (a sign-out: the next person loads what they may see). */
+export function forgetFileUrls() {
+    urls.forEach((url) => void url.then(URL.revokeObjectURL, () => undefined));
+    urls.clear();
+}
+
 /** An object URL for an uploaded file; undefined while it loads, or when there is no file. */
 export function useFileUrl(id: number | null | undefined): { url: string | undefined; isError: boolean } {
     const query = useQuery({

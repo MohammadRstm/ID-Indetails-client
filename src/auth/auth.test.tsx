@@ -39,6 +39,16 @@ describe("signing in", () => {
     });
 });
 
+describe("coming back", () => {
+    it("restores the session after a moment when the server was briefly unavailable", async () => {
+        renderApp("/design/projects", personas.designEmployee,
+            http.post("/api/auth/refresh", () => HttpResponse.json({ code: "rate_limited", message: "Too many requests." }, { status: 429 }), { once: true }));
+        // the first try is refused; the next one, two seconds on, finds the session still good
+        expect(await screen.findByRole("heading", { name: /Sarah/ }, { timeout: 6000 })).toBeInTheDocument();
+        expect(window.location.pathname).toBe("/design/projects");
+    });
+});
+
 describe("resetting a password", () => {
     it("tells the person when the link has expired", async () => {
         server.use(http.post("/api/auth/reset-password", () =>

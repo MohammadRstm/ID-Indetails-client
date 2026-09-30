@@ -2,6 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, configure } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { server } from "./server";
+import { clearToasts } from "@/shared/components/Feedback/toast";
 
 // Pages load on demand, so the first test to open one waits for its code as well as its data.
 configure({ asyncUtilTimeout: 3000 });
@@ -23,5 +24,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
     cleanup();
     server.resetHandlers();
+    // toasts live outside React, so one test's would show in the next
+    clearToasts();
 });
 afterAll(() => server.close());
