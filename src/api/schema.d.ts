@@ -9512,6 +9512,8 @@ export interface components {
             /** Format: int32 */
             people: number;
             /** Format: int32 */
+            peopleCount: number;
+            /** Format: int32 */
             peopleLoggingThisWeek: number;
             period: components["schemas"]["OverviewPeriod"];
             /** Format: int32 */
@@ -9523,7 +9525,11 @@ export interface components {
             /** Format: date */
             previousTo: string;
             previousWeekly: components["schemas"]["WeekTotalResponse"][];
+            /** Format: int32 */
+            projectCount: number;
             projectsByStatus: components["schemas"]["StatusCountResponse"][];
+            /** Format: int32 */
+            thisWeekMinutes: number;
             /** Format: date */
             to: string;
             weekly: components["schemas"]["WeekTotalResponse"][];
