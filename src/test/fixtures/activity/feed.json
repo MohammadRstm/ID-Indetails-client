@@ -1,0 +1,551 @@
+{
+  "items": [
+    {
+      "id": 739,
+      "kind": "work_entry_deleted",
+      "group": "work",
+      "domain": "design",
+      "occurredAt": "2026-09-30T06:15:14.097Z",
+      "actor": {
+        "id": 3,
+        "name": "Sarah Haddad"
+      },
+      "project": {
+        "id": 2,
+        "name": "Villa Mounir interiors"
+      },
+      "client": {
+        "id": 2,
+        "name": "Mounir Aoun"
+      },
+      "subjectType": "work_entry",
+      "subjectId": 552,
+      "amount": null,
+      "prevAmount": null,
+      "payload": {
+        "minutes": 60
+      },
+      "workEntry": null,
+      "isDemo": false
+    },
+    {
+      "id": 738,
+      "kind": "work_entry_updated",
+      "group": "work",
+      "domain": "design",
+      "occurredAt": "2026-09-30T06:14:41.87Z",
+      "actor": {
+        "id": 3,
+        "name": "Sarah Haddad"
+      },
+      "project": {
+        "id": 2,
+        "name": "Villa Mounir interiors"
+      },
+      "client": {
+        "id": 2,
+        "name": "Mounir Aoun"
+      },
+      "subjectType": "work_entry",
+      "subjectId": 78,
+      "amount": null,
+      "prevAmount": null,
+      "payload": {
+        "minutes": 80
+      },
+      "workEntry": {
+        "id": 78,
+        "person": {
+          "id": 3,
+          "name": "Sarah Haddad"
+        },
+        "project": {
+          "id": 2,
+          "title": "Villa Mounir interiors",
+          "icon": "palette",
+          "tint": "#8A5A2B"
+        },
+        "description": "Living room concept",
+        "startedAt": "2026-09-28T13:40:00Z",
+        "endedAt": "2026-09-28T15:00:00Z",
+        "minutes": 80,
+        "overtimeMinutes": 60,
+        "createdAt": "2026-09-30T04:52:31.652Z",
+        "updatedAt": "2026-09-30T06:14:41.862Z",
+        "canEdit": false,
+        "commentCount": 0,
+        "attachment": null
+      },
+      "isDemo": false
+    },
+    {
+      "id": 737,
+      "kind": "work_entry_logged",
+      "group": "work",
+      "domain": "design",
+      "occurredAt": "2026-09-30T06:14:41.87Z",
+      "actor": {
+        "id": 3,
+        "name": "Sarah Haddad"
+      },
+      "project": {
+        "id": 2,
+        "name": "Villa Mounir interiors"
+      },
+      "client": {
+        "id": 2,
+        "name": "Mounir Aoun"
+      },
+      "subjectType": "work_entry",
+      "subjectId": 552,
+      "amount": null,
+      "prevAmount": null,
+      "payload": {
+        "minutes": 60
+      },
+      "workEntry": null,
+      "isDemo": false
+    },
+    {
+      "id": 734,
+      "kind": "payment_recorded",
+      "group": "billing",
+      "domain": "design",
+      "occurredAt": "2026-09-30T04:52:54.631Z",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam"
+      },
+      "project": {
+        "id": 1,
+        "name": "Haddad Holdings HQ fit-out"
+      },
+      "client": {
+        "id": 1,
+        "name": "Georges Haddad"
+      },
+      "subjectType": "payment",
+      "subjectId": 5,
+      "amount": 4000,
+      "prevAmount": null,
+      "payload": {
+        "method": "cheque",
+        "currency": "USD",
+        "isInitial": false,
+        "invoiceNumber": "ID-2026-002"
+      },
+      "workEntry": null,
+      "isDemo": false
+    },
+    {
+      "id": 733,
+      "kind": "payment_recorded",
+      "group": "billing",
+      "domain": "design",
+      "occurredAt": "2026-09-30T04:52:54.571Z",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam"
+      },
+      "project": {
+        "id": 1,
+        "name": "Haddad Holdings HQ fit-out"
+      },
+      "client": {
+        "id": 1,
+        "name": "Georges Haddad"
+      },
+      "subjectType": "payment",
+      "subjectId": 4,
+      "amount": 14400,
+      "prevAmount": null,
+      "payload": {
+        "method": "bank",
+        "currency": "USD",
+        "isInitial": false,
+        "invoiceNumber": "ID-2026-001"
+      },
+      "workEntry": null,
+      "isDemo": false
+    },
+    {
+      "id": 729,
+      "kind": "invoice_issued",
+      "group": "billing",
+      "domain": "design",
+      "occurredAt": "2026-09-30T04:52:54.4Z",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam"
+      },
+      "project": {
+        "id": 1,
+        "name": "Haddad Holdings HQ fit-out"
+      },
+      "client": {
+        "id": 1,
+        "name": "Georges Haddad"
+      },
+      "subjectType": "invoice",
+      "subjectId": 2,
+      "amount": 9600,
+      "prevAmount": null,
+      "payload": {
+        "number": "ID-2026-002"
+      },
+      "workEntry": null,
+      "isDemo": false
+    },
+    {
+      "id": 732,
+      "kind": "invoice_created",
+      "group": "billing",
+      "domain": "design",
+      "occurredAt": "2026-09-30T04:52:54.498Z",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam"
+      },
+      "project": {
+        "id": 3,
+        "name": "Cedar Bank branch refresh"
+      },
+      "client": {
+        "id": 3,
+        "name": "Rita Frem"
+      },
+      "subjectType": "invoice",
+      "subjectId": 4,
+      "amount": 10500,
+      "prevAmount": null,
+      "payload": null,
+      "workEntry": null,
+      "isDemo": false
+    },
+    {
+      "id": 731,
+      "kind": "invoice_issued",
+      "group": "billing",
+      "domain": "design",
+      "occurredAt": "2026-09-30T04:52:54.464Z",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam"
+      },
+      "project": {
+        "id": 2,
+        "name": "Villa Mounir interiors"
+      },
+      "client": {
+        "id": 2,
+        "name": "Mounir Aoun"
+      },
+      "subjectType": "invoice",
+      "subjectId": 3,
+      "amount": 7800,
+      "prevAmount": null,
+      "payload": {
+        "number": "ID-2026-003"
+      },
+      "workEntry": null,
+      "isDemo": false
+    },
+    {
+      "id": 730,
+      "kind": "invoice_created",
+      "group": "billing",
+      "domain": "design",
+      "occurredAt": "2026-09-30T04:52:54.435Z",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam"
+      },
+      "project": {
+        "id": 2,
+        "name": "Villa Mounir interiors"
+      },
+      "client": {
+        "id": 2,
+        "name": "Mounir Aoun"
+      },
+      "subjectType": "invoice",
+      "subjectId": 3,
+      "amount": 7800,
+      "prevAmount": null,
+      "payload": null,
+      "workEntry": null,
+      "isDemo": false
+    },
+    {
+      "id": 728,
+      "kind": "invoice_created",
+      "group": "billing",
+      "domain": "design",
+      "occurredAt": "2026-09-30T04:52:54.367Z",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam"
+      },
+      "project": {
+        "id": 1,
+        "name": "Haddad Holdings HQ fit-out"
+      },
+      "client": {
+        "id": 1,
+        "name": "Georges Haddad"
+      },
+      "subjectType": "invoice",
+      "subjectId": 2,
+      "amount": 9600,
+      "prevAmount": null,
+      "payload": null,
+      "workEntry": null,
+      "isDemo": false
+    },
+    {
+      "id": 727,
+      "kind": "invoice_issued",
+      "group": "billing",
+      "domain": "design",
+      "occurredAt": "2026-09-30T04:52:54.316Z",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam"
+      },
+      "project": {
+        "id": 1,
+        "name": "Haddad Holdings HQ fit-out"
+      },
+      "client": {
+        "id": 1,
+        "name": "Georges Haddad"
+      },
+      "subjectType": "invoice",
+      "subjectId": 1,
+      "amount": 14400,
+      "prevAmount": null,
+      "payload": {
+        "number": "ID-2026-001"
+      },
+      "workEntry": null,
+      "isDemo": false
+    },
+    {
+      "id": 726,
+      "kind": "invoice_created",
+      "group": "billing",
+      "domain": "design",
+      "occurredAt": "2026-09-30T04:52:54.168Z",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam"
+      },
+      "project": {
+        "id": 1,
+        "name": "Haddad Holdings HQ fit-out"
+      },
+      "client": {
+        "id": 1,
+        "name": "Georges Haddad"
+      },
+      "subjectType": "invoice",
+      "subjectId": 1,
+      "amount": 14400,
+      "prevAmount": null,
+      "payload": null,
+      "workEntry": null,
+      "isDemo": false
+    },
+    {
+      "id": 592,
+      "kind": "work_entry_logged",
+      "group": "work",
+      "domain": "design",
+      "occurredAt": "2026-09-30T04:52:49.292Z",
+      "actor": {
+        "id": 7,
+        "name": "Maya Nassar"
+      },
+      "project": {
+        "id": 6,
+        "name": "Portfolio and competition entries"
+      },
+      "client": null,
+      "subjectType": "work_entry",
+      "subjectId": 551,
+      "amount": null,
+      "prevAmount": null,
+      "payload": {
+        "minutes": 60
+      },
+      "workEntry": {
+        "id": 551,
+        "person": {
+          "id": 7,
+          "name": "Maya Nassar"
+        },
+        "project": {
+          "id": 6,
+          "title": "Portfolio and competition entries",
+          "icon": "folder",
+          "tint": "#697572"
+        },
+        "description": "Competition boards",
+        "startedAt": "2026-09-29T13:00:00Z",
+        "endedAt": "2026-09-29T14:00:00Z",
+        "minutes": 60,
+        "overtimeMinutes": 30,
+        "createdAt": "2026-09-30T04:52:49.286Z",
+        "updatedAt": null,
+        "canEdit": false,
+        "commentCount": 0,
+        "attachment": null
+      },
+      "isDemo": false
+    },
+    {
+      "id": 591,
+      "kind": "work_entry_logged",
+      "group": "work",
+      "domain": "design",
+      "occurredAt": "2026-09-30T04:52:49.253Z",
+      "actor": {
+        "id": 7,
+        "name": "Maya Nassar"
+      },
+      "project": {
+        "id": 6,
+        "name": "Portfolio and competition entries"
+      },
+      "client": null,
+      "subjectType": "work_entry",
+      "subjectId": 550,
+      "amount": null,
+      "prevAmount": null,
+      "payload": {
+        "minutes": 90
+      },
+      "workEntry": {
+        "id": 550,
+        "person": {
+          "id": 7,
+          "name": "Maya Nassar"
+        },
+        "project": {
+          "id": 6,
+          "title": "Portfolio and competition entries",
+          "icon": "folder",
+          "tint": "#697572"
+        },
+        "description": "Award submission text",
+        "startedAt": "2026-09-29T11:00:00Z",
+        "endedAt": "2026-09-29T12:30:00Z",
+        "minutes": 90,
+        "overtimeMinutes": 0,
+        "createdAt": "2026-09-30T04:52:49.247Z",
+        "updatedAt": null,
+        "canEdit": false,
+        "commentCount": 0,
+        "attachment": null
+      },
+      "isDemo": false
+    },
+    {
+      "id": 590,
+      "kind": "work_entry_logged",
+      "group": "work",
+      "domain": "design",
+      "occurredAt": "2026-09-30T04:52:49.214Z",
+      "actor": {
+        "id": 7,
+        "name": "Maya Nassar"
+      },
+      "project": {
+        "id": 6,
+        "name": "Portfolio and competition entries"
+      },
+      "client": null,
+      "subjectType": "work_entry",
+      "subjectId": 549,
+      "amount": null,
+      "prevAmount": null,
+      "payload": {
+        "minutes": 120
+      },
+      "workEntry": {
+        "id": 549,
+        "person": {
+          "id": 7,
+          "name": "Maya Nassar"
+        },
+        "project": {
+          "id": 6,
+          "title": "Portfolio and competition entries",
+          "icon": "folder",
+          "tint": "#697572"
+        },
+        "description": "Award submission text",
+        "startedAt": "2026-09-29T09:00:00Z",
+        "endedAt": "2026-09-29T11:00:00Z",
+        "minutes": 120,
+        "overtimeMinutes": 0,
+        "createdAt": "2026-09-30T04:52:49.207Z",
+        "updatedAt": null,
+        "canEdit": false,
+        "commentCount": 0,
+        "attachment": null
+      },
+      "isDemo": false
+    },
+    {
+      "id": 589,
+      "kind": "work_entry_logged",
+      "group": "work",
+      "domain": "design",
+      "occurredAt": "2026-09-30T04:52:49.176Z",
+      "actor": {
+        "id": 7,
+        "name": "Maya Nassar"
+      },
+      "project": {
+        "id": 6,
+        "name": "Portfolio and competition entries"
+      },
+      "client": null,
+      "subjectType": "work_entry",
+      "subjectId": 548,
+      "amount": null,
+      "prevAmount": null,
+      "payload": {
+        "minutes": 180
+      },
+      "workEntry": {
+        "id": 548,
+        "person": {
+          "id": 7,
+          "name": "Maya Nassar"
+        },
+        "project": {
+          "id": 6,
+          "title": "Portfolio and competition entries",
+          "icon": "folder",
+          "tint": "#697572"
+        },
+        "description": "Award submission text",
+        "startedAt": "2026-09-29T06:00:00Z",
+        "endedAt": "2026-09-29T09:00:00Z",
+        "minutes": 180,
+        "overtimeMinutes": 0,
+        "createdAt": "2026-09-30T04:52:49.17Z",
+        "updatedAt": null,
+        "canEdit": false,
+        "commentCount": 0,
+        "attachment": null
+      },
+      "isDemo": false
+    }
+  ],
+  "page": 1,
+  "pageSize": 40,
+  "totalCount": 662
+}

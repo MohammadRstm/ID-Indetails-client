@@ -12,10 +12,11 @@ export type Team = Schemas["TeamResponse"];
 export type Pay = Schemas["PayResponse"];
 
 /** Everyone's week, quarter and totals, with focus and cost (work_entry:view_all). */
-export function usePeopleWork() {
+export function usePeopleWork(enabled = true) {
     return useQuery({
         queryKey: [...keys.employees.all, "work"],
         queryFn: async () => (await http.get<PersonWork[]>("/work/people")).data,
+        enabled,
     });
 }
 

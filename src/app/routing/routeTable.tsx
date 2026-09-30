@@ -12,6 +12,7 @@ import ProjectRoute from "@/domains/shared/projects/ProjectRoute";
 import ProjectsPage from "@/domains/shared/projects/ProjectsPage";
 import MyWorkRoute from "@/domains/shared/requirements/MyWorkRoute";
 import MyPayPage from "@/domains/design/pay/MyPayPage";
+import ActivityPage from "@/domains/design/activity/ActivityPage";
 import PeoplePage from "@/domains/design/people/PeoplePage";
 import { MyProfilePage, PersonProfilePage } from "@/domains/design/people/ProfilePage";
 
@@ -140,7 +141,7 @@ export const domainRoutes: DomainRoute[] = [
     {
         path: "activity",
         nav: { label: "Activity", icon: "activity" },
-        admin: { element: soon("Activity"), access: designOnly(all(P.ACTIVITY_VIEW)) },
+        admin: { element: <ActivityPage />, access: designOnly(all(P.ACTIVITY_VIEW)) },
     },
     {
         path: "reports",
