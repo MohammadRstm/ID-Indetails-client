@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import Logo, { useBranding } from "@/shared/components/Identity/Logo";
+import Logo from "@/shared/components/Identity/Logo";
+import { useBranding } from "@/shared/components/Identity/useBranding";
 
 type AuthLayoutProps = {
     title: string;

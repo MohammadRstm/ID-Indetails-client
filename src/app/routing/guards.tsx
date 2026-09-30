@@ -1,10 +1,10 @@
-import { createContext, useContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Navigate, Outlet, useLocation, useParams } from "react-router";
 import { usePermissions } from "@/app/permissions/usePermissions";
-import type { Domain } from "@/app/permissions/permissions";
 import { useSession } from "@/app/session/useSession";
 import NotAuthorized from "@/app/pages/NotAuthorized";
 import BootScreen from "@/app/pages/BootScreen";
+import { DomainContext, useDomain } from "./domainContext";
 import { homePath } from "./home";
 import { pageFor, type CompanyRoute, type DomainRoute } from "./routeTable";
 
@@ -35,15 +35,6 @@ export function PublicOnly({ children }: { children: ReactNode }) {
 export function HomeRedirect() {
     const permissions = usePermissions();
     return <Navigate to={homePath(permissions)} replace />;
-}
-
-const DomainContext = createContext<Domain | null>(null);
-
-/** The domain of the page being shown (the first segment of the URL). */
-export function useDomain(): Domain {
-    const domain = useContext(DomainContext);
-    if (!domain) throw new Error("useDomain must be used inside a domain route.");
-    return domain;
 }
 
 /** The domain in the URL must be one the person may enter; otherwise they go home. */

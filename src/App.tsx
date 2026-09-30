@@ -25,6 +25,8 @@ import ForgotPasswordPage from "@/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/auth/ResetPasswordPage";
 import SignInPage from "@/auth/SignInPage";
 import Toasts from "@/shared/components/Feedback/Toasts";
+import TipHost from "@/shared/components/Overlays/TipHost";
+import KitGallery from "@/app/pages/KitGallery";
 
 export default function App() {
     const [queryClient] = useState(createQueryClient);
@@ -34,6 +36,7 @@ export default function App() {
                 <SessionProvider>
                     <AppRoutes />
                     <Toasts />
+                    <TipHost />
                 </SessionProvider>
             </BrowserRouter>
         </QueryClientProvider>
@@ -64,6 +67,7 @@ export function AppRoutes() {
                         <Route index element={<HomeRedirect />} />
                         <Route path="/no-access" element={<NoAccess />} />
                         <Route path="/company" element={<CompanyLauncher />} />
+                        {import.meta.env.DEV && <Route path="/dev/kit" element={<KitGallery />} />}
 
                         <Route element={<AppShell />}>
                             <Route path="/company">

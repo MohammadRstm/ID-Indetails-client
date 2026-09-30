@@ -15,3 +15,5 @@ export type SessionValue = {
 };
 
 export const SessionContext = createContext<SessionValue | null>(null);
+
+export const ME_KEY = ["session", "me"] as const;
