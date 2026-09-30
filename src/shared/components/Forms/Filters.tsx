@@ -67,16 +67,17 @@ type SegmentedProps<V extends string> = {
     style?: CSSProperties;
     /** Buttons share the width equally. */
     stretch?: boolean;
+    disabled?: boolean;
     "aria-label"?: string;
 };
 
 /** The prototype's .seg control: a few mutually exclusive views or periods. */
-export function Segmented<V extends string>({ value, options, onChange, className, style, stretch, ...rest }: SegmentedProps<V>) {
+export function Segmented<V extends string>({ value, options, onChange, className, style, stretch, disabled, ...rest }: SegmentedProps<V>) {
     return (
         <div className={cx("seg", className)} role="tablist" aria-label={rest["aria-label"]} style={stretch ? { width: "100%", ...style } : style}>
             {options.map((o) => (
                 <button key={o.value} type="button" role="tab" aria-selected={value === o.value}
-                    className={cx("seg-btn", value === o.value && "on")} style={stretch ? { flex: 1 } : undefined}
+                    className={cx("seg-btn", value === o.value && "on")} style={stretch ? { flex: 1 } : undefined} disabled={disabled}
                     onClick={() => onChange(o.value)}>
                     {o.label}
                 </button>

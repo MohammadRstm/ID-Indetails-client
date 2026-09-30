@@ -33,7 +33,7 @@ const nameFromEmail = (email: string) => email.split("@")[0].replace(/[._-]+/g, 
  * Add employee (the prototype's P.AddEmployee): they get an invitation and appear in the employee list
  * straight away. They give their own name when they accept.
  */
-export default function InviteModal({ domain, onClose }: { domain: Domain; onClose: () => void }) {
+export default function InviteModal({ domain, initialRole = "employee", onClose }: { domain: Domain; initialRole?: Role; onClose: () => void }) {
     const navigate = useNavigate();
     const permissions = usePermissions();
     const company = useCompanySettings().data;
@@ -44,7 +44,7 @@ export default function InviteModal({ domain, onClose }: { domain: Domain; onClo
     const [email, setEmail] = useState("");
     const [position, setPosition] = useState("");
     const [teamId, setTeamId] = useState("");
-    const [role, setRole] = useState<Role>("employee");
+    const [role, setRole] = useState<Role>(initialRole);
     // an hourly cost only means something where people log hours: Design is paid per hour by default
     const [basis, setBasis] = useState<"hourly" | "monthly">(design ? "hourly" : "monthly");
     const [amount, setAmount] = useState(0);
