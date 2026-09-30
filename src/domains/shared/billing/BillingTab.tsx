@@ -118,7 +118,7 @@ export default function BillingTab({ domain, tiles }: { domain: Domain; tiles: M
                     {!b ? <SkeletonLines lines={4} /> : (
                         <>
                             <RankBars format={(v) => money.short(v)} unit="Collected" showPct items={b.byMethod.map((m) => ({ label: PAYMENT_METHODS[m.method] ?? m.method, value: m.amount }))} />
-                            <div className="chart-note">Hourline never touches the money: it records what arrived, how it arrived, and against which invoice.</div>
+                            <div className="chart-note">ID InDetails never touches the money: it records what arrived, how it arrived, and against which invoice.</div>
                         </>
                     )}
                 </Figure>

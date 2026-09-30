@@ -1,6 +1,6 @@
-# Hourline client
+# ID InDetails client
 
-The web app for Hourline, ID-Indetails' internal project, time and money platform. It talks to the Hourline API ([ID-Indetails-api](https://github.com/MohammadRstm/ID-Indetails-api)), and ports the approved prototype screen by screen. [docs/build-plan.md](docs/build-plan.md) has the plan and progress.
+The web app for ID InDetails, the company's internal project, time and money platform. It talks to the ID InDetails API ([ID-Indetails-api](https://github.com/MohammadRstm/ID-Indetails-api)), and ports the approved prototype screen by screen. [docs/build-plan.md](docs/build-plan.md) has the plan and progress.
 
 ## Running it
 

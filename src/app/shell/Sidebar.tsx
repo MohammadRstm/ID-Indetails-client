@@ -57,7 +57,7 @@ export default function Sidebar({ area }: { area: ShellArea }) {
             <div className="side-head">
                 <Logo />
                 <div className="logo-text">
-                    <div className="logo-name">Hourline</div>
+                    <div className="logo-name">ID InDetails</div>
                     <div className="logo-sub">{company.data?.name ?? ""}</div>
                 </div>
             </div>

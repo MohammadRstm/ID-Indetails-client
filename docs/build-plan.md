@@ -1,6 +1,6 @@
-# Hourline client: build plan
+# ID InDetails client: build plan
 
-The React client for the Hourline API (`ID-Indetails-api`). It ports the approved prototype (the `hourline` folder) screen by screen. The user approved this plan on 30 Sep 2026.
+The React client for the ID InDetails API (`ID-Indetails-api`). It ports the approved prototype (the `hourline` folder) screen by screen. The user approved this plan on 30 Sep 2026.
 
 ## Rules
 

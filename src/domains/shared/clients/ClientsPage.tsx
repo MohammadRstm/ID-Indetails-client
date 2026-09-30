@@ -114,7 +114,7 @@ export default function ClientsPage() {
         <div className="page">
             <PageHead
                 title="Clients"
-                sub="Who the work is for. Clients are records only - they never sign in to Hourline."
+                sub="Who the work is for. Clients are records only - they never sign in to ID InDetails."
                 actions={permissions.has(P.CLIENT_CREATE) && <button className="btn btn-primary" onClick={() => setShowAdd(true)}><Icon name="plus" />Add client</button>}
             />
 

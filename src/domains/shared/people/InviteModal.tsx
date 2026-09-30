@@ -86,7 +86,7 @@ export default function InviteModal({ domain, initialRole = "employee", onClose 
                 <div className="panel" style={{ background: "var(--surface-2)" }}>
                     <div className="panel-body">
                         <div className="muted" style={{ fontSize: 11 }}>To: {sent.email}</div>
-                        <div style={{ fontWeight: 650, marginTop: 6 }}>You have been invited to Hourline</div>
+                        <div style={{ fontWeight: 650, marginTop: 6 }}>You have been invited to ID InDetails</div>
                         <p className="sec mt-s" style={{ fontSize: "12.5px" }}>
                             You were added to {company?.name ?? "the company"}. Accept the invitation, set your name and password, and you can see the projects you work on.
                         </p>

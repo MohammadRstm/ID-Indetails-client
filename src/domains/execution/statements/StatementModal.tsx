@@ -438,7 +438,7 @@ function SendPicker({ number, client, channels, busy, onSend, onClose }: SendPic
                             </label>
                         ))}
                     </div>
-                    <div className="hint mt-s">WhatsApp opens with a short summary ready to send. Email goes out from Hourline with the statement attached as a PDF.</div>
+                    <div className="hint mt-s">WhatsApp opens with a short summary ready to send. Email goes out from ID InDetails with the statement attached as a PDF.</div>
                 </>
             ) : (
                 <div className="banner hold">

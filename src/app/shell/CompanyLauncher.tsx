@@ -44,7 +44,7 @@ export default function CompanyLauncher() {
                 <div className="row" style={{ gap: 11, marginBottom: 26 }}>
                     <Logo size={32} />
                     <div>
-                        <div className="logo-name" style={{ fontSize: 15 }}>Hourline</div>
+                        <div className="logo-name" style={{ fontSize: 15 }}>ID InDetails</div>
                         <div className="logo-sub">{company.data?.name ?? ""}</div>
                     </div>
                     <span className="grow" />

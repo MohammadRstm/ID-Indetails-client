@@ -94,7 +94,7 @@ export default function BillingBand({ project }: { project: Project }) {
                         <InvoiceLine key={inv.id} invoice={inv} onOpen={() => links.openInvoice(inv.id)} />
                     )) : (
                         <p className="muted" style={{ padding: "6px 0 10px" }}>
-                            No invoice yet. Invoices are documents that request payment - the client pays outside Hourline and an admin records it here.
+                            No invoice yet. Invoices are documents that request payment - the client pays outside ID InDetails and an admin records it here.
                         </p>
                     )}
                     {voided.length > 0 && (
@@ -122,7 +122,7 @@ export default function BillingBand({ project }: { project: Project }) {
                     <div className="alloc-total mt">
                         <Icon name="info" />
                         <div className="grow">
-                            <b>Paid outside Hourline</b>
+                            <b>Paid outside ID InDetails</b>
                             <div className="muted" style={{ fontSize: "11.5px" }}>
                                 Invoices go out by email or WhatsApp; the money arrives by transfer, cheque or cash and an admin records it here. Nothing is charged or collected by this platform.
                             </div>

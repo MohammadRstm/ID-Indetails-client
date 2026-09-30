@@ -50,7 +50,7 @@ export function useSaveCompanySettings() {
     });
 }
 
-/** A new logo from an uploaded file, or null for Hourline's mark (company_settings:manage). */
+/** A new logo from an uploaded file, or null for the ID InDetails mark (company_settings:manage). */
 export function useSetLogo() {
     const invalidate = useInvalidate();
     return useMutation({

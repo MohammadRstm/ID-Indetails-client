@@ -14,7 +14,7 @@ import { useSendInvoice, type Invoice } from "./billingApi";
 import { channelsOf, waLink } from "./channels";
 
 /**
- * Sending an invoice (the prototype's P.SendModal): by email, which Hourline sends with the PDF attached,
+ * Sending an invoice (the prototype's P.SendModal): by email, which ID InDetails sends with the PDF attached,
  * on WhatsApp, which opens the chat with the message ready, or as a PDF the admin sends themselves. A
  * draft is issued on the way, which numbers it and starts the payment clock.
  */
@@ -129,8 +129,8 @@ export default function SendInvoiceModal({ invoice: inv, onClose }: { invoice: I
                 <div className="grow">
                     <b>How it is sent</b>
                     <div className="muted" style={{ fontSize: "11.5px" }}>
-                        Email goes out from Hourline with the invoice attached as a PDF. The WhatsApp link opens the chat with the message ready,
-                        and you send it from your own account. Either way, Hourline records who it went to and when.
+                        Email goes out from ID InDetails with the invoice attached as a PDF. The WhatsApp link opens the chat with the message ready,
+                        and you send it from your own account. Either way, ID InDetails records who it went to and when.
                     </div>
                 </div>
             </div>
