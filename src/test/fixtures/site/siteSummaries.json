@@ -1,0 +1,26 @@
+[
+  {
+    "projectId": 7,
+    "materialCount": 4,
+    "materialCost": 6036,
+    "reportedWeeks": 4,
+    "groundLabour": 3000,
+    "myLastRecordedAt": null
+  },
+  {
+    "projectId": 8,
+    "materialCount": 4,
+    "materialCost": 6726,
+    "reportedWeeks": 4,
+    "groundLabour": 3125,
+    "myLastRecordedAt": "2026-09-30T04:52:53.253Z"
+  },
+  {
+    "projectId": 9,
+    "materialCount": 4,
+    "materialCost": 6350,
+    "reportedWeeks": 4,
+    "groundLabour": 3225,
+    "myLastRecordedAt": null
+  }
+]

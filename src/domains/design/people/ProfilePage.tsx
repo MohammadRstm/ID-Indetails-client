@@ -34,6 +34,7 @@ import { companyNow } from "../work/day";
 import EntryRow from "../work/EntryRow";
 import OvertimePanel from "../work/OvertimePanel";
 import type { WorkEntry } from "../work/workApi";
+import SiteWork from "../../execution/staff/SiteWork";
 import EditProfileModal, { type ProfilePerson } from "./EditProfileModal";
 import { useEmployee, useLabourCost, usePayHistory, usePersonEntries, usePersonHours, usePersonWorkSummary } from "./peopleWorkApi";
 
@@ -138,7 +139,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
             </div>
 
             {execution ? (
-                <div className="panel"><Empty art="time" title="On its way" text="What Execution staff record - materials and site labour - arrives with the Execution screens." /></div>
+                (self || permissions.has(P.EMPLOYEE_VIEW)) && <SiteWork userId={self ? null : person.id} joinedOn={extra.joinedOn ?? null} />
             ) : seesWork ? (
                 <DesignWork userId={self ? null : person.id} first={first} self={self} />
             ) : null}

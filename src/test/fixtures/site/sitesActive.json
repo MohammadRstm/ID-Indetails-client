@@ -1,0 +1,109 @@
+{
+  "items": [
+    {
+      "id": 7,
+      "domain": "execution",
+      "title": "Achrafieh Towers lobby",
+      "description": "Achrafieh Towers lobby: site works, materials and ground labour.",
+      "icon": "building",
+      "tint": "#0C6B69",
+      "status": "active",
+      "billingType": "client",
+      "client": {
+        "id": 6,
+        "displayName": "Achrafieh Towers SAL"
+      },
+      "owner": {
+        "id": 10,
+        "name": "Karim Jaber"
+      },
+      "startDate": "2026-06-27",
+      "targetDate": "2026-12-27",
+      "progressPct": 33,
+      "team": {
+        "people": [
+          {
+            "id": 12,
+            "name": "Joe Hanna"
+          },
+          {
+            "id": 11,
+            "name": "Tarek Salem"
+          }
+        ],
+        "count": 2
+      }
+    },
+    {
+      "id": 8,
+      "domain": "execution",
+      "title": "Mar Mikhael loft renovation",
+      "description": "Mar Mikhael loft renovation: site works, materials and ground labour.",
+      "icon": "grid",
+      "tint": "#8A5A2B",
+      "status": "active",
+      "billingType": "client",
+      "client": {
+        "id": 7,
+        "displayName": "Mar Mikhael Lofts"
+      },
+      "owner": {
+        "id": 10,
+        "name": "Karim Jaber"
+      },
+      "startDate": "2026-06-18",
+      "targetDate": "2027-01-10",
+      "progressPct": 33,
+      "team": {
+        "people": [
+          {
+            "id": 12,
+            "name": "Joe Hanna"
+          },
+          {
+            "id": 13,
+            "name": "Nour Aziz"
+          }
+        ],
+        "count": 2
+      }
+    },
+    {
+      "id": 9,
+      "domain": "execution",
+      "title": "Dbayeh marina villa",
+      "description": "Dbayeh marina villa: site works, materials and ground labour.",
+      "icon": "compass",
+      "tint": "#3F4B63",
+      "status": "active",
+      "billingType": "client",
+      "client": {
+        "id": 8,
+        "displayName": "Samir Ghosn"
+      },
+      "owner": {
+        "id": 10,
+        "name": "Karim Jaber"
+      },
+      "startDate": "2026-06-09",
+      "targetDate": "2026-12-30",
+      "progressPct": 33,
+      "team": {
+        "people": [
+          {
+            "id": 12,
+            "name": "Joe Hanna"
+          },
+          {
+            "id": 14,
+            "name": "Walid Chami"
+          }
+        ],
+        "count": 2
+      }
+    }
+  ],
+  "page": 1,
+  "pageSize": 100,
+  "totalCount": 3
+}
