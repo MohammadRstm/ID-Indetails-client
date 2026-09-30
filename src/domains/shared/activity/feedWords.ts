@@ -1,7 +1,7 @@
 import type { Schemas } from "@/api/types";
 import { money } from "@/shared/format/money";
 import { DOMAIN_LABEL } from "@/shared/format/labels";
-import { fmtDate, fmtDayDate, fmtDur, fmtTime } from "@/shared/format/time";
+import { fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtTime } from "@/shared/format/time";
 import type { IconName } from "@/shared/icons/icons";
 
 export type FeedEvent = Schemas["ActivityItemResponse"];
@@ -25,6 +25,19 @@ const person = (p: Payload, names: NameOf, key: string, fallback: string) => {
 };
 const subject = (e: FeedEvent, names: NameOf) => (e.subjectId != null && names(e.subjectId)) || "an employee";
 const entryLength = (p: Payload) => (num(p.minutes) != null ? `a ${fmtDur(num(p.minutes)!)} entry` : "an entry");
+const from = (v: unknown) => (str(v) ? ` from ${fmtDate(str(v)!)}` : "");
+/** How much of a month was excused: "7h", "3 days off", "all of September 2026". Older events only say the kind. */
+const excused = (p: Payload) => {
+    const month = str(p.month) ? fmtMonthY(str(p.month)!) : "the month";
+    const minutes = num(p.minutes);
+    const days = num(p.days);
+    const amount = p.kind === "WholeMonth" ? `all of ${month}`
+        : p.kind === "Days" ? `${days ? `${days} ${days === 1 ? "day" : "days"}` : "days"} off in ${month}`
+            : `${minutes != null ? fmtH(minutes) : "some hours"} in ${month}`;
+    return `${amount}${p.isPaid === false ? ", unpaid" : ""}`;
+};
+/** A company expense's name, and the details its event carries. */
+const overhead = (p: Payload) => ({ name: str(p.name) ?? "a company expense", currency: str(p.currency) ?? "USD", d: (p.details ?? {}) as Payload });
 
 /*
  * What each recorded event says, after the name of whoever did it (the prototype's EVENT_STYLE). Amounts
@@ -141,6 +154,46 @@ const WORDS: Record<string, Words> = {
     permission_reset: { icon: "shield", text: (e, _p, names) => `reset ${subject(e, names)}'s permissions` },
     role_auto_promoted: { icon: "shield", text: (e, _p, names) => `${subject(e, names)}'s access changed with their permissions` },
     role_auto_demoted: { icon: "shield", text: (e, _p, names) => `${subject(e, names)}'s access changed with their permissions` },
+
+    // hours and schedules
+    schedule_changed: {
+        icon: "calendar",
+        text: (e, p, names) => (p.followsDefault === true
+            ? `put ${subject(e, names)} back on the company's working hours${from(p.effectiveFrom)}`
+            : `changed ${subject(e, names)}'s working hours${from(p.effectiveFrom)}`),
+    },
+    working_time_changed: { icon: "clock", text: (_e, p) => `changed the company's working hours${from(p.effectiveFrom)}` },
+    hours_excused: { icon: "checkCircle", text: (e, p, names) => `excused ${subject(e, names)} for ${excused(p)}` },
+    hours_excuse_removed: { icon: "x", text: (e, p, names) => `removed ${subject(e, names)}'s excuse for ${excused(p)}` },
+
+    // company expenses (the payload names the line; amounts only for financial:view)
+    overhead_added: {
+        icon: "plus",
+        text: (e, p) => {
+            const o = overhead(p);
+            return o.d.replaces != null ? `carried ${o.name} on in ${o.currency}${dash(e.amount, o.currency)}` : `added ${o.name} to the company expenses${dash(e.amount, o.currency)}`;
+        },
+    },
+    overhead_updated: { icon: "edit", text: (_e, p) => `updated ${overhead(p).name}'s details` },
+    overhead_amount_changed: {
+        icon: "card",
+        text: (e, p) => {
+            const o = overhead(p);
+            return `changed ${o.name}'s monthly cost${e.amount == null ? "" : ` to ${money.fmt(e.amount, o.currency)}`}${str(o.d.fromMonth) ? ` from ${fmtMonthY(str(o.d.fromMonth)!)}` : ""}`;
+        },
+    },
+    overhead_currency_changed: {
+        icon: "card",
+        text: (_e, p) => {
+            const o = overhead(p);
+            // either the line changed currency, or it ended and a new line carries on in the new one
+            return str(o.d.previousCurrency) ? `changed ${o.name} from ${str(o.d.previousCurrency)} to ${o.currency}`
+                : `ended ${o.name} in ${o.currency}${str(o.d.endedOn) ? ` on ${fmtDate(str(o.d.endedOn)!)}` : ""} to change its currency`;
+        },
+    },
+    overhead_cancelled: { icon: "pause", text: (_e, p) => { const o = overhead(p); return `cancelled ${o.name}${str(o.d.endedOn) ? `, ending ${fmtDate(str(o.d.endedOn)!)}` : ""}`; } },
+    overhead_resumed: { icon: "play", text: (_e, p) => `resumed ${overhead(p).name}` },
+    overhead_removed: { icon: "trash", text: (_e, p) => `removed ${overhead(p).name} from the company expenses` },
 
     // settings
     domain_settings_updated: { icon: "settings", text: (e) => `updated the ${DOMAIN_LABEL[e.domain ?? ""] ?? "domain"} settings` },
