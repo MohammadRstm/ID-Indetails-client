@@ -37,9 +37,10 @@ import type { WorkEntry } from "../work/workApi";
 import SiteWork from "../../execution/staff/SiteWork";
 import PermissionsModal from "../../shared/settings/PermissionsModal";
 import EditProfileModal, { type ProfilePerson } from "./EditProfileModal";
+import PersonActions from "./PersonActions";
 import { useEmployee, useLabourCost, usePayHistory, usePersonEntries, usePersonHours, usePersonWorkSummary } from "./peopleWorkApi";
 
-type Extra = { online?: boolean; lastSeenAt?: string | null; joinedOn?: string | null; status?: string; role?: string; isJoker?: boolean };
+type Extra = { online?: boolean; lastSeenAt?: string | null; joinedOn?: string | null; leftOn?: string | null; status?: string; role?: string; isJoker?: boolean };
 
 /** Someone's profile, for admins (the prototype's P.Profile). */
 export function PersonProfilePage() {
@@ -54,7 +55,7 @@ export function PersonProfilePage() {
     if (!e) return <ProfileSkeleton />;
     return (
         <Profile self={false} person={{ id: e.id, firstName: e.firstName, lastName: e.lastName, email: e.email, phone: e.phone, photoFileId: e.photoFileId, position: e.position, team: e.team, domain: e.domain }}
-            extra={{ online: e.online, lastSeenAt: e.lastSeenAt, joinedOn: e.joinedOn, status: e.status, role: e.role, isJoker: e.isJoker }} />
+            extra={{ online: e.online, lastSeenAt: e.lastSeenAt, joinedOn: e.joinedOn, leftOn: e.leftOn, status: e.status, role: e.role, isJoker: e.isJoker }} />
     );
 }
 
@@ -124,6 +125,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                             {person.phone && <span className="row" style={{ gap: 6 }}><Icon name="phone" style={{ width: 14, height: 14 }} />{person.phone}</span>}
                             {extra.joinedOn && <span className="row" style={{ gap: 6 }}><Icon name="calendar" style={{ width: 14, height: 14 }} />Joined {fmtDateY(extra.joinedOn)}</span>}
                             {extra.status === "invited" && <StatusBadge status="invited" />}
+                            {extra.status === "deactivated" && <span className="badge badge-archived"><Icon name="lock" />{extra.leftOn ? `Left ${fmtDateY(extra.leftOn)}` : "Deactivated"}</span>}
                             {extra.isJoker && <span className="badge" title="Holds a different set of permissions from the role's">Custom access</span>}
                         </div>
                     </div>
@@ -133,12 +135,15 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                         <button className="btn" onClick={() => setEditing(true)}><Icon name="edit" />Edit profile</button>
                     ) : (
                         <div className="row" style={{ gap: 8 }}>
-                            <button className="btn" onClick={() => navigate(`/${domain}/messages?to=${person.id}`)}><Icon name="chat" />Send message</button>
+                            {extra.status === "active" && <button className="btn" onClick={() => navigate(`/${domain}/messages?with=${person.id}`)}><Icon name="chat" />Send message</button>}
                             {permissions.hasAny(P.EMPLOYEE_MANAGE, P.EMPLOYEE_PAY_MANAGE) && <button className="btn" onClick={() => setEditing(true)}><Icon name="edit" />Edit profile</button>}
                             {permissions.has(P.PERMISSION_MANAGE) && extra.role !== "super_admin" && extra.status !== "deactivated" && (
                                 <button className="btn" onClick={() => setPermissionsOpen(true)}><Icon name="shield" />Permissions</button>
                             )}
                             {!execution && permissions.has(P.WORK_ENTRY_VIEW_ALL) && <button className="btn" onClick={exportTimesheet}><Icon name="download" />Export timesheet</button>}
+                            {extra.status && extra.role && (
+                                <PersonActions account={{ id: person.id, name, role: extra.role, domain: person.domain, status: extra.status, leftOn: extra.leftOn ?? null }} />
+                            )}
                         </div>
                     )}
                 </div>

@@ -1,0 +1,216 @@
+import { useState } from "react";
+import { errorMessage } from "@/api/errors";
+import { P } from "@/app/permissions/codes";
+import type { Domain } from "@/app/permissions/permissions";
+import { usePermissions } from "@/app/permissions/usePermissions";
+import { AREAS } from "@/app/routing/areas";
+import { toast } from "@/shared/components/Feedback/toast";
+import { Segmented } from "@/shared/components/Forms/Filters";
+import DateInput from "@/shared/components/Forms/DateInput";
+import Select from "@/shared/components/Forms/Select";
+import MenuButton from "@/shared/components/Overlays/MenuButton";
+import Modal from "@/shared/components/Overlays/Modal";
+import { companyToday, fmtDateY, fmtMonthY } from "@/shared/format/time";
+import Icon from "@/shared/icons/Icon";
+import { useChangeRole, useDeactivate, useMoveEmployee, useReactivate, useResendInvitation, useTeams } from "./peopleWorkApi";
+
+export type Account = {
+    id: number;
+    name: string;
+    role: string;
+    domain: string | null;
+    status: string;
+    leftOn: string | null;
+};
+
+type Dialog = "role" | "move" | "deactivate" | "reactivate" | null;
+
+const ROLES = [{ value: "employee", label: "Employee" }, { value: "admin", label: "Admin" }, { value: "super_admin", label: "Super admin" }] as const;
+const other = (d: string | null): Domain => (d === "design" ? "execution" : "design");
+
+function Foot({ error, busy, label, danger, disabled, onCancel, onGo }: { error: unknown; busy: boolean; label: string; danger?: boolean; disabled?: boolean; onCancel: () => void; onGo: () => void }) {
+    return (
+        <>
+            <div className="grow">{error ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(error)}</span> : null}</div>
+            <button className="btn" onClick={onCancel}>Cancel</button>
+            <button className={danger ? "btn btn-danger" : "btn btn-primary"} disabled={busy || disabled} onClick={onGo}>{label}</button>
+        </>
+    );
+}
+
+/**
+ * What an admin can do to someone's account beyond their details: their role, their business, ending and
+ * restarting their employment, and a fresh invitation. The prototype had none of these; they follow the API's
+ * rules (nobody changes their own account, a super admin's needs employee:invite_super_admin, and only
+ * someone who sees both businesses moves people between them).
+ */
+export default function PersonActions({ account }: { account: Account }) {
+    const permissions = usePermissions();
+    const [dialog, setDialog] = useState<Dialog>(null);
+    const resend = useResendInvitation(account.id);
+    const manage = permissions.has(P.EMPLOYEE_MANAGE) && (account.role !== "super_admin" || permissions.has(P.EMPLOYEE_INVITE_SUPER_ADMIN));
+    const deactivated = account.status === "deactivated";
+    const invited = account.status === "invited";
+    const canMove = manage && !deactivated && account.role !== "super_admin" && permissions.canSeeDomain("design") && permissions.canSeeDomain("execution");
+    const canResend = invited && permissions.hasAny(P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN);
+    if (!manage && !canResend) return null;
+
+    function sendAgain() {
+        resend.mutate(undefined, {
+            onSuccess: () => toast({ text: "Invitation sent again", sub: "The earlier link no longer works.", icon: "send" }),
+            onError: (e) => toast({ text: "The invitation wasn't sent", sub: errorMessage(e), icon: "alert" }),
+        });
+    }
+
+    return (
+        <>
+            <MenuButton icon="dots" label="More actions" width={220}>
+                {(close) => (
+                    <div>
+                        {canResend && <button className="pop-item" disabled={resend.isPending} onClick={() => { close(); sendAgain(); }}><Icon name="send" />Resend invitation</button>}
+                        {manage && !deactivated && !invited && <button className="pop-item" onClick={() => { close(); setDialog("role"); }}><Icon name="shield" />Change role…</button>}
+                        {canMove && <button className="pop-item" onClick={() => { close(); setDialog("move"); }}><Icon name="arrowRight" />Move to {AREAS[other(account.domain)].label}…</button>}
+                        {manage && !deactivated && <button className="pop-item" onClick={() => { close(); setDialog("deactivate"); }}><Icon name="lock" />Deactivate…</button>}
+                        {manage && deactivated && <button className="pop-item" onClick={() => { close(); setDialog("reactivate"); }}><Icon name="refresh" />Reactivate…</button>}
+                    </div>
+                )}
+            </MenuButton>
+            {dialog === "role" && <RoleModal account={account} onClose={() => setDialog(null)} />}
+            {dialog === "move" && <MoveModal account={account} onClose={() => setDialog(null)} />}
+            {dialog === "deactivate" && <DeactivateModal account={account} onClose={() => setDialog(null)} />}
+            {dialog === "reactivate" && <ReactivateModal account={account} onClose={() => setDialog(null)} />}
+        </>
+    );
+}
+
+function RoleModal({ account, onClose }: { account: Account; onClose: () => void }) {
+    const permissions = usePermissions();
+    const change = useChangeRole(account.id);
+    const supers = permissions.has(P.EMPLOYEE_INVITE_SUPER_ADMIN);
+    const options = ROLES.filter((r) => r.value !== account.role && (r.value !== "super_admin" || supers));
+    const [role, setRole] = useState<string>(options[0]?.value ?? "employee");
+    // a super admin belongs to no business, so stepping down means joining one
+    const needsDomain = account.role === "super_admin" && role !== "super_admin";
+    const [domain, setDomain] = useState<Domain>("design");
+    const label = ROLES.find((r) => r.value === role)?.label ?? role;
+
+    function go() {
+        change.mutate({ role, domainCode: needsDomain ? domain : null }, {
+            onSuccess: () => { toast({ text: `${account.name} is now ${role === "admin" ? "an admin" : role === "employee" ? "an employee" : "a super admin"}`, sub: "Any permissions set just for them were cleared.", icon: "shield" }); onClose(); },
+        });
+    }
+
+    return (
+        <Modal title="Change role" sub={account.name} onClose={onClose}
+            foot={<Foot error={change.error} busy={change.isPending} label={`Make ${label.toLowerCase()}`} onCancel={onClose} onGo={go} />}>
+            <div className="field">
+                <label className="label">New role</label>
+                <Segmented aria-label="New role" value={role} onChange={setRole} options={options.map((o) => ({ value: o.value, label: o.label }))} />
+            </div>
+            {needsDomain && (
+                <div className="field mt">
+                    <label className="label">Business they join</label>
+                    <Segmented aria-label="Business they join" value={domain} onChange={setDomain}
+                        options={(["design", "execution"] as Domain[]).map((d) => ({ value: d, label: AREAS[d].label }))} />
+                </div>
+            )}
+            <p className="hint mt">
+                {role === "super_admin" ? "A super admin sees both businesses and the company area, and belongs to neither. " : ""}
+                They get the new role's permissions; anything set just for them is cleared, and they're told.
+            </p>
+        </Modal>
+    );
+}
+
+function MoveModal({ account, onClose }: { account: Account; onClose: () => void }) {
+    const to = other(account.domain);
+    const move = useMoveEmployee(account.id);
+    const teams = useTeams(to);
+    const [team, setTeam] = useState("none");
+
+    function go() {
+        move.mutate({ domainCode: to, teamId: team === "none" ? null : Number(team) }, {
+            onSuccess: () => { toast({ text: `${account.name} moved to ${AREAS[to].label}`, sub: "Any permissions set just for them were cleared.", icon: "arrowRight" }); onClose(); },
+        });
+    }
+
+    return (
+        <Modal title={`Move to ${AREAS[to].label}`} sub={account.name} onClose={onClose}
+            foot={<Foot error={move.error} busy={move.isPending} label={`Move to ${AREAS[to].label}`} onCancel={onClose} onGo={go} />}>
+            <div className="field">
+                <label className="label" htmlFor="move-team">Team</label>
+                <Select id="move-team" value={team} onChange={setTeam}
+                    options={[{ value: "none", label: "No team" }, ...(teams.data ?? []).map((t) => ({ value: String(t.id), label: t.name }))]} />
+            </div>
+            <p className="hint mt">
+                They keep their role and their history. They leave {AREAS[other(to)].label}'s projects and chats and see {AREAS[to].label}'s instead;
+                anything set just for them in permissions is cleared.
+            </p>
+        </Modal>
+    );
+}
+
+function DeactivateModal({ account, onClose }: { account: Account; onClose: () => void }) {
+    const today = companyToday();
+    const deactivate = useDeactivate(account.id);
+    const [lastDay, setLastDay] = useState(today);
+    const invited = account.status === "invited";
+
+    function go() {
+        deactivate.mutate(invited ? null : lastDay, {
+            onSuccess: () => {
+                toast({ text: `${account.name} deactivated`, sub: invited ? "Their invitation no longer works." : `Employment ends ${fmtDateY(lastDay)}. Their history stays.`, icon: "lock" });
+                onClose();
+            },
+        });
+    }
+
+    return (
+        <Modal title={invited ? "Cancel invitation" : "Deactivate account"} sub={account.name} onClose={onClose}
+            foot={<Foot error={deactivate.error} busy={deactivate.isPending} danger label={invited ? "Cancel invitation" : "Deactivate"} disabled={!invited && !lastDay} onCancel={onClose} onGo={go} />}>
+            {!invited && (
+                <div className="field">
+                    <label className="label" htmlFor="last-day">Last working day</label>
+                    <DateInput id="last-day" value={lastDay} onChange={setLastDay} />
+                    <div className="hint">Paid up to and including this day.</div>
+                </div>
+            )}
+            <p className="hint mt">
+                They can't sign in any more, and every session they have open ends now. Their work, pay and messages stay as they were;
+                they can be reactivated later.
+            </p>
+        </Modal>
+    );
+}
+
+function ReactivateModal({ account, onClose }: { account: Account; onClose: () => void }) {
+    const reactivate = useReactivate(account.id);
+    // only time away within this month can still be paid; earlier months are closed
+    const askGap = account.leftOn != null && account.leftOn.slice(0, 7) === companyToday().slice(0, 7);
+    const [payGap, setPayGap] = useState<"paid" | "unpaid">("unpaid");
+
+    function go() {
+        reactivate.mutate(askGap ? payGap === "paid" : null, {
+            onSuccess: (e) => {
+                toast({ text: `${account.name} reactivated`, sub: e.status === "invited" ? "They were invited again, with a new link." : "A new period of employment starts today.", icon: "refresh" });
+                onClose();
+            },
+        });
+    }
+
+    return (
+        <Modal title="Reactivate account" sub={account.name} onClose={onClose}
+            foot={<Foot error={reactivate.error} busy={reactivate.isPending} label="Reactivate" onCancel={onClose} onGo={go} />}>
+            {askGap && (
+                <div className="field">
+                    <label className="label">The days they were away in {fmtMonthY(account.leftOn!)}</label>
+                    <Segmented aria-label="Time away" value={payGap} onChange={setPayGap} options={[{ value: "unpaid", label: "Unpaid" }, { value: "paid", label: "Paid" }]} />
+                </div>
+            )}
+            <p className="hint mt">
+                {account.leftOn ? `They left on ${fmtDateY(account.leftOn)}. ` : ""}They can sign in again as before, and a new period of
+                employment starts today{askGap ? "" : " - time away isn't paid"}. Someone who never signed up is invited again instead.
+            </p>
+        </Modal>
+    );
+}
