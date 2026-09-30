@@ -233,11 +233,11 @@ export function RevenueCostCard({ months, error, retry }: { months: FinanceMonth
     const financials = open("financials");
     const list = months ?? [];
     return (
-        <Figure title="Revenue against cost" sub="Revenue is recognised by progress, so it lands as the work is done."
+        <Figure title="Revenue against cost" sub="Revenue is the money received from clients, in the month it arrived."
             tools={financials && <button className="btn btn-sm btn-quiet" onClick={financials}>Open financials</button>}
             table={{ cols: [{ label: "Month" }, { label: "Revenue", right: true }, { label: "Cost", right: true }, { label: "Profit", right: true }], rows: list.map((m) => [fmtMonthY(m.month), money.fmt(m.revenue), money.fmt(m.cost), money.fmt(m.profit)]) }}>
             {error ? <LoadError error={error} retry={retry} what="the months" /> : !months ? <SkeletonLines lines={6} /> : (
-                <Columns height={190} labelEvery={Math.max(1, Math.ceil(list.length / 6))} seriesLabel="Revenue recognised" ghostLabel="Total cost" format={(v) => money.short(v)}
+                <Columns height={190} labelEvery={Math.max(1, Math.ceil(list.length / 6))} seriesLabel="Revenue received" ghostLabel="Total cost" format={(v) => money.short(v)}
                     data={list.map((m) => ({ label: monthLabel(m.month), tip: fmtMonthY(m.month), value: m.revenue, ghost: m.cost, note: `profit ${money.fmt(m.profit)}` }))} />
             )}
         </Figure>

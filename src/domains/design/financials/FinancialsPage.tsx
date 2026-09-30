@@ -98,7 +98,7 @@ function FinancialsPage({ domain }: { domain: Domain }) {
             {summary.isError && !summary.data ? <div className="panel"><div className="panel-body"><LoadError error={summary.error} retry={() => summary.refetch()} what="the financials" /></div></div> : (
                 <>
                     <KpiStrip loading={!s} items={[
-                        { key: "revenue", label: "Revenue recognised", value: money.short(s?.revenue ?? 0), sub: <span>{s?.clientProjects ?? 0} client projects · by progress</span> },
+                        { key: "revenue", label: "Revenue received", value: money.short(s?.revenue ?? 0), sub: <span>{s?.clientProjects ?? 0} client projects · payments in the period</span> },
                         ...costTiles,
                         { key: "profit", label: "Net profit", value: money.short(s?.profit ?? 0), sub: <span>revenue less {costWords(domain).toLowerCase()}</span> },
                         { key: "margin", label: "Margin", value: money.pct(s?.margin), sub: <span>all-time client profit {money.short(s?.allTimeClientProfit ?? 0)}</span> },

@@ -112,7 +112,7 @@ function OverviewPage({ domain }: { domain: Domain }) {
 
     const moneyFigures = orFailed(summary, "the money", (
         <KpiStrip loading={!s} items={[
-            { key: "revenue", label: `Revenue · ${range.label}`, value: money.short(s?.revenue ?? 0), sub: <span>recognised by progress</span> },
+            { key: "revenue", label: `Revenue · ${range.label}`, value: money.short(s?.revenue ?? 0), sub: <span>received from clients</span> },
             {
                 key: "cost", label: "Total cost", value: money.short(s?.cost.total ?? 0),
                 // "labour $12k · project expenses $1.6k"; a site's "materials $6k · ground labour $3k · project expenses $0"

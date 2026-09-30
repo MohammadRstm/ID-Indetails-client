@@ -72,7 +72,7 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
                             <SwitchRow title="Pay changes apply forward only" description="Past hours keep the rate they were logged at, so closed projects and paid months never change value." control={<Always />} />
                             <SwitchRow title="Company expenses" description="Subscriptions and running costs belong to the company, not to this business. They are managed above it and never reach a project or a client." control={<span className="badge">Company level</span>} />
                             <SwitchRow title="Who can see financials" description="Cost rates, pay, revenue and profit." control={<Always>Admins only</Always>} />
-                            <SwitchRow title="Revenue recognition" description="How revenue is spread across months: in step with each project's progress (its requirements)." control={<Always>By progress</Always>} />
+                            <SwitchRow title="Revenue" description="How revenue counts on the overview, the dashboards and Financials: the money received from clients, on the day it arrives." control={<Always>As received</Always>} />
                         </>
                     )}
                 </div>

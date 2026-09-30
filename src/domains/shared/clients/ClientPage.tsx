@@ -157,7 +157,7 @@ function ClientView({ client }: { client: Client }) {
                 { key: "projects", label: "Projects", value: client.projectCount, sub: m ? <span>{m.activeProjects} active · {m.completedProjects} completed</span> : undefined },
                 ...(w ? [{ key: "hours", label: "Hours worked", value: w.totalMinutes ? fmtH(w.totalMinutes) : "-", sub: <span>{plural(w.contributorCount, "person", "people")} · {w.entryCount.toLocaleString("en-US")} entries</span> }] : []),
                 ...(m ? [
-                    { key: "revenue", label: "Revenue", value: money.short(m.revenue), sub: <span>{money.short(m.recognisedToDate)} earned so far</span> },
+                    { key: "revenue", label: "Revenue", value: money.short(m.revenue), sub: <span>{money.short(m.billing.received)} received so far</span> },
                     { key: "cost", label: "Cost", value: money.short(m.cost.total), sub: <span>labour {money.short(m.cost.labour)} · expenses {money.short(m.cost.expenses)}</span> },
                     { key: "profit", label: "Profit", value: money.short(m.profit), sub: <span>payment less labour and expenses</span> },
                     {
@@ -196,7 +196,7 @@ function ClientView({ client }: { client: Client }) {
                                         <MarginPill value={m.marginKnown ? m.margin : null} />
                                         {m.activeProjects > 0 && (
                                             <span className="muted" style={{ fontSize: "11.5px" }}>
-                                                {plural(m.activeProjects, "project")} still running - {money.short(m.activeRevenue - (m.recognisedToDate - m.completedRevenue))} of it not earned yet
+                                                {plural(m.activeProjects, "project")} still running - {money.short(Math.max(0, m.revenue - m.billing.received))} of the agreed payments still to collect
                                             </span>
                                         )}
                                     </div>
