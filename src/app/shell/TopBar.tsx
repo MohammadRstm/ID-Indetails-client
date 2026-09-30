@@ -6,9 +6,11 @@ import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
 import ThemeToggle from "@/shared/components/Buttons/ThemeToggle";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Popover from "@/shared/components/Overlays/Popover";
+import MessagesDropdown from "@/domains/shared/messages/MessagesDropdown";
 import NotificationBell from "@/domains/shared/notifications/NotificationBell";
 import TimerControl from "@/domains/design/work/TimerControl";
 import Icon from "@/shared/icons/Icon";
+import { cx } from "@/shared/utils/cx";
 import { useUnreadBadges } from "./shellQueries";
 import type { ShellArea } from "./useArea";
 
@@ -45,12 +47,19 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
 
                 <ThemeToggle />
 
-                <button className="icon-btn" onClick={() => navigate(`${base}/messages`)} aria-label="Messages">
-                    <Icon name="chat" />
-                    {unreadMessages > 0 && (
-                        <span className="msg-badge">{badges.messages?.mention ? "@" : unreadMessages > 9 ? "9+" : unreadMessages}</span>
+                <Popover
+                    align="right"
+                    trigger={(open, toggle) => (
+                        <button className={cx("icon-btn", open && "on")} onClick={toggle} aria-label="Messages">
+                            <Icon name="chat" />
+                            {unreadMessages > 0 && (
+                                <span className="msg-badge">{badges.messages?.mention ? "@" : unreadMessages > 9 ? "9+" : unreadMessages}</span>
+                            )}
+                        </button>
                     )}
-                </button>
+                >
+                    {(close) => <MessagesDropdown messagesPath={`${base}/messages`} close={close} />}
+                </Popover>
 
                 <NotificationBell allPath={`${base}/notifications`} />
 

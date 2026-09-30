@@ -3,7 +3,6 @@ import { matchPath } from "react-router";
 import { P } from "@/app/permissions/codes";
 import type { Domain, Permissions } from "@/app/permissions/permissions";
 import type { IconName } from "@/shared/icons/icons";
-import ComingSoon from "@/app/pages/ComingSoon";
 import ClientPage from "@/domains/shared/clients/ClientPage";
 import ClientsPage from "@/domains/shared/clients/ClientsPage";
 import { MeetingsPage } from "@/domains/shared/meetings/Meetings";
@@ -17,6 +16,7 @@ import CompanyOverviewPage from "@/domains/company/CompanyOverviewPage";
 import ProjectPayPage from "@/domains/company/projectPay/ProjectPayPage";
 import SalariesPage from "@/domains/company/salaries/SalariesPage";
 import SchedulesPage from "@/domains/company/schedules/SchedulesPage";
+import MessagesPage from "@/domains/shared/messages/MessagesPage";
 import NotificationsPage from "@/domains/shared/notifications/NotificationsPage";
 import MyPayPage from "@/domains/design/pay/MyPayPage";
 import ActivityPage from "@/domains/design/activity/ActivityPage";
@@ -82,8 +82,6 @@ const SETTINGS_CODES = [
     P.EMPLOYEE_INVITE_SUPER_ADMIN,
     P.PERMISSION_MANAGE,
 ] as const;
-
-const soon = (title: string) => <ComingSoon title={title} />;
 
 export const domainRoutes: DomainRoute[] = [
     {
@@ -175,8 +173,8 @@ export const domainRoutes: DomainRoute[] = [
     },
     {
         path: "messages",
-        admin: { element: soon("Messages"), access: signedIn },
-        employee: { element: soon("Messages"), access: signedIn },
+        admin: { element: <MessagesPage />, access: signedIn },
+        employee: { element: <MessagesPage />, access: signedIn },
     },
 ];
 
@@ -187,7 +185,7 @@ export const companyRoutes: CompanyRoute[] = [
     { path: "project-pay", nav: { label: "Project pay", icon: "briefcase" }, element: <ProjectPayPage />, access: (p) => p.has(P.SALARY_VIEW) },
     { path: "schedules", nav: { label: "Schedules", icon: "calendar" }, element: <SchedulesPage />, access: (p) => p.has(P.SCHEDULE_MANAGE) },
     { path: "notifications", element: <NotificationsPage />, access: () => true },
-    { path: "messages", element: soon("Messages"), access: () => true },
+    { path: "messages", element: <MessagesPage />, access: () => true },
 ];
 
 /** The page a person gets on a route: the admin page for admins, the employee page for employees. */
