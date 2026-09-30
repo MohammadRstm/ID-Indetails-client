@@ -84,7 +84,13 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const requirements = useRequirements(project.id, permissions.has(P.REQUIREMENT_VIEW));
     const meetings = useProjectMeetings(project.id);
     const [showDone, setShowDone] = useState(false);
-    const [showReport, setShowReport] = useState(false);
+    // the report opens through the link too (?report=1), as the projects list's menu does
+    const showReport = params.get("report") === "1";
+    const setShowReport = (show: boolean) => {
+        if (show) params.set("report", "1");
+        else params.delete("report");
+        setParams(params, { replace: !show });
+    };
     const completeFromList = params.get("complete") === "1";
 
     const site = project.domain === "execution";

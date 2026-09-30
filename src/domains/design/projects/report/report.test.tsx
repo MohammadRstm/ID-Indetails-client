@@ -43,6 +43,14 @@ describe("the project report", () => {
         expect(within(summary).getAllByText("Internal only")).toHaveLength(3);
     });
 
+    it("opens from a link, as the projects list's menu does, and closes back to the project", async () => {
+        renderApp(`${path}?report=1`, admin, ...handlers);
+        expect(await screen.findByRole("dialog", { name: "Project report" })).toBeInTheDocument();
+        await userEvent.keyboard("{Escape}");
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: "Project report" })).toBeNull());
+        expect(window.location.search).toBe("");
+    });
+
     it("asks the server for the PDF with the type, range and sections picked", async () => {
         const asked: URLSearchParams[] = [];
         renderApp(path, admin,
