@@ -95,7 +95,7 @@ export default function ProjectsPage() {
                             <span className="trunc" style={{ fontWeight: 650, fontSize: 13 }}>{p.title}</span>
                             {p.startDate === companyToday() && <span className="badge badge-new">New</span>}
                         </div>
-                        <div className="muted trunc" style={{ fontSize: "11.5px", maxWidth: 340 }}>{p.owner.name}</div>
+                        <div className="muted trunc" style={{ fontSize: "11.5px", maxWidth: 340 }}>{p.description || "No description"}</div>
                     </div>
                 </div>
             ),

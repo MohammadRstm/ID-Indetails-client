@@ -1,0 +1,162 @@
+{
+  "person": {
+    "id": 13,
+    "name": "Nour Aziz"
+  },
+  "currency": "USD",
+  "materialCount": 4,
+  "materials": 6726,
+  "labourWeeks": 0,
+  "labour": 0,
+  "total": 6726,
+  "thisQuarter": 6726,
+  "activeDays": 1,
+  "weeks": [
+    {
+      "weekStart": "2026-06-15",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-06-22",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-06-29",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-07-06",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-07-13",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-07-20",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-07-27",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-08-03",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-08-10",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-08-17",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-08-24",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-08-31",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-09-07",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-09-14",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-09-21",
+      "materials": 0,
+      "labour": 0,
+      "value": 0
+    },
+    {
+      "weekStart": "2026-09-28",
+      "materials": 6726,
+      "labour": 0,
+      "value": 6726
+    }
+  ],
+  "projects": [
+    {
+      "projectId": 8,
+      "title": "Mar Mikhael loft renovation",
+      "status": "active",
+      "materialCount": 4,
+      "materials": 6726,
+      "labourWeeks": 0,
+      "labour": 0,
+      "lastRecordedAt": "2026-09-30T04:52:53.253Z"
+    }
+  ],
+  "recent": [
+    {
+      "kind": "material",
+      "id": 5,
+      "projectId": 8,
+      "projectTitle": "Mar Mikhael loft renovation",
+      "at": "2026-09-30T04:52:53.253Z",
+      "label": "Rebar 12mm",
+      "amount": 936
+    },
+    {
+      "kind": "material",
+      "id": 6,
+      "projectId": 8,
+      "projectTitle": "Mar Mikhael loft renovation",
+      "at": "2026-09-30T04:52:53.253Z",
+      "label": "Porcelain tiles",
+      "amount": 3960
+    },
+    {
+      "kind": "material",
+      "id": 7,
+      "projectId": 8,
+      "projectTitle": "Mar Mikhael loft renovation",
+      "at": "2026-09-30T04:52:53.253Z",
+      "label": "Paint",
+      "amount": 840
+    },
+    {
+      "kind": "material",
+      "id": 8,
+      "projectId": 8,
+      "projectTitle": "Mar Mikhael loft renovation",
+      "at": "2026-09-30T04:52:53.253Z",
+      "label": "Plasterboard",
+      "amount": 990
+    }
+  ]
+}

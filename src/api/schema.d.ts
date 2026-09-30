@@ -10088,6 +10088,7 @@ export interface components {
         ProjectSummaryResponse: {
             billingType: components["schemas"]["BillingType"];
             client: null | components["schemas"]["ProjectClientResponse"];
+            description: null | string;
             domain: string;
             icon: null | string;
             /** Format: int64 */
