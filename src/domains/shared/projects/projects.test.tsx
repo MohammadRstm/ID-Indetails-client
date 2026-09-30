@@ -95,6 +95,8 @@ describe("a project", () => {
         await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
         await userEvent.click(screen.getByRole("button", { name: "Put on hold" }));
         await waitFor(() => expect(held).toBe(true));
+        // the menu has closed by now; the toast still comes
+        expect(await screen.findByText("Haddad Holdings HQ fit-out is now on hold")).toBeInTheDocument();
     });
 
     it("hides the payment without financial:view", async () => {
