@@ -25,6 +25,7 @@ The web app for Hourline, ID-Indetails' internal project, time and money platfor
 | `npm test` | Tests, once (Vitest, at most 2 workers) |
 | `npm run test:watch` | Tests, re-run on change |
 | `npm run api:types` | Regenerates `src/api/schema.d.ts` from the running API's OpenAPI document |
+| `node scripts/seed-dev.mjs` | Fills an empty development database with a sample company through the API. Needs `SETUP_KEY` (the API's `Setup:SuperAdminKey`) and Mailpit. Writes the accounts to `dev-accounts.local`, which is git-ignored |
 
 ## How it's built
 
@@ -39,8 +40,16 @@ The web app for Hourline, ID-Indetails' internal project, time and money platfor
   - Icons: the prototype's own set.
   - Formatting in the prototype's style: dates and times in the company's time zone, durations and money.
   - The light and dark theme (dark by default).
-- **`src/features/<area>`: one folder per area** (projects, clients, work, billing, execution, company, people, messaging, settings). Each holds its React Query hooks, components and pages.
-- **`src/app`: the app shell, the router, the session and permissions.**
+- **`src/domains`: the screens.**
+  - `design`, `execution` and `company` hold what only that area has.
+  - `shared` holds what both domains use: projects, clients, financials, invoices, people and meetings.
+  - Each area holds its React Query hooks, components and pages.
+- **`src/auth`: signing in and out.** Sign-in, the password flows and accepting an invitation.
+- **`src/app`: the frame around the screens.**
+  - The app shell and the session.
+  - Permissions: `usePermissions()` and `<Can>`.
+  - The route table (`routing/routeTable.tsx`). Every screen is listed once, with the permission it needs. The route guard and the sidebar both read it.
+- **`src/services`: app-wide services,** such as live updates.
 
 The client never calculates money or decides access. Every figure comes from the API, and every rule is enforced there. The client hides what someone can't see or do, based on the permissions `GET /api/auth/me` returns.
 

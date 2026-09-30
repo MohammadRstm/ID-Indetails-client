@@ -1,0 +1,193 @@
+import type { ReactNode } from "react";
+import { P } from "@/app/permissions/codes";
+import type { Domain, Permissions } from "@/app/permissions/permissions";
+import type { IconName } from "@/shared/icons/icons";
+import ComingSoon from "@/app/pages/ComingSoon";
+
+/*
+ * Every screen, once. A route names the page an admin sees and the page an employee sees, what each needs,
+ * and its place in the sidebar. The route guard and the sidebar both read this table, so a nav item and the
+ * route behind it can never disagree.
+ *
+ * Access here decides what the client shows; the API checks every request again.
+ */
+
+export type AccessContext = { p: Permissions; domain: Domain };
+export type AccessRule = (ctx: AccessContext) => boolean;
+
+export type RoutePage = { element: ReactNode; access: AccessRule };
+
+export type NavEntry = {
+    label: string | ((domain: Domain) => string);
+    icon: IconName;
+    /** Under the "Workspace" heading. */
+    section?: "workspace";
+    /** A count next to the label. */
+    count?: "projects" | "clients" | "people";
+};
+
+export type DomainRoute = {
+    path: string;
+    /** Which nav item lights up; defaults to the first segment of the path. */
+    navKey?: string;
+    nav?: NavEntry;
+    admin?: RoutePage;
+    employee?: RoutePage;
+};
+
+export type CompanyRoute = {
+    path: string;
+    navKey?: string;
+    nav?: NavEntry;
+    element: ReactNode;
+    access: (p: Permissions) => boolean;
+};
+
+const signedIn: AccessRule = () => true;
+const all = (...codes: Parameters<Permissions["hasAll"]>): AccessRule => ({ p }) => p.hasAll(...codes);
+const any = (...codes: Parameters<Permissions["hasAny"]>): AccessRule => ({ p }) => p.hasAny(...codes);
+const designOnly = (rule: AccessRule): AccessRule => (ctx) => ctx.domain === "design" && rule(ctx);
+
+/** Anything a settings page lets someone manage. */
+const SETTINGS_CODES = [
+    P.DOMAIN_SETTINGS_MANAGE,
+    P.BILLING_SETTINGS_MANAGE,
+    P.EXCHANGE_RATE_MANAGE,
+    P.COMPANY_SETTINGS_MANAGE,
+    P.WORKING_TIME_MANAGE,
+    P.TEAM_MANAGE,
+    P.EMPLOYEE_INVITE,
+    P.EMPLOYEE_INVITE_SUPER_ADMIN,
+    P.PERMISSION_MANAGE,
+] as const;
+
+const soon = (title: string) => <ComingSoon title={title} />;
+
+export const domainRoutes: DomainRoute[] = [
+    {
+        path: "overview",
+        nav: { label: (d) => (d === "execution" ? "Dashboard" : "Overview"), icon: "overview" },
+        admin: { element: soon("Overview"), access: all(P.REPORT_VIEW) },
+    },
+    {
+        path: "projects",
+        nav: { label: "Projects", icon: "projects", count: "projects" },
+        admin: { element: soon("Projects"), access: all(P.PROJECT_VIEW) },
+        employee: { element: soon("Projects"), access: all(P.PROJECT_VIEW) },
+    },
+    {
+        path: "projects/:id",
+        navKey: "projects",
+        admin: { element: soon("Project"), access: all(P.PROJECT_VIEW) },
+        employee: { element: soon("Project"), access: all(P.PROJECT_VIEW) },
+    },
+    {
+        path: "clients",
+        nav: { label: "Clients", icon: "briefcase", count: "clients" },
+        admin: { element: soon("Clients"), access: all(P.CLIENT_VIEW) },
+    },
+    {
+        path: "clients/:id",
+        navKey: "clients",
+        admin: { element: soon("Client"), access: all(P.CLIENT_VIEW) },
+    },
+    {
+        // Built on logged hours, so Design only; an Execution person's profile is still reachable from their name.
+        path: "people",
+        nav: { label: "Employees", icon: "people", count: "people" },
+        admin: { element: soon("Employees"), access: designOnly(all(P.EMPLOYEE_VIEW, P.WORK_ENTRY_VIEW_ALL)) },
+    },
+    {
+        path: "people/:id",
+        navKey: "people",
+        admin: { element: soon("Profile"), access: all(P.EMPLOYEE_VIEW) },
+    },
+    {
+        path: "financials",
+        nav: { label: "Financials", icon: "card" },
+        admin: { element: soon("Financials"), access: all(P.FINANCIAL_VIEW) },
+    },
+    {
+        path: "my-work",
+        nav: { label: "My work", icon: "clock" },
+        employee: {
+            element: soon("My work"),
+            access: (ctx) => (ctx.domain === "design" ? ctx.p.has(P.WORK_ENTRY_VIEW_OWN) : ctx.p.has(P.REQUIREMENT_VIEW)),
+        },
+    },
+    {
+        path: "pay",
+        nav: { label: "My pay", icon: "card" },
+        employee: { element: soon("My pay"), access: designOnly(all(P.WORK_ENTRY_VIEW_OWN)) },
+    },
+    {
+        path: "meetings",
+        nav: { label: "Meetings", icon: "calendar" },
+        admin: { element: soon("Meetings"), access: all(P.PROJECT_VIEW) },
+        employee: { element: soon("Meetings"), access: all(P.PROJECT_VIEW) },
+    },
+    {
+        path: "activity",
+        nav: { label: "Activity", icon: "activity" },
+        admin: { element: soon("Activity"), access: designOnly(all(P.ACTIVITY_VIEW)) },
+    },
+    {
+        path: "reports",
+        nav: { label: "Reports", icon: "reports" },
+        admin: { element: soon("Reports"), access: designOnly(all(P.REPORT_VIEW)) },
+    },
+    {
+        path: "profile",
+        nav: { label: "Profile", icon: "user" },
+        employee: { element: soon("Profile"), access: signedIn },
+    },
+    {
+        path: "settings",
+        nav: { label: "Settings", icon: "settings", section: "workspace" },
+        admin: { element: soon("Settings"), access: any(...SETTINGS_CODES) },
+    },
+    {
+        path: "notifications",
+        admin: { element: soon("Notifications"), access: signedIn },
+        employee: { element: soon("Notifications"), access: signedIn },
+    },
+    {
+        path: "messages",
+        admin: { element: soon("Messages"), access: signedIn },
+        employee: { element: soon("Messages"), access: signedIn },
+    },
+];
+
+export const companyRoutes: CompanyRoute[] = [
+    { path: "overview", nav: { label: "Overview", icon: "chartTile" }, element: soon("Company overview"), access: (p) => p.has(P.COMPANY_VIEW) },
+    { path: "overhead", nav: { label: "Expenses", icon: "card" }, element: soon("Company expenses"), access: (p) => p.hasAny(P.COMPANY_VIEW, P.OVERHEAD_MANAGE) },
+    { path: "salaries", nav: { label: "Salaries", icon: "people" }, element: soon("Salaries"), access: (p) => p.has(P.SALARY_VIEW) },
+    { path: "project-pay", nav: { label: "Project pay", icon: "briefcase" }, element: soon("Project pay"), access: (p) => p.has(P.SALARY_VIEW) },
+    { path: "schedules", nav: { label: "Schedules", icon: "calendar" }, element: soon("Schedules"), access: (p) => p.has(P.SCHEDULE_MANAGE) },
+    { path: "notifications", element: soon("Notifications"), access: () => true },
+    { path: "messages", element: soon("Messages"), access: () => true },
+];
+
+/** The page a person gets on a route: the admin page for admins, the employee page for employees. */
+export function pageFor(route: DomainRoute, p: Permissions): RoutePage | undefined {
+    return p.isAdmin ? route.admin : route.employee;
+}
+
+export type NavItem = { key: string; path: string; label: string; icon: IconName; section?: "workspace"; count?: NavEntry["count"] };
+
+/** The sidebar of a domain: the routes with a nav entry whose page this person may open. */
+export function domainNav(p: Permissions, domain: Domain): NavItem[] {
+    return domainRoutes.flatMap((route) => {
+        const page = pageFor(route, p);
+        if (!route.nav || !page || !page.access({ p, domain })) return [];
+        const { label, icon, section, count } = route.nav;
+        return [{ key: route.path, path: route.path, label: typeof label === "function" ? label(domain) : label, icon, section, count }];
+    });
+}
+
+export function companyNav(p: Permissions): NavItem[] {
+    return companyRoutes.flatMap((route) => {
+        if (!route.nav || !route.access(p)) return [];
+        return [{ key: route.path, path: route.path, label: route.nav.label as string, icon: route.nav.icon }];
+    });
+}
