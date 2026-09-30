@@ -49,7 +49,7 @@ export default function CompanyExpensesPage() {
     const active = (o?.lines ?? []).filter((l) => !l.isCancelled);
     // a cancelled line can be taken back until the end of the month it stops after, unless another line with
     // its name carries on from the next day (a change of currency, or it was added again): both would charge
-    const carriedOn = (l: OverheadLine) => (o?.lines ?? []).some((x) => x.id !== l.id && x.name === l.name && x.costGroup === l.costGroup
+    const carriedOn = (l: OverheadLine) => (o?.lines ?? []).some((x) => x.id !== l.id && x.name.toLowerCase() === l.name.toLowerCase() && x.costGroup === l.costGroup
         && l.endedOn != null && x.startedOn === addDays(l.endedOn, 1));
     const canResume = (l: OverheadLine) => l.isCancelled && l.endedOn != null && l.endedOn >= companyToday() && !carriedOn(l);
     const perMonth = usd(o?.monthTotals ?? []);
