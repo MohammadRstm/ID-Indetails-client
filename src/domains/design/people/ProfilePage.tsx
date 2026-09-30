@@ -95,6 +95,9 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
     const entryId = Number(params.get("entry")) || null;
     const closeEntry = () => { params.delete("entry"); setParams(params, { replace: true }); };
     const avatar = { name, photoFileId: person.photoFileId, online: extra.online };
+    // an admin can reach their own profile here too; the API lets nobody message themselves or change their own permissions
+    const me = useCurrentUser();
+    const own = person.id === me.id;
 
     async function exportTimesheet() {
         const { today } = companyNow();
@@ -136,9 +139,9 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                         <button className="btn" onClick={() => setEditing(true)}><Icon name="edit" />Edit profile</button>
                     ) : (
                         <div className="row" style={{ gap: 8 }}>
-                            {extra.status === "active" && <button className="btn" onClick={() => navigate(`/${domain}/messages?with=${person.id}`)}><Icon name="chat" />Send message</button>}
+                            {extra.status === "active" && !own && <button className="btn" onClick={() => navigate(`/${domain}/messages?with=${person.id}`)}><Icon name="chat" />Send message</button>}
                             {permissions.hasAny(P.EMPLOYEE_MANAGE, P.EMPLOYEE_PAY_MANAGE) && <button className="btn" onClick={() => setEditing(true)}><Icon name="edit" />Edit profile</button>}
-                            {permissions.has(P.PERMISSION_MANAGE) && extra.role !== "super_admin" && extra.status !== "deactivated" && (
+                            {permissions.has(P.PERMISSION_MANAGE) && !own && extra.role !== "super_admin" && extra.status !== "deactivated" && (
                                 <button className="btn" onClick={() => setPermissionsOpen(true)}><Icon name="shield" />Permissions</button>
                             )}
                             {!execution && permissions.has(P.WORK_ENTRY_VIEW_ALL) && <button className="btn" onClick={exportTimesheet}><Icon name="download" />Export timesheet</button>}

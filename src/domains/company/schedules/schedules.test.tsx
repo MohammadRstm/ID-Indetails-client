@@ -87,6 +87,15 @@ describe("Schedules", () => {
         expect(await screen.findByText("Elie follows the company default")).toBeInTheDocument();
     });
 
+    it("say that a change saved for the day one is already set replaces it", async () => {
+        renderApp("/company/schedules", rana,
+            withPerson(8, { changedOn: "2026-09-30", nextChangeOn: "2026-10-01" }),
+            ...companyPayHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Edit Elie Khalil's schedule" }));
+        const dialog = await screen.findByRole("dialog", { name: "Elie Khalil's schedule" });
+        expect(within(dialog).getByText(/It replaces the change already set for Oct 1\./)).toBeInTheDocument();
+    });
+
     it("treat a week the same as the company's as following it", async () => {
         const { sent, handler } = saving();
         renderApp("/company/schedules", rana, handler,

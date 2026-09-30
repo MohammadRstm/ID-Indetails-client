@@ -79,6 +79,25 @@ describe("Someone's account", () => {
         await waitFor(() => expect(sent).toEqual([{ payGap: true }]));
     });
 
+    it("is reactivated without asking about pay when they left today", async () => {
+        const { sent, handler } = recording("post", "/api/employees/:id/reactivate");
+        renderApp("/design/people/9", rana, handler, as({ status: "deactivated", leftOn: "2026-09-30" }), ...peopleHandlers);
+        await menu();
+        await userEvent.click(screen.getByRole("button", { name: "Reactivate…" }));
+        const dialog = await screen.findByRole("dialog", { name: "Reactivate account" });
+        expect(within(dialog).queryByRole("tab", { name: "Paid" })).not.toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Reactivate" }));
+        await waitFor(() => expect(sent).toEqual([{}]));
+    });
+
+    it("can't be changed, messaged or given permissions by its own holder", async () => {
+        renderApp("/design/people/1", rana, as({ id: 1, role: "admin" }), ...peopleHandlers);
+        expect(await screen.findByRole("button", { name: "Edit profile" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "More actions" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Send message" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Permissions" })).not.toBeInTheDocument();
+    });
+
     it("gets a fresh invitation while they haven't signed up", async () => {
         const sent: string[] = [];
         renderApp("/design/people/9", personas.designAdmin, as({ status: "invited" }),
