@@ -1,0 +1,349 @@
+import { useState } from "react";
+import { P } from "@/app/permissions/codes";
+import { usePermissions } from "@/app/permissions/usePermissions";
+import { Delta, RankBars, Spark } from "@/shared/components/Charts/Bars";
+import Columns from "@/shared/components/Charts/Columns";
+import Figure from "@/shared/components/Charts/Figure";
+import { HourHeat } from "@/shared/components/Charts/Heat";
+import LineChart, { type LineSeries } from "@/shared/components/Charts/LineChart";
+import { Bar } from "@/shared/components/Data/Bits";
+import { KpiStrip } from "@/shared/components/Data/Kpi";
+import { MixedCurrency } from "@/shared/components/Data/Money";
+import { activityLevelOf } from "@/shared/components/Data/activity";
+import { SortTh, type SortState } from "@/shared/components/Data-Tables/DataTable";
+import Empty from "@/shared/components/Feedback/Empty";
+import LoadError from "@/shared/components/Feedback/LoadError";
+import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
+import Select from "@/shared/components/Forms/Select";
+import { SearchInput, Segmented } from "@/shared/components/Forms/Filters";
+import { Avatars, PersonAvatar, PersonLine } from "@/shared/components/Identity/People";
+import useDebounce from "@/shared/hooks/useDebounce";
+import { money } from "@/shared/format/money";
+import { quarterEnd, quarterLabel, quarterOf, quarterStart } from "@/shared/format/periods";
+import { addDays, dayKey, daysBetween, fmtDate, fmtDateY, fmtDur, fmtDurShort, fmtH, fmtNumber, relDay, startOfWeek } from "@/shared/format/time";
+import Icon from "@/shared/icons/Icon";
+import { cx } from "@/shared/utils/cx";
+import { useDomainPeople } from "../../shared/people/peopleApi";
+import type { Project } from "../../shared/projects/projectsApi";
+import { companyNow } from "../work/day";
+import ContributorDrawer, { type WorkRange } from "./ContributorDrawer";
+import EntryModal from "./EntryModal";
+import { useLatestEntry, useProjectTimeline, useProjectWork, type Contributor, type ProjectWork } from "./projectWorkApi";
+import WorkTimeline from "./WorkTimeline";
+
+type RangeKey = "all" | "quarter" | "d30" | "d7";
+const ACTIVITY = ["No activity", "Quiet", "Steady", "Busy"];
+const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+function rangeOptions(project: Project, today: string): Record<RangeKey, WorkRange> {
+    const q = quarterOf(today);
+    return {
+        all: { label: "Entire project", from: project.startDate, to: project.completedAt ? dayKey(project.completedAt) : today },
+        quarter: { label: quarterLabel(q.year, q.quarter), from: quarterStart(q.year, q.quarter), to: quarterEnd(q.year, q.quarter) },
+        d30: { label: "Last 30 days", from: addDays(today, -29), to: today },
+        d7: { label: "Last 7 days", from: addDays(today, -6), to: today },
+    };
+}
+
+/**
+ * A Design project's Overview tab, for admins (the prototype's AdminProject): the work KPIs, who put the
+ * hours in, the work timeline and the analytics.
+ */
+export default function DesignOverview({ project }: { project: Project }) {
+    const permissions = usePermissions();
+    const { today } = companyNow();
+    const seesWork = permissions.has(P.WORK_ENTRY_VIEW_ALL);
+    const [drawer, setDrawer] = useState<number | null>(null);
+    const [entry, setEntry] = useState<number | null>(null);
+    const [search, setSearch] = useState("");
+    const [workQ, setWorkQ] = useState("");
+    const [rangeKey, setRangeKey] = useState<RangeKey>("all");
+    const ranges = rangeOptions(project, today);
+    const range = ranges[rangeKey];
+    const text = useDebounce({ value: workQ.trim(), debounceTimeMs: 250 });
+    const all = useProjectWork(project.id);
+    const filtered = useProjectWork(project.id, { from: range.from, to: range.to, search: text || undefined });
+
+    if (!seesWork) return <Kpis project={project} work={undefined} />;
+    return (
+        <>
+            {all.isError ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="the project's work" /></div></div>
+                : <Kpis project={project} work={all.data} />}
+
+            <div className="mt">
+                <Contributors work={filtered.data} error={filtered.error} retry={() => filtered.refetch()} range={range} rangeKey={rangeKey} ranges={ranges}
+                    setRangeKey={setRangeKey} search={search} setSearch={setSearch} workQ={workQ} setWorkQ={setWorkQ} onPerson={setDrawer} />
+            </div>
+
+            <div className="mt">
+                <WorkTimeline project={project} onPerson={setDrawer} onEntry={setEntry} />
+            </div>
+
+            <Analytics project={project} work={all.data} contributors={filtered.data?.contributors ?? []} onPerson={setDrawer} />
+
+            {drawer != null && (
+                <ContributorDrawer projectId={project.id} projectTitle={project.title} personId={drawer} range={range} workQ={workQ}
+                    onOpenEntry={setEntry} onClose={() => setDrawer(null)} />
+            )}
+            {entry != null && <EntryModal entryId={entry} overDrawer={drawer != null} onClose={() => setEntry(null)} />}
+        </>
+    );
+}
+
+/** The KPI strip: hours, entries, contributors, progress, payment, last activity and pace. */
+function Kpis({ project, work: w }: { project: Project; work: ProjectWork | undefined }) {
+    const permissions = usePermissions();
+    const seesWork = permissions.has(P.WORK_ENTRY_VIEW_ALL);
+    const latest = useLatestEntry(project.id);
+    const m = permissions.has(P.FINANCIAL_VIEW) && project.billingType === "client" ? project.money : null;
+    const b = m?.billing;
+    const last = latest.data;
+    const progress = { key: "progress", label: "Progress", value: `${project.progressPct}%`, sub: <div style={{ width: 88 }}><Bar value={project.progressPct} hideValue /></div> };
+    if (!seesWork) return <KpiStrip items={[progress]} />;
+    const normal = (w?.totalMinutes ?? 0) - (w?.totalOvertimeMinutes ?? 0);
+
+    return (
+        <KpiStrip loading={!w} items={[
+            {
+                key: "hours", label: "Total hours", value: fmtH(w?.totalMinutes ?? 0),
+                sub: w?.totalOvertimeMinutes ? <span>{fmtH(normal)} normal · <span className="ot-text">{fmtH(w.totalOvertimeMinutes)} overtime</span></span> : undefined,
+                delta: w && <Delta value={w.minutesLast14Days} prev={w.minutesPrevious14Days} label="last 14 days vs previous" />,
+            },
+            { key: "entries", label: "Work entries", value: fmtNumber(w?.entryCount ?? 0), sub: <span>avg {w?.entryCount ? fmtDur(w.totalMinutes / w.entryCount) : "-"} per entry</span> },
+            {
+                key: "people", label: "Contributors", value: w?.contributorCount ?? 0,
+                sub: <Avatars people={(w?.contributors ?? []).map((c) => ({ id: c.userId, name: c.name }))} max={6} link />,
+            },
+            progress,
+            ...(m && b ? [{
+                key: "payment", label: "Payment status",
+                value: b.invoiced <= 0 ? "Not invoiced" : b.outstanding > 0.5 ? money.short(b.outstanding) : "Paid",
+                sub: (
+                    <span className={b.overdue > 0.5 ? "down" : ""}>
+                        {b.invoiced <= 0 ? `${money.short(m.revenue)} still to bill`
+                            : b.outstanding > 0.5 ? `${b.overdue > 0.5 ? "overdue · " : "outstanding · "}${money.short(b.received)} received`
+                                : `${money.short(b.received)} received in full`}
+                    </span>
+                ),
+            }] : []),
+            {
+                key: "last", label: "Last activity", value: w?.lastStartedAt ? relDay(w.lastStartedAt) : "-",
+                sub: <span>{last ? `${last.person.name.split(" ")[0]} · ${fmtDurShort(last.minutes)}` : "no work logged"}</span>,
+            },
+            { key: "activity", label: "Activity", value: ACTIVITY[activityLevelOf(w?.activityLevel)], sub: <span>{fmtH((w?.minutesLast14Days ?? 0) / 2)} per week (14-day average)</span> },
+        ]} />
+    );
+}
+
+type ContributorsProps = {
+    work: ProjectWork | undefined;
+    error: unknown;
+    retry: () => void;
+    range: WorkRange;
+    rangeKey: RangeKey;
+    ranges: Record<RangeKey, WorkRange>;
+    setRangeKey: (k: RangeKey) => void;
+    search: string;
+    setSearch: (v: string) => void;
+    workQ: string;
+    setWorkQ: (v: string) => void;
+    onPerson: (id: number) => void;
+};
+
+/** "Contributors": who put the hours in, filtered by range and work text (the prototype's contributors table). */
+function Contributors({ work, error, retry, range, rangeKey, ranges, setRangeKey, search, setSearch, workQ, setWorkQ, onPerson }: ContributorsProps) {
+    const permissions = usePermissions();
+    const seesMoney = permissions.has(P.FINANCIAL_VIEW);
+    const [showCost, setShowCost] = useState(false);
+    const [sort, setSort] = useState<SortState>({ key: "hours", dir: "desc" });
+    // positions, under each name
+    const people = useDomainPeople("design", permissions.has(P.EMPLOYEE_VIEW));
+    const positionOf = new Map((people.data ?? []).map((p) => [p.id, p.position]));
+    const sq = search.trim().toLowerCase();
+    const dir = sort.dir === "desc" ? 1 : -1;
+    const list = (work?.contributors ?? [])
+        .filter((c) => !sq || c.name.toLowerCase().includes(sq))
+        .sort((a, b) => {
+            if (sort.key === "entries") return (b.entries - a.entries) * dir;
+            if (sort.key === "recent") return b.lastStartedAt.localeCompare(a.lastStartedAt) * dir;
+            if (sort.key === "name") return a.name.localeCompare(b.name) * -dir;
+            return (b.minutes - a.minutes) * dir;
+        });
+    const total = list.reduce((s, c) => s + c.minutes, 0);
+    const totalCost = list.reduce((s, c) => s + (c.labourCost?.usd ?? 0), 0);
+    const entries = list.reduce((s, c) => s + c.entries, 0);
+    const share = (c: Contributor) => (showCost ? (totalCost ? Math.round(((c.labourCost?.usd ?? 0) / totalCost) * 100) : 0) : total ? Math.round((c.minutes / total) * 100) : 0);
+    const clear = () => { setSearch(""); setWorkQ(""); setRangeKey("all"); };
+
+    return (
+        <div className="panel">
+            <div className="panel-head">
+                <div className="grow" style={{ minWidth: 180 }}>
+                    <div className="panel-title">Contributors</div>
+                    <div className="panel-sub">Who put the hours in. Click a person to see their entries on this project.</div>
+                </div>
+                <div className="panel-tools">
+                    <SearchInput width={150} value={search} onChange={setSearch} placeholder="Find person" />
+                    <SearchInput width={160} icon="filter" value={workQ} onChange={setWorkQ} placeholder="Filter work text" />
+                    <Select className="select sm" style={{ width: 150 }} aria-label="Range" value={rangeKey} onChange={setRangeKey}
+                        options={(Object.keys(ranges) as RangeKey[]).map((k) => ({ value: k, label: ranges[k].label }))} />
+                    {seesMoney && (
+                        <Segmented value={showCost ? "cost" : "hours"} onChange={(v) => setShowCost(v === "cost")} aria-label="Share of"
+                            options={[{ value: "hours", label: "Hours" }, { value: "cost", label: "Cost" }]} />
+                    )}
+                </div>
+            </div>
+            {error ? <div className="panel-body"><LoadError error={error} retry={retry} what="the contributors" /></div> : !work ? <div className="panel-body"><SkeletonLines lines={4} /></div> : (
+                <>
+                    <div className="tbl-wrap">
+                        <table className="tbl tbl-min-sm">
+                            <thead>
+                                <tr>
+                                    <SortTh sortKey="name" sort={sort} onSort={setSort}>Employee</SortTh>
+                                    <SortTh sortKey="entries" sort={sort} onSort={setSort} right>Entries</SortTh>
+                                    <th className="r" title="Hours inside the working day">Normal</th>
+                                    <th className="r" title="Outside the working day, on a day off, or past what the day asks for">Overtime</th>
+                                    <SortTh sortKey="hours" sort={sort} onSort={setSort} right>Total</SortTh>
+                                    {seesMoney && <th className="r">Labour cost</th>}
+                                    <th style={{ width: 120 }}>{showCost ? "Share of cost" : "Share"}</th>
+                                    <th>Last 8 weeks</th>
+                                    <SortTh sortKey="recent" sort={sort} onSort={setSort}>Last activity</SortTh>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {list.map((c) => (
+                                    <tr key={c.userId} className="click" onClick={() => onPerson(c.userId)}>
+                                        <td><PersonLine person={{ id: c.userId, name: c.name }} size={28} link sub={positionOf.get(c.userId) ?? false} /></td>
+                                        <td className="r num">{c.entries}</td>
+                                        <td className="r mono">{fmtDur(c.minutes - c.overtimeMinutes)}</td>
+                                        <td className={cx("r mono", c.overtimeMinutes ? "ot-text" : "muted")}>{c.overtimeMinutes ? fmtDur(c.overtimeMinutes) : "-"}</td>
+                                        <td className="r mono" style={{ fontWeight: 600 }}>{fmtDur(c.minutes)}</td>
+                                        {seesMoney && (
+                                            <td className="r mono">
+                                                {money.fmt(c.labourCost?.usd ?? 0)}
+                                                {c.labourCost?.unconverted.length ? <div><MixedCurrency amounts={c.labourCost.unconverted} /></div> : null}
+                                            </td>
+                                        )}
+                                        <td>
+                                            <div className="meter-row">
+                                                <div className="bar"><i style={{ width: `${share(c)}%` }} /></div>
+                                                <span className="meter-val">{share(c)}%</span>
+                                            </div>
+                                        </td>
+                                        <td><Spark values={c.weekly} width={64} height={18} /></td>
+                                        <td className="nowrap muted">{relDay(c.lastStartedAt)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    {list.length === 0 && (
+                        <Empty art="search" title="No contributions match these filters" text="Widen the date range or clear the work-text filter."
+                            action={<button className="btn" onClick={clear}>Clear filters</button>} />
+                    )}
+                    {list.length > 0 && (
+                        <div className="panel-foot">
+                            <span>{list.length} contributors · {fmtNumber(entries)} entries · {fmtH(total)}</span>
+                            <div className="grow" />
+                            <span className="muted">{range.label}{workQ ? ` · work text contains "${workQ}"` : ""}</span>
+                        </div>
+                    )}
+                </>
+            )}
+        </div>
+    );
+}
+
+/** The analytics that close the page, collapsed until asked for. */
+function Analytics({ project, work: w, contributors, onPerson }: { project: Project; work: ProjectWork | undefined; contributors: Contributor[]; onPerson: (id: number) => void }) {
+    const [open, setOpen] = useState(false);
+    const total = contributors.reduce((s, c) => s + c.minutes, 0);
+    const top3 = contributors.slice().sort((a, b) => b.minutes - a.minutes).slice(0, 3).reduce((s, c) => s + c.minutes, 0);
+    const weekly = w?.weekly ?? [];
+    const grid = WEEKDAYS.map(() => Array.from({ length: 24 }, () => 0));
+    for (const cell of w?.hourHeat ?? []) grid[WEEKDAYS.indexOf(cell.weekday)][cell.hour] += cell.minutes;
+    const labelEvery = Math.max(1, Math.ceil(weekly.length / 6));
+
+    return (
+        <>
+            <div className="analytics-head">
+                <h2 className="page-title" style={{ fontSize: 16 }}>Analytics</h2>
+                {!open && <span className="muted" style={{ fontSize: 12 }}>4 charts: hours per week, contribution share, when work happens, hours vs plan</span>}
+                <span className="grow" />
+                <button className="link analytics-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
+                    <Icon name={open ? "chevronUp" : "chevronDown"} />{open ? "Hide analytics" : "Show analytics"}
+                </button>
+            </div>
+            {open && (
+                <>
+                    <div className="grid g-2">
+                        <Figure title="Hours per week" sub="Where the effort actually landed across the project's life."
+                            table={{ cols: [{ label: "Week of" }, { label: "Hours", right: true }, { label: "Entries", right: true }], rows: weekly.map((x) => [fmtDateY(x.weekStart), (x.minutes / 60).toFixed(1), x.entries]) }}>
+                            <Columns height={180} labelEvery={labelEvery} format={(v) => `${Math.round(v)}h`}
+                                data={weekly.map((x) => ({ label: fmtDate(x.weekStart), tip: `Week of ${fmtDateY(x.weekStart)}`, value: x.minutes / 60, note: `${x.entries} entries` }))} />
+                        </Figure>
+                        <Figure title="Contribution share" sub="How the work is distributed across the team."
+                            table={{ cols: [{ label: "Employee" }, { label: "Hours", right: true }, { label: "Share", right: true }], rows: contributors.map((c) => [c.name, fmtDur(c.minutes), `${total ? Math.round((c.minutes / total) * 100) : 0}%`]) }}>
+                            <RankBars showPct onClick={(it) => onPerson(Number(it.id))}
+                                items={contributors.slice(0, 9).map((c) => ({
+                                    id: c.userId, label: c.name, value: c.minutes,
+                                    node: <><PersonAvatar person={{ id: c.userId, name: c.name }} size={20} link={false} /><span className="trunc">{c.name}</span></>,
+                                }))} />
+                            <div className="chart-note">Top 3 contributors account for {total ? Math.round((top3 / total) * 100) : 0}% of logged hours.</div>
+                        </Figure>
+                    </div>
+                    <div className="grid g-2 mt">
+                        <Figure title="When work happens" sub="Logged time by weekday and hour - useful for spotting crunch.">
+                            <HourHeat grid={grid} />
+                        </Figure>
+                        <Figure title="Cumulative hours vs plan" sub={project.targetDate ? "Actual hours against a straight-line plan to the target date." : "Hours accumulated since the project started."}>
+                            <BurnUp project={project} />
+                        </Figure>
+                    </div>
+                </>
+            )}
+        </>
+    );
+}
+
+/** Hours accumulated week by week, against a straight-line pace (the prototype's BurnUp). */
+function BurnUp({ project }: { project: Project }) {
+    const { today } = companyNow();
+    const timeline = useProjectTimeline(project.id);
+    if (!timeline.data) return <SkeletonLines lines={4} />;
+    const completed = project.completedAt ? dayKey(project.completedAt) : null;
+    const end = completed ?? (project.targetDate && project.targetDate > today ? project.targetDate : today);
+    const weeks = Math.min(40, Math.max(3, Math.ceil((daysBetween(project.startDate, end) + 1) / 7)));
+    const s0 = startOfWeek(project.startDate);
+    const byDay = new Map(timeline.data.days.map((d) => [d.day, d.minutes]));
+    const minutesIn = (a: string, b: string) => {
+        let m = 0;
+        for (let k = a; k <= b; k = addDays(k, 1)) m += byDay.get(k) ?? 0;
+        return m;
+    };
+    const totalNow = minutesIn(project.startDate, today) / 60;
+    const planTotal = project.progressPct > 0 ? (totalNow / Math.max(5, project.progressPct)) * 100 : totalNow;
+    const actual = [], plan = [];
+    let cum = 0;
+    for (let i = 0; i < weeks; i++) {
+        const ws = addDays(s0, i * 7), we = addDays(ws, 6);
+        const label = fmtDate(ws), tipText = `Week of ${fmtDateY(ws)}`;
+        if (ws <= today) {
+            cum += minutesIn(ws, we) / 60;
+            actual.push({ y: cum, label, tip: tipText });
+        }
+        plan.push({ y: (planTotal * (i + 1)) / weeks, label, tip: tipText });
+    }
+    const series: LineSeries[] = [
+        { label: "Actual hours", points: actual, area: true },
+        { label: completed ? "Straight-line pace" : "Pace needed for target", points: plan, ghost: true, dash: true },
+    ];
+    return (
+        <div>
+            <LineChart series={series} height={190} tickEvery={Math.max(1, Math.ceil(plan.length / 6))} format={(v) => `${Math.round(v)}h`} />
+            <div className="chart-note">
+                The dashed line is a simple straight-line pace, not an estimate: there are no hour budgets yet.
+            </div>
+        </div>
+    );
+}

@@ -1,11 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import { useRef, useState, type ReactNode } from "react";
 import { errorMessage } from "@/api/errors";
-import { http } from "@/api/http";
-import type { Schemas } from "@/api/types";
 import { ProjectTile } from "@/shared/components/Data/Bits";
-import LoadError from "@/shared/components/Feedback/LoadError";
-import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
 import { PersonAvatar, PersonName } from "@/shared/components/Identity/People";
 import MediaLightbox from "@/shared/components/Overlays/MediaLightbox";
@@ -14,11 +9,10 @@ import { useFileUrl } from "@/shared/files/useFileUrl";
 import { fmtDayDate, fmtDayDateY, fmtDur, fmtRange, relTime } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import EntryComments from "./EntryComments";
+import { commentCount } from "./entryWords";
 import { entryBody, uploadFile, useSaveEntry, type WorkEntry } from "./workApi";
 
-type Comment = Schemas["WorkEntryCommentResponse"];
-
-const commentCount = (n: number) => `${n} comment${n === 1 ? "" : "s"}`;
 
 type EntryRowProps = {
     entry: WorkEntry;
@@ -118,40 +112,8 @@ export function EntryCommentsModal({ entry: e, onClose }: { entry: WorkEntry; on
                 {url && <img className="cm-thumb" src={url} alt={e.attachment!.name} title="View file" onClick={() => setViewing(true)} />}
                 {e.attachment?.kind === "video" && <span className="link" onClick={() => setViewing(true)}><Icon name="file" />View file</span>}
             </div>
-            <EntryComments entryId={e.id} />
+            <EntryComments entryId={e.id} author={e.person} domain="design" />
             {viewing && e.attachment && <MediaLightbox file={e.attachment} onClose={() => setViewing(false)} />}
         </Modal>
-    );
-}
-
-const ROLE_LABEL: Record<string, string> = { super_admin: "Super admin", admin: "Admin" };
-
-/** The comment thread on an entry. */
-function EntryComments({ entryId }: { entryId: number }) {
-    const query = useQuery({
-        queryKey: ["work", "comments", entryId],
-        queryFn: async () => (await http.get<Comment[]>(`/work-entries/${entryId}/comments`)).data,
-    });
-    const list = query.data ?? [];
-    return (
-        <div className="cm">
-            <div className="cm-title">{query.data ? commentCount(list.length) : "Comments"}</div>
-            {query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="the comments" />
-                : !query.data ? <SkeletonLines lines={2} />
-                    : list.length ? list.map((c) => (
-                        <div key={c.id} className="cm-item">
-                            <PersonAvatar person={c.author} size={30} />
-                            <div className="grow" style={{ minWidth: 0 }}>
-                                <div className="cm-meta">
-                                    <b><PersonName person={c.author} /></b>
-                                    {ROLE_LABEL[c.author.role] && <span className="badge badge-new">{ROLE_LABEL[c.author.role]}</span>}
-                                    <span className="muted">{relTime(c.createdAt)}</span>
-                                </div>
-                                <div className="cm-text">{c.body}</div>
-                                {c.sentToGroup && <div className="cm-sent"><Icon name="chat" />Sent to the team group chat · @all</div>}
-                            </div>
-                        </div>
-                    )) : <div className="muted" style={{ fontSize: "12.5px", padding: "6px 0" }}>No comments on this entry yet.</div>}
-        </div>
     );
 }
