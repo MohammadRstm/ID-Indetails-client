@@ -24,6 +24,7 @@ import { Day, EventRow, Gap as GapRow, HistoryStatus } from "./HistoryParts";
 import ProgressRail from "./ProgressRail";
 import SnapshotView from "./SnapshotView";
 import { fmtMoment } from "./words";
+import { loadFailed } from "@/api/queryState";
 
 /** A Design project's Timeline tab (the prototype's P.ProjectTimeline): the project at any moment of its life. */
 export default function ProjectHistoryTab({ project }: { project: Project }) {
@@ -32,7 +33,7 @@ export default function ProjectHistoryTab({ project }: { project: Project }) {
     const created = [dayKey(project.createdAt), project.startDate].sort()[0];
     const timeline = useProjectTimeline(project.id);
     const entries = useTimelineEntries(project.id, addDays(created, -7), today);
-    const error = timeline.error ?? entries.error;
+    const error = [timeline, entries].find(loadFailed)?.error;
     const history = useMemo(
         () => (timeline.data && entries.data ? build(project, timeline.data, entries.data, now) : null),
         [project, timeline.data, entries.data, now],

@@ -6,6 +6,7 @@ import { cx } from "@/shared/utils/cx";
 import { describe, type Notification } from "./notificationWords";
 import { useMarkRead } from "./notificationsApi";
 import { useOpenNotification, useReader } from "./useNotificationLinks";
+import { clickable } from "@/shared/utils/clickable";
 
 /**
  * One notification (the prototype's NotifItem): who or what it is about, the sentence, when. A click marks
@@ -25,7 +26,7 @@ export default function NotificationItem({ note, onOpen }: { note: Notification;
     }
 
     return (
-        <div className={cx("notif", unread && "unread")} role="button" tabIndex={0} onClick={click} onKeyDown={(e) => { if (e.key === "Enter") click(); }}>
+        <div className={cx("notif", unread && "unread")} {...clickable(click, "button")}>
             {note.actor ? <Avatar person={{ name: note.actor.name, photoFileId: note.actor.photoFileId }} size={28} />
                 : note.project ? <ProjectTile icon={note.project.icon} tint={note.project.tint} />
                     : <span className="feed-ic"><Icon name={view.icon} /></span>}

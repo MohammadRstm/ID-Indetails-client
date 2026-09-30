@@ -59,7 +59,8 @@ export default function ProjectPage({ panels }: { panels: ProjectPanels }) {
     // a failed refresh keeps the project on screen; only a load with nothing to show stops here
     if (query.isError && !query.data) return <div className="page"><LoadError error={query.error} retry={() => query.refetch()} what="the project" /></div>;
     if (!query.data) return <ProjectSkeleton />;
-    return <ProjectView project={query.data} panels={panels} />;
+    // a fresh view per project: filters, picked weeks and open panels belong to the project they were set on
+    return <ProjectView key={query.data.id} project={query.data} panels={panels} />;
 }
 
 function ProjectSkeleton() {
@@ -95,6 +96,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const completeFromList = params.get("complete") === "1";
 
     const site = project.domain === "execution";
+    // a Design project's report carries its costs and everyone's work, as the API's own check does
+    const canReport = !site && permissions.has(P.FINANCIAL_VIEW) && permissions.has(P.WORK_ENTRY_VIEW_ALL);
     const canChangeStatus = permissions.has(P.PROJECT_CHANGE_STATUS);
     const seesMoney = permissions.has(P.FINANCIAL_VIEW);
     const timelineTab = !site && permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.timeline != null;
@@ -199,7 +202,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     </div>
                 </div>
                 <div className="page-actions">
-                    {!site && permissions.has(P.FINANCIAL_VIEW) && permissions.has(P.WORK_ENTRY_VIEW_ALL) && (
+                    {canReport && (
                         <button className="btn" onClick={() => setShowReport(true)}><Icon name="download" />Export report</button>
                     )}
                     {canChangeStatus && (closed ? (
@@ -281,7 +284,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {moneyAction === "expense" && canAddExpense && <ExpenseModal project={project} onClose={closeMoney} />}
             <BillingModalHost project={project} />
             {site && <StatementHost project={project} />}
-            {showReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}
+            {showReport && canReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}
         </div>
     );
 }

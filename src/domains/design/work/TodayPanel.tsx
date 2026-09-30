@@ -17,6 +17,7 @@ import TimeRange from "./TimeRange";
 import {
     loggableProjects, useDomainSettings, useMyDay, useMyProjects, useMySchedule, useOvertimeFor, useSaveEntry, useUndoLog,
 } from "./workApi";
+import { loadFailed } from "@/api/queryState";
 
 /** Today at a glance on the employee home: a strip of the day that opens into the day composer. */
 export default function TodayPanel() {
@@ -57,7 +58,7 @@ function TodayStrip({ onOpen }: { onOpen: () => void }) {
                 <button className="btn btn-sm" onClick={onOpen}><Icon name="plus" />Add logs</button>
             </div>
             <div className="panel-body">
-                {day.isError ? <LoadError error={day.error} retry={() => day.refetch()} what="today's work" /> : (
+                {loadFailed(day) ? <LoadError error={day.error} retry={() => day.refetch()} what="today's work" /> : (
                     <>
                         <DayTrack lo={r[0]} hi={r[1]} workHours={wh} entries={list.map((e) => trackEntry(e, today))} nowMin={nowMin}
                             onClick={onOpen} title="Open today's timeline to add logs" />

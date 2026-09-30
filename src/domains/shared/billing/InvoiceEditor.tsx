@@ -53,7 +53,12 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
     const touched = (key: string) => setFlash((f) => ({ key, n: f.n + 1 }));
 
     const total = lines.reduce((t, l) => t + (Number(l.amount) || 0), 0);
-    const valid = total > 0 && lines.some((l) => l.description.trim());
+    // a line with a description or an amount needs both, as the API does; an empty line is left out
+    const filled = lines.filter((l) => l.description.trim() || Number(l.amount));
+    const incomplete = filled.some((l) => !l.description.trim() || !(Number(l.amount) > 0));
+    // said once a line has been described: before that, the empty description is plainly still to do
+    const sayIncomplete = incomplete && filled.some((l) => l.description.trim());
+    const valid = total > 0 && filled.length > 0 && !incomplete;
     const over = total > remaining + 0.5;
     const termOptions = TERMS.some((t) => +t.value === termsDays) ? TERMS : [...TERMS, { value: String(termsDays), label: `Net ${termsDays} - due in ${termsDays} days` }];
     const clientName = client?.displayName ?? project.client?.displayName ?? "the client";
@@ -69,7 +74,7 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
     function submit(send: boolean) {
         if (!valid) return;
         save.mutate({
-            lines: lines.filter((l) => l.description.trim() && l.amount > 0).map((l) => ({ description: l.description.trim(), amount: l.amount })),
+            lines: filled.map((l) => ({ description: l.description.trim(), amount: l.amount })),
             notes: notes.trim() || null,
             termsDays,
         }, {
@@ -93,7 +98,8 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
             foot={
                 <>
                     <div className="grow mono" style={{ fontSize: "12.5px", fontWeight: 650 }}>
-                        {save.error ? <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span> : money.exact(total)}
+                        {save.error ? <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span>
+                            : sayIncomplete ? <span className="err"><Icon name="alert" />Each line needs a description and an amount.</span> : money.exact(total)}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn" disabled={!valid || save.isPending} onClick={() => submit(false)}>Save draft</button>
@@ -116,7 +122,7 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
                         <div key={i} className="line-row">
                             <input className="input" placeholder="What is being billed" aria-label={`Line ${i + 1}`} value={l.description}
                                 onChange={(e) => setLine(i, { description: e.target.value })} />
-                            <AmountField value={l.amount} currency="USD" currencies={false} onChange={(amount) => setLine(i, { amount })} />
+                            <AmountField value={l.amount} currency="USD" currencies={false} aria-label={`Line ${i + 1} amount`} onChange={(amount) => setLine(i, { amount })} />
                             <button className="icon-btn" aria-label="Remove line" disabled={lines.length < 2} onClick={() => setLines(lines.filter((_, j) => j !== i))}>
                                 <Icon name="minus" />
                             </button>

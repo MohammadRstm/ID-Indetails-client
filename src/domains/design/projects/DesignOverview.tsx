@@ -36,6 +36,7 @@ import MoneyBand from "./money/MoneyBand";
 import { useProjectExpenses } from "./money/moneyApi";
 import WorkTimeline from "./WorkTimeline";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 const ACTIVITY = ["No activity", "Quiet", "Steady", "Busy"];
 const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
@@ -56,8 +57,9 @@ export default function DesignOverview({ project }: { project: Project }) {
     const ranges = rangeOptions(project, today);
     const range = ranges[rangeKey];
     const text = useDebounce({ value: workQ.trim(), debounceTimeMs: 250 });
-    const all = useProjectWork(project.id);
-    const filtered = useProjectWork(project.id, { from: range.from, to: range.to, search: text || undefined });
+    // everyone's work, the timeline and the cost curve built on it need work_entry:view_all
+    const all = useProjectWork(project.id, {}, seesWork);
+    const filtered = useProjectWork(project.id, { from: range.from, to: range.to, search: text || undefined }, seesWork);
 
     const m = permissions.has(P.FINANCIAL_VIEW) ? project.money : null;
     const expenses = useProjectExpenses(project.id, !!m);
@@ -82,16 +84,16 @@ export default function DesignOverview({ project }: { project: Project }) {
             canRemoveExpenses={permissions.has(P.EXPENSE_MANAGE)} />
     );
 
-    if (!seesWork) return <><Kpis project={project} work={undefined} />{band}{breakdown}{m && <CostFigures project={project} money={m} />}</>;
+    if (!seesWork) return <><Kpis project={project} work={undefined} />{band}{breakdown}</>;
     return (
         <>
-            {all.isError ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="the project's work" /></div></div>
+            {loadFailed(all) ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="the project's work" /></div></div>
                 : <Kpis project={project} work={all.data} />}
 
             {band}
 
             <div className="mt">
-                <Contributors work={filtered.data} error={filtered.error} retry={() => filtered.refetch()} range={range} rangeKey={rangeKey} ranges={ranges}
+                <Contributors work={filtered.data} error={loadFailed(filtered) ? filtered.error : null} retry={() => filtered.refetch()} range={range} rangeKey={rangeKey} ranges={ranges}
                     setRangeKey={setRangeKey} search={search} setSearch={setSearch} workQ={workQ} setWorkQ={setWorkQ} onPerson={setDrawer} />
             </div>
 
@@ -116,7 +118,7 @@ export default function DesignOverview({ project }: { project: Project }) {
 function Kpis({ project, work: w }: { project: Project; work: ProjectWork | undefined }) {
     const permissions = usePermissions();
     const seesWork = permissions.has(P.WORK_ENTRY_VIEW_ALL);
-    const latest = useLatestEntry(project.id);
+    const latest = useLatestEntry(project.id, seesWork);
     const m = permissions.has(P.FINANCIAL_VIEW) && project.billingType === "client" ? project.money : null;
     const b = m?.billing;
     const last = latest.data;
@@ -335,6 +337,7 @@ function Analytics({ project, work: w, contributors, onPerson }: { project: Proj
 function BurnUp({ project }: { project: Project }) {
     const { today } = companyNow();
     const timeline = useProjectTimeline(project.id);
+    if (loadFailed(timeline)) return <LoadError error={timeline.error} retry={() => timeline.refetch()} what="the hours so far" />;
     if (!timeline.data) return <SkeletonLines lines={4} />;
     const completed = project.completedAt ? dayKey(project.completedAt) : null;
     const end = completed ?? (project.targetDate && project.targetDate > today ? project.targetDate : today);

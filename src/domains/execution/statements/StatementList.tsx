@@ -6,6 +6,7 @@ import { fmtDateY } from "@/shared/format/time";
 import type { Project } from "../../shared/projects/projectsApi";
 import { useStatementLinks } from "./statementLinks";
 import { useStatements } from "./statementsApi";
+import { clickable } from "@/shared/utils/clickable";
 
 const SENT = { whatsapp: "WhatsApp", email: "emailed", download: "saved as PDF" };
 
@@ -27,8 +28,7 @@ export default function StatementList({ project }: { project: Project }) {
             </div>
             <div className="panel-body">
                 {list.items.map((s) => (
-                    <div key={s.id} className="cost-row click" role="button" tabIndex={0} onClick={() => links.open(s.id)}
-                        onKeyDown={(e) => { if (e.key === "Enter") links.open(s.id); }}>
+                    <div key={s.id} className="cost-row click" {...clickable(() => links.open(s.id), "button")}>
                         <span className="mono nowrap" style={{ fontWeight: 600, fontSize: 12 }}>{s.number}</span>
                         <span className="grow muted trunc" style={{ fontSize: "11.5px" }}>
                             {fmtDateY(s.createdAt)} · {s.mode === "total" ? "total only" : plural(s.count, "material")}

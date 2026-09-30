@@ -27,7 +27,9 @@ const SEARCH_FROM = 9;
  */
 export default function Select<V extends string>({ value, options, onChange, id, className, style, disabled, ...rest }: SelectProps<V>) {
     const currentIndex = options.findIndex((o) => o.value === value);
-    const shown = currentIndex >= 0 ? options[currentIndex] : options[0];
+    // a value that isn't one of the options shows as a choice still to make, not as the first option: the form
+    // would send the value, not what was shown
+    const shown = currentIndex >= 0 ? options[currentIndex] : null;
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [active, setActive] = useState(0);
@@ -119,7 +121,7 @@ export default function Select<V extends string>({ value, options, onChange, id,
                 onClick={() => (open ? close(false) : openMenu())}
                 onKeyDown={onKey}
             >
-                <span className="sel-val">{shown?.label ?? ""}</span>
+                <span className={cx("sel-val", !shown && "muted")}>{shown?.label ?? "Choose…"}</span>
                 <Icon name="chevronDown" className="sel-chev" />
             </button>
             {open && createPortal(

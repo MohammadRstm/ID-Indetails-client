@@ -25,6 +25,7 @@ export function useSetSchedule(userId: number) {
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async (body: Schemas["SetScheduleRequest"]) => (await http.put<PersonSchedule>(`/employees/${userId}/schedule`, body)).data,
-        onSuccess: () => { void invalidate(schedulesKey, ["company", "salaries"], keys.employees.all, keys.work.all); },
+        // the paid break of each day worked follows the schedule, so labour cost moves with it
+        onSuccess: () => { void invalidate(schedulesKey, ["company"], keys.employees.all, keys.work.all, keys.projects.all, keys.finance.all, keys.dashboard.all); },
     });
 }

@@ -9,6 +9,8 @@ import { cx } from "@/shared/utils/cx";
 import GroupTile from "./GroupTile";
 import { firstName, snippet } from "./messageText";
 import { chatQuery, useConversations, type Conversation } from "./messagesApi";
+import { loadFailed } from "@/api/queryState";
+import { clickable } from "@/shared/utils/clickable";
 
 /** The chat icon's panel (the prototype's P.MessagesDropdown): the chats with the newest messages. */
 export default function MessagesDropdown({ messagesPath, close }: { messagesPath: string; close: () => void }) {
@@ -22,14 +24,13 @@ export default function MessagesDropdown({ messagesPath, close }: { messagesPath
         <div style={{ width: 356, maxWidth: "80vw" }}>
             <div className="pop-head"><div className="grow"><b>Messages</b></div></div>
             <div className="notif-list">
-                {conversations.isError ? <div style={{ padding: 10 }}><LoadError error={conversations.error} retry={() => conversations.refetch()} what="your messages" /></div>
+                {loadFailed(conversations) ? <div style={{ padding: 10 }}><LoadError error={conversations.error} retry={() => conversations.refetch()} what="your messages" /></div>
                     : !conversations.data ? <div style={{ padding: 10 }}><SkeletonLines lines={4} /></div>
                         : list.length === 0 ? <Empty art="done" title="No conversations yet" />
                             : list.map((c) => {
                                 const last = c.lastMessage!;
                                 return (
-                                    <div key={chatQuery(c)} className={cx("notif", c.unread > 0 && "unread")} role="button" tabIndex={0}
-                                        onClick={() => open(c)} onKeyDown={(e) => { if (e.key === "Enter") open(c); }}>
+                                    <div key={chatQuery(c)} className={cx("notif", c.unread > 0 && "unread")} {...clickable(() => open(c), "button")}>
                                         {c.person ? <Avatar person={{ name: c.person.name, photoFileId: c.person.photoFileId }} size={28} /> : <GroupTile domain={c.team?.domain ?? ""} />}
                                         <div className="grow" style={{ minWidth: 0 }}>
                                             <div className="notif-txt trunc">

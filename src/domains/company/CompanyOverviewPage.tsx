@@ -16,6 +16,11 @@ import { cx } from "@/shared/utils/cx";
 import { useCompanyOverview, type CompanyOverview } from "./companyApi";
 import { companyPeriod, lastChoice, rememberChoice, type PeriodChoice } from "./companyPeriod";
 import PeriodBar from "./PeriodBar";
+import { loadFailed } from "@/api/queryState";
+
+/** One amount per currency (costs come per source: materials, labour, expenses). */
+const merged = (amounts: { currency: string; amount: number }[]) =>
+    [...amounts.reduce((m, a) => m.set(a.currency, (m.get(a.currency) ?? 0) + a.amount), new Map<string, number>())].map(([currency, amount]) => ({ currency, amount }));
 
 type DomainFigures = CompanyOverview["domains"][number];
 
@@ -79,7 +84,10 @@ export default function CompanyOverviewPage() {
                     <>
                         <CostRow label="Revenue" value={money.fmt(t.revenue)} />
                         <CostRow label="Cost" value={money.fmt(t.cost)} />
+                        {/* amounts in a currency with no rate on their day are left out of the totals, and said here */}
+                        {t.domains.some((d) => d.unconvertedCosts.length > 0) && <div className="mt-s"><MixedCurrency amounts={merged(t.domains.flatMap((d) => d.unconvertedCosts))} /></div>}
                         <CostRow label="Invoiced" value={money.fmt(t.invoiced)} />
+                        {t.unconvertedInvoices.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedInvoices} /></div>}
                         <CostRow label="Collected" value={money.fmt(t.collected)} />
                         <CostRow label="Outstanding today" value={money.fmt(t.outstanding)} />
                         <CostRow label="Projects with activity" value={fmtNumber(t.projectsWithActivity)} />
@@ -108,6 +116,7 @@ export default function CompanyOverviewPage() {
                         <Kpi label="Cost" value={money.short(d.cost)} />
                         <Kpi label="Profit" value={money.short(d.profit)} sub={d.margin != null ? `${money.pct(d.margin)} margin` : "-"} />
                     </div>
+                    {d.unconvertedCosts.length > 0 && <div className="mt-s"><MixedCurrency amounts={merged(d.unconvertedCosts)} /></div>}
                     <div className="kpis" style={{ marginTop: 10 }}>
                         <Kpi label="Projects" value={fmtNumber(d.projectsWithActivity)} sub={`with activity · ${d.activeProjects} active now`} />
                         <Kpi label="People" value={fmtNumber(d.people)} sub={d.tracksHours ? `${d.loggers} logged work` : "hours not tracked"} />
@@ -118,6 +127,7 @@ export default function CompanyOverviewPage() {
                         <Kpi label="Collected" value={money.short(d.collected)} />
                         <Kpi label="Outstanding" value={money.short(d.outstanding)} sub="today" />
                     </div>
+                    {d.unconvertedInvoices.length > 0 && <div className="mt-s"><MixedCurrency amounts={d.unconvertedInvoices} /></div>}
                 </div>
             </div>
         );
@@ -139,7 +149,7 @@ export default function CompanyOverviewPage() {
             <PeriodBar choice={choice} period={period} onChange={choose} />
 
             <div className="mt">
-                {overview.isError ? <div className="panel"><div className="panel-body"><LoadError error={overview.error} retry={() => overview.refetch()} what="the company's figures" /></div></div> : (
+                {loadFailed(overview) ? <div className="panel"><div className="panel-body"><LoadError error={overview.error} retry={() => overview.refetch()} what="the company's figures" /></div></div> : (
                     <Board id="company-overview" editing={editing} onDone={() => setEditing(false)} cards={[
                         { key: "keeps", label: "What the company keeps", span: 8, node: keeps },
                         { key: "across", label: "Across both", span: 4, node: across },

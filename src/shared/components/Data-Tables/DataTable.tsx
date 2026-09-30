@@ -117,7 +117,7 @@ export function SortTh({ sortKey, sort, onSort, right, width, className, childre
             className={cx("sortable", right && "r", className)}
             style={width ? { width } : undefined}
             aria-sort={on ? (sort.dir === "desc" ? "descending" : "ascending") : undefined}
-            onClick={() => onSort({ key: sortKey, dir: on && sort.dir === "desc" ? "asc" : "desc" })}
+            {...clickable(() => onSort({ key: sortKey, dir: on && sort.dir === "desc" ? "asc" : "desc" }))}
         >
             {children}
             {on && <Icon name={sort.dir === "desc" ? "arrowDown" : "arrowUp"} />}

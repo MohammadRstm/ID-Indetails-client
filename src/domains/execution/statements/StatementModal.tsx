@@ -23,6 +23,7 @@ import { useAllMaterials, useSetMaterialPrice, type Material } from "../material
 import { isSiteOpen, markupText, siteMoneyOf } from "../projects/siteMoney";
 import StatementDoc from "./StatementDoc";
 import { useCreateStatement, useEmailStatement, useRecordStatementDelivery, useStatement, useStatementPreview, useStatements, type Statement, type StatementChoice } from "./statementsApi";
+import { loadFailed } from "@/api/queryState";
 
 const QUICK = [5, 10, 25];
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -172,7 +173,7 @@ function SavedStatement({ project, id, onClose }: { project: Project; id: number
         <Frame project={project} title={s?.number ?? "Client statement"} doc={s} firstName={out.firstName} onClose={onClose}
             foot={<Foot total={s?.total ?? 0} summary={s ? (s.mode === "total" ? "total only" : plural(s.count, "material")) : ""} saved canGo={!!s} out={out}
                 onPdf={() => out.savePdf(made)} onSend={() => setSending(true)} onClose={onClose} />}>
-            {statement.isError ? <LoadError error={statement.error} retry={() => statement.refetch()} what="the statement" />
+            {loadFailed(statement) ? <LoadError error={statement.error} retry={() => statement.refetch()} what="the statement" />
                 : s && (
                     <div className="banner">
                         <Icon name="info" />
@@ -278,7 +279,7 @@ function NewStatement({ project, onMade, onClose }: { project: Project; onMade: 
         <Frame project={project} title="Client statement" doc={doc} flash={flash} firstName={out.firstName} onClose={onClose}
             foot={<Foot total={doc?.total ?? 0} summary={summary} saved={false} canGo={pool > 0 && !!doc} out={out}
                 onPdf={() => out.savePdf(made)} onSend={() => setSending(true)} onClose={onClose} />}>
-            {all.isError ? <LoadError error={all.error} retry={() => all.refetch()} what="the materials" />
+            {loadFailed(all) ? <LoadError error={all.error} retry={() => all.refetch()} what="the materials" />
                 : !all.data ? <SkeletonLines lines={8} /> : (
                     <div>
                         <div className="field">
@@ -401,7 +402,7 @@ function NewStatement({ project, onMade, onClose }: { project: Project; onMade: 
                                 <em>of {money.exact(agreed)} agreed so far</em>
                             </div>
                         </div>
-                        {preview.isError && <p className="err mt-s"><Icon name="alert" />The preview didn't load: {errorMessage(preview.error)}</p>}
+                        {loadFailed(preview) && <p className="err mt-s"><Icon name="alert" />The preview didn't load: {errorMessage(preview.error)}</p>}
                         <p className="hint mt">A statement is for the client's information: it is not an invoice, records no payment and changes nothing that is owed.</p>
                     </div>
                 )}

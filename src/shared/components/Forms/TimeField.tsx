@@ -70,7 +70,11 @@ export default function TimeField({ value, onChange, min, id, label, placeholder
                         setOpen(false);
                         e.currentTarget.blur();
                     }
-                    if (e.key === "Escape") setOpen(false);
+                    // an open list takes the Escape, so the dialog around the field stays open
+                    if (e.key === "Escape" && open) {
+                        e.stopPropagation();
+                        setOpen(false);
+                    }
                 }}
             />
             {open && (

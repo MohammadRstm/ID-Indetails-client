@@ -115,6 +115,45 @@ describe("Company expenses", () => {
         await waitFor(() => expect(calls).toEqual(["1:cancel", "3:resume"]));
     });
 
+    it("can't be reactivated once another line carries them on, as after a change of currency", async () => {
+        const moved = {
+            ...company.overhead,
+            lines: [...company.overhead.lines, { ...company.overhead.lines[2], id: 4, currency: "LBP", isCancelled: false, endedOn: null, startedOn: "2026-10-01" }],
+        };
+        renderApp("/company/overhead", rana, http.get("/api/company/overhead", () => HttpResponse.json(moved)), ...companyHandlers);
+        const menus = await screen.findAllByRole("button", { name: "Figma actions" });
+        expect(menus).toHaveLength(2);
+        for (const menu of menus) {
+            await userEvent.click(menu);
+            expect(screen.queryByRole("button", { name: "Reactivate" })).toBeNull();
+            await userEvent.keyboard("{Escape}");
+        }
+    });
+
+    it("say so when cancelling removed a line that hadn't started", async () => {
+        renderApp("/company/overhead", rana,
+            http.post("/api/company/overhead/:id/cancel", () => new HttpResponse(null, { status: 204 })),
+            ...companyHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "AWS actions" }));
+        await userEvent.click(screen.getByRole("button", { name: "Cancel subscription" }));
+        expect(await screen.findByText("AWS removed")).toBeInTheDocument();
+        expect(screen.getByText("It hadn't started yet, so it was never charged.")).toBeInTheDocument();
+    });
+
+    it("show overhead:manage alone the expenses by month, without the company's profit", async () => {
+        let askedCompany = false;
+        renderApp("/company/overhead", withPermissions(rana, { revoke: [P.COMPANY_VIEW] }),
+            http.get("/api/company/overview/monthly", () => { askedCompany = true; return HttpResponse.json(company.months); }),
+            http.get("/api/company/overhead/monthly", () => HttpResponse.json(company.months.map((m) => ({ month: m.month, totals: [{ currency: "USD", total: 2310 }] })))),
+            ...companyHandlers);
+        const strip = (await screen.findByText("Last 13 months", { selector: ".kpi-label" })).closest(".kpis") as HTMLElement;
+        // 13 months at $2,310
+        expect(await within(strip).findByText(money.short(2310 * company.months.length))).toBeInTheDocument();
+        expect(screen.queryByText("What company expenses do to each month")).toBeNull();
+        expect(screen.queryByText("Share of this month's cost")).toBeNull();
+        expect(askedCompany).toBe(false);
+    });
+
     it("are read-only without overhead:manage", async () => {
         renderApp("/company/overhead", withPermissions(rana, { revoke: [P.OVERHEAD_MANAGE] }), ...companyHandlers);
         expect(await screen.findByText("Office rent")).toBeInTheDocument();

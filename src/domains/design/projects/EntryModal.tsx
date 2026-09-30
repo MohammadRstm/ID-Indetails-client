@@ -12,6 +12,7 @@ import { fmtDayDateY, fmtDur, fmtRange, relTime } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import EntryComments from "../work/EntryComments";
 import { useEmployeeTeam, useEntryDetail } from "./projectWorkApi";
+import { loadFailed } from "@/api/queryState";
 
 type EntryModalProps = {
     entryId: number;
@@ -38,7 +39,7 @@ export default function EntryModal({ entryId, onClose, overDrawer }: EntryModalP
                     <button className="btn" onClick={onClose}>Close</button>
                 </>
             }>
-            {detail.isError ? <LoadError error={detail.error} retry={() => detail.refetch()} what="the entry" />
+            {loadFailed(detail) ? <LoadError error={detail.error} retry={() => detail.refetch()} what="the entry" />
                 : !d || !e ? <SkeletonLines lines={6} /> : (
                     <>
                         <div className="row" style={{ gap: 11, marginBottom: 12 }}>

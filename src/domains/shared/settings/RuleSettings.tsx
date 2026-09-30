@@ -10,6 +10,7 @@ import { rulesBody } from "./domainRules";
 import { Always } from "./SettingBits";
 import { useSaveDomainRules } from "./settingsApi";
 import { notSaved, saved } from "./settingsToasts";
+import { loadFailed } from "@/api/queryState";
 
 /** Reading and saving one domain's rules, a setting at a time. */
 function useRules(domain: Domain) {
@@ -24,7 +25,7 @@ function useRules(domain: Domain) {
         <Toggle label={label} checked={!!rules?.[k]} disabled={!canEdit} onChange={(on) => set({ [k]: on })} />
     );
     // what a section shows until the rules are here: a skeleton, or why they aren't
-    const pending = query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="the settings" /> : <SkeletonLines lines={4} />;
+    const pending = loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the settings" /> : <SkeletonLines lines={4} />;
     return { rules, canEdit, set, toggle, pending };
 }
 

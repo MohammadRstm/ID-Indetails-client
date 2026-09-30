@@ -15,6 +15,7 @@ import { markupText, siteMoneyOf } from "../projects/siteMoney";
 import MaterialGrid, { type GridRow } from "./MaterialGrid";
 import { BLOCK, blankRows, COLS, COLS_PRICED, costOf, entryOf, link, pasteInto, rowOf, rowProblems, rowUsed, type ColKey, type Row } from "./materialRules";
 import { useAddMaterials, useAllMaterials } from "./materialsApi";
+import { loadFailed } from "@/api/queryState";
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 /** Every row in use: ten more. */
@@ -138,7 +139,7 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
                     {canPrice ? ` Client price starts at the project's ${Math.round(markup * 1000) / 10}% material profit - type over it to charge something else.` : ""}
                 </span>
             </div>
-            {saved.isError ? <div className="panel-body"><LoadError error={saved.error} retry={() => saved.refetch()} what="the materials" /></div>
+            {loadFailed(saved) ? <div className="panel-body"><LoadError error={saved.error} retry={() => saved.refetch()} what="the materials" /></div>
                 : !saved.data ? <div className="panel-body"><SkeletonLines lines={8} /></div> : (
                 <SheetGrid first={N}>
                     <MaterialGrid cols={cols} rows={shown} eager showBy={N > 0}

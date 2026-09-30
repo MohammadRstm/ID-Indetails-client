@@ -19,6 +19,7 @@ import { useInvoices, usePayments, type InvoiceSummary } from "./billingApi";
 import { useBillingLinks } from "./billingLinks";
 import { InvoiceTable, PaymentTable, type Tile } from "./BillingTables";
 import { invoiceStateOf } from "./invoiceStatus";
+import { loadFailed } from "@/api/queryState";
 
 type Filter = "all" | "open" | "overdue" | "paid" | "draft";
 
@@ -41,14 +42,15 @@ export default function BillingTab({ domain, tiles }: { domain: Domain; tiles: M
     const [filter, setFilter] = useState<Filter>("all");
     const billing = useFinanceBilling(domain, 12, true);
     const invoices = useInvoices({ domain, pageSize: 100 });
-    const payments = usePayments({ domain, pageSize: 14 }).data?.items;
+    const paymentQuery = usePayments({ domain, pageSize: 14 });
+    const payments = paymentQuery.data?.items;
     const b = billing.data;
     const all = invoices.data?.items ?? [];
     const shown = all.filter(FILTERS[filter]);
     const issued = shown.filter((i) => i.issuedAt).reduce((t, i) => t + i.total, 0);
     const clientPath = (id: number) => (canOpen(permissions, domain, `clients/${id}`) ? () => navigate(`/${domain}/clients/${id}`) : undefined);
 
-    if (billing.isError) return <div className="panel"><div className="panel-body"><LoadError error={billing.error} retry={() => billing.refetch()} what="the billing" /></div></div>;
+    if (loadFailed(billing)) return <div className="panel"><div className="panel-body"><LoadError error={billing.error} retry={() => billing.refetch()} what="the billing" /></div></div>;
     const p = b?.position;
     const collectedPct = p?.invoiced ? Math.round((p.received / p.invoiced) * 100) : 0;
     const owing = (b?.byClient ?? []).filter((c) => c.outstanding > 0).sort((x, y) => y.outstanding - x.outstanding);
@@ -136,7 +138,7 @@ export default function BillingTab({ domain, tiles }: { domain: Domain; tiles: M
                             }))} />
                     </div>
                 </div>
-                {invoices.isError ? <div className="panel-body"><LoadError error={invoices.error} retry={() => invoices.refetch()} what="the invoices" /></div>
+                {loadFailed(invoices) ? <div className="panel-body"><LoadError error={invoices.error} retry={() => invoices.refetch()} what="the invoices" /></div>
                     : !invoices.data ? <div className="panel-body"><SkeletonLines lines={6} /></div>
                         : <InvoiceTable invoices={shown} showProject showClient tiles={tiles} onOpen={(inv) => links.openInvoice(inv.id)} />}
                 <div className="panel-foot">
@@ -152,7 +154,8 @@ export default function BillingTab({ domain, tiles }: { domain: Domain; tiles: M
                 <div className="panel-head">
                     <div><div className="panel-title">Payments received</div><div className="panel-sub">Cash recorded by an admin after it arrived - bank, cheque or cash.</div></div>
                 </div>
-                {!payments ? <div className="panel-body"><SkeletonLines lines={4} /></div>
+                {loadFailed(paymentQuery) ? <div className="panel-body"><LoadError error={paymentQuery.error} retry={() => paymentQuery.refetch()} what="the payments" /></div>
+                    : !payments ? <div className="panel-body"><SkeletonLines lines={4} /></div>
                     : <PaymentTable payments={payments} showProject tiles={tiles} onOpen={links.openInvoice} actions />}
             </div>
         </div>

@@ -52,7 +52,7 @@ export function useAllMaterials(projectId: number, enabled = true) {
 function useRefreshSite() {
     const invalidate = useInvalidate();
     // a client's page shows what their sites charge them
-    return () => invalidate(keys.projects.all, keys.finance.all, keys.dashboard.all, keys.activity.all, keys.clients.all);
+    return () => { void invalidate(keys.projects.all, keys.finance.all, keys.dashboard.all, keys.activity.all, keys.clients.all, ["company"]); };
 }
 
 // The API takes at most this many materials at once.
@@ -89,7 +89,7 @@ function useSaved(projectId: number) {
     return (saved: Material) => {
         queryClient.setQueriesData<MaterialList>({ queryKey: materialsKey(projectId) }, (list) =>
             list && { ...list, items: list.items.map((m) => (m.id === saved.id ? saved : m)) });
-        return refresh();
+        refresh();
     };
 }
 
@@ -104,10 +104,16 @@ export function useUpdateMaterial(projectId: number) {
 }
 
 export function useDeleteMaterial(projectId: number) {
+    const queryClient = useQueryClient();
     const refresh = useRefreshSite();
     return useMutation({
         mutationFn: async (id: number) => { await http.delete(`/projects/${projectId}/materials/${id}`); },
-        onSuccess: refresh,
+        onSuccess: (_, id) => {
+            // gone from the table at once, so its armed Delete can't be clicked again while the list reloads
+            queryClient.setQueriesData<MaterialList>({ queryKey: materialsKey(projectId) }, (list) =>
+                list && { ...list, items: list.items.filter((m) => m.id !== id), totalCount: Math.max(0, list.totalCount - 1) });
+            refresh();
+        },
     });
 }
 

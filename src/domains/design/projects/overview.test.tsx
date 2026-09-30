@@ -40,12 +40,36 @@ describe("a Design project's overview", () => {
         expect(screen.queryByText("Payment status")).toBeNull();
     });
 
-    it("shows only the progress without work_entry:view_all", async () => {
-        renderApp(path, withPermissions(admin, { revoke: [P.WORK_ENTRY_VIEW_ALL] }), ...projectWorkHandlers);
+    it("shows only the progress without work_entry:view_all, and never asks for everyone's work", async () => {
+        const asked: string[] = [];
+        const refuse = (what: string) => () => { asked.push(what); return HttpResponse.json({ code: "forbidden" }, { status: 403 }); };
+        renderApp(path, withPermissions(admin, { revoke: [P.WORK_ENTRY_VIEW_ALL] }),
+            http.get("/api/projects/:id/work", refuse("work")),
+            http.get("/api/projects/:id/timeline", refuse("timeline")),
+            http.get("/api/work-entries", refuse("entries")),
+            ...projectWorkHandlers);
         await screen.findByRole("heading", { name: projectWork.project.title });
         expect(await screen.findByText("Progress")).toBeInTheDocument();
         expect(screen.queryByText("Contributors")).toBeNull();
         expect(screen.queryByText("Work timeline")).toBeNull();
+        // the money that doesn't need everyone's work still shows
+        expect(await screen.findByText("Financial breakdown")).toBeInTheDocument();
+        expect(asked).toEqual([]);
+    });
+
+    it("asks for a project's whole life 366 days at a time, as the API allows", async () => {
+        const ranges: string[] = [];
+        const old = { ...projectWork.project, createdAt: "2024-03-01T08:00:00Z", startDate: "2024-03-01" };
+        renderApp(`${path}?tab=timeline`, admin,
+            http.get("/api/projects/:id", () => HttpResponse.json(old)),
+            http.get("/api/projects/:id/timeline/entries", ({ request }) => {
+                const q = new URL(request.url).searchParams;
+                ranges.push(`${q.get("from")}..${q.get("to")}`);
+                return HttpResponse.json([]);
+            }),
+            ...projectWorkHandlers);
+        await waitFor(() => expect(ranges).toEqual(["2024-02-23..2025-02-22", "2025-02-23..2026-02-23", "2026-02-24..2026-09-30"]));
+        expect(screen.queryByText(/Couldn't load the project's history/)).toBeNull();
     });
 
     it("filters the contributors by range and work text through the API", async () => {

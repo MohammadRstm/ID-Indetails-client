@@ -11,6 +11,8 @@ import { useInvoices } from "./billingApi";
 import { BillingMeter, InvoiceLine, InvoiceStatusPill } from "./BillingBits";
 import { useBillingLinks } from "./billingLinks";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
+import LoadError from "@/shared/components/Feedback/LoadError";
 
 const COLOURS = { paid: "var(--heat-3)", out: "var(--warn-mark)" };
 
@@ -21,7 +23,8 @@ const COLOURS = { paid: "var(--heat-3)", out: "var(--warn-mark)" };
 export default function BillingBand({ project }: { project: Project }) {
     const permissions = usePermissions();
     const links = useBillingLinks();
-    const invoices = useInvoices({ projectId: project.id, pageSize: 100 }).data?.items;
+    const invoiceQuery = useInvoices({ projectId: project.id, pageSize: 100 });
+    const invoices = invoiceQuery.data?.items;
     const m = project.money;
     if (!m) return null;
     const b = m.billing;
@@ -86,7 +89,8 @@ export default function BillingBand({ project }: { project: Project }) {
                         <span className="u">Invoices</span>
                         <span className="muted" style={{ fontSize: "11.5px" }}>{project.client.displayName}</span>
                     </div>
-                    {!invoices ? <SkeletonLines lines={3} /> : live.length ? live.map((inv) => (
+                    {loadFailed(invoiceQuery) ? <LoadError error={invoiceQuery.error} retry={() => invoiceQuery.refetch()} what="the invoices" />
+                        : !invoices ? <SkeletonLines lines={3} /> : live.length ? live.map((inv) => (
                         <InvoiceLine key={inv.id} invoice={inv} onOpen={() => links.openInvoice(inv.id)} />
                     )) : (
                         <p className="muted" style={{ padding: "6px 0 10px" }}>

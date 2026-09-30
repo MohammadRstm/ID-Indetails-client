@@ -27,3 +27,7 @@ table { line-height: normal; font-weight: normal; }
 
 /* a whole page that couldn't load, or isn't there */
 .page-state { min-height: 50vh; display: grid; place-items: center; }
+
+/* A dialog takes the keyboard focus when it opens (the prototype's never did); the dialog itself draws no
+   focus ring for it, as the prototype's had none. */
+.modal:focus { outline: none; }

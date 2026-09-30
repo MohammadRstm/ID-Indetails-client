@@ -10,6 +10,7 @@ import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../shared/projects/projectsApi";
 import { useSiteTimeline, type SiteTimeline } from "./siteApi";
 import { siteMoneyOf, type SiteMoney } from "./siteMoney";
+import { loadFailed } from "@/api/queryState";
 
 /**
  * Ground labour against the profit the client's payments have made (the prototype's EX.LabourHealth): how much
@@ -29,7 +30,7 @@ export default function LabourHealth({ project }: { project: Project }) {
                 </div>
             </div>
             <div className="panel-body">
-                {timeline.isError ? <LoadError error={timeline.error} retry={() => timeline.refetch()} what="the labour figures" />
+                {loadFailed(timeline) ? <LoadError error={timeline.error} retry={() => timeline.refetch()} what="the labour figures" />
                     : !timeline.data ? <SkeletonLines lines={5} />
                         : <Health x={x} timeline={timeline.data} />}
             </div>

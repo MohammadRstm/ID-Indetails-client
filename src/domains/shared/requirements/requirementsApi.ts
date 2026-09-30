@@ -30,7 +30,8 @@ function useRequirementChange<T>(projectId: number, request: (arg: T) => Promise
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: request,
-        onSuccess: () => invalidate(keys.requirements.project(projectId), keys.requirements.mine, keys.projects.all, keys.dashboard.all),
+        // a requirement moves the project's progress, which an employee's project cards show too
+        onSuccess: () => { void invalidate(keys.requirements.project(projectId), keys.requirements.mine, keys.projects.all, keys.dashboard.all, keys.work.myProjects); },
     });
 }
 

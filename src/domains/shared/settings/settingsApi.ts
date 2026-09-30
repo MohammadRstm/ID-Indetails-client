@@ -63,6 +63,12 @@ export function useSetLogo() {
 const workingTimeKey = ["company", "working-time"] as const;
 
 /** The company week, break and overtime rate in force, and every version of them. */
+/** The working-time policy in force on a day: the newest one from that day or before. */
+export function policyOn(wt: WorkingTime | undefined, day: string): WorkingTimePolicy | undefined {
+    if (!wt) return undefined;
+    return [...wt.policies].sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom)).find((p) => p.effectiveFrom <= day) ?? wt.current;
+}
+
 export function useWorkingTime() {
     return useQuery({
         queryKey: workingTimeKey,
@@ -108,7 +114,7 @@ export function useAddExchangeRate() {
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async (body: Schemas["AddExchangeRateRequest"]) => (await http.post<ExchangeRate>("/exchange-rates", body)).data,
-        onSuccess: () => invalidate(["exchange-rates"]),
+        onSuccess: () => { void invalidate(["exchange-rates"]); },
     });
 }
 
@@ -169,6 +175,6 @@ export function useUpdateUserPermissions(userId: number) {
     return useMutation({
         mutationFn: async (changes: Schemas["PermissionChangeRequest"][]) =>
             (await http.put<UserPermissions>(`/users/${userId}/permissions`, { changes })).data,
-        onSuccess: () => invalidate(["permissions", "user", userId], keys.employees.all),
+        onSuccess: () => { void invalidate(["permissions", "user", userId], keys.employees.all); },
     });
 }

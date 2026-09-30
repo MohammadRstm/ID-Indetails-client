@@ -24,6 +24,7 @@ import { cx } from "@/shared/utils/cx";
 import { useFinanceMonthly } from "../../shared/finance/financeApi";
 import { useReportEntries, type ReportScope, type WorkReport } from "./reportsApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 export type Tile = { icon: string | null; tint: string | null };
 export type ReportPerson = Person & { team?: string | null };
@@ -221,7 +222,7 @@ export function MoneyTab({ report, people }: TabProps) {
             </div>
             <div className="grid g-8-4 mt">
                 <Figure title="Revenue against cost" sub="Revenue recognised by progress, month by month.">
-                    {months.isError ? <LoadError error={months.error} retry={() => months.refetch()} what="the months" />
+                    {loadFailed(months) ? <LoadError error={months.error} retry={() => months.refetch()} what="the months" />
                         : !months.data ? <SkeletonLines lines={5} /> : (
                             <Columns height={200} labelEvery={1} seriesLabel="Revenue" ghostLabel="Cost" format={(v) => money.short(v)}
                                 data={months.data.map((x) => ({ label: MONTHS[+x.month.slice(5, 7) - 1], tip: fmtMonthY(x.month), value: x.revenue, ghost: x.cost }))} />
@@ -272,7 +273,7 @@ export function EntriesTab({ scope, label, people }: { scope: ReportScope; label
                     <SearchInput width={220} value={q} onChange={setQ} placeholder="Search work, person or project" />
                 </div>
             </div>
-            {query.isError ? <div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the entries" /></div>
+            {loadFailed(query) ? <div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the entries" /></div>
                 : !query.data ? <div className="panel-body"><SkeletonLines lines={8} /></div> : (
                     <div className="tbl-wrap">
                         <table className="tbl tbl-min">

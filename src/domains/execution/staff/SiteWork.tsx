@@ -12,6 +12,7 @@ import { money } from "@/shared/format/money";
 import { dayKey, fmtDate, fmtDateY, fmtDayDateY, fmtNumber, relDay } from "@/shared/format/time";
 import { useSiteRecords, type SiteRecords } from "./siteRecordsApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 type Record_ = SiteRecords["recent"][number];
 
@@ -23,7 +24,7 @@ export default function SiteWork({ userId, joinedOn }: { userId: number | null; 
     const records = useSiteRecords(userId ?? "me");
     const navigate = useNavigate();
     const r = records.data;
-    if (records.isError) return <div className="panel"><div className="panel-body"><LoadError error={records.error} retry={() => records.refetch()} what="what they recorded" /></div></div>;
+    if (loadFailed(records)) return <div className="panel"><div className="panel-body"><LoadError error={records.error} retry={() => records.refetch()} what="what they recorded" /></div></div>;
     // the last 16 weeks, oldest first: the average is over the latest 12
     const latest = (r?.weeks ?? []).slice(-12);
     const avgWeek = latest.length ? latest.reduce((t, w) => t + w.value, 0) / 12 : 0;

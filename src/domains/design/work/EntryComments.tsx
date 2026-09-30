@@ -15,6 +15,7 @@ import { relTime } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useAddComment, useEmployeeTeam } from "../projects/projectWorkApi";
 import { commentCount } from "./entryWords";
+import { loadFailed } from "@/api/queryState";
 
 type Comment = Schemas["WorkEntryCommentResponse"];
 
@@ -36,7 +37,7 @@ export default function EntryComments({ entryId, author, domain }: { entryId: nu
         <div className="cm">
             <div className="cm-title">{query.data ? commentCount(list.length) : "Comments"}</div>
             {canComment && <Compose entryId={entryId} author={author} domain={domain} canSeeTeam={permissions.has(P.EMPLOYEE_VIEW)} />}
-            {query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="the comments" />
+            {loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the comments" />
                 : !query.data ? <SkeletonLines lines={2} />
                     : list.length ? list.map((c) => (
                         <div key={c.id} className="cm-item">

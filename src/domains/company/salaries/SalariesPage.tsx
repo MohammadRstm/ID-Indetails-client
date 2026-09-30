@@ -21,6 +21,7 @@ import { HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
 import SalaryDrawer from "./SalaryDrawer";
 import { useSalaries, type SalaryRow } from "./salariesApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 const PAGE = 10;
 const cash = (v: number, cur: string, cents = false) => money.exact(v, cur, cents ? { cents: true } : undefined);
@@ -114,7 +115,7 @@ export default function SalariesPage() {
                 </div>
             </div>
 
-            {salaries.isError ? <div className="panel"><div className="panel-body"><LoadError error={salaries.error} retry={() => salaries.refetch()} what="the salaries" /></div></div> : (
+            {loadFailed(salaries) ? <div className="panel"><div className="panel-body"><LoadError error={salaries.error} retry={() => salaries.refetch()} what="the salaries" /></div></div> : (
                 <>
                     <KpiStrip loading={!r} items={[
                         ...(totals.length ? totals : [{ currency: "USD", total: 0, basePay: 0, overtimePay: 0 }]).map((t) => ({

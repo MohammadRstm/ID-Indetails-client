@@ -13,6 +13,7 @@ import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../shared/projects/projectsApi";
 import LabourDefaultsModal from "./LabourDefaultsModal";
 import { useLabourDefaults, useLabourWeek, useLabourWeeks, useSetLabourDefaults, useSubmitWeek, type LabourDefault, type LabourDefaults, type LabourWeek } from "./labourApi";
+import { loadFailed } from "@/api/queryState";
 
 // Two fields a row: workers, then pay per worker. The defaults bar is row -1, the days rows 0 to 5, and the
 // Submit button sits after them as row 6, so Enter walks from the defaults through the week to Submit.
@@ -67,8 +68,8 @@ export default function LabourPanel({ project }: { project: Project }) {
                 </div>
             </div>
             <div className="panel-body" ref={navRef}>
-                {weeks.isError ? <LoadError error={weeks.error} retry={() => weeks.refetch()} what="the labour weeks" />
-                    : defaults.isError ? <LoadError error={defaults.error} retry={() => defaults.refetch()} what="the labour defaults" />
+                {loadFailed(weeks) ? <LoadError error={weeks.error} retry={() => weeks.refetch()} what="the labour weeks" />
+                    : loadFailed(defaults) ? <LoadError error={defaults.error} retry={() => defaults.refetch()} what="the labour defaults" />
                     : !weeks.data || !defaults.data ? <SkeletonLines lines={6} /> : (
                         <>
                             <DefaultsBar key={`${current?.effectiveFrom}:${current?.workers}:${current?.dailyPay}`} projectId={project.id} defaults={defaults.data}
@@ -82,7 +83,7 @@ export default function LabourPanel({ project }: { project: Project }) {
                                     }))} />
                             </div>
                             {!chosen ? <Empty art="time" title="No weeks in range yet" text="Once the project has been running for a few days, weeks appear here to report." />
-                                : week.isError ? <LoadError error={week.error} retry={() => week.refetch()} what="the week" />
+                                : loadFailed(week) ? <LoadError error={week.error} retry={() => week.refetch()} what="the week" />
                                     : !week.data || week.data.weekStart !== chosen ? <SkeletonLines lines={6} />
                                         // the editor starts from the week as the API fills it in: it starts again when those
                                         // days change (new defaults, a report saved), not when the same days are fetched again

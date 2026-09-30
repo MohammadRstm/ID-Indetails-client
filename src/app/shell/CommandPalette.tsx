@@ -20,6 +20,7 @@ import Icon from "@/shared/icons/Icon";
 import type { IconName } from "@/shared/icons/icons";
 import { cx } from "@/shared/utils/cx";
 import type { ShellArea } from "./useArea";
+import { loadFailed } from "@/api/queryState";
 
 type SearchResponse = Schemas["SearchResponse"];
 
@@ -65,7 +66,11 @@ export default function CommandPalette({ area, onClose }: { area: ShellArea; onC
                     value={q}
                     onChange={(e) => { setQ(e.target.value); setSel(0); }}
                     onKeyDown={(e) => {
-                        if (e.key === "Escape") onClose();
+                        if (e.key === "Escape") {
+                            // the palette only, not a dialog open beneath it
+                            e.stopPropagation();
+                            onClose();
+                        }
                         if (e.key === "ArrowDown") { e.preventDefault(); setSel(Math.min(at + 1, items.length - 1)); }
                         if (e.key === "ArrowUp") { e.preventDefault(); setSel(Math.max(at - 1, 0)); }
                         if (e.key === "Enter" && items[at]) run(items[at]);
@@ -76,7 +81,7 @@ export default function CommandPalette({ area, onClose }: { area: ShellArea; onC
                             <Skeleton width={20} height={20} style={{ borderRadius: 6 }} /><Skeleton width={`${60 - i * 8}%`} height={10} />
                         </div>
                     ))}
-                    {found.isError && <div style={{ padding: "6px 10px" }}><LoadError error={found.error} retry={() => found.refetch()} what="search results" /></div>}
+                    {loadFailed(found) && <div style={{ padding: "6px 10px" }}><LoadError error={found.error} retry={() => found.refetch()} what="search results" /></div>}
                     {items.map((item, i) => (
                         <button key={item.key} role="option" aria-selected={i === at} className={cx("cmdk-item", i === at && "on")}
                             onMouseEnter={() => setSel(i)} onClick={() => run(item)}>
@@ -86,7 +91,7 @@ export default function CommandPalette({ area, onClose }: { area: ShellArea; onC
                             <span className="cmdk-kind">{item.kind}</span>
                         </button>
                     ))}
-                    {items.length === 0 && !found.isPending && !found.isError && <div className="empty" style={{ padding: "26px" }}><h4>No matches</h4></div>}
+                    {items.length === 0 && !found.isPending && !loadFailed(found) && <div className="empty" style={{ padding: "26px" }}><h4>No matches</h4></div>}
                 </div>
                 <div className="cmdk-foot"><span>↑↓ to move</span><span>↵ to open</span><span>esc to close</span></div>
             </div>

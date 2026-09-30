@@ -18,6 +18,7 @@ import { InvoiceStatusPill } from "./BillingBits";
 import InvoiceDoc from "./InvoiceDoc";
 import { docOf } from "./invoiceDocData";
 import { invoiceStateOf } from "./invoiceStatus";
+import { loadFailed } from "@/api/queryState";
 
 type InvoiceModalProps = {
     invoiceId: number;
@@ -35,7 +36,8 @@ export default function InvoiceModal({ invoiceId, onClose, onSend, onEdit, onPay
     const query = useInvoice(invoiceId);
     const inv = query.data;
     const settings = useBillingSettings(inv?.domain ?? "", !!inv).data;
-    const payments = usePayments({ invoiceId, pageSize: 100 }, !!inv).data?.items ?? [];
+    const paymentQuery = usePayments({ invoiceId, pageSize: 100 }, !!inv);
+    const payments = paymentQuery.data?.items ?? [];
     const voidIt = useVoidInvoice();
     const discard = useDiscardInvoice();
     const [confirmVoid, setConfirmVoid] = useState(false);
@@ -44,7 +46,7 @@ export default function InvoiceModal({ invoiceId, onClose, onSend, onEdit, onPay
     if (!inv) {
         return (
             <Modal size="xl" onClose={onClose} title="Invoice">
-                {query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="the invoice" /> : <SkeletonLines lines={8} />}
+                {loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the invoice" /> : <SkeletonLines lines={8} />}
             </Modal>
         );
     }
@@ -106,7 +108,8 @@ export default function InvoiceModal({ invoiceId, onClose, onSend, onEdit, onPay
                                 <div className="grow"><CostRow label={PAYMENT_METHODS[p.method] ?? p.method} meta={`${fmtDate(p.receivedOn)}${p.reference ? ` · ${p.reference}` : ""}`} value={money.fmt(p.amountUsd)} /></div>
                                 <PaymentActions payment={p} />
                             </div>
-                        )) : <p className="muted" style={{ fontSize: "11.5px" }}>Nothing received against this invoice yet.</p>}
+                        )) : loadFailed(paymentQuery) ? <LoadError error={paymentQuery.error} retry={() => paymentQuery.refetch()} what="the payments" />
+                            : paymentQuery.data ? <p className="muted" style={{ fontSize: "11.5px" }}>Nothing received against this invoice yet.</p> : <SkeletonLines lines={1} />}
                         {live.length > 0 && <CostRow strong label="Balance" value={money.fmt(balance)} />}
                         {live.filter((p) => p.currency !== "USD").map((p) => (
                             <p key={p.id} className="hint">Received as {money.fmt(p.amount, p.currency)} at {fmtNumber(p.fxRate)}/$ on {fmtDate(p.receivedOn)}.</p>

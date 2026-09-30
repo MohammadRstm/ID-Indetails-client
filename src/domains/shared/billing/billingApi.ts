@@ -45,7 +45,7 @@ function useInvalidateBilling() {
     const invalidate = useInvalidate();
     // not awaited: a window's own onSuccess (its toast, closing it) runs at once, before the lists reload and
     // perhaps drop the row it was opened from
-    return () => { void invalidate(["invoices"], ["payments"], keys.projects.all, keys.finance.all, keys.clients.all, keys.dashboard.all, keys.activity.all); };
+    return () => { void invalidate(["invoices"], ["payments"], keys.projects.all, keys.finance.all, keys.clients.all, keys.dashboard.all, keys.activity.all, ["company"]); };
 }
 
 /** One invoice with its lines, deliveries and balance (financial:view). */
@@ -84,11 +84,14 @@ export function useSendInvoice() {
     const refresh = useInvalidateBilling();
     return useMutation({
         mutationFn: async ({ invoice, channel, to }: { invoice: Invoice; channel: Schemas["DeliveryChannel"]; to: string | null }) => {
-            const issued = invoice.issuedAt ? invoice : (await http.post<Invoice>(`/invoices/${invoice.id}/issue`, {})).data;
+            // a send that failed after issuing (the email bounced) left it issued: a retry only delivers it
+            const current = invoice.issuedAt ? invoice : (await http.get<Invoice>(`/invoices/${invoice.id}`)).data;
+            const issued = current.issuedAt ? current : (await http.post<Invoice>(`/invoices/${invoice.id}/issue`, {})).data;
             if (channel === "email") return (await http.post<Invoice>(`/invoices/${issued.id}/email`, { to })).data;
             return (await http.post<Invoice>(`/invoices/${issued.id}/deliveries`, { channel, recipient: to })).data;
         },
-        onSuccess: refresh,
+        // after a failure too: the invoice may have been issued before the delivery failed
+        onSettled: refresh,
     });
 }
 
@@ -136,11 +139,15 @@ export function useBillingSettings(domain: string, enabled = true) {
     });
 }
 
-/** The latest rate for a currency, in units per US dollar (financial:view). */
-export function useLatestRate(currency: string, enabled = true) {
-    return useQuery({
-        queryKey: ["exchange-rates", currency],
-        queryFn: async () => (await http.get<Schemas["ExchangeRateResponse"][]>("/exchange-rates", { params: { currency } })).data[0] ?? null,
+/**
+ * The rate in force on a day, in units per US dollar (financial:view): the newest one set from that day or
+ * before, as the API converts a payment by the day it was received.
+ */
+export function useRateOn(currency: string, day: string, enabled = true) {
+    const rates = useQuery({
+        queryKey: ["exchange-rates", currency, "all"],
+        queryFn: async () => (await http.get<Schemas["ExchangeRateResponse"][]>("/exchange-rates", { params: { currency } })).data,
         enabled,
     });
+    return [...(rates.data ?? [])].sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom)).find((r) => r.effectiveFrom <= day) ?? null;
 }

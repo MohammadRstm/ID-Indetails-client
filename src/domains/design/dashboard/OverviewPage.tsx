@@ -26,6 +26,7 @@ import { followups } from "./followups";
 import { FollowupsCard, HoursCard, InvoicedCard, OwedCard, ProfitCard, RevenueCostCard, StatusCard, TimeCard, TopClientsCard, type ProjectInfo } from "./OverviewCards";
 import { useDashboard, useOverview, useUpcomingDeadlines } from "./overviewApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 type Period = Extract<PeriodKind, "quarter" | "month" | "30d">;
 
@@ -33,8 +34,8 @@ type Period = Extract<PeriodKind, "quarter" | "month" | "30d">;
 function Failed({ query, what }: { query: { error: unknown; refetch: () => unknown }; what: string }) {
     return <div className="panel"><div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what={what} /></div></div>;
 }
-const orFailed = (query: { isError: boolean; error: unknown; refetch: () => unknown }, what: string, node: ReactNode) =>
-    query.isError ? <Failed query={query} what={what} /> : node;
+const orFailed = (query: { isError: boolean; data: unknown; error: unknown; refetch: () => unknown }, what: string, node: ReactNode) =>
+    loadFailed(query) ? <Failed query={query} what={what} /> : node;
 
 /** The overview an admin lands on: Design's, or Execution's dashboard. */
 export default function OverviewRoute() {
@@ -144,18 +145,19 @@ function OverviewPage({ domain }: { domain: Domain }) {
                 </div>
             </div>
 
-            {overview.isError && <div style={{ marginBottom: 14 }}><Failed query={overview} what="the overview" /></div>}
+            {loadFailed(overview) && <div style={{ marginBottom: 14 }}><Failed query={overview} what="the overview" /></div>}
             {/* Execution's board, and Design's project counts, come from the dashboard */}
-            {dashboard.isError && <div style={{ marginBottom: 14 }}><Failed query={dashboard} what="the dashboard" /></div>}
+            {loadFailed(dashboard) && <div style={{ marginBottom: 14 }}><Failed query={dashboard} what="the dashboard" /></div>}
 
             <Board id={`overview-${domain}`} editing={editing} onDone={() => setEditing(false)} cards={[
                 { key: "figures", label: "Key figures", span: 12, node: figures },
                 seesMoney && { key: "money", label: "Money figures", span: 12, node: moneyFigures },
                 design && { key: "hours", label: "Hours logged per week", span: 7, node: <HoursCard overview={o} label={range.label} prevLabel={range.prevLabel} /> },
-                design && { key: "followups", label: "Needs attention & deadlines", span: 5, node: <FollowupsCard items={items} deadlines={deadlines.data} loading={!o} /> },
+                design && { key: "followups", label: "Needs attention & deadlines", span: 5, node: <FollowupsCard items={items} deadlines={deadlines.data} loading={!o}
+                    deadlinesFailed={loadFailed(deadlines) ? { error: deadlines.error, retry: () => void deadlines.refetch() } : null} /> },
                 design && { key: "time", label: "Where the time went", span: 7, node: <TimeCard overview={o} label={range.label} projects={projects} /> },
                 { key: "status", label: "Projects by status", span: design ? 5 : 12, node: <StatusCard overview={o} dashboard={d} execution={!design} /> },
-                seesMoney && { key: "revcost", label: "Revenue against cost", span: 7, node: <RevenueCostCard months={monthly.data} error={monthly.isError ? monthly.error : null} retry={() => monthly.refetch()} /> },
+                seesMoney && { key: "revcost", label: "Revenue against cost", span: 7, node: <RevenueCostCard months={monthly.data} error={loadFailed(monthly) ? monthly.error : null} retry={() => monthly.refetch()} /> },
                 seesMoney && { key: "profit", label: "Profit by project", span: 5, node: orFailed(finProjects, "the projects' profit", <ProfitCard finance={finProjects.data} projects={projects} />) },
                 seesMoney && { key: "invoiced", label: "Invoiced against collected", span: 7, node: orFailed(billing, "the billing", <InvoicedCard billing={billing.data} />) },
                 seesMoney && { key: "owed", label: "Money owed to us", span: 5, node: orFailed(billing, "what is owed", <OwedCard billing={billing.data} />) },

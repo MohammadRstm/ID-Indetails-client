@@ -14,6 +14,7 @@ import type { Project } from "../../shared/projects/projectsApi";
 import { companyNow } from "../work/day";
 import { useProjectTimeline, useTimelineEntries, type TimelineEntry } from "./projectWorkApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 type Scale = "project" | "quarter" | "month" | "week";
 
@@ -119,7 +120,8 @@ export default function WorkTimeline({ project, onPerson, onEntry }: WorkTimelin
     }).sort((a, b) => b.minutes - a.minutes || b.total - a.total);
     const q = search.trim().toLowerCase();
     const visible = rows.filter((x) => (!q || x.name.toLowerCase().includes(q)) && (showAll || x.minutes > 0 || q));
-    const hiddenCount = rows.length - visible.length;
+    // the people with no work in this range, whether hidden now or shown on request
+    const idleCount = rows.filter((x) => (!q || x.name.toLowerCase().includes(q)) && x.minutes === 0).length;
 
     const pulse = units.map((u) => u.days.reduce((sum, k) => sum + (dayMinutes.get(k) ?? 0), 0));
     const pulseMax = Math.max(1, ...pulse);
@@ -226,7 +228,7 @@ export default function WorkTimeline({ project, onPerson, onEntry }: WorkTimelin
                     </div>
 
                     <div className="tl-rows">
-                        {timeline.isError ? <div style={{ padding: 16 }}><LoadError error={timeline.error} retry={() => timeline.refetch()} what="the timeline" /></div>
+                        {loadFailed(timeline) ? <div style={{ padding: 16 }}><LoadError error={timeline.error} retry={() => timeline.refetch()} what="the timeline" /></div>
                             : !timeline.data ? <div style={{ padding: 16 }}><SkeletonLines lines={4} /></div>
                                 : visible.length === 0 && (
                                     <div className="empty" style={{ padding: 26 }}>
@@ -324,9 +326,9 @@ export default function WorkTimeline({ project, onPerson, onEntry }: WorkTimelin
                     <span className="row" style={{ gap: 5 }}><i style={{ background: "var(--now)", width: 2 }} /> now</span>
                 </div>
                 <div className="grow" />
-                {hiddenCount > 0 && (
+                {idleCount > 0 && !q && (
                     <button className="btn btn-sm btn-quiet" onClick={() => setShowAll(!showAll)}>
-                        {showAll ? "Hide" : "Show"} {hiddenCount} contributor{hiddenCount === 1 ? "" : "s"} with no work in this range
+                        {showAll ? "Hide" : "Show"} {idleCount} contributor{idleCount === 1 ? "" : "s"} with no work in this range
                     </button>
                 )}
             </div>

@@ -12,6 +12,8 @@ import { cx } from "@/shared/utils/cx";
 import GroupTile from "./GroupTile";
 import Thread from "./Thread";
 import { chatKey, chatOf, useContacts, useConversations, usePresence, type Chat, type Conversation } from "./messagesApi";
+import { loadFailed } from "@/api/queryState";
+import { clickable } from "@/shared/utils/clickable";
 
 // direct messages are listed by who people are: super admins, then admins, then employees
 const LEVELS = [{ role: "super_admin", label: "Super admins" }, { role: "admin", label: "Admins" }, { role: "employee", label: "Employees" }];
@@ -73,7 +75,7 @@ export default function MessagesPage() {
                         <Icon name="search" />
                         <input className="input" placeholder="Find people or groups" aria-label="Find people or groups" value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
-                    {conversations.isError || contacts.isError
+                    {loadFailed(conversations) || loadFailed(contacts)
                         ? <LoadError error={conversations.error ?? contacts.error} retry={() => { void conversations.refetch(); void contacts.refetch(); }} what="your chats" />
                         : !conversations.data || !contacts.data ? <SkeletonLines lines={8} /> : (
                             <>
@@ -81,8 +83,7 @@ export default function MessagesPage() {
                                 {groups.map((c) => {
                                     const k: Chat = { kind: "group", teamId: c.team!.id };
                                     return (
-                                        <div key={chatKey(k)} className={cx("msg-contact-row", chat && chatKey(chat) === chatKey(k) && "on")} role="button" tabIndex={0}
-                                            onClick={() => select(k)} onKeyDown={(e) => { if (e.key === "Enter") select(k); }}>
+                                        <div key={chatKey(k)} className={cx("msg-contact-row", chat && chatKey(chat) === chatKey(k) && "on")} {...clickable(() => select(k), "button")}>
                                             <GroupTile domain={c.team!.domain} size="sm" />
                                             <div className="grow" style={{ minWidth: 0 }}>
                                                 <div className="trunc" style={{ fontWeight: 600 }}>{c.team!.name}</div>
@@ -102,8 +103,7 @@ export default function MessagesPage() {
                                             {rows.map((p) => {
                                                 const k: Chat = { kind: "dm", userId: p.id };
                                                 return (
-                                                    <div key={p.id} className={cx("msg-contact-row", chat && chatKey(chat) === chatKey(k) && "on")} role="button" tabIndex={0}
-                                                        onClick={() => select(k)} onKeyDown={(e) => { if (e.key === "Enter") select(k); }}>
+                                                    <div key={p.id} className={cx("msg-contact-row", chat && chatKey(chat) === chatKey(k) && "on")} {...clickable(() => select(k), "button")}>
                                                         <Avatar person={{ name: p.name, photoFileId: p.photoFileId, online: presence.data?.has(p.id) ?? false }} size={28} presence />
                                                         <div className="grow" style={{ minWidth: 0 }}>
                                                             <div className="trunc" style={{ fontWeight: 600 }}>{p.name}</div>

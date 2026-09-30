@@ -14,9 +14,11 @@ import { money } from "@/shared/format/money";
 import { companyToday, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
 import { HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
-import { useMyOvertime, useMySchedule } from "@/domains/design/work/workApi";
+import { useMyOvertime } from "@/domains/design/work/workApi";
+import { policyOn, useWorkingTime } from "@/domains/shared/settings/settingsApi";
 import ExcuseHours from "./ExcuseHours";
 import { useSalary, type SalaryDetail, type SalaryRow } from "./salariesApi";
+import { loadFailed } from "@/api/queryState";
 
 const cash = (v: number, cur: string, cents = false) => money.exact(v, cur, cents ? { cents: true } : undefined);
 
@@ -54,7 +56,7 @@ export default function SalaryDrawer({ row, month, multiplier, onClose }: Salary
                     {profile && <button className="btn btn-sm" onClick={() => { onClose(); navigate(profile); }}>Open profile</button>}
                 </>
             }>
-            {detail.isError ? <LoadError error={detail.error} retry={() => detail.refetch()} what={`${row.name.split(" ")[0]}'s pay`} />
+            {loadFailed(detail) ? <LoadError error={detail.error} retry={() => detail.refetch()} what={`${row.name.split(" ")[0]}'s pay`} />
                 : !d ? <SkeletonLines lines={8} />
                     : <DetailBody detail={d} month={month} multiplier={multiplier} canExcuse={permissions.has(P.HOURS_EXCUSE)} seesWork={permissions.has(P.WORK_ENTRY_VIEW_ALL)} />}
         </Drawer>
@@ -120,7 +122,7 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork }: BodyP
                             <span className="mono">{cash(s.basePay + s.deduction, cur)}</span>
                         </div>
                     ) : (
-                        <HourlyLines detail={d} />
+                        <HourlyLines detail={d} month={month} />
                     )}
                     {s.deduction > 0 && (
                         <div className="down">
@@ -152,10 +154,11 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork }: BodyP
 }
 
 /** Hours at the rate of the day they were worked, and the paid break of each working day worked. */
-function HourlyLines({ detail: d }: { detail: SalaryDetail }) {
+function HourlyLines({ detail: d, month }: { detail: SalaryDetail; month: string }) {
     const s = d.salary;
     const cur = s.currency;
-    const breakMinutes = useMySchedule(companyToday()).data?.companyWeek.breakMinutes ?? 0;
+    // the company's break that month (not the viewer's own schedule, which a salary:view holder may not have)
+    const breakMinutes = policyOn(useWorkingTime().data, `${month.slice(0, 7)}-01`)?.breakMinutes ?? 0;
     return (
         <>
             <div>
@@ -182,7 +185,7 @@ function OvertimeDays({ userId, month }: { userId: number; month: string }) {
                 <div className="u">Where the overtime happened</div>
                 {query.data && <div className="muted" style={{ fontSize: "11.5px" }}>{days.length} day{days.length === 1 ? "" : "s"}</div>}
             </div>
-            {query.isError ? <div className="mt-s"><LoadError error={query.error} retry={() => query.refetch()} what="their overtime" /></div>
+            {loadFailed(query) ? <div className="mt-s"><LoadError error={query.error} retry={() => query.refetch()} what="their overtime" /></div>
                 : !query.data ? <div className="mt-s"><SkeletonLines lines={2} /></div>
                     : days.length === 0 ? <div className="hint mt-s">No overtime in {fmtMonthY(month)}.</div> : (
                         <div className="ot-days mt-s">

@@ -159,6 +159,14 @@ describe("invoicing settings", () => {
         await waitFor(() => expect(post.bodies).toEqual([{ currency: "LBP", ratePerUsd: 90000, effectiveFrom: "2026-09-30" }]));
     });
 
+    it("offer the days the API takes a rate from: after the latest one, up to today", async () => {
+        renderApp(page("finance"), rana, http.get("/api/exchange-rates", () => HttpResponse.json([{ ...billing.rates[0], effectiveFrom: "2026-09-30" }])), ...settingsHandlers);
+        const row = (await screen.findByText("Payments in another currency")).closest(".switch-row") as HTMLElement;
+        // one was set today: the next can only start tomorrow, which can't be set yet
+        expect(await within(row).findByText("Set today · the next change can apply from tomorrow")).toBeInTheDocument();
+        expect(within(row).queryByRole("button", { name: "Change" })).not.toBeInTheDocument();
+    });
+
     it("leave the LBP rate fixed for an admin", async () => {
         renderApp(page("finance"), nadia, ...settingsHandlers);
         const row = (await screen.findByText("Payments in another currency")).closest(".switch-row") as HTMLElement;

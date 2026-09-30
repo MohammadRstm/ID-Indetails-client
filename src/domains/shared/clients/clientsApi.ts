@@ -57,7 +57,7 @@ export function useSaveClient(id?: number) {
     return useMutation({
         mutationFn: async (body: SaveClientBody) =>
             (id ? await http.put<Client>(`/clients/${id}`, body) : await http.post<Client>("/clients", body)).data,
-        onSuccess: () => invalidate(keys.clients.all, keys.projects.all),
+        onSuccess: () => { void invalidate(keys.clients.all, keys.projects.all); },
     });
 }
 
@@ -65,7 +65,7 @@ export function useArchiveClient(id: number) {
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async (archive: boolean) => (await http.post<Client>(`/clients/${id}/${archive ? "archive" : "restore"}`)).data,
-        onSuccess: () => invalidate(keys.clients.all),
+        onSuccess: () => { void invalidate(keys.clients.all); },
     });
 }
 
@@ -75,7 +75,7 @@ export function useDeleteClient(id: number) {
         mutationFn: async () => {
             await http.delete(`/clients/${id}`);
         },
-        onSuccess: () => invalidate(keys.clients.all),
+        onSuccess: () => { void invalidate(keys.clients.all); },
     });
 }
 

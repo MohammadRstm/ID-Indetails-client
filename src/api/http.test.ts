@@ -2,7 +2,8 @@ import { http as mock, HttpResponse } from "msw";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { server } from "@/test/server";
 import { ApiError } from "./errors";
-import { configureSession, http, refreshSession } from "./http";
+import { fetchBlob } from "./download";
+import { configureSession, http, refreshSession, signOut } from "./http";
 import { tokenStore } from "./tokenStore";
 
 const auth = (token: string) => ({ accessToken: token, accessTokenExpiresAt: "2026-09-30T12:00:00Z", user: { id: 1 } });
@@ -88,6 +89,29 @@ describe("http", () => {
         expect(error.status).toBe(400);
         expect(error.code).toBe("validation_failed");
         expect(error.fieldErrors).toEqual({ name: "Name is required.", startedAt: "The value is invalid." });
+    });
+
+    it("gives a failed download the API's own message", async () => {
+        server.use(mock.get("/api/invoices/5/pdf", () => HttpResponse.json(
+            { type: "not_found", code: "invoice_not_found", message: "This invoice was discarded." }, { status: 404 })));
+
+        const error = await fetchBlob("/invoices/5/pdf").catch((e) => e);
+
+        expect(error).toBeInstanceOf(ApiError);
+        expect(error.code).toBe("invoice_not_found");
+        expect(error.message).toBe("This invoice was discarded.");
+    });
+
+    it("keeps the session when the server couldn't end it, and says so", async () => {
+        tokenStore.set("abc");
+        server.use(mock.post("/api/auth/logout", () => HttpResponse.json({ code: "server_error" }, { status: 503 })));
+
+        await expect(signOut()).rejects.toBeInstanceOf(ApiError);
+        expect(tokenStore.get()).toBe("abc");
+
+        server.use(mock.post("/api/auth/logout", () => new HttpResponse(null, { status: 204 })));
+        await signOut();
+        expect(tokenStore.get()).toBeNull();
     });
 
     it("says there is no session to restore when the refresh cookie is missing", async () => {

@@ -14,6 +14,7 @@ import InviteModal from "../people/InviteModal";
 import { personName } from "../people/peopleApi";
 import PermissionsModal from "./PermissionsModal";
 import { useAdmins } from "./settingsApi";
+import { loadFailed } from "@/api/queryState";
 
 type Target = { id: number; name: string; domain: string | null };
 
@@ -40,7 +41,7 @@ export default function AccessSettings({ domain }: { domain: Domain }) {
                 </div>
                 {canInvite && <div className="panel-tools"><button className="btn btn-sm" onClick={() => setInviting(true)}><Icon name="plus" />Invite admin</button></div>}
             </div>
-            {admins.isError ? <div className="panel-body"><LoadError error={admins.error} retry={() => admins.refetch()} what="the admins" /></div>
+            {loadFailed(admins) ? <div className="panel-body"><LoadError error={admins.error} retry={() => admins.refetch()} what="the admins" /></div>
                 : !admins.data ? <div className="panel-body"><SkeletonLines lines={4} /></div> : (
                     <div className="tbl-wrap">
                         <table className="tbl">

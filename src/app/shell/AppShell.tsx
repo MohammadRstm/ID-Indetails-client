@@ -2,6 +2,9 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Outlet, useLocation } from "react-router";
 import CrashScreen from "@/app/pages/CrashScreen";
+import { load } from "@/app/routing/pages";
+import { errorMessage } from "@/api/errors";
+import { toast } from "@/shared/components/Feedback/toast";
 import Skeleton, { SkeletonKpis, SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { cx } from "@/shared/utils/cx";
 import { LogWorkHost } from "@/domains/design/work/LogWorkHost";
@@ -11,7 +14,7 @@ import { useCompanySettings } from "./shellQueries";
 import { useArea } from "./useArea";
 
 // opened with ⌘K, so it loads then
-const CommandPalette = lazy(() => import("./CommandPalette"));
+const CommandPalette = lazy(load(() => import("./CommandPalette")));
 
 /** A page's shape while its code loads, the first time it is opened. */
 function PageLoading() {
@@ -38,7 +41,9 @@ export default function AppShell() {
     const setNavOpen = (open: boolean) => setNavOpenOn(open ? location.pathname : null);
     const [palette, setPalette] = useState(false);
     const area = useArea();
-    useCompanySettings();
+    const company = useCompanySettings();
+    // times and weeks follow the company's settings, so the page waits for them (a failure falls back to defaults)
+    const formatsKnown = !!company.data || company.isError;
 
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
@@ -65,11 +70,16 @@ export default function AppShell() {
                 {/* a page that fails keeps the shell around it, and moving to another page clears it */}
                 <ErrorBoundary FallbackComponent={CrashScreen} resetKeys={[location.pathname]}>
                     <Suspense fallback={<PageLoading />}>
-                        <Outlet />
+                        {formatsKnown ? <Outlet /> : <PageLoading />}
                     </Suspense>
                 </ErrorBoundary>
             </div>
-            {palette && <Suspense fallback={null}><CommandPalette area={area} onClose={() => setPalette(false)} /></Suspense>}
+            {palette && (
+                // a failure closes the palette only, not the whole app around it
+                <ErrorBoundary fallback={null} onError={(e) => { setPalette(false); toast({ text: "Search didn't open", sub: errorMessage(e), icon: "alert" }); }}>
+                    <Suspense fallback={null}><CommandPalette area={area} onClose={() => setPalette(false)} /></Suspense>
+                </ErrorBoundary>
+            )}
             <LogWorkHost />
         </div>
     );

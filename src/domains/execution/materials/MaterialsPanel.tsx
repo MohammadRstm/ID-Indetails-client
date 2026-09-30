@@ -21,6 +21,7 @@ import MaterialGrid, { type GridRow } from "./MaterialGrid";
 import MaterialSheet from "./MaterialSheet";
 import { COLS, COLS_PRICED, entryOf, link, problems, rowOf, STATED_KEYS, TOTAL_AT, type ColKey, type Row } from "./materialRules";
 import { useDeleteMaterial, useMaterials, useSetMaterialPrice, useUpdateMaterial, type Material, type MaterialQuery } from "./materialsApi";
+import { loadFailed } from "@/api/queryState";
 
 const PER_PAGE = 30;
 const NUMBERS: ColKey[] = ["quantity", "unitCost", "amount"];
@@ -159,7 +160,7 @@ export default function MaterialsPanel({ project }: { project: Project }) {
                 </div>
             </div>
             <div className="panel-body">
-                {list.isError ? <LoadError error={list.error} retry={() => list.refetch()} what="the materials" />
+                {loadFailed(list) ? <LoadError error={list.error} retry={() => list.refetch()} what="the materials" />
                     : !d ? <SkeletonLines lines={6} />
                         : d.all.count === 0 ? (
                             <Empty art="search" title="No materials logged yet"

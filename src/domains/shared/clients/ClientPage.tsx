@@ -36,6 +36,7 @@ import { useProjects, type ProjectSummary } from "../projects/projectsApi";
 import { ClientMark, ContactRow } from "./ClientBits";
 import ClientModal from "./ClientModal";
 import { useArchiveClient, useClient, useDeleteClient, type Client } from "./clientsApi";
+import { loadFailed } from "@/api/queryState";
 
 const COLOURS = { labour: "var(--heat-3)", expense: "var(--heat-1)" };
 
@@ -46,7 +47,7 @@ export default function ClientPage() {
     const clientId = Number(id);
     const query = useClient(Number.isInteger(clientId) && clientId > 0 ? clientId : null);
     if (!(Number.isInteger(clientId) && clientId > 0) || isStatus(query.error, 404)) return <MissingRecord title="Client not found" to={`/${domain}/clients`} back="Back to clients" />;
-    if (query.isError) return <div className="page"><LoadError error={query.error} retry={() => query.refetch()} what="the client" /></div>;
+    if (loadFailed(query)) return <div className="page"><LoadError error={query.error} retry={() => query.refetch()} what="the client" /></div>;
     if (!query.data) {
         return (
             <div className="page" aria-busy="true">
@@ -249,7 +250,7 @@ function ClientView({ client }: { client: Client }) {
                                 <div>
                                     <div className="u" style={{ marginBottom: 6 }}>Invoices</div>
                                     {invoices.isPending ? <SkeletonLines lines={3} />
-                                        : invoices.isError ? <LoadError error={invoices.error} retry={() => invoices.refetch()} what="the invoices" />
+                                        : loadFailed(invoices) ? <LoadError error={invoices.error} retry={() => invoices.refetch()} what="the invoices" />
                                             : liveInvoices.length
                                                 ? liveInvoices.slice(0, 6).map((inv) => <InvoiceLine key={inv.id} invoice={inv} onOpen={() => billingLinks.openInvoice(inv.id)} />)
                                                 : <p className="muted" style={{ padding: "6px 0" }}>Nothing has been invoiced to this client yet.</p>}
@@ -270,7 +271,7 @@ function ClientView({ client }: { client: Client }) {
                     )}
 
                     <div className="grid g-8-4 mt">
-                        <ClientProjects client={client} projects={projects.data?.items} loading={projects.isPending} />
+                        <ClientProjects client={client} projects={projects.data?.items} loading={projects.isPending} error={projects.error} onRetry={() => projects.refetch()} />
                         <div className="stack">
                             {w && (
                                 <Figure title="Work per month" sub="Hours logged for this client.">
@@ -334,7 +335,9 @@ function ClientView({ client }: { client: Client }) {
 }
 
 /** The client's projects: with money for money viewers, otherwise from the project list. */
-function ClientProjects({ client, projects, loading }: { client: Client; projects?: ProjectSummary[]; loading: boolean }) {
+type ClientProjectsProps = { client: Client; projects?: ProjectSummary[]; loading: boolean; error: unknown; onRetry: () => void };
+
+function ClientProjects({ client, projects, loading, error, onRetry }: ClientProjectsProps) {
     const domain = useDomain();
     const navigate = useNavigate();
     const open = (id: number) => navigate(`/${domain}/projects/${id}`);
@@ -381,7 +384,7 @@ function ClientProjects({ client, projects, loading }: { client: Client; project
     ];
     return (
         <Panel title="Projects" sub="Everything we have done for this client." flush>
-            <DataTable columns={columns} rows={projects} loading={loading} rowKey={(p) => p.id} minWidth="tbl-min-sm" onRowClick={(p) => open(p.id)} />
+            <DataTable columns={columns} rows={projects} loading={loading} error={error} onRetry={onRetry} what="the projects" rowKey={(p) => p.id} minWidth="tbl-min-sm" onRowClick={(p) => open(p.id)} />
         </Panel>
     );
 }

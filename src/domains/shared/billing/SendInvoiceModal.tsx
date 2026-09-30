@@ -64,14 +64,15 @@ export default function SendInvoiceModal({ invoice: inv, onClose }: { invoice: I
     }
 
     return (
-        <Modal size="md" onClose={onClose} title={`Send ${inv.number ?? "invoice"}`} sub={`${inv.client.displayName} · ${money.exact(inv.total)}`}
+        // it stays open while sending: the WhatsApp tab and the PDF follow the send's own success
+        <Modal size="md" onClose={send.isPending ? undefined : onClose} title={`Send ${inv.number ?? "invoice"}`} sub={`${inv.client.displayName} · ${money.exact(inv.total)}`}
             foot={
                 <>
                     <div className="grow muted" style={{ fontSize: "11.5px" }}>
                         {send.error ? <span className="err"><Icon name="alert" />{errorMessage(send.error)}</span>
                             : first ? "Sending issues the invoice and starts the payment clock." : "Already sent - this records another delivery."}
                     </div>
-                    <button className="btn" onClick={onClose}>Cancel</button>
+                    <button className="btn" disabled={send.isPending} onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={send.isPending} onClick={submit}>
                         <Icon name={chosen?.channel === "whatsapp" ? "send" : chosen ? "mail" : "download"} />
                         {send.isPending ? "Sending…" : chosen?.channel === "whatsapp" ? "Open WhatsApp" : chosen ? "Send email" : "Download"}
