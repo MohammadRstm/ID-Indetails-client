@@ -107,7 +107,8 @@ export function useUpdateEmployee(userId: number) {
 /** Someone's place in the company changed: their lists, chats, salaries and schedules follow. */
 function useAccountChanged() {
     const invalidate = useInvalidate();
-    return () => invalidate(keys.employees.all, ME_KEY, keys.work.all, ["company"], ["messages"], ["teams"]);
+    // not awaited: the dialog closes and says so at once, and the page follows as the lists reload
+    return () => { void invalidate(keys.employees.all, ME_KEY, keys.work.all, ["company"], ["messages"], ["teams"]); };
 }
 
 /** Ends their employment on their last working day and blocks sign-in; their history stays (employee:manage). */

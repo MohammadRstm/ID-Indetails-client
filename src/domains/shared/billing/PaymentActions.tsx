@@ -41,7 +41,8 @@ export default function PaymentActions({ payment }: { payment: Payment }) {
 function ApplyModal({ payment, onClose }: { payment: Payment; onClose: () => void }) {
     const apply = useApplyPayment();
     const invoices = useInvoices({ projectId: payment.project.id, pageSize: 100 });
-    const open = (invoices.data?.items ?? []).filter((i) => i.issuedAt && i.status !== "void" && (i.balance ?? 0) > 0.5);
+    // the whole payment goes on the invoice, so only one with at least that much left can take it
+    const open = (invoices.data?.items ?? []).filter((i) => i.issuedAt && i.status !== "void" && (i.balance ?? 0) >= payment.amountUsd);
     const [invoiceId, setInvoiceId] = useState("");
     const chosen = open.find((i) => String(i.id) === invoiceId);
 
@@ -61,7 +62,7 @@ function ApplyModal({ payment, onClose }: { payment: Payment; onClose: () => voi
                     <button className="btn btn-primary" disabled={!chosen || apply.isPending} onClick={go}>Apply</button>
                 </>
             }>
-            {invoices.data && open.length === 0 ? <p className="muted">This project has no issued invoice with anything left to pay.</p> : (
+            {invoices.data && open.length === 0 ? <p className="muted">No issued invoice on this project has {money.fmt(payment.amountUsd)} left to pay.</p> : (
                 <div className="field">
                     <label className="label" htmlFor="apply-invoice">Invoice</label>
                     <Select id="apply-invoice" value={invoiceId} onChange={setInvoiceId}

@@ -24,7 +24,9 @@ afterEach(() => vi.useRealTimers());
 describe("Correcting a payment", () => {
     it("voids one recorded in error, with a reason", async () => {
         const voided: unknown[] = [];
+        // once voided, the payment leaves the list the window was opened from
         renderApp(path, admin,
+            http.get("/api/payments", () => HttpResponse.json(voided.length ? { ...billing.domainPayments, items: billing.domainPayments.items.slice(1) } : billing.domainPayments)),
             http.post("/api/payments/:id/void", async ({ params, request }) => { voided.push({ id: params.id, ...(await request.json() as object) }); return HttpResponse.json({ ...paid, voidedAt: "2026-09-30T09:00:00Z" }); }),
             ...billingHandlers, ...financialsHandlers);
         const panel = await received();
@@ -54,6 +56,17 @@ describe("Correcting a payment", () => {
         await userEvent.click(await screen.findByRole("option", { name: new RegExp(`^${open.number}`) }));
         await userEvent.click(within(dialog).getByRole("button", { name: "Apply" }));
         await waitFor(() => expect(applied).toEqual([{ id: "31", invoiceId: open.id }]));
+    });
+
+    it("offers only invoices with room for the whole payment", async () => {
+        const big = { ...onAccount, amountUsd: 1_000_000, amount: 1_000_000 };
+        renderApp(path, admin, http.get("/api/payments", () => HttpResponse.json({ ...billing.domainPayments, items: [big] })), ...billingHandlers, ...financialsHandlers);
+        const panel = await received();
+        await userEvent.click(await within(panel).findByRole("button", { name: /^Payment of .* actions$/ }));
+        await userEvent.click(screen.getByRole("button", { name: "Apply to an invoice…" }));
+        const dialog = await screen.findByRole("dialog", { name: "Apply to an invoice" });
+        expect(await within(dialog).findByText(/No issued invoice on this project has .* left to pay\./)).toBeInTheDocument();
+        expect(within(dialog).getByRole("button", { name: "Apply" })).toBeDisabled();
     });
 
     it("offers nothing to someone who may neither record nor void payments", async () => {

@@ -4,13 +4,14 @@ import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { AREAS } from "@/app/routing/areas";
+import { useCurrentUser } from "@/app/session/useSession";
 import { toast } from "@/shared/components/Feedback/toast";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import DateInput from "@/shared/components/Forms/DateInput";
 import Select from "@/shared/components/Forms/Select";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
 import Modal from "@/shared/components/Overlays/Modal";
-import { companyToday, fmtDateY, fmtMonthY } from "@/shared/format/time";
+import { addDays, companyToday, fmtDateY, fmtMonthY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useChangeRole, useDeactivate, useMoveEmployee, useReactivate, useResendInvitation, useTeams } from "./peopleWorkApi";
 
@@ -46,6 +47,7 @@ function Foot({ error, busy, label, danger, disabled, onCancel, onGo }: { error:
  */
 export default function PersonActions({ account }: { account: Account }) {
     const permissions = usePermissions();
+    const me = useCurrentUser();
     const [dialog, setDialog] = useState<Dialog>(null);
     const resend = useResendInvitation(account.id);
     const manage = permissions.has(P.EMPLOYEE_MANAGE) && (account.role !== "super_admin" || permissions.has(P.EMPLOYEE_INVITE_SUPER_ADMIN));
@@ -53,7 +55,8 @@ export default function PersonActions({ account }: { account: Account }) {
     const invited = account.status === "invited";
     const canMove = manage && !deactivated && account.role !== "super_admin" && permissions.canSeeDomain("design") && permissions.canSeeDomain("execution");
     const canResend = invited && permissions.hasAny(P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN);
-    if (!manage && !canResend) return null;
+    // nobody changes their own account (an admin can reach their own profile from a notice or the feed)
+    if (account.id === me.id || (!manage && !canResend)) return null;
 
     function sendAgain() {
         resend.mutate(undefined, {
@@ -185,8 +188,10 @@ function DeactivateModal({ account, onClose }: { account: Account; onClose: () =
 
 function ReactivateModal({ account, onClose }: { account: Account; onClose: () => void }) {
     const reactivate = useReactivate(account.id);
-    // only time away within this month can still be paid; earlier months are closed
-    const askGap = account.leftOn != null && account.leftOn.slice(0, 7) === companyToday().slice(0, 7);
+    // only days away earlier this month can still be paid (the API's EmploymentRules.AsksAboutGap): a
+    // left-on in this month with at least a day between it and today; earlier months are closed
+    const today = companyToday();
+    const askGap = account.leftOn != null && account.leftOn.slice(0, 7) === today.slice(0, 7) && addDays(account.leftOn, 1) < today;
     const [payGap, setPayGap] = useState<"paid" | "unpaid">("unpaid");
 
     function go() {

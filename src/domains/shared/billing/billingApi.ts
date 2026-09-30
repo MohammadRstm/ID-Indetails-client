@@ -43,7 +43,9 @@ export type BillingSettings = Schemas["BillingSettingsResponse"];
 /** Every figure an invoice or a payment moves: the lists, the project, the domain's money, the dashboards and the feed. */
 function useInvalidateBilling() {
     const invalidate = useInvalidate();
-    return () => invalidate(["invoices"], ["payments"], keys.projects.all, keys.finance.all, keys.clients.all, keys.dashboard.all, keys.activity.all);
+    // not awaited: a window's own onSuccess (its toast, closing it) runs at once, before the lists reload and
+    // perhaps drop the row it was opened from
+    return () => { void invalidate(["invoices"], ["payments"], keys.projects.all, keys.finance.all, keys.clients.all, keys.dashboard.all, keys.activity.all); };
 }
 
 /** One invoice with its lines, deliveries and balance (financial:view). */
