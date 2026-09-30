@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
 import type { Paged, Schemas } from "@/api/types";
@@ -16,23 +16,37 @@ export type PermissionDefinition = Schemas["PermissionDefinitionResponse"];
  * Settings live in four places in the API: the company's (name, logo, week, currency), the company's
  * working time (hours, break, overtime), each domain's rules (time tracking, projects, notifications)
  * and each domain's billing (terms, numbering, bank details). Saving one refreshes whatever reads it.
+ *
+ * Each save sends the whole record, built from what is loaded, so what the API answers goes straight into the
+ * cache: a second change made right after the first then starts from it rather than undoing it. The rest is
+ * refreshed without waiting, so a section's own "saved" runs at once.
  */
 
 /** The domain's time-tracking, project and notification rules, read with useDomainSettings (domain_settings:manage). */
 export function useSaveDomainRules(domain: string) {
+    const queryClient = useQueryClient();
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async (body: Schemas["SaveDomainSettingsRequest"]) => (await http.put<DomainSettings>(`/domain-settings/${domain}`, body)).data,
-        onSuccess: () => invalidate(keys.settings.domain(domain), keys.projects.all),
+        onSuccess: (saved) => {
+            queryClient.setQueryData(keys.settings.domain(domain), saved);
+            void invalidate(keys.projects.all);
+        },
     });
 }
 
+const companySettingsKey = ["company", "settings"] as const;
+
 /** Name, address, website, week, time format and currency (company_settings:manage). */
 export function useSaveCompanySettings() {
+    const queryClient = useQueryClient();
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async (body: Schemas["UpdateCompanySettingsRequest"]) => (await http.put<CompanySettings>("/company/settings", body)).data,
-        onSuccess: () => invalidate(["company"]),
+        onSuccess: (saved) => {
+            queryClient.setQueryData(companySettingsKey, saved);
+            void invalidate(["company"]);
+        },
     });
 }
 
@@ -42,7 +56,7 @@ export function useSetLogo() {
     return useMutation({
         mutationFn: async (fileId: number | null) =>
             (fileId == null ? await http.delete<CompanySettings>("/company/logo") : await http.put<CompanySettings>("/company/logo", { fileId })).data,
-        onSuccess: () => invalidate(["company"]),
+        onSuccess: () => { void invalidate(["company"]); },
     });
 }
 
@@ -58,20 +72,25 @@ export function useWorkingTime() {
 
 /** A new version of the working time, from a day (working_time:manage). Hours, overtime and pay follow it. */
 export function useSetWorkingTime() {
+    const queryClient = useQueryClient();
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async (body: Schemas["SetWorkingTimeRequest"]) => (await http.post<WorkingTime>("/company/working-time", body)).data,
-        onSuccess: () => invalidate(workingTimeKey, keys.work.all, keys.employees.all, keys.finance.all),
+        onSuccess: (saved) => {
+            queryClient.setQueryData(workingTimeKey, saved);
+            // hours, overtime and so pay, salaries, schedules and the dashboards all follow the working time
+            void invalidate(keys.work.all, keys.employees.all, keys.finance.all, keys.dashboard.all, ["company"]);
+        },
     });
 }
 
 /** Terms, numbering, bank details and the words on every invoice (billing_settings:manage). */
 export function useSaveBillingSettings(domain: string) {
-    const invalidate = useInvalidate();
+    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (body: Schemas["SaveBillingSettingsRequest"]) =>
             (await http.put<Schemas["BillingSettingsResponse"]>(`/billing-settings/${domain}`, body)).data,
-        onSuccess: () => invalidate(["billing-settings", domain]),
+        onSuccess: (saved) => queryClient.setQueryData(["billing-settings", domain], saved),
     });
 }
 
@@ -113,7 +132,7 @@ export function useSaveTeam() {
     return useMutation({
         mutationFn: async ({ id, name, domain }: { id: number | null; name: string; domain: string }) =>
             (id == null ? await http.post<Team>("/teams", { name, domainCode: domain }) : await http.put<Team>(`/teams/${id}`, { name })).data,
-        onSuccess: () => invalidate(teamsKey, keys.employees.all),
+        onSuccess: () => { void invalidate(teamsKey, keys.employees.all); },
     });
 }
 
@@ -121,7 +140,8 @@ export function useDeleteTeam() {
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async (id: number) => { await http.delete(`/teams/${id}`); },
-        onSuccess: () => invalidate(teamsKey, keys.employees.all),
+        // not awaited: the team's row leaves the list on the refresh, and "Team removed" has to run first
+        onSuccess: () => { void invalidate(teamsKey, keys.employees.all); },
     });
 }
 

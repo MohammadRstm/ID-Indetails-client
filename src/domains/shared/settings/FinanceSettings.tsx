@@ -5,6 +5,7 @@ import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { useCompanySettings } from "@/app/shell/shellQueries";
+import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { SwitchRow } from "@/shared/components/Forms/Filters";
@@ -26,14 +27,18 @@ const OVERTIME = [{ value: "1", label: "×1 - same as normal" }, { value: "1.25"
 /** The prototype's Settings → Finance: the rules behind revenue, cost and pay, and invoicing and payments. */
 export default function FinanceSettings({ domain }: { domain: Domain }) {
     const permissions = usePermissions();
-    const company = useCompanySettings().data;
-    const wt = useWorkingTime().data;
+    const companyQuery = useCompanySettings();
+    const wtQuery = useWorkingTime();
+    const company = companyQuery.data;
+    const wt = wtQuery.data;
+    const failed = companyQuery.isError ? companyQuery : wtQuery.isError ? wtQuery : null;
     const saveCompany = useSaveCompanySettings();
     const setWt = useSetWorkingTime();
     const canCompany = permissions.has(P.COMPANY_SETTINGS_MANAGE);
     const canTime = permissions.has(P.WORKING_TIME_MANAGE);
     const seesBilling = permissions.hasAny(P.BILLING_SETTINGS_MANAGE, P.FINANCIAL_VIEW);
-    const billing = useBillingSettings(domain, seesBilling).data;
+    const billingQuery = useBillingSettings(domain, seesBilling);
+    const billing = billingQuery.data;
     const overtime = wt ? nextChange(wt, companyToday()) : null;
     const overtimeOpts = overtime && !OVERTIME.some((o) => +o.value === overtime.latest.overtimeMultiplier)
         ? [...OVERTIME, { value: String(overtime.latest.overtimeMultiplier), label: `×${overtime.latest.overtimeMultiplier}` }] : OVERTIME;
@@ -43,10 +48,11 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
             <div className="panel">
                 <div className="panel-head"><div><div className="panel-title">Finance</div><div className="panel-sub">Rules behind revenue, cost and pay in this business.</div></div></div>
                 <div className="panel-body">
-                    {!company || !overtime ? <SkeletonLines lines={6} /> : (
+                    {failed ? <LoadError error={failed.error} retry={() => failed.refetch()} what="the finance settings" />
+                        : !company || !overtime ? <SkeletonLines lines={6} /> : (
                         <>
                             <SwitchRow title="Default currency" description={<>Pre-selected when adding an employee's pay, an expense or a payment.{!canCompany && <OnlyFor who="a super admin" />}</>} control={
-                                <Select className="select sm" style={{ width: 120 }} aria-label="Default currency" disabled={!canCompany} value={company.defaultCurrency}
+                                <Select className="select sm" style={{ width: 120 }} aria-label="Default currency" disabled={!canCompany || saveCompany.isPending} value={company.defaultCurrency}
                                     onChange={(v) => saveCompany.mutate({
                                         name: company.name, address: company.address, website: company.website, weekStart: company.weekStart,
                                         use24HourTime: company.use24HourTime, defaultCurrency: v,
@@ -56,7 +62,7 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
                             <SwitchRow title="Overtime pay rate"
                                 description={<>What an overtime hour (before 9 AM, after 5 PM, weekends) is paid, as a multiple of the normal rate. Used by Salaries; project labour cost is unaffected.{!canTime && <OnlyFor who="a super admin" />}</>}
                                 control={
-                                    <Select className="select sm" style={{ width: 150 }} aria-label="Overtime pay rate" disabled={!canTime} value={String(overtime.latest.overtimeMultiplier)}
+                                    <Select className="select sm" style={{ width: 150 }} aria-label="Overtime pay rate" disabled={!canTime || setWt.isPending} value={String(overtime.latest.overtimeMultiplier)}
                                         onChange={(v) => setWt.mutate(overtime.body({ overtimeMultiplier: +v }), { onSuccess: saved("Overtime rate updated", overtime.when), onError: notSaved })}
                                         options={overtimeOpts} />
                                 } />
@@ -77,7 +83,8 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
                         <div><div className="panel-title">Invoicing and payments</div><div className="panel-sub">Invoices request money; payments record what arrived. Neither one changes revenue or profit.</div></div>
                     </div>
                     <div className="panel-body">
-                        {!billing ? <SkeletonLines lines={6} /> : <Invoicing domain={domain} billing={billing} />}
+                        {billingQuery.isError ? <LoadError error={billingQuery.error} retry={() => billingQuery.refetch()} what="the invoicing settings" />
+                            : !billing ? <SkeletonLines lines={6} /> : <Invoicing domain={domain} billing={billing} />}
                     </div>
                 </div>
             )}
@@ -104,7 +111,7 @@ function Invoicing({ domain, billing: b }: { domain: Domain; billing: BillingSet
     return (
         <>
             <SwitchRow title="Default payment terms" description="Sets each new invoice's due date, and therefore when it counts as overdue." control={
-                <Select className="select sm" style={{ width: 190 }} aria-label="Default payment terms" disabled={!canEdit} value={String(b.defaultTermsDays)}
+                <Select className="select sm" style={{ width: 190 }} aria-label="Default payment terms" disabled={!canEdit || save.isPending} value={String(b.defaultTermsDays)}
                     onChange={(v) => save.mutate({ ...body, defaultTermsDays: +v }, { onSuccess: saved("Payment terms updated"), onError: notSaved })}
                     options={TERMS.some((t) => +t.value === b.defaultTermsDays) ? TERMS : [...TERMS, { value: String(b.defaultTermsDays), label: `Net ${b.defaultTermsDays}` }]} />
             } />

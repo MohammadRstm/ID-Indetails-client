@@ -60,6 +60,34 @@ describe("Settings", () => {
         expect(await screen.findByText("Setting saved")).toBeInTheDocument();
     });
 
+    it("keeps a rule changed just before another", async () => {
+        const bodies: Record<string, unknown>[] = [];
+        const current: Record<string, unknown> = { ...settings.domainRules };
+        renderApp(page("projects"), nadia,
+            http.put("/api/domain-settings/design", async ({ request }) => {
+                const body = await request.json() as Record<string, unknown>;
+                bodies.push(body);
+                Object.assign(current, body);
+                return HttpResponse.json(current);
+            }),
+            ...settingsHandlers);
+        await userEvent.click(await screen.findByRole("switch", { name: "Allow logging on projects that are on hold" }));
+        await waitFor(() => expect(bodies).toHaveLength(1));
+        const archive = screen.getByRole("switch", { name: "Archive completed projects automatically" });
+        await waitFor(() => expect(archive).toBeEnabled());
+        await userEvent.click(archive);
+        await waitFor(() => expect(bodies).toHaveLength(2));
+        // the second save starts from what the first one saved
+        expect(bodies[1]).toMatchObject({ holdLogging: true, autoArchive: !settings.domainRules.autoArchive });
+    });
+
+    it("says so when a section's settings can't be loaded", async () => {
+        renderApp(page("projects"), nadia,
+            http.get("/api/domain-settings/:domain", () => HttpResponse.json({ code: "forbidden", message: "You can't see that." }, { status: 403 })),
+            ...settingsHandlers);
+        expect(await screen.findByRole("button", { name: "Try again" })).toBeInTheDocument();
+    });
+
     it("keeps the domain's rules fixed without domain_settings:manage", async () => {
         renderApp(page("notifications"), withPermissions(nadia, { revoke: [P.DOMAIN_SETTINGS_MANAGE] }), ...settingsHandlers);
         expect(await screen.findByRole("switch", { name: "Weekly summary" })).toBeDisabled();
@@ -144,7 +172,9 @@ describe("teams", () => {
         const created = recorder("post", "/api/teams", { id: 99, name: "Lighting", domain: "design", memberCount: 0 });
         const renamed = recorder("put", "/api/teams/:id", settings.teams[0]);
         const removed = recorder("delete", "/api/teams/:id");
-        renderApp(page("teams"), nadia, created.handler, renamed.handler, removed.handler, ...settingsHandlers);
+        // once removed, the team leaves the list its row was drawn from
+        const teams = http.get("/api/teams", () => HttpResponse.json(removed.bodies.length ? settings.teams.filter((t) => t.name !== "Operations") : settings.teams));
+        renderApp(page("teams"), nadia, created.handler, renamed.handler, removed.handler, teams, ...settingsHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Add team" }));
         await userEvent.type(screen.getByLabelText("Team name"), "Lighting{Enter}");
         await waitFor(() => expect(created.bodies).toEqual([{ name: "Lighting", domainCode: "design" }]));
@@ -160,6 +190,7 @@ describe("teams", () => {
         await userEvent.click(within(ops).getByRole("button", { name: "Remove" }));
         await userEvent.click(within(ops).getByRole("button", { name: "Remove" }));
         await waitFor(() => expect(removed.bodies).toHaveLength(1));
+        expect(await screen.findByText("Team removed")).toBeInTheDocument();
     });
 
     it("are only listed without team:manage", async () => {
