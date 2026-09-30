@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import type { Schemas } from "@/api/types";
 import { usePermissions } from "@/app/permissions/usePermissions";
+import { useDomain } from "@/app/routing/domainContext";
 import { canOpen } from "@/app/routing/routeTable";
 import { CompositionBar, ProfitBars, RankBars } from "@/shared/components/Charts/Bars";
 import Columns from "@/shared/components/Charts/Columns";
@@ -19,19 +20,20 @@ import { money } from "@/shared/format/money";
 import { fmtDateY, fmtH, fmtMonthY, MONTHS } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
 import { ClientBadge } from "../../shared/clients/ClientBits";
+import { costPartsOf, costWords } from "../../shared/finance/costParts";
 import type { FinanceClient, FinanceMonth, FinanceProjects, FinanceSummary } from "../../shared/finance/financeApi";
 
 export type Tile = { icon: string | null; tint: string | null };
 type FinanceProject = Schemas["FinanceProjectResponse"];
 
-const COL = { labour: "var(--heat-3)", expense: "var(--heat-1)" };
 const monthLabel = (m: string) => MONTHS[+m.slice(5, 7) - 1];
 
-/** Opens a Design page when the viewer may; otherwise leaves the row still. */
+/** Opens a page of the domain when the viewer may; otherwise leaves the row still. */
 function useOpener() {
     const navigate = useNavigate();
     const permissions = usePermissions();
-    return (path: string) => (canOpen(permissions, "design", path) ? () => navigate(`/design/${path}`) : undefined);
+    const domain = useDomain();
+    return (path: string) => (canOpen(permissions, domain, path) ? () => navigate(`/${domain}/${path}`) : undefined);
 }
 
 const Tile = ({ tile }: { tile: Tile | undefined }) => <ProjectTile icon={tile?.icon} tint={tile?.tint} size="sm" />;
@@ -46,6 +48,8 @@ type OverviewTabProps = {
 
 export function OverviewTab({ summary: s, months, projects, label, tiles }: OverviewTabProps) {
     const open = useOpener();
+    const domain = useDomain();
+    const parts = costPartsOf(domain);
     const list = months ?? [];
     const all = projects?.projects ?? [];
     const billable = all.filter((f) => f.billingType !== "internal");
@@ -70,12 +74,11 @@ export function OverviewTab({ summary: s, months, projects, label, tiles }: Over
                 <Figure title="Net profit" sub={`Everything earned and spent in ${label} - internal work included.`}>
                     <Waterfall height={200} steps={[
                         { label: "Revenue", value: s.revenue, kind: "start" },
-                        { label: "Labour", value: s.cost.labour, kind: "cost" },
-                        { label: "Expenses", value: s.cost.expenses, kind: "cost" },
+                        ...parts.map((p) => ({ label: p.column, value: s.cost[p.key], kind: "cost" as const })),
                         { label: "Net profit", value: 0, kind: "result" },
                     ]} />
                     <div className="chart-note">
-                        Labour and expenses include internal work.
+                        {costWords(domain)} include internal work.
                         {s.stillToEarn > 1000 && <span> Running projects have {money.short(s.stillToEarn)} of contracted payment still to earn.</span>}
                     </div>
                 </Figure>
@@ -109,10 +112,7 @@ export function OverviewTab({ summary: s, months, projects, label, tiles }: Over
             <div className="panel mt">
                 <div className="panel-head"><div><div className="panel-title">Cost composition</div><div className="panel-sub">Every dollar the company spent, by kind.</div></div></div>
                 <div className="panel-body">
-                    <CompositionBar height={18} parts={[
-                        { label: "Employee labour", value: s.cost.labour, color: COL.labour },
-                        { label: "Project expenses", value: s.cost.expenses, color: COL.expense },
-                    ]} />
+                    <CompositionBar height={18} parts={parts.map((p) => ({ label: p.label, value: s.cost[p.key], color: p.color }))} />
                 </div>
             </div>
         </div>
@@ -123,6 +123,10 @@ type ProjectSort = "name" | "revenue" | "hours" | "cost" | "profit" | "margin";
 
 export function ProjectsTab({ projects, tiles }: { projects: FinanceProjects | undefined; tiles: Map<number, Tile> }) {
     const open = useOpener();
+    const domain = useDomain();
+    const parts = costPartsOf(domain);
+    // nobody logs hours on a site
+    const hours = domain === "design";
     const [sort, setSort] = useState<SortState>({ key: "profit", dir: "desc" });
     const all = projects?.projects ?? [];
     const dir = sort.dir === "desc" ? 1 : -1;
@@ -146,9 +150,8 @@ export function ProjectsTab({ projects, tiles }: { projects: FinanceProjects | u
                                 <SortTh sortKey="name" sort={sort} onSort={setSort}>Project</SortTh>
                                 <th>Status</th>
                                 <SortTh sortKey="revenue" sort={sort} onSort={setSort} right>Revenue</SortTh>
-                                <SortTh sortKey="hours" sort={sort} onSort={setSort} right>Hours</SortTh>
-                                <th className="r">Labour</th>
-                                <th className="r">Expenses</th>
+                                {hours && <SortTh sortKey="hours" sort={sort} onSort={setSort} right>Hours</SortTh>}
+                                {parts.map((p) => <th key={p.key} className="r">{p.column}</th>)}
                                 <SortTh sortKey="cost" sort={sort} onSort={setSort} right>Cost</SortTh>
                                 <SortTh sortKey="profit" sort={sort} onSort={setSort} right>Profit</SortTh>
                                 <SortTh sortKey="margin" sort={sort} onSort={setSort}>Margin</SortTh>
@@ -171,9 +174,8 @@ export function ProjectsTab({ projects, tiles }: { projects: FinanceProjects | u
                                         </td>
                                         <td><StatusBadge status={f.status} /></td>
                                         <td className="r mono">{internal ? <span className="muted">-</span> : money.fmt(f.revenue)}</td>
-                                        <td className="r mono">{fmtH(f.hours * 60)}</td>
-                                        <td className="r mono">{money.fmt(f.cost.labour)}</td>
-                                        <td className="r mono">{money.fmt(f.cost.expenses)}</td>
+                                        {hours && <td className="r mono">{fmtH(f.hours * 60)}</td>}
+                                        {parts.map((p) => <td key={p.key} className="r mono">{money.fmt(f.cost[p.key])}</td>)}
                                         <td className="r mono">{money.fmt(f.cost.total)}</td>
                                         <td className={cx("r mono", !internal && (f.profit >= 0 ? "up" : "down"))}>
                                             {internal ? <span className="muted">{money.fmt(-f.cost.total)}</span> : money.fmt(f.profit)}
@@ -189,7 +191,7 @@ export function ProjectsTab({ projects, tiles }: { projects: FinanceProjects | u
             <div className="panel-foot">
                 <span>{all.length - internalCount} client · {internalCount} internal</span>
                 <div className="grow" />
-                <span className="muted">Margin needs 5% progress or 10 logged hours before it is shown.</span>
+                <span className="muted">{hours ? "Margin needs 5% progress or 10 logged hours before it is shown." : "Margin needs 5% progress before it is shown."}</span>
             </div>
         </div>
     );
@@ -199,6 +201,9 @@ const HEAT = ["var(--heat-4)", "var(--heat-3)", "var(--heat-2)", "var(--heat-1)"
 
 export function ClientsTab({ clients, projects }: { clients: FinanceClient[] | undefined; projects: FinanceProjects | undefined }) {
     const open = useOpener();
+    const domain = useDomain();
+    const parts = costPartsOf(domain);
+    const hours = domain === "design";
     const all = clients ?? [];
     const rows = all.filter((c) => c.money.projects > 0).sort((a, b) => b.money.revenue - a.money.revenue);
     const total = rows.reduce((t, c) => t + c.money.revenue, 0);
@@ -252,8 +257,8 @@ export function ClientsTab({ clients, projects }: { clients: FinanceClient[] | u
                 <div className="tbl-wrap">
                     <table className="tbl tbl-min">
                         <thead>
-                            <tr><th>Client</th><th>Label</th><th className="r">Projects</th><th className="r">Hours</th><th className="r">Revenue</th>
-                                <th className="r">Labour</th><th className="r">Expenses</th><th className="r">Profit</th><th>Margin</th></tr>
+                            <tr><th>Client</th><th>Label</th><th className="r">Projects</th>{hours && <th className="r">Hours</th>}<th className="r">Revenue</th>
+                                {parts.map((p) => <th key={p.key} className="r">{p.column}</th>)}<th className="r">Profit</th><th>Margin</th></tr>
                         </thead>
                         <tbody>
                             {rows.map((c) => {
@@ -263,10 +268,9 @@ export function ClientsTab({ clients, projects }: { clients: FinanceClient[] | u
                                         <td><ClientBadge client={{ id: c.clientId, displayName: c.name }} link={false} /></td>
                                         <td>{c.label && <span className="badge">{c.label}</span>}</td>
                                         <td className="r num">{c.money.projects}</td>
-                                        <td className="r mono">{fmtH(c.money.hours * 60)}</td>
+                                        {hours && <td className="r mono">{fmtH(c.money.hours * 60)}</td>}
                                         <td className="r mono">{money.fmt(c.money.revenue)}</td>
-                                        <td className="r mono">{money.fmt(c.money.cost.labour)}</td>
-                                        <td className="r mono">{money.fmt(c.money.cost.expenses)}</td>
+                                        {parts.map((p) => <td key={p.key} className="r mono">{money.fmt(c.money.cost[p.key])}</td>)}
                                         <td className={cx("r mono", c.money.profit >= 0 ? "up" : "down")}>{money.fmt(c.money.profit)}</td>
                                         <td><MarginPill value={c.money.marginKnown ? c.money.margin : null} label={false} /></td>
                                     </tr>
@@ -289,19 +293,28 @@ type Costs = Schemas["FinanceCostsResponse"];
 
 export function CostsTab({ costs, error, retry, tiles }: { costs: Costs | undefined; error: unknown; retry: () => void; tiles: Map<number, Tile> }) {
     const open = useOpener();
+    const domain = useDomain();
     if (error) return <div className="panel"><div className="panel-body"><LoadError error={error} retry={retry} what="the costs" /></div></div>;
     if (!costs) return <div className="panel"><div className="panel-body"><SkeletonLines lines={8} /></div></div>;
     return (
         <div>
             <div className="grid g-2">
-                <Figure title="Labour cost by employee" sub="Hours already logged, costed at each person's rate."
-                    table={{ cols: [{ label: "Employee" }, { label: "Hours", right: true }, { label: "Cost", right: true }], rows: costs.labourByPerson.map((p) => [p.name, fmtH(p.minutes), money.fmt(p.usd)]) }}>
-                    <RankBars format={(v) => money.short(v)} unit="Cost" onClick={(it) => open(`people/${it.id}`)?.()}
-                        items={costs.labourByPerson.filter((p) => p.usd > 0).map((p) => ({
-                            id: p.userId, label: p.name, value: p.usd,
-                            node: <><Avatar person={{ name: p.name }} size={20} /><span className="trunc">{p.name}</span></>,
-                        }))} />
-                </Figure>
+                {domain === "design" ? (
+                    <Figure title="Labour cost by employee" sub="Hours already logged, costed at each person's rate."
+                        table={{ cols: [{ label: "Employee" }, { label: "Hours", right: true }, { label: "Cost", right: true }], rows: costs.labourByPerson.map((p) => [p.name, fmtH(p.minutes), money.fmt(p.usd)]) }}>
+                        <RankBars format={(v) => money.short(v)} unit="Cost" onClick={(it) => open(`people/${it.id}`)?.()}
+                            items={costs.labourByPerson.filter((p) => p.usd > 0).map((p) => ({
+                                id: p.userId, label: p.name, value: p.usd,
+                                node: <><Avatar person={{ name: p.name }} size={20} /><span className="trunc">{p.name}</span></>,
+                            }))} />
+                    </Figure>
+                ) : (
+                    <Figure title="Site cost by kind" sub="Materials delivered, ground labour reported and project expenses in the period."
+                        table={{ cols: [{ label: "Kind" }, { label: "Cost", right: true }], rows: costPartsOf(domain).map((p) => [p.label, money.fmt(costs.bySource[p.key])]) }}>
+                        <RankBars format={(v) => money.short(v)} unit="Cost" showPct
+                            items={costPartsOf(domain).map((p) => ({ label: p.label, value: costs.bySource[p.key] }))} />
+                    </Figure>
+                )}
                 <Figure title="Project expenses by category" sub="One-off costs that belong to a single project.">
                     <RankBars format={(v) => money.short(v)} showPct
                         items={costs.expensesByCategory.map((c) => ({ label: c.category.charAt(0).toUpperCase() + c.category.slice(1), value: c.usd }))} />

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { downloadFile } from "@/api/download";
 import { errorMessage } from "@/api/errors";
-import ComingSoon from "@/app/pages/ComingSoon";
+import type { Domain } from "@/app/permissions/permissions";
 import { useDomain } from "@/app/routing/domainContext";
 import { KpiStrip } from "@/shared/components/Data/Kpi";
 import { PageHead } from "@/shared/components/Data/Panel";
@@ -18,6 +18,7 @@ import Icon from "@/shared/icons/Icon";
 import BillingModalHost from "../../shared/billing/BillingModalHost";
 import BillingTab from "../../shared/billing/BillingTab";
 import { useInvoices } from "../../shared/billing/billingApi";
+import { costPartsOf, costWords } from "../../shared/finance/costParts";
 import { useFinanceClients, useFinanceCosts, useFinanceMonthly, useFinanceProjects, useFinanceSummary } from "../../shared/finance/financeApi";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { ClientsTab, CostsTab, OverviewTab, ProjectsTab, type Tile } from "./FinanceTabs";
@@ -38,13 +39,13 @@ function periodsOf(today: string): Record<PeriodKey, { label: string; from: stri
     };
 }
 
-/** A business's financials; Execution's arrive with phase 6. */
+/** Revenue, cost and profit across a domain's projects (the prototype's P.AdminFinancials), for Design and Execution alike. */
 export default function FinancialsRoute() {
-    return useDomain() === "design" ? <FinancialsPage /> : <ComingSoon title="Financials" />;
+    const domain = useDomain();
+    return <FinancialsPage key={domain} domain={domain} />;
 }
 
-/** Revenue, cost and profit across Design's projects (the prototype's P.AdminFinancials). */
-function FinancialsPage() {
+function FinancialsPage({ domain }: { domain: Domain }) {
     const [params, setParams] = useSearchParams();
     const requested = params.get("tab") as Tab | null;
     const tab: Tab = requested && TABS.includes(requested) ? requested : "overview";
@@ -54,19 +55,26 @@ function FinancialsPage() {
     const period = periods[periodKey];
     const range = { from: period.from, to: period.to };
 
-    const summary = useFinanceSummary("design", range, true);
-    const monthly = useFinanceMonthly("design", Math.max(4, Math.min(13, period.months)), tab === "overview");
-    const projects = useFinanceProjects("design", true);
-    const clients = useFinanceClients("design", true);
-    const costs = useFinanceCosts("design", range, tab === "costs");
-    const invoiceCount = useInvoices({ domain: "design", pageSize: 1 }).data?.totalCount;
-    const tiles = new Map<number, Tile>((useProjects({ domain: "design", pageSize: 100 }).data?.items ?? []).map((p) => [p.id, { icon: p.icon, tint: p.tint }]));
+    const summary = useFinanceSummary(domain, range, true);
+    const monthly = useFinanceMonthly(domain, Math.max(4, Math.min(13, period.months)), tab === "overview");
+    const projects = useFinanceProjects(domain, true);
+    const clients = useFinanceClients(domain, true);
+    const costs = useFinanceCosts(domain, range, tab === "costs");
+    const invoiceCount = useInvoices({ domain, pageSize: 1 }).data?.totalCount;
+    const tiles = new Map<number, Tile>((useProjects({ domain, pageSize: 100 }).data?.items ?? []).map((p) => [p.id, { icon: p.icon, tint: p.tint }]));
     const s = summary.data;
+    // Design spends on its employees' hours and expenses; a site on materials, ground labour and expenses
+    const costTiles = domain === "design"
+        ? [
+            { key: "labour", label: "Employee labour", value: money.short(s?.cost.labour ?? 0), sub: <span>{fmtNumber(Math.round((s?.labourMinutes ?? 0) / 60))} hours logged</span> },
+            { key: "expenses", label: "Project expenses", value: money.short(s?.cost.expenses ?? 0) },
+        ]
+        : costPartsOf(domain).map((part) => ({ key: part.key, label: part.label, value: money.short(s?.cost[part.key] ?? 0) }));
 
     async function exportCsv() {
         const slug = period.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
         try {
-            await downloadFile("/finance/design/projects/export", `financials-${slug}.csv`, range);
+            await downloadFile(`/finance/${domain}/projects/export`, `financials-${slug}.csv`, range);
         } catch (e) {
             toast({ text: "The financials weren't exported", sub: errorMessage(e), icon: "alert" });
         }
@@ -87,9 +95,8 @@ function FinancialsPage() {
                 <>
                     <KpiStrip loading={!s} items={[
                         { key: "revenue", label: "Revenue recognised", value: money.short(s?.revenue ?? 0), sub: <span>{s?.clientProjects ?? 0} client projects · by progress</span> },
-                        { key: "labour", label: "Employee labour", value: money.short(s?.cost.labour ?? 0), sub: <span>{fmtNumber(Math.round((s?.labourMinutes ?? 0) / 60))} hours logged</span> },
-                        { key: "expenses", label: "Project expenses", value: money.short(s?.cost.expenses ?? 0) },
-                        { key: "profit", label: "Net profit", value: money.short(s?.profit ?? 0), sub: <span>revenue less labour and expenses</span> },
+                        ...costTiles,
+                        { key: "profit", label: "Net profit", value: money.short(s?.profit ?? 0), sub: <span>revenue less {costWords(domain).toLowerCase()}</span> },
                         { key: "margin", label: "Margin", value: money.pct(s?.margin), sub: <span>all-time client profit {money.short(s?.allTimeClientProfit ?? 0)}</span> },
                     ]} />
 
@@ -105,7 +112,7 @@ function FinancialsPage() {
                         : <div className="panel"><div className="panel-body"><SkeletonLines lines={8} /></div></div>)}
                     {tab === "projects" && <ProjectsTab projects={projects.data} tiles={tiles} />}
                     {tab === "clients" && <ClientsTab clients={clients.data} projects={projects.data} />}
-                    {tab === "billing" && <BillingTab domain="design" tiles={tiles} />}
+                    {tab === "billing" && <BillingTab domain={domain} tiles={tiles} />}
                     {tab === "costs" && <CostsTab costs={costs.data} error={costs.isError ? costs.error : null} retry={() => costs.refetch()} tiles={tiles} />}
                 </>
             )}

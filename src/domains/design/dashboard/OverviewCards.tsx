@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import type { Schemas } from "@/api/types";
 import { usePermissions } from "@/app/permissions/usePermissions";
+import { useDomain } from "@/app/routing/domainContext";
 import { canOpen } from "@/app/routing/routeTable";
 import { Delta, ProfitBars, RankBars, StatusBar } from "@/shared/components/Charts/Bars";
 import Columns from "@/shared/components/Charts/Columns";
@@ -25,11 +26,12 @@ import type { Overview } from "./overviewApi";
 
 export type ProjectInfo = { icon: string | null; tint: string | null; activity: number; targetDate: string | null };
 
-/** Opens a Design page when the viewer may; otherwise leaves the row still. */
+/** Opens a page of the domain when the viewer may; otherwise leaves the row still. */
 function useOpener() {
     const navigate = useNavigate();
     const permissions = usePermissions();
-    return (path: string) => (canOpen(permissions, "design", path) ? () => navigate(`/design/${path}`) : undefined);
+    const domain = useDomain();
+    return (path: string) => (canOpen(permissions, domain, path) ? () => navigate(`/${domain}/${path}`) : undefined);
 }
 
 const Tile = ({ info }: { info: ProjectInfo | undefined }) => <ProjectTile icon={info?.icon} tint={info?.tint} size="sm" />;
@@ -177,7 +179,9 @@ export function TimeCard({ overview, label, projects }: { overview: Overview | u
 
 /** "Projects by status", with the longest-running and busiest projects. */
 export function StatusCard({ overview, dashboard, execution }: { overview: Overview | undefined; dashboard: Schemas["DashboardResponse"] | undefined; execution?: boolean }) {
-    const count = (status: string) => overview?.projectsByStatus.find((s) => s.status === status)?.count ?? 0;
+    // Execution has no work overview: its counts come from the dashboard
+    const counts = overview?.projectsByStatus ?? dashboard?.projectsByStatus;
+    const count = (status: string) => counts?.find((s) => s.status === status)?.count ?? 0;
     const longest = dashboard?.longestRunning[0];
     const busiest = overview?.busiestProjectThisWeek;
     const rows: [string, string][] = [
@@ -189,7 +193,7 @@ export function StatusCard({ overview, dashboard, execution }: { overview: Overv
         <div className="panel">
             <div className="panel-head"><div><div className="panel-title">Projects by status</div></div></div>
             <div className="panel-body">
-                {!overview ? <SkeletonLines lines={4} /> : (
+                {!counts ? <SkeletonLines lines={4} /> : (
                     <>
                         <StatusBar segments={[
                             { label: "Active", value: count("active"), color: "var(--ok)" },

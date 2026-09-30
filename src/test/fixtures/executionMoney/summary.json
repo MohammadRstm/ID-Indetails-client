@@ -1,0 +1,38 @@
+{
+  "domain": "execution",
+  "from": "2026-01-01",
+  "to": "2026-09-30",
+  "revenue": 20501.12,
+  "cost": {
+    "labour": 0,
+    "expenses": 0,
+    "materials": 19112,
+    "groundLabour": 9350,
+    "total": 28462
+  },
+  "profit": -7960.88,
+  "margin": -0.3883,
+  "unconverted": [],
+  "unpricedLabourMinutes": 0,
+  "clientProjects": 3,
+  "internalProjects": 0,
+  "allTimeClientRevenue": 62124.6,
+  "allTimeClientProfit": 33662.6,
+  "allTimeInternalCost": 0,
+  "stillToEarn": 41623.48,
+  "billing": {
+    "value": 62124.6,
+    "invoiced": 6500,
+    "issuedCount": 1,
+    "received": 30000,
+    "onAccount": 30000,
+    "outstanding": 6500,
+    "overdue": 0,
+    "overdueCount": 0,
+    "oldestOverdueDays": null,
+    "notYetInvoiced": 55624.6,
+    "drafts": 0,
+    "paymentCount": 3
+  },
+  "labourMinutes": 0
+}
