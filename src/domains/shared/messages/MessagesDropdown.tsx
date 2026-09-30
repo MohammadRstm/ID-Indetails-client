@@ -10,6 +10,7 @@ import GroupTile from "./GroupTile";
 import { firstName, snippet } from "./messageText";
 import { chatQuery, useConversations, type Conversation } from "./messagesApi";
 import { loadFailed } from "@/api/queryState";
+import { clickable } from "@/shared/utils/clickable";
 
 /** The chat icon's panel (the prototype's P.MessagesDropdown): the chats with the newest messages. */
 export default function MessagesDropdown({ messagesPath, close }: { messagesPath: string; close: () => void }) {
@@ -29,8 +30,7 @@ export default function MessagesDropdown({ messagesPath, close }: { messagesPath
                             : list.map((c) => {
                                 const last = c.lastMessage!;
                                 return (
-                                    <div key={chatQuery(c)} className={cx("notif", c.unread > 0 && "unread")} role="button" tabIndex={0}
-                                        onClick={() => open(c)} onKeyDown={(e) => { if (e.key === "Enter") open(c); }}>
+                                    <div key={chatQuery(c)} className={cx("notif", c.unread > 0 && "unread")} {...clickable(() => open(c), "button")}>
                                         {c.person ? <Avatar person={{ name: c.person.name, photoFileId: c.person.photoFileId }} size={28} /> : <GroupTile domain={c.team?.domain ?? ""} />}
                                         <div className="grow" style={{ minWidth: 0 }}>
                                             <div className="notif-txt trunc">

@@ -26,7 +26,17 @@ type ModalProps = {
 /** A dialog over the page (the prototype's UI.Modal). A click on the backdrop or Escape closes it. */
 export default function Modal({ title, sub, onClose, size, flush, foot, headTools, scrimClass, children }: ModalProps) {
     const ref = useRef<HTMLDivElement>(null);
+    const dialogRef = useRef<HTMLDivElement>(null);
     const close = useEffectEvent(() => onClose?.());
+
+    // the keyboard follows the dialog: into it when it opens (unless a field in it took focus), and back to
+    // where it was when it closes
+    useEffect(() => {
+        const before = document.activeElement as HTMLElement | null;
+        const dialog = dialogRef.current;
+        if (dialog && !dialog.contains(document.activeElement)) dialog.focus();
+        return () => before?.focus?.();
+    }, []);
 
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
@@ -44,7 +54,7 @@ export default function Modal({ title, sub, onClose, size, flush, foot, headTool
                 if (e.target === e.currentTarget) onClose?.();
             }}
         >
-            <div className={cx("modal", size)} role="dialog" aria-modal="true" aria-label={typeof title === "string" ? title : undefined}>
+            <div ref={dialogRef} tabIndex={-1} className={cx("modal", size)} role="dialog" aria-modal="true" aria-label={typeof title === "string" ? title : undefined}>
                 {(title || onClose) && (
                     <div className="modal-head">
                         <div className="grow">

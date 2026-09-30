@@ -29,7 +29,7 @@ function Media({ file, className, onOpen }: { file: File; className?: string; on
     if (!url) return <div className={cx("msg-att", className)} style={{ width: 180, height: 120, background: "var(--surface-3)" }} />;
     return file.kind === "video" || file.mimeType.startsWith("video/")
         ? <video className="msg-att" src={url} controls />
-        : <img className={cx("msg-att", className)} src={url} alt={file.name} title={file.name} onClick={onOpen} />;
+        : <img className={cx("msg-att", className)} src={url} alt={file.name} title={file.name} {...clickable(onOpen, "button")} />;
 }
 
 /** An admin's comment on someone's work, shared to their team (the prototype's TaskCommentCard). */

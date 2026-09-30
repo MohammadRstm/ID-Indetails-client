@@ -66,7 +66,11 @@ export default function CommandPalette({ area, onClose }: { area: ShellArea; onC
                     value={q}
                     onChange={(e) => { setQ(e.target.value); setSel(0); }}
                     onKeyDown={(e) => {
-                        if (e.key === "Escape") onClose();
+                        if (e.key === "Escape") {
+                            // the palette only, not a dialog open beneath it
+                            e.stopPropagation();
+                            onClose();
+                        }
                         if (e.key === "ArrowDown") { e.preventDefault(); setSel(Math.min(at + 1, items.length - 1)); }
                         if (e.key === "ArrowUp") { e.preventDefault(); setSel(Math.max(at - 1, 0)); }
                         if (e.key === "Enter" && items[at]) run(items[at]);

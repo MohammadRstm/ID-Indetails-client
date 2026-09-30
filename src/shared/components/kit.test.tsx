@@ -11,6 +11,7 @@ import DataTable, { type SortState } from "./Data-Tables/DataTable";
 import Pager from "./Data-Tables/Pager";
 import { ChipGroup } from "./Forms/Filters";
 import Select from "./Forms/Select";
+import MenuButton from "./Overlays/MenuButton";
 import Modal from "./Overlays/Modal";
 
 describe("Select", () => {
@@ -75,6 +76,10 @@ describe("DataTable", () => {
         render(<DataTable columns={columns} rows={[{ id: 1, name: "Sarah", hours: 3 }]} rowKey={(r) => r.id} sort={sort} onSort={onSort} />);
         await userEvent.click(screen.getByText("Hours"));
         expect(onSort).toHaveBeenCalledWith({ key: "hours", dir: "desc" });
+        // and from the keyboard
+        screen.getByRole("columnheader", { name: "Hours" }).focus();
+        await userEvent.keyboard("{Enter}");
+        expect(onSort).toHaveBeenCalledTimes(2);
     });
 
     it("shows skeletons while loading, an inline error with a retry, and an empty state", async () => {
@@ -121,6 +126,35 @@ describe("small pieces", () => {
         render(<Modal title="Invoice" onClose={onClose}><p>Body</p></Modal>);
         fireEvent.keyDown(document, { key: "Escape" });
         expect(onClose).toHaveBeenCalled();
+    });
+
+    it("Escape in a menu inside a modal closes the menu only", async () => {
+        const onClose = vi.fn();
+        render(
+            <Modal title="Invoice" onClose={onClose}>
+                <MenuButton label="Payment actions">{() => <button>Void payment</button>}</MenuButton>
+            </Modal>,
+        );
+        await userEvent.click(screen.getByRole("button", { name: "Payment actions" }));
+        expect(screen.getByRole("button", { name: "Void payment" })).toBeInTheDocument();
+        await userEvent.keyboard("{Escape}");
+        expect(screen.queryByRole("button", { name: "Void payment" })).toBeNull();
+        expect(onClose).not.toHaveBeenCalled();
+        // with the menu closed, Escape is the modal's again
+        await userEvent.keyboard("{Escape}");
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("a modal takes the keyboard focus, and gives it back when it closes", () => {
+        function Harness({ open }: { open: boolean }) {
+            return <><button>Open invoice</button>{open && <Modal title="Invoice" onClose={vi.fn()}><p>Body</p></Modal>}</>;
+        }
+        const { rerender } = render(<Harness open={false} />);
+        screen.getByRole("button", { name: "Open invoice" }).focus();
+        rerender(<Harness open />);
+        expect(screen.getByRole("dialog", { name: "Invoice" })).toHaveFocus();
+        rerender(<Harness open={false} />);
+        expect(screen.getByRole("button", { name: "Open invoice" })).toHaveFocus();
     });
 
     it("a change is good news or bad news", () => {

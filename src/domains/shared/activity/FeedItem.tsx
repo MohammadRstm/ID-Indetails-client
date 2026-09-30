@@ -39,8 +39,7 @@ export default function FeedItem({ item, people, hideProject }: FeedItemProps) {
         const person = personOf(e.person);
         return (
             <>
-                <div className="feed-item click" role="button" tabIndex={0} title="Open this entry - details, file and comments"
-                    onClick={() => setOpened(true)} onKeyDown={(ev) => { if (ev.key === "Enter") setOpened(true); }}>
+                <div className="feed-item click" title="Open this entry - details, file and comments" {...clickable(() => setOpened(true), "button")}>
                     <PersonAvatar person={person} size={28} presence />
                     <div className="grow" style={{ minWidth: 0 }}>
                         <div className="feed-text">

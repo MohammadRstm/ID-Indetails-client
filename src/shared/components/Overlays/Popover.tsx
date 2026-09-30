@@ -23,14 +23,17 @@ export default function Popover({ trigger, children, align = "right", width, hos
         const onDoc = (e: MouseEvent) => {
             if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
         };
+        // Escape closes the menu only, not a dialog it sits in: caught first, on the way down, and stopped there
         const onKey = (e: KeyboardEvent) => {
-            if (e.key === "Escape") setOpen(false);
+            if (e.key !== "Escape") return;
+            e.stopImmediatePropagation();
+            setOpen(false);
         };
         document.addEventListener("mousedown", onDoc);
-        document.addEventListener("keydown", onKey);
+        window.addEventListener("keydown", onKey, true);
         return () => {
             document.removeEventListener("mousedown", onDoc);
-            document.removeEventListener("keydown", onKey);
+            window.removeEventListener("keydown", onKey, true);
         };
     }, [open]);
 

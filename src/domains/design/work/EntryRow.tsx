@@ -112,7 +112,7 @@ export function EntryCommentsModal({ entry: e, onClose }: { entry: WorkEntry; on
                     <ProjectTile icon={e.project.icon} tint={e.project.tint} />
                 </div>
                 <p style={{ margin: "10px 0 0", fontSize: "13.5px" }}>{e.description}</p>
-                {url && <img className="cm-thumb" src={url} alt={e.attachment!.name} title="View file" onClick={() => setViewing(true)} />}
+                {url && <img className="cm-thumb" src={url} alt={e.attachment!.name} title="View file" {...clickable(() => setViewing(true), "button")} />}
                 {e.attachment?.kind === "video" && <span className="link" {...clickable(() => setViewing(true), "button")}><Icon name="file" />View file</span>}
             </div>
             <EntryComments entryId={e.id} author={e.person} domain="design" />
