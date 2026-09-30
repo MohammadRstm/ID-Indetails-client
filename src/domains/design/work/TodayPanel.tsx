@@ -164,7 +164,7 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                         </div>
                         <div className="field">
                             <label className="label" htmlFor="dc-desc">What did you work on?</label>
-                            <input id="dc-desc" className="input" placeholder="e.g. Built the pricing table for tablet" value={desc}
+                            <input id="dc-desc" className="input" placeholder="e.g. Revised the ground-floor plan" value={desc}
                                 onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)} />
                         </div>
                     </div>

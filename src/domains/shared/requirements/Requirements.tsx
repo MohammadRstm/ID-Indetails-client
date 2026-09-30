@@ -130,7 +130,7 @@ function ReqForm({ domain, requirement, busy, error, onSubmit, onCancel }: ReqFo
 
     return (
         <div className="req-form">
-            <textarea className="textarea" rows={2} placeholder="What has to be achieved? e.g. Homepage mockups approved by the client"
+            <textarea className="textarea" rows={2} placeholder={`What has to be achieved? e.g. ${domain === "execution" ? "Kitchen tiling finished and inspected" : "Concept design approved by the client"}`}
                 aria-label="Requirement" value={text} onChange={(e) => setText(e.target.value)} />
             <div className="req-form-row">
                 <div className="req-field"><span className="label">Assigned to</span><AssigneePicker value={who} onChange={setWho} options={options} /></div>

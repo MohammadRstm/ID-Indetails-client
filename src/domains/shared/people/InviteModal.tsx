@@ -119,7 +119,7 @@ export default function InviteModal({ domain, initialRole = "employee", onClose 
                     <div className="grid g-2">
                         <div className="field">
                             <label className="label" htmlFor="ae-pos">Position</label>
-                            <input id="ae-pos" className="input" placeholder="e.g. Product Designer" value={position} onChange={(e) => setPosition(e.target.value)} />
+                            <input id="ae-pos" className="input" placeholder={design ? "e.g. Interior Architect" : "e.g. Site Engineer"} value={position} onChange={(e) => setPosition(e.target.value)} />
                         </div>
                         <div className="field">
                             <label className="label" htmlFor="ae-team">Team</label>

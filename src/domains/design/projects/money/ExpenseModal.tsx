@@ -48,7 +48,7 @@ export default function ExpenseModal({ project, onClose }: { project: Project; o
             }>
             <div className="field">
                 <label className="label" htmlFor="ex-label">What was it?</label>
-                <input id="ex-label" className="input" autoFocus placeholder="e.g. Stock photography pack" value={label} onChange={(e) => setLabel(e.target.value)} />
+                <input id="ex-label" className="input" autoFocus placeholder="e.g. Plan printing and material samples" value={label} onChange={(e) => setLabel(e.target.value)} />
             </div>
             <div className="grid g-2 mt">
                 <div className="field">

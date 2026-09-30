@@ -120,7 +120,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
             <form onSubmit={submit}>
                 <div className="field">
                     <label className="label" htmlFor="np-title">Project name</label>
-                    <input id="np-title" className="input" style={{ height: 44, fontSize: 16, fontWeight: 600 }} autoFocus placeholder="e.g. Website Redesign"
+                    <input id="np-title" className="input" style={{ height: 44, fontSize: 16, fontWeight: 600 }} autoFocus placeholder={execution ? "e.g. Achrafieh apartment fit-out" : "e.g. Villa Mounir interiors"}
                         value={title} onChange={(e) => setTitle(e.target.value)} />
                     <div className="hint">Press Enter to create. You can add details later.</div>
                 </div>

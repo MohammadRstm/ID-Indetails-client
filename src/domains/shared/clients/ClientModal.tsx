@@ -109,11 +109,11 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
             <div className="grid g-2">
                 <div className="field">
                     <label className="label" htmlFor="cl-name">Full name</label>
-                    <input id="cl-name" className="input" autoFocus placeholder="e.g. Miriam Castellanos" value={name} onChange={(e) => setName(e.target.value)} />
+                    <input id="cl-name" className="input" autoFocus placeholder="e.g. Rania Khoury" value={name} onChange={(e) => setName(e.target.value)} />
                 </div>
                 <div className="field">
                     <label className="label" htmlFor="cl-org">Organisation <span className="muted">(optional)</span></label>
-                    <input id="cl-org" className="input" placeholder="e.g. Arcwave Commerce" value={organisation} onChange={(e) => setOrganisation(e.target.value)} />
+                    <input id="cl-org" className="input" placeholder={domain === "execution" ? "e.g. Cedar Developers SAL" : "e.g. Haddad Holdings"} value={organisation} onChange={(e) => setOrganisation(e.target.value)} />
                 </div>
             </div>
 

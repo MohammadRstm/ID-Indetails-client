@@ -61,7 +61,7 @@ export default function OverheadModal({ line, onClose }: { line: OverheadLine | 
             }>
             <div className="field">
                 <label className="label" htmlFor="ov-name">Name</label>
-                <input id="ov-name" className="input" autoFocus placeholder="e.g. AWS" value={name} onChange={(e) => setName(e.target.value)} />
+                <input id="ov-name" className="input" autoFocus placeholder="e.g. AutoCAD licences" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="grid g-2 mt">
                 <div className="field">

@@ -181,7 +181,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayEnd
 
                 <div className="field mt">
                     <label className="label" htmlFor="lw-desc">What did you work on?</label>
-                    <textarea id="lw-desc" className="textarea" autoFocus placeholder="e.g. Implemented authentication middleware and fixed refresh-token handling"
+                    <textarea id="lw-desc" className="textarea" autoFocus placeholder="e.g. Detailed the kitchen joinery drawings for the client review"
                         value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)}
                         onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit(); }} />
                 </div>
