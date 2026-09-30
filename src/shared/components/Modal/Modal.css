@@ -1,0 +1,113 @@
+.modal-backdrop{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    backdrop-filter: blur(4px);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 1000;
+    animation: fadeIn .2s ease;
+}
+
+.modal-container{
+    position: relative;
+
+    width: min(90vw, 650px);
+    max-height: 85vh;
+
+    background: #fff;
+    border-radius: 16px;
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.25),
+        0 4px 12px rgba(0,0,0,.15);
+
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+
+    animation: slideUp .25s ease;
+}
+
+.modal-cancel-button{
+    position: absolute;
+    top: 16px;
+    right: 16px;
+
+    width: 36px;
+    height: 36px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: #f3f3f3;
+    color: #444;
+
+    font-size: 18px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition:
+        background .2s,
+        transform .2s;
+}
+
+.modal-cancel-button:hover{
+    background: #e5e5e5;
+    transform: rotate(90deg);
+}
+
+.modal-cancel-button:active{
+    transform: scale(.95);
+}
+
+.modal-header{
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid #ececec;
+}
+
+.modal-header h2{
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.modal-body{
+    padding: 24px 28px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+
+.modal-footer{
+    padding: 18px 28px;
+    border-top: 1px solid #ececec;
+
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+    }
+    to{
+        opacity:1;
+    }
+}
+
+@keyframes slideUp{
+    from{
+        opacity:0;
+        transform: translateY(20px) scale(.98);
+    }
+    to{
+        opacity:1;
+        transform: translateY(0) scale(1);
+    }
+}
