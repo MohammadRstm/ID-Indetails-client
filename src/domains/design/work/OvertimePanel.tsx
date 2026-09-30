@@ -7,13 +7,19 @@ import { addMonths, companyToday, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange,
 import Icon from "@/shared/icons/Icon";
 import { useMyOvertime } from "./workApi";
 
-/** The person's overtime month by month, day by day and entry by entry (the prototype's UI.OvertimePanel). */
-export default function OvertimePanel() {
+type OvertimePanelProps = {
+    /** Someone else's overtime (an admin on their profile); the signed-in person's own when left out. */
+    userId?: number;
+};
+
+/** A person's overtime month by month, day by day and entry by entry (the prototype's UI.OvertimePanel). */
+export default function OvertimePanel({ userId }: OvertimePanelProps) {
     const navigate = useNavigate();
     const thisMonth = monthKey(companyToday());
     const [month, setMonth] = useState(thisMonth);
     const [open, setOpen] = useState(false);
-    const query = useMyOvertime(month);
+    const query = useMyOvertime(month, userId ?? null);
+    const entryPath = (id: number) => (userId == null ? `/design/profile?entry=${id}` : `/design/people/${userId}?entry=${id}`);
     const ot = query.data;
     const isThisMonth = month === thisMonth;
     const days = ot?.days ?? [];
@@ -24,7 +30,7 @@ export default function OvertimePanel() {
             <div className="panel-head">
                 <div className="grow">
                     <div className="panel-title">Overtime</div>
-                    <div className="panel-sub">Time logged outside your working hours, and everything on your days off.</div>
+                    <div className="panel-sub">Time logged outside {userId == null ? "your" : "their"} working hours, and everything on {userId == null ? "your" : "their"} days off.</div>
                 </div>
                 <div className="row" style={{ gap: 4 }}>
                     <button className="icon-btn" aria-label="Previous month" onClick={() => setMonth(addMonths(month, -1))}><Icon name="chevronLeft" /></button>
@@ -61,8 +67,8 @@ export default function OvertimePanel() {
                                         </div>
                                         {d.entries.map((e) => (
                                             <div key={e.workEntryId} className="ot-item" role="link" tabIndex={0} title="Open this entry"
-                                                onClick={() => navigate(`/design/profile?entry=${e.workEntryId}`)}
-                                                onKeyDown={(ev) => { if (ev.key === "Enter") navigate(`/design/profile?entry=${e.workEntryId}`); }}>
+                                                onClick={() => navigate(entryPath(e.workEntryId))}
+                                                onKeyDown={(ev) => { if (ev.key === "Enter") navigate(entryPath(e.workEntryId)); }}>
                                                 <ProjectTile icon={e.projectIcon} tint={e.projectTint} size="sm" />
                                                 <div className="grow" style={{ minWidth: 0 }}>
                                                     <div className="trunc">{e.description}</div>

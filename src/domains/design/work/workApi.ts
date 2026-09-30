@@ -103,11 +103,11 @@ export function useMySchedule(date: string) {
     });
 }
 
-/** Their overtime in a month, day by day and entry by entry. */
-export function useMyOvertime(month: string) {
+/** Overtime in a month, day by day and entry by entry: the person's own, or someone's (work_entry:view_all). */
+export function useMyOvertime(month: string, userId: number | null = null) {
     return useQuery({
-        queryKey: keys.work.overtime(month),
-        queryFn: async () => (await http.get<Schemas["MyOvertimeResponse"]>("/me/overtime", { params: { month } })).data,
+        queryKey: userId == null ? keys.work.overtime(month) : [...keys.employees.all, "overtime", userId, month],
+        queryFn: async () => (await http.get<Schemas["MyOvertimeResponse"]>(userId == null ? "/me/overtime" : `/employees/${userId}/overtime`, { params: { month } })).data,
         placeholderData: keepPreviousData,
     });
 }
