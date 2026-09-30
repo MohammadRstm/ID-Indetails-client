@@ -10,7 +10,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { SwitchRow } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
-import { companyToday, fmtDateY, fmtNumber } from "@/shared/format/time";
+import { addDays, companyToday, fmtDateY, fmtNumber } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useBillingSettings, type BillingSettings } from "../billing/billingApi";
 import { Always, OnlyFor } from "./SettingBits";
@@ -191,6 +191,10 @@ function LbpRate() {
     const today = companyToday();
     const current = rates.find((r) => r.effectiveFrom <= today) ?? rates[0];
     const earlier = rates.filter((r) => r !== current).slice(0, 4);
+    // as the API allows: from the day after the latest rate, up to today
+    const latest = rates.map((r) => r.effectiveFrom).sort().at(-1);
+    const firstDay = latest ? addDays(latest, 1) : null;
+    const dayOk = (day: string) => day <= today && (!firstDay || day >= firstDay);
 
     return (
         <SwitchRow title="Payments in another currency"
@@ -205,8 +209,8 @@ function LbpRate() {
                 <div className="row wrap" style={{ gap: 6 }}>
                     <input className="input mono" style={{ width: 110 }} inputMode="numeric" aria-label="LBP per dollar" value={editing.rate}
                         onChange={(e) => setEditing({ ...editing, rate: e.target.value === "" ? "" : +e.target.value.replace(/[^0-9.]/g, "") || 0 })} />
-                    <div style={{ width: 150 }}><DateInput value={editing.from} min={today} onChange={(from) => setEditing({ ...editing, from })} aria-label="From" /></div>
-                    <button className="btn btn-sm btn-primary" disabled={!editing.rate || add.isPending}
+                    <div style={{ width: 150 }}><DateInput value={editing.from} min={firstDay ?? undefined} max={today} onChange={(from) => setEditing({ ...editing, from })} aria-label="From" /></div>
+                    <button className="btn btn-sm btn-primary" disabled={!editing.rate || !dayOk(editing.from) || add.isPending}
                         onClick={() => add.mutate({ currency: "LBP", ratePerUsd: +editing.rate, effectiveFrom: editing.from },
                             { onSuccess: () => { saved("Exchange rate set", `LBP · ${fmtNumber(+editing.rate)}/$ from ${fmtDateY(editing.from)}`)(); setEditing(null); } })}>Save</button>
                     <button className="btn btn-sm" onClick={() => { setEditing(null); add.reset(); }}>Cancel</button>
@@ -214,7 +218,9 @@ function LbpRate() {
             ) : (
                 <div className="row" style={{ gap: 8 }}>
                     <span className="badge cur-chip">{current ? `LBP · ${fmtNumber(current.ratePerUsd)}/$` : "No rate yet"}</span>
-                    {canSet && <button className="btn btn-sm" onClick={() => setEditing({ rate: current?.ratePerUsd ?? "", from: today })}>Change</button>}
+                    {canSet && (firstDay && firstDay > today
+                        ? <span className="muted" style={{ fontSize: 12 }}>Set today · the next change can apply from tomorrow</span>
+                        : <button className="btn btn-sm" onClick={() => setEditing({ rate: current?.ratePerUsd ?? "", from: today })}>Change</button>)}
                 </div>
             )} />
     );

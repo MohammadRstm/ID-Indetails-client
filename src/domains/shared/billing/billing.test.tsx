@@ -69,6 +69,46 @@ describe("a project's billing", () => {
         expect(emailed).toEqual([{ to: "mounir.aoun@mail.test" }]);
     });
 
+    it("retries a send whose email failed after issuing without issuing it again", async () => {
+        const calls: string[] = [];
+        let issued = false;
+        let emails = 0;
+        renderApp(`${path}?send=${billing.draft.id}`, admin,
+            http.get(`/api/invoices/${billing.draft.id}`, () => HttpResponse.json(issued ? { ...inv, id: billing.draft.id } : billing.draft)),
+            http.post(`/api/invoices/${billing.draft.id}/issue`, () => { calls.push("issue"); issued = true; return HttpResponse.json({ ...inv, id: billing.draft.id }); }),
+            http.post(`/api/invoices/${billing.draft.id}/email`, () => {
+                calls.push("email");
+                return ++emails === 1
+                    ? HttpResponse.json({ code: "email_unavailable", message: "The invoice could not be emailed. Please try again." }, { status: 503 })
+                    : HttpResponse.json({ ...inv, id: billing.draft.id }, { status: 201 });
+            }),
+            ...handlers);
+        const send = await screen.findByRole("dialog", { name: "Send invoice" });
+        await userEvent.click(await within(send).findByRole("button", { name: "Send email" }));
+        expect(await within(send).findByText("The invoice could not be emailed. Please try again.")).toBeInTheDocument();
+        await userEvent.click(within(send).getByRole("button", { name: "Send email" }));
+        await waitFor(() => expect(calls).toEqual(["issue", "email", "email"]));
+    });
+
+    it("won't save an invoice line that has an amount but no description", async () => {
+        let saved = false;
+        renderApp(path, admin,
+            http.post(`/api/projects/${project.id}/invoices`, () => { saved = true; return HttpResponse.json(billing.draft, { status: 201 }); }),
+            ...handlers);
+        await userEvent.click(within(await band()).getByRole("button", { name: "New invoice" }));
+        const dialog = await screen.findByRole("dialog", { name: "New invoice" });
+        await userEvent.type(within(dialog).getByLabelText("Line 1"), "Second milestone");
+        // a second line with only an amount would have been dropped from the invoice without a word
+        await userEvent.click(within(dialog).getByRole("button", { name: /Add line/ }));
+        await userEvent.type(within(dialog).getByLabelText("Line 2 amount"), "2000");
+        expect(await within(dialog).findByText("Each line needs a description and an amount.")).toBeInTheDocument();
+        expect(within(dialog).getByRole("button", { name: "Save draft" })).toBeDisabled();
+        await userEvent.type(within(dialog).getByLabelText("Line 2"), "Site visits");
+        expect(within(dialog).queryByText("Each line needs a description and an amount.")).toBeNull();
+        expect(within(dialog).getByRole("button", { name: "Save draft" })).toBeEnabled();
+        expect(saved).toBe(false);
+    });
+
     it("records a download as a delivery", async () => {
         const delivered: unknown[] = [];
         renderApp(`${path}?send=${inv.id}`, admin,
@@ -96,6 +136,31 @@ describe("a project's billing", () => {
         await userEvent.type(within(dialog).getByLabelText("Reference"), "TRX-118");
         await userEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
         await waitFor(() => expect(recorded).toEqual([{ amount: 7800, currency: "USD", fxRate: null, invoiceId: inv.id, method: "bank", receivedOn: "2026-09-30", reference: "TRX-118" }]));
+    });
+
+    it("converts a backdated LBP payment at the rate of the day it was received", async () => {
+        const recorded: { fxRate?: number }[] = [];
+        const rates = [
+            { ...billing.rates[0], id: 2, ratePerUsd: 90000, effectiveFrom: "2026-09-25" },
+            { ...billing.rates[0], id: 1, ratePerUsd: 89500, effectiveFrom: "2026-09-01" },
+        ];
+        renderApp(path, admin,
+            http.get("/api/exchange-rates", () => HttpResponse.json(rates)),
+            http.post(`/api/projects/${project.id}/payments`, async ({ request }) => {
+                recorded.push(await request.json() as { fxRate?: number });
+                return HttpResponse.json(billing.domainPayments.items[0], { status: 201 });
+            }),
+            ...handlers);
+        await userEvent.click(within(await band()).getByRole("button", { name: "Record payment" }));
+        const dialog = await screen.findByRole("dialog", { name: "Record a client payment" });
+        await userEvent.click(within(dialog).getByRole("button", { name: "Currency" }));
+        await userEvent.click(screen.getByRole("option", { name: "LBP" }));
+        const date = within(dialog).getByLabelText("Date received");
+        await userEvent.clear(date);
+        await userEvent.type(date, "2026-09-20{Enter}");
+        await waitFor(() => expect(within(dialog).getByLabelText("Exchange rate on the day")).toHaveValue("89500"));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
+        await waitFor(() => expect(recorded).toEqual([expect.objectContaining({ currency: "LBP", fxRate: 89500, receivedOn: "2026-09-20" })]));
     });
 
     it("settles invoices to the cent, as the API does", async () => {

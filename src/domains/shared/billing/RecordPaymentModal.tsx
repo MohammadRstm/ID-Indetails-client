@@ -11,8 +11,10 @@ import { companyToday, fmtDateY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import type { Schemas } from "@/api/types";
 import type { Project } from "../projects/projectsApi";
-import { useInvoices, useLatestRate, useRecordPayment } from "./billingApi";
+import { useInvoices, useRateOn, useRecordPayment } from "./billingApi";
 import { invoiceStateOf } from "./invoiceStatus";
+import { loadFailed } from "@/api/queryState";
+import LoadError from "@/shared/components/Feedback/LoadError";
 
 const cents = (usd: number) => Math.round(usd * 100);
 
@@ -25,8 +27,8 @@ type Method = Schemas["PaymentMethod"];
 export default function RecordPaymentModal({ project, invoiceId: preset, onClose }: { project: Project; invoiceId?: number | null; onClose: () => void }) {
     const today = companyToday();
     const record = useRecordPayment(project.id);
-    const invoices = useInvoices({ projectId: project.id, pageSize: 100 }).data?.items;
-    const rate0 = useLatestRate("LBP").data?.ratePerUsd;
+    const invoiceQuery = useInvoices({ projectId: project.id, pageSize: 100 });
+    const invoices = invoiceQuery.data?.items;
     // the API settles invoices to the cent, so a few cents left are still owed on the invoice
     const open = (invoices ?? []).filter((i) => i.issuedAt && i.status !== "void" && cents(i.balance ?? 0) > 0);
     const [picked, setPicked] = useState<string | null>(preset != null ? String(preset) : null);
@@ -37,9 +39,11 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
     const [currency, setCurrency] = useState("USD");
     const [rate, setRate] = useState<number | null>(null);
     const [date, setDate] = useState(today);
+    // until one is typed, the rate of the day the money was received
+    const rateOfDay = useRateOn("LBP", date)?.ratePerUsd;
     const [method, setMethod] = useState<Method>("bank");
     const [reference, setReference] = useState("");
-    const fx = rate ?? rate0 ?? 0;
+    const fx = rate ?? rateOfDay ?? 0;
     // until it is typed, the amount is what the chosen invoice still owes
     const value = amount ?? (currency === "USD" ? cents(balance) / 100 : Math.round(balance * fx));
     // as the API counts it: in dollars, to the cent
@@ -47,7 +51,8 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
     const received = project.money?.billing.received ?? 0;
     const overInvoice = !!target && cents(usd) > cents(balance);
     const overProject = !target && usd + received > (project.money?.revenue ?? 0) + 0.5;
-    const valid = usd > 0 && !overInvoice && (currency === "USD" || fx > 0);
+    // without the invoices it can't tell an invoice from money on account, so it waits for them
+    const valid = !!invoices && usd > 0 && !overInvoice && (currency === "USD" || fx > 0);
 
     function pick(id: string) {
         setPicked(id);
@@ -89,6 +94,7 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
                     ...open.map((i) => ({ value: String(i.id), label: `${i.number} - ${money.exact(i.balance ?? 0, "USD", { cents: true })} outstanding${invoiceStateOf(i) === "overdue" ? " · overdue" : ""}` })),
                     { value: "", label: "On account - no invoice yet" },
                 ]} />
+                {loadFailed(invoiceQuery) && <div className="mt-s"><LoadError error={invoiceQuery.error} retry={() => invoiceQuery.refetch()} what="the project's invoices" /></div>}
                 <div className="hint">
                     {target ? `Balance on ${target.number}: ${money.exact(balance, "USD", { cents: true })}${target.dueOn ? `, due ${fmtDateY(target.dueOn)}` : ""}`
                         : "Money received before invoicing is held as a credit on the project until an invoice is raised."}
