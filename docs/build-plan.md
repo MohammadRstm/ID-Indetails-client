@@ -74,7 +74,9 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - [x] 6c-2: Execution's people: nothing to build. The prototype has no Employees, Activity or Reports page for Execution ("all built on logged hours"), and neither does the client; a person's profile is reached from their name.
 - [ ] **7. Company and settings**, in parts:
   - [x] 7a: Settings: the company, time tracking and working time, finance and invoicing (terms, numbering, bank details, exchange rates), projects, notifications, teams, admins & access with each person's permissions, data & export;
-  - [ ] 7b: the company layer: company overview, company expenses, salaries and excused hours, project pay, schedules.
+  - [x] 7b-1: the company overview and company expenses;
+  - [ ] 7b-2: salaries and excused hours;
+  - [ ] 7b-3: project pay and schedules.
 - [ ] **8. Messages, notifications and live updates.**
 - [ ] **9. Hardening:**
   - accessibility, responsive layouts, light and dark;
@@ -136,6 +138,7 @@ Decisions made along the way, and anything skipped because it needs the user's i
   - **What the API adds**: the company's website and address in place of the prototype's fixed email domain, the invoice prefix, SWIFT, payment terms text and footer beside the bank details, the LBP rate with the rates before it, a Teams section, and a person's permissions (from Admins & access and from their profile, for permission:manage).
   - **Left out**: the prototype's "Reset the prototype", the count of people paid in another currency and the count of completed projects that would be archived: no endpoint gives either.
   - **The logo** is cropped to a 128px square before it is uploaded, as in the prototype, and its address carries its file (API PR #34), so a new logo shows at once. Your own profile now says when you joined (API PR #34).
+- **The company area.** The Company overview measures one window, picked as in the prototype (this month, quarter or year, a year or quarter, or a range), which is remembered while moving between the company's pages; its figures are the API's (`/company/overview`), and its board's layout is saved like the Design overview's. Company expenses are the API's ledger: kept per currency and never converted, a new amount or currency applies from the first of a month, and a cancelled line is charged to the end of its month and can be taken back until then. The prototype's closing note that the company layer was still to come is left out.
 - **Amounts keep what is typed.** The prototype's amount field turned "42." back into "42" as it was typed, so no amount with cents could be entered; the client's keeps the text as typed.
 - **The account menu opens upwards.** The prototype opened it downwards from the foot of the sidebar, so on any page longer than the window it was drawn below the screen and Sign out was out of reach.
 - **Your own phone** (API PR #28). The session now carries the phone, so editing your own name no longer sends an empty phone back.
