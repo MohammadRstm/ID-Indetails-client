@@ -35,6 +35,7 @@ import FinancialBreakdown, { CostFigures } from "./money/FinancialBreakdown";
 import MoneyBand from "./money/MoneyBand";
 import { useProjectExpenses } from "./money/moneyApi";
 import WorkTimeline from "./WorkTimeline";
+import { clickable } from "@/shared/utils/clickable";
 
 const ACTIVITY = ["No activity", "Quiet", "Steady", "Busy"];
 const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
@@ -232,7 +233,7 @@ function Contributors({ work, error, retry, range, rangeKey, ranges, setRangeKey
                             </thead>
                             <tbody>
                                 {list.map((c) => (
-                                    <tr key={c.userId} className="click" onClick={() => onPerson(c.userId)}>
+                                    <tr key={c.userId} className="click" {...clickable(() => onPerson(c.userId))}>
                                         <td><PersonLine person={{ id: c.userId, name: c.name }} size={28} link sub={positionOf.get(c.userId) ?? false} /></td>
                                         <td className="r num">{c.entries}</td>
                                         <td className="r mono">{fmtDur(c.minutes - c.overtimeMinutes)}</td>

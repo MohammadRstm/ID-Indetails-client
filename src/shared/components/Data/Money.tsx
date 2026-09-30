@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { money } from "@/shared/format/money";
 import { cx } from "@/shared/utils/cx";
+import { clickable } from "@/shared/utils/clickable";
 
 type MoneyProps = {
     value: number | null | undefined;
@@ -42,7 +43,7 @@ type CostRowProps = {
 /** A label and an amount on one line, as in cost summaries (the prototype's UI.CostRow). */
 export function CostRow({ label, value, meta, swatch, strong, tone, onClick }: CostRowProps) {
     return (
-        <div className={cx("cost-row", strong && "strong", onClick && "click")} onClick={onClick}>
+        <div className={cx("cost-row", strong && "strong", onClick && "click")} {...clickable(onClick, "button")}>
             {swatch && <i className="cost-dot" style={{ background: swatch }} />}
             <span className="grow trunc">{label}</span>
             {meta && <span className="muted" style={{ fontSize: "11.5px" }}>{meta}</span>}

@@ -1,4 +1,4 @@
-import type { MouseEvent } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 import { StatusBadge as ProjectStatus } from "@/shared/components/Data/Pills";
 import { Avatars, PersonAvatar, PersonName } from "@/shared/components/Identity/People";
 import { tip } from "@/shared/components/Overlays/tip";
@@ -8,6 +8,7 @@ import { cx } from "@/shared/utils/cx";
 import { meetingTitle } from "../../../shared/meetings/meetingsApi";
 import { clamp, dayStart, hoursOf, matches, progressAt, roundMin, segmentsFor, type Annotation, type Day as HistoryDay, type Filter, type Gap as HistoryGap, type History, type StatusAt } from "./history";
 import { annView, firstName, list, STATUS_WORD, type SourceKind } from "./words";
+import { clickable } from "@/shared/utils/clickable";
 
 /** Where a figure comes from: recorded, estimated, inferred or calculated. */
 export function Src({ kind, title }: { kind: SourceKind; title?: string }) {
@@ -75,7 +76,7 @@ export function Day({ day, history: h, scale, at, filter, anns, expanded, tasksO
     }
     const atLine = here ? <span className="lane-at" style={{ left: `${pct(at!)}%` }} /> : null;
     // the card opens the day as a card timeline; what's clickable inside it keeps its own job
-    function openDay(ev: MouseEvent<HTMLDivElement>) {
+    function openDay(ev: MouseEvent | KeyboardEvent) {
         if ((ev.target as HTMLElement).closest("button, a, .link, .plink, .lane-track, .lane-depth, .vt-seg, .vt-desc, .vt-ann")) return;
         onOpenDay(day.key);
     }
@@ -83,7 +84,7 @@ export function Day({ day, history: h, scale, at, filter, anns, expanded, tasksO
     return (
         <div className={cx("vt-row vt-day", here && "sel")} id={`vt-${day.key}`}>
             <span className="vt-node" />
-            <div className="vt-card click" onClick={openDay} title="Open this day as a card timeline">
+            <div className="vt-card click" {...clickable(openDay, "button")} title="Open this day as a card timeline">
                 <div className="vt-head">
                     <h4>{relDay(day.key)}</h4>
                     <span className="muted" style={{ fontSize: "11.5px" }}>{fmtDayDateY(day.key)}</span>

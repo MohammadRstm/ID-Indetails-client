@@ -126,8 +126,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                         </div>
                     </div>
                     <div className="field">
-                        <label className="label">Work email</label>
-                        <input className="input" value={person.email} readOnly />
+                        <label className="label" htmlFor="ep-email">Work email</label>
+                        <input id="ep-email" className="input" value={person.email} readOnly />
                         <div className="hint">{self ? "Your" : "Their"} sign-in address - changed by the company, not here.</div>
                     </div>
                     {manages ? (

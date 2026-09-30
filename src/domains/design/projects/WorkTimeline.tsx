@@ -13,6 +13,7 @@ import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../shared/projects/projectsApi";
 import { companyNow } from "../work/day";
 import { useProjectTimeline, useTimelineEntries, type TimelineEntry } from "./projectWorkApi";
+import { clickable } from "@/shared/utils/clickable";
 
 type Scale = "project" | "quarter" | "month" | "week";
 
@@ -235,7 +236,7 @@ export default function WorkTimeline({ project, onPerson, onEntry }: WorkTimelin
                                 )}
                         {visible.map((row) => (
                             <div key={row.id} className={cx("tl-row", row.minutes === 0 && "dim")}>
-                                <div className="tl-name" onClick={() => onPerson(row.id)} title={`Open ${row.name}'s contribution`}>
+                                <div className="tl-name" {...clickable(() => onPerson(row.id), "button")} title={`Open ${row.name}'s contribution`}>
                                     <PersonAvatar person={{ id: row.id, name: row.name }} size={22} />
                                     <div style={{ minWidth: 0 }}>
                                         <div className="tl-name-txt trunc"><PersonName person={{ id: row.id, name: row.name }} /></div>
@@ -252,7 +253,7 @@ export default function WorkTimeline({ project, onPerson, onEntry }: WorkTimelin
                                                     <div key={u.start} className={cx("tl-wcell", u.weekend && "we")}>
                                                         {list.length > 0 && <DayRuler blocks={list.map((e) => ({ start: e.startedAt, end: e.endedAt }))} scale={false} />}
                                                         {list.map((e) => (
-                                                            <div key={e.id} className="tl-chip" onClick={() => onEntry(e.id)}>
+                                                            <div key={e.id} className="tl-chip" {...clickable(() => onEntry(e.id), "button")}>
                                                                 <div className="tl-chip-time mono">{fmtTime(e.startedAt)} · {fmtDurShort(e.minutes)}</div>
                                                                 <div className="tl-chip-desc clamp2">{e.description}</div>
                                                             </div>

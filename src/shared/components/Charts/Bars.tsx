@@ -4,6 +4,7 @@ import { money } from "@/shared/format/money";
 import { fmtH, pct } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import { clickable } from "@/shared/utils/clickable";
 
 export type RankItem = { id?: string | number; label: string; value: number; node?: ReactNode };
 
@@ -21,7 +22,7 @@ export function RankBars({ items, format = fmtH, unit = "Hours", showPct, onClic
     return (
         <div>
             {items.map((it, i) => (
-                <div key={it.id ?? i} className={cx("rb", onClick && "click")} onClick={onClick ? () => onClick(it) : undefined}
+                <div key={it.id ?? i} className={cx("rb", onClick && "click")} {...clickable(onClick ? () => onClick(it) : undefined, "button")}
                     onMouseMove={(e) => tip.show(e, [{ big: it.label }, { k: unit, v: format(it.value) }, total ? { k: "Share", v: `${pct(it.value, total)}%` } : null])}
                     onMouseLeave={tip.hide}>
                     <div className="rb-lab trunc">{it.node ?? <span className="trunc">{it.label}</span>}</div>
@@ -46,7 +47,7 @@ export function ProfitBars({ items, unit, onClick }: { items: ProfitItem[]; unit
                 const pos = it.value >= 0;
                 const width = (Math.abs(it.value) / max) * 50;
                 return (
-                    <div key={it.id ?? i} className={cx("pb", onClick && "click")} onClick={onClick ? () => onClick(it) : undefined}
+                    <div key={it.id ?? i} className={cx("pb", onClick && "click")} {...clickable(onClick ? () => onClick(it) : undefined, "button")}
                         onMouseMove={(e) => tip.show(e, [{ big: it.label }, { k: unit || (pos ? "Profit" : "Loss"), v: money.fmt(it.value) }, it.note])}
                         onMouseLeave={tip.hide}>
                         <div className="pb-lab trunc">{it.node ?? it.label}</div>

@@ -18,6 +18,7 @@ import { cx } from "@/shared/utils/cx";
 import { BREAK_AFTER, clock, daysText, hoursText, weekOrder } from "@/domains/shared/settings/workingTime";
 import ScheduleModal from "./ScheduleModal";
 import { useSchedules, type PersonSchedule } from "./schedulesApi";
+import { clickable } from "@/shared/utils/clickable";
 
 type Day = Schemas["ScheduleDayResponse"];
 
@@ -141,7 +142,7 @@ export default function SchedulesPage() {
                                                 ...g.people.map((p) => {
                                                     const editable = canEdit(p);
                                                     return (
-                                                        <tr key={p.userId} className="sc-row" style={editable ? undefined : { cursor: "default" }} onClick={editable ? () => setEditing(p) : undefined}>
+                                                        <tr key={p.userId} className="sc-row" style={editable ? undefined : { cursor: "default" }} {...clickable(editable ? () => setEditing(p) : undefined)}>
                                                             <td className="sc-who">
                                                                 <div className="row" style={{ gap: 9, minWidth: 0 }}>
                                                                     <Avatar person={{ name: p.name, photoFileId: p.photoFileId }} size={26} />

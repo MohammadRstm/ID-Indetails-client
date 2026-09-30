@@ -24,6 +24,7 @@ import { useFinanceClients, useFinanceSummary } from "../finance/financeApi";
 import { ClientBadge } from "./ClientBits";
 import ClientModal from "./ClientModal";
 import { secondaryLine, useClientOverview, useClients, type ClientFilter, type ClientSort, type ClientSummary } from "./clientsApi";
+import { clickable } from "@/shared/utils/clickable";
 
 const PAGE_SIZE = 50;
 
@@ -121,7 +122,7 @@ export default function ClientsPage() {
                     { key: "profit", label: "Client profit", value: money.short(s?.allTimeClientProfit ?? 0), sub: <span>{money.pct(revenue ? (s?.allTimeClientProfit ?? 0) / revenue : null)} margin</span> },
                     {
                         key: "outstanding", label: "Outstanding", value: money.short(s?.billing.outstanding ?? 0),
-                        sub: <span className="link" onClick={() => navigate(`/${domain}/financials?tab=billing`)}>cash owed, not revenue</span>,
+                        sub: <span className="link" {...clickable(() => navigate(`/${domain}/financials?tab=billing`), "link")}>cash owed, not revenue</span>,
                     },
                     { key: "largest", label: "Largest client", value: top ? money.pct(concentration) : "-", sub: <span>{top ? `${top.name} of all revenue` : "no revenue yet"}</span> },
                 ] : []),

@@ -20,6 +20,7 @@ import Icon from "@/shared/icons/Icon";
 import { HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
 import SalaryDrawer from "./SalaryDrawer";
 import { useSalaries, type SalaryRow } from "./salariesApi";
+import { clickable } from "@/shared/utils/clickable";
 
 const PAGE = 10;
 const cash = (v: number, cur: string, cents = false) => money.exact(v, cur, cents ? { cents: true } : undefined);
@@ -223,7 +224,7 @@ function SalaryLine({ row: r, onOpen }: { row: SalaryRow; onOpen: () => void }) 
     const ruled = r.expectedMinutes != null;
     const otLogged = r.overtimeMinutes + r.madeUpMinutes;
     return (
-        <tr className="click" onClick={onOpen}>
+        <tr className="click" {...clickable(onOpen)}>
             <td>
                 <div className="row" style={{ gap: 9, minWidth: 0 }}>
                     <Avatar person={{ name: r.name, photoFileId: r.photoFileId }} size={28} />

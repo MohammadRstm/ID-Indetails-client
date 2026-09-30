@@ -12,6 +12,7 @@ import { cx } from "@/shared/utils/cx";
 import EntryComments from "./EntryComments";
 import { commentCount } from "./entryWords";
 import { entryBody, uploadFile, useSaveEntry, type WorkEntry } from "./workApi";
+import { clickable } from "@/shared/utils/clickable";
 
 
 type EntryRowProps = {
@@ -53,7 +54,7 @@ export default function EntryRow({ entry: e, showProject = true, showPerson, sho
                     ev.target.value = "";
                 }} />
             )}
-            <div className={cx("entry", onOpen && "click")} title={onOpen ? "Open this entry" : undefined} onClick={onOpen ? () => onOpen(e) : undefined}>
+            <div className={cx("entry", onOpen && "click")} title={onOpen ? "Open this entry" : undefined} {...clickable(onOpen ? () => onOpen(e) : undefined, "button")}>
                 <div className="entry-when">
                     <div className="entry-dur mono">{fmtDur(e.minutes)}</div>
                     <div className="entry-range mono">{fmtRange(e.startedAt, e.endedAt)}</div>
@@ -70,16 +71,18 @@ export default function EntryRow({ entry: e, showProject = true, showPerson, sho
                         <span>{fmtDayDate(e.startedAt)}</span>
                         {showCreated && <span className="muted">logged {relTime(e.createdAt)}</span>}
                         {e.attachment && (
-                            <span className="link" onClick={(ev) => { ev.stopPropagation(); setViewing(true); }}>
+                            <span className="link" {...clickable((ev) => { ev.stopPropagation(); setViewing(true); }, "button")}>
                                 <Icon name="file" style={{ width: 12, height: 12 }} />View file
                             </span>
                         )}
                         {attachable && (
-                            <span className="link-quiet" onClick={(ev) => { ev.stopPropagation(); fileRef.current?.click(); }}>
+                            <span className="link-quiet" role="button" tabIndex={0}
+                                onClick={(ev) => { ev.stopPropagation(); fileRef.current?.click(); }}
+                                onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); ev.stopPropagation(); fileRef.current?.click(); } }}>
                                 <Icon name="attach" style={{ width: 12, height: 12 }} />{save.isPending ? "Attaching…" : "Attach file"}
                             </span>
                         )}
-                        <span className={e.commentCount ? "link" : "link-quiet"} onClick={(ev) => { ev.stopPropagation(); if (onOpen) onOpen(e); else setComments(true); }}>
+                        <span className={e.commentCount ? "link" : "link-quiet"} {...clickable((ev) => { ev.stopPropagation(); if (onOpen) onOpen(e); else setComments(true); }, "button")}>
                             <Icon name="chat" style={{ width: 12, height: 12 }} />{commentCount(e.commentCount)}
                         </span>
                     </div>
@@ -110,7 +113,7 @@ export function EntryCommentsModal({ entry: e, onClose }: { entry: WorkEntry; on
                 </div>
                 <p style={{ margin: "10px 0 0", fontSize: "13.5px" }}>{e.description}</p>
                 {url && <img className="cm-thumb" src={url} alt={e.attachment!.name} title="View file" onClick={() => setViewing(true)} />}
-                {e.attachment?.kind === "video" && <span className="link" onClick={() => setViewing(true)}><Icon name="file" />View file</span>}
+                {e.attachment?.kind === "video" && <span className="link" {...clickable(() => setViewing(true), "button")}><Icon name="file" />View file</span>}
             </div>
             <EntryComments entryId={e.id} author={e.person} domain="design" />
             {viewing && e.attachment && <MediaLightbox file={e.attachment} onClose={() => setViewing(false)} />}

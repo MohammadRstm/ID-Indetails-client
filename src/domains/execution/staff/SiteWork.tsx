@@ -11,6 +11,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { money } from "@/shared/format/money";
 import { dayKey, fmtDate, fmtDateY, fmtDayDateY, fmtNumber, relDay } from "@/shared/format/time";
 import { useSiteRecords, type SiteRecords } from "./siteRecordsApi";
+import { clickable } from "@/shared/utils/clickable";
 
 type Record_ = SiteRecords["recent"][number];
 
@@ -89,7 +90,7 @@ export default function SiteWork({ userId, joinedOn }: { userId: number | null; 
                             <thead><tr><th>Project</th><th className="r">Value</th><th className="r">Entries</th><th>Last</th></tr></thead>
                             <tbody>
                                 {projects.map((p) => (
-                                    <tr key={p.projectId} className="click" onClick={() => openProject(p.projectId)}>
+                                    <tr key={p.projectId} className="click" {...clickable(() => openProject(p.projectId))}>
                                         <td>
                                             <div className="pname">
                                                 <ProjectTile size="sm" />

@@ -21,6 +21,7 @@ import type { FeedEvent } from "../../shared/activity/feedWords";
 import { useClients } from "../../shared/clients/clientsApi";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { usePeopleWork } from "../people/peopleWorkApi";
+import { clickable } from "@/shared/utils/clickable";
 
 type Kind = "all" | ActivityGroup;
 
@@ -131,7 +132,7 @@ export default function ActivityPage() {
                             <div className="panel-head"><div><div className="panel-title">Online now</div><div className="panel-sub">{peopleWork.data ? `${online.length} people` : " "}</div></div></div>
                             <div className="panel-body" style={{ paddingTop: 4 }}>
                                 {!peopleWork.data ? <SkeletonLines lines={3} /> : online.map((r) => (
-                                    <div key={r.id} className="mini-row" style={{ cursor: "pointer" }} onClick={() => navigate(`/design/people/${r.id}`)}>
+                                    <div key={r.id} className="mini-row" style={{ cursor: "pointer" }} {...clickable(() => navigate(`/design/people/${r.id}`), "button")}>
                                         <Avatar person={people.get(r.id)!} size={26} presence />
                                         <div className="grow" style={{ minWidth: 0 }}>
                                             <div className="trunc" style={{ fontWeight: 600, fontSize: "12.5px" }}>{r.name}</div>

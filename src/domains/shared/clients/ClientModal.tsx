@@ -131,7 +131,7 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
                         <button key={l} type="button" className={cx("chip", label === l && "on")} onClick={() => setLabel(l)}>{l}</button>
                     ))}
                 </div>
-                <input className="input mt-s" placeholder="or type your own label" value={label} onChange={(e) => setLabel(e.target.value)} />
+                <input className="input mt-s" placeholder="or type your own label" aria-label="Your own label" value={label} onChange={(e) => setLabel(e.target.value)} />
                 <div className="hint">A descriptive tag only - it grants no access and changes no figures.</div>
             </div>
 
@@ -143,9 +143,9 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
                             <Select className="select sm" style={{ width: 94 }} aria-label="Kind" value={c.kind}
                                 options={[{ value: "email", label: "Email" }, { value: "phone", label: "Phone" }]}
                                 onChange={(kind) => setContact(i, { kind, isWhatsapp: kind === "phone" ? c.isWhatsapp : false })} />
-                            <input className="input grow" placeholder={c.kind === "email" ? "name@company.com" : "+961 3 555 142"} value={c.value}
+                            <input className="input grow" placeholder={c.kind === "email" ? "name@company.com" : "+961 3 555 142"} aria-label={c.kind === "email" ? "Email address" : "Phone number"} value={c.value}
                                 onChange={(e) => setContact(i, { value: e.target.value })} />
-                            <input className="input" style={{ width: 108 }} placeholder="Label" value={c.label} onChange={(e) => setContact(i, { label: e.target.value })} />
+                            <input className="input" style={{ width: 108 }} placeholder="Label" aria-label="Contact label" value={c.label} onChange={(e) => setContact(i, { label: e.target.value })} />
                             {c.kind === "phone" && (
                                 <button type="button" className={cx("chip", c.isWhatsapp && "on")} title="Reachable on WhatsApp"
                                     onClick={() => setContact(i, { isWhatsapp: !c.isWhatsapp })}>WhatsApp</button>

@@ -5,6 +5,7 @@ import Icon from "@/shared/icons/Icon";
 import { middleOf, NEARBY_DAYS, type History, type ProgressAt, type Snapshot } from "./history";
 import { HistoryStatus, Src } from "./HistoryParts";
 import { eventText, firstName, STATUS_WORD } from "./words";
+import { clickable } from "@/shared/utils/clickable";
 
 function ProgressLine({ pr, todayPct }: { pr: ProgressAt; todayPct: number }) {
     if (pr.basis === "none") {
@@ -115,7 +116,7 @@ export default function SnapshotView({ snap: s, history: h, todayPct, onPick, on
                                         {a.justStarted && <span className="badge badge-new">just began</span>}
                                         {a.justEnded && <span className="badge">just ended</span>}
                                     </div>
-                                    <div className="sec link-quiet" style={{ marginTop: 2 }} onClick={() => onEntry(a.entry.id)}>{a.description}</div>
+                                    <div className="sec link-quiet" style={{ marginTop: 2 }} {...clickable(() => onEntry(a.entry.id), "button")}>{a.description}</div>
                                 </div>
                                 <span className="mono muted nowrap" style={{ fontSize: 11 }}>{fmtRange(a.entry.start, a.entry.end)}</span>
                             </div>

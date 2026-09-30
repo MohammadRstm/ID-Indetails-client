@@ -5,6 +5,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { DeadlineTag } from "./Requirements";
 import { useMyRequirements } from "./requirementsApi";
+import { clickable } from "@/shared/utils/clickable";
 
 /** Open requirements assigned to the person that carry a deadline, soonest first (the prototype's UI.MyDeadlines). */
 export default function MyDeadlines() {
@@ -28,7 +29,7 @@ export default function MyDeadlines() {
                 {query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="your requirements" />
                     : !query.data ? <SkeletonLines lines={3} />
                         : dated.length ? dated.map((r) => (
-                            <div key={r.id} className="req click" onClick={() => navigate(`/${domain}/projects/${r.project.id}`)}>
+                            <div key={r.id} className="req click" {...clickable(() => navigate(`/${domain}/projects/${r.project.id}`), "link")}>
                                 <ProjectTile icon={r.project.icon} tint={r.project.tint} size="sm" />
                                 <div className="grow" style={{ minWidth: 0 }}>
                                     <div className="req-text">{r.text}</div>

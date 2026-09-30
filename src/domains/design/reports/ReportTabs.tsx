@@ -23,6 +23,7 @@ import { companyToday, fmtDate, fmtDateY, fmtDur, fmtH, fmtMonthY, fmtNumber, fm
 import { cx } from "@/shared/utils/cx";
 import { useFinanceMonthly } from "../../shared/finance/financeApi";
 import { useReportEntries, type ReportScope, type WorkReport } from "./reportsApi";
+import { clickable } from "@/shared/utils/clickable";
 
 export type Tile = { icon: string | null; tint: string | null };
 export type ReportPerson = Person & { team?: string | null };
@@ -104,7 +105,7 @@ export function OverviewTab({ report, label, tiles, people }: TabProps) {
                         <thead><tr><th>Project</th><th>Started</th><th>Completed</th><th className="r">Days</th><th className="r">Hours</th><th className="r">People</th></tr></thead>
                         <tbody>
                             {report.completedProjects.map((p) => (
-                                <tr key={p.projectId} className={cx(open(`projects/${p.projectId}`) && "click")} onClick={open(`projects/${p.projectId}`)}>
+                                <tr key={p.projectId} className={cx(open(`projects/${p.projectId}`) && "click")} {...clickable(open(`projects/${p.projectId}`))}>
                                     <td><div className="pname"><ProjectTile icon={tiles.get(p.projectId)?.icon} tint={tiles.get(p.projectId)?.tint} size="sm" /><b>{p.title}</b></div></td>
                                     <td className="muted nowrap">{fmtDateY(p.startDate)}</td>
                                     <td className="muted nowrap">{fmtDateY(p.completedOn)}</td>
@@ -137,7 +138,7 @@ export function ProjectsTab({ report, label, tiles }: TabProps) {
                     <thead><tr><th>Project</th><th>Status</th><th className="r">Hours</th><th className="r">Entries</th><th className="r">People</th><th className="r">Share</th><th>Weekly rhythm</th></tr></thead>
                     <tbody>
                         {report.byProject.map((p) => (
-                            <tr key={p.projectId} className={cx(open(`projects/${p.projectId}`) && "click")} onClick={open(`projects/${p.projectId}`)}>
+                            <tr key={p.projectId} className={cx(open(`projects/${p.projectId}`) && "click")} {...clickable(open(`projects/${p.projectId}`))}>
                                 <td><div className="pname"><ProjectTile icon={tiles.get(p.projectId)?.icon} tint={tiles.get(p.projectId)?.tint} size="sm" /><b className="trunc">{p.title}</b></div></td>
                                 <td><StatusBadge status={p.status} /></td>
                                 <td className="r mono">{fmtH(p.minutes)}</td>
@@ -180,7 +181,7 @@ export function PeopleTab({ report, label, people }: TabProps) {
                         {rows.map((r) => {
                             const person = personOf(people, r.userId, r.name);
                             return (
-                                <tr key={r.userId} className={cx(open(`people/${r.userId}`) && "click")} onClick={open(`people/${r.userId}`)}>
+                                <tr key={r.userId} className={cx(open(`people/${r.userId}`) && "click")} {...clickable(open(`people/${r.userId}`))}>
                                     <td><PersonLine person={person} size={26} sub={person.team ?? false} /></td>
                                     {r.cells.map((mins, i) => {
                                         const lvl = mins ? Math.min(4, Math.max(1, Math.ceil((mins / Math.max(1, r.totalMinutes)) * 4))) : 0;

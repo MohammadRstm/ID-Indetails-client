@@ -43,7 +43,7 @@ export default function ClientPicker({ domain, value, onChange, onCreate, invali
                     <div style={{ padding: "4px 4px 6px" }}>
                         <div className="search">
                             <Icon name="search" />
-                            <input className="input" autoFocus placeholder="Name or organisation" value={q} onChange={(e) => setQ(e.target.value)} />
+                            <input className="input" autoFocus placeholder="Name or organisation" aria-label="Find a client" value={q} onChange={(e) => setQ(e.target.value)} />
                         </div>
                     </div>
                     <div style={{ maxHeight: 240, overflowY: "auto" }}>

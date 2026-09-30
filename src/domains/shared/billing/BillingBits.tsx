@@ -4,6 +4,7 @@ import { companyToday, daysBetween, fmtDate } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { INVOICE_STATUS, invoiceStateOf, type InvoiceLike } from "./invoiceStatus";
+import { clickable } from "@/shared/utils/clickable";
 
 /** An invoice's state; overdue ones say by how many days (the prototype's BL.StatusPill). */
 export function InvoiceStatusPill({ invoice, days = true }: { invoice: InvoiceLike; days?: boolean }) {
@@ -64,7 +65,7 @@ export function InvoiceLine({ invoice, onOpen }: { invoice: InvoiceLike & { id: 
     const state = invoiceStateOf(invoice);
     const balance = invoice.balance ?? 0;
     return (
-        <div className={cx("cost-row", onOpen && "click")} onClick={onOpen}>
+        <div className={cx("cost-row", onOpen && "click")} {...clickable(onOpen, "button")}>
             <span className="mono nowrap" style={{ fontWeight: 600, fontSize: 12 }}>{invoice.number ?? "Draft"}</span>
             <span className="grow muted trunc" style={{ fontSize: "11.5px" }}>
                 {state === "draft" ? "not issued" : `${invoice.issuedAt ? fmtDate(invoice.issuedAt) : ""}${invoice.dueOn ? ` · due ${fmtDate(invoice.dueOn)}` : ""}`}

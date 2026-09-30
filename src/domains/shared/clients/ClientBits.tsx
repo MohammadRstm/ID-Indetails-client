@@ -3,6 +3,7 @@ import { useDomain } from "@/app/routing/domainContext";
 import { toast } from "@/shared/components/Feedback/toast";
 import Icon from "@/shared/icons/Icon";
 import type { ClientContact } from "./clientsApi";
+import { clickable } from "@/shared/utils/clickable";
 
 export type ClientRef = { id: number; displayName: string; secondary?: string | null };
 
@@ -36,7 +37,7 @@ export function ClientBadge({ client, sub = true, strong = true, link = true }: 
     );
     if (!link) return inner;
     return (
-        <span className="client-link" onClick={(e) => { e.stopPropagation(); navigate(`/${domain}/clients/${client.id}`); }}>
+        <span className="client-link" {...clickable((e) => { e.stopPropagation(); navigate(`/${domain}/clients/${client.id}`); }, "link")}>
             {inner}
         </span>
     );
