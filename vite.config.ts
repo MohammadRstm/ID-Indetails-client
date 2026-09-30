@@ -27,6 +27,8 @@ export default defineConfig({
         css: false,
         // The development laptop crashes under heavy load: keep the test run small.
         maxWorkers: 2,
+        // on two cores a file's first test also loads the whole app, which can take longer than the default 5s
+        testTimeout: 15000,
         restoreMocks: true,
     },
 });
