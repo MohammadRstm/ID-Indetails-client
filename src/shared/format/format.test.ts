@@ -3,6 +3,7 @@ import { money } from "./money";
 import {
     addDays,
     compactNumber,
+    companyTimeToUtc,
     dayKey,
     daysBetween,
     fmtDate,
@@ -15,6 +16,7 @@ import {
     fmtMonthY,
     fmtRange,
     fmtTime,
+    minutesOfDay,
     relDay,
     relTime,
     setFormatSettings,
@@ -37,6 +39,13 @@ describe("dates and times", () => {
         setFormatSettings({ use24HourTime: true });
         expect(fmtRange("2026-09-30T06:00:00Z", "2026-09-30T08:15:00Z")).toBe("09:00 → 11:15");
         expect(fmtMinutes(13 * 60 + 5)).toBe("13:05");
+    });
+
+    it("turns a company wall-clock time into the UTC instant the API stores", () => {
+        expect(companyTimeToUtc("2026-09-30", 9 * 60 + 30).toISOString()).toBe("2026-09-30T06:30:00.000Z");
+        // Beirut is UTC+2 in winter.
+        expect(companyTimeToUtc("2026-12-01", 9 * 60).toISOString()).toBe("2026-12-01T07:00:00.000Z");
+        expect(minutesOfDay("2026-09-30T06:30:00Z")).toBe(9 * 60 + 30);
     });
 
     it("writes durations like the prototype", () => {

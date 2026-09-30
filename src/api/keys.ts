@@ -1,0 +1,54 @@
+import { useQueryClient, type QueryKey } from "@tanstack/react-query";
+import { useCallback } from "react";
+
+/*
+ * Every query key starts with its area ("projects", "clients", …), so a change can refresh an area, or one
+ * record in it, by prefix. Mutations list what they touch with useInvalidate.
+ */
+
+export const keys = {
+    projects: {
+        all: ["projects"] as const,
+        list: (params: object) => ["projects", "list", params] as const,
+        totals: (params: object) => ["projects", "totals", params] as const,
+        counts: (domain: string) => ["projects", "counts", domain] as const,
+        detail: (id: number) => ["projects", "detail", id] as const,
+    },
+    requirements: {
+        all: ["requirements"] as const,
+        project: (projectId: number) => ["requirements", projectId] as const,
+        mine: ["requirements", "mine"] as const,
+    },
+    meetings: {
+        all: ["meetings"] as const,
+        list: (params: object) => ["meetings", "list", params] as const,
+        project: (projectId: number) => ["meetings", "project", projectId] as const,
+    },
+    clients: {
+        all: ["clients"] as const,
+        list: (params: object) => ["clients", "list", params] as const,
+        overview: (domain: string) => ["clients", "overview", domain] as const,
+        detail: (id: number) => ["clients", "detail", id] as const,
+    },
+    employees: {
+        all: ["employees"] as const,
+        list: (params: object) => ["employees", "list", params] as const,
+    },
+    finance: {
+        all: ["finance"] as const,
+        summary: (domain: string, params: object) => ["finance", domain, "summary", params] as const,
+        clients: (domain: string) => ["finance", domain, "clients"] as const,
+    },
+    activity: { all: ["activity"] as const },
+    dashboard: { all: ["dashboard"] as const },
+    search: (q: string) => ["search", q] as const,
+};
+
+/** Refreshes every query under these prefixes (active ones refetch now, the rest when next shown). */
+export function useInvalidate() {
+    const queryClient = useQueryClient();
+    return useCallback(
+        (...prefixes: QueryKey[]) => Promise.all(prefixes.map((queryKey) => queryClient.invalidateQueries({ queryKey }))),
+        [queryClient],
+    );
+}

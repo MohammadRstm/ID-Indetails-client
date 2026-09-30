@@ -5,7 +5,7 @@ import { permissionsOf } from "@/app/permissions/permissions";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import { homePath } from "./home";
-import { companyNav, domainNav, domainRoutes, pageFor } from "./routeTable";
+import { canOpen, companyNav, domainNav, domainRoutes, pageFor } from "./routeTable";
 
 const navLabels = (user: typeof personas.designAdmin, domain: "design" | "execution") =>
     domainNav(permissionsOf(user), domain).map((item) => item.label);
@@ -51,6 +51,19 @@ describe("the route table", () => {
         // A grant that opens the other domain brings the launcher.
         const both = withPermissions(personas.designAdmin, { grant: [P.PROJECT_PRICING_MANAGE], visibleDomains: ["design", "execution"] });
         expect(homePath(permissionsOf(both))).toBe("/company");
+    });
+
+    it("says which pages a person may open, from a path", () => {
+        const admin = permissionsOf(personas.designAdmin);
+        const employee = permissionsOf(personas.designEmployee);
+        expect(canOpen(admin, "design", "clients/4")).toBe(true);
+        expect(canOpen(admin, "design", "financials?tab=billing")).toBe(true);
+        expect(canOpen(employee, "design", "clients/4")).toBe(false);
+        expect(canOpen(employee, "design", "projects/1")).toBe(true);
+        // Another domain's pages, even with the right permissions.
+        expect(canOpen(admin, "execution", "projects/1")).toBe(false);
+        expect(canOpen(permissionsOf(withPermissions(personas.designAdmin, { revoke: [P.FINANCIAL_VIEW] })), "design", "financials")).toBe(false);
+        expect(canOpen(admin, "design", "no-such-page")).toBe(false);
     });
 
     it("hands admins the admin page and employees the employee page", () => {

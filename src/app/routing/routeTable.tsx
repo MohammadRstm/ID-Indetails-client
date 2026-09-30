@@ -1,8 +1,14 @@
 import type { ReactNode } from "react";
+import { matchPath } from "react-router";
 import { P } from "@/app/permissions/codes";
 import type { Domain, Permissions } from "@/app/permissions/permissions";
 import type { IconName } from "@/shared/icons/icons";
 import ComingSoon from "@/app/pages/ComingSoon";
+import ClientPage from "@/domains/shared/clients/ClientPage";
+import ClientsPage from "@/domains/shared/clients/ClientsPage";
+import { MeetingsPage } from "@/domains/shared/meetings/Meetings";
+import ProjectRoute from "@/domains/shared/projects/ProjectRoute";
+import ProjectsPage from "@/domains/shared/projects/ProjectsPage";
 
 /*
  * Every screen, once. A route names the page an admin sees and the page an employee sees, what each needs,
@@ -72,24 +78,24 @@ export const domainRoutes: DomainRoute[] = [
     {
         path: "projects",
         nav: { label: "Projects", icon: "projects", count: "projects" },
-        admin: { element: soon("Projects"), access: all(P.PROJECT_VIEW) },
+        admin: { element: <ProjectsPage />, access: all(P.PROJECT_VIEW) },
         employee: { element: soon("Projects"), access: all(P.PROJECT_VIEW) },
     },
     {
         path: "projects/:id",
         navKey: "projects",
-        admin: { element: soon("Project"), access: all(P.PROJECT_VIEW) },
+        admin: { element: <ProjectRoute />, access: all(P.PROJECT_VIEW) },
         employee: { element: soon("Project"), access: all(P.PROJECT_VIEW) },
     },
     {
         path: "clients",
         nav: { label: "Clients", icon: "briefcase", count: "clients" },
-        admin: { element: soon("Clients"), access: all(P.CLIENT_VIEW) },
+        admin: { element: <ClientsPage />, access: all(P.CLIENT_VIEW) },
     },
     {
         path: "clients/:id",
         navKey: "clients",
-        admin: { element: soon("Client"), access: all(P.CLIENT_VIEW) },
+        admin: { element: <ClientPage />, access: all(P.CLIENT_VIEW) },
     },
     {
         // Built on logged hours, so Design only; an Execution person's profile is still reachable from their name.
@@ -123,8 +129,8 @@ export const domainRoutes: DomainRoute[] = [
     {
         path: "meetings",
         nav: { label: "Meetings", icon: "calendar" },
-        admin: { element: soon("Meetings"), access: all(P.PROJECT_VIEW) },
-        employee: { element: soon("Meetings"), access: all(P.PROJECT_VIEW) },
+        admin: { element: <MeetingsPage />, access: all(P.PROJECT_VIEW) },
+        employee: { element: <MeetingsPage />, access: all(P.PROJECT_VIEW) },
     },
     {
         path: "activity",
@@ -171,6 +177,15 @@ export const companyRoutes: CompanyRoute[] = [
 /** The page a person gets on a route: the admin page for admins, the employee page for employees. */
 export function pageFor(route: DomainRoute, p: Permissions): RoutePage | undefined {
     return p.isAdmin ? route.admin : route.employee;
+}
+
+/** Whether this person may open a domain page, such as "clients/12" or "financials?tab=billing". */
+export function canOpen(p: Permissions, domain: Domain, path: string): boolean {
+    if (!p.canSeeDomain(domain)) return false;
+    const pathname = `/${path.split("?")[0]}`;
+    const route = domainRoutes.find((r) => matchPath(`/${r.path}`, pathname));
+    const page = route && pageFor(route, p);
+    return !!page && page.access({ p, domain });
 }
 
 export type NavItem = { key: string; path: string; label: string; icon: IconName; section?: "workspace"; count?: NavEntry["count"] };

@@ -1,6 +1,11 @@
 /* Additions the client needs and the prototype never did: it had no network, so nothing ever loaded or
    failed to load. Built only from the prototype's tokens, so they sit in its design. */
 
+/* The prototype's page has no doctype, so browsers draw it in quirks mode, where a table doesn't inherit
+   the page's line height or font weight. The client is a standards-mode page; this keeps its tables as
+   the prototype draws them. */
+table { line-height: normal; font-weight: normal; }
+
 /* loading skeletons */
 .skel {
   display: block; border-radius: 5px;

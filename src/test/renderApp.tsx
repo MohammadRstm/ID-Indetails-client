@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { http, HttpResponse } from "msw";
+import { http, HttpResponse, type RequestHandler } from "msw";
 import App from "@/App";
 import type { CurrentUser } from "@/api/types";
 import { tokenStore } from "@/api/tokenStore";
@@ -22,9 +22,10 @@ export const shellHandlers = [
 
 /**
  * Renders the whole app at `path`, signed in as `user` (or signed out when null): the refresh cookie
- * "restores" that session, as it would in the browser.
+ * "restores" that session, as it would in the browser. `handlers` answer the page's own calls, and win
+ * over the shell's defaults.
  */
-export function renderApp(path: string, user: CurrentUser | null) {
+export function renderApp(path: string, user: CurrentUser | null, ...handlers: RequestHandler[]) {
     tokenStore.set(null);
     window.history.replaceState(null, "", path);
     server.use(
@@ -36,5 +37,7 @@ export function renderApp(path: string, user: CurrentUser | null) {
             ? HttpResponse.json(user)
             : HttpResponse.json({ type: "authentication", code: "unauthenticated", message: "Sign in." }, { status: 401 })),
     );
+    // server.use puts the newest handlers first, so these win over the shell's.
+    if (handlers.length) server.use(...handlers);
     return render(<App />);
 }
