@@ -1,0 +1,506 @@
+{
+  "unit": "month",
+  "from": "2026-09-01",
+  "to": "2026-09-30",
+  "designProjects": 6,
+  "projects": [
+    {
+      "projectId": 1,
+      "title": "Haddad Holdings HQ fit-out",
+      "client": "Haddad Holdings",
+      "normalMinutes": 15130,
+      "overtimeMinutes": 40,
+      "pay": [
+        {
+          "currency": "USD",
+          "total": 2700.58
+        }
+      ],
+      "people": [
+        {
+          "userId": 3,
+          "name": "Sarah Haddad",
+          "email": "sarah@id-indetails.test",
+          "team": {
+            "id": 13,
+            "name": "Interiors"
+          },
+          "basis": "monthly",
+          "entries": 43,
+          "normalMinutes": 4830,
+          "overtimeMinutes": 20,
+          "hourlyRate": 10.3848,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 839.44,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Senior interior designer",
+          "monthlySalary": 1800
+        },
+        {
+          "userId": 8,
+          "name": "Elie Khalil",
+          "email": "elie@id-indetails.test",
+          "team": {
+            "id": 12,
+            "name": "Architecture"
+          },
+          "basis": "hourly",
+          "entries": 36,
+          "normalMinutes": 4160,
+          "overtimeMinutes": 0,
+          "hourlyRate": 8,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 554.67,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Draughtsman",
+          "monthlySalary": null
+        },
+        {
+          "userId": 4,
+          "name": "Omar Fares",
+          "email": "omar@id-indetails.test",
+          "team": {
+            "id": 12,
+            "name": "Architecture"
+          },
+          "basis": "monthly",
+          "entries": 29,
+          "normalMinutes": 3170,
+          "overtimeMinutes": 20,
+          "hourlyRate": 11.5387,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 613.47,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Architect",
+          "monthlySalary": 2000
+        },
+        {
+          "userId": 6,
+          "name": "Rami Aoun",
+          "email": "rami@id-indetails.test",
+          "team": {
+            "id": 14,
+            "name": "Visualisation"
+          },
+          "basis": "hourly",
+          "entries": 29,
+          "normalMinutes": 2970,
+          "overtimeMinutes": 0,
+          "hourlyRate": 14,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 693,
+          "priced": true,
+          "photoFileId": null,
+          "position": "3D visualiser",
+          "monthlySalary": null
+        }
+      ]
+    },
+    {
+      "projectId": 3,
+      "title": "Cedar Bank branch refresh",
+      "client": "Cedar Bank SAL",
+      "normalMinutes": 13460,
+      "overtimeMinutes": 460,
+      "pay": [
+        {
+          "currency": "USD",
+          "total": 2349.59
+        }
+      ],
+      "people": [
+        {
+          "userId": 8,
+          "name": "Elie Khalil",
+          "email": "elie@id-indetails.test",
+          "team": {
+            "id": 12,
+            "name": "Architecture"
+          },
+          "basis": "hourly",
+          "entries": 42,
+          "normalMinutes": 4660,
+          "overtimeMinutes": 80,
+          "hourlyRate": 8,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 632,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Draughtsman",
+          "monthlySalary": null
+        },
+        {
+          "userId": 7,
+          "name": "Maya Nassar",
+          "email": "maya@id-indetails.test",
+          "team": {
+            "id": 12,
+            "name": "Architecture"
+          },
+          "basis": "hourly",
+          "entries": 31,
+          "normalMinutes": 3390,
+          "overtimeMinutes": 300,
+          "hourlyRate": 9,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 553.5,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Junior architect",
+          "monthlySalary": null
+        },
+        {
+          "userId": 4,
+          "name": "Omar Fares",
+          "email": "omar@id-indetails.test",
+          "team": {
+            "id": 12,
+            "name": "Architecture"
+          },
+          "basis": "monthly",
+          "entries": 26,
+          "normalMinutes": 2770,
+          "overtimeMinutes": 80,
+          "hourlyRate": 11.5387,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 548.09,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Architect",
+          "monthlySalary": 2000
+        },
+        {
+          "userId": 6,
+          "name": "Rami Aoun",
+          "email": "rami@id-indetails.test",
+          "team": {
+            "id": 14,
+            "name": "Visualisation"
+          },
+          "basis": "hourly",
+          "entries": 25,
+          "normalMinutes": 2640,
+          "overtimeMinutes": 0,
+          "hourlyRate": 14,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 616,
+          "priced": true,
+          "photoFileId": null,
+          "position": "3D visualiser",
+          "monthlySalary": null
+        }
+      ]
+    },
+    {
+      "projectId": 2,
+      "title": "Villa Mounir interiors",
+      "client": "Mounir Aoun",
+      "normalMinutes": 9350,
+      "overtimeMinutes": 160,
+      "pay": [
+        {
+          "currency": "USD",
+          "total": 1688.71
+        }
+      ],
+      "people": [
+        {
+          "userId": 3,
+          "name": "Sarah Haddad",
+          "email": "sarah@id-indetails.test",
+          "team": {
+            "id": 13,
+            "name": "Interiors"
+          },
+          "basis": "monthly",
+          "entries": 39,
+          "normalMinutes": 3990,
+          "overtimeMinutes": 110,
+          "hourlyRate": 10.3848,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 709.63,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Senior interior designer",
+          "monthlySalary": 1800
+        },
+        {
+          "userId": 5,
+          "name": "Lina Saad",
+          "email": "lina@id-indetails.test",
+          "team": {
+            "id": 13,
+            "name": "Interiors"
+          },
+          "basis": "hourly",
+          "entries": 26,
+          "normalMinutes": 3130,
+          "overtimeMinutes": 50,
+          "hourlyRate": 12,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 636,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Interior designer",
+          "monthlySalary": null
+        },
+        {
+          "userId": 9,
+          "name": "Yara Mansour",
+          "email": "yara@id-indetails.test",
+          "team": {
+            "id": 14,
+            "name": "Visualisation"
+          },
+          "basis": "monthly",
+          "entries": 18,
+          "normalMinutes": 2230,
+          "overtimeMinutes": 0,
+          "hourlyRate": 9.2309,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 343.08,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Visualisation lead",
+          "monthlySalary": 1600
+        }
+      ]
+    },
+    {
+      "projectId": 6,
+      "title": "Portfolio and competition entries",
+      "client": null,
+      "normalMinutes": 9330,
+      "overtimeMinutes": 280,
+      "pay": [
+        {
+          "currency": "USD",
+          "total": 1579.37
+        }
+      ],
+      "people": [
+        {
+          "userId": 7,
+          "name": "Maya Nassar",
+          "email": "maya@id-indetails.test",
+          "team": {
+            "id": 12,
+            "name": "Architecture"
+          },
+          "basis": "hourly",
+          "entries": 30,
+          "normalMinutes": 3390,
+          "overtimeMinutes": 180,
+          "hourlyRate": 9,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 535.5,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Junior architect",
+          "monthlySalary": null
+        },
+        {
+          "userId": 9,
+          "name": "Yara Mansour",
+          "email": "yara@id-indetails.test",
+          "team": {
+            "id": 14,
+            "name": "Visualisation"
+          },
+          "basis": "monthly",
+          "entries": 27,
+          "normalMinutes": 3060,
+          "overtimeMinutes": 0,
+          "hourlyRate": 9.2309,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 470.78,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Visualisation lead",
+          "monthlySalary": 1600
+        },
+        {
+          "userId": 4,
+          "name": "Omar Fares",
+          "email": "omar@id-indetails.test",
+          "team": {
+            "id": 12,
+            "name": "Architecture"
+          },
+          "basis": "monthly",
+          "entries": 25,
+          "normalMinutes": 2880,
+          "overtimeMinutes": 100,
+          "hourlyRate": 11.5387,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 573.09,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Architect",
+          "monthlySalary": 2000
+        }
+      ]
+    },
+    {
+      "projectId": 4,
+      "title": "Beit Misk show apartment",
+      "client": "Beit Misk Residences",
+      "normalMinutes": 7910,
+      "overtimeMinutes": 370,
+      "pay": [
+        {
+          "currency": "USD",
+          "total": 1378.66
+        }
+      ],
+      "people": [
+        {
+          "userId": 9,
+          "name": "Yara Mansour",
+          "email": "yara@id-indetails.test",
+          "team": {
+            "id": 14,
+            "name": "Visualisation"
+          },
+          "basis": "monthly",
+          "entries": 30,
+          "normalMinutes": 3420,
+          "overtimeMinutes": 0,
+          "hourlyRate": 9.2309,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 526.16,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Visualisation lead",
+          "monthlySalary": 1600
+        },
+        {
+          "userId": 5,
+          "name": "Lina Saad",
+          "email": "lina@id-indetails.test",
+          "team": {
+            "id": 13,
+            "name": "Interiors"
+          },
+          "basis": "hourly",
+          "entries": 24,
+          "normalMinutes": 2450,
+          "overtimeMinutes": 20,
+          "hourlyRate": 12,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 494,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Interior designer",
+          "monthlySalary": null
+        },
+        {
+          "userId": 7,
+          "name": "Maya Nassar",
+          "email": "maya@id-indetails.test",
+          "team": {
+            "id": 12,
+            "name": "Architecture"
+          },
+          "basis": "hourly",
+          "entries": 23,
+          "normalMinutes": 2040,
+          "overtimeMinutes": 350,
+          "hourlyRate": 9,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 358.5,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Junior architect",
+          "monthlySalary": null
+        }
+      ]
+    },
+    {
+      "projectId": 5,
+      "title": "Studio Nour brand space",
+      "client": "Studio Nour",
+      "normalMinutes": 5630,
+      "overtimeMinutes": 70,
+      "pay": [
+        {
+          "currency": "USD",
+          "total": 1219.67
+        }
+      ],
+      "people": [
+        {
+          "userId": 5,
+          "name": "Lina Saad",
+          "email": "lina@id-indetails.test",
+          "team": {
+            "id": 13,
+            "name": "Interiors"
+          },
+          "basis": "hourly",
+          "entries": 29,
+          "normalMinutes": 3240,
+          "overtimeMinutes": 70,
+          "hourlyRate": 12,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 662,
+          "priced": true,
+          "photoFileId": null,
+          "position": "Interior designer",
+          "monthlySalary": null
+        },
+        {
+          "userId": 6,
+          "name": "Rami Aoun",
+          "email": "rami@id-indetails.test",
+          "team": {
+            "id": 14,
+            "name": "Visualisation"
+          },
+          "basis": "hourly",
+          "entries": 19,
+          "normalMinutes": 2390,
+          "overtimeMinutes": 0,
+          "hourlyRate": 14,
+          "rateChanged": false,
+          "currency": "USD",
+          "pay": 557.67,
+          "priced": true,
+          "photoFileId": null,
+          "position": "3D visualiser",
+          "monthlySalary": null
+        }
+      ]
+    }
+  ],
+  "totals": [
+    {
+      "currency": "USD",
+      "total": 10916.58
+    }
+  ],
+  "people": 7,
+  "normalMinutes": 60810,
+  "overtimeMinutes": 1380
+}
