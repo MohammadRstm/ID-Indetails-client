@@ -93,3 +93,12 @@ describe("Execution's financials", () => {
         await vi.waitFor(() => expect(exported).toEqual(["execution"]));
     });
 });
+
+describe("Execution's dashboard, when it can't be loaded", () => {
+    it("says so, with a way to try again", async () => {
+        renderApp("/execution/overview", karim,
+            http.get("/api/dashboard/execution", () => HttpResponse.json({ code: "forbidden", message: "You can't see that." }, { status: 403 })),
+            ...executionMoneyHandlers);
+        expect(await screen.findByText(/Couldn't load the dashboard\./)).toBeInTheDocument();
+    });
+});

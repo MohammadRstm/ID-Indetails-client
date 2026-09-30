@@ -43,8 +43,12 @@ export default function StatementModal({ project, statementId, onMade, onClose }
         : <NewStatement project={project} onMade={onMade} onClose={onClose} />;
 }
 
-/** Saving the PDF and sending, for a statement that is already made or is made on the way. */
-function useOutgoing(project: Project, onClose: () => void) {
+/**
+ * Saving the PDF and sending, for a statement that is already made or is made on the way. A statement made on
+ * the way (`afterMade`) switches the window to the saved statement only once the rest is done, so a send that
+ * fails is still told; since the window then changes, that failure is a toast.
+ */
+function useOutgoing(project: Project, onClose: () => void, afterMade?: (id: number) => void) {
     const permissions = usePermissions();
     const company = useCompanySettings().data;
     const client = useClient(project.client?.id).data;
@@ -55,32 +59,36 @@ function useOutgoing(project: Project, onClose: () => void) {
     const canSend = permissions.has(P.STATEMENT_SEND);
     const firstName = (client?.name ?? project.client?.displayName ?? "").split(" ")[0];
 
-    async function run(work: () => Promise<void>) {
+    /** `work` gets the statement made, says when it closed the window, and throws what went wrong. */
+    async function run(made: () => Promise<Statement>, work: (s: Statement) => Promise<"closed" | void>, failed: string) {
         setBusy(true);
         setError(null);
+        let madeId: number | null = null, closed = false;
         try {
-            await work();
+            const s = await made();
+            if (afterMade) madeId = s.id!;
+            closed = (await work(s)) === "closed";
         } catch (e) {
-            setError(e);
+            if (madeId != null) toast({ text: failed, sub: `The statement was made. ${errorMessage(e)}`, icon: "alert" });
+            else setError(e);
         } finally {
             setBusy(false);
+            if (madeId != null && !closed) afterMade?.(madeId);
         }
     }
     return {
         busy, error, canSend, firstName, channels: channelsOf(client?.contacts),
-        savePdf: (made: () => Promise<Statement>) => run(async () => {
-            const s = await made();
+        savePdf: (made: () => Promise<Statement>) => run(made, async (s) => {
             if (canSend) await deliver.mutateAsync({ id: s.id!, body: { channel: "download" } });
             await downloadFile(`/statements/${s.id}/pdf`, `${s.number.toLowerCase()}.pdf`);
             toast({ text: `${s.number} downloaded`, sub: "A statement only - nothing is owed or paid because of it", icon: "download" });
-        }),
+        }, "The PDF wasn't downloaded"),
         send: (made: () => Promise<Statement>, ch: Channel) => {
             // the chat opens in a tab of its own; it is opened now, while the click still allows it
             const tab = ch.channel === "whatsapp" ? window.open("", "_blank") : null;
             if (tab) tab.opener = null;
-            return run(async () => {
+            return run(made, async (s) => {
                 try {
-                    const s = await made();
                     if (ch.channel === "email") await email.mutateAsync({ id: s.id!, to: ch.value });
                     else {
                         await deliver.mutateAsync({ id: s.id!, body: { channel: "whatsapp", recipient: ch.value } });
@@ -93,11 +101,12 @@ function useOutgoing(project: Project, onClose: () => void) {
                         sub: "A statement only - nothing is owed or paid because of it", icon: "send",
                     });
                     onClose();
+                    return "closed";
                 } catch (e) {
                     tab?.close();
                     throw e;
                 }
-            });
+            }, "The statement wasn't sent");
         },
     };
 }
@@ -187,7 +196,7 @@ function NewStatement({ project, onMade, onClose }: { project: Project; onMade: 
     const last = useStatements(project.id, 1, true).data?.items[0];
     const setPrice = useSetMaterialPrice(project.id);
     const create = useCreateStatement(project.id);
-    const out = useOutgoing(project, onClose);
+    const out = useOutgoing(project, onClose, onMade);
     const [mode, setMode] = useState<"detail" | "total">("detail");
     const [includePrev, setIncludePrev] = useState(false);
     const [off, setOff] = useState<Record<number, boolean>>({});
@@ -260,11 +269,7 @@ function NewStatement({ project, onMade, onClose }: { project: Project; onMade: 
         setOff((o) => ({ ...o, [m.id]: !on }));
         ping(`t:${typeKey(m.name)}`);
     }
-    const made = async () => {
-        const s = await create.mutateAsync(choice);
-        onMade(s.id!);
-        return s;
-    };
+    const made = () => create.mutateAsync(choice);
 
     const summary = mode === "total" ? `total of ${plural(pool, "material")}`
         : `${chosen.length} of ${fresh.length} new${prevIn.length ? ` + ${prevIn.length} earlier · ${doc?.types.length ?? 0} type rows` : ""}`;

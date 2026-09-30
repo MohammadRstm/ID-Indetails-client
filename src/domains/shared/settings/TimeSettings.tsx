@@ -4,6 +4,7 @@ import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { useCompanySettings } from "@/app/shell/shellQueries";
+import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { SwitchRow, Toggle } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
@@ -25,15 +26,18 @@ const EDIT_WINDOWS = [
 /** The prototype's Settings → Time tracking: the company's working week and break, and the domain's rules for entries. */
 export default function TimeSettings({ domain }: { domain: Domain }) {
     const permissions = usePermissions();
-    const rules = useDomainSettings(domain).data;
-    const wt = useWorkingTime().data;
+    const rulesQuery = useDomainSettings(domain);
+    const wtQuery = useWorkingTime();
+    const rules = rulesQuery.data;
+    const wt = wtQuery.data;
+    const failed = rulesQuery.isError ? rulesQuery : wtQuery.isError ? wtQuery : null;
     const weekStart = useCompanySettings().data?.weekStart ?? 1;
     const save = useSaveDomainRules(domain);
     const canRule = permissions.has(P.DOMAIN_SETTINGS_MANAGE);
     const canTime = permissions.has(P.WORKING_TIME_MANAGE);
     const set = (patch: Partial<DomainSettings>) => rules && save.mutate({ ...rulesBody(rules), ...patch }, { onSuccess: saved(), onError: notSaved });
     const toggle = (k: keyof DomainSettings, label: string) => (
-        <Toggle label={label} checked={!!rules?.[k]} disabled={!canRule || !rules} onChange={(on) => set({ [k]: on })} />
+        <Toggle label={label} checked={!!rules?.[k]} disabled={!canRule || !rules || save.isPending} onChange={(on) => set({ [k]: on })} />
     );
 
     return (
@@ -42,7 +46,8 @@ export default function TimeSettings({ domain }: { domain: Domain }) {
                 <div><div className="panel-title">Time tracking rules</div><div className="panel-sub">These are the decisions that shape how clean the data stays.</div></div>
             </div>
             <div className="panel-body">
-                {!rules || !wt ? <SkeletonLines lines={8} /> : (
+                {failed ? <LoadError error={failed.error} retry={() => failed.refetch()} what="the time tracking rules" />
+                    : !rules || !wt ? <SkeletonLines lines={8} /> : (
                     <>
                         <SwitchRow title="Default working hours"
                             description={<>The week everyone works unless they have their own schedule (Company → Schedules). Its hours are also the working day that overtime is measured against.{!canTime && <OnlyFor who="a super admin" />}</>}
@@ -51,7 +56,7 @@ export default function TimeSettings({ domain }: { domain: Domain }) {
                             description={<>One break for everyone, taken whenever suits. The break is paid, but it isn't required work: on every working day longer than 6 hours, 9 to 5 with a 1h break asks for 7h of work and is paid as 8h. Time worked past the 7h counts as overtime.{!canTime && <OnlyFor who="a super admin" />}</>}
                             control={<BreakEditor wt={wt} canEdit={canTime} />} />
                         <SwitchRow title="Entry edit window" description="How long an employee can edit or delete their own entry after logging it." control={
-                            <Select className="select sm" style={{ width: 150 }} aria-label="Entry edit window" disabled={!canRule} value={rules.editWindow}
+                            <Select className="select sm" style={{ width: 150 }} aria-label="Entry edit window" disabled={!canRule || save.isPending} value={rules.editWindow}
                                 onChange={(v) => set({ editWindow: v })} options={[...EDIT_WINDOWS]} />
                         } />
                         <SwitchRow title="Allow overlapping entries" description="Off means one person cannot log two pieces of work at the same time." control={toggle("allowOverlap", "Allow overlapping entries")} />

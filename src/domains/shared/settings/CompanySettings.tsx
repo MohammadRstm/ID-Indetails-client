@@ -3,6 +3,7 @@ import { errorMessage } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { useCompanySettings } from "@/app/shell/shellQueries";
+import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { Segmented, SwitchRow } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
@@ -27,7 +28,8 @@ async function squareLogo(file: File): Promise<File> {
 
 /** The prototype's Settings → Company: how the app looks here, and the company's name, logo, week and time format. */
 export default function CompanySettingsSection() {
-    const settings = useCompanySettings().data;
+    const query = useCompanySettings();
+    const settings = query.data;
     const theme = useTheme();
     return (
         <>
@@ -47,7 +49,10 @@ export default function CompanySettingsSection() {
                     } />
                 </div>
             </div>
-            {settings ? <Company settings={settings} /> : <div className="panel"><div className="panel-body"><SkeletonLines lines={6} /></div></div>}
+            {settings ? <Company settings={settings} />
+                : <div className="panel"><div className="panel-body">
+                    {query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="the company's settings" /> : <SkeletonLines lines={6} />}
+                </div></div>}
         </>
     );
 }
@@ -133,12 +138,12 @@ function Company({ settings: s }: { settings: CompanySettings }) {
                         </div>
                     } />
                     <SwitchRow title="Working week" description="Where every week starts - weekly totals, “this week” figures and week views." control={
-                        <Select className="select sm" style={{ width: 170 }} aria-label="Working week" disabled={!canEdit} value={String(s.weekStart)}
+                        <Select className="select sm" style={{ width: 170 }} aria-label="Working week" disabled={!canEdit || save.isPending} value={String(s.weekStart)}
                             onChange={(v) => saveRule({ weekStart: +v })}
                             options={[{ value: "1", label: "Monday – Sunday" }, { value: "0", label: "Sunday – Saturday" }]} />
                     } />
                     <SwitchRow title="Time format" description="Changes every timestamp in the product." control={
-                        <Segmented value={s.use24HourTime ? "24" : "12"} aria-label="Time format" disabled={!canEdit} onChange={(v) => saveRule({ use24HourTime: v === "24" })}
+                        <Segmented value={s.use24HourTime ? "24" : "12"} aria-label="Time format" disabled={!canEdit || save.isPending} onChange={(v) => saveRule({ use24HourTime: v === "24" })}
                             options={[{ value: "12", label: "4:00 PM" }, { value: "24", label: "16:00" }]} />
                     } />
                 </div>

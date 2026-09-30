@@ -44,7 +44,7 @@ export function useLabourDefaults(projectId: number) {
  */
 function useRefreshSite() {
     const invalidate = useInvalidate();
-    return () => { void invalidate(keys.projects.all, keys.finance.all, keys.dashboard.all, keys.activity.all); };
+    return () => { void invalidate(keys.projects.all, keys.finance.all, keys.dashboard.all, keys.activity.all, keys.clients.all); };
 }
 
 /** Submits a week, or replaces the days of one already reported (labour_report:create for your own, :manage for anyone's). */

@@ -276,6 +276,41 @@ describe("the Add materials sheet", () => {
         expect(added).toEqual([]);
     });
 
+    it("flags what is longer than the API takes, and sends nothing", async () => {
+        const added: unknown[] = [];
+        renderApp(openPath, karim,
+            http.post("/api/projects/:id/materials", async ({ request }) => { added.push(await request.json()); return HttpResponse.json([], { status: 201 }); }),
+            ...siteHandlers);
+        const sheet = await openSheet();
+        const first = await within(sheet).findByLabelText("Type 5");
+        fireEvent.paste(first, { clipboardData: { getData: () => `Sand\t2\t${"t".repeat(25)}\t30` } });
+        await userEvent.click(within(sheet).getByRole("button", { name: "Add 1 material" }));
+        expect(within(sheet).getByText(/1 row needs fixing - point at a red cell to see why/)).toBeInTheDocument();
+        expect(within(sheet).getByLabelText("Unit 5").closest("td")).toHaveAttribute("title", "At most 20 characters");
+        expect(added).toEqual([]);
+    });
+
+    it("keeps only what a failed batch didn't save, so nothing is added twice", async () => {
+        const batches: number[] = [];
+        renderApp(openPath, karim,
+            http.post("/api/projects/:id/materials", async ({ request }) => {
+                const { items } = await request.json() as { items: unknown[] };
+                batches.push(items.length);
+                return batches.length === 1
+                    ? HttpResponse.json([], { status: 201 })
+                    : HttpResponse.json({ code: "validation_failed", message: "Something in the second batch was refused." }, { status: 400 });
+            }),
+            ...siteHandlers);
+        const sheet = await openSheet();
+        const first = await within(sheet).findByLabelText("Type 5");
+        fireEvent.paste(first, { clipboardData: { getData: () => Array.from({ length: 150 }, (_, i) => `Item ${i + 1}\t\t\t\t10`).join("\n") } });
+        await userEvent.click(within(sheet).getByRole("button", { name: "Add 150 materials" }));
+        await waitFor(() => expect(batches).toEqual([100, 50]));
+        // the first hundred are recorded; only the fifty the API refused are left to send again
+        expect(await within(sheet).findByRole("button", { name: "Add 50 materials" })).toBeInTheDocument();
+        expect(within(sheet).getByText(/Something in the second batch was refused\./)).toBeInTheDocument();
+    });
+
     it("takes a block pasted from Excel", async () => {
         renderApp(openPath, karim, ...siteHandlers);
         const sheet = await openSheet();

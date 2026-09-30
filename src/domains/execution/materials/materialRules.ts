@@ -68,6 +68,10 @@ export function problems(r: Row): RowProblems {
     }
     if (decimals(r.quantity) > 3) bad.quantity = "At most 3 decimals";
     if (decimals(r.unitCost) > 4) bad.unitCost = "At most 4 decimals";
+    // the API's limits, so a long paste is caught before any of it is sent
+    for (const [k, max] of [["name", 200], ["unit", 20], ["supplier", 200], ["note", 500]] as const) {
+        if (r[k].trim().length > max) bad[k] = `At most ${max} characters`;
+    }
     return Object.keys(bad).length ? bad : null;
 }
 export const rowProblems = (r: Row): RowProblems => (rowUsed(r) ? problems(r) : null);

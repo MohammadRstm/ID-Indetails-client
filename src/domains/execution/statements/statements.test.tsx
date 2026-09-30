@@ -121,6 +121,22 @@ describe("client statements", () => {
         expect(await screen.findByRole("dialog", { name: made.number })).toBeInTheDocument();
     });
 
+    it("say when one made on the way couldn't be sent, and open it to try again", async () => {
+        renderApp(`${loft}?statement=new`, karim,
+            http.post("/api/projects/:id/statements", () => HttpResponse.json(made, { status: 201 })),
+            http.post("/api/statements/:id/email", () => HttpResponse.json({ code: "email_failed", message: "The email couldn't be sent." }, { status: 502 })),
+            http.get("/api/statements/:id", () => HttpResponse.json(made)),
+            ...siteHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "Client statement" });
+        await within(dialog).findByText("Preview");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Send to client…" }));
+        const picker = await screen.findByRole("dialog", { name: /^Send/ });
+        await userEvent.click(within(picker).getByRole("button", { name: "Send" }));
+        expect(await screen.findByText("The statement wasn't sent")).toBeInTheDocument();
+        expect(screen.getByText(/The statement was made\. The email couldn't be sent\./)).toBeInTheDocument();
+        expect(await screen.findByRole("dialog", { name: made.number })).toBeInTheDocument();
+    });
+
     it("are emailed to the client", async () => {
         const emailed: unknown[] = [];
         renderApp(`${lobby}?statement=1`, karim,

@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { site, siteHandlers } from "@/test/fixtures/site";
@@ -101,6 +101,39 @@ describe("the labour defaults", () => {
         await userEvent.click(within(p).getByRole("button", { name: "Save defaults" }));
         await waitFor(() => expect(saved).toEqual([{ workers: 8, dailyPay: 25 }]));
         expect(await screen.findByText("Labour defaults updated")).toBeInTheDocument();
+    });
+
+    it("reach a week not reported yet, whichever comes back first", async () => {
+        let saved = false;
+        const eight = { ...site.labourDefaults, current: { ...site.labourDefaults.current!, workers: 8 } };
+        renderApp(path, karim,
+            http.post("/api/projects/:id/labour-defaults", () => { saved = true; return HttpResponse.json(eight); }),
+            http.get("/api/projects/:id/labour-defaults", () => HttpResponse.json(saved ? eight : site.labourDefaults)),
+            // the week comes back after the defaults do
+            http.get("/api/projects/:id/labour-weeks/:weekStart", async ({ params }) => {
+                if (params.weekStart !== "2026-09-28") return undefined;
+                if (!saved) return HttpResponse.json(site.labourWeekOpen);
+                await delay(200);
+                return HttpResponse.json({ ...site.labourWeekOpen, days: site.labourWeekOpen.days.map((d) => (d.date === "2026-09-30" ? { ...d, workers: 8 } : d)) });
+            }),
+            ...siteHandlers);
+        const p = await panel();
+        await userEvent.click(await within(p).findByLabelText("Week"));
+        await userEvent.click(screen.getByRole("option", { name: "Week of Sep 28, 2026 - no report yet" }));
+        expect(await within(p).findByLabelText("Workers on Sep 30")).toHaveValue(6);
+        const workers = within(p).getByLabelText("Ground workers per day");
+        await userEvent.clear(workers);
+        await userEvent.type(workers, "8");
+        await userEvent.click(within(p).getByRole("button", { name: "Save defaults" }));
+        await waitFor(() => expect(within(p).getByLabelText("Workers on Sep 30")).toHaveValue(8));
+    });
+
+    it("say so when they can't be loaded", async () => {
+        renderApp(path, karim,
+            http.get("/api/projects/:id/labour-defaults", () => HttpResponse.json({ code: "forbidden", message: "You can't see that." }, { status: 403 })),
+            ...siteHandlers);
+        const p = await panel();
+        expect(await within(p).findByRole("button", { name: "Try again" })).toBeInTheDocument();
     });
 
     it("are read-only without labour_report:manage", async () => {

@@ -51,20 +51,27 @@ export function useAllMaterials(projectId: number, enabled = true) {
 /** Everything a material moves: the site's figures and money, the domain's, the dashboards and the feed. */
 function useRefreshSite() {
     const invalidate = useInvalidate();
-    return () => invalidate(keys.projects.all, keys.finance.all, keys.dashboard.all, keys.activity.all);
+    // a client's page shows what their sites charge them
+    return () => invalidate(keys.projects.all, keys.finance.all, keys.dashboard.all, keys.activity.all, keys.clients.all);
 }
 
 // The API takes at most this many materials at once.
 const BATCH = 100;
 
-/** Adds the rows of the Add materials sheet, a hundred at a time (material:create). */
-export function useAddMaterials(projectId: number) {
+/**
+ * Adds the rows of the Add materials sheet, a hundred at a time (material:create). Each batch is saved on its
+ * own, so `onSaved` hears how many rows each one took: if a later batch fails, those are already recorded and
+ * mustn't be sent again.
+ */
+export function useAddMaterials(projectId: number, onSaved?: (count: number) => void) {
     const refresh = useRefreshSite();
     return useMutation({
         mutationFn: async (items: Schemas["NewMaterialRequest"][]) => {
             const added: Material[] = [];
             for (let i = 0; i < items.length; i += BATCH) {
-                added.push(...(await http.post<Material[]>(`/projects/${projectId}/materials`, { items: items.slice(i, i + BATCH) })).data);
+                const batch = items.slice(i, i + BATCH);
+                added.push(...(await http.post<Material[]>(`/projects/${projectId}/materials`, { items: batch })).data);
+                onSaved?.(batch.length);
             }
             return added;
         },

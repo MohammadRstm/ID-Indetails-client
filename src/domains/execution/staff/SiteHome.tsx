@@ -97,12 +97,15 @@ export default function SiteHome() {
                 {filtering && <span className="muted" style={{ fontSize: 12 }}>{active.length + held.length} of {allActive.length + allHeld.length} projects</span>}
             </div>
 
+            {!error && summaries.isError && (
+                <div style={{ marginBottom: 10 }}><LoadError error={summaries.error} retry={() => summaries.refetch()} what="what has been recorded on your projects" /></div>
+            )}
             {error ? <div className="panel"><div className="panel-body"><LoadError error={error} retry={() => { activeQuery.refetch(); heldQuery.refetch(); }} what="your projects" /></div></div>
                 : !activeQuery.data || !heldQuery.data ? (
                     <div className="grid g-3">{[0, 1, 2].map((i) => <div key={i} className="pcard"><SkeletonLines lines={5} /></div>)}</div>
                 ) : (
                     <>
-                        <div className="grid g-3">{active.map((p) => <SiteCard key={p.id} project={p} summary={byId.get(p.id)} />)}</div>
+                        <div className="grid g-3">{active.map((p) => <SiteCard key={p.id} project={p} summary={byId.get(p.id)} failed={summaries.isError} />)}</div>
                         {active.length === 0 && (
                             <div className="panel">
                                 {filtering
@@ -114,7 +117,7 @@ export default function SiteHome() {
                             <div>
                                 <h2 className="page-title" style={{ fontSize: 15, margin: "22px 0 4px" }}>Paused</h2>
                                 <p className="page-sub" style={{ marginBottom: 10 }}>Still visible so you know where they stand - but nothing new is scheduled until they resume.</p>
-                                <div className="grid g-3">{held.map((p) => <SiteCard key={p.id} project={p} summary={byId.get(p.id)} paused />)}</div>
+                                <div className="grid g-3">{held.map((p) => <SiteCard key={p.id} project={p} summary={byId.get(p.id)} failed={summaries.isError} paused />)}</div>
                             </div>
                         )}
                     </>
@@ -124,7 +127,7 @@ export default function SiteHome() {
 }
 
 /** One site the person records on: its progress, its materials so far and who has been recording there. */
-function SiteCard({ project: p, summary: s, paused }: { project: ProjectSummary; summary: SiteSummary | undefined; paused?: boolean }) {
+function SiteCard({ project: p, summary: s, failed, paused }: { project: ProjectSummary; summary: SiteSummary | undefined; failed: boolean; paused?: boolean }) {
     const navigate = useNavigate();
     return (
         <div className="pcard" {...clickable(() => navigate(`/execution/projects/${p.id}`), "link")}>
@@ -149,7 +152,7 @@ function SiteCard({ project: p, summary: s, paused }: { project: ProjectSummary;
             <div className="pcard-mine">
                 <div className="grow">
                     <div className="u">Materials logged</div>
-                    <div className="mono" style={{ fontWeight: 650, fontSize: 14 }}>{s ? money.short(s.materialCost) : "…"}</div>
+                    <div className="mono" style={{ fontWeight: 650, fontSize: 14 }}>{s ? money.short(s.materialCost) : failed ? "-" : "…"}</div>
                     <div className="muted" style={{ fontSize: 11 }}>{s?.myLastRecordedAt ? `you last recorded here ${relTime(s.myLastRecordedAt)}` : "nothing recorded by you yet"}</div>
                 </div>
                 <div style={{ textAlign: "right" }}>

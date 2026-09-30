@@ -145,6 +145,8 @@ function OverviewPage({ domain }: { domain: Domain }) {
             </div>
 
             {overview.isError && <div style={{ marginBottom: 14 }}><Failed query={overview} what="the overview" /></div>}
+            {/* Execution's board, and Design's project counts, come from the dashboard */}
+            {dashboard.isError && <div style={{ marginBottom: 14 }}><Failed query={dashboard} what="the dashboard" /></div>}
 
             <Board id={`overview-${domain}`} editing={editing} onDone={() => setEditing(false)} cards={[
                 { key: "figures", label: "Key figures", span: 12, node: figures },
