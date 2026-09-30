@@ -15,6 +15,16 @@ export function useRequirements(projectId: number, enabled = true) {
     });
 }
 
+export type MyRequirements = Schemas["MyRequirementsResponse"];
+
+/** The open requirements assigned to the signed-in person, across the projects they see. */
+export function useMyRequirements() {
+    return useQuery({
+        queryKey: keys.requirements.mine,
+        queryFn: async () => (await http.get<MyRequirements>("/me/requirements")).data,
+    });
+}
+
 /** Adding, editing, ticking or removing a requirement moves the project's progress too. */
 function useRequirementChange<T>(projectId: number, request: (arg: T) => Promise<unknown>) {
     const invalidate = useInvalidate();
