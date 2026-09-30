@@ -68,6 +68,7 @@ export default function LabourPanel({ project }: { project: Project }) {
             </div>
             <div className="panel-body" ref={navRef}>
                 {weeks.isError ? <LoadError error={weeks.error} retry={() => weeks.refetch()} what="the labour weeks" />
+                    : defaults.isError ? <LoadError error={defaults.error} retry={() => defaults.refetch()} what="the labour defaults" />
                     : !weeks.data || !defaults.data ? <SkeletonLines lines={6} /> : (
                         <>
                             <DefaultsBar key={`${current?.effectiveFrom}:${current?.workers}:${current?.dailyPay}`} projectId={project.id} defaults={defaults.data}
@@ -83,7 +84,9 @@ export default function LabourPanel({ project }: { project: Project }) {
                             {!chosen ? <Empty art="time" title="No weeks in range yet" text="Once the project has been running for a few days, weeks appear here to report." />
                                 : week.isError ? <LoadError error={week.error} retry={() => week.refetch()} what="the week" />
                                     : !week.data || week.data.weekStart !== chosen ? <SkeletonLines lines={6} />
-                                        : <WeekEditor key={`${chosen}:${current?.effectiveFrom}:${current?.workers}:${current?.dailyPay}`}
+                                        // the editor starts from the week as the API fills it in: it starts again when those
+                                        // days change (new defaults, a report saved), not when the same days are fetched again
+                                        : <WeekEditor key={`${chosen}:${week.data.isReported}:${week.data.days.map((d) => `${d.workers}x${d.dailyPay}`).join(",")}`}
                                             projectId={project.id} week={week.data} defaults={defaults.data} onNav={nav} />}
                         </>
                     )}
