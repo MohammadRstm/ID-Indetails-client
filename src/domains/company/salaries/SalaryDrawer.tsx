@@ -17,6 +17,7 @@ import { HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
 import { useMyOvertime, useMySchedule } from "@/domains/design/work/workApi";
 import ExcuseHours from "./ExcuseHours";
 import { useSalary, type SalaryDetail, type SalaryRow } from "./salariesApi";
+import { loadFailed } from "@/api/queryState";
 
 const cash = (v: number, cur: string, cents = false) => money.exact(v, cur, cents ? { cents: true } : undefined);
 
@@ -54,7 +55,7 @@ export default function SalaryDrawer({ row, month, multiplier, onClose }: Salary
                     {profile && <button className="btn btn-sm" onClick={() => { onClose(); navigate(profile); }}>Open profile</button>}
                 </>
             }>
-            {detail.isError ? <LoadError error={detail.error} retry={() => detail.refetch()} what={`${row.name.split(" ")[0]}'s pay`} />
+            {loadFailed(detail) ? <LoadError error={detail.error} retry={() => detail.refetch()} what={`${row.name.split(" ")[0]}'s pay`} />
                 : !d ? <SkeletonLines lines={8} />
                     : <DetailBody detail={d} month={month} multiplier={multiplier} canExcuse={permissions.has(P.HOURS_EXCUSE)} seesWork={permissions.has(P.WORK_ENTRY_VIEW_ALL)} />}
         </Drawer>
@@ -182,7 +183,7 @@ function OvertimeDays({ userId, month }: { userId: number; month: string }) {
                 <div className="u">Where the overtime happened</div>
                 {query.data && <div className="muted" style={{ fontSize: "11.5px" }}>{days.length} day{days.length === 1 ? "" : "s"}</div>}
             </div>
-            {query.isError ? <div className="mt-s"><LoadError error={query.error} retry={() => query.refetch()} what="their overtime" /></div>
+            {loadFailed(query) ? <div className="mt-s"><LoadError error={query.error} retry={() => query.refetch()} what="their overtime" /></div>
                 : !query.data ? <div className="mt-s"><SkeletonLines lines={2} /></div>
                     : days.length === 0 ? <div className="hint mt-s">No overtime in {fmtMonthY(month)}.</div> : (
                         <div className="ot-days mt-s">

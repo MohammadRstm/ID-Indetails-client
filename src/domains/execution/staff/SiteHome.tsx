@@ -16,6 +16,7 @@ import { useProjects, type ProjectSummary } from "../../shared/projects/projects
 import { companyNow } from "../../design/work/day";
 import { useSiteSummaries, type SiteSummary } from "./siteRecordsApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 type LastWorked = "any" | "week" | "month" | "older" | "never";
 
@@ -64,7 +65,7 @@ export default function SiteHome() {
     const clientNames = [...new Set([...allActive, ...allHeld].map((p) => p.client?.displayName).filter((n): n is string => !!n))];
     const hasInternal = [...allActive, ...allHeld].some((p) => !p.client);
     const clear = () => { setFq(""); setFClient(""); setFLast("any"); };
-    const error = activeQuery.error ?? heldQuery.error;
+    const error = [activeQuery, heldQuery].find(loadFailed)?.error;
 
     return (
         <div className="page">
@@ -97,7 +98,7 @@ export default function SiteHome() {
                 {filtering && <span className="muted" style={{ fontSize: 12 }}>{active.length + held.length} of {allActive.length + allHeld.length} projects</span>}
             </div>
 
-            {!error && summaries.isError && (
+            {!error && loadFailed(summaries) && (
                 <div style={{ marginBottom: 10 }}><LoadError error={summaries.error} retry={() => summaries.refetch()} what="what has been recorded on your projects" /></div>
             )}
             {error ? <div className="panel"><div className="panel-body"><LoadError error={error} retry={() => { activeQuery.refetch(); heldQuery.refetch(); }} what="your projects" /></div></div>
@@ -105,7 +106,7 @@ export default function SiteHome() {
                     <div className="grid g-3">{[0, 1, 2].map((i) => <div key={i} className="pcard"><SkeletonLines lines={5} /></div>)}</div>
                 ) : (
                     <>
-                        <div className="grid g-3">{active.map((p) => <SiteCard key={p.id} project={p} summary={byId.get(p.id)} failed={summaries.isError} />)}</div>
+                        <div className="grid g-3">{active.map((p) => <SiteCard key={p.id} project={p} summary={byId.get(p.id)} failed={loadFailed(summaries)} />)}</div>
                         {active.length === 0 && (
                             <div className="panel">
                                 {filtering
@@ -117,7 +118,7 @@ export default function SiteHome() {
                             <div>
                                 <h2 className="page-title" style={{ fontSize: 15, margin: "22px 0 4px" }}>Paused</h2>
                                 <p className="page-sub" style={{ marginBottom: 10 }}>Still visible so you know where they stand - but nothing new is scheduled until they resume.</p>
-                                <div className="grid g-3">{held.map((p) => <SiteCard key={p.id} project={p} summary={byId.get(p.id)} failed={summaries.isError} paused />)}</div>
+                                <div className="grid g-3">{held.map((p) => <SiteCard key={p.id} project={p} summary={byId.get(p.id)} failed={loadFailed(summaries)} paused />)}</div>
                             </div>
                         )}
                     </>

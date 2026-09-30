@@ -18,6 +18,7 @@ import { useProjects } from "../../shared/projects/projectsApi";
 import { usePeopleWork } from "../people/peopleWorkApi";
 import { EntriesTab, MoneyTab, OverviewTab, PeopleTab, ProjectsTab, type ReportPerson, type Tile } from "./ReportTabs";
 import { useWorkReport, type ReportScope } from "./reportsApi";
+import { loadFailed } from "@/api/queryState";
 
 type Tab = "overview" | "projects" | "people" | "money" | "entries";
 
@@ -97,7 +98,7 @@ export default function ReportsPage() {
                 )}
             </div>
 
-            {query.isError ? <div className="panel"><div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the report" /></div></div> : (
+            {loadFailed(query) ? <div className="panel"><div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the report" /></div></div> : (
                 <>
                     <KpiStrip loading={!r} items={[
                         { key: "hours", label: "Hours logged", value: fmtNumber(Math.round((r?.totalMinutes ?? 0) / 60)), unit: "h" },

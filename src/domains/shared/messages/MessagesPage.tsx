@@ -12,6 +12,7 @@ import { cx } from "@/shared/utils/cx";
 import GroupTile from "./GroupTile";
 import Thread from "./Thread";
 import { chatKey, chatOf, useContacts, useConversations, usePresence, type Chat, type Conversation } from "./messagesApi";
+import { loadFailed } from "@/api/queryState";
 
 // direct messages are listed by who people are: super admins, then admins, then employees
 const LEVELS = [{ role: "super_admin", label: "Super admins" }, { role: "admin", label: "Admins" }, { role: "employee", label: "Employees" }];
@@ -73,7 +74,7 @@ export default function MessagesPage() {
                         <Icon name="search" />
                         <input className="input" placeholder="Find people or groups" aria-label="Find people or groups" value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
-                    {conversations.isError || contacts.isError
+                    {loadFailed(conversations) || loadFailed(contacts)
                         ? <LoadError error={conversations.error ?? contacts.error} retry={() => { void conversations.refetch(); void contacts.refetch(); }} what="your chats" />
                         : !conversations.data || !contacts.data ? <SkeletonLines lines={8} /> : (
                             <>

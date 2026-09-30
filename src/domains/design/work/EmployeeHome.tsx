@@ -22,6 +22,7 @@ import OvertimePanel from "./OvertimePanel";
 import TodayPanel from "./TodayPanel";
 import { useDomainSettings, useMyProjects, useMySchedule, useMyWorkSummary, type MyProject } from "./workApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 type LastWorked = "any" | "week" | "month" | "older" | "never";
 
@@ -84,7 +85,7 @@ export default function EmployeeHome() {
                 )}
             </div>
 
-            <WeekPanel summary={s} error={summary.error} retry={() => summary.refetch()} today={today} />
+            <WeekPanel summary={s} error={loadFailed(summary) ? summary.error : null} retry={() => summary.refetch()} today={today} />
 
             {settings?.logReminder && workHours && nowMin >= 15 * 60 && s && !s.todayMinutes && canLog && (
                 <div className="banner attn mt"><Icon name="bell" />
@@ -118,7 +119,7 @@ export default function EmployeeHome() {
                 {filtering && <span className="muted" style={{ fontSize: 12 }}>{active.length + held.length} of {allActive.length + allHeld.length} projects</span>}
             </div>
 
-            {projects.isError ? <div className="panel"><div className="panel-body"><LoadError error={projects.error} retry={() => projects.refetch()} what="your projects" /></div></div>
+            {loadFailed(projects) ? <div className="panel"><div className="panel-body"><LoadError error={projects.error} retry={() => projects.refetch()} what="your projects" /></div></div>
                 : !projects.data ? (
                     <div className="grid g-3">{[0, 1, 2].map((i) => <div key={i} className="pcard"><SkeletonLines lines={5} /></div>)}</div>
                 ) : (

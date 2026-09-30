@@ -12,6 +12,7 @@ import { DOMAIN_LABEL } from "@/shared/format/labels";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { usePermissionCatalog, useUpdateUserPermissions, useUserPermissions, type PermissionDefinition } from "./settingsApi";
+import { loadFailed } from "@/api/queryState";
 
 // the part of a code before the colon, as people would call it
 const AREAS: Record<string, string> = {
@@ -86,8 +87,8 @@ export default function PermissionsModal({ person, onClose }: { person: Target; 
                     {!locked && !self && <button className="btn btn-primary" disabled={!changes.length || update.isPending} onClick={submit}>{update.isPending ? "Saving…" : "Save"}</button>}
                 </>
             }>
-            {query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="their permissions" />
-                : catalog.isError ? <LoadError error={catalog.error} retry={() => catalog.refetch()} what="the permissions" />
+            {loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="their permissions" />
+                : loadFailed(catalog) ? <LoadError error={catalog.error} retry={() => catalog.refetch()} what="the permissions" />
                     : !u || !catalog.data ? <SkeletonLines lines={10} /> : (
                         <>
                             {locked && <div className="banner" style={{ marginBottom: 12 }}><Icon name="lock" /><div className="grow">A super admin always holds every permission; theirs can't be changed.</div></div>}

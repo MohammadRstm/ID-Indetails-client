@@ -26,6 +26,7 @@ import { RequirementsPanel } from "../../shared/requirements/Requirements";
 import EntryRow from "./EntryRow";
 import { openLogWork } from "./logWorkStore";
 import { useDeleteEntry, useMyProjects, useMyProjectWork, useRestoreEntry, type WorkEntry } from "./workApi";
+import { loadFailed } from "@/api/queryState";
 
 /** A project as a Design employee sees it (the prototype's P.EmpProject): their own work on it, and the team's. */
 export default function EmployeeProjectPage() {
@@ -34,7 +35,7 @@ export default function EmployeeProjectPage() {
     const valid = Number.isInteger(projectId) && projectId > 0;
     const project = useProject(projectId);
     if (!valid || isStatus(project.error, 404)) return <MissingRecord title="Project not found" to="/design/projects" back="Back to projects" />;
-    if (project.isError) return <div className="page"><LoadError error={project.error} retry={() => project.refetch()} what="the project" /></div>;
+    if (loadFailed(project)) return <div className="page"><LoadError error={project.error} retry={() => project.refetch()} what="the project" /></div>;
     if (!project.data) {
         return (
             <div className="page" aria-busy="true">
@@ -114,7 +115,7 @@ function ProjectView({ project }: { project: Project }) {
             {tab === "meetings" ? <ProjectMeetingsTab project={project} /> : (
                 <div className="grid g-8-4">
                     <div className="stack">
-                        {work.isError ? <div className="panel"><div className="panel-body"><LoadError error={work.error} retry={() => work.refetch()} what="your work here" /></div></div> : (
+                        {loadFailed(work) ? <div className="panel"><div className="panel-body"><LoadError error={work.error} retry={() => work.refetch()} what="your work here" /></div></div> : (
                             <KpiStrip loading={!w} items={[
                                 { key: "mine", label: "Your hours here", value: fmtH(w?.myMinutes ?? 0), sub: <span>{w?.myEntries ?? 0} entries</span> },
                                 { key: "week", label: "Your hours this week", value: fmtH(w?.myThisWeekMinutes ?? 0) },

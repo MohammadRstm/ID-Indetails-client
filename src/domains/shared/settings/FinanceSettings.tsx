@@ -17,6 +17,7 @@ import { Always, OnlyFor } from "./SettingBits";
 import { useAddExchangeRate, useExchangeRates, useSaveBillingSettings, useSaveCompanySettings, useSetWorkingTime, useWorkingTime } from "./settingsApi";
 import { notSaved, saved } from "./settingsToasts";
 import { nextChange } from "./workingTime";
+import { loadFailed } from "@/api/queryState";
 
 const TERMS = [
     { value: "0", label: "Due on receipt" }, { value: "15", label: "Net 15 - due in 15 days" }, { value: "30", label: "Net 30 - due in 30 days" },
@@ -31,7 +32,7 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
     const wtQuery = useWorkingTime();
     const company = companyQuery.data;
     const wt = wtQuery.data;
-    const failed = companyQuery.isError ? companyQuery : wtQuery.isError ? wtQuery : null;
+    const failed = loadFailed(companyQuery) ? companyQuery : loadFailed(wtQuery) ? wtQuery : null;
     const saveCompany = useSaveCompanySettings();
     const setWt = useSetWorkingTime();
     const canCompany = permissions.has(P.COMPANY_SETTINGS_MANAGE);
@@ -83,7 +84,7 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
                         <div><div className="panel-title">Invoicing and payments</div><div className="panel-sub">Invoices request money; payments record what arrived. Neither one changes revenue or profit.</div></div>
                     </div>
                     <div className="panel-body">
-                        {billingQuery.isError ? <LoadError error={billingQuery.error} retry={() => billingQuery.refetch()} what="the invoicing settings" />
+                        {loadFailed(billingQuery) ? <LoadError error={billingQuery.error} retry={() => billingQuery.refetch()} what="the invoicing settings" />
                             : !billing ? <SkeletonLines lines={6} /> : <Invoicing domain={domain} billing={billing} />}
                     </div>
                 </div>

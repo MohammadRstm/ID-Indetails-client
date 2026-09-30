@@ -14,6 +14,7 @@ import type { Project } from "../../shared/projects/projectsApi";
 import { companyNow } from "../work/day";
 import { useProjectTimeline, useTimelineEntries, type TimelineEntry } from "./projectWorkApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 type Scale = "project" | "quarter" | "month" | "week";
 
@@ -226,7 +227,7 @@ export default function WorkTimeline({ project, onPerson, onEntry }: WorkTimelin
                     </div>
 
                     <div className="tl-rows">
-                        {timeline.isError ? <div style={{ padding: 16 }}><LoadError error={timeline.error} retry={() => timeline.refetch()} what="the timeline" /></div>
+                        {loadFailed(timeline) ? <div style={{ padding: 16 }}><LoadError error={timeline.error} retry={() => timeline.refetch()} what="the timeline" /></div>
                             : !timeline.data ? <div style={{ padding: 16 }}><SkeletonLines lines={4} /></div>
                                 : visible.length === 0 && (
                                     <div className="empty" style={{ padding: 26 }}>

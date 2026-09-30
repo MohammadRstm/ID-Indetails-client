@@ -4,6 +4,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import NotificationItem from "./NotificationItem";
 import { useLatestNotifications, useMarkRead } from "./notificationsApi";
+import { loadFailed } from "@/api/queryState";
 
 /** The bell's panel (the prototype's P.NotificationDropdown): the newest nine, and a way to all of them. */
 export default function NotificationDropdown({ unread, allPath, close }: { unread: number; allPath: string; close: () => void }) {
@@ -19,7 +20,7 @@ export default function NotificationDropdown({ unread, allPath, close }: { unrea
                 <button className="btn btn-sm btn-quiet" disabled={markRead.isPending || unread === 0} onClick={() => markRead.mutate("all")}>Mark all read</button>
             </div>
             <div className="notif-list">
-                {latest.isError ? <div style={{ padding: 10 }}><LoadError error={latest.error} retry={() => latest.refetch()} what="your notifications" /></div>
+                {loadFailed(latest) ? <div style={{ padding: 10 }}><LoadError error={latest.error} retry={() => latest.refetch()} what="your notifications" /></div>
                     : !latest.data ? <div style={{ padding: 10 }}><SkeletonLines lines={4} /></div>
                         : list.length === 0 ? <Empty art="done" title="You're all caught up" />
                             : list.map((n) => <NotificationItem key={n.id} note={n} onOpen={close} />)}

@@ -16,6 +16,7 @@ import { cx } from "@/shared/utils/cx";
 import { useCompanyOverview, type CompanyOverview } from "./companyApi";
 import { companyPeriod, lastChoice, rememberChoice, type PeriodChoice } from "./companyPeriod";
 import PeriodBar from "./PeriodBar";
+import { loadFailed } from "@/api/queryState";
 
 type DomainFigures = CompanyOverview["domains"][number];
 
@@ -139,7 +140,7 @@ export default function CompanyOverviewPage() {
             <PeriodBar choice={choice} period={period} onChange={choose} />
 
             <div className="mt">
-                {overview.isError ? <div className="panel"><div className="panel-body"><LoadError error={overview.error} retry={() => overview.refetch()} what="the company's figures" /></div></div> : (
+                {loadFailed(overview) ? <div className="panel"><div className="panel-body"><LoadError error={overview.error} retry={() => overview.refetch()} what="the company's figures" /></div></div> : (
                     <Board id="company-overview" editing={editing} onDone={() => setEditing(false)} cards={[
                         { key: "keeps", label: "What the company keeps", span: 8, node: keeps },
                         { key: "across", label: "Across both", span: 4, node: across },

@@ -8,6 +8,7 @@ import { dayKey, relDay } from "@/shared/format/time";
 import NotificationItem from "./NotificationItem";
 import type { Notification } from "./notificationWords";
 import { useMarkRead, useNotificationPages } from "./notificationsApi";
+import { loadFailed } from "@/api/queryState";
 
 /** Everything the bell has said, by day (the prototype's P.Notifications). */
 export default function NotificationsPage() {
@@ -41,7 +42,7 @@ export default function NotificationsPage() {
             </div>
             <div className="panel" style={{ maxWidth: 760 }}>
                 <div className="panel-body" style={{ paddingTop: 4 }}>
-                    {pages.isError ? <div className="mt-s"><LoadError error={pages.error} retry={() => pages.refetch()} what="your notifications" /></div>
+                    {loadFailed(pages) ? <div className="mt-s"><LoadError error={pages.error} retry={() => pages.refetch()} what="your notifications" /></div>
                         : !pages.data ? <div className="mt-s"><SkeletonLines lines={8} /></div> : (
                             <>
                                 {groups.map((g) => (

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchBlob } from "@/api/download";
+import { loadFailed } from "@/api/queryState";
 
 /*
  * Files need the access token, so <img src="/api/files/1"> can't load them. They are fetched once as blobs
@@ -26,5 +27,5 @@ export function useFileUrl(id: number | null | undefined): { url: string | undef
         enabled: id != null,
         staleTime: Infinity,
     });
-    return { url: id == null ? undefined : query.data, isError: query.isError };
+    return { url: id == null ? undefined : query.data, isError: loadFailed(query) };
 }

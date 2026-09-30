@@ -23,6 +23,7 @@ import { useMySchedule } from "@/domains/design/work/workApi";
 import { useProjects } from "@/domains/shared/projects/projectsApi";
 import { periodDates, periodLabel, periodOf, stepPeriod, type PayPeriod, type PayUnit } from "./payPeriod";
 import { useProjectPay, type ProjectPayPerson, type ProjectPayProject } from "./projectPayApi";
+import { loadFailed } from "@/api/queryState";
 
 type Totals = { currency: string; total: number }[];
 type Tile = { icon: string | null; tint: string | null };
@@ -110,7 +111,7 @@ export default function ProjectPayPage() {
                 </div>
             </div>
 
-            {pay.isError ? <div className="panel mt"><div className="panel-body"><LoadError error={pay.error} retry={() => pay.refetch()} what="project pay" /></div></div> : (
+            {loadFailed(pay) ? <div className="panel mt"><div className="panel-body"><LoadError error={pay.error} retry={() => pay.refetch()} what="project pay" /></div></div> : (
                 <>
                     <div className="mt">
                         <KpiStrip loading={!r} items={[

@@ -6,6 +6,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { addMonths, companyToday, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange, monthKey } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useMyOvertime } from "./workApi";
+import { loadFailed } from "@/api/queryState";
 
 type OvertimePanelProps = {
     /** Someone else's overtime (an admin on their profile); the signed-in person's own when left out. */
@@ -39,7 +40,7 @@ export default function OvertimePanel({ userId }: OvertimePanelProps) {
                 </div>
             </div>
             <div className="panel-body">
-                {query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="your overtime" /> : !ot ? <SkeletonLines lines={2} /> : (
+                {loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="your overtime" /> : !ot ? <SkeletonLines lines={2} /> : (
                     <>
                         <div className="row wrap" style={{ gap: "10px 22px", alignItems: "baseline" }}>
                             <div>

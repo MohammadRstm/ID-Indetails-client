@@ -18,6 +18,7 @@ import { OnlyFor } from "./SettingBits";
 import { useSaveDomainRules, useSetWorkingTime, useWorkingTime, type WorkingTime } from "./settingsApi";
 import { notSaved, saved } from "./settingsToasts";
 import { BREAKS, breakText, clock, daysText, hoursText, nextChange, requiredOf, weekOrder } from "./workingTime";
+import { loadFailed } from "@/api/queryState";
 
 const EDIT_WINDOWS = [
     { value: "none", label: "No editing" }, { value: "one_day", label: "24 hours" }, { value: "seven_days", label: "7 days" }, { value: "unlimited", label: "Always" },
@@ -30,7 +31,7 @@ export default function TimeSettings({ domain }: { domain: Domain }) {
     const wtQuery = useWorkingTime();
     const rules = rulesQuery.data;
     const wt = wtQuery.data;
-    const failed = rulesQuery.isError ? rulesQuery : wtQuery.isError ? wtQuery : null;
+    const failed = loadFailed(rulesQuery) ? rulesQuery : loadFailed(wtQuery) ? wtQuery : null;
     const weekStart = useCompanySettings().data?.weekStart ?? 1;
     const save = useSaveDomainRules(domain);
     const canRule = permissions.has(P.DOMAIN_SETTINGS_MANAGE);

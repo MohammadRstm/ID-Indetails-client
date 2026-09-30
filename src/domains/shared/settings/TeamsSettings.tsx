@@ -11,6 +11,7 @@ import Icon from "@/shared/icons/Icon";
 import { useTeams } from "../../design/people/peopleWorkApi";
 import { useDeleteTeam, useSaveTeam, type Team } from "./settingsApi";
 import { saved } from "./settingsToasts";
+import { loadFailed } from "@/api/queryState";
 
 /**
  * The business's teams: what each person belongs to, shown on their profile and in the schedules. The
@@ -30,7 +31,7 @@ export default function TeamsSettings({ domain }: { domain: Domain }) {
                 {canEdit && !adding && <div className="panel-tools"><button className="btn btn-sm" onClick={() => setAdding(true)}><Icon name="plus" />Add team</button></div>}
             </div>
             <div className="panel-body">
-                {teams.isError ? <LoadError error={teams.error} retry={() => teams.refetch()} what="the teams" />
+                {loadFailed(teams) ? <LoadError error={teams.error} retry={() => teams.refetch()} what="the teams" />
                     : !teams.data ? <SkeletonLines lines={4} /> : (
                         <>
                             {adding && <TeamRow domain={domain} team={null} canEdit onDone={() => setAdding(false)} />}

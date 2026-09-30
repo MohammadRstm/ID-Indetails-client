@@ -25,6 +25,7 @@ import {
     useAddRequirement, useDeleteRequirement, useRequirements, useTickRequirement, useUpdateRequirement,
     type Requirement, type SaveRequirementBody,
 } from "./requirementsApi";
+import { loadFailed } from "@/api/queryState";
 
 type Person = { id: number; name: string };
 
@@ -276,7 +277,7 @@ export function ProjectRequirementsTab({ project }: { project: { id: number; dom
                     ]} />
                 )}>
                 {query.isPending ? <SkeletonLines lines={4} />
-                        : query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="the requirements" />
+                        : loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the requirements" />
                             : shown.length ? (
                                 <ReqList list={shown} me={me} canManage={canManage} canTickOwn={permissions.has(P.REQUIREMENT_COMPLETE_OWN) && !locked}
                                     onToggle={onToggle} onEdit={setEditing} onDelete={onDelete} />
@@ -314,7 +315,7 @@ export function RequirementsPanel({ project }: { project: { id: number; status: 
             ? `${query.data.done} of ${query.data.total} done · the project's progress is worked out from these${mineOpen ? ` · ${mineOpen} open assigned to you` : ""}`
             : " "} bodyStyle={{ paddingTop: 2 }}>
                 {query.isPending ? <SkeletonLines lines={3} />
-                    : query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="the requirements" />
+                    : loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the requirements" />
                         : list.length ? (
                             <ReqList list={list} me={me} canManage={false} canTickOwn={permissions.has(P.REQUIREMENT_COMPLETE_OWN) && !locked}
                                 onToggle={(r, done) => tick.mutate({ id: r.id, done }, {

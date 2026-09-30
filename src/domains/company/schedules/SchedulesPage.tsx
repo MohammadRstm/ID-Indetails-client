@@ -19,6 +19,7 @@ import { BREAK_AFTER, clock, daysText, hoursText, weekOrder } from "@/domains/sh
 import ScheduleModal from "./ScheduleModal";
 import { useSchedules, type PersonSchedule } from "./schedulesApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 type Day = Schemas["ScheduleDayResponse"];
 
@@ -92,7 +93,7 @@ export default function SchedulesPage() {
                 </div>
             </div>
 
-            {schedules.isError ? <div className="panel"><div className="panel-body"><LoadError error={schedules.error} retry={() => schedules.refetch()} what="the schedules" /></div></div> : (
+            {loadFailed(schedules) ? <div className="panel"><div className="panel-body"><LoadError error={schedules.error} retry={() => schedules.refetch()} what="the schedules" /></div></div> : (
                 <>
                     <div className="sc-default">
                         <Icon name="clock" />

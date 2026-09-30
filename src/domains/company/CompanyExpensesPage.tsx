@@ -19,6 +19,7 @@ import Icon from "@/shared/icons/Icon";
 import { useCancelOverhead, useCompanyMonths, useOverhead, type OverheadGroup, type OverheadLine } from "./companyApi";
 import OverheadModal from "./OverheadModal";
 import { GROUP_LABEL } from "./overheadGroups";
+import { loadFailed } from "@/api/queryState";
 
 const monthLabel = (m: string) => MONTHS[+m.slice(5, 7) - 1];
 const usd = (totals: { currency: string; total: number }[]) => totals.find((t) => t.currency === "USD")?.total ?? 0;
@@ -68,7 +69,7 @@ export default function CompanyExpensesPage() {
                 </div>
             </div>
 
-            {overhead.isError ? <div className="panel"><div className="panel-body"><LoadError error={overhead.error} retry={() => overhead.refetch()} what="the company's expenses" /></div></div> : (
+            {loadFailed(overhead) ? <div className="panel"><div className="panel-body"><LoadError error={overhead.error} retry={() => overhead.refetch()} what="the company's expenses" /></div></div> : (
                 <>
                     <KpiStrip loading={!o || !months.data} items={[
                         {

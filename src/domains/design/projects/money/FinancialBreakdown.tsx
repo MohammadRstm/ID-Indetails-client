@@ -17,6 +17,7 @@ import type { Project } from "../../../shared/projects/projectsApi";
 import type { Contributor } from "../projectWorkApi";
 import { COST_COLORS } from "./moneyParts";
 import { useCostTimeline, useDeleteExpense, type Expense } from "./moneyApi";
+import { loadFailed } from "@/api/queryState";
 
 type ProjectMoney = NonNullable<Project["money"]>;
 
@@ -130,7 +131,7 @@ export function CostFigures({ project, money: m }: { project: Project; money: Pr
     const note = internal ? "Cost accumulates from logged hours and project expenses."
         : m.revenue > 0 ? `${Math.round((m.cost.total / m.revenue) * 100)}% of the payment has been consumed so far.` : "No payment recorded for this project yet.";
 
-    if (timeline.isError) return <div className="panel mt"><div className="panel-body"><LoadError error={timeline.error} retry={() => timeline.refetch()} what="the cost over time" /></div></div>;
+    if (loadFailed(timeline)) return <div className="panel mt"><div className="panel-body"><LoadError error={timeline.error} retry={() => timeline.refetch()} what="the cost over time" /></div></div>;
     return (
         <div className="grid g-2 mt">
             <Figure title={internal ? "Cost accumulation" : "Payment vs cumulative cost"}

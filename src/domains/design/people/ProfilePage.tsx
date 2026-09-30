@@ -40,6 +40,7 @@ import EditProfileModal, { type ProfilePerson } from "./EditProfileModal";
 import PersonActions from "./PersonActions";
 import { useEmployee, useLabourCost, usePayHistory, usePersonEntries, usePersonHours, usePersonWorkSummary } from "./peopleWorkApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 type Extra = { online?: boolean; lastSeenAt?: string | null; joinedOn?: string | null; leftOn?: string | null; status?: string; role?: string; isJoker?: boolean };
 
@@ -51,7 +52,7 @@ export function PersonProfilePage() {
     const valid = Number.isInteger(userId) && userId > 0;
     const employee = useEmployee(userId, valid);
     if (!valid || isStatus(employee.error, 404)) return <MissingRecord title="Employee not found" to={`/${domain}/people`} back="Back to employees" />;
-    if (employee.isError) return <div className="page"><LoadError error={employee.error} retry={() => employee.refetch()} what="the profile" /></div>;
+    if (loadFailed(employee)) return <div className="page"><LoadError error={employee.error} retry={() => employee.refetch()} what="the profile" /></div>;
     const e = employee.data;
     if (!e) return <ProfileSkeleton />;
     return (
@@ -177,7 +178,7 @@ function DesignWork({ userId, first, self }: { userId: number | null; first: str
     const projectPath = (id: number) => `/design/projects/${id}`;
     const openEntry = (e: WorkEntry) => setParams({ entry: String(e.id) });
 
-    if (summary.isError) return <div className="panel"><div className="panel-body"><LoadError error={summary.error} retry={() => summary.refetch()} what="their work" /></div></div>;
+    if (loadFailed(summary)) return <div className="panel"><div className="panel-body"><LoadError error={summary.error} retry={() => summary.refetch()} what="their work" /></div></div>;
     const weekly = (s?.weekly ?? []).slice(-16);
     const lastTwelve = weekly.slice(-13, -1);
     const avgWeek = lastTwelve.length ? lastTwelve.reduce((a, w) => a + w.minutes, 0) / 12 : 0;
@@ -229,7 +230,7 @@ function DesignWork({ userId, first, self }: { userId: number | null; first: str
                 <div className="panel">
                     <div className="panel-head"><div><div className="panel-title">Recent work</div><div className="panel-sub">Newest entries, grouped by day.</div></div></div>
                     <div className="panel-body" style={{ paddingTop: 2 }}>
-                        {entries.isError ? <LoadError error={entries.error} retry={() => entries.refetch()} what="their entries" />
+                        {loadFailed(entries) ? <LoadError error={entries.error} retry={() => entries.refetch()} what="their entries" />
                             : !entries.data ? <SkeletonLines lines={5} />
                                 : groups.map((g) => (
                                     <div key={g.key} className="day-group">
@@ -303,7 +304,7 @@ function CostPanel({ userId, first, entries }: { userId: number; first: string; 
                 </div>
             </div>
             <div className="panel-body">
-                {cost.isError ? <LoadError error={cost.error} retry={() => cost.refetch()} what="their cost" /> : (
+                {loadFailed(cost) ? <LoadError error={cost.error} retry={() => cost.refetch()} what="their cost" /> : (
                     <div className="grid g-7-5">
                         <div>
                             <div className="kpis" style={{ border: 0 }}>

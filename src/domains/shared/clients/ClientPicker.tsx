@@ -7,6 +7,7 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { ClientBadge } from "./ClientBits";
 import { secondaryLine, useClient, useClients } from "./clientsApi";
+import { loadFailed } from "@/api/queryState";
 
 type ClientPickerProps = {
     domain: string;
@@ -48,7 +49,7 @@ export default function ClientPicker({ domain, value, onChange, onCreate, invali
                     </div>
                     <div style={{ maxHeight: 240, overflowY: "auto" }}>
                         {list.isPending ? <div style={{ padding: 8 }}><SkeletonLines lines={3} /></div>
-                            : list.isError ? <div style={{ padding: 8 }}><LoadError error={list.error} retry={() => list.refetch()} what="the clients" /></div>
+                            : loadFailed(list) ? <div style={{ padding: 8 }}><LoadError error={list.error} retry={() => list.refetch()} what="the clients" /></div>
                                 : list.data!.items.map((c) => (
                                     <button key={c.id} type="button" className={cx("pop-item", value === c.id && "on")} onClick={() => { onChange(c.id); close(); }}>
                                         <ClientBadge link={false} client={{ id: c.id, displayName: c.displayName, secondary: secondaryLine(c) }} />

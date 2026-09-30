@@ -86,7 +86,15 @@ function readOpen() {
 }
 
 /** "Needs attention" and "Upcoming deadlines" in one card that folds away, remembered in this browser. */
-export function FollowupsCard({ items, deadlines, loading }: { items: Followup[]; deadlines: Schemas["UpcomingDeadlinesResponse"] | undefined; loading: boolean }) {
+type FollowupsCardProps = {
+    items: Followup[];
+    deadlines: Schemas["UpcomingDeadlinesResponse"] | undefined;
+    /** Why the deadlines didn't load, with a retry. */
+    deadlinesFailed?: { error: unknown; retry: () => void } | null;
+    loading: boolean;
+};
+
+export function FollowupsCard({ items, deadlines, deadlinesFailed, loading }: FollowupsCardProps) {
     const open = useOpener();
     const [expanded, setExpanded] = useState(readOpen);
     function toggle() {
@@ -134,7 +142,8 @@ export function FollowupsCard({ items, deadlines, loading }: { items: Followup[]
                                 Open requirements due in the next {DEADLINE_DAYS} days{deadlines?.overdue ? <> · <span className="down">{deadlines.overdue} overdue</span></> : ""}.
                             </div>
                         </div>
-                        {!deadlines ? <SkeletonLines lines={3} /> : shown.length ? shown.map((r) => (
+                        {!deadlines ? (deadlinesFailed ? <LoadError error={deadlinesFailed.error} retry={deadlinesFailed.retry} what="the deadlines" /> : <SkeletonLines lines={3} />)
+                            : shown.length ? shown.map((r) => (
                             <div key={r.requirementId} className={cx("req", open(`projects/${r.project.id}`) && "click")} {...clickable(open(`projects/${r.project.id}?tab=requirements`), "button")}>
                                 <ProjectTile icon={r.project.icon} tint={r.project.tint} size="sm" />
                                 <div className="grow" style={{ minWidth: 0 }}>

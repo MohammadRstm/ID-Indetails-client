@@ -27,6 +27,7 @@ import { cx } from "@/shared/utils/cx";
 import { useProjects } from "../projects/projectsApi";
 import { meetingTitle, useCanChangeMeeting, useCreateMeeting, useDeleteMeeting, useMeetings, useProjectMeetings, type Meeting } from "./meetingsApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 function RemoveMenu({ meeting }: { meeting: Meeting }) {
     const remove = useDeleteMeeting();
@@ -146,7 +147,7 @@ export function ProjectMeetingsTab({ project }: { project: { id: number; title: 
                     : "Schedule a meeting for this project. Once its time is set, it shows up on the Timeline alongside the work logged that day."}
                 tools={canCreate && <button className="btn btn-primary btn-sm" onClick={() => setShowNew(true)}><Icon name="plus" />New meeting</button>}>
                 {query.isPending ? <SkeletonLines lines={3} />
-                    : query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="the meetings" />
+                    : loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the meetings" />
                         : !list.length ? (
                             <Empty art="time" title="No meetings scheduled yet" text="Meetings you add will appear here, and as a red block on the project's Timeline."
                                 action={canCreate && <button className="btn" onClick={() => setShowNew(true)}><Icon name="plus" />New meeting</button>} />
@@ -240,7 +241,7 @@ export function MeetingsPage() {
 
             <Panel className="mt" title="Upcoming" sub={`${upcoming.length} meeting${upcoming.length === 1 ? "" : "s"}`} bodyStyle={{ paddingTop: 2 }}>
                 {query.isPending ? <SkeletonLines lines={4} />
-                    : query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="the meetings" />
+                    : loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the meetings" />
                         : upcoming.length ? upcoming.map(Row) : (
                             <Empty art="time" title="No meetings coming up"
                                 text="Schedule one for any project in your business - it shows up here for everyone, and on the project's Timeline."

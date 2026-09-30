@@ -36,6 +36,7 @@ import MoneyBand from "./money/MoneyBand";
 import { useProjectExpenses } from "./money/moneyApi";
 import WorkTimeline from "./WorkTimeline";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 const ACTIVITY = ["No activity", "Quiet", "Steady", "Busy"];
 const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
@@ -85,13 +86,13 @@ export default function DesignOverview({ project }: { project: Project }) {
     if (!seesWork) return <><Kpis project={project} work={undefined} />{band}{breakdown}{m && <CostFigures project={project} money={m} />}</>;
     return (
         <>
-            {all.isError ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="the project's work" /></div></div>
+            {loadFailed(all) ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="the project's work" /></div></div>
                 : <Kpis project={project} work={all.data} />}
 
             {band}
 
             <div className="mt">
-                <Contributors work={filtered.data} error={filtered.error} retry={() => filtered.refetch()} range={range} rangeKey={rangeKey} ranges={ranges}
+                <Contributors work={filtered.data} error={loadFailed(filtered) ? filtered.error : null} retry={() => filtered.refetch()} range={range} rangeKey={rangeKey} ranges={ranges}
                     setRangeKey={setRangeKey} search={search} setSearch={setSearch} workQ={workQ} setWorkQ={setWorkQ} onPerson={setDrawer} />
             </div>
 
@@ -335,6 +336,7 @@ function Analytics({ project, work: w, contributors, onPerson }: { project: Proj
 function BurnUp({ project }: { project: Project }) {
     const { today } = companyNow();
     const timeline = useProjectTimeline(project.id);
+    if (loadFailed(timeline)) return <LoadError error={timeline.error} retry={() => timeline.refetch()} what="the hours so far" />;
     if (!timeline.data) return <SkeletonLines lines={4} />;
     const completed = project.completedAt ? dayKey(project.completedAt) : null;
     const end = completed ?? (project.targetDate && project.targetDate > today ? project.targetDate : today);

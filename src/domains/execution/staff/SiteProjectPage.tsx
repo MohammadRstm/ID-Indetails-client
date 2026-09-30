@@ -19,6 +19,7 @@ import LabourPanel from "../labour/LabourPanel";
 import { useLabourWeeks } from "../labour/labourApi";
 import MaterialsPanel from "../materials/MaterialsPanel";
 import { useMaterials } from "../materials/materialsApi";
+import { loadFailed } from "@/api/queryState";
 
 /**
  * A site as an Execution employee sees it (the Execution side of the prototype's P.EmpProject): nobody logs
@@ -30,7 +31,7 @@ export default function SiteProjectPage() {
     const valid = Number.isInteger(projectId) && projectId > 0;
     const project = useProject(projectId);
     if (!valid || isStatus(project.error, 404)) return <MissingRecord title="Project not found" to="/execution/projects" back="Back to projects" />;
-    if (project.isError) return <div className="page"><LoadError error={project.error} retry={() => project.refetch()} what="the project" /></div>;
+    if (loadFailed(project)) return <div className="page"><LoadError error={project.error} retry={() => project.refetch()} what="the project" /></div>;
     if (!project.data) {
         return (
             <div className="page" aria-busy="true">

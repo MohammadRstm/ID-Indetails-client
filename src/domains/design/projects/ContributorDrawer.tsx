@@ -10,6 +10,7 @@ import { Drawer } from "@/shared/components/Overlays/Modal";
 import { fmtDate, fmtDateY, fmtH } from "@/shared/format/time";
 import EntryRow from "../work/EntryRow";
 import { useContributor, useEmployeeTeam } from "./projectWorkApi";
+import { loadFailed } from "@/api/queryState";
 
 export type WorkRange = { label: string; from?: string; to?: string };
 
@@ -51,7 +52,7 @@ export default function ContributorDrawer({ projectId, projectTitle, personId, r
                     )}
                 </>
             }>
-            {query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="their work here" /> : (
+            {loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="their work here" /> : (
                 <>
                     <div style={{ borderRadius: "var(--r2)", overflow: "hidden" }}>
                         <KpiStrip loading={!c} items={[

@@ -15,6 +15,7 @@ import NotificationBell from "@/domains/shared/notifications/NotificationBell";
 import { companyToday } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useCompanySettings } from "./shellQueries";
+import { loadFailed } from "@/api/queryState";
 
 type Overview = Schemas["CompanyOverviewResponse"];
 
@@ -84,7 +85,7 @@ export default function CompanyLauncher() {
                                 <span className="launch-meta">
                                     {overview.data
                                         ? `Net profit this month ${money.short(overview.data.netProfit)}`
-                                        : overview.isError ? "Figures unavailable right now" : <Skeleton width={150} height={10} />}
+                                        : loadFailed(overview) ? "Figures unavailable right now" : <Skeleton width={150} height={10} />}
                                 </span>
                             </span>
                             <Icon name="chevronRight" />

@@ -11,6 +11,7 @@ import { cx } from "@/shared/utils/cx";
 import { companyNow, hoursText } from "../work/day";
 import { openLogWork } from "../work/logWorkStore";
 import { useMyPay, useMySchedule } from "../work/workApi";
+import { loadFailed } from "@/api/queryState";
 
 type Pay = Schemas["MyPayResponse"];
 type Ledger = Schemas["MyLedgerMonthResponse"];
@@ -50,7 +51,7 @@ export default function MyPayPage() {
                 </div>
             </div>
 
-            {pay.isError ? <div className="panel"><div className="panel-body"><LoadError error={pay.error} retry={() => pay.refetch()} what="your pay" /></div></div>
+            {loadFailed(pay) ? <div className="panel"><div className="panel-body"><LoadError error={pay.error} retry={() => pay.refetch()} what="your pay" /></div></div>
                 : !r ? <><SkeletonKpis count={3} /><div className="panel mt"><div className="panel-body"><SkeletonLines lines={5} /></div></div></>
                     : !r.salary && !r.ledger ? <div className="panel"><Empty art="search" title="Nothing for this month" text="You hadn't joined yet." /></div>
                         : <PayMonth pay={r} month={month} breakMinutes={schedule.data?.companyWeek.breakMinutes ?? 0} typical={typicalDay(schedule.data)}

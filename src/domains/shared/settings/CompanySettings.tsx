@@ -13,6 +13,7 @@ import { setTheme, useTheme } from "@/shared/theme";
 import { uploadFile } from "../../design/work/workApi";
 import { useSaveCompanySettings, useSetLogo, type CompanySettings } from "./settingsApi";
 import { notSaved, saved } from "./settingsToasts";
+import { loadFailed } from "@/api/queryState";
 
 /** An image cropped to a 128px square PNG, as the prototype did, so every logo sits the same in its tile. */
 async function squareLogo(file: File): Promise<File> {
@@ -51,7 +52,7 @@ export default function CompanySettingsSection() {
             </div>
             {settings ? <Company settings={settings} />
                 : <div className="panel"><div className="panel-body">
-                    {query.isError ? <LoadError error={query.error} retry={() => query.refetch()} what="the company's settings" /> : <SkeletonLines lines={6} />}
+                    {loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the company's settings" /> : <SkeletonLines lines={6} />}
                 </div></div>}
         </>
     );

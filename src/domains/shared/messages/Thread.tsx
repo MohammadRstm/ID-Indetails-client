@@ -18,6 +18,7 @@ import GroupTile from "./GroupTile";
 import { mentionParts, startsRun } from "./messageText";
 import { chatKey, useMarkChatRead, usePresence, useSendMessage, useTeamMembers, useThread, type Chat, type Contact, type Message } from "./messagesApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 type File = Message["attachments"][number];
 
@@ -154,7 +155,7 @@ export default function Thread({ chat, person, team, meId }: ThreadProps) {
                 <div className="grow" />
             </div>
             <div className="msg-list" ref={listRef}>
-                {thread.isError ? <div className="mt"><LoadError error={thread.error} retry={() => thread.refetch()} what="the messages" /></div>
+                {loadFailed(thread) ? <div className="mt"><LoadError error={thread.error} retry={() => thread.refetch()} what="the messages" /></div>
                     : !thread.data ? <div className="mt"><SkeletonLines lines={6} /></div> : (
                         <>
                             {thread.hasNextPage && (

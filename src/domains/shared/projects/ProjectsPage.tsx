@@ -28,6 +28,8 @@ import { useDomainPeople, personName } from "../people/peopleApi";
 import CreateProjectModal from "./CreateProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useProjects, useProjectStatusCounts, useProjectTotals, type ProjectListParams, type ProjectSort, type ProjectStatus, type ProjectSummary } from "./projectsApi";
+import { loadFailed } from "@/api/queryState";
+import LoadError from "@/shared/components/Feedback/LoadError";
 
 // Sorting and filtering by money stay on the server's list of what it can sort by (decision M7).
 const SORTS: { value: ProjectSort; label: string }[] = [
@@ -179,7 +181,10 @@ export default function ProjectsPage() {
                 )}
             />
 
-            {seesMoney && (
+            {seesMoney && loadFailed(totals) && (
+                <div className="panel" style={{ marginBottom: 12 }}><div className="panel-body"><LoadError error={totals.error} retry={() => totals.refetch()} what="the projects' money" /></div></div>
+            )}
+            {seesMoney && !loadFailed(totals) && (
                 <div style={{ marginBottom: 12 }}>
                     <KpiStrip loading={!t} items={[
                         { key: "revenue", label: "Revenue", value: money.short(t?.revenue ?? 0), sub: <span>{t?.clientProjects ?? 0} client projects</span> },

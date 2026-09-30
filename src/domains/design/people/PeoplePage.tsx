@@ -24,6 +24,7 @@ import InviteModal from "../../shared/people/InviteModal";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { usePeopleWork, type PersonWork } from "./peopleWorkApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 type PresenceFilter = "all" | "online" | "offline" | "invited";
 
@@ -78,7 +79,7 @@ export default function PeoplePage() {
                 sub={query.data ? `${rows.length} people · ${online.length} online now · ${fmtH(weekTotal)} logged since Monday` : " "}
                 actions={canInvite && <button className="btn btn-primary" onClick={openAdd}><Icon name="userPlus" />Add employee</button>} />
 
-            {query.isError ? <div className="panel"><div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the employees" /></div></div> : (
+            {loadFailed(query) ? <div className="panel"><div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the employees" /></div></div> : (
                 <>
                     <KpiStrip loading={!query.data} items={[
                         { key: "people", label: "Employees", value: active.length, sub: <span>{rows.filter((r) => r.status === "invited").length} invited · {teams.length} teams</span> },

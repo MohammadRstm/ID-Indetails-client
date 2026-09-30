@@ -22,6 +22,7 @@ import { useClients } from "../../shared/clients/clientsApi";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { usePeopleWork } from "../people/peopleWorkApi";
 import { clickable } from "@/shared/utils/clickable";
+import { loadFailed } from "@/api/queryState";
 
 type Kind = "all" | ActivityGroup;
 
@@ -93,7 +94,7 @@ export default function ActivityPage() {
             <div className="grid g-8-4">
                 <div className="panel">
                     <div className="panel-body" style={{ paddingTop: 2 }}>
-                        {feed.isError ? <div style={{ paddingTop: 12 }}><LoadError error={feed.error} retry={() => feed.refetch()} what="the activity" /></div>
+                        {loadFailed(feed) ? <div style={{ paddingTop: 12 }}><LoadError error={feed.error} retry={() => feed.refetch()} what="the activity" /></div>
                             : !feed.data ? <div style={{ paddingTop: 12 }}><SkeletonLines lines={8} /></div>
                                 : groups.map((g) => (
                                     <div key={g.key}>
@@ -115,7 +116,7 @@ export default function ActivityPage() {
                 {seesWork && (
                     <div className="stack">
                         <Figure title="Today at a glance" sub={fmtDayDateY(new Date())}>
-                            {today.isError ? <LoadError error={today.error} retry={() => today.refetch()} what="today's work" /> : (
+                            {loadFailed(today) ? <LoadError error={today.error} retry={() => today.refetch()} what="today's work" /> : (
                                 <>
                                     <div className="kpis" style={{ border: 0, marginBottom: 10 }}>
                                         <Kpi label="Hours logged" value={today.data ? fmtH(today.data.minutes) : "-"} />
@@ -131,7 +132,7 @@ export default function ActivityPage() {
                         <div className="panel">
                             <div className="panel-head"><div><div className="panel-title">Online now</div><div className="panel-sub">{peopleWork.data ? `${online.length} people` : " "}</div></div></div>
                             <div className="panel-body" style={{ paddingTop: 4 }}>
-                                {!peopleWork.data ? <SkeletonLines lines={3} /> : online.map((r) => (
+                                {loadFailed(peopleWork) ? <LoadError error={peopleWork.error} retry={() => peopleWork.refetch()} what="who is online" /> : !peopleWork.data ? <SkeletonLines lines={3} /> : online.map((r) => (
                                     <div key={r.id} className="mini-row" style={{ cursor: "pointer" }} {...clickable(() => navigate(`/design/people/${r.id}`), "button")}>
                                         <Avatar person={people.get(r.id)!} size={26} presence />
                                         <div className="grow" style={{ minWidth: 0 }}>

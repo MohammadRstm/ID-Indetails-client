@@ -25,6 +25,7 @@ import { companyNow } from "./day";
 import EntryRow from "./EntryRow";
 import { openLogWork } from "./logWorkStore";
 import { useMyEntries, useMyProjects, useMyWorkSummary, type WorkEntry } from "./workApi";
+import { loadFailed } from "@/api/queryState";
 
 type Period = "week" | "month" | "quarter" | "all";
 
@@ -69,7 +70,7 @@ export default function MyWorkPage() {
             <PageHead title="My work" sub="Everything you have logged, and how it adds up."
                 actions={canLog && <button className="btn btn-primary" onClick={() => openLogWork()}><Icon name="plus" />Log work</button>} />
 
-            {all.isError ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="your totals" /></div></div> : (
+            {loadFailed(all) ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="your totals" /></div></div> : (
                 <KpiStrip loading={!s} items={[
                     { key: "week", label: "This week", value: fmtH(s?.thisWeekMinutes ?? 0), sub: <span>{fmtDate(startOfWeek(today))} – {fmtDate(today)}</span> },
                     { key: "month", label: "This month", value: fmtH(s?.thisMonthMinutes ?? 0) },
@@ -93,7 +94,7 @@ export default function MyWorkPage() {
                     )}
                 </Figure>
                 <Figure title="Where your time went" sub={range.label}>
-                    {!inRange.data ? <SkeletonLines lines={5} /> : (
+                    {loadFailed(inRange) ? <LoadError error={inRange.error} retry={() => inRange.refetch()} what="where your time went" /> : !inRange.data ? <SkeletonLines lines={5} /> : (
                         <RankBars showPct onClick={(it) => navigate(`/design/projects/${it.id}`)}
                             items={inRange.data.byProject.map((p) => ({
                                 id: p.projectId, label: p.title, value: p.minutes,
@@ -127,7 +128,7 @@ export default function MyWorkPage() {
             {view === "list" ? (
                 <div className="panel">
                     <div className="panel-body" style={{ paddingTop: 4 }}>
-                        {entries.isError ? <LoadError error={entries.error} retry={() => entries.refetch()} what="your entries" />
+                        {loadFailed(entries) ? <LoadError error={entries.error} retry={() => entries.refetch()} what="your entries" />
                             : !entries.data ? <SkeletonLines lines={6} />
                                 : groups.slice(0, 20).map((g) => (
                                     <div key={g.key} className="day-group">
@@ -197,7 +198,7 @@ function WeekCalendar({ anchor, setAnchor, today }: { anchor: string; setAnchor:
                 </div>
             </div>
             <div className="panel-body" style={{ overflowX: "auto" }}>
-                {list.isError ? <LoadError error={list.error} retry={() => list.refetch()} what="the week" /> : (
+                {loadFailed(list) ? <LoadError error={list.error} retry={() => list.refetch()} what="the week" /> : (
                     <div style={{ minWidth: 660 }}>
                         <div style={{ display: "flex", marginLeft: 46 }}>
                             {days.map((d) => {
