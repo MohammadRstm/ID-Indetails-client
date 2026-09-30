@@ -13,7 +13,7 @@ import { AttachmentField } from "./AttachmentField";
 import { checkLog, companyNow, DAY, defaultSlot, isoAt, movesFor, spanOn, workHoursOf, type Moves } from "./day";
 import DayChips from "./DayChips";
 import DragDay from "./DragDay";
-import { closeLogWork, useLogWork, type LogWorkOptions } from "./logWorkStore";
+import { closeLogWork, type LogWorkOptions } from "./logWorkStore";
 import OvertimeWarning from "./OvertimeWarning";
 import TimeRange from "./TimeRange";
 import { startTimer } from "./timer";
@@ -23,13 +23,8 @@ import {
 } from "./workApi";
 
 /** Shows Log work wherever it was opened from. */
-export function LogWorkHost() {
-    const open = useLogWork();
-    return open ? <LogWorkModal key={open.n} options={open} /> : null;
-}
-
 /** Waits for what the form needs to open on a sensible time, then shows it. */
-function LogWorkModal({ options }: { options: LogWorkOptions }) {
+export default function LogWorkModal({ options }: { options: LogWorkOptions }) {
     const { today } = companyNow();
     const edit = options.edit;
     const firstDay = edit ? dayKey(edit.startedAt) : options.date ?? today;

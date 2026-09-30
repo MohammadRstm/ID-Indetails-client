@@ -1,7 +1,10 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { server } from "./server";
+
+// Pages load on demand, so the first test to open one waits for its code as well as its data.
+configure({ asyncUtilTimeout: 3000 });
 
 // The live connection talks to a stand-in hub: tests send its signals with live.emit.
 vi.mock("@microsoft/signalr", () => import("./liveHub"));

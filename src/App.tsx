@@ -1,8 +1,9 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
 import { createQueryClient } from "@/api/queryClient";
+import BootScreen from "@/app/pages/BootScreen";
 import CrashScreen from "@/app/pages/CrashScreen";
 import NoAccess from "@/app/pages/NoAccess";
 import NotFound from "@/app/pages/NotFound";
@@ -15,19 +16,14 @@ import {
     RequirePasswordChanged,
     RequireSession,
 } from "@/app/routing/guards";
+import { AcceptInvitationPage, ChangePasswordPage, ForgotPasswordPage, KitGallery, ResetPasswordPage, SignInPage } from "@/app/routing/pages";
 import { companyRoutes, domainRoutes } from "@/app/routing/routeTable";
 import { SessionProvider } from "@/app/session/SessionProvider";
 import LiveRoute from "@/app/live/LiveRoute";
 import AppShell from "@/app/shell/AppShell";
 import CompanyLauncher from "@/app/shell/CompanyLauncher";
-import AcceptInvitationPage from "@/auth/AcceptInvitationPage";
-import ChangePasswordPage from "@/auth/ChangePasswordPage";
-import ForgotPasswordPage from "@/auth/ForgotPasswordPage";
-import ResetPasswordPage from "@/auth/ResetPasswordPage";
-import SignInPage from "@/auth/SignInPage";
 import Toasts from "@/shared/components/Feedback/Toasts";
 import TipHost from "@/shared/components/Overlays/TipHost";
-import KitGallery from "@/app/pages/KitGallery";
 
 export default function App() {
     const [queryClient] = useState(createQueryClient);
@@ -48,7 +44,10 @@ export default function App() {
 function Boundary() {
     return (
         <ErrorBoundary FallbackComponent={CrashScreen}>
-            <Outlet />
+            {/* the signed-out pages load on demand; the shell has its own page skeleton */}
+            <Suspense fallback={<BootScreen />}>
+                <Outlet />
+            </Suspense>
         </ErrorBoundary>
     );
 }
