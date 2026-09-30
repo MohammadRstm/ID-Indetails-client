@@ -1,0 +1,220 @@
+{
+  "salary": {
+    "userId": 3,
+    "name": "Sarah Haddad",
+    "email": "sarah@id-indetails.test",
+    "role": "employee",
+    "domain": "design",
+    "team": {
+      "id": 13,
+      "name": "Interiors"
+    },
+    "basis": "monthly",
+    "amount": 1800,
+    "currency": "USD",
+    "hourlyRate": 10.3848,
+    "tracksHours": true,
+    "expectedMinutes": 8820,
+    "normalMinutes": 8170,
+    "madeUpMinutes": 650,
+    "overtimeMinutes": 130,
+    "excusedMinutes": 0,
+    "shortMinutes": 0,
+    "flagged": false,
+    "behind": false,
+    "proRated": false,
+    "leftOn": null,
+    "photoFileId": null,
+    "position": "Senior interior designer",
+    "workingDays": 22,
+    "workingDaysPaid": 22,
+    "deduction": 0,
+    "basePay": 1800,
+    "overtimePay": 22.5,
+    "total": 1822.5
+  },
+  "inProgress": true,
+  "paidBreakDays": 0,
+  "paidBreakPay": 0,
+  "deductionMinutes": 0,
+  "missedDays": [
+    "2026-09-15"
+  ],
+  "overtimeWork": [
+    {
+      "workEntryId": 12,
+      "day": "2026-09-03",
+      "minutes": 90,
+      "overtimeMinutes": 60,
+      "madeUpMinutes": 60
+    },
+    {
+      "workEntryId": 26,
+      "day": "2026-09-08",
+      "minutes": 150,
+      "overtimeMinutes": 60,
+      "madeUpMinutes": 60
+    },
+    {
+      "workEntryId": 27,
+      "day": "2026-09-08",
+      "minutes": 50,
+      "overtimeMinutes": 50,
+      "madeUpMinutes": 50
+    },
+    {
+      "workEntryId": 39,
+      "day": "2026-09-11",
+      "minutes": 110,
+      "overtimeMinutes": 50,
+      "madeUpMinutes": 50
+    },
+    {
+      "workEntryId": 46,
+      "day": "2026-09-16",
+      "minutes": 180,
+      "overtimeMinutes": 60,
+      "madeUpMinutes": 60
+    },
+    {
+      "workEntryId": 47,
+      "day": "2026-09-16",
+      "minutes": 70,
+      "overtimeMinutes": 70,
+      "madeUpMinutes": 70
+    },
+    {
+      "workEntryId": 51,
+      "day": "2026-09-17",
+      "minutes": 110,
+      "overtimeMinutes": 50,
+      "madeUpMinutes": 50
+    },
+    {
+      "workEntryId": 62,
+      "day": "2026-09-22",
+      "minutes": 110,
+      "overtimeMinutes": 90,
+      "madeUpMinutes": 90
+    },
+    {
+      "workEntryId": 69,
+      "day": "2026-09-24",
+      "minutes": 130,
+      "overtimeMinutes": 130,
+      "madeUpMinutes": 130
+    },
+    {
+      "workEntryId": 73,
+      "day": "2026-09-25",
+      "minutes": 120,
+      "overtimeMinutes": 50,
+      "madeUpMinutes": 30
+    },
+    {
+      "workEntryId": 78,
+      "day": "2026-09-28",
+      "minutes": 80,
+      "overtimeMinutes": 60,
+      "madeUpMinutes": 0
+    },
+    {
+      "workEntryId": 82,
+      "day": "2026-09-29",
+      "minutes": 80,
+      "overtimeMinutes": 50,
+      "madeUpMinutes": 0
+    }
+  ],
+  "excuses": [],
+  "workingDays": [
+    {
+      "date": "2026-09-01",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-02",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-03",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-04",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-07",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-08",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-09",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-10",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-11",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-14",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-15",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-16",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-17",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-18",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-21",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-22",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-23",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-24",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-25",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-28",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-29",
+      "requiredMinutes": 420
+    },
+    {
+      "date": "2026-09-30",
+      "requiredMinutes": 420
+    }
+  ]
+}
