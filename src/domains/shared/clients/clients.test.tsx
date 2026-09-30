@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
@@ -48,6 +48,22 @@ describe("the clients list", () => {
         expect(await screen.findByRole("columnheader", { name: /revenue/i })).toBeInTheDocument();
         expect(screen.queryByRole("columnheader", { name: /hours/i })).toBeNull();
         expect(screen.queryByRole("columnheader", { name: /last activity/i })).toBeNull();
+    });
+
+    it("asks the server for the other way round when a header is clicked again", async () => {
+        const asked: string[] = [];
+        renderApp("/design/clients", admin,
+            http.get("/api/clients", ({ request }) => {
+                const q = new URL(request.url).searchParams;
+                asked.push(`${q.get("sort")}:${q.get("reverse") ?? "false"}`);
+                return HttpResponse.json(fixtures.clients);
+            }),
+            ...projectHandlers);
+        const header = await screen.findByRole("columnheader", { name: /^Client/ });
+        await userEvent.click(header);
+        await userEvent.click(header);
+        // money first, highest first; then the name Z to A, then A to Z
+        await waitFor(() => expect(asked.slice(-3)).toEqual(["revenue:false", "name:true", "name:false"]));
     });
 
     it("offers Add client only with client:create", async () => {
