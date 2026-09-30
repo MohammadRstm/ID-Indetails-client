@@ -60,3 +60,7 @@ export const pctOf = (ratio: number) => `${Math.round(ratio * 1000) / 10}%`;
 
 /** A markup as a signed percentage: 0.15 → "+15%", -0.05 → "−5%". */
 export const markupText = (ratio: number) => `${ratio >= 0 ? "+" : "−"}${Math.abs(Math.round(ratio * 1000) / 10)}%`;
+
+/** Open for site records (materials and labour): not closed, and not finalised, as the API's SiteRules has it. */
+export const isSiteOpen = (project: Project) =>
+    project.status !== "completed" && project.status !== "archived" && !project.finalizedAt && !project.money?.isLocked;

@@ -66,7 +66,7 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - [x] 5d: the project report. Billing settings and exchange rates moved to phase 7: the prototype keeps them in Settings → Finance.
 - [ ] **6. Execution**, in parts:
   - [x] 6a-1: a site's overview for admins: its KPIs, project money, the fee and material profit, payments on account, ground labour and profit;
-  - [ ] 6a-2: materials: the table edited in place and the Add materials sheet;
+  - [x] 6a-2: materials: the table edited in place and the Add materials sheet;
   - [ ] 6a-3: weekly labour and its defaults;
   - [ ] 6a-4: client statements;
   - [ ] 6b: the Execution employee views and profile;
@@ -89,7 +89,7 @@ Everything that only served the demo:
 - the demo guide and demo clock;
 - seed data, local save and "reset data";
 - "Appear offline", which has no API support;
-- the prototype's unused components (`EX.PricingModal`, `EX.SiteBreakdown`, `UI.ShortHoursAlert`).
+- the prototype's unused components (`EX.PricingModal`, `EX.SiteBreakdown`, `UI.ShortHoursAlert`, and the single-material edit form behind `EX.MaterialModal`, which nothing opens: the materials table is edited in place).
 
 ## Notes and open items
 
@@ -130,6 +130,7 @@ Decisions made along the way, and anything skipped because it needs the user's i
 - **Financials.** "All time" asks from 1 January 2000, since the API's default period is this quarter. The hours behind the labour cost come from the API (API PR #32). The export is the API's CSV of the period's projects. Execution's financials arrive with phase 6.
 - **The overview board.** Each person's card order is saved on the server (`/api/me/board-layouts/overview-design`) instead of the prototype's browser storage, so it follows them to any browser; the prototype's "Export JSON" button, there to hand the layouts over while it had no server, is left out. Whether "Needs attention & deadlines" is folded stays in the browser, as in the prototype. The period's people, projects and this week's hours come from the API (API PR #31). Execution's dashboard arrives with phase 6.
 - **A site's money.** The figures come from the project's money, and the week-by-week cash and the projection of when profit reaches zero from `/site-money/timeline`, so the rule lives in the API. "Fee & material profit" previews the new agreed amount over every material (fetched a hundred at a time); a material on a client statement keeps its price when the markup changes, as the API freezes it. A site takes payments on account, so Record payment is there before anything is invoiced, and a new invoice starts from what is still owed less what is invoiced and unpaid, as in the prototype.
+- **Materials.** The filters, totals and pages (30 a page) come from the API, as do who may change a row (`canEdit`) and whether new ones can be added (`canAdd`). A material on a client statement keeps its type, cost and price, and can't be removed, since the API freezes it; its supplier and note can still change, and the row says why the rest is locked. Client prices and the material profit are shown to people who see money, and set only with project:pricing_manage while the site is open. A cell saves only what was typed in it, and a saved material goes straight into the loaded list, so a quick run of changes along a row never starts from a list that is still being fetched. The Add materials sheet sends a hundred rows at a time, the API's limit.
 - **Amounts keep what is typed.** The prototype's amount field turned "42." back into "42" as it was typed, so no amount with cents could be entered; the client's keeps the text as typed.
 - **The account menu opens upwards.** The prototype opened it downwards from the foot of the sidebar, so on any page longer than the window it was drawn below the screen and Sign out was out of reach.
 - **Your own phone** (API PR #28). The session now carries the phone, so editing your own name no longer sends an empty phone back.
