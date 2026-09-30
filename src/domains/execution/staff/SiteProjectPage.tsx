@@ -78,6 +78,7 @@ function SiteView({ project }: { project: Project }) {
                         </div>
                         {project.description && <div className="page-sub" style={{ maxWidth: "70ch" }}>{project.description}</div>}
                         <div className="row wrap mt-s" style={{ gap: 14, fontSize: 12, color: "var(--ink-3)" }}>
+                            {project.location && <span className="row" style={{ gap: 6 }}><Icon name="pin" style={{ width: 14, height: 14 }} /><b className="sec">{project.location}</b></span>}
                             {project.client && <span>Client <b className="sec">{project.client.displayName}</b></span>}
                             <span>Started <b className="sec">{fmtDateY(project.startDate)}</b></span>
                             {project.targetDate && !project.completedAt && <span>Target <b className="sec">{fmtDateY(project.targetDate)}</b></span>}

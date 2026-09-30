@@ -69,6 +69,7 @@ export const icons = {
   flag: '<path d="M6 20.4V4"/><path d="M6 5h11l-2.2 3.4L17 11.8H6"/>',
   target: '<circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="4.2"/><circle class="f" cx="12" cy="12" r="1.4"/>',
   menu: '<path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/>',
+  pin: '<path d="M12 20.6s-6.4-5.9-6.4-10.5a6.4 6.4 0 0 1 12.8 0c0 4.6-6.4 10.5-6.4 10.5z"/><circle cx="12" cy="10.1" r="2.2"/>',
   building: '<path d="M4.6 20.4V5.4A1.4 1.4 0 0 1 6 4h7a1.4 1.4 0 0 1 1.4 1.4v15"/><path d="M14.4 9.6H18a1.4 1.4 0 0 1 1.4 1.4v9.4"/><path d="M3.4 20.4h17.2"/><path d="M7.8 8h3"/><path d="M7.8 12h3"/><path d="M7.8 16h3"/>',
   send: '<path d="M20.4 3.6 3.6 10.2l6.6 2.8 2.8 6.6z"/><path d="M20.4 3.6 10.2 13"/>',
   sort: '<path d="M8 9.4 12 5.4l4 4"/><path d="M8 14.6 12 18.6l4-4"/>',

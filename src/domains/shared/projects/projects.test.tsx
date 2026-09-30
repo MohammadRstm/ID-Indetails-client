@@ -138,6 +138,60 @@ describe("a project", () => {
     });
 });
 
+describe("a new project and its details", () => {
+    it("says what is missing instead of doing nothing, and sends where the work is", async () => {
+        const bodies: Record<string, unknown>[] = [];
+        renderApp("/design/projects?new=1", admin,
+            http.post("/api/projects", async ({ request }) => {
+                bodies.push((await request.json()) as Record<string, unknown>);
+                return HttpResponse.json({ ...fixtures.project, id: 77, title: "Villa interiors" }, { status: 201 });
+            }),
+            ...projectHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "New project" });
+        await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
+        expect(within(dialog).getByText("Give the project a name.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Choose who the project is for, or make it internal.")).toBeInTheDocument();
+        expect(bodies).toEqual([]);
+
+        await userEvent.type(within(dialog).getByLabelText("Project name"), "Villa interiors");
+        expect(within(dialog).queryByText("Give the project a name.")).toBeNull();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Internal" }));
+        await userEvent.type(within(dialog).getByLabelText(/Location/), "Broummana");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ title: "Villa interiors", billingType: "internal", location: "Broummana" })]));
+    });
+
+    it("shows where a project is, and edits it with the rest of its details", async () => {
+        const bodies: Record<string, unknown>[] = [];
+        const located = { ...fixtures.project, location: "Achrafieh, Beirut" };
+        renderApp("/design/projects/1", admin,
+            http.get("/api/projects/1", () => HttpResponse.json(located)),
+            http.put("/api/projects/1", async ({ request }) => {
+                bodies.push((await request.json()) as Record<string, unknown>);
+                return HttpResponse.json({ ...located, location: "Jounieh" });
+            }),
+            ...projectHandlers);
+        expect(await screen.findByText("Achrafieh, Beirut")).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+        await userEvent.click(screen.getByRole("button", { name: "Edit details" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit project details" });
+        const where = within(dialog).getByLabelText(/Location/);
+        await userEvent.clear(where);
+        await userEvent.type(where, "Jounieh");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        // the rest goes back as it was, the owner included
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ title: fixtures.project.title, location: "Jounieh", ownerId: fixtures.project.owner.id })]));
+    });
+
+    it("keeps editing to people with project:edit", async () => {
+        renderApp("/design/projects/1", withPermissions(admin, { revoke: [P.PROJECT_EDIT] }), ...projectHandlers);
+        await screen.findByRole("heading", { name: fixtures.project.title });
+        const menu = screen.queryByRole("button", { name: "More actions" });
+        if (menu) await userEvent.click(menu);
+        expect(screen.queryByRole("button", { name: "Edit details" })).toBeNull();
+    });
+});
+
 describe("a new Execution project", () => {
     const karim = personas.executionAdmin;
     const newProject = () => screen.findByRole("dialog", { name: "New project" });

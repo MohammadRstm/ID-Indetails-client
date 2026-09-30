@@ -138,7 +138,7 @@ function SiteCard({ project: p, summary: s, failed, paused }: { project: Project
                     <div className="row" style={{ gap: 7, flexWrap: "wrap" }}>
                         <span className="pcard-title trunc">{p.title}</span>
                     </div>
-                    {p.client && <div className="muted trunc" style={{ fontSize: "11.5px", marginTop: 2 }}>for {p.client.displayName}</div>}
+                    {(p.client || p.location) && <div className="muted trunc" style={{ fontSize: "11.5px", marginTop: 2 }}>{[p.client && `for ${p.client.displayName}`, p.location].filter(Boolean).join(" · ")}</div>}
                     <div className="muted clamp2" style={{ fontSize: "11.5px", marginTop: 2 }}>{p.description}</div>
                 </div>
                 <StatusBadge status={p.status} />
