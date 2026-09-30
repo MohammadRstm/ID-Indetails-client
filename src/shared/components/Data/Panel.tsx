@@ -10,13 +10,15 @@ type PanelProps = {
     flush?: boolean;
     className?: string;
     bodyClassName?: string;
+    /** The prototype often trims the body's top padding (paddingTop: 2) under a list. */
+    bodyStyle?: CSSProperties;
     style?: CSSProperties;
     id?: string;
     children?: ReactNode;
 };
 
 /** A card with a head (title, sub-line, tools), a body and an optional foot: the prototype's .panel. */
-export default function Panel({ title, sub, tools, foot, flush, className, bodyClassName, style, id, children }: PanelProps) {
+export default function Panel({ title, sub, tools, foot, flush, className, bodyClassName, bodyStyle, style, id, children }: PanelProps) {
     return (
         <div className={cx("panel", className)} style={style} id={id}>
             {(title || tools) && (
@@ -28,7 +30,7 @@ export default function Panel({ title, sub, tools, foot, flush, className, bodyC
                     {tools && <div className="panel-tools">{tools}</div>}
                 </div>
             )}
-            {children !== undefined && <div className={cx("panel-body", flush && "flush", bodyClassName)}>{children}</div>}
+            {children !== undefined && <div className={cx("panel-body", flush && "flush", bodyClassName)} style={bodyStyle}>{children}</div>}
             {foot && <div className="panel-foot">{foot}</div>}
         </div>
     );

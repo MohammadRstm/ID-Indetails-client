@@ -89,6 +89,29 @@ export function companyToday(now: Date = new Date()): string {
     return dayKey(now);
 }
 
+/**
+ * The UTC instant of a wall-clock time in the company time zone: a day and minutes after its midnight.
+ * Used to send what someone typed ("9:30 on Sep 30") to the API, which stores instants in UTC.
+ */
+export function companyTimeToUtc(day: string, minutes: number): Date {
+    const [y, m, d] = day.split("-").map(Number);
+    const wanted = Date.UTC(y, m - 1, d, 0, minutes);
+    // Guess, see how far the zone moves it, and correct; twice covers a change of daylight saving.
+    let guess = wanted;
+    for (let i = 0; i < 2; i++) {
+        const p = partsOf(new Date(guess));
+        const shown = Date.UTC(p.year, p.month, p.day, p.hour, p.minute);
+        guess += wanted - shown;
+    }
+    return new Date(guess);
+}
+
+/** Minutes after midnight, in company time, of an instant. */
+export function minutesOfDay(value: DateValue): number {
+    const p = partsOf(value);
+    return p.hour * 60 + p.minute;
+}
+
 /** Adds days to a "yyyy-MM-dd" key. */
 export function addDays(key: string, days: number): string {
     const p = partsOf(key);
