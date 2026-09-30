@@ -36,6 +36,15 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("an Execution employee's projects", () => {
+    it("say when what was recorded on them can't be loaded", async () => {
+        renderApp("/execution/projects", tarek,
+            http.get("/api/projects/site-summary", () => HttpResponse.json({ code: "forbidden", message: "You can't see that." }, { status: 403 })),
+            ...homeHandlers);
+        expect(await screen.findByText(/Couldn't load what has been recorded on your projects\./)).toBeInTheDocument();
+        await screen.findAllByText("Mar Mikhael loft renovation");
+        expect(screen.queryAllByText("…")).toHaveLength(0);
+    });
+
     it("are the open sites, the one they last recorded on first, with what was recorded there", async () => {
         renderApp("/execution/projects", tarek, ...homeHandlers);
         expect(await screen.findByText("Good afternoon, Tarek")).toBeInTheDocument();
