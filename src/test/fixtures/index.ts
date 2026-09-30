@@ -1,4 +1,5 @@
 import { http, HttpResponse } from "msw";
+import { overview } from "./overview";
 import { projectWorkHandlers } from "./project";
 import type { Paged, Schemas } from "@/api/types";
 import clientJson from "./client.json";
@@ -53,6 +54,8 @@ export const projectHandlers = [
     http.get("/api/finance/:domain/summary", () => HttpResponse.json(fixtures.financeSummary)),
     http.get("/api/finance/:domain/clients", () => HttpResponse.json(fixtures.financeClients)),
     http.get("/api/search", () => HttpResponse.json(fixtures.search)),
+    // the projects list's hours this quarter
+    http.get("/api/reports/overview", () => HttpResponse.json(overview.overview)),
     // a client page's recent activity
     http.get("/api/activity", () => HttpResponse.json(empty)),
     // a Design project's overview: its work, timeline and entries
