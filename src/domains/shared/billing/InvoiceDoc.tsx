@@ -1,10 +1,9 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { useCompanySettings } from "@/app/shell/shellQueries";
-import Logo from "@/shared/components/Identity/Logo";
 import { money } from "@/shared/format/money";
 import { addDays, companyToday, fmtDateY } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
 import type { BillingSettings } from "./billingApi";
+import { DocContinued, DocLetterhead } from "./DocHead";
 import type { DocFlash, DocInvoice } from "./invoiceDocData";
 
 // Long invoices run over several pages: the letterhead opens the first, later ones carry a "continued"
@@ -38,12 +37,10 @@ type InvoiceDocProps = {
  * reads what is on the invoice: never hours, rates, labour cost, names of employees, profit or margin.
  */
 export default function InvoiceDoc({ invoice: inv, settings, preview = false, flash }: InvoiceDocProps) {
-    const company = useCompanySettings().data;
     const today = companyToday();
     const pages = pagesOf(inv.lines);
     const fl = (key: string) => (flash?.key === key ? `doc-flash f${flash.n % 2}` : "");
     const number = inv.number ?? "Draft";
-    const contact = [company?.website, company?.address].filter(Boolean).join(" · ");
     const due = preview ? (inv.termsDays ? fmtDateY(addDays(today, inv.termsDays)) : "On receipt")
         : inv.dueOn ? fmtDateY(inv.dueOn) : inv.termsDays > 0 ? `Net ${inv.termsDays}` : "On receipt";
     const terms = inv.termsDays > 0 ? `Payment due within ${inv.termsDays} days of the invoice date.` : "Payment due on receipt.";
@@ -60,18 +57,7 @@ export default function InvoiceDoc({ invoice: inv, settings, preview = false, fl
                         {preview && first && <div className="doc-watermark">Draft</div>}
                         {first ? (
                             <div>
-                                <div className="rep-head">
-                                    <Logo size={34} />
-                                    <div className="grow">
-                                        <div className="rep-title">{company?.name ?? ""}</div>
-                                        {contact && <div style={{ fontSize: "11.5px", color: "#46514F" }}>{contact}</div>}
-                                    </div>
-                                    <div style={{ textAlign: "right" }}>
-                                        <div className="doc-kind">Invoice</div>
-                                        <div className="mono" style={{ fontSize: 13, fontWeight: 650 }}>{number}</div>
-                                        {inv.voided && <div className="doc-void">VOID</div>}
-                                    </div>
-                                </div>
+                                <DocLetterhead kind="Invoice" number={number}>{inv.voided && <div className="doc-void">VOID</div>}</DocLetterhead>
 
                                 <div className="doc-meta">
                                     <div>
@@ -93,12 +79,7 @@ export default function InvoiceDoc({ invoice: inv, settings, preview = false, fl
                                     </div>
                                 </div>
                             </div>
-                        ) : (
-                            <div className="stmt-cont">
-                                <span><b>{company?.name ?? ""}</b> · Invoice {number}</span>
-                                <span>{inv.projectTitle} · continued</span>
-                            </div>
-                        )}
+                        ) : <DocContinued kind="Invoice" number={number} projectTitle={inv.projectTitle} />}
 
                         <div className="rep-sec">
                             {first && <h3>Details</h3>}
