@@ -1,0 +1,158 @@
+import { useEffect, useState, type ReactNode } from "react";
+import { errorMessage } from "@/api/errors";
+import { P } from "@/app/permissions/codes";
+import { usePermissions } from "@/app/permissions/usePermissions";
+import LoadError from "@/shared/components/Feedback/LoadError";
+import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
+import { toast } from "@/shared/components/Feedback/toast";
+import Modal from "@/shared/components/Overlays/Modal";
+import { plural } from "@/shared/format/labels";
+import { money } from "@/shared/format/money";
+import Icon from "@/shared/icons/Icon";
+import { cx } from "@/shared/utils/cx";
+import type { Project } from "../../shared/projects/projectsApi";
+import { markupText, siteMoneyOf } from "../projects/siteMoney";
+import MaterialGrid, { type GridRow } from "./MaterialGrid";
+import { BLOCK, blankRows, COLS, COLS_PRICED, costOf, entryOf, link, pasteInto, rowOf, rowProblems, rowUsed, type ColKey, type Row } from "./materialRules";
+import { useAddMaterials, useAllMaterials } from "./materialsApi";
+
+const r2 = (n: number) => Math.round(n * 100) / 100;
+/** Every row in use: ten more. */
+const grow = (list: Row[]) => (list.filter(rowUsed).length >= list.length ? list.concat(blankRows(BLOCK)) : list);
+
+/**
+ * The Add materials sheet (the prototype's EX.MaterialSheet): rows typed like a spreadsheet, or pasted straight
+ * from Excel, and added together. What is already recorded sits above, read-only, so nothing is typed twice.
+ * People who price for the client set each row's client price as they go and watch the profit move.
+ */
+export default function MaterialSheet({ project, onClose }: { project: Project; onClose: () => void }) {
+    const saved = useAllMaterials(project.id);
+    const markup = saved.data?.defaultMarkup ?? project.money?.materialMarkup ?? 0;
+    const permissions = usePermissions();
+    const add = useAddMaterials(project.id);
+    const client = project.billingType === "client" && !!project.client;
+    const canPrice = client && permissions.has(P.PROJECT_PRICING_MANAGE);
+    const x = client && permissions.has(P.FINANCIAL_VIEW) && project.money ? siteMoneyOf(project.money) : null;
+    const cols = canPrice ? COLS_PRICED : COLS;
+    const [rows, setRows] = useState(() => blankRows(BLOCK));
+    const [tried, setTried] = useState(false);
+
+    // the recorded materials, oldest first
+    const recorded: GridRow[] = (saved.data?.items ?? []).slice().reverse().map((m) => ({ ...rowOf(m), id: m.id, by: m.addedBy.name }));
+    const N = recorded.length;
+    const recordedTotal = r2(recorded.reduce((t, r) => t + costOf(r), 0));
+    const used = rows.filter(rowUsed);
+    const problems = rows.map(rowProblems);
+    const nBad = problems.filter(Boolean).length;
+    const total = r2(used.reduce((t, r) => t + costOf(r), 0));
+    // a new row's client price: its own once typed, otherwise its cost at the project's markup
+    const autoPrice = (r: Row) => { const c = costOf(r); return c > 0 ? String(r2(c * (1 + markup))) : ""; };
+    const priceOf = (r: Row) => (r.clientPrice !== "" ? r.clientPrice : autoPrice(r));
+    const charge = canPrice ? r2(used.reduce((t, r) => t + (+priceOf(r) || 0), 0)) : 0;
+
+    // live, on every keystroke: quantity or unit cost typed → the total follows; a total over both → the unit cost
+    function setCell(r: number, k: ColKey, v: string) {
+        setRows((current) => {
+            const next = current.slice();
+            let row = { ...next[r] };
+            // a client price typed back to what the markup gives stays on the markup
+            if (k === "clientPrice") row.clientPrice = v === "" || +v === +autoPrice(row) ? "" : v;
+            else row[k] = v;
+            if (k === "quantity" || k === "unitCost" || k === "amount") row = link(row, k);
+            next[r] = row;
+            return grow(next);
+        });
+    }
+    function removeRow(r: number) {
+        setRows((current) => {
+            const next = current.filter((_, i) => i !== r);
+            return next.length < BLOCK ? next.concat(blankRows(BLOCK - next.length)) : next;
+        });
+    }
+    function submit() {
+        setTried(true);
+        if (nBad || !used.length) return;
+        add.mutate(used.map((r) => ({ ...entryOf(r), clientPrice: canPrice && r.clientPrice !== "" ? +r.clientPrice : null })), {
+            onSuccess: () => {
+                toast({ text: `Added ${plural(used.length, "material")}`, sub: `${money.exact(total)} in total · ${project.title}`, icon: "checkCircle" });
+                onClose();
+            },
+        });
+    }
+    function close() {
+        if (used.length && !window.confirm(`Discard the ${plural(used.length, "material")} typed so far?`)) return;
+        onClose();
+    }
+
+    const shown: GridRow[] = recorded.concat(rows.map((r, i) => ({ ...r, clientPrice: canPrice ? priceOf(r) : r.clientPrice, cls: i === 0 && N ? "sh-first-new" : undefined })));
+
+    return (
+        <Modal size="xl mat-sheet" flush title="Add materials" sub={project.title} onClose={close}
+            foot={
+                <>
+                    <div className="grow">
+                        {used.length ? <><b className="mono" style={{ color: "var(--ink)" }}>{money.exact(total)}</b> · {used.length} new material{used.length === 1 ? "" : "s"}</> : "Nothing new typed yet"}
+                        {N > 0 && <span className="muted"> · {used.length ? `${money.exact(recordedTotal + total)} for the project with them` : `${money.exact(recordedTotal)} recorded so far`}</span>}
+                        {tried && nBad > 0 && <span className="sh-warn"> · {nBad} row{nBad === 1 ? " needs" : "s need"} a type and a cost - quantity × unit cost, or a total</span>}
+                        {add.error && <span className="sh-warn"> · {errorMessage(add.error)}</span>}
+                    </div>
+                    <button className="btn" onClick={close}>Cancel</button>
+                    <button className="btn btn-primary" disabled={!used.length || add.isPending} onClick={submit}>
+                        <Icon name="checkCircle" />{add.isPending ? "Adding…" : `Add ${used.length || ""} material${used.length === 1 ? "" : "s"}`}
+                    </button>
+                </>
+            }>
+            {x && (
+                <div className={cx("xm-strip", x.received - (x.spent + total) < 0 && "neg")} role="status">
+                    <span>Received <b className="mono">{money.exact(x.received)}</b></span>
+                    <span className="muted">·</span>
+                    <span>Spent <b className="mono">{money.exact(r2(x.spent + total))}</b>{total > 0 && <> <em className="mono">(+{money.exact(total)} here)</em></>}</span>
+                    <span className="muted">→</span>
+                    <span>Profit <b className="mono xm-profit">{money.exact(r2(x.received - x.spent - total))}</b>{total > 0 && <> <em className="mono">(−{money.exact(total)})</em></>}</span>
+                    {charge > 0 && (
+                        <>
+                            <span className="grow" />
+                            <span className="muted">Charged to client <b className="mono">{money.exact(charge)}</b> · material profit <b className="mono">+{money.exact(r2(charge - total))}</b></span>
+                        </>
+                    )}
+                </div>
+            )}
+            <div className="sh-help">
+                <span><kbd>Enter</kbd> next column</span><span><kbd>Shift</kbd>+<kbd>Enter</kbd> back</span>
+                <span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move between cells</span><span>Paste straight from Excel</span>
+                <span className="grow" />
+                <span className="muted">{N ? `${N} already recorded · ` : ""}{rows.length} new rows · more are added as you fill them</span>
+            </div>
+            <div className="sh-help">
+                <span className="muted">
+                    Qty and unit cost are optional. With both, Total is worked out for you - type a Total over them and the unit cost is adjusted to match. Without them, type the Total.
+                    {canPrice ? ` Client price starts at the project's ${Math.round(markup * 1000) / 10}% material profit - type over it to charge something else.` : ""}
+                </span>
+            </div>
+            {saved.isError ? <div className="panel-body"><LoadError error={saved.error} retry={() => saved.refetch()} what="the materials" /></div>
+                : !saved.data ? <div className="panel-body"><SkeletonLines lines={8} /></div> : (
+                <SheetGrid first={N}>
+                    <MaterialGrid cols={cols} rows={shown} eager showBy={N > 0}
+                        after={canPrice ? (row) => <span className="sh-mk">{costOf(row) > 0 && row.clientPrice !== "" ? markupText(+row.clientPrice / costOf(row) - 1) : ""}</span> : undefined}
+                        afterLabel="Material profit"
+                        problems={tried ? [...recorded.map(() => null), ...problems] : null}
+                        locked={(r) => r < N}
+                        canDelete={(r) => r >= N}
+                        onCell={(r, k, v) => { if (r >= N) setCell(r - N, k, v); }}
+                        onGrow={() => setRows((current) => current.concat(blankRows(BLOCK)))}
+                        onPaste={(r, c, t) => { if (r >= N) setRows((current) => grow(pasteInto(current, r - N, c, t, cols))); }}
+                        onDelete={(r) => { if (r >= N) removeRow(r - N); }} />
+                </SheetGrid>
+            )}
+        </Modal>
+    );
+}
+
+/** Puts the cursor in the first new row once the sheet is open. */
+function SheetGrid({ first, children }: { first: number; children: ReactNode }) {
+    useEffect(() => {
+        const t = setTimeout(() => document.querySelector<HTMLInputElement>(`.mat-sheet [data-r="${first}"][data-c="0"]`)?.focus(), 60);
+        return () => clearTimeout(t);
+    }, [first]);
+    return <>{children}</>;
+}

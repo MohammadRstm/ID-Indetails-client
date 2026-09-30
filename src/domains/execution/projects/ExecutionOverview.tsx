@@ -10,6 +10,7 @@ import type { Project } from "../../shared/projects/projectsApi";
 import { useRequirements } from "../../shared/requirements/requirementsApi";
 import { useLabourWeeks } from "../labour/labourApi";
 import { useMaterials } from "../materials/materialsApi";
+import MaterialsPanel from "../materials/MaterialsPanel";
 import LabourHealth from "./LabourHealth";
 import SiteMoneyPanel from "./SiteMoneyPanel";
 
@@ -35,6 +36,7 @@ export default function ExecutionOverview({ project }: { project: Project }) {
                     onEditPricing={permissions.has(P.PROJECT_PRICING_MANAGE) ? openPricing : undefined} />
             )}
             {m && client && <BillingBand project={project} />}
+            <MaterialsPanel project={project} />
             {m && client && <LabourHealth project={project} />}
         </>
     );
