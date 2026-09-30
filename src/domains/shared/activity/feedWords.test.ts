@@ -38,6 +38,40 @@ describe("what the activity feed says", () => {
             .toBe("scheduled a meeting on Beit Misk show apartment · Client presentation, Sat, Oct 3 at 10:00 AM");
     });
 
+    it("says what was excused from a person's hours, and whether it is paid", () => {
+        const sarah = { subjectType: "user", subjectId: 3 };
+        const excuse = (payload: object, kind = "hours_excused") => say(event(kind, { ...sarah, project: null, payload: { month: "2026-09-01", isPaid: true, ...payload } }));
+        expect(excuse({ kind: "Minutes", minutes: 420, days: 0 })).toBe("excused Sarah Haddad for 7h in September 2026");
+        expect(excuse({ kind: "Days", minutes: null, days: 3 })).toBe("excused Sarah Haddad for 3 days off in September 2026");
+        expect(excuse({ kind: "Days", minutes: null, days: 1, isPaid: false })).toBe("excused Sarah Haddad for 1 day off in September 2026, unpaid");
+        expect(excuse({ kind: "WholeMonth", minutes: null, days: 0 })).toBe("excused Sarah Haddad for all of September 2026");
+        expect(excuse({ kind: "Days", minutes: null, days: 3 }, "hours_excuse_removed")).toBe("removed Sarah Haddad's excuse for 3 days off in September 2026");
+        // events from before the amount was recorded
+        expect(excuse({ kind: "Minutes" })).toBe("excused Sarah Haddad for some hours in September 2026");
+        expect(excuse({ kind: "Days" })).toBe("excused Sarah Haddad for days off in September 2026");
+    });
+
+    it("words schedule and working-hours changes", () => {
+        const sarah = { subjectType: "user", subjectId: 3, project: null };
+        expect(say(event("schedule_changed", { ...sarah, payload: { effectiveFrom: "2026-10-01", followsDefault: false } }))).toBe("changed Sarah Haddad's working hours from Oct 1");
+        expect(say(event("schedule_changed", { ...sarah, payload: { effectiveFrom: "2026-10-01", followsDefault: true } }))).toBe("put Sarah Haddad back on the company's working hours from Oct 1");
+        expect(say(event("working_time_changed", { project: null, payload: { effectiveFrom: "2026-11-01" } }))).toBe("changed the company's working hours from Nov 1");
+    });
+
+    it("words company expenses, with their amounts for people who see money", () => {
+        const line = (kind: string, details: object | null = null, extra: Partial<FeedEvent> = {}) =>
+            say(event(kind, { project: null, subjectType: "overhead_item", subjectId: 5, payload: { name: "Figma", currency: "USD", details }, ...extra }));
+        expect(line("overhead_added", null, { amount: 45 })).toBe("added Figma to the company expenses - $45");
+        expect(line("overhead_added")).toBe("added Figma to the company expenses");
+        expect(line("overhead_amount_changed", { fromMonth: "2026-10-01" }, { amount: 60 })).toBe("changed Figma's monthly cost to $60 from October 2026");
+        expect(line("overhead_currency_changed", { previousCurrency: "LBP" })).toBe("changed Figma from LBP to USD");
+        expect(line("overhead_currency_changed", { endedOn: "2026-09-30", replacedBy: 6 })).toBe("ended Figma in USD on Sep 30 to change its currency");
+        expect(line("overhead_added", { replaces: 5 })).toBe("carried Figma on in USD");
+        expect(line("overhead_cancelled", { endedOn: "2026-09-30" })).toBe("cancelled Figma, ending Sep 30");
+        expect(line("overhead_resumed")).toBe("resumed Figma");
+        expect(line("overhead_removed")).toBe("removed Figma from the company expenses");
+    });
+
     it("says something for a kind it doesn't know", () => {
         expect(feedWords(event("something_new"), names)).toEqual({ icon: "info", text: "something new" });
     });
