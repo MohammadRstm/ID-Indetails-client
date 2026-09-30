@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from "react";
+import { useState, type KeyboardEvent } from "react";
 import Select from "./Select";
 
 type AmountFieldProps = {
@@ -16,8 +16,20 @@ type AmountFieldProps = {
     onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
 };
 
+const shown = (value: number | null) => (value === 0 || value ? String(value) : "");
+const parsed = (text: string) => (text === "" ? 0 : Number(text) || 0);
+
 /** An amount with its currency sign and an optional USD / LBP picker (the prototype's UI.AmountField). */
 export default function AmountField({ value, onChange, currency = "USD", onCurrency, currencies = true, id, placeholder = "0", r, c, onKeyDown }: AmountFieldProps) {
+    // The text as typed, so "42." and "42.50" stay as they are while the amount they give is handed up;
+    // an amount set from outside replaces it.
+    const [text, setText] = useState(() => shown(value));
+    const [last, setLast] = useState(value);
+    if (value !== last) {
+        setLast(value);
+        if (parsed(text) !== (value ?? 0)) setText(shown(value));
+    }
+
     return (
         <div className="amount-field">
             <span className="amount-cur">{currency === "LBP" ? "LBP" : "$"}</span>
@@ -26,13 +38,14 @@ export default function AmountField({ value, onChange, currency = "USD", onCurre
                 className="input mono"
                 inputMode="decimal"
                 placeholder={placeholder}
-                value={value === 0 || value ? String(value) : ""}
+                value={text}
                 data-r={r}
                 data-c={c}
                 onKeyDown={onKeyDown}
                 onChange={(e) => {
                     const raw = e.target.value.replace(/[^0-9.]/g, "");
-                    onChange(raw === "" ? 0 : Number(raw));
+                    setText(raw);
+                    onChange(parsed(raw));
                 }}
             />
             {currencies && (
