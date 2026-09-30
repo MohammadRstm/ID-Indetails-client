@@ -9737,6 +9737,8 @@ export interface components {
             name: string;
         };
         PersonScheduleResponse: {
+            /** Format: date */
+            changedOn: null | string;
             days: components["schemas"]["ScheduleDayResponse"][];
             domain: null | string;
             isOwn: boolean;

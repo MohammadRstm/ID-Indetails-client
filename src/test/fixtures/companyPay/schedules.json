@@ -1,0 +1,698 @@
+{
+  "companyWeek": {
+    "id": 1,
+    "effectiveFrom": "2000-01-01",
+    "workDays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "startMinute": 540,
+    "endMinute": 1020,
+    "breakMinutes": 60,
+    "overtimeMultiplier": 1,
+    "requiredMinutesPerDay": 420,
+    "requiredMinutesPerWeek": 2100
+  },
+  "people": [
+    {
+      "userId": 1,
+      "name": "Rana Khoury",
+      "position": "Managing director",
+      "role": "super_admin",
+      "domain": null,
+      "team": null,
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    },
+    {
+      "userId": 8,
+      "name": "Elie Khalil",
+      "position": "Draughtsman",
+      "role": "employee",
+      "domain": "design",
+      "team": {
+        "id": 12,
+        "name": "Architecture"
+      },
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    },
+    {
+      "userId": 5,
+      "name": "Lina Saad",
+      "position": "Interior designer",
+      "role": "employee",
+      "domain": "design",
+      "team": {
+        "id": 13,
+        "name": "Interiors"
+      },
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    },
+    {
+      "userId": 7,
+      "name": "Maya Nassar",
+      "position": "Junior architect",
+      "role": "employee",
+      "domain": "design",
+      "team": {
+        "id": 12,
+        "name": "Architecture"
+      },
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    },
+    {
+      "userId": 2,
+      "name": "Nadia Karam",
+      "position": "Design director",
+      "role": "admin",
+      "domain": "design",
+      "team": null,
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    },
+    {
+      "userId": 4,
+      "name": "Omar Fares",
+      "position": "Architect",
+      "role": "employee",
+      "domain": "design",
+      "team": {
+        "id": 12,
+        "name": "Architecture"
+      },
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    },
+    {
+      "userId": 6,
+      "name": "Rami Aoun",
+      "position": "3D visualiser",
+      "role": "employee",
+      "domain": "design",
+      "team": {
+        "id": 14,
+        "name": "Visualisation"
+      },
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    },
+    {
+      "userId": 3,
+      "name": "Sarah Haddad",
+      "position": "Senior interior designer",
+      "role": "employee",
+      "domain": "design",
+      "team": {
+        "id": 13,
+        "name": "Interiors"
+      },
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    },
+    {
+      "userId": 9,
+      "name": "Yara Mansour",
+      "position": "Visualisation lead",
+      "role": "employee",
+      "domain": "design",
+      "team": {
+        "id": 14,
+        "name": "Visualisation"
+      },
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    },
+    {
+      "userId": 12,
+      "name": "Joe Hanna",
+      "position": "Foreman",
+      "role": "employee",
+      "domain": "execution",
+      "team": {
+        "id": 15,
+        "name": "Site"
+      },
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    },
+    {
+      "userId": 10,
+      "name": "Karim Jaber",
+      "position": "Operations manager",
+      "role": "admin",
+      "domain": "execution",
+      "team": null,
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    },
+    {
+      "userId": 13,
+      "name": "Nour Aziz",
+      "position": "Procurement officer",
+      "role": "employee",
+      "domain": "execution",
+      "team": {
+        "id": 8,
+        "name": "Procurement"
+      },
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    },
+    {
+      "userId": 11,
+      "name": "Tarek Salem",
+      "position": "Site engineer",
+      "role": "employee",
+      "domain": "execution",
+      "team": {
+        "id": 15,
+        "name": "Site"
+      },
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    },
+    {
+      "userId": 14,
+      "name": "Walid Chami",
+      "position": "Site supervisor",
+      "role": "employee",
+      "domain": "execution",
+      "team": {
+        "id": 15,
+        "name": "Site"
+      },
+      "isOwn": false,
+      "ownSince": null,
+      "days": [
+        {
+          "weekday": 1,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 2,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 3,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 4,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        },
+        {
+          "weekday": 5,
+          "startMinute": 540,
+          "endMinute": 1020,
+          "requiredMinutes": 420
+        }
+      ],
+      "requiredMinutesPerWeek": 2100,
+      "nextChangeOn": null,
+      "photoFileId": null,
+      "changedOn": null
+    }
+  ]
+}
