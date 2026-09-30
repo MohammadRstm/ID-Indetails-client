@@ -59,7 +59,8 @@ export default function ProjectPage({ panels }: { panels: ProjectPanels }) {
     // a failed refresh keeps the project on screen; only a load with nothing to show stops here
     if (query.isError && !query.data) return <div className="page"><LoadError error={query.error} retry={() => query.refetch()} what="the project" /></div>;
     if (!query.data) return <ProjectSkeleton />;
-    return <ProjectView project={query.data} panels={panels} />;
+    // a fresh view per project: filters, picked weeks and open panels belong to the project they were set on
+    return <ProjectView key={query.data.id} project={query.data} panels={panels} />;
 }
 
 function ProjectSkeleton() {

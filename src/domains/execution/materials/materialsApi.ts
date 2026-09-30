@@ -104,10 +104,16 @@ export function useUpdateMaterial(projectId: number) {
 }
 
 export function useDeleteMaterial(projectId: number) {
+    const queryClient = useQueryClient();
     const refresh = useRefreshSite();
     return useMutation({
         mutationFn: async (id: number) => { await http.delete(`/projects/${projectId}/materials/${id}`); },
-        onSuccess: refresh,
+        onSuccess: (_, id) => {
+            // gone from the table at once, so its armed Delete can't be clicked again while the list reloads
+            queryClient.setQueriesData<MaterialList>({ queryKey: materialsKey(projectId) }, (list) =>
+                list && { ...list, items: list.items.filter((m) => m.id !== id), totalCount: Math.max(0, list.totalCount - 1) });
+            refresh();
+        },
     });
 }
 

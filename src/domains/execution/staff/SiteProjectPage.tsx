@@ -42,7 +42,8 @@ export default function SiteProjectPage() {
             </div>
         );
     }
-    return <SiteView project={project.data} />;
+    // a fresh view per site: filters and the picked week belong to the site they were set on
+    return <SiteView key={project.data.id} project={project.data} />;
 }
 
 function SiteView({ project }: { project: Project }) {
