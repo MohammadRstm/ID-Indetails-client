@@ -25,14 +25,7 @@ import {
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useProjects } from "../projects/projectsApi";
-import { meetingTitle, useCreateMeeting, useDeleteMeeting, useMeetings, useProjectMeetings, type Meeting } from "./meetingsApi";
-
-/** The person who set a meeting can take it off again; meeting:manage removes any. */
-function useCanRemove() {
-    const permissions = usePermissions();
-    const me = useCurrentUser().id;
-    return (m: Meeting) => permissions.has(P.MEETING_MANAGE) || (permissions.has(P.MEETING_CREATE) && m.createdBy?.id === me);
-}
+import { meetingTitle, useCanChangeMeeting, useCreateMeeting, useDeleteMeeting, useMeetings, useProjectMeetings, type Meeting } from "./meetingsApi";
 
 function RemoveMenu({ meeting }: { meeting: Meeting }) {
     const remove = useDeleteMeeting();
@@ -138,7 +131,7 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
 /** A project's Meetings tab (the prototype's P.ProjectMeetings). */
 export function ProjectMeetingsTab({ project }: { project: { id: number; title: string; domain: string } }) {
     const permissions = usePermissions();
-    const canRemove = useCanRemove();
+    const canRemove = useCanChangeMeeting();
     const query = useProjectMeetings(project.id);
     const [showNew, setShowNew] = useState(false);
     const list = [...(query.data ?? [])].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
@@ -183,7 +176,7 @@ export function MeetingsPage() {
     const navigate = useNavigate();
     const permissions = usePermissions();
     const me = useCurrentUser().id;
-    const canRemove = useCanRemove();
+    const canRemove = useCanChangeMeeting();
     const [projectId, setProjectId] = useState("all");
     const [mine, setMine] = useState(false);
     const [showPast, setShowPast] = useState(false);
