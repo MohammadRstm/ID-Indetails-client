@@ -64,14 +64,14 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - [x] 5b: a project's money: the money band, cost curve, customer payment, expenses and closing out;
   - [x] 5c: invoices and payments, and the Financials billing tab;
   - [x] 5d: the project report. Billing settings and exchange rates moved to phase 7: the prototype keeps them in Settings → Finance.
-- [ ] **6. Execution**, in parts:
+- [x] **6. Execution**, in parts:
   - [x] 6a-1: a site's overview for admins: its KPIs, project money, the fee and material profit, payments on account, ground labour and profit;
   - [x] 6a-2: materials: the table edited in place and the Add materials sheet;
   - [x] 6a-3: weekly labour and its defaults;
   - [x] 6a-4: client statements;
   - [x] 6b: the Execution employee views and profile;
   - [x] 6c-1: Execution's dashboard and financials;
-  - [ ] 6c-2: Execution's people.
+  - [x] 6c-2: Execution's people: nothing to build. The prototype has no Employees, Activity or Reports page for Execution ("all built on logged hours"), and neither does the client; a person's profile is reached from their name.
 - [ ] **7. Company and settings:**
   - company overview, overhead, salaries and excuses, project pay, schedules, working time;
   - company, domain and billing settings (terms, bank details), exchange rates, the logo, teams, invitations;
@@ -136,6 +136,11 @@ Decisions made along the way, and anything skipped because it needs the user's i
 - **The account menu opens upwards.** The prototype opened it downwards from the foot of the sidebar, so on any page longer than the window it was drawn below the screen and Sign out was out of reach.
 - **Your own phone** (API PR #28). The session now carries the phone, so editing your own name no longer sends an empty phone back.
 - **Strict numbers in the API** (API PR #27). JSON numbers are strict there, so the generated types say `number`, not `number | string`.
+
+### Waiting for the user
+
+- **An Activity page for Execution?** The prototype has none, since its feed was built on logged hours. The API's feed does record site events (materials added, priced or removed, labour weeks, statements, payments), and the client already words every one of them. The page could be opened to Execution admins as it is, if wanted.
+- **The company's own events in the feed.** Overheads, excused hours, schedules and working time are recorded by the API but not worded yet; they belong to phase 7's company screens.
 
 ### API follow-ups
 
