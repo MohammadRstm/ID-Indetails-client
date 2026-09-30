@@ -49,7 +49,7 @@ export default function FinancialBreakdown({ project, money: m, contributors, en
             <div className="panel-head">
                 <div className="grow">
                     <div className="panel-title">Financial breakdown</div>
-                    <div className="panel-sub">Labour comes from the {fmtNumber(entryCount ?? 0)} work entries on this project - nothing is typed in by hand.</div>
+                    <div className="panel-sub">Labour comes from the {entryCount != null ? `${fmtNumber(entryCount)} ` : ""}work entries on this project - nothing is typed in by hand.</div>
                 </div>
                 {add && <div className="panel-tools"><button className="btn btn-sm" onClick={add}><Icon name="plus" />Add expense</button></div>}
             </div>

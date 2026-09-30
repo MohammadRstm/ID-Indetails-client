@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
 import type { Paged, Schemas } from "@/api/types";
+import { addDays } from "@/shared/format/time";
 
 /* Everyone's work on a Design project, for admins (work_entry:view_all). */
 
@@ -16,12 +17,13 @@ type Range = { from?: string; to?: string; search?: string };
 const clean = (p: object) => Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined && v !== ""));
 
 /** Totals, contributors, weekly hours and the hour heat, for a range and a work-text search. */
-export function useProjectWork(projectId: number, range: Range = {}) {
+export function useProjectWork(projectId: number, range: Range = {}, enabled = true) {
     const p = clean(range);
     return useQuery({
         queryKey: [...keys.projects.detail(projectId), "work", p],
         queryFn: async () => (await http.get<ProjectWork>(`/projects/${projectId}/work`, { params: p })).data,
         placeholderData: keepPreviousData,
+        enabled,
     });
 }
 
@@ -36,10 +38,11 @@ export function useContributor(projectId: number, userId: number, range: Range =
 }
 
 /** The project's latest entry: who logged what, and for how long. */
-export function useLatestEntry(projectId: number) {
+export function useLatestEntry(projectId: number, enabled = true) {
     return useQuery({
         queryKey: [...keys.projects.detail(projectId), "latest-entry"],
         queryFn: async () => (await http.get<Paged<Schemas["WorkEntryResponse"]>>("/work-entries", { params: { projectId, page: 1, pageSize: 1 } })).data.items[0] ?? null,
+        enabled,
     });
 }
 
@@ -51,11 +54,21 @@ export function useProjectTimeline(projectId: number) {
     });
 }
 
-/** The entries behind a stretch of the timeline. */
+/** The API gives at most this many days of entries at a time. */
+const MAX_ENTRY_DAYS = 366;
+
+/** The entries behind a stretch of the timeline; a stretch longer than a year is asked for a year at a time. */
 export function useTimelineEntries(projectId: number, from: string, to: string) {
     return useQuery({
         queryKey: [...keys.projects.detail(projectId), "timeline", "entries", from, to],
-        queryFn: async () => (await http.get<TimelineEntry[]>(`/projects/${projectId}/timeline/entries`, { params: { from, to } })).data,
+        queryFn: async () => {
+            const all: TimelineEntry[] = [];
+            for (let start = from; start <= to; start = addDays(start, MAX_ENTRY_DAYS)) {
+                const end = [addDays(start, MAX_ENTRY_DAYS - 1), to].sort()[0];
+                all.push(...(await http.get<TimelineEntry[]>(`/projects/${projectId}/timeline/entries`, { params: { from: start, to: end } })).data);
+            }
+            return all;
+        },
         placeholderData: keepPreviousData,
     });
 }

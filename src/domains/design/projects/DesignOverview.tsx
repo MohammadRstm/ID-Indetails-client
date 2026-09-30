@@ -57,8 +57,9 @@ export default function DesignOverview({ project }: { project: Project }) {
     const ranges = rangeOptions(project, today);
     const range = ranges[rangeKey];
     const text = useDebounce({ value: workQ.trim(), debounceTimeMs: 250 });
-    const all = useProjectWork(project.id);
-    const filtered = useProjectWork(project.id, { from: range.from, to: range.to, search: text || undefined });
+    // everyone's work, the timeline and the cost curve built on it need work_entry:view_all
+    const all = useProjectWork(project.id, {}, seesWork);
+    const filtered = useProjectWork(project.id, { from: range.from, to: range.to, search: text || undefined }, seesWork);
 
     const m = permissions.has(P.FINANCIAL_VIEW) ? project.money : null;
     const expenses = useProjectExpenses(project.id, !!m);
@@ -83,7 +84,7 @@ export default function DesignOverview({ project }: { project: Project }) {
             canRemoveExpenses={permissions.has(P.EXPENSE_MANAGE)} />
     );
 
-    if (!seesWork) return <><Kpis project={project} work={undefined} />{band}{breakdown}{m && <CostFigures project={project} money={m} />}</>;
+    if (!seesWork) return <><Kpis project={project} work={undefined} />{band}{breakdown}</>;
     return (
         <>
             {loadFailed(all) ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="the project's work" /></div></div>
@@ -117,7 +118,7 @@ export default function DesignOverview({ project }: { project: Project }) {
 function Kpis({ project, work: w }: { project: Project; work: ProjectWork | undefined }) {
     const permissions = usePermissions();
     const seesWork = permissions.has(P.WORK_ENTRY_VIEW_ALL);
-    const latest = useLatestEntry(project.id);
+    const latest = useLatestEntry(project.id, seesWork);
     const m = permissions.has(P.FINANCIAL_VIEW) && project.billingType === "client" ? project.money : null;
     const b = m?.billing;
     const last = latest.data;

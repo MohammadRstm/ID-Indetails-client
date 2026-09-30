@@ -51,6 +51,12 @@ describe("the project report", () => {
         expect(window.location.search).toBe("");
     });
 
+    it("doesn't open from a link for someone the button isn't offered to", async () => {
+        renderApp(`${path}?report=1`, withPermissions(admin, { revoke: [P.WORK_ENTRY_VIEW_ALL] }), ...handlers);
+        await screen.findByRole("heading", { name: project.title });
+        expect(screen.queryByRole("dialog", { name: "Project report" })).toBeNull();
+    });
+
     it("asks the server for the PDF with the type, range and sections picked", async () => {
         const asked: URLSearchParams[] = [];
         renderApp(path, admin,
