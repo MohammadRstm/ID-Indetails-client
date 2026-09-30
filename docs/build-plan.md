@@ -70,8 +70,7 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - the Execution employee views.
 - [ ] **7. Company and settings:**
   - company overview, overhead, salaries and excuses, project pay, schedules, working time;
-  - settings, with Finance's billing settings (terms, bank details) and exchange rates;
-  - company, domain and billing settings, the logo, teams, invitations;
+  - company, domain and billing settings (terms, bank details), exchange rates, the logo, teams, invitations;
   - managing a person's permissions.
 - [ ] **8. Messages, notifications and live updates.**
 - [ ] **9. Hardening:**
