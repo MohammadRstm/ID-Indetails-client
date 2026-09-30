@@ -75,7 +75,14 @@ http.interceptors.response.use(
         const config = error.config as RetriableConfig | undefined;
         if (error.response?.status === 401 && config && !config._retried) {
             config._retried = true;
-            const auth = await refreshSession().catch(() => null);
+            let auth: AuthResponse | null;
+            try {
+                auth = await refreshSession();
+            } catch (refreshError) {
+                // the refresh itself failed (rate limit, server, network), which says nothing about the session:
+                // this request fails, and the next one tries again
+                return Promise.reject(toApiError(refreshError));
+            }
             if (auth) return http(config);
             handlers.onExpired();
         }
