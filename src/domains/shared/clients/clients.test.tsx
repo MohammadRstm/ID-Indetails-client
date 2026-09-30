@@ -43,6 +43,13 @@ describe("the clients list", () => {
         expect((await screen.findAllByText(client.displayName)).length).toBeGreaterThan(0);
     });
 
+    it("leaves hours and last activity out for people who don't see everyone's work", async () => {
+        renderApp("/design/clients", withPermissions(admin, { revoke: [P.WORK_ENTRY_VIEW_ALL] }), ...projectHandlers);
+        expect(await screen.findByRole("columnheader", { name: /revenue/i })).toBeInTheDocument();
+        expect(screen.queryByRole("columnheader", { name: /hours/i })).toBeNull();
+        expect(screen.queryByRole("columnheader", { name: /last activity/i })).toBeNull();
+    });
+
     it("offers Add client only with client:create", async () => {
         renderApp("/design/clients", withPermissions(admin, { revoke: [P.CLIENT_CREATE] }), ...projectHandlers);
         await screen.findAllByText(client.displayName);

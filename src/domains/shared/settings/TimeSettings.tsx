@@ -126,7 +126,7 @@ function BreakEditor({ wt, canEdit }: { wt: WorkingTime; canEdit: boolean }) {
     return (
         <div className="row wrap" style={{ gap: 8, alignItems: "center" }}>
             {canEdit ? (
-                <Select className="select sm" style={{ width: 130 }} aria-label="Break per day" value={String(p.breakMinutes)} onChange={(v) => save(+v)}
+                <Select className="select sm" style={{ width: 130 }} aria-label="Break per day" value={String(p.breakMinutes)} onChange={(v) => save(+v)} disabled={setWt.isPending}
                     options={opts.map((m) => ({ value: String(m), label: breakText(m) }))} />
             ) : <b className="mono">{breakText(p.breakMinutes)}</b>}
             <span className="muted" style={{ fontSize: 12 }}>{hoursText(p)} = {fmtH(requiredOf(p.startMinute, p.endMinute, p.breakMinutes))} of work required, {fmtH(p.endMinute - p.startMinute)} paid</span>

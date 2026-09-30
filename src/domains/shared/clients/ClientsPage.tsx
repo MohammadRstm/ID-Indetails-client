@@ -34,6 +34,8 @@ export default function ClientsPage() {
     const navigate = useNavigate();
     const permissions = usePermissions();
     const seesMoney = permissions.has(P.FINANCIAL_VIEW);
+    // the API gives a client's hours and last work only to people who see everyone's work
+    const seesWork = permissions.has(P.WORK_ENTRY_VIEW_ALL);
     const [q, setQ] = useState("");
     const [filter, setFilter] = useState<"all" | ClientFilter>("all");
     const [sort, setSort] = useState<SortState>({ key: seesMoney ? "revenue" : "name", dir: seesMoney ? "desc" : "asc" });
@@ -80,10 +82,10 @@ export default function ClientsPage() {
                 return c.projectCount ? <span className="num">{c.projectCount}{active ? ` · ${active} open` : ""}</span> : <span className="muted">-</span>;
             },
         },
-        {
+        ...(seesWork ? [{
             key: "hours", header: "Hours", right: true, mono: true, sortKey: "hours",
-            cell: (c) => (c.work?.totalMinutes ? fmtH(c.work.totalMinutes) : <span className="muted">-</span>),
-        },
+            cell: (c: ClientSummary) => (c.work?.totalMinutes ? fmtH(c.work.totalMinutes) : <span className="muted">-</span>),
+        }] : []),
         ...(seesMoney ? [
             { key: "revenue", header: "Revenue", right: true, mono: true, sortKey: "revenue", cell: (c: ClientSummary) => (c.money?.revenue ? money.short(c.money.revenue) : <span className="muted">-</span>) },
             { key: "cost", header: "Cost", right: true, mono: true, cell: (c: ClientSummary) => (c.money?.cost.total ? money.short(c.money.cost.total) : <span className="muted">-</span>) },
@@ -102,10 +104,10 @@ export default function ClientsPage() {
                 },
             },
         ] : []),
-        {
+        ...(seesWork ? [{
             key: "activity", header: "Last activity", sortKey: "activity", nowrap: true,
-            cell: (c) => <span className="muted">{c.work?.lastStartedAt ? relDay(c.work.lastStartedAt) : "no work yet"}</span>,
-        },
+            cell: (c: ClientSummary) => <span className="muted">{c.work?.lastStartedAt ? relDay(c.work.lastStartedAt) : "no work yet"}</span>,
+        }] : []),
     ];
 
     return (
