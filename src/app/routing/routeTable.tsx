@@ -17,6 +17,7 @@ import CompanyOverviewPage from "@/domains/company/CompanyOverviewPage";
 import ProjectPayPage from "@/domains/company/projectPay/ProjectPayPage";
 import SalariesPage from "@/domains/company/salaries/SalariesPage";
 import SchedulesPage from "@/domains/company/schedules/SchedulesPage";
+import NotificationsPage from "@/domains/shared/notifications/NotificationsPage";
 import MyPayPage from "@/domains/design/pay/MyPayPage";
 import ActivityPage from "@/domains/design/activity/ActivityPage";
 import OverviewRoute from "@/domains/design/dashboard/OverviewPage";
@@ -169,8 +170,8 @@ export const domainRoutes: DomainRoute[] = [
     },
     {
         path: "notifications",
-        admin: { element: soon("Notifications"), access: signedIn },
-        employee: { element: soon("Notifications"), access: signedIn },
+        admin: { element: <NotificationsPage />, access: signedIn },
+        employee: { element: <NotificationsPage />, access: signedIn },
     },
     {
         path: "messages",
@@ -185,7 +186,7 @@ export const companyRoutes: CompanyRoute[] = [
     { path: "salaries", nav: { label: "Salaries", icon: "people" }, element: <SalariesPage />, access: (p) => p.has(P.SALARY_VIEW) },
     { path: "project-pay", nav: { label: "Project pay", icon: "briefcase" }, element: <ProjectPayPage />, access: (p) => p.has(P.SALARY_VIEW) },
     { path: "schedules", nav: { label: "Schedules", icon: "calendar" }, element: <SchedulesPage />, access: (p) => p.has(P.SCHEDULE_MANAGE) },
-    { path: "notifications", element: soon("Notifications"), access: () => true },
+    { path: "notifications", element: <NotificationsPage />, access: () => true },
     { path: "messages", element: soon("Messages"), access: () => true },
 ];
 

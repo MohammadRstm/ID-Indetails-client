@@ -1,0 +1,446 @@
+{
+  "items": [
+    {
+      "id": 241,
+      "kind": "weekly_summary",
+      "actor": null,
+      "project": null,
+      "subjectType": null,
+      "subjectId": null,
+      "payload": {
+        "entries": 18,
+        "minutes": 2220,
+        "projects": 2,
+        "weekStart": "2026-09-21"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T05:51:18.904Z",
+      "readAt": null
+    },
+    {
+      "id": 161,
+      "kind": "requirements_added",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 6,
+        "title": "Portfolio and competition entries",
+        "domain": "design",
+        "icon": "folder",
+        "tint": "#697572"
+      },
+      "subjectType": "requirement",
+      "subjectId": 24,
+      "payload": {
+        "latestText": "Handover package",
+        "projectTitle": "Portfolio and competition entries"
+      },
+      "count": 4,
+      "createdAt": "2026-09-30T04:52:51.64Z",
+      "readAt": null
+    },
+    {
+      "id": 147,
+      "kind": "requirements_added",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 5,
+        "title": "Studio Nour brand space",
+        "domain": "design",
+        "icon": "flag",
+        "tint": "#C58200"
+      },
+      "subjectType": "requirement",
+      "subjectId": 20,
+      "payload": {
+        "latestText": "Handover package",
+        "projectTitle": "Studio Nour brand space"
+      },
+      "count": 4,
+      "createdAt": "2026-09-30T04:52:51.283Z",
+      "readAt": null
+    },
+    {
+      "id": 133,
+      "kind": "requirements_added",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 4,
+        "title": "Beit Misk show apartment",
+        "domain": "design",
+        "icon": "target",
+        "tint": "#6C5CE7"
+      },
+      "subjectType": "requirement",
+      "subjectId": 16,
+      "payload": {
+        "latestText": "Handover package",
+        "projectTitle": "Beit Misk show apartment"
+      },
+      "count": 4,
+      "createdAt": "2026-09-30T04:52:50.915Z",
+      "readAt": null
+    },
+    {
+      "id": 119,
+      "kind": "requirements_added",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 3,
+        "title": "Cedar Bank branch refresh",
+        "domain": "design",
+        "icon": "briefcase",
+        "tint": "#3F4B63"
+      },
+      "subjectType": "requirement",
+      "subjectId": 12,
+      "payload": {
+        "latestText": "Handover package",
+        "projectTitle": "Cedar Bank branch refresh"
+      },
+      "count": 4,
+      "createdAt": "2026-09-30T04:52:50.529Z",
+      "readAt": null
+    },
+    {
+      "id": 117,
+      "kind": "requirement_assigned",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "domain": "design",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "requirement",
+      "subjectId": 8,
+      "payload": {
+        "text": "Handover package",
+        "deadline": "2026-10-17",
+        "projectTitle": "Villa Mounir interiors"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:50.169Z",
+      "readAt": null
+    },
+    {
+      "id": 115,
+      "kind": "requirements_added",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "domain": "design",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "requirement",
+      "subjectId": 7,
+      "payload": {
+        "latestText": "Final material schedule",
+        "projectTitle": "Villa Mounir interiors"
+      },
+      "count": 2,
+      "createdAt": "2026-09-30T04:52:50.123Z",
+      "readAt": null
+    },
+    {
+      "id": 113,
+      "kind": "requirement_done",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "domain": "design",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "requirement",
+      "subjectId": 5,
+      "payload": {
+        "text": "Client sign-off on the concept",
+        "projectTitle": "Villa Mounir interiors"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:50.031Z",
+      "readAt": null
+    },
+    {
+      "id": 104,
+      "kind": "requirement_assigned",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "domain": "design",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "requirement",
+      "subjectId": 5,
+      "payload": {
+        "text": "Client sign-off on the concept",
+        "deadline": "2026-09-20",
+        "projectTitle": "Villa Mounir interiors"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:49.978Z",
+      "readAt": null
+    },
+    {
+      "id": 101,
+      "kind": "requirements_added",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out",
+        "domain": "design",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "subjectType": "requirement",
+      "subjectId": 4,
+      "payload": {
+        "latestText": "Handover package",
+        "projectTitle": "Haddad Holdings HQ fit-out"
+      },
+      "count": 3,
+      "createdAt": "2026-09-30T04:52:49.761Z",
+      "readAt": null
+    },
+    {
+      "id": 99,
+      "kind": "requirement_done",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out",
+        "domain": "design",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "subjectType": "requirement",
+      "subjectId": 1,
+      "payload": {
+        "text": "Client sign-off on the concept",
+        "projectTitle": "Haddad Holdings HQ fit-out"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:49.613Z",
+      "readAt": null
+    },
+    {
+      "id": 90,
+      "kind": "requirement_assigned",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out",
+        "domain": "design",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "subjectType": "requirement",
+      "subjectId": 1,
+      "payload": {
+        "text": "Client sign-off on the concept",
+        "deadline": "2026-09-20",
+        "projectTitle": "Haddad Holdings HQ fit-out"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:49.445Z",
+      "readAt": null
+    },
+    {
+      "id": 68,
+      "kind": "project_created",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 6,
+        "title": "Portfolio and competition entries",
+        "domain": "design",
+        "icon": "folder",
+        "tint": "#697572"
+      },
+      "subjectType": "project",
+      "subjectId": 6,
+      "payload": {
+        "projectTitle": "Portfolio and competition entries"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:27.823Z",
+      "readAt": null
+    },
+    {
+      "id": 61,
+      "kind": "project_created",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 5,
+        "title": "Studio Nour brand space",
+        "domain": "design",
+        "icon": "flag",
+        "tint": "#C58200"
+      },
+      "subjectType": "project",
+      "subjectId": 5,
+      "payload": {
+        "projectTitle": "Studio Nour brand space"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:27.757Z",
+      "readAt": null
+    },
+    {
+      "id": 54,
+      "kind": "project_created",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 4,
+        "title": "Beit Misk show apartment",
+        "domain": "design",
+        "icon": "target",
+        "tint": "#6C5CE7"
+      },
+      "subjectType": "project",
+      "subjectId": 4,
+      "payload": {
+        "projectTitle": "Beit Misk show apartment"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:27.691Z",
+      "readAt": null
+    },
+    {
+      "id": 47,
+      "kind": "project_created",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 3,
+        "title": "Cedar Bank branch refresh",
+        "domain": "design",
+        "icon": "briefcase",
+        "tint": "#3F4B63"
+      },
+      "subjectType": "project",
+      "subjectId": 3,
+      "payload": {
+        "projectTitle": "Cedar Bank branch refresh"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:27.63Z",
+      "readAt": null
+    },
+    {
+      "id": 40,
+      "kind": "project_created",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "domain": "design",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "project",
+      "subjectId": 2,
+      "payload": {
+        "projectTitle": "Villa Mounir interiors"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:27.544Z",
+      "readAt": null
+    },
+    {
+      "id": 33,
+      "kind": "project_created",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out",
+        "domain": "design",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "subjectType": "project",
+      "subjectId": 1,
+      "payload": {
+        "projectTitle": "Haddad Holdings HQ fit-out"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:27.305Z",
+      "readAt": null
+    }
+  ],
+  "page": 1,
+  "pageSize": 30,
+  "totalCount": 18
+}

@@ -11,6 +11,7 @@ import ThemeToggle from "@/shared/components/Buttons/ThemeToggle";
 import Logo from "@/shared/components/Identity/Logo";
 import Skeleton from "@/shared/components/Feedback/Skeleton";
 import { money } from "@/shared/format/money";
+import NotificationBell from "@/domains/shared/notifications/NotificationBell";
 import { companyToday } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useCompanySettings } from "./shellQueries";
@@ -45,9 +46,7 @@ export default function CompanyLauncher() {
                     </div>
                     <span className="grow" />
                     <ThemeToggle />
-                    <button className="icon-btn" onClick={() => navigate("/company/notifications")} aria-label="Notifications">
-                        <Icon name="bell" />
-                    </button>
+                    <NotificationBell allPath="/company/notifications" />
                 </div>
 
                 <h1 className="launch-h">What would you like to manage?</h1>
