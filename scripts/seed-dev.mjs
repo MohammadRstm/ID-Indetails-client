@@ -9,9 +9,9 @@
 //
 // Work can only be logged in open months, so the logged hours cover the current month.
 //
-// One thing isn't possible through the API: the API sets a person's join date to the day they accept their
-// invitation, and the sample staff joined earlier. Their join dates are moved back in the database directly
-// (as the API's own integration tests do), in the container's development database only.
+// Two dates can't be set through the API: a person's join date (the day they accept their invitation) and a
+// project's start (the day it is created). The sample company is older than today, so both are moved back in
+// the database directly (as the API's own integration tests do), in the container's development database only.
 import { execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { existsSync, writeFileSync } from "node:fs";
@@ -88,6 +88,17 @@ function rand() {
     return seed / 0x7fffffff;
 }
 const pick = (list) => list[Math.floor(rand() * list.length)];
+
+// The API may still be starting.
+for (let i = 0; ; i++) {
+    try {
+        if ((await fetch(`${API}/company/branding`)).ok) break;
+    } catch {
+        // not listening yet
+    }
+    if (i > 60) throw new Error(`The API at ${API} isn't answering.`);
+    await sleep(1000);
+}
 
 /* ---------------- the super admin ---------------- */
 console.log("Creating the super admin…");
@@ -174,10 +185,14 @@ for (const person of PEOPLE) {
 }
 const nadia = people.nadia.api, karim = people.karim.api;
 
+function sql(statements) {
+    execFileSync("docker", ["exec", "id-indetails-mysql", "sh", "-c", `mysql -uroot -p"$MYSQL_ROOT_PASSWORD" id_indetails -e "${statements}" 2>/dev/null`]);
+}
+
 console.log("Moving the staff's join dates back…");
 const joined = `UPDATE users SET joined_on = '${now.getUTCFullYear() - 3}-03-01' WHERE email = '${superEmail}'; ` + PEOPLE.map((person, i) => `UPDATE users SET joined_on = '${now.getUTCFullYear() - 1 - (i % 3)}-0${1 + (i % 9)}-15' WHERE email = '${person.key}@id-indetails.test';`).join(" ");
 const periods = "UPDATE employment_periods ep JOIN users u ON u.id = ep.user_id SET ep.started_on = u.joined_on WHERE u.email LIKE '%@id-indetails.test';";
-execFileSync("docker", ["exec", "id-indetails-mysql", "sh", "-c", `mysql -uroot -p"$MYSQL_ROOT_PASSWORD" id_indetails -e "${joined} ${periods}" 2>/dev/null`]);
+sql(`${joined} ${periods}`);
 
 /* ---------------- clients ---------------- */
 console.log("Clients and projects…");
@@ -186,7 +201,7 @@ async function client(api, domainCode, name, organisation, label, email, phone) 
         name, organisation, label, domainCode, note: null,
         contacts: [
             { kind: "email", value: email, label: "Work", isWhatsapp: false, isPrimary: true },
-            { kind: "phone", value: phone, label: "Mobile", isWhatsapp: true, isPrimary: true },
+            { kind: "phone", value: phone, label: "Mobile", isWhatsapp: true, isPrimary: false },
         ],
     })).id;
 }
@@ -250,6 +265,12 @@ for (const s of SITES) {
         labourDefaults: { workers: 6, dailyPay: 25 },
     });
 }
+
+console.log("Moving the projects' start dates back…");
+sql(Object.values(projects).map((id, i) => {
+    const started = dayKey(addDays(monthStart, -12 - i * 9));
+    return `UPDATE projects SET start_date = '${started}', created_at = '${started} 08:00:00' WHERE id = ${id};`;
+}).join(" "));
 
 /* ---------------- this month's Design work ---------------- */
 console.log("Logging this month's Design work…");
