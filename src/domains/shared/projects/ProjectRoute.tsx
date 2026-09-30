@@ -2,6 +2,7 @@ import type { Domain } from "@/app/permissions/permissions";
 import { useDomain } from "@/app/routing/domainContext";
 import Empty from "@/shared/components/Feedback/Empty";
 import DesignOverview from "../../design/projects/DesignOverview";
+import ProjectHistoryTab from "../../design/projects/history/ProjectHistoryTab";
 import ProjectPage, { type ProjectPanels } from "./ProjectPage";
 
 /** Stands in for a domain's overview until its phase of docs/build-plan.md lands. */
@@ -11,9 +12,9 @@ const onItsWay = () => (
     </div>
 );
 
-/** Each domain's Overview and Timeline tabs. Design's timeline arrives in phase 4b-2, Execution's panels in phase 6. */
+/** Each domain's Overview and Timeline tabs. Execution's arrive in phase 6. */
 const PANELS: Record<Domain, ProjectPanels> = {
-    design: { overview: (project) => <DesignOverview project={project} /> },
+    design: { overview: (project) => <DesignOverview project={project} />, timeline: (project) => <ProjectHistoryTab project={project} /> },
     execution: { overview: onItsWay },
 };
 
