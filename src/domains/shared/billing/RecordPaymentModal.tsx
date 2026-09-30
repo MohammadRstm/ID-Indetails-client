@@ -14,6 +14,8 @@ import type { Project } from "../projects/projectsApi";
 import { useInvoices, useLatestRate, useRecordPayment } from "./billingApi";
 import { invoiceStateOf } from "./invoiceStatus";
 
+const cents = (usd: number) => Math.round(usd * 100);
+
 type Method = Schemas["PaymentMethod"];
 
 /**
@@ -25,7 +27,8 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
     const record = useRecordPayment(project.id);
     const invoices = useInvoices({ projectId: project.id, pageSize: 100 }).data?.items;
     const rate0 = useLatestRate("LBP").data?.ratePerUsd;
-    const open = (invoices ?? []).filter((i) => i.issuedAt && i.status !== "void" && (i.balance ?? 0) > 0.5);
+    // the API settles invoices to the cent, so a few cents left are still owed on the invoice
+    const open = (invoices ?? []).filter((i) => i.issuedAt && i.status !== "void" && cents(i.balance ?? 0) > 0);
     const [picked, setPicked] = useState<string | null>(preset != null ? String(preset) : null);
     const invoiceId = picked ?? (invoices ? String(open[0]?.id ?? "") : "");
     const target = open.find((i) => String(i.id) === invoiceId) ?? null;
@@ -38,10 +41,11 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
     const [reference, setReference] = useState("");
     const fx = rate ?? rate0 ?? 0;
     // until it is typed, the amount is what the chosen invoice still owes
-    const value = amount ?? (currency === "USD" ? Math.round(balance) : Math.round(balance * fx));
-    const usd = currency === "USD" ? value : fx > 0 ? value / fx : 0;
+    const value = amount ?? (currency === "USD" ? cents(balance) / 100 : Math.round(balance * fx));
+    // as the API counts it: in dollars, to the cent
+    const usd = currency === "USD" ? value : fx > 0 ? cents(value / fx) / 100 : 0;
     const received = project.money?.billing.received ?? 0;
-    const overInvoice = !!target && usd > balance + 0.5;
+    const overInvoice = !!target && cents(usd) > cents(balance);
     const overProject = !target && usd + received > (project.money?.revenue ?? 0) + 0.5;
     const valid = usd > 0 && !overInvoice && (currency === "USD" || fx > 0);
 
@@ -59,7 +63,7 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
                 const left = balance - pay.amountUsd;
                 toast({
                     text: `${money.exact(pay.amountUsd)} recorded${target ? ` against ${target.number}` : " on account"}`,
-                    sub: target ? (left <= 0.5 ? `${target.number} is now fully paid` : `${money.exact(left)} still outstanding`) : "Held as a credit until it is applied to an invoice",
+                    sub: target ? (cents(left) <= 0 ? `${target.number} is now fully paid` : `${money.exact(left, "USD", { cents: true })} still outstanding`) : "Held as a credit until it is applied to an invoice",
                     icon: "card",
                 });
                 onClose();
@@ -82,11 +86,11 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
             <div className="field">
                 <label className="label" htmlFor="pay-inv">Against which invoice?</label>
                 <Select id="pay-inv" value={invoiceId} onChange={pick} options={[
-                    ...open.map((i) => ({ value: String(i.id), label: `${i.number} - ${money.exact(i.balance ?? 0)} outstanding${invoiceStateOf(i) === "overdue" ? " · overdue" : ""}` })),
+                    ...open.map((i) => ({ value: String(i.id), label: `${i.number} - ${money.exact(i.balance ?? 0, "USD", { cents: true })} outstanding${invoiceStateOf(i) === "overdue" ? " · overdue" : ""}` })),
                     { value: "", label: "On account - no invoice yet" },
                 ]} />
                 <div className="hint">
-                    {target ? `Balance on ${target.number}: ${money.exact(balance)}${target.dueOn ? `, due ${fmtDateY(target.dueOn)}` : ""}`
+                    {target ? `Balance on ${target.number}: ${money.exact(balance, "USD", { cents: true })}${target.dueOn ? `, due ${fmtDateY(target.dueOn)}` : ""}`
                         : "Money received before invoicing is held as a credit on the project until an invoice is raised."}
                 </div>
             </div>
@@ -131,7 +135,7 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
             {overInvoice && target && (
                 <div className="banner attn mt">
                     <Icon name="alert" />
-                    <div className="grow"><b>More than this invoice is owed.</b> {target.number} has {money.exact(balance)} outstanding. Record the balance here and the rest on account, or against another invoice.</div>
+                    <div className="grow"><b>More than this invoice is owed.</b> {target.number} has {money.exact(balance, "USD", { cents: true })} outstanding. Record the balance here and the rest on account, or against another invoice.</div>
                 </div>
             )}
             {overProject && (
