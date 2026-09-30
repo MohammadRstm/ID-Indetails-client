@@ -86,6 +86,18 @@ describe("My pay", () => {
         expect(within(banner).getByRole("button", { name: /log work/i })).toBeInTheDocument();
     });
 
+    it("says what the deduction covers: a missed day costs its paid break too", async () => {
+        // a closed month, 7h short from one missed day: the day's 8 paid hours come off, at $10.38 an hour
+        const closed = {
+            ...work.pay, inProgress: false,
+            salary: { ...salary, deductionMinutes: 480, deduction: 83.08, basePay: salary.amount - 83.08 },
+            ledger: { ...work.pay.ledger!, inProgress: false, status: "short", shortMinutes: 420 },
+        };
+        renderApp("/design/pay", sarah, http.get("/api/me/pay", () => HttpResponse.json(closed)), ...workHandlers);
+        expect(await screen.findByText(/^Short 7h · 8h unpaid · at \$10\.38\/h$/)).toBeInTheDocument();
+        expect(screen.getByText(`−${money.exact(83.08, salary.currency)}`)).toBeInTheDocument();
+    });
+
     it("is closed to someone without work_entry:view_own", async () => {
         renderApp("/design/pay", withPermissions(sarah, { revoke: [P.WORK_ENTRY_VIEW_OWN] }), ...workHandlers);
         expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();

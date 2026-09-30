@@ -190,6 +190,25 @@ describe("Someone's profile", () => {
         expect(pays).toEqual([{ basis: "monthly", amount: 1800, currency: "USD", effectiveFrom: "2026-09-30" }]);
     });
 
+    it("saves the profile of someone with no pay yet, and sets no pay", async () => {
+        const updates: unknown[] = [];
+        let paid = false;
+        renderApp("/design/people/9", nadia,
+            http.get("/api/employees/9/pay", () => HttpResponse.json([])),
+            http.put("/api/employees/9", async ({ request }) => { updates.push(await request.json()); return HttpResponse.json(yara); }),
+            http.post("/api/employees/9/pay", () => { paid = true; return HttpResponse.json(people.payHistory[0]); }),
+            ...peopleHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
+        await within(dialog).findByLabelText("Pay");
+        const position = within(dialog).getByLabelText("Position");
+        await userEvent.clear(position);
+        await userEvent.type(position, "Senior visualiser");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(updates).toHaveLength(1));
+        expect(paid).toBe(false);
+    });
+
     it("lets pay be changed without the rest of the profile, which it doesn't send", async () => {
         let updated = false;
         const pays: unknown[] = [];

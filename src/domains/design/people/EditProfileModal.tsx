@@ -56,8 +56,9 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     const [pay, setPay] = useState<{ basis: "hourly" | "monthly"; amount: number; currency: string } | null>(null);
     const [from, setFrom] = useState(today);
     if (pays && pay == null && history.data) setPay({ basis: terms?.basis ?? "hourly", amount: terms?.amount ?? 0, currency: terms?.currency ?? "USD" });
-    const payChanged = !!pay && (!terms || pay.basis !== terms.basis || pay.currency !== terms.currency || Math.abs(pay.amount - terms.amount) > 0.004);
-    const valid = !!name.trim() && (!manages || !!position.trim()) && (!pays || !pay || pay.amount > 0);
+    // someone with no pay yet (an invited admin) keeps none until an amount is typed
+    const payChanged = !!pay && (terms ? pay.basis !== terms.basis || pay.currency !== terms.currency || Math.abs(pay.amount - terms.amount) > 0.004 : pay.amount > 0);
+    const valid = !!name.trim() && (!manages || !!position.trim()) && (!payChanged || pay.amount > 0);
     const busy = updateMine.isPending || updateEmployee.isPending || setPhoto.isPending || changePay.isPending || uploading;
     const error = updateMine.error ?? updateEmployee.error ?? setPhoto.error ?? changePay.error;
 

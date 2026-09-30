@@ -231,7 +231,11 @@ function HowItAddsUp({ pay: r, salary: s, ledger: lg, breakMinutes, typical }: A
                         </>
                     )}
                     {s.deduction > 0 && lg && (
-                        <div className="down"><span>Short {fmtH(lg.shortMinutes)} · at {cash(s.hourlyRate, cur, true)}/h</span><span className="mono">−{cash(s.deduction, cur)}</span></div>
+                        // the deduction covers more than the shortfall: a missed day's paid break, and unpaid time off
+                        <div className="down">
+                            <span>{lg.shortMinutes > 0 ? `Short ${fmtH(lg.shortMinutes)}` : "Unpaid time off"}{s.deductionMinutes !== lg.shortMinutes ? ` · ${fmtH(s.deductionMinutes)} unpaid` : ""} · at {cash(s.hourlyRate, cur, true)}/h</span>
+                            <span className="mono">−{cash(s.deduction, cur)}</span>
+                        </div>
                     )}
                     <div><span>Overtime · {fmtH(s.overtimeMinutes)} at {cash(s.hourlyRate * s.overtimeMultiplier, cur, true)}/h{s.overtimeMultiplier !== 1 ? ` (×${s.overtimeMultiplier})` : ""}</span>
                         <span className="mono">{cash(s.overtimePay, cur)}</span></div>
