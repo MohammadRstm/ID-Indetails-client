@@ -57,7 +57,7 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - [x] 4b-1: a Design project's overview for admins: work KPIs, contributors and their drawer, the work timeline, analytics, the entry window and comments;
   - [x] 4b-2: the project Timeline tab: the project at any moment, progress and status over time, the history day by day, and a day as cards;
   - [x] 4c-1: employees, Add employee, someone's profile and your own, Edit profile with pay from a date;
-  - [ ] 4c-2: activity and reports;
+  - [x] 4c-2: activity and reports;
   - [ ] 4c-3: the overview board and the client page's recent activity.
 - [ ] **5. Money:**
   - financials, project money, expenses;
@@ -118,6 +118,11 @@ Decisions made along the way, and anything skipped because it needs the user's i
 - **Overtime is the API's.** The client never works out overtime itself: every log form and the drag timeline ask `/api/me/overtime-preview`, a moment after the time stops changing, so the rule lives in one place.
 - **The timer** remembers when it started in the browser (per person), so a reload keeps it running; stopping it opens Log work with the times filled in.
 - **Profiles.** Someone's profile follows the prototype: the hours balance is for people with salary:view (the super admin), the cost panel for financial:view, and Edit profile for employee:manage (position and team) or employee:pay_manage (pay from a date on).
+- **Activity and Reports.** The feed's words live in one place (`feedWords.ts`), shared with the client page's recent activity. Every sentence reads as well without the amounts people without financial:view don't get, and events the prototype never had (requirements, meetings, teams, permissions) are worded in its voice. Everyone's work (the Work logged filter, today at a glance, online now, the entries tab and Export) needs work_entry:view_all; the Money tab needs financial:view.
+  - Client events now name their client (API PR #29), and the feed, the report and the timesheet export name clients by their display name, as the rest of the API does (API PR #30).
+  - A quarter that hasn't started yet reports on its first day; the prototype asked for a range ending before it began.
+  - The entries tab loads 50 at a time; the prototype showed 25 first.
+- **The account menu opens upwards.** The prototype opened it downwards from the foot of the sidebar, so on any page longer than the window it was drawn below the screen and Sign out was out of reach.
 - **Your own phone** (API PR #28). The session now carries the phone, so editing your own name no longer sends an empty phone back.
 - **Strict numbers in the API** (API PR #27). JSON numbers are strict there, so the generated types say `number`, not `number | string`.
 
