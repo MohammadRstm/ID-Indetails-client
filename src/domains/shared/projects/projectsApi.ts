@@ -80,7 +80,7 @@ export function useCreateProject() {
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async (body: CreateProjectBody) => (await http.post<Project>("/projects", body)).data,
-        onSuccess: () => invalidate(keys.projects.all, keys.clients.all, keys.dashboard.all, keys.activity.all),
+        onSuccess: () => { void invalidate(keys.projects.all, keys.clients.all, keys.dashboard.all, keys.activity.all); },
     });
 }
 
@@ -88,7 +88,7 @@ export function useUpdateProject(id: number) {
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async (body: Schemas["UpdateProjectRequest"]) => (await http.put<Project>(`/projects/${id}`, body)).data,
-        onSuccess: () => invalidate(keys.projects.all, keys.activity.all),
+        onSuccess: () => { void invalidate(keys.projects.all, keys.activity.all); },
     });
 }
 
@@ -118,6 +118,8 @@ export function useChangeProjectStatus(id: number) {
     return useMutation({
         mutationFn: async (action: StatusAction) => (await http.post<Project>(`/projects/${id}/${action}`)).data,
         // Completing ticks every open requirement; reopening unticks those again.
-        onSuccess: () => invalidate(keys.projects.all, keys.requirements.all, keys.activity.all, keys.dashboard.all, keys.clients.all, keys.finance.all),
+        // not awaited: the close-out window's own onSuccess (its toast with Undo) has to run before the project
+        // comes back completed and the window goes
+        onSuccess: () => { void invalidate(keys.projects.all, keys.requirements.all, keys.activity.all, keys.dashboard.all, keys.clients.all, keys.finance.all); },
     });
 }

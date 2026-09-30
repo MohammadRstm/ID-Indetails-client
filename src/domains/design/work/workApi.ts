@@ -173,6 +173,21 @@ export function useDeleteEntry() {
     });
 }
 
+/**
+ * Undoes a new log: deletes it, then puts back the entries it moved. One step, so it finishes even though the
+ * form it came from has closed (a per-call callback on a closed form never runs).
+ */
+export function useUndoLog() {
+    const changed = useWorkChanged();
+    return useMutation({
+        mutationFn: async ({ id, restore }: { id: number; restore: { id: number; body: SaveEntryBody } | null }) => {
+            await http.delete(`/work-entries/${id}`);
+            if (restore) await http.put<WorkEntry>(`/work-entries/${restore.id}`, restore.body);
+        },
+        onSuccess: changed,
+    });
+}
+
 /** Puts a deleted entry back, exactly as it was (Undo). */
 export function useRestoreEntry() {
     const changed = useWorkChanged();
@@ -194,8 +209,9 @@ export function useResizeMeeting() {
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async ({ id, body }: { id: number; body: Schemas["SaveMeetingRequest"] }) =>
-            (await http.put(`/meetings/${id}`, body)).data,
-        onSuccess: () => invalidate(keys.meetings.all, keys.work.all),
+            (await http.put<Schemas["MeetingResponse"]>(`/meetings/${id}`, body)).data,
+        // it shows on its project's timeline too
+        onSuccess: (meeting) => { void invalidate(keys.meetings.all, keys.work.all, keys.projects.detail(meeting.project.id)); },
     });
 }
 

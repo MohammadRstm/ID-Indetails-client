@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { fixtures, projectHandlers } from "@/test/fixtures";
+import { siteHandlers } from "@/test/fixtures/site";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
@@ -95,6 +96,8 @@ describe("a project", () => {
         await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
         await userEvent.click(screen.getByRole("button", { name: "Put on hold" }));
         await waitFor(() => expect(held).toBe(true));
+        // the menu has closed by now; the toast still comes
+        expect(await screen.findByText("Haddad Holdings HQ fit-out is now on hold")).toBeInTheDocument();
     });
 
     it("hides the payment without financial:view", async () => {
@@ -116,6 +119,25 @@ describe("a project", () => {
         await screen.findByRole("heading", { name: "Haddad Holdings HQ fit-out" });
         expect(screen.queryByRole("tab", { name: /requirements/i })).toBeNull();
         expect(screen.queryByText("Add a requirement")).toBeNull();
+    });
+});
+
+describe("a new Execution project", () => {
+    const karim = personas.executionAdmin;
+    const newProject = () => screen.findByRole("dialog", { name: "New project" });
+
+    it("takes the first payment from people who record payments", async () => {
+        renderApp("/execution/projects?new=1", karim, ...siteHandlers, ...projectHandlers);
+        const dialog = await newProject();
+        expect(within(dialog).getByLabelText("Initial payment received")).toBeInTheDocument();
+        expect(within(dialog).getByLabelText(/Project fee/)).toBeInTheDocument();
+    });
+
+    it("leaves the payment out without payment:record, as the API would refuse the project", async () => {
+        renderApp("/execution/projects?new=1", withPermissions(karim, { revoke: [P.PAYMENT_RECORD] }), ...siteHandlers, ...projectHandlers);
+        const dialog = await newProject();
+        expect(within(dialog).queryByLabelText("Initial payment received")).not.toBeInTheDocument();
+        expect(within(dialog).getByLabelText(/Project fee/)).toBeInTheDocument();
     });
 });
 

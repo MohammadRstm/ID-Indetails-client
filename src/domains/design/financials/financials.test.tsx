@@ -54,6 +54,16 @@ describe("Financials", () => {
         expect(titles()).toEqual(az(titles()));
     });
 
+    it("says so where figures don't load, and keeps the rest", async () => {
+        renderApp("/design/financials?tab=projects", nadia,
+            http.get("/api/finance/design/projects", () => HttpResponse.json({ type: "forbidden", code: "forbidden", message: "Not allowed." }, { status: 403 })),
+            ...financialsHandlers);
+        expect(await screen.findByText(/Couldn't load the projects\./)).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("tab", { name: /Clients/ }));
+        expect(await screen.findByText(/Couldn't load the project totals\./)).toBeInTheDocument();
+        expect(screen.getByText("Client ledger")).toBeInTheDocument();
+    });
+
     it("asks for the costs only when their tab opens", async () => {
         const asked: URLSearchParams[] = [];
         renderApp("/design/financials", nadia,

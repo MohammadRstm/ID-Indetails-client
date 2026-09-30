@@ -1,7 +1,7 @@
 import type { Schemas } from "@/api/types";
 import { companyTimeToUtc, companyToday, dayKey, fmtH, fmtHourLabel, fmtMinutes, fmtRange, fmtTime, minutesOfDay } from "@/shared/format/time";
 import type { TrackEntry } from "./DayTrack";
-import type { EntryMove, WorkEntry } from "./workApi";
+import { entryBody, type EntryMove, type SaveEntryBody, type WorkEntry } from "./workApi";
 
 /*
  * A working day as minutes after midnight, in company time (the prototype's 72-workday.js). What counts
@@ -128,5 +128,26 @@ export function trackEntry(e: WorkEntry, day: string): TrackEntry {
     return {
         id: e.id, s: sp.s, e: sp.e, description: e.description, projectTitle: e.project.title,
         range: fmtRange(e.startedAt, e.endedAt), overtime: e.overtimeMinutes, locked: !e.canEdit,
+    };
+}
+
+/**
+ * How to put back the entries a new log moved (its Undo): one save of the first of them, at the time it had,
+ * carrying the others back as its moves. Null when nothing moved.
+ */
+export function restoreOf(list: WorkEntry[], day: string, moved: Moves): { id: number; body: SaveEntryBody } | null {
+    const back: Moves = {};
+    for (const id of Object.keys(moved)) {
+        const e = list.find((x) => x.id === +id);
+        if (e) back[+id] = spanOn(e, day);
+    }
+    const ids = Object.keys(back).map(Number);
+    const first = list.find((x) => x.id === ids[0]);
+    if (!first) return null;
+    const rest = { ...back };
+    delete rest[first.id];
+    return {
+        id: first.id,
+        body: { ...entryBody(first, { startedAt: isoAt(day, back[first.id].s), endedAt: isoAt(day, back[first.id].e) }), moves: movesFor(day, rest) },
     };
 }

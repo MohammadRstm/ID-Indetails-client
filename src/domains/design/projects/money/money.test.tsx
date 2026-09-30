@@ -34,6 +34,14 @@ describe("a project's money", () => {
         expect(screen.getByText(projectWork.expenses.items[0].label)).toBeInTheDocument();
     });
 
+    it("says so next to the expenses when they don't load", async () => {
+        renderApp(path, admin,
+            http.get("/api/projects/:id/expenses", () => HttpResponse.json({ type: "forbidden", code: "forbidden", message: "Not allowed." }, { status: 403 })),
+            ...projectWorkHandlers);
+        expect(await screen.findByText(/Couldn't load the expenses\./)).toBeInTheDocument();
+        expect(screen.getByText("Financial breakdown")).toBeInTheDocument();
+    });
+
     it("edits the customer payment from the header", async () => {
         const saved: unknown[] = [];
         renderApp(path, admin,

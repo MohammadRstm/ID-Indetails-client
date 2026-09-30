@@ -36,7 +36,7 @@ function RemoveMenu({ meeting }: { meeting: Meeting }) {
                 <div>
                     <button className="pop-item" onClick={() => {
                         close();
-                        remove.mutate(meeting.id, {
+                        remove.mutate({ id: meeting.id, projectId: meeting.project.id }, {
                             onSuccess: () => toast({ text: "Meeting removed", sub: `${meeting.topic || meetingTitle(meeting)} · ${fmtDayDate(meeting.startsAt)}`, icon: "trash" }),
                             onError: (e) => toast({ text: "The meeting wasn't removed", sub: errorMessage(e), icon: "alert" }),
                         });

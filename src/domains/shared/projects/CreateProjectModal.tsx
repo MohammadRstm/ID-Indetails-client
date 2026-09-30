@@ -54,6 +54,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const [markupPct, setMarkupPct] = useState<number | "">(10);
     const client = useClient(clientId);
     const execMoney = execution && billing === "client";
+    // the API refuses the whole project if the payment comes from someone who can't record payments
+    const takesPayment = execMoney && permissions.has(P.PAYMENT_RECORD);
     const ok = title.trim() !== "" && (billing === "internal" || clientId != null) && !create.isPending;
 
     // Who can own it: the person creating it, and the people of this domain.
@@ -77,14 +79,14 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                 revenue: !execution && billing === "client" && revenue ? revenue : null,
                 projectFee: execMoney ? fee || 0 : null,
                 materialMarkup: execMoney ? (+markupPct || 0) / 100 : null,
-                initialPayment: execMoney && initialPay > 0
+                initialPayment: takesPayment && initialPay > 0
                     ? { amount: initialPay, currency: "USD", method: payMethod as "bank", receivedOn: payDate, note: "Initial payment", reference: null }
                     : null,
                 labourDefaults: execution && (workers !== "" || dailyPay) ? { workers: +workers || 0, dailyPay: dailyPay || 0 } : null,
             });
             toast({
                 text: `"${project.title}" created · active from today`,
-                sub: execMoney && initialPay > 0 ? `${money.exact(initialPay)} received · it is on everyone's active project list`
+                sub: takesPayment && initialPay > 0 ? `${money.exact(initialPay)} received · it is on everyone's active project list`
                     : "It is on everyone's active project list",
                 icon: "checkCircle",
                 actionLabel: "Open project",
@@ -160,7 +162,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                 {execMoney && (
                     <div className="np-money mt">
                         <div className="u" style={{ marginBottom: 8 }}>Money</div>
-                        <div className="grid g-2">
+                        {takesPayment && <div className="grid g-2">
                             <div className="field">
                                 <label className="label" htmlFor="np-init">Initial payment received</label>
                                 <AmountField id="np-init" value={initialPay} currencies={false} onChange={setInitialPay} />
@@ -176,8 +178,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                                         options={Object.entries(PAYMENT_METHODS).map(([value, label]) => ({ value, label }))} />
                                 </div>
                             </div>
-                        </div>
-                        <div className="grid g-2 mt-s">
+                        </div>}
+                        <div className={takesPayment ? "grid g-2 mt-s" : "grid g-2"}>
                             <div className="field">
                                 <label className="label" htmlFor="np-fee">Project fee <span className="muted">· optional</span></label>
                                 <AmountField id="np-fee" value={fee} currencies={false} onChange={setFee} />
@@ -195,9 +197,9 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                             </div>
                         </div>
                         <div className="hint" style={{ marginTop: 6 }}>
-                            {initialPay > 0
-                                ? `Recorded as a client payment. With nothing spent yet, the project starts ${money.exact(initialPay)} in profit.`
-                                : "Leave the payment at $0 if nothing has been received yet - it can be recorded later."} Fee and material profit can be changed at any time.
+                            {!takesPayment ? "" : initialPay > 0
+                                ? `Recorded as a client payment. With nothing spent yet, the project starts ${money.exact(initialPay)} in profit. `
+                                : "Leave the payment at $0 if nothing has been received yet - it can be recorded later. "}Fee and material profit can be changed at any time.
                         </div>
                     </div>
                 )}

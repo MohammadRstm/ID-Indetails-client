@@ -98,6 +98,28 @@ describe("a project's billing", () => {
         await waitFor(() => expect(recorded).toEqual([{ amount: 7800, currency: "USD", fxRate: null, invoiceId: inv.id, method: "bank", receivedOn: "2026-09-30", reference: "TRX-118" }]));
     });
 
+    it("settles invoices to the cent, as the API does", async () => {
+        const recorded: unknown[] = [];
+        const row = billing.projectInvoices.items[0];
+        // a fraction of a cent left is settled; a balance with a floating-point tail is still its cents
+        const settled = { ...row, id: 4, number: "ID-2026-004", balance: 0.004 };
+        const owing = { ...row, balance: 1234.56 - 1e-7 };
+        renderApp(path, admin,
+            http.get("/api/invoices", () => HttpResponse.json({ ...billing.projectInvoices, items: [settled, owing], totalCount: 2 })),
+            http.post(`/api/projects/${project.id}/payments`, async ({ request }) => {
+                recorded.push(await request.json());
+                return HttpResponse.json({ ...billing.domainPayments.items[0], amountUsd: 1234.56 }, { status: 201 });
+            }),
+            ...handlers);
+        await userEvent.click(within(await band()).getByRole("button", { name: "Record payment" }));
+        const dialog = await screen.findByRole("dialog", { name: "Record a client payment" });
+        expect(await within(dialog).findByText(/^Balance on ID-2026-003: \$1,234\.56/)).toBeInTheDocument();
+        expect(within(dialog).queryByText(/ID-2026-004/)).not.toBeInTheDocument();
+        expect(within(dialog).queryByText("More than this invoice is owed.")).not.toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
+        await waitFor(() => expect(recorded).toEqual([expect.objectContaining({ amount: 1234.56, invoiceId: owing.id })]));
+    });
+
     it("voids a sent invoice with its reason", async () => {
         const voided: unknown[] = [];
         renderApp(`${path}?invoice=${inv.id}`, admin,

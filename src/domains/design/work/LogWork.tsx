@@ -10,7 +10,7 @@ import { dayKey, fmtDayDate, fmtDur, fmtH, fmtRange, minutesOfDay } from "@/shar
 import Icon from "@/shared/icons/Icon";
 import { useAttachment } from "./attachments";
 import { AttachmentField } from "./AttachmentField";
-import { checkLog, companyNow, DAY, defaultSlot, isoAt, movesFor, spanOn, workHoursOf, type Moves } from "./day";
+import { checkLog, companyNow, DAY, defaultSlot, isoAt, movesFor, restoreOf, spanOn, workHoursOf, type Moves } from "./day";
 import DayChips from "./DayChips";
 import DragDay from "./DragDay";
 import { closeLogWork, type LogWorkOptions } from "./logWorkStore";
@@ -18,7 +18,7 @@ import OvertimeWarning from "./OvertimeWarning";
 import TimeRange from "./TimeRange";
 import { startTimer } from "./timer";
 import {
-    entryBody, loggableProjects, useDeleteEntry, useDomainSettings, useMyDay, useMyProjects, useMySchedule, useOvertimeFor, useSaveEntry,
+    entryBody, loggableProjects, useDomainSettings, useMyDay, useMyProjects, useMySchedule, useOvertimeFor, useSaveEntry, useUndoLog,
     type DomainSettings, type MyProject, type WorkEntry,
 } from "./workApi";
 
@@ -32,14 +32,15 @@ export default function LogWorkModal({ options }: { options: LogWorkOptions }) {
     const settings = useDomainSettings("design");
     const day = useMyDay(firstDay);
     const schedule = useMySchedule(firstDay);
-    const failed = projects.error ?? settings.error ?? day.error;
+    // only a load with nothing to show blocks the form; a failed refresh keeps what it had
+    const failed = [projects, settings, day, schedule].find((q) => q.isError && !q.data)?.error;
     const ready = projects.data && settings.data && day.data && !day.isPlaceholderData && schedule.data;
 
     if (!ready || failed) {
         return (
             <Modal size="md" title={edit ? "Edit work entry" : options.overtime ? "Log overtime" : "Log work"} onClose={closeLogWork}
                 foot={<><div className="grow" /><button className="btn" onClick={closeLogWork}>Cancel</button></>}>
-                {failed ? <LoadError error={failed} retry={() => { projects.refetch(); settings.refetch(); day.refetch(); }} what="your day" /> : <SkeletonLines lines={6} />}
+                {failed ? <LoadError error={failed} retry={() => { projects.refetch(); settings.refetch(); day.refetch(); schedule.refetch(); }} what="your day" /> : <SkeletonLines lines={6} />}
             </Modal>
         );
     }
@@ -75,7 +76,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayEnd
     const [slotFor, setSlotFor] = useState<string | null>(null);
     const attachment = useAttachment(ed?.attachment ?? null);
     const save = useSaveEntry();
-    const remove = useDeleteEntry();
+    const undo = useUndoLog();
     const day = useMyDay(date);
     const schedule = useMySchedule(date);
     const plain = !ed && !options.overtime && options.startMin == null && options.endMin == null;
@@ -121,6 +122,8 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayEnd
         setTouched(true);
         if (blocked || projectId == null) return;
         const back = movesBack();
+        // worked out now, while the day is loaded: the form has closed by the time Undo is pressed
+        const restore = restoreOf(list, date, swaps);
         const body = { projectId, description: desc, startedAt: startAt, endedAt: endAt, attachmentFileId: attachment.file?.id ?? null, moves: movesFor(date, swaps) };
         const title = project?.title ?? "the project";
         save.mutate({ id: ed?.id, body }, {
@@ -135,20 +138,10 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayEnd
                 }
                 toast({
                     text: `${fmtDur(saved.minutes)} logged on ${title}`, sub: `${fmtDayDate(startAt)} · ${fmtRange(startAt, endAt)}`, icon: "checkCircle",
-                    actionLabel: "Undo", action: () => remove.mutate(saved.id, { onSuccess: () => undoMoves(back) }),
+                    actionLabel: "Undo", action: () => undo.mutate({ id: saved.id, restore }),
                 });
             },
         });
-    }
-
-    /** Moves tasks back with one save of the first of them, carrying the others as its moves. */
-    function undoMoves(back: Moves) {
-        const ids = Object.keys(back).map(Number);
-        const first = list.find((x) => x.id === ids[0]);
-        if (!first) return;
-        const rest = { ...back };
-        delete rest[first.id];
-        save.mutate({ id: first.id, body: { ...entryBody(first, { startedAt: isoAt(date, back[first.id].s), endedAt: isoAt(date, back[first.id].e) }), moves: movesFor(date, rest) } });
     }
 
     const failure = save.error ? errorMessage(save.error) : null;

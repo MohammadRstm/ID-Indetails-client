@@ -78,7 +78,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
         const lastName = rest.join(" ");
         try {
             if (self) await updateMine.mutateAsync({ firstName, lastName, phone: phone.trim() || null });
-            else await updateEmployee.mutateAsync({ firstName, lastName, phone: phone.trim() || null, ...(manages ? { position: position.trim(), teamId: teamId ? +teamId : null } : {}) });
+            // someone who may only change pay (employee:pay_manage) doesn't send the rest, which needs employee:manage
+            else if (manages) await updateEmployee.mutateAsync({ firstName, lastName, phone: phone.trim() || null, position: position.trim(), teamId: teamId ? +teamId : null });
             if (photo !== person.photoFileId) await setPhoto.mutateAsync(photo);
             if (payChanged && pay) await changePay.mutateAsync({ basis: pay.basis, amount: pay.amount, currency: pay.currency, effectiveFrom: from });
             toast({ text: "Profile updated", icon: "checkCircle", sub: payChanged ? `New pay applies from ${fmtDateY(from)} - earlier months are unchanged` : undefined });

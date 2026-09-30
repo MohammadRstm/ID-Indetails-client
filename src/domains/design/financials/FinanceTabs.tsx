@@ -39,15 +39,24 @@ function useOpener() {
 
 const Tile = ({ tile }: { tile: Tile | undefined }) => <ProjectTile icon={tile?.icon} tint={tile?.tint} size="sm" />;
 
+/** A load that failed with nothing to show, and its retry. */
+export type Failure = { error: unknown; retry: () => void } | null;
+
+/** A skeleton while it loads, or the small error when it failed. */
+function Pending({ failed, lines, what }: { failed: Failure; lines: number; what: string }) {
+    return failed ? <LoadError error={failed.error} retry={failed.retry} what={what} /> : <SkeletonLines lines={lines} />;
+}
+
 type OverviewTabProps = {
     summary: FinanceSummary;
     months: FinanceMonth[] | undefined;
     projects: FinanceProjects | undefined;
+    failed: { months: Failure; projects: Failure };
     label: string;
     tiles: Map<number, Tile>;
 };
 
-export function OverviewTab({ summary: s, months, projects, label, tiles }: OverviewTabProps) {
+export function OverviewTab({ summary: s, months, projects, failed, label, tiles }: OverviewTabProps) {
     const open = useOpener();
     const domain = useDomain();
     const parts = costPartsOf(domain);
@@ -60,7 +69,7 @@ export function OverviewTab({ summary: s, months, projects, label, tiles }: Over
             <div className="grid g-8-4">
                 <Figure title="Revenue against cost, month by month" sub="Revenue is recognised by progress - a project earns its payment as the work is done."
                     table={{ cols: [{ label: "Month" }, { label: "Revenue", right: true }, { label: "Cost", right: true }, { label: "Profit", right: true }], rows: list.map((m) => [fmtMonthY(m.month), money.fmt(m.revenue), money.fmt(m.cost), money.fmt(m.profit)]) }}>
-                    {!months ? <SkeletonLines lines={8} /> : (
+                    {!months ? <Pending failed={failed.months} lines={8} what="the monthly figures" /> : (
                         <>
                             <Columns height={210} labelEvery={Math.max(1, Math.ceil(list.length / 7))} seriesLabel="Revenue recognised" ghostLabel="Total cost" format={(v) => money.short(v)}
                                 data={list.map((m) => ({ label: monthLabel(m.month), tip: fmtMonthY(m.month), value: m.revenue, ghost: m.cost, note: `profit ${money.fmt(m.profit)}` }))} />
@@ -88,7 +97,7 @@ export function OverviewTab({ summary: s, months, projects, label, tiles }: Over
             <div className="grid g-7-5 mt">
                 <Figure title="Profit by client project" sub="Losses point left."
                     table={{ cols: [{ label: "Project" }, { label: "Profit", right: true }, { label: "Margin", right: true }], rows: billable.map((f) => [f.title, money.fmt(f.profit), money.pct(f.margin)]) }}>
-                    {!projects ? <SkeletonLines lines={6} /> : (
+                    {!projects ? <Pending failed={failed.projects} lines={6} what="the projects" /> : (
                         <ProfitBars onClick={(it) => open(`projects/${it.id}`)?.()}
                             items={[...billable].sort((a, b) => b.profit - a.profit).map((f) => ({
                                 id: f.projectId, label: f.title, value: f.profit, note: `${money.pct(f.margin)} margin`,
@@ -97,7 +106,7 @@ export function OverviewTab({ summary: s, months, projects, label, tiles }: Over
                     )}
                 </Figure>
                 <Figure title="Internal investment" sub="Projects with no payment attached - pure company cost.">
-                    {!projects ? <SkeletonLines lines={4} /> : (
+                    {!projects ? <Pending failed={failed.projects} lines={4} what="the projects" /> : (
                         <>
                             <RankBars format={(v) => money.short(v)} unit="Cost" onClick={(it) => open(`projects/${it.id}`)?.()}
                                 items={[...internal].sort((a, b) => b.cost.total - a.cost.total).map((f) => ({
@@ -122,7 +131,7 @@ export function OverviewTab({ summary: s, months, projects, label, tiles }: Over
 
 type ProjectSort = "name" | "revenue" | "hours" | "cost" | "profit" | "margin";
 
-export function ProjectsTab({ projects, tiles }: { projects: FinanceProjects | undefined; tiles: Map<number, Tile> }) {
+export function ProjectsTab({ projects, failed, tiles }: { projects: FinanceProjects | undefined; failed: Failure; tiles: Map<number, Tile> }) {
     const open = useOpener();
     const domain = useDomain();
     const parts = costPartsOf(domain);
@@ -143,7 +152,7 @@ export function ProjectsTab({ projects, tiles }: { projects: FinanceProjects | u
             <div className="panel-head">
                 <div><div className="panel-title">Profitability by project</div><div className="panel-sub">Client projects show margin; internal projects show what they cost.</div></div>
             </div>
-            {!projects ? <div className="panel-body"><SkeletonLines lines={8} /></div> : (
+            {!projects ? <div className="panel-body"><Pending failed={failed} lines={8} what="the projects" /></div> : (
                 <div className="tbl-wrap">
                     <table className="tbl tbl-min">
                         <thead>
@@ -200,7 +209,13 @@ export function ProjectsTab({ projects, tiles }: { projects: FinanceProjects | u
 
 const HEAT = ["var(--heat-4)", "var(--heat-3)", "var(--heat-2)", "var(--heat-1)"];
 
-export function ClientsTab({ clients, projects }: { clients: FinanceClient[] | undefined; projects: FinanceProjects | undefined }) {
+type ClientsTabProps = {
+    clients: FinanceClient[] | undefined;
+    projects: FinanceProjects | undefined;
+    failed: { clients: Failure; projects: Failure };
+};
+
+export function ClientsTab({ clients, projects, failed }: ClientsTabProps) {
     const open = useOpener();
     const domain = useDomain();
     const parts = costPartsOf(domain);
@@ -212,7 +227,7 @@ export function ClientsTab({ clients, projects }: { clients: FinanceClient[] | u
     const concentration = top && total ? top.money.revenue / total : 0;
     const t = projects?.totals;
     const allClients = open("clients");
-    if (!clients) return <div className="panel"><div className="panel-body"><SkeletonLines lines={8} /></div></div>;
+    if (!clients) return <div className="panel"><div className="panel-body"><Pending failed={failed.clients} lines={8} what="the clients" /></div></div>;
     return (
         <div>
             <div className="grid g-7-5">
@@ -238,7 +253,7 @@ export function ClientsTab({ clients, projects }: { clients: FinanceClient[] | u
                     <div className="panel">
                         <div className="panel-head"><div><div className="panel-title">Client work against internal work</div></div></div>
                         <div className="panel-body">
-                            {!t ? <SkeletonLines lines={3} /> : (
+                            {!t ? <Pending failed={failed.projects} lines={3} what="the project totals" /> : (
                                 <>
                                     <CostRow label="Cost of client projects" swatch="var(--heat-3)" meta={`${t.clientProjects} projects`} value={money.fmt(t.clientCost)} />
                                     <CostRow label="Cost of internal projects" swatch="var(--ghost)" meta={`${t.internalProjects} projects`} value={money.fmt(t.internalCost)} />

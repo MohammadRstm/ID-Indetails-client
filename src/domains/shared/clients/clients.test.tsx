@@ -34,6 +34,15 @@ describe("the clients list", () => {
         expect(askedForMoney).toBe(false);
     });
 
+    it("says so when the figures don't load, instead of loading forever", async () => {
+        renderApp("/design/clients", admin,
+            http.get("/api/finance/:domain/summary", () => HttpResponse.json({ type: "forbidden", code: "forbidden", message: "Not allowed." }, { status: 403 })),
+            ...projectHandlers);
+        expect(await screen.findByText(/Couldn't load the client figures\./)).toBeInTheDocument();
+        // the list still loads
+        expect((await screen.findAllByText(client.displayName)).length).toBeGreaterThan(0);
+    });
+
     it("offers Add client only with client:create", async () => {
         renderApp("/design/clients", withPermissions(admin, { revoke: [P.CLIENT_CREATE] }), ...projectHandlers);
         await screen.findAllByText(client.displayName);

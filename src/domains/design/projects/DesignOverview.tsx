@@ -77,7 +77,8 @@ export default function DesignOverview({ project }: { project: Project }) {
     );
     const breakdown = m && (
         <FinancialBreakdown project={project} money={m} contributors={seesWork ? all.data?.contributors : undefined} entryCount={all.data?.entryCount}
-            expenses={expenses.data?.items} onPerson={seesWork ? setDrawer : undefined} onAddExpense={moneyActions.onAddExpense}
+            expenses={expenses.data?.items} expensesFailed={expenses.isError && !expenses.data ? { error: expenses.error, retry: () => void expenses.refetch() } : null}
+            onPerson={seesWork ? setDrawer : undefined} onAddExpense={moneyActions.onAddExpense}
             canRemoveExpenses={permissions.has(P.EXPENSE_MANAGE)} />
     );
 

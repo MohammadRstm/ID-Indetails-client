@@ -57,6 +57,23 @@ describe("http", () => {
         expect(tokenStore.get()).toBeNull();
     });
 
+    it("keeps the session when the refresh itself fails, and fails only that request", async () => {
+        tokenStore.set("old");
+        server.use(
+            mock.get("/api/ping", () => HttpResponse.json({ code: "unauthenticated" }, { status: 401 })),
+            mock.post("/api/auth/refresh", () => HttpResponse.json({ code: "rate_limited", message: "Too many requests." }, { status: 429 })),
+        );
+        const onExpired = vi.fn();
+        configureSession({ onRefreshed: vi.fn(), onExpired });
+
+        const error = await http.get("/ping").catch((e) => e);
+
+        expect(error).toBeInstanceOf(ApiError);
+        expect(error.status).toBe(429);
+        expect(onExpired).not.toHaveBeenCalled();
+        expect(tokenStore.get()).toBe("old");
+    });
+
     it("turns the API's error body into an ApiError with field errors", async () => {
         server.use(mock.post("/api/things", () => HttpResponse.json({
             type: "validation",

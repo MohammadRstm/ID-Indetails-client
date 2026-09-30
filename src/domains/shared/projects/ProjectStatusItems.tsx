@@ -29,10 +29,11 @@ export default function ProjectStatusItems({ project, close, onComplete }: Proje
             onComplete();
             return;
         }
-        change.mutate(action, {
-            onSuccess: () => toast({ text: `${project.title} is now ${PROJECT_STATUS[to].label.toLowerCase()}`, icon: "checkCircle" }),
-            onError: (error) => toast({ text: "The status didn't change", sub: errorMessage(error), icon: "alert" }),
-        });
+        // the menu has closed, so its per-call callbacks would never run; the promise still settles
+        change.mutateAsync(action).then(
+            () => toast({ text: `${project.title} is now ${PROJECT_STATUS[to].label.toLowerCase()}`, icon: "checkCircle" }),
+            (error: unknown) => toast({ text: "The status didn't change", sub: errorMessage(error), icon: "alert" }),
+        );
     }
 
     return (
