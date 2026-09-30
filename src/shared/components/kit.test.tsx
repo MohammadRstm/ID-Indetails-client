@@ -1,0 +1,139 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { useState } from "react";
+import { describe, expect, it, vi } from "vitest";
+import { ApiError } from "@/api/errors";
+import { parseDateText } from "@/shared/format/parseDate";
+import { parseTime } from "@/shared/format/parseTime";
+import { periodRange } from "@/shared/format/periods";
+import { Delta } from "./Charts/Bars";
+import DataTable, { type SortState } from "./Data-Tables/DataTable";
+import Pager from "./Data-Tables/Pager";
+import { ChipGroup } from "./Forms/Filters";
+import Select from "./Forms/Select";
+import Modal from "./Overlays/Modal";
+
+describe("Select", () => {
+    function Harness({ count = 3, onChange = vi.fn() }: { count?: number; onChange?: (v: string) => void }) {
+        const [value, setValue] = useState("o0");
+        const options = Array.from({ length: count }, (_, i) => ({ value: `o${i}`, label: `Option ${i}` }));
+        return <Select aria-label="Pick" value={value} options={options} onChange={(v) => { setValue(v); onChange(v); }} />;
+    }
+
+    it("opens, moves with the keyboard and picks", async () => {
+        const onChange = vi.fn();
+        render(<Harness onChange={onChange} />);
+        const button = screen.getByRole("button", { name: "Pick" });
+        button.focus();
+        await userEvent.keyboard("{ArrowDown}");
+        expect(screen.getByRole("listbox")).toBeInTheDocument();
+        await userEvent.keyboard("{ArrowDown}{ArrowDown}{Enter}");
+        expect(onChange).toHaveBeenCalledWith("o2");
+        expect(button).toHaveTextContent("Option 2");
+    });
+
+    it("filters long lists", async () => {
+        render(<Harness count={12} />);
+        await userEvent.click(screen.getByRole("button", { name: "Pick" }));
+        await userEvent.type(screen.getByLabelText("Filter options"), "11");
+        expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["Option 11"]);
+    });
+});
+
+describe("typed dates and times", () => {
+    it("reads dates the way people write them", () => {
+        const today = "2026-09-30";
+        expect(parseDateText("23/9/2026", today)).toBe("2026-09-23");
+        expect(parseDateText("23.9.26", today)).toBe("2026-09-23");
+        expect(parseDateText("23/9", today)).toBe("2026-09-23");
+        expect(parseDateText("Sep 23 2026", today)).toBe("2026-09-23");
+        expect(parseDateText("23 September", today)).toBe("2026-09-23");
+        expect(parseDateText("sept 2026", today)).toBe("2026-09-01");
+        expect(parseDateText("yesterday", today)).toBe("2026-09-29");
+        expect(parseDateText("31/2/2026", today)).toBeNull();
+        expect(parseDateText("", today)).toBe("");
+    });
+
+    it("reads times, taking 1 to 7 without am/pm as the afternoon", () => {
+        expect(parseTime("930")).toBe(9 * 60 + 30);
+        expect(parseTime("9:30pm")).toBe(21 * 60 + 30);
+        expect(parseTime("3")).toBe(15 * 60);
+        expect(parseTime("12am")).toBe(0);
+        expect(parseTime("25:00")).toBeNull();
+    });
+});
+
+describe("DataTable", () => {
+    const columns = [
+        { key: "name", header: "Name", cell: (r: { id: number; name: string; hours: number }) => r.name },
+        { key: "hours", header: "Hours", right: true, sortKey: "hours", cell: (r: { hours: number }) => r.hours },
+    ];
+
+    it("sorts descending first, then ascending", async () => {
+        const onSort = vi.fn();
+        const sort: SortState = { key: "name", dir: "desc" };
+        render(<DataTable columns={columns} rows={[{ id: 1, name: "Sarah", hours: 3 }]} rowKey={(r) => r.id} sort={sort} onSort={onSort} />);
+        await userEvent.click(screen.getByText("Hours"));
+        expect(onSort).toHaveBeenCalledWith({ key: "hours", dir: "desc" });
+    });
+
+    it("shows skeletons while loading, an inline error with a retry, and an empty state", async () => {
+        const retry = vi.fn();
+        const { rerender, container } = render(<DataTable columns={columns} rows={undefined} loading rowKey={() => 0} />);
+        expect(container.querySelectorAll(".skel").length).toBeGreaterThan(0);
+
+        rerender(<DataTable columns={columns} rows={undefined} error={new ApiError(500, {})} onRetry={retry} what="the people" rowKey={() => 0} />);
+        expect(screen.getByRole("alert")).toHaveTextContent("Couldn't load the people.");
+        await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+        expect(retry).toHaveBeenCalled();
+
+        rerender(<DataTable columns={columns} rows={[]} rowKey={() => 0} empty="Nobody yet" />);
+        expect(screen.getByText("Nobody yet")).toBeInTheDocument();
+    });
+});
+
+describe("Pager", () => {
+    it("shows the range and moves between pages", async () => {
+        const onPage = vi.fn();
+        render(<Pager page={1} pageSize={30} total={75} onPage={onPage} />);
+        expect(screen.getByText("1–30 of 75")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Previous page" })).toBeDisabled();
+        await userEvent.click(screen.getByRole("button", { name: "3" }));
+        expect(onPage).toHaveBeenCalledWith(3);
+    });
+
+    it("hides itself when one page holds everything", () => {
+        const { container } = render(<Pager page={1} pageSize={30} total={12} onPage={() => {}} />);
+        expect(container).toBeEmptyDOMElement();
+    });
+});
+
+describe("small pieces", () => {
+    it("chips report the one picked", async () => {
+        const onChange = vi.fn();
+        render(<ChipGroup value="all" onChange={onChange} options={[{ value: "all", label: "All", count: 4 }, { value: "hold", label: "On hold" }]} />);
+        await userEvent.click(screen.getByRole("button", { name: "On hold" }));
+        expect(onChange).toHaveBeenCalledWith("hold");
+    });
+
+    it("a modal closes with Escape", () => {
+        const onClose = vi.fn();
+        render(<Modal title="Invoice" onClose={onClose}><p>Body</p></Modal>);
+        fireEvent.keyDown(document, { key: "Escape" });
+        expect(onClose).toHaveBeenCalled();
+    });
+
+    it("a change is good news or bad news", () => {
+        const { container, rerender } = render(<Delta value={120} prev={100} />);
+        expect(container.textContent).toContain("+20.0%");
+        expect(container.querySelector(".up")).not.toBeNull();
+        rerender(<Delta value={120} prev={100} inverse />);
+        expect(container.querySelector(".down")).not.toBeNull();
+    });
+
+    it("periods run to today and compare with the same stretch before", () => {
+        expect(periodRange("month", "2026-09-30")).toMatchObject({ from: "2026-09-01", to: "2026-09-30", prevFrom: "2026-08-01", prevTo: "2026-08-30" });
+        expect(periodRange("quarter", "2026-09-30")).toMatchObject({ from: "2026-07-01", label: "Q3 2026 to date", prevFrom: "2026-04-01", prevLabel: "Q2 2026" });
+        expect(periodRange("30d", "2026-09-30")).toMatchObject({ from: "2026-09-01" });
+    });
+});

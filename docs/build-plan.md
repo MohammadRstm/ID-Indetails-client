@@ -38,13 +38,13 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - test tools, API types, the proxy, path aliases;
   - the prototype stylesheet, fonts and icons;
   - docs.
-- [ ] **1. Sign-in and app shell:**
+- [x] **1. Sign-in and app shell:**
   - sign in, session restore and refresh, change password, forgot and reset password, accept an invitation;
   - the permission model;
   - the route table and guards;
   - sidebar and top bar, the company launcher and switching domain;
   - error pages.
-- [ ] **2. Shared UI kit and charts.**
+- [x] **2. Shared UI kit and charts.** Every piece is on the development-only page `/dev/kit`.
 - [ ] **3. Projects and clients:**
   - project list with totals, creating a project;
   - the project header and status changes;
