@@ -1,0 +1,95 @@
+{
+  "items": [
+    {
+      "id": 4,
+      "domain": "design",
+      "project": {
+        "id": 3,
+        "title": "Cedar Bank branch refresh"
+      },
+      "client": {
+        "id": 3,
+        "displayName": "Cedar Bank SAL"
+      },
+      "number": null,
+      "status": "draft",
+      "isOverdue": false,
+      "currency": "USD",
+      "total": 10500,
+      "paid": 0,
+      "balance": 10500,
+      "issuedAt": null,
+      "dueOn": null,
+      "createdAt": "2026-09-30T04:52:54.492Z"
+    },
+    {
+      "id": 3,
+      "domain": "design",
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors"
+      },
+      "client": {
+        "id": 2,
+        "displayName": "Mounir Aoun"
+      },
+      "number": "ID-2026-003",
+      "status": "sent",
+      "isOverdue": true,
+      "currency": "USD",
+      "total": 7800,
+      "paid": 0,
+      "balance": 7800,
+      "issuedAt": "2026-08-21T12:00:00Z",
+      "dueOn": "2026-09-20",
+      "createdAt": "2026-09-30T04:52:54.428Z"
+    },
+    {
+      "id": 2,
+      "domain": "design",
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out"
+      },
+      "client": {
+        "id": 1,
+        "displayName": "Haddad Holdings"
+      },
+      "number": "ID-2026-002",
+      "status": "partial",
+      "isOverdue": false,
+      "currency": "USD",
+      "total": 9600,
+      "paid": 4000,
+      "balance": 5600,
+      "issuedAt": "2026-09-24T12:00:00Z",
+      "dueOn": "2026-10-24",
+      "createdAt": "2026-09-30T04:52:54.36Z"
+    },
+    {
+      "id": 1,
+      "domain": "design",
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out"
+      },
+      "client": {
+        "id": 1,
+        "displayName": "Haddad Holdings"
+      },
+      "number": "ID-2026-001",
+      "status": "paid",
+      "isOverdue": false,
+      "currency": "USD",
+      "total": 14400,
+      "paid": 14400,
+      "balance": 0,
+      "issuedAt": "2026-09-05T12:00:00Z",
+      "dueOn": "2026-10-05",
+      "createdAt": "2026-09-30T04:52:54.088Z"
+    }
+  ],
+  "page": 1,
+  "pageSize": 100,
+  "totalCount": 4
+}

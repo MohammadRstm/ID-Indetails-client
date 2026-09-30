@@ -1,0 +1,159 @@
+{
+  "id": 2,
+  "domain": "design",
+  "name": "Mounir Aoun",
+  "organisation": null,
+  "displayName": "Mounir Aoun",
+  "label": "Residential",
+  "note": null,
+  "isArchived": false,
+  "createdAt": "2026-09-30T04:52:26.712Z",
+  "contacts": [
+    {
+      "id": 3,
+      "kind": "email",
+      "value": "mounir.aoun@mail.test",
+      "label": "Work",
+      "isWhatsapp": false,
+      "isPrimary": true
+    },
+    {
+      "id": 4,
+      "kind": "phone",
+      "value": "+961 71 222 333",
+      "label": "Mobile",
+      "isWhatsapp": true,
+      "isPrimary": false
+    }
+  ],
+  "projectCount": 1,
+  "nameSharedWithAnotherClient": false,
+  "money": {
+    "projects": 1,
+    "activeProjects": 1,
+    "completedProjects": 0,
+    "hours": 158.5,
+    "revenue": 26000,
+    "recognisedToDate": 6500,
+    "cost": {
+      "labour": 1915.48,
+      "expenses": 155,
+      "materials": 0,
+      "groundLabour": 0,
+      "total": 2070.48,
+      "unconverted": [],
+      "unpricedLabourMinutes": 0
+    },
+    "profit": 23929.52,
+    "margin": 0.9204,
+    "marginKnown": true,
+    "activeRevenue": 26000,
+    "completedRevenue": 0,
+    "completedMargin": null,
+    "billing": {
+      "invoiced": 7800,
+      "received": 0,
+      "outstanding": 7800,
+      "overdue": 7800,
+      "notYetInvoiced": 18200,
+      "drafts": 0
+    },
+    "unconvertedInvoices": []
+  },
+  "projectMoney": [
+    {
+      "projectId": 2,
+      "title": "Villa Mounir interiors",
+      "status": "active",
+      "hours": 158.5,
+      "revenue": 26000,
+      "cost": 2070.48,
+      "profit": 23929.52,
+      "margin": 0.9204,
+      "marginKnown": true,
+      "billing": {
+        "invoiced": 7800,
+        "received": 0,
+        "outstanding": 7800,
+        "overdue": 7800,
+        "notYetInvoiced": 18200,
+        "drafts": 0
+      },
+      "startDate": "2026-08-11",
+      "hasUnconverted": false,
+      "unpricedLabourMinutes": 0
+    }
+  ],
+  "work": {
+    "totalMinutes": 9510,
+    "entryCount": 83,
+    "contributorCount": 3,
+    "monthly": [
+      {
+        "month": "2025-10-01",
+        "minutes": 0
+      },
+      {
+        "month": "2025-11-01",
+        "minutes": 0
+      },
+      {
+        "month": "2025-12-01",
+        "minutes": 0
+      },
+      {
+        "month": "2026-01-01",
+        "minutes": 0
+      },
+      {
+        "month": "2026-02-01",
+        "minutes": 0
+      },
+      {
+        "month": "2026-03-01",
+        "minutes": 0
+      },
+      {
+        "month": "2026-04-01",
+        "minutes": 0
+      },
+      {
+        "month": "2026-05-01",
+        "minutes": 0
+      },
+      {
+        "month": "2026-06-01",
+        "minutes": 0
+      },
+      {
+        "month": "2026-07-01",
+        "minutes": 0
+      },
+      {
+        "month": "2026-08-01",
+        "minutes": 0
+      },
+      {
+        "month": "2026-09-01",
+        "minutes": 9510
+      }
+    ],
+    "people": [
+      {
+        "id": 3,
+        "name": "Sarah Haddad",
+        "minutes": 4100
+      },
+      {
+        "id": 5,
+        "name": "Lina Saad",
+        "minutes": 3180
+      },
+      {
+        "id": 9,
+        "name": "Yara Mansour",
+        "minutes": 2230
+      }
+    ]
+  }
+}

@@ -82,7 +82,7 @@ describe("a project", () => {
     });
 
     it("has no menu at all for someone who can change neither the status nor the money", async () => {
-        renderApp("/design/projects/1", withPermissions(admin, { revoke: [P.PROJECT_CHANGE_STATUS, P.PROJECT_EDIT, P.EXPENSE_MANAGE] }), ...projectHandlers);
+        renderApp("/design/projects/1", withPermissions(admin, { revoke: [P.PROJECT_CHANGE_STATUS, P.PROJECT_EDIT, P.EXPENSE_MANAGE, P.INVOICE_CREATE, P.PAYMENT_RECORD] }), ...projectHandlers);
         await screen.findByRole("heading", { name: "Haddad Holdings HQ fit-out" });
         expect(screen.queryByRole("button", { name: "More actions" })).toBeNull();
     });

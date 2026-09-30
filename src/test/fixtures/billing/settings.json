@@ -1,0 +1,12 @@
+{
+  "domain": "design",
+  "invoicePrefix": "ID",
+  "defaultTermsDays": 30,
+  "bankAccount": "ID-Indetails SAL",
+  "bankName": "Bank Audi",
+  "iban": "LB62099900000001001901229114",
+  "swift": "AUDBLBBX",
+  "termsText": "Bank transfer, cheque or cash are all accepted.",
+  "footer": "Thank you for working with ID-Indetails.",
+  "updatedAt": "2026-09-30T04:51:22.678Z"
+}

@@ -29,6 +29,8 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import RecentActivity from "../activity/RecentActivity";
 import { BillingMeter, InvoiceLine } from "../billing/BillingBits";
+import BillingModalHost from "../billing/BillingModalHost";
+import { useBillingLinks } from "../billing/billingLinks";
 import { useInvoices, usePayments } from "../billing/billingApi";
 import { useProjects, type ProjectSummary } from "../projects/projectsApi";
 import { ClientMark, ContactRow } from "./ClientBits";
@@ -78,6 +80,7 @@ function ClientView({ client }: { client: Client }) {
     const firstProject = client.projectMoney?.map((p) => p.startDate).sort()[0];
     const canDelete = client.projectCount === 0;
     const liveInvoices = invoices.data?.items.filter((i) => i.status !== "void") ?? [];
+    const billingLinks = useBillingLinks();
     const oldest = liveInvoices
         .filter((i) => i.isOverdue && (i.balance ?? 0) > 0.5 && i.dueOn)
         .sort((a, b) => a.dueOn!.localeCompare(b.dueOn!))[0];
@@ -248,7 +251,7 @@ function ClientView({ client }: { client: Client }) {
                                     {invoices.isPending ? <SkeletonLines lines={3} />
                                         : invoices.isError ? <LoadError error={invoices.error} retry={() => invoices.refetch()} what="the invoices" />
                                             : liveInvoices.length
-                                                ? liveInvoices.slice(0, 6).map((inv) => <InvoiceLine key={inv.id} invoice={inv} />)
+                                                ? liveInvoices.slice(0, 6).map((inv) => <InvoiceLine key={inv.id} invoice={inv} onOpen={() => billingLinks.openInvoice(inv.id)} />)
                                                 : <p className="muted" style={{ padding: "6px 0" }}>Nothing has been invoiced to this client yet.</p>}
                                     <div className="row wrap mt" style={{ gap: 8 }}>
                                         <button className="btn btn-sm" onClick={() => navigate(`/${domain}/financials?tab=billing`)}><Icon name="external" />Billing overview</button>
@@ -294,6 +297,7 @@ function ClientView({ client }: { client: Client }) {
                 </>
             )}
 
+            <BillingModalHost />
             {showEdit && <ClientModal domain={domain} client={client} onClose={() => setShowEdit(false)} />}
             {showDelete && (
                 <Modal title={canDelete ? `Delete ${client.displayName}?` : "This client can't be deleted"} onClose={() => setShowDelete(false)}
