@@ -14,6 +14,7 @@ import MyWorkRoute from "@/domains/shared/requirements/MyWorkRoute";
 import MyPayPage from "@/domains/design/pay/MyPayPage";
 import ActivityPage from "@/domains/design/activity/ActivityPage";
 import OverviewRoute from "@/domains/design/dashboard/OverviewPage";
+import FinancialsRoute from "@/domains/design/financials/FinancialsPage";
 import PeoplePage from "@/domains/design/people/PeoplePage";
 import { MyProfilePage, PersonProfilePage } from "@/domains/design/people/ProfilePage";
 import ReportsPage from "@/domains/design/reports/ReportsPage";
@@ -119,7 +120,7 @@ export const domainRoutes: DomainRoute[] = [
     {
         path: "financials",
         nav: { label: "Financials", icon: "card" },
-        admin: { element: soon("Financials"), access: all(P.FINANCIAL_VIEW) },
+        admin: { element: <FinancialsRoute />, access: all(P.FINANCIAL_VIEW) },
     },
     {
         path: "my-work",

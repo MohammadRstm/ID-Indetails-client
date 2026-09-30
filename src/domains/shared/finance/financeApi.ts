@@ -9,6 +9,7 @@ export type FinanceMonth = Schemas["FinanceMonthResponse"];
 export type FinanceProjects = Schemas["FinanceProjectsResponse"];
 export type FinanceBilling = Schemas["FinanceBillingResponse"];
 export type MoneyAttention = Schemas["MoneyAttentionResponse"];
+export type FinanceCosts = Schemas["FinanceCostsResponse"];
 
 /** Revenue, cost, profit and margin over a period, with the billing position. Needs financial:view. */
 export function useFinanceSummary(domain: string, range: { from?: string; to?: string }, enabled: boolean) {
@@ -60,6 +61,15 @@ export function useFinanceAttention(domain: string, enabled: boolean) {
     return useQuery({
         queryKey: keys.finance.attention(domain),
         queryFn: async () => (await http.get<MoneyAttention[]>(`/finance/${domain}/attention`)).data,
+        enabled,
+    });
+}
+
+/** Labour by person, expenses by category and the biggest expenses over a period. Needs financial:view. */
+export function useFinanceCosts(domain: string, range: { from?: string; to?: string }, enabled: boolean) {
+    return useQuery({
+        queryKey: keys.finance.costs(domain, range),
+        queryFn: async () => (await http.get<FinanceCosts>(`/finance/${domain}/costs`, { params: range })).data,
         enabled,
     });
 }

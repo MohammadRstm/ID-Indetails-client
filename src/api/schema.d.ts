@@ -8634,6 +8634,8 @@ export interface components {
             from: string;
             /** Format: int32 */
             internalProjects: number;
+            /** Format: int32 */
+            labourMinutes: number;
             /** Format: double */
             margin: null | number;
             /** Format: double */
@@ -9710,6 +9712,8 @@ export interface components {
             setAt: string;
         };
         PersonCostResponse: {
+            /** Format: int32 */
+            minutes: number;
             name: string;
             unconverted: components["schemas"]["CurrencyTotalResponse"][];
             /** Format: double */
