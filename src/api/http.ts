@@ -11,10 +11,11 @@ import type { AuthResponse } from "./types";
  * overlap: one runs at a time in this tab (a shared promise) and across tabs (a Web Lock).
  */
 
-export const http = axios.create({ baseURL: "/api", headers: { Accept: "application/json" } });
+// Arrays go as repeated keys (sections=a&sections=b), the way ASP.NET binds them.
+export const http = axios.create({ baseURL: "/api", headers: { Accept: "application/json" }, paramsSerializer: { indexes: null } });
 
 // The refresh itself goes around the interceptors, so a failed refresh can't trigger another.
-const bare = axios.create({ baseURL: "/api", headers: { Accept: "application/json" } });
+const bare = axios.create({ baseURL: "/api", headers: { Accept: "application/json" }, paramsSerializer: { indexes: null } });
 
 type SessionHandlers = {
     /** A refresh succeeded: the user may have changed (permissions, role). */

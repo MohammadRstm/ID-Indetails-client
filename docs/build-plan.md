@@ -59,18 +59,18 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - [x] 4c-1: employees, Add employee, someone's profile and your own, Edit profile with pay from a date;
   - [x] 4c-2: activity and reports;
   - [x] 4c-3: the overview board and the client page's recent activity.
-- [ ] **5. Money**, in parts:
+- [x] **5. Money**, in parts:
   - [x] 5a: Design's financials: overview, projects, clients and costs;
   - [x] 5b: a project's money: the money band, cost curve, customer payment, expenses and closing out;
   - [x] 5c: invoices and payments, and the Financials billing tab;
-  - [ ] 5d: billing settings, exchange rates and the project report.
+  - [x] 5d: the project report. Billing settings and exchange rates moved to phase 7: the prototype keeps them in Settings → Finance.
 - [ ] **6. Execution:**
   - sites, materials, labour weeks, pricing, site money;
   - statements;
   - the Execution employee views.
 - [ ] **7. Company and settings:**
   - company overview, overhead, salaries and excuses, project pay, schedules, working time;
-  - company, domain and billing settings, the logo, teams, invitations;
+  - company, domain and billing settings (terms, bank details), exchange rates, the logo, teams, invitations;
   - managing a person's permissions.
 - [ ] **8. Messages, notifications and live updates.**
 - [ ] **9. Hardening:**
@@ -121,6 +121,7 @@ Decisions made along the way, and anything skipped because it needs the user's i
   - Client events now name their client (API PR #29), and the feed, the report and the timesheet export name clients by their display name, as the rest of the API does (API PR #30).
   - A quarter that hasn't started yet reports on its first day; the prototype asked for a range ending before it began.
   - The entries tab loads 50 at a time; the prototype showed 25 first.
+- **The project report.** Its preview is laid out as the server's PDF is, section by section, so it shows what the PDF holds: the prototype's "Performance" charts and the employees' positions aren't in the PDF, so they are left out of the preview and the section list. The PDF and the CSV of the range's entries come from the API; arrays in query strings now go as repeated keys (sections=a&sections=b), as ASP.NET reads them.
 - **Invoices and payments.** The invoice document is drawn on screen from the invoice, laid out as the server's PDF (MigraDoc) is, so the editor's live preview and the invoice window show what the client receives; the PDF button downloads the server's file. Email is really sent, by the server, with the PDF attached, so the prototype's "email delivery is simulated" note is replaced by how sending works; WhatsApp opens the chat with the message ready, as in the prototype. Sending a draft issues it first. The billing windows open through the link (?invoice=, ?edit=, ?send=, ?pay=), so an invoice can be linked to from anywhere. The register shows the latest 100 invoices.
 - **A project's money.** The money band, financial breakdown and the two cost charts (inside Analytics, as in the prototype) come from the project's money and its cost timeline. The customer payment asks for a client when an internal project becomes client work, since the API needs one. An expense row opens a small "Remove this expense?" for people with expense:manage while the project is open: the prototype had no way to take back a mistaken expense. Execution's fee and materials arrive with phase 6.
 - **Financials.** "All time" asks from 1 January 2000, since the API's default period is this quarter. The hours behind the labour cost come from the API (API PR #32). The export is the API's CSV of the period's projects. Execution's financials arrive with phase 6.

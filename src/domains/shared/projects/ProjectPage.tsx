@@ -29,6 +29,7 @@ import ExpenseModal from "../../design/projects/money/ExpenseModal";
 import BillingModalHost from "../billing/BillingModalHost";
 import { useBillingLinks } from "../billing/billingLinks";
 import PaymentModal from "../../design/projects/money/PaymentModal";
+import ReportModal from "../../design/projects/report/ReportModal";
 import CompleteProjectModal from "./CompleteProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
@@ -79,6 +80,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const requirements = useRequirements(project.id, permissions.has(P.REQUIREMENT_VIEW));
     const meetings = useProjectMeetings(project.id);
     const [showDone, setShowDone] = useState(false);
+    const [showReport, setShowReport] = useState(false);
     const completeFromList = params.get("complete") === "1";
 
     const site = project.domain === "execution";
@@ -178,6 +180,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     </div>
                 </div>
                 <div className="page-actions">
+                    {!site && permissions.has(P.FINANCIAL_VIEW) && permissions.has(P.WORK_ENTRY_VIEW_ALL) && (
+                        <button className="btn" onClick={() => setShowReport(true)}><Icon name="download" />Export report</button>
+                    )}
                     {canChangeStatus && (closed ? (
                         <button className="btn" onClick={() => run("reopen", `${project.title} is active again`)}><Icon name="refresh" />Reopen project</button>
                     ) : (
@@ -253,6 +258,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {moneyAction === "payment" && canEditPayment && <PaymentModal project={project} onClose={closeMoney} />}
             {moneyAction === "expense" && canAddExpense && <ExpenseModal project={project} onClose={closeMoney} />}
             {!site && <BillingModalHost project={project} />}
+            {showReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}
         </div>
     );
 }
