@@ -12,6 +12,7 @@ import { PAYMENT_METHODS } from "@/shared/format/labels";
 import { money } from "@/shared/format/money";
 import { companyToday, daysBetween, fmtDate, fmtDateY, fmtNumber } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import PaymentActions from "./PaymentActions";
 import { useBillingSettings, useDiscardInvoice, useInvoice, usePayments, useVoidInvoice, type Invoice } from "./billingApi";
 import { InvoiceStatusPill } from "./BillingBits";
 import InvoiceDoc from "./InvoiceDoc";
@@ -101,7 +102,10 @@ export default function InvoiceModal({ invoiceId, onClose, onSend, onEdit, onPay
                     <div className="u mt">Payments</div>
                     <div className="mt-s">
                         {live.length ? live.map((p) => (
-                            <CostRow key={p.id} label={PAYMENT_METHODS[p.method] ?? p.method} meta={`${fmtDate(p.receivedOn)}${p.reference ? ` · ${p.reference}` : ""}`} value={money.fmt(p.amountUsd)} />
+                            <div key={p.id} className="row" style={{ gap: 4 }}>
+                                <div className="grow"><CostRow label={PAYMENT_METHODS[p.method] ?? p.method} meta={`${fmtDate(p.receivedOn)}${p.reference ? ` · ${p.reference}` : ""}`} value={money.fmt(p.amountUsd)} /></div>
+                                <PaymentActions payment={p} />
+                            </div>
                         )) : <p className="muted" style={{ fontSize: "11.5px" }}>Nothing received against this invoice yet.</p>}
                         {live.length > 0 && <CostRow strong label="Balance" value={money.fmt(balance)} />}
                         {live.filter((p) => p.currency !== "USD").map((p) => (

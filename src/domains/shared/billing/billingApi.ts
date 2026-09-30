@@ -107,6 +107,24 @@ export function useRecordPayment(projectId: number) {
     });
 }
 
+/** Puts a payment received on account against one of the project's issued invoices (payment:record). */
+export function useApplyPayment() {
+    const refresh = useInvalidateBilling();
+    return useMutation({
+        mutationFn: async ({ id, invoiceId }: { id: number; invoiceId: number }) => (await http.put<Payment>(`/payments/${id}/invoice`, { invoiceId })).data,
+        onSuccess: refresh,
+    });
+}
+
+/** Voids a payment that was recorded in error; it stays in the register with its reason (payment:void). */
+export function useVoidPayment() {
+    const refresh = useInvalidateBilling();
+    return useMutation({
+        mutationFn: async ({ id, reason }: { id: number; reason: string }) => (await http.post<Payment>(`/payments/${id}/void`, { reason })).data,
+        onSuccess: refresh,
+    });
+}
+
 /** A domain's bank details, terms and footer for its invoices (billing_settings:manage or financial:view). */
 export function useBillingSettings(domain: string, enabled = true) {
     return useQuery({

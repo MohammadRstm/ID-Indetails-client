@@ -153,7 +153,7 @@ export default function BillingTab({ domain, tiles }: { domain: Domain; tiles: M
                     <div><div className="panel-title">Payments received</div><div className="panel-sub">Cash recorded by an admin after it arrived - bank, cheque or cash.</div></div>
                 </div>
                 {!payments ? <div className="panel-body"><SkeletonLines lines={4} /></div>
-                    : <PaymentTable payments={payments} showProject tiles={tiles} onOpen={links.openInvoice} />}
+                    : <PaymentTable payments={payments} showProject tiles={tiles} onOpen={links.openInvoice} actions />}
             </div>
         </div>
     );
