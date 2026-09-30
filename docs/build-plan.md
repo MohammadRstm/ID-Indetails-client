@@ -160,10 +160,11 @@ Decisions made along the way, and anything skipped because it needs the user's i
 
 ### Waiting for the user
 
-- **The length of a colleague's last work on an employee's project cards.** The prototype says "Sarah logged 2h · 3 hours ago". The API gives employees who logged last and when, but deliberately not how long ("Other people's hours stay private"), so the card says "Sarah logged work · 3 hours ago". Showing the length would let every employee see part of their colleagues' hours; that is a privacy call, not a technical one.
+Nothing at the moment.
 
 ### Decided
 
+- **Colleagues' hours stay private** (the user, 30 Sep 2026). An employee's project cards say "Sarah logged work · 3 hours ago", not the prototype's "Sarah logged 2h": employees never see how long a colleague worked.
 - **No Activity page for Execution** (the user, 30 Sep 2026). The prototype has none, and it stays that way, although the API records site events and the client words them.
 - **The company's own events are worded.** Schedules, working time, excused hours and company expenses read like the rest of the feed ("excused Sarah Haddad for 3 days off in September 2026", "changed the company's working hours from Oct 1"). The client always asks for one domain's feed, so only the schedule and excuse events, which carry the person's domain, reach a page today (Design's Activity page). The company ones would show on a company-wide feed, if one is ever wanted.
 
