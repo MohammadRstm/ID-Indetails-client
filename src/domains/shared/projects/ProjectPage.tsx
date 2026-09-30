@@ -25,6 +25,8 @@ import { useProjectMeetings } from "../meetings/meetingsApi";
 import { personName, useDomainPeople } from "../people/peopleApi";
 import { ProjectRequirementsTab } from "../requirements/Requirements";
 import { useRequirements } from "../requirements/requirementsApi";
+import ExpenseModal from "../../design/projects/money/ExpenseModal";
+import PaymentModal from "../../design/projects/money/PaymentModal";
 import CompleteProjectModal from "./CompleteProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
@@ -89,6 +91,12 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const days = daysBetween(project.startDate, end) + 1;
     const m = seesMoney ? project.money : null;
     const openRequirements = requirements.data ? requirements.data.total - requirements.data.done : 0;
+    // Design's customer payment and expenses, opened from the header or the money band (?money=payment|expense)
+    const moneyAction = !site && m ? params.get("money") : null;
+    const canEditPayment = !site && !!m && !m.isLocked && permissions.has(P.PROJECT_EDIT);
+    const canAddExpense = !site && !!m && !m.isLocked && permissions.has(P.EXPENSE_MANAGE);
+    const openMoney = (action: "payment" | "expense") => { params.set("money", action); setParams(params); };
+    const closeMoney = () => { params.delete("money"); setParams(params, { replace: true }); };
 
     function switchTab(k: TabKey) {
         if (k === "overview") params.delete("tab");
@@ -153,7 +161,11 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                 </span>
                             ) : (
                                 <span className="row" style={{ gap: 6 }}>Payment <b className="sec mono">{money.fmt(m.revenue)}</b>
-                                    {m.isLocked && <LockedSince at={project.finalizedAt} />}
+                                    {m.isLocked ? <LockedSince at={project.finalizedAt} /> : canEditPayment && (
+                                        <button className="icon-btn" style={{ width: 22, height: 22 }} aria-label="Edit payment" onClick={() => openMoney("payment")}>
+                                            <Icon name="edit" style={{ width: 13, height: 13 }} />
+                                        </button>
+                                    )}
                                 </span>
                             ))}
                         </div>
@@ -165,14 +177,25 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     ) : (
                         <button className="btn btn-primary" onClick={() => setShowDone(true)}><Icon name="check" />Mark as done</button>
                     ))}
-                    {canChangeStatus && !closed && (
+                    {((canChangeStatus && !closed) || canAddExpense || canEditPayment) && (
                         <MenuButton icon="dots" label="More actions">
                             {(close) => (
                                 <div>
-                                    {project.status !== "hold" && (
-                                        <button className="pop-item" onClick={() => { close(); run("hold", `${project.title} is now on hold`); }}><Icon name="pause" />Put on hold</button>
+                                    {canChangeStatus && !closed && (
+                                        <>
+                                            {project.status !== "hold" && (
+                                                <button className="pop-item" onClick={() => { close(); run("hold", `${project.title} is now on hold`); }}><Icon name="pause" />Put on hold</button>
+                                            )}
+                                            <button className="pop-item" onClick={() => { close(); run("archive", `${project.title} is now archived`); }}><Icon name="archive" />Archive project</button>
+                                        </>
                                     )}
-                                    <button className="pop-item" onClick={() => { close(); run("archive", `${project.title} is now archived`); }}><Icon name="archive" />Archive project</button>
+                                    {canChangeStatus && !closed && (canAddExpense || canEditPayment) && <div className="pop-sep" />}
+                                    {canAddExpense && <button className="pop-item" onClick={() => { close(); openMoney("expense"); }}><Icon name="plus" />Add project expense</button>}
+                                    {canEditPayment && (
+                                        <button className="pop-item" onClick={() => { close(); openMoney("payment"); }}>
+                                            <Icon name="card" />{project.billingType === "internal" ? "Set a customer payment" : "Edit customer payment"}
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </MenuButton>
@@ -219,6 +242,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {(showDone || completeFromList) && canChangeStatus && !closed && (
                 <CompleteProjectModal project={project} openRequirements={openRequirements} onClose={closeComplete} />
             )}
+            {moneyAction === "payment" && canEditPayment && <PaymentModal project={project} onClose={closeMoney} />}
+            {moneyAction === "expense" && canAddExpense && <ExpenseModal project={project} onClose={closeMoney} />}
         </div>
     );
 }

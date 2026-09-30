@@ -1,8 +1,10 @@
 import { http, HttpResponse } from "msw";
 import type { Paged, Schemas } from "@/api/types";
 import contributorJson from "./project/contributor.json";
+import costTimelineJson from "./project/costTimeline.json";
 import employeeJson from "./project/employee.json";
 import entryJson from "./project/entry.json";
+import expensesJson from "./project/expenses.json";
 import latestJson from "./project/latest.json";
 import projectJson from "./project/project.json";
 import timelineJson from "./project/timeline.json";
@@ -23,6 +25,8 @@ export const projectWork = {
     latest: latestJson as unknown as Paged<Schemas["WorkEntryResponse"]>,
     entry: entryJson as unknown as Schemas["WorkEntryDetailResponse"],
     employee: employeeJson as unknown as Schemas["EmployeeResponse"],
+    expenses: expensesJson as unknown as Schemas["ExpenseListResponse"],
+    costTimeline: costTimelineJson as unknown as Schemas["ProjectCostTimelineResponse"],
 };
 
 export const projectWorkHandlers = [
@@ -39,4 +43,8 @@ export const projectWorkHandlers = [
     http.get("/api/work-entries/:id/comments", () => HttpResponse.json(projectWork.entry.comments)),
     http.get("/api/employees/:id", () => HttpResponse.json(projectWork.employee)),
     http.get("/api/employees", () => HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 })),
+    http.get("/api/projects/:id/expenses", () => HttpResponse.json(projectWork.expenses)),
+    http.get("/api/projects/:id/cost-timeline", () => HttpResponse.json(projectWork.costTimeline)),
+    // the customer payment's history
+    http.get("/api/activity", () => HttpResponse.json({ items: [], page: 1, pageSize: 40, totalCount: 0 })),
 ];
