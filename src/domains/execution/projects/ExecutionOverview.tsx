@@ -9,6 +9,7 @@ import { useBillingLinks } from "../../shared/billing/billingLinks";
 import type { Project } from "../../shared/projects/projectsApi";
 import { useRequirements } from "../../shared/requirements/requirementsApi";
 import { useLabourWeeks } from "../labour/labourApi";
+import LabourPanel from "../labour/LabourPanel";
 import { useMaterials } from "../materials/materialsApi";
 import MaterialsPanel from "../materials/MaterialsPanel";
 import LabourHealth from "./LabourHealth";
@@ -37,6 +38,7 @@ export default function ExecutionOverview({ project }: { project: Project }) {
             )}
             {m && client && <BillingBand project={project} />}
             <MaterialsPanel project={project} />
+            <LabourPanel project={project} />
             {m && client && <LabourHealth project={project} />}
         </>
     );

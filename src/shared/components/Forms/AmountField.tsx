@@ -9,6 +9,8 @@ type AmountFieldProps = {
     /** false hides the currency picker (amounts that are always in one currency). */
     currencies?: boolean;
     id?: string;
+    /** For a field with no label of its own, as in a grid. */
+    "aria-label"?: string;
     placeholder?: string;
     /** Row and column, for grids that move between fields with Enter. */
     r?: number;
@@ -20,7 +22,7 @@ const shown = (value: number | null) => (value === 0 || value ? String(value) : 
 const parsed = (text: string) => (text === "" ? 0 : Number(text) || 0);
 
 /** An amount with its currency sign and an optional USD / LBP picker (the prototype's UI.AmountField). */
-export default function AmountField({ value, onChange, currency = "USD", onCurrency, currencies = true, id, placeholder = "0", r, c, onKeyDown }: AmountFieldProps) {
+export default function AmountField({ value, onChange, currency = "USD", onCurrency, currencies = true, id, placeholder = "0", r, c, onKeyDown, ...rest }: AmountFieldProps) {
     // The text as typed, so "42." and "42.50" stay as they are while the amount they give is handed up;
     // an amount set from outside replaces it.
     const [text, setText] = useState(() => shown(value));
@@ -35,6 +37,7 @@ export default function AmountField({ value, onChange, currency = "USD", onCurre
             <span className="amount-cur">{currency === "LBP" ? "LBP" : "$"}</span>
             <input
                 id={id}
+                aria-label={rest["aria-label"]}
                 className="input mono"
                 inputMode="decimal"
                 placeholder={placeholder}
