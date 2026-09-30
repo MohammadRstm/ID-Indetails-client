@@ -139,6 +139,35 @@ describe("the timer", () => {
         expect(await within(dialog).findByRole("button", { name: /^Log 20m/ })).toBeInTheDocument();
         expect(within(dialog).getByLabelText("Start time")).toHaveValue("7:00 PM");
     });
+
+    it("keeps the evening part of a timer stopped after midnight", async () => {
+        // 11:30 PM in Beirut, stopped at 12:45 AM
+        vi.setSystemTime(new Date("2026-09-28T20:30:00Z"));
+        renderApp("/design/projects", sarah, ...workHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: /start timer/i }));
+        vi.setSystemTime(new Date("2026-09-28T21:45:00Z"));
+        await userEvent.click(await screen.findByRole("button", { name: /stop/i }));
+        const dialog = await logWindow();
+        expect(await within(dialog).findByRole("button", { name: /^Log 1h 15m/ })).toBeInTheDocument();
+        expect(within(dialog).getByLabelText("Start time")).toHaveValue("11:30 PM");
+    });
+});
+
+describe("overtime on a day off", () => {
+    it("opens on the usual slot, not from a working day's end that doesn't exist", async () => {
+        // Saturday 3 October, 11 AM in Beirut: a day off, all of it overtime
+        vi.setSystemTime(new Date("2026-10-03T08:00:00Z"));
+        const off = { ...work.schedule.day, isWorkingDay: false, startMinute: null, endMinute: null, requiredMinutes: 0 };
+        renderApp("/design/projects", sarah,
+            http.get("/api/me/schedule", ({ request }) => HttpResponse.json({ ...work.schedule, day: { ...off, date: new URL(request.url).searchParams.get("date") } })),
+            ...workHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Log overtime" }));
+        const dialog = await screen.findByRole("dialog", { name: "Log overtime" });
+        expect(within(dialog).queryByText("That ends in the future")).toBeNull();
+        // an empty day: the first hour of the usual day, as Log work opens on
+        expect(within(dialog).getByLabelText("Start time")).toHaveValue("9:00 AM");
+        expect(within(dialog).getByLabelText("End time")).toHaveValue("10:00 AM");
+    });
 });
 
 describe("an employee's project", () => {

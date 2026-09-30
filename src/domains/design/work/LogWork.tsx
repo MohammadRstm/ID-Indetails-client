@@ -45,7 +45,7 @@ export default function LogWorkModal({ options }: { options: LogWorkOptions }) {
         );
     }
     return <LogWorkForm options={options} firstDay={firstDay} projects={projects.data} settings={settings.data} dayEntries={day.data.entries}
-        dayEnd={workHoursOf(schedule.data.day)?.e ?? 17 * 60} />;
+        dayEnd={workHoursOf(schedule.data.day)?.e ?? null} />;
 }
 
 type FormProps = {
@@ -55,7 +55,8 @@ type FormProps = {
     settings: DomainSettings;
     dayEntries: WorkEntry[];
     /** Where the working day ends: "Log overtime" starts there. */
-    dayEnd: number;
+    /** When the working day ends; null on a day off. */
+    dayEnd: number | null;
 };
 
 /** The window itself (the prototype's P.LogWork): what was done, when, and on which project. */
@@ -99,7 +100,9 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayEnd
         projectId, day: date, startMin, duration, others: list, moves: swaps, ignoreId: ed?.id,
         allowFuture: settings.allowFutureEntries, allowOverlap: settings.allowOverlap,
     }) ?? (settings.requireDescription && !desc.trim() && touched ? "Say what you worked on." : null);
-    const blocked = !!error || (settings.requireDescription && !desc.trim()) || attachment.uploading || save.isPending;
+    // a project that stopped taking work (the timer ran on it) has to be picked again from the list
+    const unlisted = !ed && !choices.some((c) => c.id === projectId);
+    const blocked = !!error || unlisted || (settings.requireDescription && !desc.trim()) || attachment.uploading || save.isPending;
 
     function pickDay(d: string) {
         setDate(d);
@@ -215,14 +218,17 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayEnd
  * Where the window opens (the prototype's rules): an edited entry where it is; overtime from the end of
  * the working day up to now; given times as given; otherwise the day's first free time.
  */
-function firstSlot(o: LogWorkOptions, day: string, entries: WorkEntry[], dayEnd: number, today: string, nowMin: number): { s: number; d: number } {
+function firstSlot(o: LogWorkOptions, day: string, entries: WorkEntry[], dayEnd: number | null, today: string, nowMin: number): { s: number; d: number } {
     if (o.edit) return { s: minutesOfDay(o.edit.startedAt), d: o.edit.minutes };
     const isToday = day === today;
-    if (!o.overtime && o.startMin == null && o.endMin == null) {
+    // a day off is all overtime, and today's overtime can't start before the working day ends: the usual slot
+    const noOvertimeStart = dayEnd == null || (isToday && nowMin <= dayEnd);
+    if ((!o.overtime || noOvertimeStart) && o.startMin == null && o.endMin == null) {
         return defaultSlot(entries.map((e) => spanOn(e, day)), 9 * 60, isToday, nowMin);
     }
-    const end = o.endMin ?? (o.overtime && isToday && nowMin > dayEnd ? Math.floor(nowMin / 5) * 5
+    const workEnd = dayEnd ?? 17 * 60;
+    const end = o.endMin ?? (o.overtime && isToday && nowMin > workEnd ? Math.floor(nowMin / 5) * 5
         : isToday ? Math.max(10 * 60, Math.floor(nowMin / 15) * 15) : 12 * 60);
-    const start = o.startMin ?? (o.overtime ? dayEnd : Math.max(0, end - (isToday ? 120 : 180)));
+    const start = o.startMin ?? (o.overtime ? workEnd : Math.max(0, end - (isToday ? 120 : 180)));
     return { s: start, d: (end - start + DAY) % DAY || (o.overtime ? 60 : 120) };
 }

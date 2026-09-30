@@ -33,6 +33,11 @@ describe("Select", () => {
         expect(button).toHaveTextContent("Option 2");
     });
 
+    it("shows a value that isn't one of its options as a choice still to make", () => {
+        render(<Select aria-label="Project" value="gone" options={[{ value: "a", label: "Villa Mounir" }]} onChange={vi.fn()} />);
+        expect(screen.getByRole("button", { name: "Project" })).toHaveTextContent("Choose…");
+    });
+
     it("filters long lists", async () => {
         render(<Harness count={12} />);
         await userEvent.click(screen.getByRole("button", { name: "Pick" }));
