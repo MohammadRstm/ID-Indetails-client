@@ -182,17 +182,13 @@ export function MeetingsPage() {
     const [mine, setMine] = useState(false);
     const [showPast, setShowPast] = useState(false);
     const [showNew, setShowNew] = useState(false);
-    const all = useMeetings({});
-    const query = useMeetings({ projectId: projectId === "all" ? undefined : +projectId, mine });
-    // The meetings list spans every domain the person can see; keep this page to its own domain's projects.
-    const several = permissions.visibleDomains.length > 1;
-    const domainProjects = useProjects({ domain, pageSize: 100 }, several);
-    const inDomain = (m: Meeting) => !several || (domainProjects.data?.items ?? []).some((p) => p.id === m.project.id);
+    const all = useMeetings({ domain });
+    const query = useMeetings({ domain, projectId: projectId === "all" ? undefined : +projectId, mine });
     const now = new Date().toISOString();
-    const list = (query.data ?? []).filter(inDomain);
+    const list = query.data ?? [];
     const upcoming = list.filter((m) => m.endsAt >= now).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
     const past = list.filter((m) => m.endsAt < now).sort((a, b) => b.startsAt.localeCompare(a.startsAt));
-    const projects = [...new Map((all.data ?? []).filter(inDomain).map((m) => [m.project.id, m.project])).values()].sort((a, b) => a.title.localeCompare(b.title));
+    const projects = [...new Map((all.data ?? []).map((m) => [m.project.id, m.project])).values()].sort((a, b) => a.title.localeCompare(b.title));
     const next = upcoming[0];
     const canCreate = permissions.hasAny(P.MEETING_CREATE, P.MEETING_MANAGE);
 

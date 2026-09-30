@@ -4187,6 +4187,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    Domain?: string;
                     From?: string;
                     Mine?: boolean;
                     ProjectId?: number;

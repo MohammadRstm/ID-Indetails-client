@@ -175,6 +175,16 @@ describe("meetings", () => {
         expect(await screen.findByRole("button", { name: /new meeting/i })).toBeInTheDocument();
     });
 
+    it("are asked for by the page's own domain", async () => {
+        const asked: (string | null)[] = [];
+        renderApp("/design/meetings", personas.superAdmin,
+            http.get("/api/meetings", ({ request }) => { asked.push(new URL(request.url).searchParams.get("domain")); return HttpResponse.json(fixtures.meetings); }),
+            ...projectHandlers);
+        await screen.findByRole("button", { name: /new meeting/i });
+        await waitFor(() => expect(asked.length).toBeGreaterThan(0));
+        expect(new Set(asked)).toEqual(new Set(["design"]));
+    });
+
     it("are read-only without meeting:create", async () => {
         renderApp("/design/meetings", withPermissions(personas.designEmployee, { revoke: [P.MEETING_CREATE] }), ...projectHandlers);
         await screen.findByText(/that already happened/);
