@@ -51,14 +51,14 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - requirements and meetings;
   - clients;
   - the search palette.
-- [ ] **4. Design work**, in parts:
+- [x] **4. Design work**, in parts:
   - [x] 4a-1: the employee home, log work with the drag timeline and the overtime preview, the timer, an employee's project;
   - [x] 4a-2: my work (both domains), my pay, the hours balance and the behind-on-hours notice;
   - [x] 4b-1: a Design project's overview for admins: work KPIs, contributors and their drawer, the work timeline, analytics, the entry window and comments;
   - [x] 4b-2: the project Timeline tab: the project at any moment, progress and status over time, the history day by day, and a day as cards;
   - [x] 4c-1: employees, Add employee, someone's profile and your own, Edit profile with pay from a date;
   - [x] 4c-2: activity and reports;
-  - [ ] 4c-3: the overview board and the client page's recent activity.
+  - [x] 4c-3: the overview board and the client page's recent activity.
 - [ ] **5. Money:**
   - financials, project money, expenses;
   - invoices, payments;
@@ -104,7 +104,6 @@ Decisions made along the way, and anything skipped because it needs the user's i
 - **Quirks mode.** The prototype's page has no doctype, so browsers draw it in quirks mode, where tables don't inherit the page's line height. The client stays in standards mode; one rule in `client.css` gives tables the prototype's line height, and the shell and table heights were measured against the prototype to match.
 - **Screens that link ahead.** A few phase 3 screens point at pages from later phases:
   - a project's Overview tab says "On its way" until Design's (phase 4) and Execution's (phase 6) panels arrive, and so does the Timeline tab;
-  - an employee's project page arrives with phase 4, and so does the client page's recent activity feed;
   - an Execution person's profile shows their header, and what they record arrives with phase 6;
   - "Send message" on a profile opens `messages?to=`, which arrives with phase 8;
   - an Execution employee's projects and project page arrive with phase 6, with the rest of Execution.
@@ -122,6 +121,7 @@ Decisions made along the way, and anything skipped because it needs the user's i
   - Client events now name their client (API PR #29), and the feed, the report and the timesheet export name clients by their display name, as the rest of the API does (API PR #30).
   - A quarter that hasn't started yet reports on its first day; the prototype asked for a range ending before it began.
   - The entries tab loads 50 at a time; the prototype showed 25 first.
+- **The overview board.** Each person's card order is saved on the server (`/api/me/board-layouts/overview-design`) instead of the prototype's browser storage, so it follows them to any browser; the prototype's "Export JSON" button, there to hand the layouts over while it had no server, is left out. Whether "Needs attention & deadlines" is folded stays in the browser, as in the prototype. The period's people, projects and this week's hours come from the API (API PR #31). Execution's dashboard arrives with phase 6.
 - **The account menu opens upwards.** The prototype opened it downwards from the foot of the sidebar, so on any page longer than the window it was drawn below the screen and Sign out was out of reach.
 - **Your own phone** (API PR #28). The session now carries the phone, so editing your own name no longer sends an empty phone back.
 - **Strict numbers in the API** (API PR #27). JSON numbers are strict there, so the generated types say `number`, not `number | string`.

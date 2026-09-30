@@ -6,6 +6,9 @@ import type { Schemas } from "@/api/types";
 export type FinanceSummary = Schemas["FinanceSummaryResponse"];
 export type FinanceClient = Schemas["FinanceClientResponse"];
 export type FinanceMonth = Schemas["FinanceMonthResponse"];
+export type FinanceProjects = Schemas["FinanceProjectsResponse"];
+export type FinanceBilling = Schemas["FinanceBillingResponse"];
+export type MoneyAttention = Schemas["MoneyAttentionResponse"];
 
 /** Revenue, cost, profit and margin over a period, with the billing position. Needs financial:view. */
 export function useFinanceSummary(domain: string, range: { from?: string; to?: string }, enabled: boolean) {
@@ -30,6 +33,33 @@ export function useFinanceMonthly(domain: string, months: number, enabled: boole
     return useQuery({
         queryKey: keys.finance.monthly(domain, months),
         queryFn: async () => (await http.get<FinanceMonth[]>(`/finance/${domain}/monthly`, { params: { months } })).data,
+        enabled,
+    });
+}
+
+/** Every project with its revenue, cost, profit and margin. Needs financial:view. */
+export function useFinanceProjects(domain: string, enabled: boolean) {
+    return useQuery({
+        queryKey: keys.finance.projects(domain),
+        queryFn: async () => (await http.get<FinanceProjects>(`/finance/${domain}/projects`)).data,
+        enabled,
+    });
+}
+
+/** What was invoiced and collected month by month, what is owed and the open invoices. Needs financial:view. */
+export function useFinanceBilling(domain: string, months: number, enabled: boolean) {
+    return useQuery({
+        queryKey: keys.finance.billing(domain, months),
+        queryFn: async () => (await http.get<FinanceBilling>(`/finance/${domain}/billing`, { params: { months } })).data,
+        enabled,
+    });
+}
+
+/** Money worth a look: overdue invoices, finished work still owed, no payment recorded, cost running high. Needs financial:view. */
+export function useFinanceAttention(domain: string, enabled: boolean) {
+    return useQuery({
+        queryKey: keys.finance.attention(domain),
+        queryFn: async () => (await http.get<MoneyAttention[]>(`/finance/${domain}/attention`)).data,
         enabled,
     });
 }

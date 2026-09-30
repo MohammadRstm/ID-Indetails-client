@@ -138,6 +138,14 @@ export function startOfWeek(key: string): string {
     return addDays(key, -((p.weekday - settings.weekStart + 7) % 7));
 }
 
+/** The ISO week number of a day: weeks start on Monday, and week 1 holds the year's first Thursday. */
+export function isoWeek(key: string): number {
+    const [y, m, d] = key.split("-").map(Number);
+    const date = new Date(Date.UTC(y, m - 1, d));
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    return Math.ceil(((+date - Date.UTC(date.getUTCFullYear(), 0, 1)) / 86_400_000 + 1) / 7);
+}
+
 export function fmtTime(value: DateValue): string {
     const p = partsOf(value);
     return clockTime(p.hour, p.minute);

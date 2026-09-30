@@ -13,6 +13,7 @@ import ProjectsPage from "@/domains/shared/projects/ProjectsPage";
 import MyWorkRoute from "@/domains/shared/requirements/MyWorkRoute";
 import MyPayPage from "@/domains/design/pay/MyPayPage";
 import ActivityPage from "@/domains/design/activity/ActivityPage";
+import OverviewRoute from "@/domains/design/dashboard/OverviewPage";
 import PeoplePage from "@/domains/design/people/PeoplePage";
 import { MyProfilePage, PersonProfilePage } from "@/domains/design/people/ProfilePage";
 import ReportsPage from "@/domains/design/reports/ReportsPage";
@@ -80,7 +81,7 @@ export const domainRoutes: DomainRoute[] = [
     {
         path: "overview",
         nav: { label: (d) => (d === "execution" ? "Dashboard" : "Overview"), icon: "overview" },
-        admin: { element: soon("Overview"), access: all(P.REPORT_VIEW) },
+        admin: { element: <OverviewRoute />, access: all(P.REPORT_VIEW) },
     },
     {
         path: "projects",

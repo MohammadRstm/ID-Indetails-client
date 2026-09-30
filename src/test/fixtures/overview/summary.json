@@ -1,0 +1,37 @@
+{
+  "domain": "design",
+  "from": "2026-07-01",
+  "to": "2026-09-30",
+  "revenue": 34125,
+  "cost": {
+    "labour": 12394.97,
+    "expenses": 1645,
+    "materials": 0,
+    "groundLabour": 0,
+    "total": 14039.97
+  },
+  "profit": 20085.03,
+  "margin": 0.5886,
+  "unconverted": [],
+  "unpricedLabourMinutes": 0,
+  "clientProjects": 5,
+  "internalProjects": 1,
+  "allTimeClientRevenue": 136500,
+  "allTimeClientProfit": 124258.46,
+  "allTimeInternalCost": 1798.43,
+  "stillToEarn": 102375,
+  "billing": {
+    "value": 136500,
+    "invoiced": 31800,
+    "issuedCount": 3,
+    "received": 18400,
+    "onAccount": 0,
+    "outstanding": 13400,
+    "overdue": 7800,
+    "overdueCount": 1,
+    "oldestOverdueDays": 10,
+    "notYetInvoiced": 104700,
+    "drafts": 10500,
+    "paymentCount": 2
+  }
+}

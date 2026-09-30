@@ -1,0 +1,178 @@
+{
+  "projects": [
+    {
+      "projectId": 1,
+      "title": "Haddad Holdings HQ fit-out",
+      "clientName": "Haddad Holdings",
+      "status": "active",
+      "billingType": "client",
+      "revenue": 48000,
+      "recognisedToDate": 12000,
+      "hours": 252.83,
+      "cost": {
+        "labour": 3072.92,
+        "expenses": 600,
+        "materials": 0,
+        "groundLabour": 0,
+        "total": 3672.92,
+        "unconverted": [],
+        "unpricedLabourMinutes": 0
+      },
+      "profit": 44327.08,
+      "margin": 0.9235,
+      "marginKnown": true,
+      "projected": {
+        "cost": 14691.68,
+        "profit": 33308.32,
+        "margin": 0.6939
+      },
+      "costPerHour": 14.53
+    },
+    {
+      "projectId": 3,
+      "title": "Cedar Bank branch refresh",
+      "clientName": "Cedar Bank SAL",
+      "status": "active",
+      "billingType": "client",
+      "revenue": 35000,
+      "recognisedToDate": 8750,
+      "hours": 232,
+      "cost": {
+        "labour": 2659.72,
+        "expenses": 250,
+        "materials": 0,
+        "groundLabour": 0,
+        "total": 2909.72,
+        "unconverted": [],
+        "unpricedLabourMinutes": 0
+      },
+      "profit": 32090.28,
+      "margin": 0.9169,
+      "marginKnown": true,
+      "projected": {
+        "cost": 11638.88,
+        "profit": 23361.12,
+        "margin": 0.6675
+      },
+      "costPerHour": 12.54
+    },
+    {
+      "projectId": 2,
+      "title": "Villa Mounir interiors",
+      "clientName": "Mounir Aoun",
+      "status": "active",
+      "billingType": "client",
+      "revenue": 26000,
+      "recognisedToDate": 6500,
+      "hours": 158.5,
+      "cost": {
+        "labour": 1915.48,
+        "expenses": 155,
+        "materials": 0,
+        "groundLabour": 0,
+        "total": 2070.48,
+        "unconverted": [],
+        "unpricedLabourMinutes": 0
+      },
+      "profit": 23929.52,
+      "margin": 0.9204,
+      "marginKnown": true,
+      "projected": {
+        "cost": 8281.92,
+        "profit": 17718.08,
+        "margin": 0.6815
+      },
+      "costPerHour": 13.06
+    },
+    {
+      "projectId": 4,
+      "title": "Beit Misk show apartment",
+      "clientName": "Beit Misk Residences",
+      "status": "active",
+      "billingType": "client",
+      "revenue": 18000,
+      "recognisedToDate": 4500,
+      "hours": 138,
+      "cost": {
+        "labour": 1560.67,
+        "expenses": 640,
+        "materials": 0,
+        "groundLabour": 0,
+        "total": 2200.67,
+        "unconverted": [],
+        "unpricedLabourMinutes": 0
+      },
+      "profit": 15799.33,
+      "margin": 0.8777,
+      "marginKnown": true,
+      "projected": {
+        "cost": 8802.68,
+        "profit": 9197.32,
+        "margin": 0.511
+      },
+      "costPerHour": 15.95
+    },
+    {
+      "projectId": 5,
+      "title": "Studio Nour brand space",
+      "clientName": "Studio Nour",
+      "status": "active",
+      "billingType": "client",
+      "revenue": 9500,
+      "recognisedToDate": 2375,
+      "hours": 95,
+      "cost": {
+        "labour": 1387.75,
+        "expenses": 0,
+        "materials": 0,
+        "groundLabour": 0,
+        "total": 1387.75,
+        "unconverted": [],
+        "unpricedLabourMinutes": 0
+      },
+      "profit": 8112.25,
+      "margin": 0.8539,
+      "marginKnown": true,
+      "projected": {
+        "cost": 5551,
+        "profit": 3949,
+        "margin": 0.4157
+      },
+      "costPerHour": 14.61
+    },
+    {
+      "projectId": 6,
+      "title": "Portfolio and competition entries",
+      "clientName": null,
+      "status": "active",
+      "billingType": "internal",
+      "revenue": 0,
+      "recognisedToDate": 0,
+      "hours": 160.17,
+      "cost": {
+        "labour": 1798.43,
+        "expenses": 0,
+        "materials": 0,
+        "groundLabour": 0,
+        "total": 1798.43,
+        "unconverted": [],
+        "unpricedLabourMinutes": 0
+      },
+      "profit": -1798.43,
+      "margin": null,
+      "marginKnown": true,
+      "projected": null,
+      "costPerHour": 11.23
+    }
+  ],
+  "totals": {
+    "clientProjects": 5,
+    "internalProjects": 1,
+    "clientRevenue": 136500,
+    "clientCost": 12241.54,
+    "clientProfit": 124258.46,
+    "internalCost": 1798.43,
+    "cost": 14039.97,
+    "unconverted": []
+  }
+}

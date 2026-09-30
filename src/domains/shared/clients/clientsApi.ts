@@ -34,10 +34,11 @@ export function useClients(params: ClientListParams, enabled = true) {
     });
 }
 
-export function useClientOverview(domain: string) {
+export function useClientOverview(domain: string, enabled = true) {
     return useQuery({
         queryKey: keys.clients.overview(domain),
         queryFn: async () => (await http.get<ClientOverview>("/clients/overview", { params: { domain } })).data,
+        enabled,
     });
 }
 

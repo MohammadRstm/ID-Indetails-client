@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "overdue_invoice",
+    "projectId": 2,
+    "projectTitle": "Villa Mounir interiors",
+    "clientName": "Mounir Aoun",
+    "invoiceId": 3,
+    "invoiceNumber": "ID-2026-003",
+    "daysOverdue": 10,
+    "amount": 7800,
+    "revenue": null,
+    "usedPct": null
+  }
+]

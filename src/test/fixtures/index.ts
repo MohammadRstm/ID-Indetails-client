@@ -53,6 +53,8 @@ export const projectHandlers = [
     http.get("/api/finance/:domain/summary", () => HttpResponse.json(fixtures.financeSummary)),
     http.get("/api/finance/:domain/clients", () => HttpResponse.json(fixtures.financeClients)),
     http.get("/api/search", () => HttpResponse.json(fixtures.search)),
+    // a client page's recent activity
+    http.get("/api/activity", () => HttpResponse.json(empty)),
     // a Design project's overview: its work, timeline and entries
     ...projectWorkHandlers,
 ];

@@ -1,0 +1,31 @@
+{
+  "domain": "design",
+  "activeProjects": 6,
+  "clients": 5,
+  "projectsByStatus": [
+    {
+      "status": "active",
+      "count": 6
+    }
+  ],
+  "longestRunning": [
+    {
+      "projectId": 6,
+      "title": "Portfolio and competition entries",
+      "startDate": "2026-07-06",
+      "days": 86
+    },
+    {
+      "projectId": 5,
+      "title": "Studio Nour brand space",
+      "startDate": "2026-07-15",
+      "days": 77
+    },
+    {
+      "projectId": 4,
+      "title": "Beit Misk show apartment",
+      "startDate": "2026-07-24",
+      "days": 68
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "total": 12,
+  "overdue": 6,
+  "items": [
+    {
+      "requirementId": 2,
+      "text": "Issue the construction drawings",
+      "deadline": "2026-09-29",
+      "isOverdue": true,
+      "daysLeft": -1,
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "assignees": [
+        {
+          "id": 4,
+          "name": "Omar Fares"
+        }
+      ]
+    },
+    {
+      "requirementId": 6,
+      "text": "Issue the construction drawings",
+      "deadline": "2026-09-29",
+      "isOverdue": true,
+      "daysLeft": -1,
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "assignees": [
+        {
+          "id": 5,
+          "name": "Lina Saad"
+        }
+      ]
+    },
+    {
+      "requirementId": 10,
+      "text": "Issue the construction drawings",
+      "deadline": "2026-09-29",
+      "isOverdue": true,
+      "daysLeft": -1,
+      "project": {
+        "id": 3,
+        "title": "Cedar Bank branch refresh",
+        "icon": "briefcase",
+        "tint": "#3F4B63"
+      },
+      "assignees": [
+        {
+          "id": 7,
+          "name": "Maya Nassar"
+        }
+      ]
+    },
+    {
+      "requirementId": 14,
+      "text": "Issue the construction drawings",
+      "deadline": "2026-09-29",
+      "isOverdue": true,
+      "daysLeft": -1,
+      "project": {
+        "id": 4,
+        "title": "Beit Misk show apartment",
+        "icon": "target",
+        "tint": "#6C5CE7"
+      },
+      "assignees": [
+        {
+          "id": 9,
+          "name": "Yara Mansour"
+        }
+      ]
+    },
+    {
+      "requirementId": 18,
+      "text": "Issue the construction drawings",
+      "deadline": "2026-09-29",
+      "isOverdue": true,
+      "daysLeft": -1,
+      "project": {
+        "id": 5,
+        "title": "Studio Nour brand space",
+        "icon": "flag",
+        "tint": "#C58200"
+      },
+      "assignees": [
+        {
+          "id": 5,
+          "name": "Lina Saad"
+        }
+      ]
+    },
+    {
+      "requirementId": 22,
+      "text": "Issue the construction drawings",
+      "deadline": "2026-09-29",
+      "isOverdue": true,
+      "daysLeft": -1,
+      "project": {
+        "id": 6,
+        "title": "Portfolio and competition entries",
+        "icon": "folder",
+        "tint": "#697572"
+      },
+      "assignees": [
+        {
+          "id": 7,
+          "name": "Maya Nassar"
+        }
+      ]
+    },
+    {
+      "requirementId": 3,
+      "text": "Final material schedule",
+      "deadline": "2026-10-08",
+      "isOverdue": false,
+      "daysLeft": 8,
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "assignees": [
+        {
+          "id": 6,
+          "name": "Rami Aoun"
+        }
+      ]
+    },
+    {
+      "requirementId": 7,
+      "text": "Final material schedule",
+      "deadline": "2026-10-08",
+      "isOverdue": false,
+      "daysLeft": 8,
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "assignees": [
+        {
+          "id": 9,
+          "name": "Yara Mansour"
+        }
+      ]
+    }
+  ]
+}

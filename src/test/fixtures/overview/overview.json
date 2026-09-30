@@ -1,0 +1,206 @@
+{
+  "period": "quarter",
+  "from": "2026-07-01",
+  "to": "2026-09-30",
+  "previousFrom": "2026-04-01",
+  "previousTo": "2026-06-30",
+  "minutes": 62190,
+  "overtimeMinutes": 4310,
+  "previousMinutes": 0,
+  "entries": 551,
+  "previousEntries": 0,
+  "averageEntryMinutes": 112,
+  "peopleLoggingThisWeek": 7,
+  "people": 8,
+  "weekly": [
+    {
+      "weekStart": "2026-06-29",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-07-06",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-07-13",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-07-20",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-07-27",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-03",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-10",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-17",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-24",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-31",
+      "minutes": 11880,
+      "entries": 107
+    },
+    {
+      "weekStart": "2026-09-07",
+      "minutes": 15260,
+      "entries": 135
+    },
+    {
+      "weekStart": "2026-09-14",
+      "minutes": 14120,
+      "entries": 127
+    },
+    {
+      "weekStart": "2026-09-21",
+      "minutes": 15090,
+      "entries": 131
+    },
+    {
+      "weekStart": "2026-09-28",
+      "minutes": 5840,
+      "entries": 51
+    }
+  ],
+  "previousWeekly": [
+    {
+      "weekStart": "2026-03-30",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-04-06",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-04-13",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-04-20",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-04-27",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-05-04",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-05-11",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-05-18",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-05-25",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-06-01",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-06-08",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-06-15",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-06-22",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-06-29",
+      "minutes": 0,
+      "entries": 0
+    }
+  ],
+  "attention": [],
+  "byProject": [
+    {
+      "projectId": 1,
+      "title": "Haddad Holdings HQ fit-out",
+      "minutes": 15170
+    },
+    {
+      "projectId": 3,
+      "title": "Cedar Bank branch refresh",
+      "minutes": 13920
+    },
+    {
+      "projectId": 6,
+      "title": "Portfolio and competition entries",
+      "minutes": 9610
+    },
+    {
+      "projectId": 2,
+      "title": "Villa Mounir interiors",
+      "minutes": 9510
+    },
+    {
+      "projectId": 4,
+      "title": "Beit Misk show apartment",
+      "minutes": 8280
+    },
+    {
+      "projectId": 5,
+      "title": "Studio Nour brand space",
+      "minutes": 5700
+    }
+  ],
+  "projectsByStatus": [
+    {
+      "status": "active",
+      "count": 6
+    }
+  ],
+  "busiestProjectThisWeek": {
+    "projectId": 2,
+    "title": "Villa Mounir interiors",
+    "minutes": 1580
+  },
+  "peopleCount": 7,
+  "projectCount": 6,
+  "thisWeekMinutes": 5840
+}

@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { fixtures, projectHandlers } from "@/test/fixtures";
+import { activity } from "@/test/fixtures/activity";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
@@ -83,5 +84,26 @@ describe("a client", () => {
             http.get("/api/clients/99", () => HttpResponse.json({ type: "not_found", code: "client_not_found", message: "Not found." }, { status: 404 })),
             ...projectHandlers);
         expect(await screen.findByText("Client not found")).toBeInTheDocument();
+    });
+
+    it("ends with its recent activity, for people with activity:view", async () => {
+        const asked: URLSearchParams[] = [];
+        renderApp(`/design/clients/${client.id}`, admin,
+            http.get("/api/activity", ({ request }) => { asked.push(new URL(request.url).searchParams); return HttpResponse.json(activity.feed); }),
+            ...projectHandlers);
+        expect(await screen.findByText("Recent activity")).toBeInTheDocument();
+        expect((await screen.findAllByText(/received from Haddad Holdings/)).length).toBeGreaterThan(0);
+        expect(asked[0].get("clientId")).toBe(String(client.id));
+        expect(asked[0].get("pageSize")).toBe("10");
+    });
+
+    it("leaves the activity out without activity:view", async () => {
+        let askedForActivity = false;
+        renderApp(`/design/clients/${client.id}`, withPermissions(admin, { revoke: [P.ACTIVITY_VIEW] }),
+            http.get("/api/activity", () => { askedForActivity = true; return HttpResponse.json(activity.feed); }),
+            ...projectHandlers);
+        await screen.findByRole("heading", { name: client.displayName });
+        expect(screen.queryByText("Recent activity")).not.toBeInTheDocument();
+        expect(askedForActivity).toBe(false);
     });
 });
