@@ -1,9 +1,9 @@
 import { useSyncExternalStore } from "react";
 
 /*
- * Light or dark, as in the prototype: dark is the default, the choice is set as data-theme on <html>
- * (hourline.css has a full token set for each) and remembered in this browser. If storage is blocked the
- * app simply opens in dark every time.
+ * Light or dark: light is the default, the choice is set as data-theme on <html> (hourline.css has a full
+ * token set for each) and remembered in this browser. If storage is blocked the app simply opens in light
+ * every time.
  */
 
 export type Theme = "light" | "dark";
@@ -13,9 +13,9 @@ const listeners = new Set<() => void>();
 
 function read(): Theme {
     try {
-        return localStorage.getItem(KEY) === "light" ? "light" : "dark";
+        return localStorage.getItem(KEY) === "dark" ? "dark" : "light";
     } catch {
-        return "dark";
+        return "light";
     }
 }
 
