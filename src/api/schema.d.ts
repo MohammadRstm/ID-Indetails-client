@@ -7893,6 +7893,8 @@ export interface components {
             /** Format: int64 */
             id: number;
             name: string;
+            /** Format: int64 */
+            photoFileId: null | number;
         };
         ChatTeamResponse: {
             domain: string;
@@ -10774,6 +10776,7 @@ export interface components {
             note?: null | string;
         };
         TaskCommentResponse: {
+            attachment: null | components["schemas"]["FileResponse"];
             author: components["schemas"]["ChatPersonResponse"];
             /** Format: int64 */
             commentId: number;
