@@ -10,6 +10,7 @@ import type { Project } from "../projects/projectsApi";
 import { useInvoices } from "./billingApi";
 import { BillingMeter, InvoiceLine, InvoiceStatusPill } from "./BillingBits";
 import { useBillingLinks } from "./billingLinks";
+import BillingSetupNotice from "./BillingSetupNotice";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -123,6 +124,7 @@ export default function BillingBand({ project }: { project: Project }) {
                             <button className="btn btn-sm" disabled={!canPay} onClick={() => links.recordPayment()}><Icon name="card" />Record payment</button>
                         )}
                     </div>
+                    {permissions.hasAny(P.INVOICE_CREATE, P.INVOICE_SEND) && <BillingSetupNotice domain={project.domain} />}
                     {site && <p className="hint mt-s">Payments can be recorded on account, without an invoice - the initial payment usually is.</p>}
                     <div className="alloc-total mt">
                         <Icon name="info" />

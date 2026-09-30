@@ -229,6 +229,43 @@ describe("a project's billing", () => {
     });
 });
 
+describe("a domain whose invoicing isn't set up", () => {
+    const notSetUp = http.get("/api/billing-settings/:domain", () => HttpResponse.json(
+        { type: "not_found", code: "billing_settings_missing", message: "Billing settings have not been set up for this domain yet." }, { status: 404 }));
+
+    it("says so beside the invoices, with the way to set it up", async () => {
+        renderApp(path, admin, notSetUp, ...handlers);
+        const panel = await band();
+        expect(await within(panel).findByText("Invoicing isn't set up for Design yet.")).toBeInTheDocument();
+        expect(within(panel).getByRole("link", { name: "Set up invoicing" })).toHaveAttribute("href", "/design/settings?section=finance");
+        // drafts are still fine
+        expect(within(panel).getByRole("button", { name: "New invoice" })).toBeEnabled();
+    });
+
+    it("tells someone who can't set it up who can", async () => {
+        renderApp(path, withPermissions(admin, { revoke: [P.BILLING_SETTINGS_MANAGE] }), notSetUp, ...handlers);
+        const panel = await band();
+        expect(await within(panel).findByText(/Ask an admin who manages the billing settings to set it up/)).toBeInTheDocument();
+        expect(within(panel).queryByRole("link", { name: "Set up invoicing" })).not.toBeInTheDocument();
+    });
+
+    it("keeps a draft from being sent", async () => {
+        renderApp(`${path}?send=${billing.draft.id}`, admin, notSetUp, ...handlers);
+        const send = await screen.findByRole("dialog", { name: "Send invoice" });
+        expect(await within(send).findByText("Invoicing isn't set up for Design yet.")).toBeInTheDocument();
+        expect(within(send).getByRole("button", { name: "Send email" })).toBeDisabled();
+    });
+
+    it("saves a new invoice as a draft only", async () => {
+        renderApp(`${path}?invoice=new`, admin, notSetUp, ...handlers);
+        const dialog = await screen.findByRole("dialog", { name: "New invoice" });
+        expect(await within(dialog).findByText("Invoicing isn't set up for Design yet.")).toBeInTheDocument();
+        await userEvent.type(within(dialog).getByLabelText("Line 1"), "Second milestone");
+        expect(within(dialog).getByRole("button", { name: "Save draft" })).toBeEnabled();
+        expect(within(dialog).getByRole("button", { name: "Save and send…" })).toBeDisabled();
+    });
+});
+
 describe("Financials → Billing", () => {
     it("shows collections and the invoice register, filtered", async () => {
         renderApp("/design/financials?tab=billing", admin, ...billingHandlers, ...financialsHandlers);

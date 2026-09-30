@@ -36,3 +36,6 @@ table { line-height: normal; font-weight: normal; }
 .help-tip { display: inline-grid; place-items: center; width: 15px; height: 15px; margin-left: 5px; padding: 0; vertical-align: -2px;
     border: 1px solid var(--line-2); border-radius: 50%; background: transparent; color: var(--ink-3); font: 650 9.5px/1 inherit; cursor: help; }
 .help-tip:hover, .help-tip:focus-visible { color: var(--ink); border-color: var(--ink-3); outline: none; }
+
+/* Space under a banner that opens a window, above what follows it. */
+.mb { margin-bottom: 14px; }

@@ -1,7 +1,10 @@
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import { toApiError } from "@/api/errors";
 import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
 import type { Paged, Schemas } from "@/api/types";
+import { P } from "@/app/permissions/codes";
+import { usePermissions } from "@/app/permissions/usePermissions";
 
 export type InvoiceSummary = Schemas["InvoiceSummaryResponse"];
 export type Invoice = Schemas["InvoiceResponse"];
@@ -137,6 +140,16 @@ export function useBillingSettings(domain: string, enabled = true) {
         queryFn: async () => (await http.get<BillingSettings>(`/billing-settings/${domain}`)).data,
         enabled,
     });
+}
+
+/** The API's answer for a domain whose invoicing was never set up: nothing can be issued until it is. */
+export const billingSettingsMissing = (error: unknown) => error != null && toApiError(error).code === "billing_settings_missing";
+
+/** Whether the domain's invoicing was never set up, to someone who can see its billing settings. */
+export function useBillingSetupMissing(domain: string) {
+    const permissions = usePermissions();
+    const query = useBillingSettings(domain, !!domain && permissions.hasAny(P.BILLING_SETTINGS_MANAGE, P.FINANCIAL_VIEW));
+    return billingSettingsMissing(query.error);
 }
 
 /**

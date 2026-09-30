@@ -10,7 +10,8 @@ import { money } from "@/shared/format/money";
 import Icon from "@/shared/icons/Icon";
 import { useClient } from "../clients/clientsApi";
 import type { Project } from "../projects/projectsApi";
-import { useBillingSettings, useSaveInvoice, type Invoice } from "./billingApi";
+import { useBillingSettings, useBillingSetupMissing, useSaveInvoice, type Invoice } from "./billingApi";
+import BillingSetupNotice from "./BillingSetupNotice";
 import InvoiceDoc, { ScaledDoc } from "./InvoiceDoc";
 import { billToContactOf, type DocFlash } from "./invoiceDocData";
 
@@ -34,6 +35,7 @@ type InvoiceEditorProps = {
 export default function InvoiceEditor({ project, invoice: existing = null, onClose, onSend }: InvoiceEditorProps) {
     const permissions = usePermissions();
     const settings = useBillingSettings(project.domain).data;
+    const notSetUp = useBillingSetupMissing(project.domain);
     const client = useClient(project.client?.id).data;
     const save = useSaveInvoice(project.id, existing?.id ?? null);
     const m = project.money;
@@ -104,7 +106,7 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn" disabled={!valid || save.isPending} onClick={() => submit(false)}>Save draft</button>
                     {permissions.has(P.INVOICE_SEND) && (
-                        <button className="btn btn-primary" disabled={!valid || save.isPending} onClick={() => submit(true)}><Icon name="send" />Save and send…</button>
+                        <button className="btn btn-primary" disabled={!valid || save.isPending || notSetUp} onClick={() => submit(true)}><Icon name="send" />Save and send…</button>
                     )}
                 </>
             }>
@@ -154,6 +156,8 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
                             </div>
                         </div>
                     )}
+
+                    <BillingSetupNotice domain={project.domain} />
 
                     <p className="hint mt">No tax is applied: these are milestones of an agreed project value. Invoicing never changes the project's revenue, profit or margin.</p>
                 </div>

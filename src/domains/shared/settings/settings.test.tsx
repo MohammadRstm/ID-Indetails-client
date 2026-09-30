@@ -173,6 +173,42 @@ describe("invoicing settings", () => {
         expect(await within(row).findByText(/LBP · /)).toBeInTheDocument();
         expect(within(row).queryByRole("button", { name: "Change" })).not.toBeInTheDocument();
     });
+
+    const notSetUp = http.get("/api/billing-settings/:domain", () => HttpResponse.json(
+        { type: "not_found", code: "billing_settings_missing", message: "Billing settings have not been set up for this domain yet." }, { status: 404 }));
+
+    it("are set up the first time, saying what is missing as it is typed", async () => {
+        const put = recorder("put", "/api/billing-settings/design", billing.settings);
+        renderApp(page("finance"), nadia, put.handler, notSetUp, ...settingsHandlers);
+        expect(await screen.findByText("Invoicing isn't set up for Design yet.")).toBeInTheDocument();
+        expect(screen.getByText("This year's first invoice is ID-2026-001. The other business needs a prefix of its own.")).toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole("button", { name: "Set up invoicing" }));
+        expect(screen.getByText("Say whose account the client pays into.")).toBeInTheDocument();
+        expect(screen.getByText("Enter the IBAN the client pays into.")).toBeInTheDocument();
+        expect(put.bodies).toEqual([]);
+
+        await userEvent.type(screen.getByLabelText("Account name"), "ID InDetails SAL");
+        await userEvent.type(screen.getByLabelText("IBAN"), "LB62099900000001001901229114");
+        await userEvent.type(screen.getByLabelText("SWIFT"), "AUDB");
+        expect(screen.queryByText("Say whose account the client pays into.")).not.toBeInTheDocument();
+        expect(screen.getByText("A SWIFT code is 8 or 11 letters or digits.")).toBeInTheDocument();
+        await userEvent.type(screen.getByLabelText("SWIFT"), "LBBX");
+        await userEvent.click(screen.getByRole("button", { name: "Set up invoicing" }));
+        await waitFor(() => expect(put.bodies).toEqual([{
+            invoicePrefix: "ID", defaultTermsDays: 30, bankAccount: "ID InDetails SAL", bankName: null, iban: "LB62099900000001001901229114",
+            swift: "AUDBLBBX", termsText: null, footer: null,
+        }]));
+        // saved: the settings as they are now, to change like any other
+        expect(await screen.findByText("Bank details printed on every invoice")).toBeInTheDocument();
+        expect(screen.queryByText("Invoicing isn't set up for Design yet.")).not.toBeInTheDocument();
+    });
+
+    it("say who sets them up to someone who can only see them", async () => {
+        renderApp(page("finance"), withPermissions(nadia, { revoke: [P.BILLING_SETTINGS_MANAGE] }), notSetUp, ...settingsHandlers);
+        expect(await screen.findByText(/An admin who manages the billing settings sets it up here/)).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Set up invoicing" })).not.toBeInTheDocument();
+    });
 });
 
 describe("teams", () => {
