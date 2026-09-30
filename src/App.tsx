@@ -17,6 +17,7 @@ import {
 } from "@/app/routing/guards";
 import { companyRoutes, domainRoutes } from "@/app/routing/routeTable";
 import { SessionProvider } from "@/app/session/SessionProvider";
+import LiveRoute from "@/app/live/LiveRoute";
 import AppShell from "@/app/shell/AppShell";
 import CompanyLauncher from "@/app/shell/CompanyLauncher";
 import AcceptInvitationPage from "@/auth/AcceptInvitationPage";
@@ -64,23 +65,25 @@ export function AppRoutes() {
                 <Route element={<RequireSession />}>
                     <Route path="/change-password" element={<ChangePasswordPage />} />
                     <Route element={<RequirePasswordChanged />}>
-                        <Route index element={<HomeRedirect />} />
-                        <Route path="/no-access" element={<NoAccess />} />
-                        <Route path="/company" element={<CompanyLauncher />} />
-                        {import.meta.env.DEV && <Route path="/dev/kit" element={<KitGallery />} />}
+                        <Route element={<LiveRoute />}>
+                            <Route index element={<HomeRedirect />} />
+                            <Route path="/no-access" element={<NoAccess />} />
+                            <Route path="/company" element={<CompanyLauncher />} />
+                            {import.meta.env.DEV && <Route path="/dev/kit" element={<KitGallery />} />}
 
-                        <Route element={<AppShell />}>
-                            <Route path="/company">
-                                {companyRoutes.map((route) => (
-                                    <Route key={route.path} path={route.path} element={<CompanyPage route={route} />} />
-                                ))}
-                            </Route>
-                            <Route path="/:domain" element={<DomainGuard />}>
-                                <Route index element={<HomeRedirect />} />
-                                {domainRoutes.map((route) => (
-                                    <Route key={route.path} path={route.path} element={<DomainPage route={route} />} />
-                                ))}
-                                <Route path="*" element={<NotFound />} />
+                            <Route element={<AppShell />}>
+                                <Route path="/company">
+                                    {companyRoutes.map((route) => (
+                                        <Route key={route.path} path={route.path} element={<CompanyPage route={route} />} />
+                                    ))}
+                                </Route>
+                                <Route path="/:domain" element={<DomainGuard />}>
+                                    <Route index element={<HomeRedirect />} />
+                                    {domainRoutes.map((route) => (
+                                        <Route key={route.path} path={route.path} element={<DomainPage route={route} />} />
+                                    ))}
+                                    <Route path="*" element={<NotFound />} />
+                                </Route>
                             </Route>
                         </Route>
                     </Route>
