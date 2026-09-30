@@ -4,10 +4,15 @@ import { cx } from "@/shared/utils/cx";
 import Avatar, { type AvatarPerson } from "./Avatar";
 import { useProfilePath } from "./useProfilePath";
 
-export type Person = AvatarPerson & { id: number; position?: string | null };
+export type Person = AvatarPerson & {
+    id: number;
+    position?: string | null;
+    /** Where their profile is, for a link from the company area. */
+    domain?: string | null;
+};
 
 function ProfileLink({ person, className, children }: { person: Person; className: string; children: ReactNode }) {
-    const path = useProfilePath(person.id);
+    const path = useProfilePath(person.id, person.domain);
     const navigate = useNavigate();
     if (!path) return <>{children}</>;
     // Only the name or picture opens the profile: a clickable row underneath keeps its own click.
