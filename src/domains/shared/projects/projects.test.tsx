@@ -66,7 +66,7 @@ describe("a project", () => {
         expect(await screen.findByRole("button", { name: /mark as done/i })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Project status" })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "More actions" })).toBeInTheDocument();
-        expect(screen.getByText(/^Payment/)).toBeInTheDocument();
+        expect(within(document.querySelector(".page-head") as HTMLElement).getByText(/^Payment/)).toBeInTheDocument();
     });
 
     it("only shows the status to everyone else", async () => {
@@ -90,7 +90,7 @@ describe("a project", () => {
     it("hides the payment without financial:view", async () => {
         renderApp("/design/projects/1", withPermissions(admin, { revoke: [P.FINANCIAL_VIEW] }), ...projectHandlers);
         await screen.findByRole("heading", { name: "Haddad Holdings HQ fit-out" });
-        expect(screen.queryByText(/^Payment/)).toBeNull();
+        expect(within(document.querySelector(".page-head") as HTMLElement).queryByText(/^Payment/)).toBeNull();
     });
 
     it("says so when the project isn't there", async () => {

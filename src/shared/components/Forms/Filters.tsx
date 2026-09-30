@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import Icon from "@/shared/icons/Icon";
+import type { IconName } from "@/shared/icons/icons";
 import { cx } from "@/shared/utils/cx";
 
 /*
@@ -13,13 +14,15 @@ type SearchInputProps = {
     placeholder?: string;
     width?: CSSProperties["width"];
     autoFocus?: boolean;
+    /** The icon in the box: a magnifier, or a funnel for a filter. */
+    icon?: IconName;
     "aria-label"?: string;
 };
 
-export function SearchInput({ value, onChange, placeholder = "Search", width = 230, autoFocus, ...rest }: SearchInputProps) {
+export function SearchInput({ value, onChange, placeholder = "Search", width = 230, autoFocus, icon = "search", ...rest }: SearchInputProps) {
     return (
         <div className="search" style={{ width }}>
-            <Icon name="search" />
+            <Icon name={icon} />
             <input
                 className="input"
                 placeholder={placeholder}

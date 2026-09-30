@@ -54,7 +54,8 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
 - [ ] **4. Design work**, in four parts:
   - [x] 4a-1: the employee home, log work with the drag timeline and the overtime preview, the timer, an employee's project;
   - [x] 4a-2: my work (both domains), my pay, the hours balance and the behind-on-hours notice;
-  - [ ] 4b: the admin project overview, analytics and timeline, entries and comments;
+  - [x] 4b-1: a Design project's overview for admins: work KPIs, contributors and their drawer, the work timeline, analytics, the entry window and comments;
+  - [ ] 4b-2: the project Timeline tab (the project's history);
   - [ ] 4c: people and profiles, activity, reports, the overview board.
 - [ ] **5. Money:**
   - financials, project money, expenses;
@@ -105,6 +106,8 @@ Decisions made along the way, and anything skipped because it needs the user's i
   - the search palette's "Add employee" opens `people?invite=1`, which the people page will handle;
   - an overtime entry opens `profile?entry=`, the employee's profile (4c);
   - an Execution employee's projects and project page arrive with phase 6, with the rest of Execution.
+- **The project overview's money** (money band, billing, financial breakdown, cost curves, Export report) arrives with phase 5; the work parts and the payment KPI are there now.
+- **Demo-only words.** The burn-up chart's note drops the prototype's "this prototype has no hour budgets yet. Ask for them…".
 - **Project margin filter.** The prototype's "Any margin" filter isn't there: filtering and sorting by money stay on the server's list (decision M7).
 - **Export report for Execution.** The API's project report is Design-only, so Execution's row menu and header leave it out for now. Phase 6 decides whether it becomes the client statement.
 - **Overtime is the API's.** The client never works out overtime itself: every log form and the drag timeline ask `/api/me/overtime-preview`, a moment after the time stops changing, so the rule lives in one place.
