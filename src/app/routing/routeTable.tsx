@@ -3,28 +3,32 @@ import { matchPath } from "react-router";
 import { P } from "@/app/permissions/codes";
 import type { Domain, Permissions } from "@/app/permissions/permissions";
 import type { IconName } from "@/shared/icons/icons";
-import ClientPage from "@/domains/shared/clients/ClientPage";
-import ClientsPage from "@/domains/shared/clients/ClientsPage";
-import { MeetingsPage } from "@/domains/shared/meetings/Meetings";
-import { EmployeeProjectRoute, EmployeeProjectsRoute } from "@/domains/shared/projects/EmployeeProjectRoutes";
-import ProjectRoute from "@/domains/shared/projects/ProjectRoute";
-import ProjectsPage from "@/domains/shared/projects/ProjectsPage";
-import MyWorkRoute from "@/domains/shared/requirements/MyWorkRoute";
-import SettingsPage from "@/domains/shared/settings/SettingsPage";
-import CompanyExpensesPage from "@/domains/company/CompanyExpensesPage";
-import CompanyOverviewPage from "@/domains/company/CompanyOverviewPage";
-import ProjectPayPage from "@/domains/company/projectPay/ProjectPayPage";
-import SalariesPage from "@/domains/company/salaries/SalariesPage";
-import SchedulesPage from "@/domains/company/schedules/SchedulesPage";
-import MessagesPage from "@/domains/shared/messages/MessagesPage";
-import NotificationsPage from "@/domains/shared/notifications/NotificationsPage";
-import MyPayPage from "@/domains/design/pay/MyPayPage";
-import ActivityPage from "@/domains/design/activity/ActivityPage";
-import OverviewRoute from "@/domains/design/dashboard/OverviewPage";
-import FinancialsRoute from "@/domains/design/financials/FinancialsPage";
-import PeoplePage from "@/domains/design/people/PeoplePage";
-import { MyProfilePage, PersonProfilePage } from "@/domains/design/people/ProfilePage";
-import ReportsPage from "@/domains/design/reports/ReportsPage";
+import {
+    ActivityPage,
+    ClientPage,
+    ClientsPage,
+    CompanyExpensesPage,
+    CompanyOverviewPage,
+    EmployeeProjectRoute,
+    EmployeeProjectsRoute,
+    FinancialsRoute,
+    MeetingsPage,
+    MessagesPage,
+    MyPayPage,
+    MyProfilePage,
+    MyWorkRoute,
+    NotificationsPage,
+    OverviewRoute,
+    PeoplePage,
+    PersonProfilePage,
+    ProjectPayPage,
+    ProjectRoute,
+    ProjectsPage,
+    ReportsPage,
+    SalariesPage,
+    SchedulesPage,
+    SettingsPage,
+} from "./pages";
 
 /*
  * Every screen, once. A route names the page an admin sees and the page an employee sees, what each needs,

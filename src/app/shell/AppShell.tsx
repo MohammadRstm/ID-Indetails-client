@@ -1,12 +1,31 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
+import Skeleton, { SkeletonKpis, SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { cx } from "@/shared/utils/cx";
-import { LogWorkHost } from "@/domains/design/work/LogWork";
-import CommandPalette from "./CommandPalette";
+import { LogWorkHost } from "@/domains/design/work/LogWorkHost";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import { useCompanySettings } from "./shellQueries";
 import { useArea } from "./useArea";
+
+// opened with ⌘K, so it loads then
+const CommandPalette = lazy(() => import("./CommandPalette"));
+
+/** A page's shape while its code loads, the first time it is opened. */
+function PageLoading() {
+    return (
+        <div className="page" aria-busy="true">
+            <div className="page-head">
+                <div>
+                    <Skeleton width={220} height={22} />
+                    <Skeleton width={340} height={11} style={{ marginTop: 10 }} />
+                </div>
+            </div>
+            <SkeletonKpis count={4} />
+            <div className="panel mt"><div className="panel-body"><SkeletonLines lines={6} /></div></div>
+        </div>
+    );
+}
 
 /** The signed-in frame: sidebar, top bar and the page (the prototype's .app grid). */
 export default function AppShell() {
@@ -41,9 +60,11 @@ export default function AppShell() {
             <Sidebar area={area} />
             <div className="main">
                 <TopBar area={area} onMenu={() => setNavOpen(!navOpen)} onSearch={() => setPalette(true)} />
-                <Outlet />
+                <Suspense fallback={<PageLoading />}>
+                    <Outlet />
+                </Suspense>
             </div>
-            {palette && <CommandPalette area={area} onClose={() => setPalette(false)} />}
+            {palette && <Suspense fallback={null}><CommandPalette area={area} onClose={() => setPalette(false)} /></Suspense>}
             <LogWorkHost />
         </div>
     );
