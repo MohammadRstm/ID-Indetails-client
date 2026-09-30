@@ -12,6 +12,8 @@ import ProjectRoute from "@/domains/shared/projects/ProjectRoute";
 import ProjectsPage from "@/domains/shared/projects/ProjectsPage";
 import MyWorkRoute from "@/domains/shared/requirements/MyWorkRoute";
 import SettingsPage from "@/domains/shared/settings/SettingsPage";
+import CompanyExpensesPage from "@/domains/company/CompanyExpensesPage";
+import CompanyOverviewPage from "@/domains/company/CompanyOverviewPage";
 import MyPayPage from "@/domains/design/pay/MyPayPage";
 import ActivityPage from "@/domains/design/activity/ActivityPage";
 import OverviewRoute from "@/domains/design/dashboard/OverviewPage";
@@ -175,8 +177,8 @@ export const domainRoutes: DomainRoute[] = [
 ];
 
 export const companyRoutes: CompanyRoute[] = [
-    { path: "overview", nav: { label: "Overview", icon: "chartTile" }, element: soon("Company overview"), access: (p) => p.has(P.COMPANY_VIEW) },
-    { path: "overhead", nav: { label: "Expenses", icon: "card" }, element: soon("Company expenses"), access: (p) => p.hasAny(P.COMPANY_VIEW, P.OVERHEAD_MANAGE) },
+    { path: "overview", nav: { label: "Overview", icon: "chartTile" }, element: <CompanyOverviewPage />, access: (p) => p.has(P.COMPANY_VIEW) },
+    { path: "overhead", nav: { label: "Expenses", icon: "card" }, element: <CompanyExpensesPage />, access: (p) => p.hasAny(P.COMPANY_VIEW, P.OVERHEAD_MANAGE) },
     { path: "salaries", nav: { label: "Salaries", icon: "people" }, element: soon("Salaries"), access: (p) => p.has(P.SALARY_VIEW) },
     { path: "project-pay", nav: { label: "Project pay", icon: "briefcase" }, element: soon("Project pay"), access: (p) => p.has(P.SALARY_VIEW) },
     { path: "schedules", nav: { label: "Schedules", icon: "calendar" }, element: soon("Schedules"), access: (p) => p.has(P.SCHEDULE_MANAGE) },
