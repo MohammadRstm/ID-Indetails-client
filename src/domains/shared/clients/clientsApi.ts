@@ -16,6 +16,8 @@ export type ClientListParams = {
     filter?: ClientFilter;
     includeArchived?: boolean;
     sort?: ClientSort;
+    /** The other way round from the sort's own order: Z to A for names, lowest first for the rest. */
+    reverse?: boolean;
     page?: number;
     pageSize?: number;
 };

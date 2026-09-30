@@ -46,7 +46,8 @@ export default function ClientsPage() {
 
     const list = useClients({
         domain, search: search.trim() || undefined, filter: filter === "all" ? undefined : filter,
-        includeArchived: showArchived, sort: sort.key as ClientSort, page, pageSize: PAGE_SIZE,
+        // names run A to Z on the server and the rest highest first; the other way is asked for as reverse
+        includeArchived: showArchived, sort: sort.key as ClientSort, reverse: sort.key === "name" ? sort.dir === "desc" : sort.dir === "asc", page, pageSize: PAGE_SIZE,
     });
     const overview = useClientOverview(domain);
     const today = companyToday();
@@ -60,7 +61,6 @@ export default function ClientsPage() {
     const concentration = top && revenue > 0 ? top.money.revenue / revenue : 0;
     // the figures fail as one: a strip of skeletons that never fills in says nothing
     const figuresFailed = overview.isError && !o ? overview : seesMoney && summary.isError && !s ? summary : null;
-    // The list sorts on the server; the direction flips client-side only for the name.
     const rows = list.data?.items;
 
     const onSort = (next: SortState) => { setSort(next); setPage(1); };

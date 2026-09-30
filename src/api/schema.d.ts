@@ -439,6 +439,7 @@ export interface paths {
                     IncludeArchived?: boolean;
                     Page?: number;
                     PageSize?: number;
+                    Reverse?: boolean;
                     Search?: string;
                     Sort?: components["schemas"]["ClientSort"];
                 };
