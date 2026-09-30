@@ -8266,6 +8266,7 @@ export interface components {
             icon?: null | string;
             initialPayment?: null | components["schemas"]["InitialPaymentRequest"];
             labourDefaults?: null | components["schemas"]["SetLabourDefaultsRequest"];
+            location?: null | string;
             /** Format: double */
             materialMarkup?: null | number;
             /** Format: int64 */
@@ -8763,6 +8764,7 @@ export interface components {
         InvoiceProjectResponse: {
             /** Format: int64 */
             id: number;
+            location: null | string;
             title: string;
         };
         InvoiceResponse: {
@@ -9228,6 +9230,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             lastActivity: null | components["schemas"]["LastActivityResponse"];
+            location: null | string;
             /** Format: date-time */
             myLastStartedAt: null | string;
             /** Format: int32 */
@@ -9811,6 +9814,8 @@ export interface components {
             /** Format: int32 */
             issuedCount: number;
             /** Format: double */
+            leftToInvoice: number;
+            /** Format: double */
             notYetInvoiced: number;
             /** Format: int32 */
             oldestOverdueDays: null | number;
@@ -10089,6 +10094,7 @@ export interface components {
             icon: null | string;
             /** Format: int64 */
             id: number;
+            location: null | string;
             money: null | components["schemas"]["ProjectMoneyResponse"];
             owner: components["schemas"]["ProjectOwnerResponse"];
             /** Format: int32 */
@@ -10114,6 +10120,7 @@ export interface components {
             icon: null | string;
             /** Format: int64 */
             id: number;
+            location: null | string;
             money: null | components["schemas"]["ProjectListMoneyResponse"];
             owner: components["schemas"]["ProjectOwnerResponse"];
             /** Format: int32 */
@@ -10724,6 +10731,7 @@ export interface components {
             paidAhead: number;
             /** Format: int64 */
             projectId: number;
+            projectLocation: null | string;
             projectTitle: string;
             /** Format: double */
             received: number;
@@ -10942,6 +10950,7 @@ export interface components {
         UpdateProjectRequest: {
             description?: null | string;
             icon?: null | string;
+            location?: null | string;
             /** Format: int64 */
             ownerId?: number;
             /** Format: date */

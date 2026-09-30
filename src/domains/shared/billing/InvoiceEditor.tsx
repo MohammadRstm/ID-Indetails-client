@@ -42,7 +42,7 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
     // Execution: what is still owed after every payment (on account ones too), less what is invoiced and unpaid
     const remaining = project.domain === "execution"
         ? Math.max(0, Math.round((m?.billing.owed ?? 0) - (m?.billing.outstanding ?? 0) - drafts))
-        : Math.max(0, (m?.billing.notYetInvoiced ?? 0) - drafts);
+        : Math.max(0, (m?.billing.leftToInvoice ?? 0) - drafts);
 
     const [lines, setLines] = useState<Line[]>(existing ? existing.lines.map((l) => ({ description: l.description, amount: l.amount }))
         : [{ description: "", amount: remaining > 0 ? Math.round(remaining) : 0 }]);

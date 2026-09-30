@@ -48,7 +48,9 @@ export default function BillingBand({ project }: { project: Project }) {
     const voided = (invoices ?? []).filter((i) => i.status === "void");
     const oldest = live.filter((i) => i.issuedAt && (i.balance ?? 0) > 0.5 && i.dueOn).sort((a, c) => a.dueOn!.localeCompare(c.dueOn!))[0];
     const site = project.domain === "execution";
-    const canInvoice = b.notYetInvoiced - b.drafts > 0.5;
+    // what a new invoice can still be for: money already paid on account can be invoiced too, for the record
+    const canInvoice = b.leftToInvoice - b.drafts > 0.5;
+    const paidInFull = m.revenue > 0.5 && b.received >= m.revenue - 0.5;
     // an Execution site takes payments on account, without an invoice
     const canPay = site || b.invoiced > 0 || b.drafts > 0;
 
@@ -65,7 +67,7 @@ export default function BillingBand({ project }: { project: Project }) {
                         <span className="muted" style={{ fontSize: 12 }}>of {money.fmt(m.revenue)} project value</span>
                         {b.overdue > 0.5 ? <span className="badge inv-overdue"><Icon name="alert" />{money.fmt(b.overdue)} overdue</span>
                             : b.outstanding > 0.5 ? <span className="badge">{money.fmt(b.outstanding)} outstanding</span>
-                                : b.invoiced > 0.5 ? <span className="badge inv-paid"><Icon name="checkCircle" />Fully paid</span>
+                                : b.invoiced > 0.5 || paidInFull ? <span className="badge inv-paid"><Icon name="checkCircle" />Fully paid</span>
                                     : <span className="badge">Not invoiced yet</span>}
                     </div>
                     <BillingMeter height={18} value={m.revenue} invoiced={b.invoiced} paid={b.received} outstanding={b.outstanding} notYetInvoiced={b.notYetInvoiced} />
@@ -74,7 +76,10 @@ export default function BillingBand({ project }: { project: Project }) {
                         <CostRow label="Paid" swatch={COLOURS.paid} value={money.fmt(b.received)} meta={plural(b.paymentCount, "payment")} />
                         <CostRow label="Outstanding" swatch={COLOURS.out} value={money.fmt(b.outstanding)} tone={b.overdue > 0.5 ? "down" : ""}
                             meta={oldest ? `oldest due ${fmtDate(oldest.dueOn!)}` : ""} />
-                        <CostRow label="Not yet invoiced" value={money.fmt(b.notYetInvoiced)} meta={b.drafts > 0.5 ? `${money.fmt(b.drafts)} in draft` : ""} />
+                        {/* neither invoiced nor already paid: nothing to show once the money is in */}
+                        {(b.notYetInvoiced > 0.5 || b.drafts > 0.5) && (
+                            <CostRow label="Not yet invoiced" value={money.fmt(b.notYetInvoiced)} meta={b.drafts > 0.5 ? `${money.fmt(b.drafts)} in draft` : ""} />
+                        )}
                     </div>
                     {closed && b.outstanding > 0.5 && (
                         <div className="banner hold mt">
