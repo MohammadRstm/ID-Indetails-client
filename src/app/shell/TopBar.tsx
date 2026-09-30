@@ -6,6 +6,7 @@ import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
 import ThemeToggle from "@/shared/components/Buttons/ThemeToggle";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Popover from "@/shared/components/Overlays/Popover";
+import NotificationBell from "@/domains/shared/notifications/NotificationBell";
 import TimerControl from "@/domains/design/work/TimerControl";
 import Icon from "@/shared/icons/Icon";
 import { useUnreadBadges } from "./shellQueries";
@@ -51,10 +52,7 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
                     )}
                 </button>
 
-                <button className="icon-btn" onClick={() => navigate(`${base}/notifications`)} aria-label="Notifications">
-                    <Icon name="bell" />
-                    {badges.notifications > 0 && <span className="pip" />}
-                </button>
+                <NotificationBell allPath={`${base}/notifications`} />
 
                 <Popover
                     align="right"

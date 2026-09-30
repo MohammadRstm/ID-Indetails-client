@@ -57,19 +57,15 @@ export function useNavCounts(domain: Domain | null, p: Permissions) {
     return { projects: projects.data, clients: clients.data, people: people.data };
 }
 
-// Until live updates arrive (phase 8), the badges are refreshed every minute.
-const BADGE_MS = 60_000;
-
+/** The bell's and the chat icon's counts; the live connection refreshes them when they change. */
 export function useUnreadBadges() {
     const notifications = useQuery({
         queryKey: ["notifications", "unread"],
         queryFn: async () => (await http.get<Schemas["UnreadCountResponse"]>("/notifications/unread-count")).data.unread,
-        refetchInterval: BADGE_MS,
     });
     const messages = useQuery({
         queryKey: ["messages", "badge"],
         queryFn: async () => (await http.get<Schemas["MessagesBadgeResponse"]>("/messages/badge")).data,
-        refetchInterval: BADGE_MS,
     });
     return { notifications: notifications.data ?? 0, messages: messages.data };
 }

@@ -1,0 +1,749 @@
+{
+  "items": [
+    {
+      "id": 280,
+      "kind": "labour_week_submitted",
+      "actor": {
+        "id": 10,
+        "name": "Karim Jaber",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 7,
+        "title": "Achrafieh Towers lobby",
+        "domain": "execution",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "subjectType": "project",
+      "subjectId": 7,
+      "payload": {
+        "updated": true,
+        "weekStart": "2026-09-21",
+        "projectTitle": "Achrafieh Towers lobby"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T10:15:46.298Z",
+      "readAt": null
+    },
+    {
+      "id": 279,
+      "kind": "labour_week_submitted",
+      "actor": {
+        "id": 10,
+        "name": "Karim Jaber",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 7,
+        "title": "Achrafieh Towers lobby",
+        "domain": "execution",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "subjectType": "project",
+      "subjectId": 7,
+      "payload": {
+        "updated": true,
+        "weekStart": "2026-09-21",
+        "projectTitle": "Achrafieh Towers lobby"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T10:14:40.872Z",
+      "readAt": null
+    },
+    {
+      "id": 278,
+      "kind": "materials_added",
+      "actor": {
+        "id": 10,
+        "name": "Karim Jaber",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 8,
+        "title": "Mar Mikhael loft renovation",
+        "domain": "execution",
+        "icon": "grid",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "project",
+      "subjectId": 8,
+      "payload": {
+        "count": 1,
+        "projectTitle": "Mar Mikhael loft renovation"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T10:02:52.312Z",
+      "readAt": null
+    },
+    {
+      "id": 277,
+      "kind": "hours_short",
+      "actor": null,
+      "project": null,
+      "subjectType": null,
+      "subjectId": null,
+      "payload": {
+        "count": 7,
+        "month": "2026-08",
+        "people": [
+          {
+            "id": 8,
+            "name": "Elie Khalil",
+            "shortMinutes": 8820
+          },
+          {
+            "id": 5,
+            "name": "Lina Saad",
+            "shortMinutes": 8820
+          },
+          {
+            "id": 7,
+            "name": "Maya Nassar",
+            "shortMinutes": 8820
+          },
+          {
+            "id": 4,
+            "name": "Omar Fares",
+            "shortMinutes": 8820
+          },
+          {
+            "id": 6,
+            "name": "Rami Aoun",
+            "shortMinutes": 8820
+          }
+        ]
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T05:51:19.16Z",
+      "readAt": null
+    },
+    {
+      "id": 275,
+      "kind": "invoice_overdue",
+      "actor": null,
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "domain": "design",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "invoice",
+      "subjectId": 3,
+      "payload": {
+        "dueOn": "2026-09-20",
+        "number": "ID-2026-003"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T05:51:19.031Z",
+      "readAt": null
+    },
+    {
+      "id": 273,
+      "kind": "requirement_overdue",
+      "actor": null,
+      "project": {
+        "id": 9,
+        "title": "Dbayeh marina villa",
+        "domain": "execution",
+        "icon": "compass",
+        "tint": "#3F4B63"
+      },
+      "subjectType": "requirement",
+      "subjectId": 32,
+      "payload": {
+        "text": "Electrical first fix inspection",
+        "deadline": "2026-09-29",
+        "projectTitle": "Dbayeh marina villa"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T05:51:18.996Z",
+      "readAt": null
+    },
+    {
+      "id": 270,
+      "kind": "requirement_overdue",
+      "actor": null,
+      "project": {
+        "id": 8,
+        "title": "Mar Mikhael loft renovation",
+        "domain": "execution",
+        "icon": "grid",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "requirement",
+      "subjectId": 29,
+      "payload": {
+        "text": "Electrical first fix inspection",
+        "deadline": "2026-09-29",
+        "projectTitle": "Mar Mikhael loft renovation"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T05:51:18.994Z",
+      "readAt": null
+    },
+    {
+      "id": 267,
+      "kind": "requirement_overdue",
+      "actor": null,
+      "project": {
+        "id": 7,
+        "title": "Achrafieh Towers lobby",
+        "domain": "execution",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "subjectType": "requirement",
+      "subjectId": 26,
+      "payload": {
+        "text": "Electrical first fix inspection",
+        "deadline": "2026-09-29",
+        "projectTitle": "Achrafieh Towers lobby"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T05:51:18.992Z",
+      "readAt": null
+    },
+    {
+      "id": 264,
+      "kind": "requirement_overdue",
+      "actor": null,
+      "project": {
+        "id": 6,
+        "title": "Portfolio and competition entries",
+        "domain": "design",
+        "icon": "folder",
+        "tint": "#697572"
+      },
+      "subjectType": "requirement",
+      "subjectId": 22,
+      "payload": {
+        "text": "Issue the construction drawings",
+        "deadline": "2026-09-29",
+        "projectTitle": "Portfolio and competition entries"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T05:51:18.974Z",
+      "readAt": null
+    },
+    {
+      "id": 261,
+      "kind": "requirement_overdue",
+      "actor": null,
+      "project": {
+        "id": 5,
+        "title": "Studio Nour brand space",
+        "domain": "design",
+        "icon": "flag",
+        "tint": "#C58200"
+      },
+      "subjectType": "requirement",
+      "subjectId": 18,
+      "payload": {
+        "text": "Issue the construction drawings",
+        "deadline": "2026-09-29",
+        "projectTitle": "Studio Nour brand space"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T05:51:18.972Z",
+      "readAt": null
+    },
+    {
+      "id": 258,
+      "kind": "requirement_overdue",
+      "actor": null,
+      "project": {
+        "id": 4,
+        "title": "Beit Misk show apartment",
+        "domain": "design",
+        "icon": "target",
+        "tint": "#6C5CE7"
+      },
+      "subjectType": "requirement",
+      "subjectId": 14,
+      "payload": {
+        "text": "Issue the construction drawings",
+        "deadline": "2026-09-29",
+        "projectTitle": "Beit Misk show apartment"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T05:51:18.97Z",
+      "readAt": null
+    },
+    {
+      "id": 255,
+      "kind": "requirement_overdue",
+      "actor": null,
+      "project": {
+        "id": 3,
+        "title": "Cedar Bank branch refresh",
+        "domain": "design",
+        "icon": "briefcase",
+        "tint": "#3F4B63"
+      },
+      "subjectType": "requirement",
+      "subjectId": 10,
+      "payload": {
+        "text": "Issue the construction drawings",
+        "deadline": "2026-09-29",
+        "projectTitle": "Cedar Bank branch refresh"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T05:51:18.968Z",
+      "readAt": null
+    },
+    {
+      "id": 252,
+      "kind": "requirement_overdue",
+      "actor": null,
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "domain": "design",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "requirement",
+      "subjectId": 6,
+      "payload": {
+        "text": "Issue the construction drawings",
+        "deadline": "2026-09-29",
+        "projectTitle": "Villa Mounir interiors"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T05:51:18.966Z",
+      "readAt": null
+    },
+    {
+      "id": 249,
+      "kind": "requirement_overdue",
+      "actor": null,
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out",
+        "domain": "design",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "subjectType": "requirement",
+      "subjectId": 2,
+      "payload": {
+        "text": "Issue the construction drawings",
+        "deadline": "2026-09-29",
+        "projectTitle": "Haddad Holdings HQ fit-out"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T05:51:18.964Z",
+      "readAt": null
+    },
+    {
+      "id": 239,
+      "kind": "invoice_issued",
+      "actor": {
+        "id": 10,
+        "name": "Karim Jaber",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 7,
+        "title": "Achrafieh Towers lobby",
+        "domain": "execution",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "subjectType": "invoice",
+      "subjectId": 5,
+      "payload": {
+        "number": "EX-2026-001"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:54.692Z",
+      "readAt": null
+    },
+    {
+      "id": 238,
+      "kind": "payment_recorded",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out",
+        "domain": "design",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "subjectType": "payment",
+      "subjectId": 5,
+      "payload": {
+        "isInitial": false,
+        "invoiceNumber": "ID-2026-002"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:54.632Z",
+      "readAt": null
+    },
+    {
+      "id": 237,
+      "kind": "payment_recorded",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out",
+        "domain": "design",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "subjectType": "payment",
+      "subjectId": 4,
+      "payload": {
+        "isInitial": false,
+        "invoiceNumber": "ID-2026-001"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:54.573Z",
+      "readAt": null
+    },
+    {
+      "id": 236,
+      "kind": "invoice_issued",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 2,
+        "title": "Villa Mounir interiors",
+        "domain": "design",
+        "icon": "palette",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "invoice",
+      "subjectId": 3,
+      "payload": {
+        "number": "ID-2026-003"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:54.465Z",
+      "readAt": null
+    },
+    {
+      "id": 235,
+      "kind": "invoice_issued",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out",
+        "domain": "design",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "subjectType": "invoice",
+      "subjectId": 2,
+      "payload": {
+        "number": "ID-2026-002"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:54.402Z",
+      "readAt": null
+    },
+    {
+      "id": 234,
+      "kind": "invoice_issued",
+      "actor": {
+        "id": 2,
+        "name": "Nadia Karam",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 1,
+        "title": "Haddad Holdings HQ fit-out",
+        "domain": "design",
+        "icon": "building",
+        "tint": "#0C6B69"
+      },
+      "subjectType": "invoice",
+      "subjectId": 1,
+      "payload": {
+        "number": "ID-2026-001"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:54.318Z",
+      "readAt": null
+    },
+    {
+      "id": 232,
+      "kind": "labour_week_submitted",
+      "actor": {
+        "id": 12,
+        "name": "Joe Hanna",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 9,
+        "title": "Dbayeh marina villa",
+        "domain": "execution",
+        "icon": "compass",
+        "tint": "#3F4B63"
+      },
+      "subjectType": "project",
+      "subjectId": 9,
+      "payload": {
+        "updated": false,
+        "weekStart": "2026-09-21",
+        "projectTitle": "Dbayeh marina villa"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:53.637Z",
+      "readAt": null
+    },
+    {
+      "id": 230,
+      "kind": "labour_week_submitted",
+      "actor": {
+        "id": 12,
+        "name": "Joe Hanna",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 9,
+        "title": "Dbayeh marina villa",
+        "domain": "execution",
+        "icon": "compass",
+        "tint": "#3F4B63"
+      },
+      "subjectType": "project",
+      "subjectId": 9,
+      "payload": {
+        "updated": false,
+        "weekStart": "2026-09-14",
+        "projectTitle": "Dbayeh marina villa"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:53.581Z",
+      "readAt": null
+    },
+    {
+      "id": 228,
+      "kind": "labour_week_submitted",
+      "actor": {
+        "id": 12,
+        "name": "Joe Hanna",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 9,
+        "title": "Dbayeh marina villa",
+        "domain": "execution",
+        "icon": "compass",
+        "tint": "#3F4B63"
+      },
+      "subjectType": "project",
+      "subjectId": 9,
+      "payload": {
+        "updated": false,
+        "weekStart": "2026-09-07",
+        "projectTitle": "Dbayeh marina villa"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:53.541Z",
+      "readAt": null
+    },
+    {
+      "id": 226,
+      "kind": "labour_week_submitted",
+      "actor": {
+        "id": 12,
+        "name": "Joe Hanna",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 9,
+        "title": "Dbayeh marina villa",
+        "domain": "execution",
+        "icon": "compass",
+        "tint": "#3F4B63"
+      },
+      "subjectType": "project",
+      "subjectId": 9,
+      "payload": {
+        "updated": false,
+        "weekStart": "2026-08-31",
+        "projectTitle": "Dbayeh marina villa"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:53.504Z",
+      "readAt": null
+    },
+    {
+      "id": 224,
+      "kind": "materials_added",
+      "actor": {
+        "id": 14,
+        "name": "Walid Chami",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 9,
+        "title": "Dbayeh marina villa",
+        "domain": "execution",
+        "icon": "compass",
+        "tint": "#3F4B63"
+      },
+      "subjectType": "project",
+      "subjectId": 9,
+      "payload": {
+        "count": 4,
+        "projectTitle": "Dbayeh marina villa"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:53.465Z",
+      "readAt": null
+    },
+    {
+      "id": 222,
+      "kind": "labour_week_submitted",
+      "actor": {
+        "id": 12,
+        "name": "Joe Hanna",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 8,
+        "title": "Mar Mikhael loft renovation",
+        "domain": "execution",
+        "icon": "grid",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "project",
+      "subjectId": 8,
+      "payload": {
+        "updated": false,
+        "weekStart": "2026-09-21",
+        "projectTitle": "Mar Mikhael loft renovation"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:53.414Z",
+      "readAt": null
+    },
+    {
+      "id": 220,
+      "kind": "labour_week_submitted",
+      "actor": {
+        "id": 12,
+        "name": "Joe Hanna",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 8,
+        "title": "Mar Mikhael loft renovation",
+        "domain": "execution",
+        "icon": "grid",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "project",
+      "subjectId": 8,
+      "payload": {
+        "updated": false,
+        "weekStart": "2026-09-14",
+        "projectTitle": "Mar Mikhael loft renovation"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:53.374Z",
+      "readAt": null
+    },
+    {
+      "id": 218,
+      "kind": "labour_week_submitted",
+      "actor": {
+        "id": 12,
+        "name": "Joe Hanna",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 8,
+        "title": "Mar Mikhael loft renovation",
+        "domain": "execution",
+        "icon": "grid",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "project",
+      "subjectId": 8,
+      "payload": {
+        "updated": false,
+        "weekStart": "2026-09-07",
+        "projectTitle": "Mar Mikhael loft renovation"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:53.336Z",
+      "readAt": null
+    },
+    {
+      "id": 216,
+      "kind": "labour_week_submitted",
+      "actor": {
+        "id": 12,
+        "name": "Joe Hanna",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 8,
+        "title": "Mar Mikhael loft renovation",
+        "domain": "execution",
+        "icon": "grid",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "project",
+      "subjectId": 8,
+      "payload": {
+        "updated": false,
+        "weekStart": "2026-08-31",
+        "projectTitle": "Mar Mikhael loft renovation"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:53.298Z",
+      "readAt": null
+    },
+    {
+      "id": 214,
+      "kind": "materials_added",
+      "actor": {
+        "id": 13,
+        "name": "Nour Aziz",
+        "photoFileId": null
+      },
+      "project": {
+        "id": 8,
+        "title": "Mar Mikhael loft renovation",
+        "domain": "execution",
+        "icon": "grid",
+        "tint": "#8A5A2B"
+      },
+      "subjectType": "project",
+      "subjectId": 8,
+      "payload": {
+        "count": 4,
+        "projectTitle": "Mar Mikhael loft renovation"
+      },
+      "count": 1,
+      "createdAt": "2026-09-30T04:52:53.26Z",
+      "readAt": null
+    }
+  ],
+  "page": 1,
+  "pageSize": 30,
+  "totalCount": 77
+}

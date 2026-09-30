@@ -72,12 +72,14 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - [x] 6b: the Execution employee views and profile;
   - [x] 6c-1: Execution's dashboard and financials;
   - [x] 6c-2: Execution's people: nothing to build. The prototype has no Employees, Activity or Reports page for Execution ("all built on logged hours"), and neither does the client; a person's profile is reached from their name.
-- [ ] **7. Company and settings**, in parts:
+- [x] **7. Company and settings**, in parts:
   - [x] 7a: Settings: the company, time tracking and working time, finance and invoicing (terms, numbering, bank details, exchange rates), projects, notifications, teams, admins & access with each person's permissions, data & export;
   - [x] 7b-1: the company overview and company expenses;
   - [x] 7b-2: salaries and excused hours;
   - [x] 7b-3: project pay and schedules.
-- [ ] **8. Messages, notifications and live updates.**
+- [ ] **8. Messages, notifications and live updates**, in parts:
+  - [x] 8a: the live connection, the bell and the notifications page;
+  - [ ] 8b: messages.
 - [ ] **9. Hardening:**
   - accessibility, responsive layouts, light and dark;
   - code-splitting;
@@ -140,6 +142,7 @@ Decisions made along the way, and anything skipped because it needs the user's i
   - **The logo** is cropped to a 128px square before it is uploaded, as in the prototype, and its address carries its file (API PR #34), so a new logo shows at once. Your own profile now says when you joined (API PR #34).
 - **The company area.** The Company overview measures one window, picked as in the prototype (this month, quarter or year, a year or quarter, or a range), which is remembered while moving between the company's pages; its figures are the API's (`/company/overview`), and its board's layout is saved like the Design overview's. Company expenses are the API's ledger: kept per currency and never converted, a new amount or currency applies from the first of a month, and a cancelled line is charged to the end of its month and can be taken back until then. The prototype's closing note that the company layer was still to come is left out.
 - **Salaries.** The list is everyone the API pays for the month, admins with a pay record included, a page at a time with totals over every page, kept per currency. A month can be opened from a link (`?month=2026-08`), as the month-end notice will. The API's rules beyond the prototype are shown where they change the pay: an excuse can be unpaid (it comes off a salary, and an unpaid day off costs the full paid day), a salaried person outside the hours rule (Execution staff) can only be given unpaid leave, working days with nothing logged are counted in a person's details (each costs the full paid day once the month closes short), and someone who joined, left or came back partway through the month is pro-rated on the days they were employed. An excuse shows the day it was given rather than who gave it. The drawer's overtime days need `work_entry:view_all`, and excusing needs `hours:excuse`.
+- **Notifications and live updates.** The API keeps each notification as its kind, who, the project, the subject and a few facts, so the client writes the sentence (`notificationWords.ts`): in the prototype's voice where it had the notice, and the same way for the kinds it didn't. A click marks it read and opens what it is about, but only a page the reader may open; a client's page is found through the client, since the notice doesn't say its business. The prototype's "View file" link on a work notice is left out: the notice doesn't carry the entry's files. The live connection (`/hubs/live`) opens once someone is signed in and only says that the bell or a chat changed; the pages then reload it, so the badges no longer poll. The connection asks for a fresh token when its own is about to expire, and keeps retrying slowly if the API is away.
 - **Project pay and schedules.** Project pay is the API's pricing of each entry (`/company/project-pay`), grouped by department in the client; a project's title opens it in Design only for someone who may. Schedules lists everyone the API does, admins and super admins included (people without a team come after their business's departments, the super admins last, under "Company"); a super admin's week needs `employee:invite_super_admin` to change. A change applies from today, or from tomorrow when one already starts today, as the company week's does in Settings; a change already set for a later day is mentioned in the editor and stays.
 - **Amounts keep what is typed.** The prototype's amount field turned "42." back into "42" as it was typed, so no amount with cents could be entered; the client's keeps the text as typed.
 - **The account menu opens upwards.** The prototype opened it downwards from the foot of the sidebar, so on any page longer than the window it was drawn below the screen and Sign out was out of reach.
