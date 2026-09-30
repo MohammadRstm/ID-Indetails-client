@@ -40,3 +40,13 @@ export function useActivityToday(enabled: boolean) {
         enabled,
     });
 }
+
+/** The newest few events, for a page's "Recent activity" (activity:view). */
+export function useRecentActivity(filters: FeedFilters, count: number, enabled = true) {
+    const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== undefined && v !== false));
+    return useQuery({
+        queryKey: [...keys.activity.all, "recent", params, count],
+        queryFn: async () => (await http.get<Paged<Schemas["ActivityItemResponse"]>>("/activity", { params: { ...params, page: 1, pageSize: count } })).data.items,
+        enabled,
+    });
+}
