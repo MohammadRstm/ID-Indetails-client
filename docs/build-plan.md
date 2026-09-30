@@ -80,11 +80,11 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
 - [x] **8. Messages, notifications and live updates**, in parts:
   - [x] 8a: the live connection, the bell and the notifications page;
   - [x] 8b: messages: the chat icon's list and the Messages page.
-- [ ] **9. Hardening:**
-  - accessibility, responsive layouts, light and dark;
-  - code-splitting;
-  - the full permission matrix;
-  - a final pass against the API.
+- [ ] **9. Hardening**, in parts:
+  - [x] 9a: a pass against the API: every endpoint the client never called was either given a screen (below) or noted;
+  - [ ] 9b: code-splitting;
+  - [ ] 9c: the full permission matrix;
+  - [ ] 9d: accessibility, responsive layouts, light and dark.
 
 ## Left out on purpose
 
@@ -144,6 +144,11 @@ Decisions made along the way, and anything skipped because it needs the user's i
 - **Salaries.** The list is everyone the API pays for the month, admins with a pay record included, a page at a time with totals over every page, kept per currency. A month can be opened from a link (`?month=2026-08`), as the month-end notice will. The API's rules beyond the prototype are shown where they change the pay: an excuse can be unpaid (it comes off a salary, and an unpaid day off costs the full paid day), a salaried person outside the hours rule (Execution staff) can only be given unpaid leave, working days with nothing logged are counted in a person's details (each costs the full paid day once the month closes short), and someone who joined, left or came back partway through the month is pro-rated on the days they were employed. An excuse shows the day it was given rather than who gave it. The drawer's overtime days need `work_entry:view_all`, and excusing needs `hours:excuse`.
 - **Notifications and live updates.** The API keeps each notification as its kind, who, the project, the subject and a few facts, so the client writes the sentence (`notificationWords.ts`): in the prototype's voice where it had the notice, and the same way for the kinds it didn't. A click marks it read and opens what it is about, but only a page the reader may open; a client's page is found through the client, since the notice doesn't say its business. The prototype's "View file" link on a work notice is left out: the notice doesn't carry the entry's files. The live connection (`/hubs/live`) opens once someone is signed in and only says that the bell or a chat changed; the pages then reload it, so the badges no longer poll. The connection asks for a fresh token when its own is about to expire, and keeps retrying slowly if the API is away.
 - **Messages.** Who talks to whom is the API's (a team's chat has its people, their business's admins and the super admins; anyone messages their own business and the super admins). A chat opens through the link (`?group=13`, `?with=2`), so a notice or a name can lead to it; opening it, and each new message while it is open, marks it read. Photos and videos upload as they are picked, as on work entries. Who is online is asked again each minute, since nothing signals it. A shared task comment's card names the admin who wrote it without their role, which the message doesn't carry. The development seed has no messages, so the tests use chats written in the API's shape.
+- **The API's features without a prototype screen.** A pass over every endpoint found some the client never called. They now have screens in the prototype's style:
+  - on someone's profile, a menu (employee:manage) to change their role, move them to the other business (only for someone who sees both), deactivate them from a last working day, reactivate them (asking whether time away this month is paid) and resend an invitation (employee:invite);
+  - on a payment, in the billing tab and the invoice window, applying money received on account to an issued invoice (payment:record) and voiding a payment with a reason (payment:void).
+
+  `GET /company/overhead/monthly` is still unused: Company expenses reads each month's cost from the company months, as the prototype does.
 - **Project pay and schedules.** Project pay is the API's pricing of each entry (`/company/project-pay`), grouped by department in the client; a project's title opens it in Design only for someone who may. Schedules lists everyone the API does, admins and super admins included (people without a team come after their business's departments, the super admins last, under "Company"); a super admin's week needs `employee:invite_super_admin` to change. A change applies from today, or from tomorrow when one already starts today, as the company week's does in Settings; a change already set for a later day is mentioned in the editor and stays.
 - **Amounts keep what is typed.** The prototype's amount field turned "42." back into "42" as it was typed, so no amount with cents could be entered; the client's keeps the text as typed.
 - **The account menu opens upwards.** The prototype opened it downwards from the foot of the sidebar, so on any page longer than the window it was drawn below the screen and Sign out was out of reach.

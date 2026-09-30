@@ -5,6 +5,7 @@ import { fmtDate, fmtDateY, fmtNumber } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
 import type { InvoiceSummary, Payment } from "./billingApi";
 import { InvoiceStatusPill } from "./BillingBits";
+import PaymentActions from "./PaymentActions";
 import { invoiceStateOf } from "./invoiceStatus";
 
 export type Tile = { icon: string | null; tint: string | null };
@@ -64,10 +65,12 @@ type PaymentTableProps = {
     tiles?: Map<number, Tile>;
     /** Opens the invoice a payment was against. */
     onOpen?: (invoiceId: number) => void;
+    /** A menu on each row to apply or void it, for those who may. */
+    actions?: boolean;
 };
 
 /** Payments with how they arrived and what they were against (the prototype's BL.PaymentTable). */
-export function PaymentTable({ payments, showProject, tiles, onOpen }: PaymentTableProps) {
+export function PaymentTable({ payments, showProject, tiles, onOpen, actions }: PaymentTableProps) {
     return (
         <div className="tbl-wrap">
             <table className="tbl tbl-min-sm">
@@ -76,6 +79,7 @@ export function PaymentTable({ payments, showProject, tiles, onOpen }: PaymentTa
                         <th className="nowrap">Received</th>
                         {showProject && <th>Project</th>}
                         <th>Invoice</th><th>Method</th><th>Reference</th><th className="r">Amount</th>
+                        {actions && <th />}
                     </tr>
                 </thead>
                 <tbody>
@@ -96,6 +100,7 @@ export function PaymentTable({ payments, showProject, tiles, onOpen }: PaymentTa
                                     )}
                                 </td>
                                 <td className="r mono">{money.fmt(p.amountUsd)}</td>
+                                {actions && <td className="r"><PaymentActions payment={p} /></td>}
                             </tr>
                         );
                     })}

@@ -104,6 +104,55 @@ export function useUpdateEmployee(userId: number) {
     });
 }
 
+/** Someone's place in the company changed: their lists, chats, salaries and schedules follow. */
+function useAccountChanged() {
+    const invalidate = useInvalidate();
+    return () => invalidate(keys.employees.all, ME_KEY, keys.work.all, ["company"], ["messages"], ["teams"]);
+}
+
+/** Ends their employment on their last working day and blocks sign-in; their history stays (employee:manage). */
+export function useDeactivate(userId: number) {
+    const changed = useAccountChanged();
+    return useMutation({
+        mutationFn: async (lastWorkingDay: string | null) => (await http.post<Employee>(`/employees/${userId}/deactivate`, { lastWorkingDay })).data,
+        onSuccess: changed,
+    });
+}
+
+/** Active again (a new period of employment), or invited again if they never signed up (employee:manage). */
+export function useReactivate(userId: number) {
+    const changed = useAccountChanged();
+    return useMutation({
+        mutationFn: async (payGap: boolean | null) => (await http.post<Employee>(`/employees/${userId}/reactivate`, payGap == null ? {} : { payGap })).data,
+        onSuccess: changed,
+    });
+}
+
+/** A new role; their personal permission changes are cleared (employee:manage). */
+export function useChangeRole(userId: number) {
+    const changed = useAccountChanged();
+    return useMutation({
+        mutationFn: async (body: Schemas["ChangeRoleRequest"]) => (await http.put<Employee>(`/employees/${userId}/role`, body)).data,
+        onSuccess: changed,
+    });
+}
+
+/** Moves them to the other business, into one of its teams or none (employee:manage). */
+export function useMoveEmployee(userId: number) {
+    const changed = useAccountChanged();
+    return useMutation({
+        mutationFn: async (body: Schemas["MoveEmployeeRequest"]) => (await http.put<Employee>(`/employees/${userId}/domain`, body)).data,
+        onSuccess: changed,
+    });
+}
+
+/** Emails a fresh sign-up link; the old one stops working (employee:invite). */
+export function useResendInvitation(userId: number) {
+    return useMutation({
+        mutationFn: async () => (await http.post<Schemas["InvitationResponse"]>(`/invitations/${userId}/resend`)).data,
+    });
+}
+
 export function useUpdateMyProfile() {
     const changed = usePeopleChanged();
     return useMutation({
