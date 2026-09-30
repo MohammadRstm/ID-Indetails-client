@@ -1,0 +1,10 @@
+/* The prototype loads Archivo and Martian Mono from Google Fonts; the client bundles them instead
+   (Fontsource, both axes: weight and width). Only the family names differ, so the stylesheet's
+   font tokens are pointed at the bundled faces here and hourline.css stays exactly as designed. */
+@import "@fontsource-variable/archivo/standard.css";
+@import "@fontsource-variable/martian-mono/standard.css";
+
+:root {
+  --sans: "Archivo Variable", "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Martian Mono Variable", "Martian Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
