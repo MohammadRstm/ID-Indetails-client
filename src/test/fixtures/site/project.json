@@ -1,0 +1,85 @@
+{
+  "id": 7,
+  "domain": "execution",
+  "title": "Achrafieh Towers lobby",
+  "description": "Achrafieh Towers lobby: site works, materials and ground labour.",
+  "icon": "building",
+  "tint": "#0C6B69",
+  "status": "active",
+  "billingType": "client",
+  "client": {
+    "id": 6,
+    "displayName": "Achrafieh Towers SAL"
+  },
+  "owner": {
+    "id": 10,
+    "name": "Karim Jaber"
+  },
+  "startDate": "2026-06-27",
+  "targetDate": "2026-12-27",
+  "completedAt": null,
+  "finalizedAt": null,
+  "heldSince": null,
+  "team": {
+    "people": [
+      {
+        "id": 12,
+        "name": "Joe Hanna"
+      },
+      {
+        "id": 11,
+        "name": "Tarek Salem"
+      }
+    ],
+    "count": 2
+  },
+  "progressPct": 33,
+  "createdAt": "2026-06-27T08:00:00Z",
+  "money": {
+    "currency": "USD",
+    "revenue": 18941.4,
+    "isLocked": false,
+    "projectFee": 12000,
+    "materialMarkup": 0.15,
+    "materialCharge": 6941.4,
+    "expenseTotals": [],
+    "billing": {
+      "invoiced": 6500,
+      "outstanding": 6500,
+      "received": 10000,
+      "onAccount": 10000,
+      "notYetInvoiced": 12441.4,
+      "owed": 8941.4,
+      "paidAhead": 0,
+      "issuedCount": 1,
+      "paymentCount": 1,
+      "overdue": 0,
+      "overdueCount": 0,
+      "oldestOverdueDays": null,
+      "drafts": 0,
+      "unconvertedInvoices": []
+    },
+    "cost": {
+      "labour": 0,
+      "expenses": 0,
+      "materials": 6036,
+      "groundLabour": 3000,
+      "total": 9036,
+      "unconverted": [],
+      "unpricedLabourMinutes": 0
+    },
+    "profit": 9905.4,
+    "margin": 0.5229,
+    "recognisedToDate": 6250.66,
+    "projected": {
+      "cost": 27381.82,
+      "profit": -8440.42,
+      "margin": -0.4456
+    },
+    "labourHours": 0,
+    "costPerHour": 0,
+    "cashProfit": 964,
+    "materialProfit": 905.4,
+    "unconvertedMaterials": 0
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "current": {
+    "effectiveFrom": "2026-09-30",
+    "workers": 6,
+    "dailyPay": 25,
+    "currency": "USD",
+    "setBy": {
+      "id": 10,
+      "name": "Karim Jaber"
+    },
+    "setAt": "2026-09-30T04:52:27.898Z"
+  },
+  "history": [
+    {
+      "effectiveFrom": "2026-09-30",
+      "workers": 6,
+      "dailyPay": 25,
+      "currency": "USD",
+      "setBy": {
+        "id": 10,
+        "name": "Karim Jaber"
+      },
+      "setAt": "2026-09-30T04:52:27.898Z"
+    }
+  ],
+  "canEdit": true
+}

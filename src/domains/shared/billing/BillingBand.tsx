@@ -43,8 +43,10 @@ export default function BillingBand({ project }: { project: Project }) {
     const live = (invoices ?? []).filter((i) => i.status !== "void");
     const voided = (invoices ?? []).filter((i) => i.status === "void");
     const oldest = live.filter((i) => i.issuedAt && (i.balance ?? 0) > 0.5 && i.dueOn).sort((a, c) => a.dueOn!.localeCompare(c.dueOn!))[0];
+    const site = project.domain === "execution";
     const canInvoice = b.notYetInvoiced - b.drafts > 0.5;
-    const canPay = b.invoiced > 0 || b.drafts > 0;
+    // an Execution site takes payments on account, without an invoice
+    const canPay = site || b.invoiced > 0 || b.drafts > 0;
 
     return (
         <div className="panel mt bill-panel">
@@ -111,6 +113,7 @@ export default function BillingBand({ project }: { project: Project }) {
                             <button className="btn btn-sm" disabled={!canPay} onClick={() => links.recordPayment()}><Icon name="card" />Record payment</button>
                         )}
                     </div>
+                    {site && <p className="hint mt-s">Payments can be recorded on account, without an invoice - the initial payment usually is.</p>}
                     <div className="alloc-total mt">
                         <Icon name="info" />
                         <div className="grow">

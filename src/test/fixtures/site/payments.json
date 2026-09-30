@@ -1,0 +1,33 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "domain": "execution",
+      "project": {
+        "id": 7,
+        "title": "Achrafieh Towers lobby"
+      },
+      "client": {
+        "id": 6,
+        "displayName": "Achrafieh Towers SAL"
+      },
+      "invoiceId": null,
+      "invoiceNumber": null,
+      "isInitial": true,
+      "amount": 10000,
+      "currency": "USD",
+      "fxRate": 1,
+      "amountUsd": 10000,
+      "receivedOn": "2026-09-01",
+      "method": "bank",
+      "reference": "Advance",
+      "note": null,
+      "recordedAt": "2026-09-30T04:52:27.96Z",
+      "voidedAt": null,
+      "voidReason": null
+    }
+  ],
+  "page": 1,
+  "pageSize": 100,
+  "totalCount": 1
+}

@@ -1,0 +1,161 @@
+{
+  "items": [
+    {
+      "id": 8,
+      "name": "Plasterboard",
+      "quantity": 90,
+      "unit": "sheet",
+      "unitCost": 11,
+      "cost": 990,
+      "currency": "USD",
+      "supplier": "Gypsum Lb",
+      "note": null,
+      "addedAt": "2026-09-30T04:52:53.253Z",
+      "addedOn": "2026-09-30",
+      "addedBy": {
+        "id": 13,
+        "name": "Nour Aziz"
+      },
+      "updatedAt": null,
+      "isStated": false,
+      "canEdit": true,
+      "clientPrice": 1188,
+      "priceSource": "auto",
+      "markup": 0.2
+    },
+    {
+      "id": 7,
+      "name": "Paint",
+      "quantity": 30,
+      "unit": "gallon",
+      "unitCost": 28,
+      "cost": 840,
+      "currency": "USD",
+      "supplier": "Sipes",
+      "note": null,
+      "addedAt": "2026-09-30T04:52:53.253Z",
+      "addedOn": "2026-09-30",
+      "addedBy": {
+        "id": 13,
+        "name": "Nour Aziz"
+      },
+      "updatedAt": null,
+      "isStated": false,
+      "canEdit": true,
+      "clientPrice": 1008,
+      "priceSource": "auto",
+      "markup": 0.2
+    },
+    {
+      "id": 6,
+      "name": "Porcelain tiles",
+      "quantity": 180,
+      "unit": "m²",
+      "unitCost": 22,
+      "cost": 3960,
+      "currency": "USD",
+      "supplier": "Tile House",
+      "note": null,
+      "addedAt": "2026-09-30T04:52:53.253Z",
+      "addedOn": "2026-09-30",
+      "addedBy": {
+        "id": 13,
+        "name": "Nour Aziz"
+      },
+      "updatedAt": null,
+      "isStated": false,
+      "canEdit": true,
+      "clientPrice": 4752,
+      "priceSource": "auto",
+      "markup": 0.2
+    },
+    {
+      "id": 5,
+      "name": "Rebar 12mm",
+      "quantity": 1.2,
+      "unit": "ton",
+      "unitCost": 780,
+      "cost": 936,
+      "currency": "USD",
+      "supplier": "Steel Co",
+      "note": null,
+      "addedAt": "2026-09-30T04:52:53.253Z",
+      "addedOn": "2026-09-30",
+      "addedBy": {
+        "id": 13,
+        "name": "Nour Aziz"
+      },
+      "updatedAt": null,
+      "isStated": false,
+      "canEdit": true,
+      "clientPrice": 1123.2,
+      "priceSource": "auto",
+      "markup": 0.2
+    }
+  ],
+  "page": 1,
+  "pageSize": 30,
+  "totalCount": 4,
+  "matching": {
+    "count": 4,
+    "cost": 6726,
+    "charge": 8071.2
+  },
+  "all": {
+    "count": 4,
+    "cost": 6726,
+    "charge": 8071.2
+  },
+  "types": [
+    {
+      "key": "paint",
+      "label": "Paint",
+      "count": 1,
+      "cost": 840
+    },
+    {
+      "key": "plasterboard",
+      "label": "Plasterboard",
+      "count": 1,
+      "cost": 990
+    },
+    {
+      "key": "porcelain tiles",
+      "label": "Porcelain tiles",
+      "count": 1,
+      "cost": 3960
+    },
+    {
+      "key": "rebar 12mm",
+      "label": "Rebar 12mm",
+      "count": 1,
+      "cost": 936
+    }
+  ],
+  "suppliers": [
+    {
+      "key": "gypsum lb",
+      "label": "Gypsum Lb"
+    },
+    {
+      "key": "sipes",
+      "label": "Sipes"
+    },
+    {
+      "key": "steel co",
+      "label": "Steel Co"
+    },
+    {
+      "key": "tile house",
+      "label": "Tile House"
+    }
+  ],
+  "addedBy": [
+    {
+      "id": 13,
+      "name": "Nour Aziz"
+    }
+  ],
+  "canAdd": true,
+  "defaultMarkup": 0.2
+}
