@@ -8303,6 +8303,7 @@ export interface components {
             lastName: string;
             mustChangePassword: boolean;
             permissions: string[];
+            phone: null | string;
             /** Format: int64 */
             photoFileId: null | number;
             position: null | string;
