@@ -27,6 +27,8 @@ type FinancialBreakdownProps = {
     contributors?: Contributor[];
     entryCount?: number;
     expenses: Expense[] | undefined;
+    /** Why the expenses didn't load, with a retry; nothing while they load or once they have. */
+    expensesFailed?: { error: unknown; retry: () => void } | null;
     onPerson?: (userId: number) => void;
     /** Left out when the viewer may not add or remove expenses. */
     onAddExpense?: () => void;
@@ -34,7 +36,7 @@ type FinancialBreakdownProps = {
 };
 
 /** "Financial breakdown": labour by person, the project's expenses and the cost summary. */
-export default function FinancialBreakdown({ project, money: m, contributors, entryCount, expenses, onPerson, onAddExpense, canRemoveExpenses }: FinancialBreakdownProps) {
+export default function FinancialBreakdown({ project, money: m, contributors, entryCount, expenses, expensesFailed, onPerson, onAddExpense, canRemoveExpenses }: FinancialBreakdownProps) {
     const [removing, setRemoving] = useState<Expense | null>(null);
     const done = m.isLocked;
     const add = !done ? onAddExpense : undefined;
@@ -67,7 +69,8 @@ export default function FinancialBreakdown({ project, money: m, contributors, en
 
                     <div>
                         <div className="u" style={{ marginBottom: 6 }}>Project expenses</div>
-                        {!expenses ? <SkeletonLines lines={3} /> : items.length ? items.map((x) => (
+                        {!expenses ? (expensesFailed ? <LoadError error={expensesFailed.error} retry={expensesFailed.retry} what="the expenses" /> : <SkeletonLines lines={3} />)
+                            : items.length ? items.map((x) => (
                             <CostRow key={x.id} label={x.label} meta={fmtDate(x.spentOn)} value={money.fmt(x.amount, x.currency)} swatch={COST_COLORS.expense}
                                 onClick={canRemoveExpenses && !done ? () => setRemoving(x) : undefined} />
                         )) : (

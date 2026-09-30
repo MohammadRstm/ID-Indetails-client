@@ -56,7 +56,8 @@ export default function ProjectPage({ panels }: { panels: ProjectPanels }) {
     const projectId = Number(id);
     const query = useProject(projectId);
     if (!(Number.isInteger(projectId) && projectId > 0) || isStatus(query.error, 404)) return <MissingRecord title="Project not found" to={`/${domain}/projects`} back="Back to projects" />;
-    if (query.isError) return <div className="page"><LoadError error={query.error} retry={() => query.refetch()} what="the project" /></div>;
+    // a failed refresh keeps the project on screen; only a load with nothing to show stops here
+    if (query.isError && !query.data) return <div className="page"><LoadError error={query.error} retry={() => query.refetch()} what="the project" /></div>;
     if (!query.data) return <ProjectSkeleton />;
     return <ProjectView project={query.data} panels={panels} />;
 }

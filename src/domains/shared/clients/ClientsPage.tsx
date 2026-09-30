@@ -56,6 +56,8 @@ export default function ClientsPage() {
     const revenue = s?.allTimeClientRevenue ?? 0;
     const top = financeClients.data?.[0];
     const concentration = top && revenue > 0 ? top.money.revenue / revenue : 0;
+    // the figures fail as one: a strip of skeletons that never fills in says nothing
+    const figuresFailed = overview.isError && !o ? overview : seesMoney && summary.isError && !s ? summary : null;
     // The list sorts on the server; the direction flips client-side only for the name.
     const rows = list.data?.items;
 
@@ -114,7 +116,9 @@ export default function ClientsPage() {
                 actions={permissions.has(P.CLIENT_CREATE) && <button className="btn btn-primary" onClick={() => setShowAdd(true)}><Icon name="plus" />Add client</button>}
             />
 
-            <KpiStrip loading={!o || (seesMoney && !s)} items={[
+            {figuresFailed ? (
+                <div className="panel"><div className="panel-body"><LoadError error={figuresFailed.error} retry={() => figuresFailed.refetch()} what="the client figures" /></div></div>
+            ) : <KpiStrip loading={!o || (seesMoney && !s)} items={[
                 { key: "clients", label: "Clients", value: o?.clients ?? 0, sub: <span>{o?.withActiveWork ?? 0} with active work · {o?.withoutProjects ?? 0} without projects</span> },
                 { key: "added", label: "Added this month", value: o?.addedThisMonth ?? 0, sub: <span>newest {o?.newest?.name ?? "-"}</span> },
                 ...(seesMoney ? [
@@ -126,12 +130,12 @@ export default function ClientsPage() {
                     },
                     { key: "largest", label: "Largest client", value: top ? money.pct(concentration) : "-", sub: <span>{top ? `${top.name} of all revenue` : "no revenue yet"}</span> },
                 ] : []),
-            ]} />
+            ]} />}
 
             <div className="grid g-7-5 mt">
                 <Figure title="Client growth" sub="Clients on the books at the end of each month."
                     table={o && { cols: [{ label: "Month" }, { label: "Added", right: true }, { label: "Total", right: true }], rows: o.growth.map((g) => [fmtMonthY(g.month), g.added.length, g.total]) }}>
-                    {overview.isError ? <LoadError error={overview.error} retry={() => overview.refetch()} what="the growth" />
+                    {overview.isError && !o ? <LoadError error={overview.error} retry={() => overview.refetch()} what="the growth" />
                         : !o ? <SkeletonLines lines={5} />
                             : <Columns height={180} labelEvery={2} format={(v) => String(Math.round(v))} seriesLabel="Clients"
                                 data={o.growth.map((g) => ({
@@ -141,7 +145,7 @@ export default function ClientsPage() {
                 </Figure>
                 {seesMoney && (
                     <Figure title="Revenue by client" sub="Contracted payments across all their projects.">
-                        {financeClients.isError ? <LoadError error={financeClients.error} retry={() => financeClients.refetch()} what="client revenue" />
+                        {financeClients.isError && !financeClients.data ? <LoadError error={financeClients.error} retry={() => financeClients.refetch()} what="client revenue" />
                             : !financeClients.data ? <SkeletonLines lines={5} />
                                 : (
                                     <>

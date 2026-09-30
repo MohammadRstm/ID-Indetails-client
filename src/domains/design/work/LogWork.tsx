@@ -32,14 +32,15 @@ export default function LogWorkModal({ options }: { options: LogWorkOptions }) {
     const settings = useDomainSettings("design");
     const day = useMyDay(firstDay);
     const schedule = useMySchedule(firstDay);
-    const failed = projects.error ?? settings.error ?? day.error;
+    // only a load with nothing to show blocks the form; a failed refresh keeps what it had
+    const failed = [projects, settings, day, schedule].find((q) => q.isError && !q.data)?.error;
     const ready = projects.data && settings.data && day.data && !day.isPlaceholderData && schedule.data;
 
     if (!ready || failed) {
         return (
             <Modal size="md" title={edit ? "Edit work entry" : options.overtime ? "Log overtime" : "Log work"} onClose={closeLogWork}
                 foot={<><div className="grow" /><button className="btn" onClick={closeLogWork}>Cancel</button></>}>
-                {failed ? <LoadError error={failed} retry={() => { projects.refetch(); settings.refetch(); day.refetch(); }} what="your day" /> : <SkeletonLines lines={6} />}
+                {failed ? <LoadError error={failed} retry={() => { projects.refetch(); settings.refetch(); day.refetch(); schedule.refetch(); }} what="your day" /> : <SkeletonLines lines={6} />}
             </Modal>
         );
     }

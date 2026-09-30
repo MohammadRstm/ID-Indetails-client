@@ -21,7 +21,7 @@ import { useInvoices } from "../../shared/billing/billingApi";
 import { costPartsOf, costWords } from "../../shared/finance/costParts";
 import { useFinanceClients, useFinanceCosts, useFinanceMonthly, useFinanceProjects, useFinanceSummary } from "../../shared/finance/financeApi";
 import { useProjects } from "../../shared/projects/projectsApi";
-import { ClientsTab, CostsTab, OverviewTab, ProjectsTab, type Tile } from "./FinanceTabs";
+import { ClientsTab, CostsTab, OverviewTab, ProjectsTab, type Failure, type Tile } from "./FinanceTabs";
 
 type PeriodKey = "quarter" | "year" | "all";
 type Tab = "overview" | "projects" | "clients" | "billing" | "costs";
@@ -29,6 +29,10 @@ const TABS: Tab[] = ["overview", "projects", "clients", "billing", "costs"];
 
 /** "All time" asks from a day before any project; the API's own default is this quarter. */
 const ALL_TIME = "2000-01-01";
+
+// a load that failed with nothing to show; a failed refresh keeps the figures it had
+const failureOf = (q: { isError: boolean; data?: unknown; error: unknown; refetch: () => unknown }): Failure =>
+    q.isError && !q.data ? { error: q.error, retry: () => void q.refetch() } : null;
 
 function periodsOf(today: string): Record<PeriodKey, { label: string; from: string; to: string; months: number }> {
     const { year, quarter } = quarterOf(today);
@@ -91,7 +95,7 @@ function FinancialsPage({ domain }: { domain: Domain }) {
                     </>
                 } />
 
-            {summary.isError ? <div className="panel"><div className="panel-body"><LoadError error={summary.error} retry={() => summary.refetch()} what="the financials" /></div></div> : (
+            {summary.isError && !summary.data ? <div className="panel"><div className="panel-body"><LoadError error={summary.error} retry={() => summary.refetch()} what="the financials" /></div></div> : (
                 <>
                     <KpiStrip loading={!s} items={[
                         { key: "revenue", label: "Revenue recognised", value: money.short(s?.revenue ?? 0), sub: <span>{s?.clientProjects ?? 0} client projects · by progress</span> },
@@ -108,12 +112,13 @@ function FinancialsPage({ domain }: { domain: Domain }) {
                         { key: "costs", label: "Costs" },
                     ]} />
 
-                    {tab === "overview" && (s ? <OverviewTab summary={s} months={monthly.data} projects={projects.data} label={period.label} tiles={tiles} />
+                    {tab === "overview" && (s ? <OverviewTab summary={s} months={monthly.data} projects={projects.data} label={period.label} tiles={tiles}
+                        failed={{ months: failureOf(monthly), projects: failureOf(projects) }} />
                         : <div className="panel"><div className="panel-body"><SkeletonLines lines={8} /></div></div>)}
-                    {tab === "projects" && <ProjectsTab projects={projects.data} tiles={tiles} />}
-                    {tab === "clients" && <ClientsTab clients={clients.data} projects={projects.data} />}
+                    {tab === "projects" && <ProjectsTab projects={projects.data} failed={failureOf(projects)} tiles={tiles} />}
+                    {tab === "clients" && <ClientsTab clients={clients.data} projects={projects.data} failed={{ clients: failureOf(clients), projects: failureOf(projects) }} />}
                     {tab === "billing" && <BillingTab domain={domain} tiles={tiles} />}
-                    {tab === "costs" && <CostsTab costs={costs.data} error={costs.isError ? costs.error : null} retry={() => costs.refetch()} tiles={tiles} />}
+                    {tab === "costs" && <CostsTab costs={costs.data} error={costs.isError && !costs.data ? costs.error : null} retry={() => costs.refetch()} tiles={tiles} />}
                 </>
             )}
             <BillingModalHost />
