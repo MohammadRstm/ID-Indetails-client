@@ -51,12 +51,14 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - requirements and meetings;
   - clients;
   - the search palette.
-- [ ] **4. Design work**, in four parts:
+- [ ] **4. Design work**, in parts:
   - [x] 4a-1: the employee home, log work with the drag timeline and the overtime preview, the timer, an employee's project;
   - [x] 4a-2: my work (both domains), my pay, the hours balance and the behind-on-hours notice;
   - [x] 4b-1: a Design project's overview for admins: work KPIs, contributors and their drawer, the work timeline, analytics, the entry window and comments;
   - [x] 4b-2: the project Timeline tab: the project at any moment, progress and status over time, the history day by day, and a day as cards;
-  - [ ] 4c: people and profiles, activity, reports, the overview board.
+  - [x] 4c-1: employees, Add employee, someone's profile and your own, Edit profile with pay from a date;
+  - [ ] 4c-2: activity and reports;
+  - [ ] 4c-3: the overview board and the client page's recent activity.
 - [ ] **5. Money:**
   - financials, project money, expenses;
   - invoices, payments;
@@ -103,8 +105,8 @@ Decisions made along the way, and anything skipped because it needs the user's i
 - **Screens that link ahead.** A few phase 3 screens point at pages from later phases:
   - a project's Overview tab says "On its way" until Design's (phase 4) and Execution's (phase 6) panels arrive, and so does the Timeline tab;
   - an employee's project page arrives with phase 4, and so does the client page's recent activity feed;
-  - the search palette's "Add employee" opens `people?invite=1`, which the people page will handle;
-  - an overtime entry opens `profile?entry=`, the employee's profile (4c);
+  - an Execution person's profile shows their header, and what they record arrives with phase 6;
+  - "Send message" on a profile opens `messages?to=`, which arrives with phase 8;
   - an Execution employee's projects and project page arrive with phase 6, with the rest of Execution.
 - **The project overview's money** (money band, billing, financial breakdown, cost curves, Export report) arrives with phase 5; the work parts and the payment KPI are there now.
 - **The project history** is rebuilt in the client from the API's timeline, entries and events (`history.ts`), as the prototype's engine did. People's "role" there is their team.
@@ -115,6 +117,8 @@ Decisions made along the way, and anything skipped because it needs the user's i
 - **Export report for Execution.** The API's project report is Design-only, so Execution's row menu and header leave it out for now. Phase 6 decides whether it becomes the client statement.
 - **Overtime is the API's.** The client never works out overtime itself: every log form and the drag timeline ask `/api/me/overtime-preview`, a moment after the time stops changing, so the rule lives in one place.
 - **The timer** remembers when it started in the browser (per person), so a reload keeps it running; stopping it opens Log work with the times filled in.
+- **Profiles.** Someone's profile follows the prototype: the hours balance is for people with salary:view (the super admin), the cost panel for financial:view, and Edit profile for employee:manage (position and team) or employee:pay_manage (pay from a date on).
+- **Your own phone** (API PR #28). The session now carries the phone, so editing your own name no longer sends an empty phone back.
 - **Strict numbers in the API** (API PR #27). JSON numbers are strict there, so the generated types say `number`, not `number | string`.
 
 ### API follow-ups

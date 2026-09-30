@@ -12,6 +12,8 @@ import ProjectRoute from "@/domains/shared/projects/ProjectRoute";
 import ProjectsPage from "@/domains/shared/projects/ProjectsPage";
 import MyWorkRoute from "@/domains/shared/requirements/MyWorkRoute";
 import MyPayPage from "@/domains/design/pay/MyPayPage";
+import PeoplePage from "@/domains/design/people/PeoplePage";
+import { MyProfilePage, PersonProfilePage } from "@/domains/design/people/ProfilePage";
 
 /*
  * Every screen, once. A route names the page an admin sees and the page an employee sees, what each needs,
@@ -104,12 +106,12 @@ export const domainRoutes: DomainRoute[] = [
         // Built on logged hours, so Design only; an Execution person's profile is still reachable from their name.
         path: "people",
         nav: { label: "Employees", icon: "people", count: "people" },
-        admin: { element: soon("Employees"), access: designOnly(all(P.EMPLOYEE_VIEW, P.WORK_ENTRY_VIEW_ALL)) },
+        admin: { element: <PeoplePage />, access: designOnly(all(P.EMPLOYEE_VIEW, P.WORK_ENTRY_VIEW_ALL)) },
     },
     {
         path: "people/:id",
         navKey: "people",
-        admin: { element: soon("Profile"), access: all(P.EMPLOYEE_VIEW) },
+        admin: { element: <PersonProfilePage />, access: all(P.EMPLOYEE_VIEW) },
     },
     {
         path: "financials",
@@ -148,7 +150,7 @@ export const domainRoutes: DomainRoute[] = [
     {
         path: "profile",
         nav: { label: "Profile", icon: "user" },
-        employee: { element: soon("Profile"), access: signedIn },
+        employee: { element: <MyProfilePage />, access: signedIn },
     },
     {
         path: "settings",

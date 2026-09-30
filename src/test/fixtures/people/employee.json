@@ -1,0 +1,33 @@
+{
+  "phone": "+961 3 555 107",
+  "createdAt": "2026-09-30T04:51:24.541Z",
+  "currentPay": {
+    "id": 8,
+    "effectiveFrom": "2026-01-01",
+    "basis": "monthly",
+    "amount": 1600,
+    "currency": "USD",
+    "hourlyCostRate": 9.2309,
+    "note": "Set at invitation",
+    "createdAt": "2026-09-30T04:51:24.541Z",
+    "createdById": 1
+  },
+  "id": 9,
+  "email": "yara@id-indetails.test",
+  "firstName": "Yara",
+  "lastName": "Mansour",
+  "role": "employee",
+  "domain": "design",
+  "team": {
+    "id": 14,
+    "name": "Visualisation"
+  },
+  "position": "Visualisation lead",
+  "photoFileId": null,
+  "status": "active",
+  "isJoker": false,
+  "joinedOn": "2024-08-15",
+  "leftOn": null,
+  "lastSeenAt": "2026-09-30T04:52:43.405Z",
+  "online": false
+}

@@ -1,0 +1,350 @@
+{
+  "month": "2026-09-01",
+  "inProgress": true,
+  "overtimeMinutes": 790,
+  "madeUpMinutes": null,
+  "paidMinutes": null,
+  "entries": 17,
+  "days": [
+    {
+      "date": "2026-09-29",
+      "dayOff": false,
+      "overtimeMinutes": 60,
+      "entries": [
+        {
+          "workEntryId": 467,
+          "projectId": 2,
+          "projectTitle": "Villa Mounir interiors",
+          "projectIcon": "palette",
+          "projectTint": "#8A5A2B",
+          "description": "Living room concept",
+          "startedAt": "2026-09-29T12:00:00Z",
+          "endedAt": "2026-09-29T14:00:00Z",
+          "minutes": 120,
+          "overtimeMinutes": 60,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-28",
+      "dayOff": false,
+      "overtimeMinutes": 70,
+      "entries": [
+        {
+          "workEntryId": 463,
+          "projectId": 2,
+          "projectTitle": "Villa Mounir interiors",
+          "projectIcon": "palette",
+          "projectTint": "#8A5A2B",
+          "description": "Client revisions to the lounge",
+          "startedAt": "2026-09-28T14:20:00Z",
+          "endedAt": "2026-09-28T15:30:00Z",
+          "minutes": 70,
+          "overtimeMinutes": 70,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "dayOff": false,
+      "overtimeMinutes": 10,
+      "entries": [
+        {
+          "workEntryId": 456,
+          "projectId": 4,
+          "projectTitle": "Beit Misk show apartment",
+          "projectIcon": "target",
+          "projectTint": "#6C5CE7",
+          "description": "Lighting scenes",
+          "startedAt": "2026-09-23T12:20:00Z",
+          "endedAt": "2026-09-23T14:00:00Z",
+          "minutes": 100,
+          "overtimeMinutes": 10,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "dayOff": false,
+      "overtimeMinutes": 110,
+      "entries": [
+        {
+          "workEntryId": 453,
+          "projectId": 2,
+          "projectTitle": "Villa Mounir interiors",
+          "projectIcon": "palette",
+          "projectTint": "#8A5A2B",
+          "description": "Furniture schedule",
+          "startedAt": "2026-09-22T13:10:00Z",
+          "endedAt": "2026-09-22T15:30:00Z",
+          "minutes": 140,
+          "overtimeMinutes": 110,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "dayOff": false,
+      "overtimeMinutes": 30,
+      "entries": [
+        {
+          "workEntryId": 448,
+          "projectId": 2,
+          "projectTitle": "Villa Mounir interiors",
+          "projectIcon": "palette",
+          "projectTint": "#8A5A2B",
+          "description": "Living room concept",
+          "startedAt": "2026-09-21T10:30:00Z",
+          "endedAt": "2026-09-21T13:30:00Z",
+          "minutes": 180,
+          "overtimeMinutes": 30,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-18",
+      "dayOff": false,
+      "overtimeMinutes": 50,
+      "entries": [
+        {
+          "workEntryId": 445,
+          "projectId": 4,
+          "projectTitle": "Beit Misk show apartment",
+          "projectIcon": "target",
+          "projectTint": "#6C5CE7",
+          "description": "Soft furnishings selection",
+          "startedAt": "2026-09-18T13:10:00Z",
+          "endedAt": "2026-09-18T14:00:00Z",
+          "minutes": 50,
+          "overtimeMinutes": 50,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-16",
+      "dayOff": false,
+      "overtimeMinutes": 30,
+      "entries": [
+        {
+          "workEntryId": 436,
+          "projectId": 6,
+          "projectTitle": "Portfolio and competition entries",
+          "projectIcon": "folder",
+          "projectTint": "#697572",
+          "description": "Competition boards",
+          "startedAt": "2026-09-16T12:00:00Z",
+          "endedAt": "2026-09-16T13:30:00Z",
+          "minutes": 90,
+          "overtimeMinutes": 30,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-15",
+      "dayOff": false,
+      "overtimeMinutes": 30,
+      "entries": [
+        {
+          "workEntryId": 432,
+          "projectId": 4,
+          "projectTitle": "Beit Misk show apartment",
+          "projectIcon": "target",
+          "projectTint": "#6C5CE7",
+          "description": "Photo-ready renders",
+          "startedAt": "2026-09-15T13:00:00Z",
+          "endedAt": "2026-09-15T14:00:00Z",
+          "minutes": 60,
+          "overtimeMinutes": 30,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-11",
+      "dayOff": false,
+      "overtimeMinutes": 40,
+      "entries": [
+        {
+          "workEntryId": 427,
+          "projectId": 4,
+          "projectTitle": "Beit Misk show apartment",
+          "projectIcon": "target",
+          "projectTint": "#6C5CE7",
+          "description": "Lighting scenes",
+          "startedAt": "2026-09-11T12:50:00Z",
+          "endedAt": "2026-09-11T14:00:00Z",
+          "minutes": 70,
+          "overtimeMinutes": 40,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-10",
+      "dayOff": false,
+      "overtimeMinutes": 30,
+      "entries": [
+        {
+          "workEntryId": 423,
+          "projectId": 2,
+          "projectTitle": "Villa Mounir interiors",
+          "projectIcon": "palette",
+          "projectTint": "#8A5A2B",
+          "description": "Furniture schedule",
+          "startedAt": "2026-09-10T11:30:00Z",
+          "endedAt": "2026-09-10T13:30:00Z",
+          "minutes": 120,
+          "overtimeMinutes": 30,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-09",
+      "dayOff": false,
+      "overtimeMinutes": 120,
+      "entries": [
+        {
+          "workEntryId": 419,
+          "projectId": 4,
+          "projectTitle": "Beit Misk show apartment",
+          "projectIcon": "target",
+          "projectTint": "#6C5CE7",
+          "description": "Photo-ready renders",
+          "startedAt": "2026-09-09T13:10:00Z",
+          "endedAt": "2026-09-09T15:10:00Z",
+          "minutes": 120,
+          "overtimeMinutes": 120,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-08",
+      "dayOff": false,
+      "overtimeMinutes": 50,
+      "entries": [
+        {
+          "workEntryId": 415,
+          "projectId": 6,
+          "projectTitle": "Portfolio and competition entries",
+          "projectIcon": "folder",
+          "projectTint": "#697572",
+          "description": "Portfolio photography edit",
+          "startedAt": "2026-09-08T11:40:00Z",
+          "endedAt": "2026-09-08T14:00:00Z",
+          "minutes": 140,
+          "overtimeMinutes": 50,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-07",
+      "dayOff": false,
+      "overtimeMinutes": 40,
+      "entries": [
+        {
+          "workEntryId": 412,
+          "projectId": 6,
+          "projectTitle": "Portfolio and competition entries",
+          "projectIcon": "folder",
+          "projectTint": "#697572",
+          "description": "Award submission text",
+          "startedAt": "2026-09-07T12:20:00Z",
+          "endedAt": "2026-09-07T14:00:00Z",
+          "minutes": 100,
+          "overtimeMinutes": 40,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-04",
+      "dayOff": false,
+      "overtimeMinutes": 40,
+      "entries": [
+        {
+          "workEntryId": 408,
+          "projectId": 2,
+          "projectTitle": "Villa Mounir interiors",
+          "projectIcon": "palette",
+          "projectTint": "#8A5A2B",
+          "description": "Kitchen elevations",
+          "startedAt": "2026-09-04T12:20:00Z",
+          "endedAt": "2026-09-04T14:00:00Z",
+          "minutes": 100,
+          "overtimeMinutes": 40,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-03",
+      "dayOff": false,
+      "overtimeMinutes": 30,
+      "entries": [
+        {
+          "workEntryId": 404,
+          "projectId": 4,
+          "projectTitle": "Beit Misk show apartment",
+          "projectIcon": "target",
+          "projectTint": "#6C5CE7",
+          "description": "Soft furnishings selection",
+          "startedAt": "2026-09-03T12:30:00Z",
+          "endedAt": "2026-09-03T14:00:00Z",
+          "minutes": 90,
+          "overtimeMinutes": 30,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-02",
+      "dayOff": false,
+      "overtimeMinutes": 30,
+      "entries": [
+        {
+          "workEntryId": 400,
+          "projectId": 4,
+          "projectTitle": "Beit Misk show apartment",
+          "projectIcon": "target",
+          "projectTint": "#6C5CE7",
+          "description": "Soft furnishings selection",
+          "startedAt": "2026-09-02T11:30:00Z",
+          "endedAt": "2026-09-02T13:30:00Z",
+          "minutes": 120,
+          "overtimeMinutes": 30,
+          "madeUpMinutes": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-01",
+      "dayOff": false,
+      "overtimeMinutes": 20,
+      "entries": [
+        {
+          "workEntryId": 396,
+          "projectId": 4,
+          "projectTitle": "Beit Misk show apartment",
+          "projectIcon": "target",
+          "projectTint": "#6C5CE7",
+          "description": "Show apartment layout",
+          "startedAt": "2026-09-01T12:10:00Z",
+          "endedAt": "2026-09-01T14:00:00Z",
+          "minutes": 110,
+          "overtimeMinutes": 20,
+          "madeUpMinutes": null
+        }
+      ]
+    }
+  ]
+}

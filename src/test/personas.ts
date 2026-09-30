@@ -33,6 +33,7 @@ function user(id: number, first: string, role: string, domain: string | null, pe
         domain,
         team: null,
         position,
+        phone: null,
         photoFileId: null,
         mustChangePassword: false,
         permissions: [...permissions].sort(),

@@ -1,0 +1,49 @@
+{
+  "userId": 9,
+  "entryCount": 75,
+  "thisQuarter": {
+    "usd": 1515.41,
+    "unconverted": [],
+    "unpricedMinutes": 0
+  },
+  "allTime": {
+    "usd": 1515.41,
+    "unconverted": [],
+    "unpricedMinutes": 0
+  },
+  "byProject": [
+    {
+      "projectId": 4,
+      "title": "Beit Misk show apartment",
+      "icon": "target",
+      "tint": "#6C5CE7",
+      "cost": {
+        "usd": 594.07,
+        "unconverted": [],
+        "unpricedMinutes": 0
+      }
+    },
+    {
+      "projectId": 6,
+      "title": "Portfolio and competition entries",
+      "icon": "folder",
+      "tint": "#697572",
+      "cost": {
+        "usd": 536.05,
+        "unconverted": [],
+        "unpricedMinutes": 0
+      }
+    },
+    {
+      "projectId": 2,
+      "title": "Villa Mounir interiors",
+      "icon": "palette",
+      "tint": "#8A5A2B",
+      "cost": {
+        "usd": 385.28,
+        "unconverted": [],
+        "unpricedMinutes": 0
+      }
+    }
+  ]
+}
