@@ -1,0 +1,236 @@
+{
+  "month": "2026-09-01",
+  "inProgress": true,
+  "overtimeMinutes": 780,
+  "madeUpMinutes": 650,
+  "paidMinutes": 130,
+  "entries": 12,
+  "days": [
+    {
+      "date": "2026-09-29",
+      "dayOff": false,
+      "overtimeMinutes": 50,
+      "entries": [
+        {
+          "workEntryId": 82,
+          "projectId": 2,
+          "projectTitle": "Villa Mounir interiors",
+          "projectIcon": "palette",
+          "projectTint": "#8A5A2B",
+          "description": "Client revisions to the lounge",
+          "startedAt": "2026-09-29T12:40:00Z",
+          "endedAt": "2026-09-29T14:00:00Z",
+          "minutes": 80,
+          "overtimeMinutes": 50,
+          "madeUpMinutes": 0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-28",
+      "dayOff": false,
+      "overtimeMinutes": 60,
+      "entries": [
+        {
+          "workEntryId": 78,
+          "projectId": 2,
+          "projectTitle": "Villa Mounir interiors",
+          "projectIcon": "palette",
+          "projectTint": "#8A5A2B",
+          "description": "Living room concept",
+          "startedAt": "2026-09-28T13:40:00Z",
+          "endedAt": "2026-09-28T15:00:00Z",
+          "minutes": 80,
+          "overtimeMinutes": 60,
+          "madeUpMinutes": 0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-25",
+      "dayOff": false,
+      "overtimeMinutes": 50,
+      "entries": [
+        {
+          "workEntryId": 73,
+          "projectId": 1,
+          "projectTitle": "Haddad Holdings HQ fit-out",
+          "projectIcon": "building",
+          "projectTint": "#0C6B69",
+          "description": "Material board for the boardroom",
+          "startedAt": "2026-09-25T12:50:00Z",
+          "endedAt": "2026-09-25T14:50:00Z",
+          "minutes": 120,
+          "overtimeMinutes": 50,
+          "madeUpMinutes": 30
+        }
+      ]
+    },
+    {
+      "date": "2026-09-24",
+      "dayOff": false,
+      "overtimeMinutes": 130,
+      "entries": [
+        {
+          "workEntryId": 69,
+          "projectId": 1,
+          "projectTitle": "Haddad Holdings HQ fit-out",
+          "projectIcon": "building",
+          "projectTint": "#0C6B69",
+          "description": "Material board for the boardroom",
+          "startedAt": "2026-09-24T13:20:00Z",
+          "endedAt": "2026-09-24T15:30:00Z",
+          "minutes": 130,
+          "overtimeMinutes": 130,
+          "madeUpMinutes": 130
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "dayOff": false,
+      "overtimeMinutes": 90,
+      "entries": [
+        {
+          "workEntryId": 62,
+          "projectId": 1,
+          "projectTitle": "Haddad Holdings HQ fit-out",
+          "projectIcon": "building",
+          "projectTint": "#0C6B69",
+          "description": "Ceiling plan drawings",
+          "startedAt": "2026-09-22T13:40:00Z",
+          "endedAt": "2026-09-22T15:30:00Z",
+          "minutes": 110,
+          "overtimeMinutes": 90,
+          "madeUpMinutes": 90
+        }
+      ]
+    },
+    {
+      "date": "2026-09-17",
+      "dayOff": false,
+      "overtimeMinutes": 50,
+      "entries": [
+        {
+          "workEntryId": 51,
+          "projectId": 1,
+          "projectTitle": "Haddad Holdings HQ fit-out",
+          "projectIcon": "building",
+          "projectTint": "#0C6B69",
+          "description": "Space planning for level 3",
+          "startedAt": "2026-09-17T12:10:00Z",
+          "endedAt": "2026-09-17T14:00:00Z",
+          "minutes": 110,
+          "overtimeMinutes": 50,
+          "madeUpMinutes": 50
+        }
+      ]
+    },
+    {
+      "date": "2026-09-16",
+      "dayOff": false,
+      "overtimeMinutes": 130,
+      "entries": [
+        {
+          "workEntryId": 46,
+          "projectId": 1,
+          "projectTitle": "Haddad Holdings HQ fit-out",
+          "projectIcon": "building",
+          "projectTint": "#0C6B69",
+          "description": "Reception joinery details",
+          "startedAt": "2026-09-16T11:20:00Z",
+          "endedAt": "2026-09-16T14:20:00Z",
+          "minutes": 180,
+          "overtimeMinutes": 60,
+          "madeUpMinutes": 60
+        },
+        {
+          "workEntryId": 47,
+          "projectId": 2,
+          "projectTitle": "Villa Mounir interiors",
+          "projectIcon": "palette",
+          "projectTint": "#8A5A2B",
+          "description": "Master bedroom mood board",
+          "startedAt": "2026-09-16T14:20:00Z",
+          "endedAt": "2026-09-16T15:30:00Z",
+          "minutes": 70,
+          "overtimeMinutes": 70,
+          "madeUpMinutes": 70
+        }
+      ]
+    },
+    {
+      "date": "2026-09-11",
+      "dayOff": false,
+      "overtimeMinutes": 50,
+      "entries": [
+        {
+          "workEntryId": 39,
+          "projectId": 2,
+          "projectTitle": "Villa Mounir interiors",
+          "projectIcon": "palette",
+          "projectTint": "#8A5A2B",
+          "description": "Master bedroom mood board",
+          "startedAt": "2026-09-11T12:10:00Z",
+          "endedAt": "2026-09-11T14:00:00Z",
+          "minutes": 110,
+          "overtimeMinutes": 50,
+          "madeUpMinutes": 50
+        }
+      ]
+    },
+    {
+      "date": "2026-09-08",
+      "dayOff": false,
+      "overtimeMinutes": 110,
+      "entries": [
+        {
+          "workEntryId": 26,
+          "projectId": 2,
+          "projectTitle": "Villa Mounir interiors",
+          "projectIcon": "palette",
+          "projectTint": "#8A5A2B",
+          "description": "Master bedroom mood board",
+          "startedAt": "2026-09-08T12:10:00Z",
+          "endedAt": "2026-09-08T14:40:00Z",
+          "minutes": 150,
+          "overtimeMinutes": 60,
+          "madeUpMinutes": 60
+        },
+        {
+          "workEntryId": 27,
+          "projectId": 2,
+          "projectTitle": "Villa Mounir interiors",
+          "projectIcon": "palette",
+          "projectTint": "#8A5A2B",
+          "description": "Kitchen elevations",
+          "startedAt": "2026-09-08T14:40:00Z",
+          "endedAt": "2026-09-08T15:30:00Z",
+          "minutes": 50,
+          "overtimeMinutes": 50,
+          "madeUpMinutes": 50
+        }
+      ]
+    },
+    {
+      "date": "2026-09-03",
+      "dayOff": false,
+      "overtimeMinutes": 60,
+      "entries": [
+        {
+          "workEntryId": 12,
+          "projectId": 1,
+          "projectTitle": "Haddad Holdings HQ fit-out",
+          "projectIcon": "building",
+          "projectTint": "#0C6B69",
+          "description": "Material board for the boardroom",
+          "startedAt": "2026-09-03T12:30:00Z",
+          "endedAt": "2026-09-03T14:00:00Z",
+          "minutes": 90,
+          "overtimeMinutes": 60,
+          "madeUpMinutes": 60
+        }
+      ]
+    }
+  ]
+}
