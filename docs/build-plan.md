@@ -45,7 +45,7 @@ The React client for the Hourline API (`ID-Indetails-api`). It ports the approve
   - sidebar and top bar, the company launcher and switching domain;
   - error pages.
 - [x] **2. Shared UI kit and charts.** Every piece is on the development-only page `/dev/kit`.
-- [ ] **3. Projects and clients:**
+- [x] **3. Projects and clients:**
   - project list with totals, creating a project;
   - the project header and status changes;
   - requirements and meetings;
@@ -99,4 +99,19 @@ Decisions made along the way, and anything skipped because it needs the user's i
   - A route the person's workspace has no page for (an employee opening an admin page) sends them home, as the prototype does.
   - A page their permissions don't cover says so, with a link home.
 - **Sample data.** `scripts/seed-dev.mjs` fills the development database through the API. The one thing the API can't do is backdate a join date (it is the day an invitation is accepted), so the sample staff's join dates are moved back in the database directly, as the API's own integration tests do. The database was backed up before seeding (`%USERPROFILE%\mysql-backup-2026-09-30-before-client-seed.sql`).
+- **Quirks mode.** The prototype's page has no doctype, so browsers draw it in quirks mode, where tables don't inherit the page's line height. The client stays in standards mode; one rule in `client.css` gives tables the prototype's line height, and the shell and table heights were measured against the prototype to match.
+- **Screens that link ahead.** A few phase 3 screens point at pages from later phases:
+  - a project's Overview tab says "On its way" until Design's (phase 4) and Execution's (phase 6) panels arrive, and so does the Timeline tab;
+  - an employee's project page arrives with phase 4, and so does the client page's recent activity feed;
+  - the search palette's "Log work" opens `my-work?log=1` and "Add employee" opens `people?invite=1`, which those pages will handle.
+- **Project margin filter.** The prototype's "Any margin" filter isn't there: filtering and sorting by money stay on the server's list (decision M7).
+- **Export report for Execution.** The API's project report is Design-only, so Execution's row menu and header leave it out for now. Phase 6 decides whether it becomes the client statement.
 - **Strict numbers in the API** (API PR #27). JSON numbers are strict there, so the generated types say `number`, not `number | string`.
+
+### API follow-ups
+
+Small API changes the screens would use. Until they're made, the client works around them.
+
+- **Project list rows lack the description.** The prototype shows it under each project's name; the client shows the owner instead.
+- **Hours logged this quarter.** The prototype's project list says "… · 6,907h logged this quarter"; no cheap endpoint gives that total, so the line stops at the project counts.
+- **The meetings list has no domain filter.** Someone who sees both domains gets both domains' meetings; the Meetings page keeps its own domain's by project.
