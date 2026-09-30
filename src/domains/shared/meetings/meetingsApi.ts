@@ -19,8 +19,8 @@ export function useCanChangeMeeting() {
     return (m: Pick<Meeting, "createdBy">) => permissions.has(P.MEETING_MANAGE) || (permissions.has(P.MEETING_CREATE) && m.createdBy?.id === me);
 }
 
-/** Meetings across the projects the person can see; the API keeps them to their domains. */
-export function useMeetings(params: { projectId?: number; mine?: boolean }) {
+/** A domain's meetings, of the projects the person can see. */
+export function useMeetings(params: { domain: string; projectId?: number; mine?: boolean }) {
     const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== false));
     return useQuery({
         queryKey: keys.meetings.list(p),

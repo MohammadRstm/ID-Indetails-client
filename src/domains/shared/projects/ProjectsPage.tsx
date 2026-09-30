@@ -18,9 +18,10 @@ import { Avatars } from "@/shared/components/Identity/People";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
 import useDebounce from "@/shared/hooks/useDebounce";
 import { money } from "@/shared/format/money";
-import { companyToday, fmtH, relDay } from "@/shared/format/time";
+import { companyToday, fmtH, fmtNumber, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import { useOverview } from "../../design/dashboard/overviewApi";
 import { ClientBadge } from "../clients/ClientBits";
 import { useClients } from "../clients/clientsApi";
 import { useDomainPeople, personName } from "../people/peopleApi";
@@ -76,6 +77,8 @@ export default function ProjectsPage() {
     const list = useProjects({ ...filters, page, pageSize: PAGE_SIZE });
     const totals = useProjectTotals(filters, seesMoney);
     const counts = useProjectStatusCounts(domain);
+    // the quarter's logged hours, from the dashboard's own query (Design work, report:view)
+    const thisQuarter = useOverview("quarter", domain === "design" && permissions.has(P.REPORT_VIEW)).data;
     const clients = useClients({ domain, includeArchived: true, sort: "name", pageSize: 100 }, permissions.has(P.CLIENT_VIEW));
     const people = useDomainPeople(domain, permissions.has(P.EMPLOYEE_VIEW), { status: "active" });
     const showNew = params.get("new") === "1";
@@ -170,7 +173,7 @@ export default function ProjectsPage() {
         <div className="page">
             <PageHead
                 title="Projects"
-                sub={total == null ? " " : `${total} project${total === 1 ? "" : "s"} · ${counts.active ?? 0} active`}
+                sub={total == null ? " " : `${total} project${total === 1 ? "" : "s"} · ${counts.active ?? 0} active${thisQuarter ? ` · ${fmtNumber(Math.round(thisQuarter.minutes / 60))}h logged this quarter` : ""}`}
                 actions={permissions.has(P.PROJECT_CREATE) && (
                     <button className="btn btn-primary" onClick={() => { params.set("new", "1"); setParams(params); }}><Icon name="plus" />New project</button>
                 )}

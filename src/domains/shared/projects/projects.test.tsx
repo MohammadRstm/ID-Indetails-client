@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { fixtures, projectHandlers } from "@/test/fixtures";
+import { overview } from "@/test/fixtures/overview";
 import { siteHandlers } from "@/test/fixtures/site";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
@@ -37,6 +38,21 @@ describe("the projects list", () => {
         await firstRow();
         expect(screen.queryByRole("columnheader", { name: "Hours" })).toBeNull();
         expect(screen.queryByRole("columnheader", { name: "Activity" })).toBeNull();
+    });
+
+    it("says how many hours were logged this quarter to people with report:view", async () => {
+        renderApp("/design/projects", admin, ...projectHandlers);
+        const hours = Math.round(overview.overview.minutes / 60).toLocaleString("en-US");
+        expect(await screen.findByText(new RegExp(`· ${hours}h logged this quarter$`))).toBeInTheDocument();
+    });
+
+    it("leaves the hours out without report:view, and never asks for them", async () => {
+        let asked = false;
+        renderApp("/design/projects", withPermissions(admin, { revoke: [P.REPORT_VIEW] }),
+            http.get("/api/reports/overview", () => { asked = true; return HttpResponse.json(overview.overview); }),
+            ...projectHandlers);
+        expect(await screen.findByText(/^\d+ projects · \d+ active$/)).toBeInTheDocument();
+        expect(asked).toBe(false);
     });
 
     it("offers New project only with project:create", async () => {
@@ -173,6 +189,16 @@ describe("meetings", () => {
     it("can be set by employees with meeting:create", async () => {
         renderApp("/design/meetings", personas.designEmployee, ...projectHandlers);
         expect(await screen.findByRole("button", { name: /new meeting/i })).toBeInTheDocument();
+    });
+
+    it("are asked for by the page's own domain", async () => {
+        const asked: (string | null)[] = [];
+        renderApp("/design/meetings", personas.superAdmin,
+            http.get("/api/meetings", ({ request }) => { asked.push(new URL(request.url).searchParams.get("domain")); return HttpResponse.json(fixtures.meetings); }),
+            ...projectHandlers);
+        await screen.findByRole("button", { name: /new meeting/i });
+        await waitFor(() => expect(asked.length).toBeGreaterThan(0));
+        expect(new Set(asked)).toEqual(new Set(["design"]));
     });
 
     it("are read-only without meeting:create", async () => {
