@@ -12,8 +12,10 @@ import ProjectRoute from "@/domains/shared/projects/ProjectRoute";
 import ProjectsPage from "@/domains/shared/projects/ProjectsPage";
 import MyWorkRoute from "@/domains/shared/requirements/MyWorkRoute";
 import MyPayPage from "@/domains/design/pay/MyPayPage";
+import ActivityPage from "@/domains/design/activity/ActivityPage";
 import PeoplePage from "@/domains/design/people/PeoplePage";
 import { MyProfilePage, PersonProfilePage } from "@/domains/design/people/ProfilePage";
+import ReportsPage from "@/domains/design/reports/ReportsPage";
 
 /*
  * Every screen, once. A route names the page an admin sees and the page an employee sees, what each needs,
@@ -140,12 +142,12 @@ export const domainRoutes: DomainRoute[] = [
     {
         path: "activity",
         nav: { label: "Activity", icon: "activity" },
-        admin: { element: soon("Activity"), access: designOnly(all(P.ACTIVITY_VIEW)) },
+        admin: { element: <ActivityPage />, access: designOnly(all(P.ACTIVITY_VIEW)) },
     },
     {
         path: "reports",
         nav: { label: "Reports", icon: "reports" },
-        admin: { element: soon("Reports"), access: designOnly(all(P.REPORT_VIEW)) },
+        admin: { element: <ReportsPage />, access: designOnly(all(P.REPORT_VIEW)) },
     },
     {
         path: "profile",
