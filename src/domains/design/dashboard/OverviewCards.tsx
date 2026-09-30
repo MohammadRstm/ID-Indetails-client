@@ -23,6 +23,7 @@ import type { FinanceBilling, FinanceClient, FinanceMonth, FinanceProjects } fro
 import { DeadlineTag, NameList } from "../../shared/requirements/Requirements";
 import type { Followup } from "./followups";
 import type { Overview } from "./overviewApi";
+import { clickable } from "@/shared/utils/clickable";
 
 export type ProjectInfo = { icon: string | null; tint: string | null; activity: number; targetDate: string | null };
 
@@ -115,7 +116,7 @@ export function FollowupsCard({ items, deadlines, loading }: { items: Followup[]
                     {loading ? <SkeletonLines lines={4} /> : items.map((a) => {
                         const go = a.projectId != null ? open(`projects/${a.projectId}`) : undefined;
                         return (
-                            <div key={a.key} className="mini-row" style={{ alignItems: "flex-start", cursor: go ? "pointer" : "default" }} onClick={go}>
+                            <div key={a.key} className="mini-row" style={{ alignItems: "flex-start", cursor: go ? "pointer" : "default" }} {...clickable(go, "button")}>
                                 <span className="feed-ic" style={TONE[a.tone]}><Icon name={a.icon} /></span>
                                 <div className="grow">
                                     <div style={{ fontSize: "12.5px" }}>{a.text}</div>
@@ -134,7 +135,7 @@ export function FollowupsCard({ items, deadlines, loading }: { items: Followup[]
                             </div>
                         </div>
                         {!deadlines ? <SkeletonLines lines={3} /> : shown.length ? shown.map((r) => (
-                            <div key={r.requirementId} className={cx("req", open(`projects/${r.project.id}`) && "click")} onClick={open(`projects/${r.project.id}?tab=requirements`)}>
+                            <div key={r.requirementId} className={cx("req", open(`projects/${r.project.id}`) && "click")} {...clickable(open(`projects/${r.project.id}?tab=requirements`), "button")}>
                                 <ProjectTile icon={r.project.icon} tint={r.project.tint} size="sm" />
                                 <div className="grow" style={{ minWidth: 0 }}>
                                     <div className="req-text">{r.text}</div>
@@ -289,7 +290,7 @@ export function OwedCard({ billing }: { billing: FinanceBilling | undefined }) {
                         <BillingMeter value={b.value} invoiced={b.invoiced} paid={b.received} outstanding={b.outstanding} notYetInvoiced={b.notYetInvoiced} height={16} />
                         <div className="mt">
                             {billing.openInvoices.slice(0, 4).map((inv) => (
-                                <div key={inv.id} className="mini-row" style={{ cursor: open(`projects/${inv.projectId}`) ? "pointer" : "default" }} onClick={open(`projects/${inv.projectId}`)}>
+                                <div key={inv.id} className="mini-row" style={{ cursor: open(`projects/${inv.projectId}`) ? "pointer" : "default" }} {...clickable(open(`projects/${inv.projectId}`), "button")}>
                                     <span className="feed-ic"><Icon name={inv.isOverdue ? "alert" : "file"} /></span>
                                     <div className="grow" style={{ minWidth: 0 }}>
                                         <div className="trunc" style={{ fontWeight: 600, fontSize: "12.5px" }}>{inv.number} · {inv.clientName}</div>
@@ -322,7 +323,7 @@ export function TopClientsCard({ clients }: { clients: FinanceClient[] | undefin
             </div>
             <div className="panel-body" style={{ paddingTop: 4 }}>
                 {!clients ? <SkeletonLines lines={4} /> : rows.map((c) => (
-                    <div key={c.clientId} className="mini-row" style={{ cursor: open(`clients/${c.clientId}`) ? "pointer" : "default" }} onClick={open(`clients/${c.clientId}`)}>
+                    <div key={c.clientId} className="mini-row" style={{ cursor: open(`clients/${c.clientId}`) ? "pointer" : "default" }} {...clickable(open(`clients/${c.clientId}`), "button")}>
                         <span className="client-mark">{c.name.slice(0, 1).toUpperCase()}</span>
                         <div className="grow" style={{ minWidth: 0 }}>
                             <div className="trunc" style={{ fontWeight: 600, fontSize: "12.5px" }}>{c.name}</div>

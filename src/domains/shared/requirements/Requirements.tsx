@@ -72,7 +72,7 @@ function AssigneePicker({ value, onChange, options }: { value: number[]; onChang
             <div>
                 <div className="search" style={{ margin: "2px 2px 6px" }}>
                     <Icon name="search" />
-                    <input className="input" placeholder="Search employees" value={q} onChange={(e) => setQ(e.target.value)} />
+                    <input className="input" placeholder="Search employees" aria-label="Search employees" value={q} onChange={(e) => setQ(e.target.value)} />
                 </div>
                 <div className="req-pick-list">
                     {shown.map((x) => (
@@ -130,7 +130,7 @@ function ReqForm({ domain, requirement, busy, error, onSubmit, onCancel }: ReqFo
     return (
         <div className="req-form">
             <textarea className="textarea" rows={2} placeholder="What has to be achieved? e.g. Homepage mockups approved by the client"
-                value={text} onChange={(e) => setText(e.target.value)} />
+                aria-label="Requirement" value={text} onChange={(e) => setText(e.target.value)} />
             <div className="req-form-row">
                 <div className="req-field"><span className="label">Assigned to</span><AssigneePicker value={who} onChange={setWho} options={options} /></div>
                 <div className="req-field">

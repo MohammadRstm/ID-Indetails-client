@@ -3,6 +3,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import Skeleton from "@/shared/components/Feedback/Skeleton";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import { clickable } from "@/shared/utils/clickable";
 
 export type SortState<K extends string = string> = { key: K; dir: "asc" | "desc" };
 
@@ -65,7 +66,7 @@ export default function DataTable<T>({
         body = empty ? <tr><td colSpan={colSpan} style={{ borderBottom: 0 }}>{empty}</td></tr> : null;
     } else {
         body = rows.map((row) => (
-            <tr key={rowKey(row)} className={cx(onRowClick && "click", rowClassName?.(row))} onClick={onRowClick ? () => onRowClick(row) : undefined}>
+            <tr key={rowKey(row)} className={cx(onRowClick && "click", rowClassName?.(row))} {...clickable(onRowClick ? () => onRowClick(row) : undefined)}>
                 {columns.map((c) => (
                     <td key={c.key} className={cx(c.right && "r", c.mono && "mono", c.nowrap && "nowrap", c.className)}>{c.cell(row)}</td>
                 ))}

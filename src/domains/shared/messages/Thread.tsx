@@ -17,6 +17,7 @@ import Composer from "./Composer";
 import GroupTile from "./GroupTile";
 import { mentionParts, startsRun } from "./messageText";
 import { chatKey, useMarkChatRead, usePresence, useSendMessage, useTeamMembers, useThread, type Chat, type Contact, type Message } from "./messagesApi";
+import { clickable } from "@/shared/utils/clickable";
 
 type File = Message["attachments"][number];
 
@@ -130,7 +131,7 @@ export default function Thread({ chat, person, team, meId }: ThreadProps) {
         <>
             <div className="msg-thread-head">
                 {person && who ? (
-                    <div className={profile ? "msg-thread-person" : undefined} onClick={profile ? () => navigate(profile) : undefined} title={profile ? "View profile" : undefined}>
+                    <div className={profile ? "msg-thread-person" : undefined} {...clickable(profile ? () => navigate(profile) : undefined, "link")} title={profile ? "View profile" : undefined}>
                         <div className="row" style={{ gap: 10 }}>
                             <Avatar person={who} size={32} presence />
                             <div style={{ minWidth: 0 }}>

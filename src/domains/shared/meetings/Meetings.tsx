@@ -26,6 +26,7 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useProjects } from "../projects/projectsApi";
 import { meetingTitle, useCanChangeMeeting, useCreateMeeting, useDeleteMeeting, useMeetings, useProjectMeetings, type Meeting } from "./meetingsApi";
+import { clickable } from "@/shared/utils/clickable";
 
 function RemoveMenu({ meeting }: { meeting: Meeting }) {
     const remove = useDeleteMeeting();
@@ -212,7 +213,7 @@ export function MeetingsPage() {
                     <div className="mtg-topic">{m.topic || meetingTitle(m)}</div>
                     {m.description && <div className="muted clamp2" style={{ fontSize: 12, marginTop: 2 }}>{m.description}</div>}
                     <div className="row wrap muted" style={{ gap: "6px 12px", fontSize: "11.5px", marginTop: 5 }}>
-                        <span className="row link-quiet" style={{ gap: 6, cursor: "pointer" }} onClick={() => navigate(route)}>
+                        <span className="row link-quiet" style={{ gap: 6, cursor: "pointer" }} {...clickable(() => navigate(route), "link")}>
                             <ProjectTile icon={m.project.icon} tint={m.project.tint} size="sm" />{m.project.title}
                         </span>
                         {m.createdBy && (

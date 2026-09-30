@@ -21,6 +21,7 @@ import { openLogWork } from "./logWorkStore";
 import OvertimePanel from "./OvertimePanel";
 import TodayPanel from "./TodayPanel";
 import { useDomainSettings, useMyProjects, useMySchedule, useMyWorkSummary, type MyProject } from "./workApi";
+import { clickable } from "@/shared/utils/clickable";
 
 type LastWorked = "any" | "week" | "month" | "older" | "never";
 
@@ -199,7 +200,7 @@ function ProjectCard({ project: p, today, canLog, paused }: { project: MyProject
     const isNew = daysBetween(dayKey(p.createdAt), today) < 2;
     const last = p.lastActivity;
     return (
-        <div className="pcard" onClick={() => navigate(`/design/projects/${p.id}`)}>
+        <div className="pcard" {...clickable(() => navigate(`/design/projects/${p.id}`), "link")}>
             <div className="row start" style={{ gap: 11 }}>
                 <ProjectTile icon={p.icon} tint={p.tint} size="lg" />
                 <div className="grow" style={{ minWidth: 0 }}>

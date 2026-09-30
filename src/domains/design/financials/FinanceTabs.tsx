@@ -22,6 +22,7 @@ import { cx } from "@/shared/utils/cx";
 import { ClientBadge } from "../../shared/clients/ClientBits";
 import { costPartsOf, costWords } from "../../shared/finance/costParts";
 import type { FinanceClient, FinanceMonth, FinanceProjects, FinanceSummary } from "../../shared/finance/financeApi";
+import { clickable } from "@/shared/utils/clickable";
 
 export type Tile = { icon: string | null; tint: string | null };
 type FinanceProject = Schemas["FinanceProjectResponse"];
@@ -162,7 +163,7 @@ export function ProjectsTab({ projects, tiles }: { projects: FinanceProjects | u
                                 const internal = f.billingType === "internal";
                                 const go = open(`projects/${f.projectId}`);
                                 return (
-                                    <tr key={f.projectId} className={cx(go && "click")} onClick={go}>
+                                    <tr key={f.projectId} className={cx(go && "click")} {...clickable(go)}>
                                         <td>
                                             <div className="pname">
                                                 <Tile tile={tiles.get(f.projectId)} />
@@ -264,7 +265,7 @@ export function ClientsTab({ clients, projects }: { clients: FinanceClient[] | u
                             {rows.map((c) => {
                                 const go = open(`clients/${c.clientId}`);
                                 return (
-                                    <tr key={c.clientId} className={cx(go && "click")} onClick={go}>
+                                    <tr key={c.clientId} className={cx(go && "click")} {...clickable(go)}>
                                         <td><ClientBadge client={{ id: c.clientId, displayName: c.name }} link={false} /></td>
                                         <td>{c.label && <span className="badge">{c.label}</span>}</td>
                                         <td className="r num">{c.money.projects}</td>
@@ -330,7 +331,7 @@ export function CostsTab({ costs, error, retry, tiles }: { costs: Costs | undefi
                             {costs.biggestExpenses.map((x) => {
                                 const go = open(`projects/${x.projectId}`);
                                 return (
-                                    <tr key={x.id} className={cx(go && "click")} onClick={go}>
+                                    <tr key={x.id} className={cx(go && "click")} {...clickable(go)}>
                                         <td><b>{x.label}</b></td>
                                         <td><div className="pname"><Tile tile={tiles.get(x.projectId)} /><span className="trunc">{x.projectTitle}</span></div></td>
                                         <td className="muted">{x.category}</td>

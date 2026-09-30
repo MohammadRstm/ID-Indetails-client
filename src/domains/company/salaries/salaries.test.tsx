@@ -123,6 +123,14 @@ describe("Salaries", () => {
 });
 
 describe("A person's salary", () => {
+    it("opens from the keyboard", async () => {
+        renderApp("/company/salaries", rana, ...salaryHandlers);
+        const row = (await screen.findByText("Sarah Haddad")).closest("tr") as HTMLElement;
+        row.focus();
+        await userEvent.keyboard("{Enter}");
+        expect(await screen.findByRole("dialog", { name: "Sarah Haddad" })).toBeInTheDocument();
+    });
+
     it("shows the hours owed, how the pay adds up and where the overtime happened", async () => {
         renderApp("/company/salaries", rana, ...salaryHandlers);
         const drawer = await openDetails("Sarah Haddad");

@@ -25,6 +25,7 @@ import { usePeopleWork } from "../people/peopleWorkApi";
 import { followups } from "./followups";
 import { FollowupsCard, HoursCard, InvoicedCard, OwedCard, ProfitCard, RevenueCostCard, StatusCard, TimeCard, TopClientsCard, type ProjectInfo } from "./OverviewCards";
 import { useDashboard, useOverview, useUpcomingDeadlines } from "./overviewApi";
+import { clickable } from "@/shared/utils/clickable";
 
 type Period = Extract<PeriodKind, "quarter" | "month" | "30d">;
 
@@ -92,7 +93,7 @@ function OverviewPage({ domain }: { domain: Domain }) {
             { key: "active", label: "Active projects", value: count("active"), sub: <span>{count("hold")} on hold · {count("completed")} completed</span> },
             {
                 key: "clients", label: "Clients", value: d?.clients ?? 0,
-                sub: clientOverview.data ? <span className="link" onClick={() => navigate(`/${domain}/clients`)}>{clientOverview.data.withActiveWork} with active work</span> : undefined,
+                sub: clientOverview.data ? <span className="link" {...clickable(() => navigate(`/${domain}/clients`), "link")}>{clientOverview.data.withActiveWork} with active work</span> : undefined,
             },
             ...(!design ? [] : [{
                 key: "hours", label: `Hours logged · ${range.label}`, value: fmtNumber(Math.round((o?.minutes ?? 0) / 60)), unit: "h",

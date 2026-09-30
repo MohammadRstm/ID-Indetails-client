@@ -10,6 +10,7 @@ import type { Project } from "../projects/projectsApi";
 import { useInvoices } from "./billingApi";
 import { BillingMeter, InvoiceLine, InvoiceStatusPill } from "./BillingBits";
 import { useBillingLinks } from "./billingLinks";
+import { clickable } from "@/shared/utils/clickable";
 
 const COLOURS = { paid: "var(--heat-3)", out: "var(--warn-mark)" };
 
@@ -95,7 +96,7 @@ export default function BillingBand({ project }: { project: Project }) {
                     {voided.length > 0 && (
                         <div className="mt-s">
                             {voided.map((inv) => (
-                                <div key={inv.id} className="cost-row voided click" onClick={() => links.openInvoice(inv.id)}>
+                                <div key={inv.id} className="cost-row voided click" {...clickable(() => links.openInvoice(inv.id), "button")}>
                                     <span className="mono nowrap" style={{ fontSize: 12 }}>{inv.number}</span>
                                     <span className="grow muted trunc" style={{ fontSize: "11.5px" }}>Voided</span>
                                     <InvoiceStatusPill invoice={inv} />

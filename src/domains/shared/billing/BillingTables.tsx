@@ -7,6 +7,7 @@ import type { InvoiceSummary, Payment } from "./billingApi";
 import { InvoiceStatusPill } from "./BillingBits";
 import PaymentActions from "./PaymentActions";
 import { invoiceStateOf } from "./invoiceStatus";
+import { clickable } from "@/shared/utils/clickable";
 
 export type Tile = { icon: string | null; tint: string | null };
 
@@ -37,7 +38,7 @@ export function InvoiceTable({ invoices, showProject, showClient, tiles, onOpen 
                         const voided = inv.status === "void";
                         const paid = inv.paid ?? 0, balance = inv.balance ?? 0;
                         return (
-                            <tr key={inv.id} className={cx("click", voided && "voided")} onClick={() => onOpen(inv)}>
+                            <tr key={inv.id} className={cx("click", voided && "voided")} {...clickable(() => onOpen(inv))}>
                                 <td className="mono nowrap" style={{ fontWeight: 600 }}>{inv.number ?? "Draft"}</td>
                                 {showProject && (
                                     <td><div className="pname"><ProjectTile icon={tiles?.get(inv.project.id)?.icon} tint={tiles?.get(inv.project.id)?.tint} size="sm" /><span className="trunc">{inv.project.title}</span></div></td>
@@ -86,7 +87,7 @@ export function PaymentTable({ payments, showProject, tiles, onOpen, actions }: 
                     {payments.map((p) => {
                         const open = p.invoiceId != null && onOpen ? () => onOpen(p.invoiceId!) : undefined;
                         return (
-                            <tr key={p.id} className={cx(p.voidedAt && "voided", open && "click")} onClick={open}>
+                            <tr key={p.id} className={cx(p.voidedAt && "voided", open && "click")} {...clickable(open)}>
                                 <td className="nowrap">{fmtDateY(p.receivedOn)}</td>
                                 {showProject && (
                                     <td><div className="pname"><ProjectTile icon={tiles?.get(p.project.id)?.icon} tint={tiles?.get(p.project.id)?.tint} size="sm" /><span className="trunc">{p.project.title}</span></div></td>

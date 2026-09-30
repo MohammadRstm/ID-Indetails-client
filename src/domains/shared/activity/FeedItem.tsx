@@ -11,6 +11,7 @@ import Icon from "@/shared/icons/Icon";
 import EntryModal from "../../design/projects/EntryModal";
 import { commentCount } from "../../design/work/entryWords";
 import { feedWords, type FeedEvent } from "./feedWords";
+import { clickable } from "@/shared/utils/clickable";
 
 type FeedItemProps = {
     item: FeedEvent;
@@ -45,7 +46,7 @@ export default function FeedItem({ item, people, hideProject }: FeedItemProps) {
                         <div className="feed-text">
                             <PersonName person={person} bold /> logged <b className="mono">{fmtDur(e.minutes)}</b>
                             {!hideProject && (
-                                <span> on <span className="link" onClick={(ev) => { ev.stopPropagation(); navigate(`/design/projects/${e.project.id}`); }}>{e.project.title}</span></span>
+                                <span> on <span className="link" {...clickable((ev) => { ev.stopPropagation(); navigate(`/design/projects/${e.project.id}`); }, "link")}>{e.project.title}</span></span>
                             )}
                         </div>
                         <div className="feed-quote trunc">{e.description}</div>
@@ -55,7 +56,7 @@ export default function FeedItem({ item, people, hideProject }: FeedItemProps) {
                             {e.attachment && (
                                 <>
                                     <span>·</span>
-                                    <span className="link" onClick={(ev) => { ev.stopPropagation(); setViewing(true); }}><Icon name="file" style={{ width: 11, height: 11 }} />View file</span>
+                                    <span className="link" {...clickable((ev) => { ev.stopPropagation(); setViewing(true); }, "button")}><Icon name="file" style={{ width: 11, height: 11 }} />View file</span>
                                 </>
                             )}
                             {e.commentCount > 0 && <><span>·</span><span className="link"><Icon name="chat" style={{ width: 11, height: 11 }} />{commentCount(e.commentCount)}</span></>}
@@ -80,8 +81,8 @@ export default function FeedItem({ item, people, hideProject }: FeedItemProps) {
                 <div className="feed-text">{actor && <><PersonName person={actor} bold /> </>}{text}</div>
                 <div className="feed-meta">
                     <span>{relTime(item.occurredAt)}</span>
-                    {projectPath && <><span>·</span><span className="link" onClick={() => navigate(projectPath)}>Open project</span></>}
-                    {clientPath && <><span>·</span><span className="link" onClick={() => navigate(clientPath)}>Open client</span></>}
+                    {projectPath && <><span>·</span><span className="link" {...clickable(() => navigate(projectPath), "link")}>Open project</span></>}
+                    {clientPath && <><span>·</span><span className="link" {...clickable(() => navigate(clientPath), "link")}>Open client</span></>}
                 </div>
             </div>
         </div>

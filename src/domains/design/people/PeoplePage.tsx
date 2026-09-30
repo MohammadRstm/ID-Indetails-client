@@ -23,6 +23,7 @@ import { cx } from "@/shared/utils/cx";
 import InviteModal from "../../shared/people/InviteModal";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { usePeopleWork, type PersonWork } from "./peopleWorkApi";
+import { clickable } from "@/shared/utils/clickable";
 
 type PresenceFilter = "all" | "online" | "offline" | "invited";
 
@@ -141,7 +142,7 @@ export default function PeoplePage() {
                                         {filtered.map((r) => {
                                             const focus = r.focus ? tiles.get(r.focus.projectId) : undefined;
                                             return (
-                                                <tr key={r.id} className="click" onClick={() => navigate(`/design/people/${r.id}`)}>
+                                                <tr key={r.id} className="click" {...clickable(() => navigate(`/design/people/${r.id}`))}>
                                                     <td><PersonLine person={person(r)} size={30} presence sub={r.position ?? false} /></td>
                                                     <td className="muted nowrap">{r.teamName ?? "-"}</td>
                                                     {seesMoney && <td className="r mono nowrap">{r.hourlyRate ? `${money.short(r.hourlyRate.amount, r.hourlyRate.currency)}/h` : "-"}</td>}

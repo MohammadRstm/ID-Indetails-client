@@ -15,6 +15,7 @@ import Icon from "@/shared/icons/Icon";
 import { useProjects, type ProjectSummary } from "../../shared/projects/projectsApi";
 import { companyNow } from "../../design/work/day";
 import { useSiteSummaries, type SiteSummary } from "./siteRecordsApi";
+import { clickable } from "@/shared/utils/clickable";
 
 type LastWorked = "any" | "week" | "month" | "older" | "never";
 
@@ -126,7 +127,7 @@ export default function SiteHome() {
 function SiteCard({ project: p, summary: s, paused }: { project: ProjectSummary; summary: SiteSummary | undefined; paused?: boolean }) {
     const navigate = useNavigate();
     return (
-        <div className="pcard" onClick={() => navigate(`/execution/projects/${p.id}`)}>
+        <div className="pcard" {...clickable(() => navigate(`/execution/projects/${p.id}`), "link")}>
             <div className="row start" style={{ gap: 11 }}>
                 <ProjectTile icon={p.icon} tint={p.tint} size="lg" />
                 <div className="grow" style={{ minWidth: 0 }}>

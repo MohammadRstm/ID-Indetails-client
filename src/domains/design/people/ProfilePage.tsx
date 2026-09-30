@@ -39,6 +39,7 @@ import PermissionsModal from "../../shared/settings/PermissionsModal";
 import EditProfileModal, { type ProfilePerson } from "./EditProfileModal";
 import PersonActions from "./PersonActions";
 import { useEmployee, useLabourCost, usePayHistory, usePersonEntries, usePersonHours, usePersonWorkSummary } from "./peopleWorkApi";
+import { clickable } from "@/shared/utils/clickable";
 
 type Extra = { online?: boolean; lastSeenAt?: string | null; joinedOn?: string | null; leftOn?: string | null; status?: string; role?: string; isJoker?: boolean };
 
@@ -250,7 +251,7 @@ function DesignWork({ userId, first, self }: { userId: number | null; first: str
                                 <thead><tr><th>Project</th><th className="r">Normal</th><th className="r">Overtime</th><th className="r">Total</th><th className="r">Entries</th><th>Last</th></tr></thead>
                                 <tbody>
                                     {s.byProject.map((p) => (
-                                        <tr key={p.projectId} className="click" onClick={() => navigate(projectPath(p.projectId))}>
+                                        <tr key={p.projectId} className="click" {...clickable(() => navigate(projectPath(p.projectId)))}>
                                             <td>
                                                 <div className="pname">
                                                     <ProjectTile icon={p.icon} tint={p.tint} size="sm" />
