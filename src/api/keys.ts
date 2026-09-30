@@ -39,6 +39,9 @@ export const keys = {
         summary: (domain: string, params: object) => ["finance", domain, "summary", params] as const,
         clients: (domain: string) => ["finance", domain, "clients"] as const,
         monthly: (domain: string, months: number) => ["finance", domain, "monthly", months] as const,
+        projects: (domain: string) => ["finance", domain, "projects"] as const,
+        billing: (domain: string, months: number) => ["finance", domain, "billing", months] as const,
+        attention: (domain: string) => ["finance", domain, "attention"] as const,
     },
     /** A person's own work: their day, entries, summaries, overtime, hours and pay. */
     work: {
@@ -62,7 +65,12 @@ export const keys = {
         domain: (domain: string) => ["settings", "domain", domain] as const,
     },
     activity: { all: ["activity"] as const },
-    dashboard: { all: ["dashboard"] as const },
+    dashboard: {
+        all: ["dashboard"] as const,
+        overview: (period: string) => ["dashboard", "overview", period] as const,
+        domain: (domain: string) => ["dashboard", domain] as const,
+        deadlines: (domain: string) => ["dashboard", domain, "deadlines"] as const,
+    },
     search: (q: string) => ["search", q] as const,
 };
 

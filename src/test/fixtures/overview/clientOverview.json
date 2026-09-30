@@ -1,0 +1,105 @@
+{
+  "clients": 5,
+  "archived": 0,
+  "withActiveWork": 5,
+  "withoutProjects": 0,
+  "addedThisMonth": 5,
+  "newest": {
+    "id": 5,
+    "name": "Nour Daher",
+    "addedAt": "2026-09-30T04:52:26.915Z"
+  },
+  "growth": [
+    {
+      "month": "2025-09-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2025-10-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2025-11-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2025-12-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-01-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-02-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-03-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-04-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-05-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-06-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-07-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-08-01",
+      "total": 0,
+      "added": []
+    },
+    {
+      "month": "2026-09-01",
+      "total": 5,
+      "added": [
+        {
+          "id": 1,
+          "name": "Georges Haddad",
+          "addedAt": "2026-09-30T04:52:26.491Z"
+        },
+        {
+          "id": 2,
+          "name": "Mounir Aoun",
+          "addedAt": "2026-09-30T04:52:26.712Z"
+        },
+        {
+          "id": 3,
+          "name": "Rita Frem",
+          "addedAt": "2026-09-30T04:52:26.781Z"
+        },
+        {
+          "id": 4,
+          "name": "Hala Rizk",
+          "addedAt": "2026-09-30T04:52:26.852Z"
+        },
+        {
+          "id": 5,
+          "name": "Nour Daher",
+          "addedAt": "2026-09-30T04:52:26.915Z"
+        }
+      ]
+    }
+  ]
+}

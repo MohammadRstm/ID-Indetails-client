@@ -29,7 +29,7 @@ import {
 type Person = { id: number; name: string };
 
 /** "Hana, Sarah": first names, each opening that person's profile. */
-function NameList({ people }: { people: Person[] }) {
+export function NameList({ people }: { people: Person[] }) {
     return (
         <span>
             {people.map((p, i) => (
