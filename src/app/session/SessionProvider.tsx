@@ -3,9 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { configureSession, http, refreshSession, signIn as apiSignIn, signOut as apiSignOut } from "@/api/http";
 import { tokenStore } from "@/api/tokenStore";
 import type { AuthResponse, CurrentUser } from "@/api/types";
-import { SessionContext, type SessionValue, type SessionStatus } from "./sessionContext";
-
-export const ME_KEY = ["session", "me"] as const;
+import { ME_KEY, SessionContext, type SessionValue, type SessionStatus } from "./sessionContext";
 
 // Permissions aren't pushed by the API, so the signed-in user is read again now and then (and when the tab
 // comes back into focus), which is how a change of permissions reaches an open app.
