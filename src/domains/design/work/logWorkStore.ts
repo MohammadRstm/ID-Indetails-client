@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { onSessionReset } from "@/app/session/sessionReset";
 import type { WorkEntry } from "./workApi";
 
 /*
@@ -44,3 +45,6 @@ export function useLogWork(): Open | null {
         () => open,
     );
 }
+
+// an entry being edited belongs to the person who opened it
+onSessionReset(closeLogWork);

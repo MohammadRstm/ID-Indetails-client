@@ -1,11 +1,13 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { http as api } from "@/api/http";
 import { P } from "@/app/permissions/codes";
 import { work, workHandlers } from "@/test/fixtures/work";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
+import { server } from "@/test/server";
 
 const sarah = personas.designEmployee;
 const cannotLog = withPermissions(sarah, { revoke: [P.WORK_ENTRY_CREATE] });
@@ -78,6 +80,20 @@ describe("logging work", () => {
         // Undo still works with the form gone
         await userEvent.click(within(logged).getByRole("button", { name: "Undo" }));
         await waitFor(() => expect(deleted).toEqual(["999"]));
+    });
+
+    it("closes when someone else signs in from another tab", async () => {
+        renderApp("/design/projects", sarah, ...workHandlers);
+        await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
+        await logWindow();
+        // the next refresh (the tabs share the cookie) comes back as another person
+        server.use(
+            http.get("/api/ping", () => HttpResponse.json({ code: "unauthenticated" }, { status: 401 }), { once: true }),
+            http.get("/api/ping", () => HttpResponse.json({ ok: true })),
+            http.post("/api/auth/refresh", () => HttpResponse.json({ accessToken: "other", accessTokenExpiresAt: "2030-01-01T00:00:00Z", user: { ...sarah, id: sarah.id + 100 } })),
+        );
+        await act(() => api.get("/ping"));
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: /log work/i })).toBeNull());
     });
 
     it("says what is wrong next to the button, not in a toast", async () => {

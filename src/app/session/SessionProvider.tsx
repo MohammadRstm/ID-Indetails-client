@@ -4,6 +4,7 @@ import { configureSession, http, refreshSession, signIn as apiSignIn, signOut as
 import { tokenStore } from "@/api/tokenStore";
 import type { AuthResponse, CurrentUser } from "@/api/types";
 import { ME_KEY, SessionContext, type SessionValue, type SessionStatus } from "./sessionContext";
+import { resetSessionState } from "./sessionReset";
 
 // Permissions aren't pushed by the API, so the signed-in user is read again now and then (and when the tab
 // comes back into focus), which is how a change of permissions reaches an open app.
@@ -30,13 +31,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
     const end = useCallback((message: string | null) => {
         queryClient.clear();
+        resetSessionState();
         setNotice(message);
         setStatus("signedOut");
     }, [queryClient]);
 
     useEffect(() => {
         configureSession({
-            onRefreshed: (auth) => queryClient.setQueryData(ME_KEY, auth.user),
+            onRefreshed: (auth) => {
+                // another tab signed in as someone else: nothing of the last person's may stay on screen
+                const before = queryClient.getQueryData<{ id: number }>(ME_KEY);
+                if (before && before.id !== auth.user.id) {
+                    queryClient.clear();
+                    resetSessionState();
+                }
+                queryClient.setQueryData(ME_KEY, auth.user);
+            },
             onExpired: () => end("Your session ended. Please sign in again."),
         });
 
