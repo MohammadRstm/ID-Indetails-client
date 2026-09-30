@@ -10,6 +10,7 @@ import { CLIENT_LABELS } from "@/shared/format/labels";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { checkClient, useSaveClient, type Client } from "./clientsApi";
+import HelpTip from "@/shared/components/Feedback/HelpTip";
 
 type ContactDraft = { kind: "email" | "phone"; value: string; label: string; isWhatsapp: boolean };
 
@@ -125,7 +126,14 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
             )}
 
             <div className="field mt">
-                <label className="label">Label</label>
+                <label className="label">
+                    Label
+                    <HelpTip label="a client's label">
+                        <b>What kind of client this is</b>: a key account, a retainer, an agency, a lead or anything you type. It shows
+                        in the client list and on their page, and searching the list finds it, so you can pick out, say, every lead.
+                        It grants no access and changes no figures.
+                    </HelpTip>
+                </label>
                 <div className="chips">
                     {CLIENT_LABELS.map((l) => (
                         <button key={l} type="button" className={cx("chip", label === l && "on")} onClick={() => setLabel(l)}>{l}</button>
@@ -145,7 +153,7 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
                                 onChange={(kind) => setContact(i, { kind, isWhatsapp: kind === "phone" ? c.isWhatsapp : false })} />
                             <input className="input grow" placeholder={c.kind === "email" ? "name@company.com" : "+961 3 555 142"} aria-label={c.kind === "email" ? "Email address" : "Phone number"} value={c.value}
                                 onChange={(e) => setContact(i, { value: e.target.value })} />
-                            <input className="input" style={{ width: 108 }} placeholder="Label" aria-label="Contact label" value={c.label} onChange={(e) => setContact(i, { label: e.target.value })} />
+                            <input className="input" style={{ width: 108 }} placeholder="e.g. Office" aria-label="Contact label" value={c.label} onChange={(e) => setContact(i, { label: e.target.value })} />
                             {c.kind === "phone" && (
                                 <button type="button" className={cx("chip", c.isWhatsapp && "on")} title="Reachable on WhatsApp"
                                     onClick={() => setContact(i, { isWhatsapp: !c.isWhatsapp })}>WhatsApp</button>
