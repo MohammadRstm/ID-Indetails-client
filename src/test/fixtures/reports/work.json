@@ -1,0 +1,597 @@
+{
+  "from": "2026-07-01",
+  "to": "2026-09-30",
+  "totalMinutes": 62190,
+  "overtimeMinutes": 4310,
+  "entryCount": 551,
+  "projectCount": 6,
+  "peopleCount": 7,
+  "averageEntryMinutes": 112,
+  "busiestWeek": {
+    "weekStart": "2026-09-07",
+    "minutes": 15260,
+    "entries": 135
+  },
+  "weekly": [
+    {
+      "weekStart": "2026-06-29",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-07-06",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-07-13",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-07-20",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-07-27",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-03",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-10",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-17",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-24",
+      "minutes": 0,
+      "entries": 0
+    },
+    {
+      "weekStart": "2026-08-31",
+      "minutes": 11880,
+      "entries": 107
+    },
+    {
+      "weekStart": "2026-09-07",
+      "minutes": 15260,
+      "entries": 135
+    },
+    {
+      "weekStart": "2026-09-14",
+      "minutes": 14120,
+      "entries": 127
+    },
+    {
+      "weekStart": "2026-09-21",
+      "minutes": 15090,
+      "entries": 131
+    },
+    {
+      "weekStart": "2026-09-28",
+      "minutes": 5840,
+      "entries": 51
+    }
+  ],
+  "byProject": [
+    {
+      "projectId": 1,
+      "title": "Haddad Holdings HQ fit-out",
+      "status": "active",
+      "minutes": 15170,
+      "entries": 137,
+      "people": 4,
+      "sharePct": 24,
+      "weekly": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2800,
+        3770,
+        2980,
+        4840,
+        780
+      ]
+    },
+    {
+      "projectId": 3,
+      "title": "Cedar Bank branch refresh",
+      "status": "active",
+      "minutes": 13920,
+      "entries": 124,
+      "people": 4,
+      "sharePct": 22,
+      "weekly": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2310,
+        3440,
+        2820,
+        3930,
+        1420
+      ]
+    },
+    {
+      "projectId": 6,
+      "title": "Portfolio and competition entries",
+      "status": "active",
+      "minutes": 9610,
+      "entries": 82,
+      "people": 3,
+      "sharePct": 15,
+      "weekly": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2220,
+        1700,
+        3030,
+        1410,
+        1250
+      ]
+    },
+    {
+      "projectId": 2,
+      "title": "Villa Mounir interiors",
+      "status": "active",
+      "minutes": 9510,
+      "entries": 83,
+      "people": 3,
+      "sharePct": 15,
+      "weekly": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1860,
+        1860,
+        2130,
+        2080,
+        1580
+      ]
+    },
+    {
+      "projectId": 4,
+      "title": "Beit Misk show apartment",
+      "status": "active",
+      "minutes": 8280,
+      "entries": 77,
+      "people": 3,
+      "sharePct": 13,
+      "weekly": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1420,
+        2680,
+        2070,
+        1750,
+        360
+      ]
+    },
+    {
+      "projectId": 5,
+      "title": "Studio Nour brand space",
+      "status": "active",
+      "minutes": 5700,
+      "entries": 48,
+      "people": 2,
+      "sharePct": 9,
+      "weekly": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1270,
+        1810,
+        1090,
+        1080,
+        450
+      ]
+    }
+  ],
+  "byClient": [
+    {
+      "clientId": 1,
+      "name": "Haddad Holdings",
+      "minutes": 15170
+    },
+    {
+      "clientId": 3,
+      "name": "Cedar Bank SAL",
+      "minutes": 13920
+    },
+    {
+      "clientId": null,
+      "name": null,
+      "minutes": 9610
+    },
+    {
+      "clientId": 2,
+      "name": "Mounir Aoun",
+      "minutes": 9510
+    },
+    {
+      "clientId": 4,
+      "name": "Beit Misk Residences",
+      "minutes": 8280
+    },
+    {
+      "clientId": 5,
+      "name": "Studio Nour",
+      "minutes": 5700
+    }
+  ],
+  "byPerson": [
+    {
+      "userId": 7,
+      "name": "Maya Nassar",
+      "minutes": 9650,
+      "overtimeMinutes": 870,
+      "entries": 84
+    },
+    {
+      "userId": 4,
+      "name": "Omar Fares",
+      "minutes": 9020,
+      "overtimeMinutes": 400,
+      "entries": 80
+    },
+    {
+      "userId": 5,
+      "name": "Lina Saad",
+      "minutes": 8960,
+      "overtimeMinutes": 270,
+      "entries": 79
+    },
+    {
+      "userId": 3,
+      "name": "Sarah Haddad",
+      "minutes": 8950,
+      "overtimeMinutes": 780,
+      "entries": 82
+    },
+    {
+      "userId": 8,
+      "name": "Elie Khalil",
+      "minutes": 8900,
+      "overtimeMinutes": 660,
+      "entries": 78
+    },
+    {
+      "userId": 9,
+      "name": "Yara Mansour",
+      "minutes": 8710,
+      "overtimeMinutes": 790,
+      "entries": 75
+    },
+    {
+      "userId": 6,
+      "name": "Rami Aoun",
+      "minutes": 8000,
+      "overtimeMinutes": 540,
+      "entries": 73
+    }
+  ],
+  "matrix": {
+    "projects": [
+      {
+        "projectId": 1,
+        "title": "Haddad Holdings HQ fit-out"
+      },
+      {
+        "projectId": 3,
+        "title": "Cedar Bank branch refresh"
+      },
+      {
+        "projectId": 6,
+        "title": "Portfolio and competition entries"
+      },
+      {
+        "projectId": 2,
+        "title": "Villa Mounir interiors"
+      },
+      {
+        "projectId": 4,
+        "title": "Beit Misk show apartment"
+      },
+      {
+        "projectId": 5,
+        "title": "Studio Nour brand space"
+      }
+    ],
+    "rows": [
+      {
+        "userId": 7,
+        "name": "Maya Nassar",
+        "totalMinutes": 9650,
+        "overtimeMinutes": 870,
+        "cells": [
+          0,
+          3690,
+          3570,
+          0,
+          2390,
+          0
+        ]
+      },
+      {
+        "userId": 4,
+        "name": "Omar Fares",
+        "totalMinutes": 9020,
+        "overtimeMinutes": 400,
+        "cells": [
+          3190,
+          2850,
+          2980,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "userId": 5,
+        "name": "Lina Saad",
+        "totalMinutes": 8960,
+        "overtimeMinutes": 270,
+        "cells": [
+          0,
+          0,
+          0,
+          3180,
+          2470,
+          3310
+        ]
+      },
+      {
+        "userId": 3,
+        "name": "Sarah Haddad",
+        "totalMinutes": 8950,
+        "overtimeMinutes": 780,
+        "cells": [
+          4850,
+          0,
+          0,
+          4100,
+          0,
+          0
+        ]
+      },
+      {
+        "userId": 8,
+        "name": "Elie Khalil",
+        "totalMinutes": 8900,
+        "overtimeMinutes": 660,
+        "cells": [
+          4160,
+          4740,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "userId": 9,
+        "name": "Yara Mansour",
+        "totalMinutes": 8710,
+        "overtimeMinutes": 790,
+        "cells": [
+          0,
+          0,
+          3060,
+          2230,
+          3420,
+          0
+        ]
+      },
+      {
+        "userId": 6,
+        "name": "Rami Aoun",
+        "totalMinutes": 8000,
+        "overtimeMinutes": 540,
+        "cells": [
+          2970,
+          2640,
+          0,
+          0,
+          0,
+          2390
+        ]
+      }
+    ]
+  },
+  "completedProjects": [],
+  "quarterly": [
+    {
+      "quarterStart": "2025-04-01",
+      "minutes": 0
+    },
+    {
+      "quarterStart": "2025-07-01",
+      "minutes": 0
+    },
+    {
+      "quarterStart": "2025-10-01",
+      "minutes": 0
+    },
+    {
+      "quarterStart": "2026-01-01",
+      "minutes": 0
+    },
+    {
+      "quarterStart": "2026-04-01",
+      "minutes": 0
+    },
+    {
+      "quarterStart": "2026-07-01",
+      "minutes": 62190
+    }
+  ],
+  "money": {
+    "labour": {
+      "usd": 12394.97,
+      "unconverted": [],
+      "unpricedMinutes": 0
+    },
+    "expensesUsd": 1645,
+    "unconvertedExpenses": [],
+    "totalCostUsd": 14039.97,
+    "clientProfit": 124258.46,
+    "profitByProject": [
+      {
+        "projectId": 1,
+        "title": "Haddad Holdings HQ fit-out",
+        "revenue": 48000,
+        "cost": 3672.92,
+        "profit": 44327.08
+      },
+      {
+        "projectId": 3,
+        "title": "Cedar Bank branch refresh",
+        "revenue": 35000,
+        "cost": 2909.72,
+        "profit": 32090.28
+      },
+      {
+        "projectId": 6,
+        "title": "Portfolio and competition entries",
+        "revenue": 0,
+        "cost": 1798.43,
+        "profit": -1798.43
+      },
+      {
+        "projectId": 2,
+        "title": "Villa Mounir interiors",
+        "revenue": 26000,
+        "cost": 2070.48,
+        "profit": 23929.52
+      },
+      {
+        "projectId": 4,
+        "title": "Beit Misk show apartment",
+        "revenue": 18000,
+        "cost": 2200.67,
+        "profit": 15799.33
+      },
+      {
+        "projectId": 5,
+        "title": "Studio Nour brand space",
+        "revenue": 9500,
+        "cost": 1387.75,
+        "profit": 8112.25
+      }
+    ],
+    "labourByPerson": [
+      {
+        "userId": 6,
+        "name": "Rami Aoun",
+        "labourCost": {
+          "usd": 2118.67,
+          "unconverted": [],
+          "unpricedMinutes": 0
+        }
+      },
+      {
+        "userId": 5,
+        "name": "Lina Saad",
+        "labourCost": {
+          "usd": 2044,
+          "unconverted": [],
+          "unpricedMinutes": 0
+        }
+      },
+      {
+        "userId": 4,
+        "name": "Omar Fares",
+        "labourCost": {
+          "usd": 1976.96,
+          "unconverted": [],
+          "unpricedMinutes": 0
+        }
+      },
+      {
+        "userId": 3,
+        "name": "Sarah Haddad",
+        "labourCost": {
+          "usd": 1756.76,
+          "unconverted": [],
+          "unpricedMinutes": 0
+        }
+      },
+      {
+        "userId": 7,
+        "name": "Maya Nassar",
+        "labourCost": {
+          "usd": 1636.5,
+          "unconverted": [],
+          "unpricedMinutes": 0
+        }
+      },
+      {
+        "userId": 9,
+        "name": "Yara Mansour",
+        "labourCost": {
+          "usd": 1515.41,
+          "unconverted": [],
+          "unpricedMinutes": 0
+        }
+      },
+      {
+        "userId": 8,
+        "name": "Elie Khalil",
+        "labourCost": {
+          "usd": 1346.67,
+          "unconverted": [],
+          "unpricedMinutes": 0
+        }
+      }
+    ]
+  }
+}

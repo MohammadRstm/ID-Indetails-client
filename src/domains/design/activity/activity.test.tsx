@@ -28,7 +28,7 @@ describe("Activity", () => {
     it("lists what happened day by day, and opens logged work", async () => {
         renderApp("/design/activity", nadia, ...activityHandlers);
         expect(await screen.findByText("Today · Sep 30, 2026")).toBeInTheDocument();
-        expect(screen.getByText(/received from Georges Haddad against ID-2026-002/)).toBeInTheDocument();
+        expect(screen.getByText(/received from Haddad Holdings against ID-2026-002/)).toBeInTheDocument();
         expect(screen.getByText(/edited a 1h 20m entry on Villa Mounir interiors/)).toBeInTheDocument();
 
         await userEvent.click(screen.getAllByText("Competition boards")[0]);
