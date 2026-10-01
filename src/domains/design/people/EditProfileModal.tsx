@@ -125,13 +125,13 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                 <div className="grow stack">
                     <div className="grid g-2">
                         <div className="field">
-                            <label className="label" htmlFor="ep-name">Full name</label>
+                            <label className="label required" htmlFor="ep-name">Full name</label>
                             <input id="ep-name" className="input" value={name} onChange={(e) => setName(e.target.value)} onBlur={errors.touch("name")} />
                             <FieldError message={errors.show("name", nameError)} />
                         </div>
                         <div className="field">
                             <label className="label" htmlFor="ep-phone">Phone</label>
-                            <input id="ep-phone" className="input" type="tel" placeholder="+961 …" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                            <input id="ep-phone" className="input" type="tel" placeholder="Optional - +961 …" value={phone} onChange={(e) => setPhone(e.target.value)} />
                         </div>
                     </div>
                     <div className="field">
@@ -142,7 +142,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                     {manages ? (
                         <div className="grid g-2">
                             <div className="field">
-                                <label className="label" htmlFor="ep-pos">Position</label>
+                                <label className="label required" htmlFor="ep-pos">Position</label>
                                 <input id="ep-pos" className="input" value={position} onChange={(e) => setPosition(e.target.value)} onBlur={errors.touch("position")} />
                                 <FieldError message={errors.show("position", positionError)} />
                             </div>
@@ -175,7 +175,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                                     </div>
                                 </div>
                                 <div className="field">
-                                    <label className="label" htmlFor="ep-from">Applies from</label>
+                                    <label className="label required" htmlFor="ep-from">Applies from</label>
                                     <DateInput id="ep-from" className="input mono" value={from} max={today} disabled={!payChanged} onChange={(v) => { if (v) setFrom(v); }} />
                                     <div className="hint">{payChanged ? "Hours before this date keep the old rate." : "Change the pay to pick a date."}</div>
                                 </div>

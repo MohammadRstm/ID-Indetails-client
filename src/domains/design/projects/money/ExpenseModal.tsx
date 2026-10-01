@@ -52,23 +52,23 @@ export default function ExpenseModal({ project, onClose }: { project: Project; o
                 </>
             }>
             <div className="field">
-                <label className="label" htmlFor="ex-label">What was it?</label>
+                <label className="label required" htmlFor="ex-label">What was it?</label>
                 <input id="ex-label" className="input" autoFocus placeholder="e.g. Plan printing and material samples" value={label} onChange={(e) => setLabel(e.target.value)} onBlur={errors.touch("label")} />
                 <FieldError message={errors.show("label", labelError)} />
             </div>
             <div className="grid g-2 mt">
                 <div className="field">
-                    <label className="label" htmlFor="ex-amount">Amount</label>
+                    <label className="label required" htmlFor="ex-amount">Amount</label>
                     <AmountField id="ex-amount" value={amount} currency={currency} onChange={setAmount} onCurrency={setCurrency} onBlur={errors.touch("amount")} />
                     <FieldError message={errors.show("amount", amountError)} />
                 </div>
                 <div className="field">
-                    <label className="label" htmlFor="ex-date">Date</label>
+                    <label className="label required" htmlFor="ex-date">Date</label>
                     <DateInput id="ex-date" className="input mono" value={date} max={today} onChange={(v) => { if (v) setDate(v); }} />
                 </div>
             </div>
             <div className="field mt">
-                <label className="label" htmlFor="ex-cat">Category</label>
+                <label className="label required" htmlFor="ex-cat">Category</label>
                 <Select id="ex-cat" value={category} onChange={setCategory} options={EXPENSE_CATEGORIES} />
             </div>
         </Modal>

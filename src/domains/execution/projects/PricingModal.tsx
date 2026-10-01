@@ -68,12 +68,12 @@ export default function PricingModal({ project, onClose }: { project: Project; o
                 </>
             }>
             <div className="field">
-                <label className="label" htmlFor="xm-fee">Project fee</label>
+                <label className="label optional" htmlFor="xm-fee">Project fee</label>
                 <AmountField id="xm-fee" value={fee} currencies={false} onChange={setFee} />
                 <div className="hint">A fixed amount for doing the job, on top of what materials earn. Ground labour is paid out of it.</div>
             </div>
             <div className="field mt">
-                <label className="label" htmlFor="xm-markup">Default material profit</label>
+                <label className="label required" htmlFor="xm-markup">Default material profit</label>
                 <div className="row wrap" style={{ gap: 6, alignItems: "center" }}>
                     {MARKUPS.map((v) => (
                         <button key={v} type="button" className={cx("chip", markup === v && pct !== "" && "on")} onClick={() => setPct(v)}>{v}%</button>

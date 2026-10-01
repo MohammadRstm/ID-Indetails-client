@@ -63,7 +63,7 @@ export default function ResetPasswordPage() {
     return (
         <AuthLayout title="Choose a new password">
             <form className="stack" onSubmit={submit} noValidate>
-                <Field id="rp-pass" label="New password" error={form.errors.password} hint={PASSWORD_HINT}>
+                <Field id="rp-pass" label="New password" required error={form.errors.password} hint={PASSWORD_HINT}>
                     <input
                         id="rp-pass"
                         className="input"
@@ -74,7 +74,7 @@ export default function ResetPasswordPage() {
                         onChange={(e) => form.set("password", e.target.value)}
                     />
                 </Field>
-                <Field id="rp-repeat" label="Repeat it" error={form.errors.repeat}>
+                <Field id="rp-repeat" label="Repeat it" required error={form.errors.repeat}>
                     <input
                         id="rp-repeat"
                         className="input"

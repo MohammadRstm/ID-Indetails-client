@@ -98,7 +98,7 @@ function Company({ settings: s }: { settings: CompanySettings }) {
             <div className="panel-body">
                 <div className="grid g-2">
                     <div className="field">
-                        <label className="label" htmlFor="s-name">Company name</label>
+                        <label className={canEdit ? "label required" : "label"} htmlFor="s-name">Company name</label>
                         <input id="s-name" className="input" value={name} disabled={!canEdit} onChange={(e) => setName(e.target.value)}
                             onKeyDown={(e) => { if (e.key === "Enter") saveDetails(); }} />
                         {canEdit && !name.trim() ? <FieldError message="The company needs a name." />
@@ -106,14 +106,14 @@ function Company({ settings: s }: { settings: CompanySettings }) {
                     </div>
                     <div className="field">
                         <label className="label" htmlFor="s-website">Website</label>
-                        <input id="s-website" className="input" placeholder="e.g. id-indetails.com" value={website} disabled={!canEdit}
+                        <input id="s-website" className="input" placeholder="Optional - e.g. id-indetails.com" value={website} disabled={!canEdit}
                             onChange={(e) => setWebsite(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") saveDetails(); }} />
                         <div className="hint">Printed under the company name on invoices and statements, with the address.</div>
                     </div>
                 </div>
                 <div className="field mt-s">
                     <label className="label" htmlFor="s-address">Address</label>
-                    <input id="s-address" className="input" placeholder="e.g. Beirut, Lebanon" value={address} disabled={!canEdit}
+                    <input id="s-address" className="input" placeholder="Optional - e.g. Beirut, Lebanon" value={address} disabled={!canEdit}
                         onChange={(e) => setAddress(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") saveDetails(); }} />
                 </div>
                 {canEdit && changed && (

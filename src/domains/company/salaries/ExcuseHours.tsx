@@ -121,7 +121,7 @@ export default function ExcuseHours({ detail, month, canExcuse }: ExcuseHoursPro
                             </div>
                             <div className="field mt-s">
                                 <label className="label" htmlFor="ex-day-note">Reason</label>
-                                <input id="ex-day-note" className="input" placeholder="e.g. Sick leave, annual leave" value={note} onChange={(e) => setNote(e.target.value)} />
+                                <input id="ex-day-note" className="input" placeholder="Optional - e.g. sick leave, annual leave" value={note} onChange={(e) => setNote(e.target.value)} />
                             </div>
                             <div className="row mt-s" style={{ gap: 6, justifyContent: "flex-end", alignItems: "center" }}>
                                 <span className="muted grow" style={{ fontSize: 12 }}>
@@ -137,13 +137,13 @@ export default function ExcuseHours({ detail, month, canExcuse }: ExcuseHoursPro
                         <div>
                             <div className="row" style={{ gap: 8 }}>
                                 <div className="field" style={{ width: 110 }}>
-                                    <label className="label" htmlFor="ex-hours">Hours</label>
+                                    <label className="label required" htmlFor="ex-hours">Hours</label>
                                     <input id="ex-hours" className="input mono" inputMode="decimal" value={hours} onChange={(e) => setHours(e.target.value.replace(/[^0-9.]/g, ""))} />
                                     <FieldError message={hoursTried && !mins ? "Enter the hours." : undefined} />
                                 </div>
                                 <div className="field grow">
                                     <label className="label" htmlFor="ex-note">Reason</label>
-                                    <input id="ex-note" className="input" placeholder="e.g. Sick leave, public holiday" value={note} onChange={(e) => setNote(e.target.value)} />
+                                    <input id="ex-note" className="input" placeholder="Optional - e.g. sick leave, public holiday" value={note} onChange={(e) => setNote(e.target.value)} />
                                 </div>
                             </div>
                             <div className="row mt-s" style={{ gap: 6, justifyContent: "flex-end" }}>

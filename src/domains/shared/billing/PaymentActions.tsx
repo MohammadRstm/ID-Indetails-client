@@ -65,7 +65,7 @@ function ApplyModal({ payment, onClose }: { payment: Payment; onClose: () => voi
             }>
             {invoices.data && open.length === 0 ? <p className="muted">No issued invoice on this project has {money.fmt(payment.amountUsd)} left to pay.</p> : (
                 <div className="field">
-                    <label className="label" htmlFor="apply-invoice">Invoice</label>
+                    <label className="label required" htmlFor="apply-invoice">Invoice</label>
                     <Select id="apply-invoice" value={invoiceId} onChange={setInvoiceId}
                         options={[{ value: "", label: invoices.data ? "Choose an invoice" : "Loading…", disabled: true },
                             ...open.map((i) => ({ value: String(i.id), label: `${i.number} · ${money.fmt(i.balance ?? 0)} left` }))]} />
@@ -98,7 +98,7 @@ function VoidModal({ payment, onClose }: { payment: Payment; onClose: () => void
                 </>
             }>
             <div className="field">
-                <label className="label" htmlFor="void-reason">Reason</label>
+                <label className="label required" htmlFor="void-reason">Reason</label>
                 <input id="void-reason" className="input" autoFocus placeholder="e.g. Recorded twice" value={reason} onChange={(e) => setReason(e.target.value)} />
                 <FieldError message={tried && !reason.trim() ? "Say why it is being voided: the reason stays in the register." : undefined} />
             </div>

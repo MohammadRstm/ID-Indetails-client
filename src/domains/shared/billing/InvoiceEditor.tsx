@@ -140,13 +140,13 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
 
                     <div className="grid g-2 mt">
                         <div className="field">
-                            <label className="label" htmlFor="inv-terms">Payment terms</label>
+                            <label className="label required" htmlFor="inv-terms">Payment terms</label>
                             <Select id="inv-terms" value={String(termsDays)} onChange={(v) => { setTerms(+v); touched("terms"); }} options={termOptions} />
                             <div className="hint">The due date is set when the invoice is sent.</div>
                         </div>
                         <div className="field">
                             <label className="label" htmlFor="inv-notes">Note on the invoice</label>
-                            <input id="inv-notes" className="input" placeholder="e.g. PO 44-1182" value={notes} onChange={(e) => { setNotes(e.target.value); touched("notes"); }} />
+                            <input id="inv-notes" className="input" placeholder="Optional - e.g. PO 44-1182" value={notes} onChange={(e) => { setNotes(e.target.value); touched("notes"); }} />
                             <div className="hint">Visible to the client.</div>
                         </div>
                     </div>

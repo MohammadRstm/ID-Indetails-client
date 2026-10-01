@@ -158,13 +158,13 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                 <form className="composer-form mt" onSubmit={add}>
                     <div className="grid g-2">
                         <div className="field">
-                            <label className="label" htmlFor="dc-project">Project</label>
+                            <label className="label required" htmlFor="dc-project">Project</label>
                             <Select id="dc-project" value={pid == null ? "" : String(pid)} onChange={(v) => setProjectId(+v)}
                                 options={choices.map((p) => ({ value: String(p.id), label: p.title }))} />
                         </div>
                         <div className="field">
-                            <label className="label" htmlFor="dc-desc">What did you work on?</label>
-                            <input id="dc-desc" className="input" placeholder="e.g. Revised the ground-floor plan" value={desc}
+                            <label className={requireDesc ? "label required" : "label"} htmlFor="dc-desc">What did you work on?</label>
+                            <input id="dc-desc" className="input" placeholder={`${requireDesc ? "" : "Optional - "}e.g. Revised the ground-floor plan`} value={desc}
                                 onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)} />
                         </div>
                     </div>

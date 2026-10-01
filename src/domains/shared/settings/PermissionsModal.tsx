@@ -95,8 +95,8 @@ export default function PermissionsModal({ person, onClose }: { person: Target; 
                             {self && !locked && <div className="banner" style={{ marginBottom: 12 }}><Icon name="info" /><div className="grow">You can't change your own permissions.</div></div>}
                             {!locked && !self && (
                                 <div className="field" style={{ marginBottom: 12 }}>
-                                    <label className="label" htmlFor="perm-reason">Reason <span className="muted">· optional, kept with the change</span></label>
-                                    <input id="perm-reason" className="input" placeholder="e.g. Covering invoicing while Nadia is away" value={reason} onChange={(e) => setReason(e.target.value)} />
+                                    <label className="label" htmlFor="perm-reason">Reason <span className="muted">· kept with the change</span></label>
+                                    <input id="perm-reason" className="input" placeholder="Optional - e.g. covering invoicing while Nadia is away" value={reason} onChange={(e) => setReason(e.target.value)} />
                                 </div>
                             )}
                             {[...groups.entries()].map(([area, list]) => (

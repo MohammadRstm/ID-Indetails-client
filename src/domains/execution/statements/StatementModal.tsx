@@ -283,7 +283,7 @@ function NewStatement({ project, onMade, onClose }: { project: Project; onMade: 
                 : !all.data ? <SkeletonLines lines={8} /> : (
                     <div>
                         <div className="field">
-                            <label className="label">What the client sees</label>
+                            <label className="label required">What the client sees</label>
                             <Segmented value={mode} onChange={(v) => { setMode(v); ping("total"); }} aria-label="What the client sees"
                                 options={[{ value: "detail", label: "Detailed materials" }, { value: "total", label: "Total only" }]} />
                             <div className="hint">{mode === "total" ? "One line with the total - no materials or descriptions listed." : "Each material you tick, with its description and client price."}</div>

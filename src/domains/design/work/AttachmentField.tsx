@@ -23,7 +23,7 @@ export function AttachmentField({ state }: { state: AttachmentState }) {
     const { url } = useFileUrl(state.file?.id);
     return (
         <div className="field mt">
-            <label className="label">Attachment (optional)</label>
+            <label className="label optional">Attachment</label>
             {state.file ? (
                 <div className="msg-attach-preview">
                     <div className="msg-attach-thumb">

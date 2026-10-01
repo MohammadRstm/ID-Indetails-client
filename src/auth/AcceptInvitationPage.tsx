@@ -105,24 +105,24 @@ export default function AcceptInvitationPage() {
                     <input id="ai-email" className="input" type="email" value={invite.email} readOnly />
                 </Field>
                 <div className="grid g-2">
-                    <Field id="ai-first" label="First name" error={form.errors.firstName}>
+                    <Field id="ai-first" label="First name" required error={form.errors.firstName}>
                         <input id="ai-first" className="input" autoComplete="given-name" autoFocus
                             value={form.values.firstName} onChange={(e) => form.set("firstName", e.target.value)} />
                     </Field>
-                    <Field id="ai-last" label="Last name" error={form.errors.lastName}>
+                    <Field id="ai-last" label="Last name" required error={form.errors.lastName}>
                         <input id="ai-last" className="input" autoComplete="family-name"
                             value={form.values.lastName} onChange={(e) => form.set("lastName", e.target.value)} />
                     </Field>
                 </div>
-                <Field id="ai-phone" label="Phone (optional)" error={form.errors.phone}>
-                    <input id="ai-phone" className="input" type="tel" autoComplete="tel"
+                <Field id="ai-phone" label="Phone" error={form.errors.phone}>
+                    <input id="ai-phone" className="input" type="tel" autoComplete="tel" placeholder="Optional"
                         value={form.values.phone} onChange={(e) => form.set("phone", e.target.value)} />
                 </Field>
-                <Field id="ai-pass" label="Password" error={form.errors.password} hint={PASSWORD_HINT}>
+                <Field id="ai-pass" label="Password" required error={form.errors.password} hint={PASSWORD_HINT}>
                     <input id="ai-pass" className="input" type="password" autoComplete="new-password"
                         value={form.values.password} onChange={(e) => form.set("password", e.target.value)} />
                 </Field>
-                <Field id="ai-repeat" label="Repeat the password" error={form.errors.repeat}>
+                <Field id="ai-repeat" label="Repeat the password" required error={form.errors.repeat}>
                     <input id="ai-repeat" className="input" type="password" autoComplete="new-password"
                         value={form.values.repeat} onChange={(e) => form.set("repeat", e.target.value)} />
                 </Field>

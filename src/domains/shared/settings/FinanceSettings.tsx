@@ -120,36 +120,36 @@ function BankFields({ bank, onChange, errors }: { bank: Bank; onChange: (bank: B
         <>
             <div className="grid g-2 mt-s">
                 <div className="field">
-                    <label className="label" htmlFor="b-account">Account name</label>
+                    <label className="label required" htmlFor="b-account">Account name</label>
                     <input id="b-account" className="input" placeholder="e.g. ID InDetails SAL" value={bank.bankAccount} onBlur={errors.touch("bankAccount")}
                         onChange={(e) => onChange({ ...bank, bankAccount: e.target.value })} />
                     <FieldError message={errors.show("bankAccount", wrong.bankAccount)} />
                 </div>
                 <div className="field">
                     <label className="label" htmlFor="b-bank">Bank</label>
-                    <input id="b-bank" className="input" placeholder="e.g. Bank of Beirut" value={bank.bankName} onChange={(e) => onChange({ ...bank, bankName: e.target.value })} />
+                    <input id="b-bank" className="input" placeholder="Optional - e.g. Bank of Beirut" value={bank.bankName} onChange={(e) => onChange({ ...bank, bankName: e.target.value })} />
                 </div>
             </div>
             <div className="grid g-2 mt-s">
                 <div className="field">
-                    <label className="label" htmlFor="b-iban">IBAN</label>
+                    <label className="label required" htmlFor="b-iban">IBAN</label>
                     <input id="b-iban" className="input mono" value={bank.iban} onBlur={errors.touch("iban")} onChange={(e) => onChange({ ...bank, iban: e.target.value })} />
                     <FieldError message={errors.show("iban", wrong.iban)} />
                 </div>
                 <div className="field">
                     <label className="label" htmlFor="b-swift">SWIFT</label>
-                    <input id="b-swift" className="input mono" value={bank.swift} onBlur={errors.touch("swift")} onChange={(e) => onChange({ ...bank, swift: e.target.value })} />
+                    <input id="b-swift" className="input mono" placeholder="Optional" value={bank.swift} onBlur={errors.touch("swift")} onChange={(e) => onChange({ ...bank, swift: e.target.value })} />
                     <FieldError message={errors.show("swift", wrong.swift)} />
                 </div>
             </div>
             <div className="field mt-s">
                 <label className="label" htmlFor="b-terms">Payment terms text</label>
-                <input id="b-terms" className="input" placeholder="e.g. Late payments may incur a fee." value={bank.termsText} onChange={(e) => onChange({ ...bank, termsText: e.target.value })} />
+                <input id="b-terms" className="input" placeholder="Optional - e.g. Late payments may incur a fee." value={bank.termsText} onChange={(e) => onChange({ ...bank, termsText: e.target.value })} />
                 <div className="hint">Printed after the due date under "How to pay".</div>
             </div>
             <div className="field mt-s">
                 <label className="label" htmlFor="b-footer">Invoice footer</label>
-                <input id="b-footer" className="input" placeholder="e.g. Thank you for your business." value={bank.footer} onChange={(e) => onChange({ ...bank, footer: e.target.value })} />
+                <input id="b-footer" className="input" placeholder="Optional - e.g. Thank you for your business." value={bank.footer} onChange={(e) => onChange({ ...bank, footer: e.target.value })} />
             </div>
         </>
     );
@@ -190,14 +190,14 @@ function SetUpInvoicing({ domain }: { domain: Domain }) {
             </div>
             <div className="grid g-2 mt">
                 <div className="field">
-                    <label className="label" htmlFor="b-prefix">Invoice numbering</label>
+                    <label className="label required" htmlFor="b-prefix">Invoice numbering</label>
                     <input id="b-prefix" className="input mono" maxLength={8} value={prefix} onBlur={errors.touch("prefix")}
                         onChange={(e) => setPrefix(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))} />
                     <FieldError message={errors.show("prefix", prefixError)} />
                     {!prefixError && <div className="hint">This year's first invoice is {prefix}-{companyToday().slice(0, 4)}-001. The other business needs a prefix of its own.</div>}
                 </div>
                 <div className="field">
-                    <label className="label" htmlFor="b-days">Default payment terms</label>
+                    <label className="label required" htmlFor="b-days">Default payment terms</label>
                     <Select id="b-days" value={String(terms)} onChange={(v) => setTerms(+v)} options={TERMS} />
                     <div className="hint">Sets each new invoice's due date.</div>
                 </div>

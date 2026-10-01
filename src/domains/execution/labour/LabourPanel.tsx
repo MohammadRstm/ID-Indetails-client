@@ -75,7 +75,7 @@ export default function LabourPanel({ project }: { project: Project }) {
                             <DefaultsBar key={`${current?.effectiveFrom}:${current?.workers}:${current?.dailyPay}`} projectId={project.id} defaults={defaults.data}
                                 onHistory={() => setHistory(true)} onNav={nav} />
                             <div className="field">
-                                <label className="label" htmlFor="lab-week">Week</label>
+                                <label className="label required" htmlFor="lab-week">Week</label>
                                 <Select id="lab-week" style={{ maxWidth: 320 }} value={chosen ?? ""} onChange={setPicked}
                                     options={list.map((w) => ({
                                         value: w.weekStart,
@@ -138,7 +138,7 @@ function DefaultsBar({ projectId, defaults, onHistory, onNav }: { projectId: num
             </div>
             <div className="lab-defaults-row">
                 <div className="field">
-                    <label className="label" htmlFor="ldb-workers">Ground workers per day</label>
+                    <label className={editable ? "label required" : "label"} htmlFor="ldb-workers">Ground workers per day</label>
                     {editable ? (
                         <input id="ldb-workers" className="input mono" type="number" min={0} step={1} value={workers} data-r={-1} data-c={0}
                             onKeyDown={onEnter(0)} onChange={(e) => setWorkers(e.target.value)} />
@@ -146,7 +146,7 @@ function DefaultsBar({ projectId, defaults, onHistory, onNav }: { projectId: num
                 </div>
                 <span className="lab-defaults-x">×</span>
                 <div className="field">
-                    <label className="label" htmlFor="ldb-pay">Cost per worker per day</label>
+                    <label className={editable ? "label required" : "label"} htmlFor="ldb-pay">Cost per worker per day</label>
                     {editable ? <AmountField id="ldb-pay" value={pay} currencies={false} onChange={setPay} r={-1} c={1} onKeyDown={onEnter(1)} />
                         : <div className="lab-defaults-val mono">{money.exact(cur.dailyPay)}</div>}
                 </div>

@@ -42,3 +42,8 @@ table { line-height: normal; font-weight: normal; }
 
 /* A menu drawn over the page beside its button (Popover floating): never inside a table it would stretch. */
 .pop.floating { position: fixed; z-index: 300; }
+
+/* A required field's label ends with a star. An optional field says so in its placeholder, or by its label when it has no
+   text to type ("· optional"). Both are drawn here, so the label's text stays the field's name. */
+.label.required::after { content: " *"; color: var(--loss); font-weight: 700; }
+.label.optional::after { content: " · optional"; color: var(--ink-3); font-weight: 400; }

@@ -203,6 +203,16 @@ describe("a new Execution project", () => {
         expect(within(dialog).getByLabelText(/Project fee/)).toBeInTheDocument();
     });
 
+    it("stars what is required and says what is optional", async () => {
+        renderApp("/execution/projects?new=1", karim, ...siteHandlers, ...projectHandlers);
+        const dialog = await newProject();
+        const label = (name: string) => within(dialog).getByText(name, { selector: "label" });
+        expect(label("Project name")).toHaveClass("required");
+        expect(label("Initial payment received")).toHaveClass("optional");
+        expect(label("Project fee")).toHaveClass("optional");
+        expect(within(dialog).getByLabelText("Location")).toHaveAttribute("placeholder", expect.stringMatching(/^Optional/));
+    });
+
     it("leaves the payment out without payment:record, as the API would refuse the project", async () => {
         renderApp("/execution/projects?new=1", withPermissions(karim, { revoke: [P.PAYMENT_RECORD] }), ...siteHandlers, ...projectHandlers);
         const dialog = await newProject();
