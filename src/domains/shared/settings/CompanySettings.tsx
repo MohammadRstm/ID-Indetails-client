@@ -28,6 +28,9 @@ async function squareLogo(file: File): Promise<File> {
     return new File([blob!], "logo.png", { type: "image/png" });
 }
 
+// Icons draw as blocks (.ic); inline, each sits beside its word instead of above it.
+const themeIcon = { width: 13, height: 13, display: "inline-block", marginRight: 6, verticalAlign: -2 } as const;
+
 /** The prototype's Settings → Company: how the app looks here, and the company's name, logo, week and time format. */
 export default function CompanySettingsSection() {
     const query = useCompanySettings();
@@ -43,10 +46,10 @@ export default function CompanySettingsSection() {
                     </div>
                 </div>
                 <div className="panel-body">
-                    <SwitchRow title="Theme" description="Dark is the default. Light suits bright rooms and printed screenshots." control={
+                    <SwitchRow title="Theme" description="Light is the default and suits bright rooms and printed screenshots. Dark is easier on the eyes in a dim room." control={
                         <Segmented value={theme} onChange={setTheme} aria-label="Theme" options={[
-                            { value: "dark", label: <><Icon name="moon" style={{ width: 13, height: 13, marginRight: 5, verticalAlign: -2 }} />Dark</> },
-                            { value: "light", label: <><Icon name="sun" style={{ width: 13, height: 13, marginRight: 5, verticalAlign: -2 }} />Light</> },
+                            { value: "dark", label: <><Icon name="moon" style={themeIcon} />Dark</> },
+                            { value: "light", label: <><Icon name="sun" style={themeIcon} />Light</> },
                         ]} />
                     } />
                 </div>
