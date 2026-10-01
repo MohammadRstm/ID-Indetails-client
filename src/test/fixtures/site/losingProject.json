@@ -37,19 +37,19 @@
   "createdAt": "2026-06-18T08:00:00Z",
   "money": {
     "currency": "USD",
-    "revenue": 16071.2,
+    "revenue": 8000,
     "isLocked": false,
     "projectFee": 8000,
     "materialMarkup": 0.2,
-    "materialCharge": 8071.2,
+    "materialCharge": 0,
     "expenseTotals": [],
     "billing": {
       "invoiced": 0,
       "outstanding": 0,
       "received": 5000,
       "onAccount": 5000,
-      "notYetInvoiced": 11071.2,
-      "owed": 11071.2,
+      "notYetInvoiced": 8000,
+      "owed": 3000,
       "paidAhead": 0,
       "issuedCount": 0,
       "paymentCount": 1,
@@ -69,8 +69,8 @@
       "unconverted": [],
       "unpricedLabourMinutes": 0
     },
-    "profit": 6220.2,
-    "margin": 0.387,
+    "profit": -1851,
+    "margin": -0.2314,
     "recognisedToDate": 5303.5,
     "projected": {
       "cost": 29851.52,
@@ -80,7 +80,9 @@
     "labourHours": 0,
     "costPerHour": 0,
     "cashProfit": -4851,
-    "materialProfit": 1345.2,
-    "unconvertedMaterials": 0
+    "materialProfit": 0,
+    "unconvertedMaterials": 0,
+    "unsentMaterialCharge": 8071.2,
+    "unsentMaterials": 4
   }
 }

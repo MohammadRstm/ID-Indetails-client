@@ -114,6 +114,10 @@ function OverviewPage({ domain }: { domain: Domain }) {
         <KpiStrip loading={!s} items={[
             { key: "revenue", label: `Revenue · ${range.label}`, value: money.short(s?.revenue ?? 0), sub: <span>received from clients</span> },
             {
+                key: "expected", label: "Expected revenue", value: money.short(s?.expectedRevenue ?? 0),
+                sub: <span>{domain === "execution" ? "fees agreed and materials sent, in this period" : "payments agreed on projects, in this period"}</span>,
+            },
+            {
                 key: "cost", label: "Total cost", value: money.short(s?.cost.total ?? 0),
                 // "labour $12k · project expenses $1.6k"; a site's "materials $6k · ground labour $3k · project expenses $0"
                 sub: <span>{costPartsOf(domain).map((p) => `${p.key === "labour" ? "labour" : p.label.toLowerCase()} ${money.short(s?.cost[p.key] ?? 0)}`).join(" · ")}</span>,

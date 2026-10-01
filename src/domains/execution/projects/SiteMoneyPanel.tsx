@@ -49,7 +49,7 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onStatement, 
 
     const initial = payments?.find((p) => p.isInitial && !p.voidedAt);
     const ownPrices = materials?.items.filter((m) => m.priceSource === "manual").length ?? 0;
-    const markupAvg = x.materialCost > 0 ? x.materialProfit / x.materialCost : 0;
+    const markupAvg = x.sentCost > 0 ? x.materialProfit / x.sentCost : 0;
     const paidAhead = x.credit > 0.5;
     const done = project.status === "completed" || project.status === "archived";
     const editPricing = x.locked ? undefined : onEditPricing;
@@ -98,18 +98,24 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onStatement, 
                     <div>
                         <div className="u" style={{ marginBottom: 6 }}>Where the profit comes from</div>
                         <CostRow label="Material profit" swatch={SITE_COLORS.materials} value={`+${money.exact(x.materialProfit)}`}
-                            meta={`${money.exact(x.materialCharge)} charged on ${money.exact(x.materialCost)}${x.materialCost ? ` · ${pctOf(markupAvg)}` : ""}`} />
+                            meta={`${money.exact(x.materialCharge)} sent at client prices, on ${money.exact(x.sentCost)}${x.sentCost ? ` · ${pctOf(markupAvg)}` : ""}`} />
                         <CostRow label="Project fee" swatch={SITE_COLORS.fee} value={`+${money.exact(x.fee)}`} meta={x.fee ? "fixed" : "none set"} onClick={editPricing} />
                         <CostRow label="Ground labour" swatch={SITE_COLORS.labour} value={`−${money.exact(x.labour)}`} tone={x.labour ? "down" : ""} meta="not billed to the client" />
                         {x.other > 0 && <CostRow label="Other expenses" swatch={SITE_COLORS.other} value={`−${money.exact(x.other)}`} tone="down" />}
                         <CostRow strong label="Expected profit" value={money.exact(x.expectedProfit)} tone={x.expectedProfit < 0 ? "down" : ""} />
                         <div className="xm-owed mt">
-                            <div><span>Agreed so far</span><b className="mono">{money.exact(x.agreed)}</b><em>materials at client prices + fee</em></div>
+                            <div><span>Agreed so far</span><b className="mono">{money.exact(x.agreed)}</b><em>the fee + materials sent to the client</em></div>
+                            {x.unsent > 0 && (
+                                <div>
+                                    <span>Not sent yet</span><b className="mono">{money.exact(x.unsentCharge)}</b>
+                                    <em>{plural(x.unsent, "material")} at client prices - a statement adds {x.unsent === 1 ? "it" : "them"}</em>
+                                </div>
+                            )}
                             <div><span>Received</span><b className="mono">{money.exact(x.received)}</b><em>{plural(x.payments, "payment")}</em></div>
                             <div className={cx((paidAhead || x.owed <= 0.5) && "ok")}>
                                 <span>{paidAhead ? "Paid ahead" : "Still owed"}</span>
                                 <b className="mono">{money.exact(paidAhead ? x.credit : x.owed)}</b>
-                                <em>{paidAhead ? "covers materials still to come" : "grows as materials are added"}</em>
+                                <em>{paidAhead ? "covers materials still to come" : "grows as statements are sent"}</em>
                             </div>
                         </div>
                         <div className="hint mt-s">

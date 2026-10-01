@@ -8783,6 +8783,8 @@ export interface components {
             /** Format: double */
             cost: number;
             /** Format: double */
+            expectedRevenue: number;
+            /** Format: double */
             expenses: number;
             /** Format: double */
             groundLabour: number;
@@ -8854,6 +8856,8 @@ export interface components {
             clientProjects: number;
             cost: components["schemas"]["PeriodCostResponse"];
             domain: string;
+            /** Format: double */
+            expectedRevenue: number;
             /** Format: date */
             from: string;
             /** Format: int32 */
@@ -9197,6 +9201,8 @@ export interface components {
             priceSource: null | components["schemas"]["PriceSource"];
             /** Format: double */
             quantity: null | number;
+            /** Format: date */
+            sentOn: null | string;
             supplier: null | string;
             unit: null | string;
             /** Format: double */
@@ -10222,6 +10228,10 @@ export interface components {
             revenue: number;
             /** Format: int32 */
             unconvertedMaterials: number;
+            /** Format: double */
+            unsentMaterialCharge: null | number;
+            /** Format: int32 */
+            unsentMaterials: number;
         };
         ProjectOwnerResponse: {
             /** Format: int64 */

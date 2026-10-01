@@ -3,6 +3,7 @@
   "from": "2026-01-01",
   "to": "2026-09-30",
   "revenue": 20501.12,
+  "expectedRevenue": 27500,
   "cost": {
     "labour": 0,
     "expenses": 0,

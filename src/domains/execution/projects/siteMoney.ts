@@ -3,8 +3,9 @@ import type { Project } from "../../shared/projects/projectsApi";
 type ProjectMoney = NonNullable<Project["money"]>;
 
 /**
- * An Execution site's money as the prototype reads it (XM.money). The client pays the agreed amount (materials
- * at client prices plus the project fee); ground labour is never billed, it comes out of the profit.
+ * An Execution site's money as the prototype reads it (XM.money). The client pays the agreed amount: the project fee
+ * plus the materials sent to them on a statement, at client prices. Ground labour is never billed: it comes out of
+ * the profit.
  */
 export type SiteMoney = {
     received: number;
@@ -16,7 +17,7 @@ export type SiteMoney = {
     other: number;
     /** Received − spent: the headline. */
     cashProfit: number;
-    /** Materials at client prices + the project fee. */
+    /** The project fee + the materials sent to the client, at client prices. */
     agreed: number;
     owed: number;
     /** Paid beyond the agreed amount so far. */
@@ -25,8 +26,15 @@ export type SiteMoney = {
     expectedProfit: number;
     fee: number;
     markup: number;
+    /** The materials sent to the client, at client prices. */
     materialCharge: number;
+    /** What the materials sent earn: their charge − their cost. */
     materialProfit: number;
+    /** What the materials sent cost. */
+    sentCost: number;
+    /** The materials not sent yet, at client prices: a statement adds them to what is owed. */
+    unsentCharge: number;
+    unsent: number;
     payments: number;
     locked: boolean;
 };
@@ -47,6 +55,9 @@ export function siteMoneyOf(m: ProjectMoney): SiteMoney {
         markup: m.materialMarkup ?? 0,
         materialCharge: m.materialCharge ?? 0,
         materialProfit: m.materialProfit ?? 0,
+        sentCost: (m.materialCharge ?? 0) - (m.materialProfit ?? 0),
+        unsentCharge: m.unsentMaterialCharge ?? 0,
+        unsent: m.unsentMaterials,
         payments: m.billing.paymentCount,
         locked: m.isLocked,
     };
