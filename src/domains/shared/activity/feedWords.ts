@@ -143,6 +143,8 @@ const WORDS: Record<string, Words> = {
     employee_updated: { icon: "edit", text: (e, _p, names) => (e.subjectId === e.actor?.id ? "updated their profile" : `updated ${subject(e, names)}'s profile`) },
     employee_deactivated: { icon: "lock", text: (e, _p, names) => `deactivated ${subject(e, names)}` },
     employee_reactivated: { icon: "refresh", text: (e, _p, names) => `reactivated ${subject(e, names)}` },
+    sessions_ended: { icon: "lock", text: (e, _p, names) => `ended every session of ${subject(e, names)} and suspended their sign-in` },
+    sign_in_restored: { icon: "refresh", text: (e, _p, names) => `restored ${subject(e, names)}'s sign-in` },
     role_changed: { icon: "shield", text: (e, p, names) => `changed ${subject(e, names)}'s access${str(p.to) ? ` to ${str(p.to)!.replace("_", " ")}` : ""}` },
     employee_moved: { icon: "arrowRight", text: (e, p, names) => `moved ${subject(e, names)} to ${DOMAIN_LABEL[str(p.to) ?? ""] ?? "another business"}` },
     pay_changed: { icon: "card", text: (e, p, names) => `changed ${subject(e, names)}'s pay${str(p.effectiveFrom) ? ` from ${fmtDate(str(p.effectiveFrom)!)}` : ""}` },

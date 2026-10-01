@@ -22,7 +22,8 @@ afterEach(() => vi.useRealTimers());
 const [karim, nadia] = settings.admins;
 const invited: Row = { ...karim, id: 40, email: "lina@id-indetails.test", firstName: null, lastName: null, role: "employee", domain: "design", position: null, status: "invited", joinedOn: null, online: false, lastSeenAt: null };
 const gone: Row = { ...karim, id: 41, email: "omar@id-indetails.test", firstName: "Omar", lastName: "Haddad", role: "employee", position: "Site engineer", status: "deactivated", leftOn: "2026-08-31" };
-const everyone = [...settings.superAdmins, nadia, karim, invited, gone];
+const locked: Row = { ...karim, id: 42, email: "maya@id-indetails.test", firstName: "Maya", lastName: "Saad", role: "employee", sessionsRevokedAt: "2026-09-29T10:00:00Z" };
+const everyone = [...settings.superAdmins, nadia, karim, invited, gone, locked];
 
 /** The people list, answering as the API filters it, and every list asked for. */
 function peopleList(asked: URLSearchParams[] = []) {
@@ -46,6 +47,7 @@ describe("the company's people", () => {
         expect(within(row("Karim Jaber")).getByText("Execution")).toBeInTheDocument();
         expect(within(row("lina@id-indetails.test")).getByText("Invited")).toBeInTheDocument();
         expect(within(row("Omar Haddad")).getByText("Left Aug 31, 2026")).toBeInTheDocument();
+        expect(within(row("Maya Saad")).getByText("Sign-in suspended")).toBeInTheDocument();
 
         await userEvent.click(screen.getByRole("button", { name: "Left" }));
         await waitFor(() => expect(asked.at(-1)?.get("status")).toBe("deactivated"));

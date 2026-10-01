@@ -42,7 +42,10 @@ import { useEmployee, useLabourCost, usePayHistory, usePersonEntries, usePersonH
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
 
-type Extra = { online?: boolean; lastSeenAt?: string | null; joinedOn?: string | null; leftOn?: string | null; status?: string; role?: string; isJoker?: boolean };
+type Extra = {
+    online?: boolean; lastSeenAt?: string | null; joinedOn?: string | null; leftOn?: string | null; status?: string; role?: string; isJoker?: boolean;
+    sessionsRevokedAt?: string | null;
+};
 
 /** Someone's profile, for admins (the prototype's P.Profile). */
 export function PersonProfilePage() {
@@ -57,7 +60,7 @@ export function PersonProfilePage() {
     if (!e) return <ProfileSkeleton />;
     return (
         <Profile self={false} person={{ id: e.id, firstName: e.firstName, lastName: e.lastName, email: e.email, phone: e.phone, photoFileId: e.photoFileId, position: e.position, team: e.team, domain: e.domain }}
-            extra={{ online: e.online, lastSeenAt: e.lastSeenAt, joinedOn: e.joinedOn, leftOn: e.leftOn, status: e.status, role: e.role, isJoker: e.isJoker }} />
+            extra={{ online: e.online, lastSeenAt: e.lastSeenAt, joinedOn: e.joinedOn, leftOn: e.leftOn, status: e.status, role: e.role, isJoker: e.isJoker, sessionsRevokedAt: e.sessionsRevokedAt }} />
     );
 }
 
@@ -131,6 +134,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                             {extra.joinedOn && <span className="row" style={{ gap: 6 }}><Icon name="calendar" style={{ width: 14, height: 14 }} />Joined {fmtDateY(extra.joinedOn)}</span>}
                             {extra.status === "invited" && <StatusBadge status="invited" />}
                             {extra.status === "deactivated" && <span className="badge badge-archived"><Icon name="lock" />{extra.leftOn ? `Left ${fmtDateY(extra.leftOn)}` : "Deactivated"}</span>}
+                            {extra.sessionsRevokedAt && <span className="badge badge-hold"><Icon name="lock" />Sign-in suspended since {fmtDateY(extra.sessionsRevokedAt)}</span>}
                             {extra.isJoker && <span className="badge" title="Holds a different set of permissions from the role's">Custom access</span>}
                         </div>
                     </div>
@@ -147,7 +151,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                             )}
                             {!execution && permissions.has(P.WORK_ENTRY_VIEW_ALL) && <button className="btn" onClick={exportTimesheet}><Icon name="download" />Export timesheet</button>}
                             {extra.status && extra.role && (
-                                <PersonActions account={{ id: person.id, name, role: extra.role, domain: person.domain, status: extra.status, leftOn: extra.leftOn ?? null }} />
+                                <PersonActions account={{ id: person.id, name, role: extra.role, domain: person.domain, status: extra.status, leftOn: extra.leftOn ?? null, sessionsRevokedAt: extra.sessionsRevokedAt }} />
                             )}
                         </div>
                     )}

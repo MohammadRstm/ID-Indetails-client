@@ -129,6 +129,27 @@ export function useReactivate(userId: number) {
     });
 }
 
+/**
+ * Signs them out everywhere at once and keeps them out, password or not, until a super admin restores their
+ * sign-in: for an account someone else may be using (super admins only).
+ */
+export function useEndSessions(userId: number) {
+    const changed = useAccountChanged();
+    return useMutation({
+        mutationFn: async () => (await http.post<Employee>(`/employees/${userId}/sessions/end`)).data,
+        onSuccess: changed,
+    });
+}
+
+/** Lets them sign in again; sessions from before stay ended (super admins only). */
+export function useRestoreSignIn(userId: number) {
+    const changed = useAccountChanged();
+    return useMutation({
+        mutationFn: async () => (await http.post<Employee>(`/employees/${userId}/sessions/restore`)).data,
+        onSuccess: changed,
+    });
+}
+
 /** A new role; their personal permission changes are cleared (employee:manage). */
 export function useChangeRole(userId: number) {
     const changed = useAccountChanged();

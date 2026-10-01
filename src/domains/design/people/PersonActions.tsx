@@ -13,7 +13,7 @@ import MenuButton from "@/shared/components/Overlays/MenuButton";
 import Modal from "@/shared/components/Overlays/Modal";
 import { addDays, companyToday, fmtDateY, fmtMonthY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import { useChangeRole, useDeactivate, useMoveEmployee, useReactivate, useResendInvitation, useTeams } from "./peopleWorkApi";
+import { useChangeRole, useDeactivate, useEndSessions, useMoveEmployee, useReactivate, useResendInvitation, useRestoreSignIn, useTeams } from "./peopleWorkApi";
 
 export type Account = {
     id: number;
@@ -22,9 +22,11 @@ export type Account = {
     domain: string | null;
     status: string;
     leftOn: string | null;
+    /** When a super admin ended their sessions; they can't sign in until it is restored. */
+    sessionsRevokedAt?: string | null;
 };
 
-type Dialog = "role" | "move" | "deactivate" | "reactivate" | null;
+type Dialog = "role" | "move" | "deactivate" | "reactivate" | "end-sessions" | "restore-sign-in" | null;
 
 const ROLES = [{ value: "employee", label: "Employee" }, { value: "admin", label: "Admin" }, { value: "super_admin", label: "Super admin" }] as const;
 const other = (d: string | null): Domain => (d === "design" ? "execution" : "design");
@@ -55,6 +57,10 @@ export default function PersonActions({ account }: { account: Account }) {
     const invited = account.status === "invited";
     const canMove = manage && !deactivated && account.role !== "super_admin" && permissions.canSeeDomain("design") && permissions.canSeeDomain("execution");
     const canResend = invited && permissions.hasAny(P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN);
+    // ending and restoring sessions is a super admin's, as the API has it
+    const suspended = !!account.sessionsRevokedAt;
+    const canEndSessions = manage && permissions.isSuperAdmin && account.status === "active" && !suspended;
+    const canRestore = manage && permissions.isSuperAdmin && suspended;
     // nobody changes their own account (an admin can reach their own profile from a notice or the feed)
     if (account.id === me.id || (!manage && !canResend)) return null;
 
@@ -73,6 +79,8 @@ export default function PersonActions({ account }: { account: Account }) {
                         {canResend && <button className="pop-item" disabled={resend.isPending} onClick={() => { close(); sendAgain(); }}><Icon name="send" />Resend invitation</button>}
                         {manage && !deactivated && !invited && <button className="pop-item" onClick={() => { close(); setDialog("role"); }}><Icon name="shield" />Change role…</button>}
                         {canMove && <button className="pop-item" onClick={() => { close(); setDialog("move"); }}><Icon name="arrowRight" />Move to {AREAS[other(account.domain)].label}…</button>}
+                        {canEndSessions && <button className="pop-item" onClick={() => { close(); setDialog("end-sessions"); }}><Icon name="logout" />End all sessions…</button>}
+                        {canRestore && <button className="pop-item" onClick={() => { close(); setDialog("restore-sign-in"); }}><Icon name="refresh" />Restore sign-in…</button>}
                         {manage && !deactivated && <button className="pop-item" onClick={() => { close(); setDialog("deactivate"); }}><Icon name="lock" />Deactivate…</button>}
                         {manage && deactivated && <button className="pop-item" onClick={() => { close(); setDialog("reactivate"); }}><Icon name="refresh" />Reactivate…</button>}
                     </div>
@@ -82,6 +90,8 @@ export default function PersonActions({ account }: { account: Account }) {
             {dialog === "move" && <MoveModal account={account} onClose={() => setDialog(null)} />}
             {dialog === "deactivate" && <DeactivateModal account={account} onClose={() => setDialog(null)} />}
             {dialog === "reactivate" && <ReactivateModal account={account} onClose={() => setDialog(null)} />}
+            {dialog === "end-sessions" && <EndSessionsModal account={account} onClose={() => setDialog(null)} />}
+            {dialog === "restore-sign-in" && <RestoreSignInModal account={account} onClose={() => setDialog(null)} />}
         </>
     );
 }
@@ -182,6 +192,59 @@ function DeactivateModal({ account, onClose }: { account: Account; onClose: () =
                 They can't sign in any more, and every session they have open ends now. Their work, pay and messages stay as they were;
                 they can be reactivated later.
             </p>
+        </Modal>
+    );
+}
+
+/** For an account someone else may be using: out everywhere now, and kept out until a super admin lets them back. */
+function EndSessionsModal({ account, onClose }: { account: Account; onClose: () => void }) {
+    const end = useEndSessions(account.id);
+    const first = account.name.split(" ")[0];
+
+    function go() {
+        end.mutate(undefined, {
+            onSuccess: () => {
+                toast({ text: `${account.name} is signed out everywhere`, sub: "They can't sign in again until a super admin restores it.", icon: "lock" });
+                onClose();
+            },
+        });
+    }
+
+    return (
+        <Modal title="End all sessions" sub={account.name} onClose={onClose}
+            foot={<Foot error={end.error} busy={end.isPending} danger label="End sessions" onCancel={onClose} onGo={go} />}>
+            <p>
+                {first} is signed out on every device at once, and can't sign in again, even with the right password, until a super admin
+                restores their sign-in here.
+            </p>
+            <p className="hint mt">
+                Use it when someone else may be using their account. Their work, pay and messages stay as they are, and they stay employed.
+            </p>
+        </Modal>
+    );
+}
+
+function RestoreSignInModal({ account, onClose }: { account: Account; onClose: () => void }) {
+    const restore = useRestoreSignIn(account.id);
+    const first = account.name.split(" ")[0];
+
+    function go() {
+        restore.mutate(undefined, {
+            onSuccess: () => {
+                toast({ text: `${account.name} can sign in again`, sub: "Sessions from before stay ended.", icon: "refresh" });
+                onClose();
+            },
+        });
+    }
+
+    return (
+        <Modal title="Restore sign-in" sub={account.name} onClose={onClose}
+            foot={<Foot error={restore.error} busy={restore.isPending} label="Restore sign-in" onCancel={onClose} onGo={go} />}>
+            <p>
+                {first} can sign in again with their password.{account.sessionsRevokedAt ? ` Their sessions were ended ${fmtDateY(account.sessionsRevokedAt)}` : ""}
+                {account.sessionsRevokedAt ? "; anything signed in before that stays signed out." : ""}
+            </p>
+            <p className="hint mt">If someone else may know their password, ask them to reset it from the sign-in page once they are back.</p>
         </Modal>
     );
 }

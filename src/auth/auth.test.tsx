@@ -19,6 +19,18 @@ describe("signing in", () => {
         expect(await screen.findByText("That email and password don't match an account.")).toBeInTheDocument();
     });
 
+    it("says why when a super admin has suspended the sign-in", async () => {
+        server.use(http.post("/api/auth/login", () => HttpResponse.json({
+            type: "authorization", code: "sign_in_suspended",
+            message: "A super admin has ended your sessions. You can sign in again once they restore your access.",
+        }, { status: 403 })));
+        renderApp("/login", null);
+        await userEvent.type(await screen.findByLabelText("Work email"), "nadia@hourline.test");
+        await userEvent.type(screen.getByLabelText("Password"), "the right password");
+        await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
+        expect(await screen.findByText("A super admin has ended your sessions. You can sign in again once they restore your access.")).toBeInTheDocument();
+    });
+
     it("checks the fields before asking the API", async () => {
         renderApp("/login", null);
         await userEvent.click(await screen.findByRole("button", { name: "Sign in" }));
