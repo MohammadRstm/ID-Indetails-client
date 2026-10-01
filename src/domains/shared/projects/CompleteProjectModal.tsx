@@ -34,6 +34,8 @@ export default function CompleteProjectModal({ project, openRequirements, contri
     const internal = project.billingType === "internal";
     const unpriced = execution && m != null && m.revenue === 0;
     const costOnly = internal || unpriced;
+    // what the client owes is frozen on completing, so every material must have been sent to them first
+    const unsent = execution && m ? m.unsentMaterials : 0;
 
     function confirm() {
         change.mutate("complete", {
@@ -76,7 +78,7 @@ export default function CompleteProjectModal({ project, openRequirements, contri
                             : m ? (costOnly ? `Final cost ${money.fmt(m.cost.total)}` : `Final profit ${money.fmt(m.profit)} · ${money.pct(m.margin)}`) : null}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" disabled={change.isPending} onClick={confirm}><Icon name="check" />Complete project</button>
+                    <button className="btn btn-primary" disabled={change.isPending || unsent > 0} onClick={confirm}><Icon name="check" />Complete project</button>
                 </>
             }
         >
@@ -87,6 +89,15 @@ export default function CompleteProjectModal({ project, openRequirements, contri
                         <b>{openRequirements} requirement{openRequirements === 1 ? " is" : "s are"} still open.</b> Completing the project marks{" "}
                         {openRequirements === 1 ? "it" : "all of them"} as done, so progress becomes 100%. Reopening the project later puts{" "}
                         {openRequirements === 1 ? "it" : "them"} back as open.
+                    </div>
+                </div>
+            )}
+            {unsent > 0 && (
+                <div className="banner hold">
+                    <Icon name="alert" />
+                    <div className="grow">
+                        <b>{unsent} material{unsent === 1 ? " hasn't" : "s haven't"} been sent to the client.</b> Completing freezes what the client owes,
+                        so send a client statement first: then {unsent === 1 ? "its price counts" : "their prices count"} in the agreed amount.
                     </div>
                 </div>
             )}

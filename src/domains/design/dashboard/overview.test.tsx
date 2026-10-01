@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
+import { money } from "@/shared/format/money";
 import { overview, overviewHandlers } from "@/test/fixtures/overview";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
@@ -31,6 +32,14 @@ describe("Overview", () => {
         expect(await screen.findByText(/ID-2026-003 is \d+ days overdue/)).toBeInTheDocument();
         expect(screen.getAllByText(overview.deadlines.items[0].text).length).toBeGreaterThan(0);
         expect(cardOrder()).toEqual(["figures", "money", "hours", "followups", "time", "status", "revcost", "profit", "invoiced", "owed", "clients"]);
+    });
+
+    it("tells revenue received apart from the revenue expected from what was agreed", async () => {
+        renderApp("/design/overview", nadia, ...overviewHandlers);
+        const expected = () => screen.getByText("Expected revenue", { selector: ".kpi-label" }).closest(".kpi") as HTMLElement;
+        await waitFor(() => expect(expected()).toHaveTextContent(money.short(42000)));
+        expect(expected()).toHaveTextContent("payments agreed on projects, in this period");
+        expect((screen.getByText(/^Revenue · /, { selector: ".kpi-label" }).closest(".kpi") as HTMLElement)).toHaveTextContent("received from clients");
     });
 
     it("asks for the period picked", async () => {

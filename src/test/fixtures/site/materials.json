@@ -21,7 +21,8 @@
       "canEdit": true,
       "clientPrice": 966,
       "priceSource": "stated",
-      "markup": 0.15
+      "markup": 0.15,
+      "sentOn": "2026-09-30"
     },
     {
       "id": 3,
@@ -44,7 +45,8 @@
       "canEdit": true,
       "clientPrice": 4554,
       "priceSource": "stated",
-      "markup": 0.15
+      "markup": 0.15,
+      "sentOn": "2026-09-30"
     },
     {
       "id": 2,
@@ -67,7 +69,8 @@
       "canEdit": true,
       "clientPrice": 1076.4,
       "priceSource": "stated",
-      "markup": 0.15
+      "markup": 0.15,
+      "sentOn": "2026-09-30"
     },
     {
       "id": 1,
@@ -90,7 +93,8 @@
       "canEdit": true,
       "clientPrice": 345,
       "priceSource": "stated",
-      "markup": 0.15
+      "markup": 0.15,
+      "sentOn": "2026-09-30"
     }
   ],
   "page": 1,

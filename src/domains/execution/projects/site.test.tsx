@@ -46,6 +46,34 @@ describe("an Execution site's overview", () => {
         expect(screen.getByText(/Payments can be recorded on account/)).toBeInTheDocument();
     });
 
+    it("shows each material's margin, and that the lobby's were all sent to the client", async () => {
+        renderApp(path, karim, ...siteHandlers);
+        const margins = (await screen.findByText("Material margins")).closest(".panel") as HTMLElement;
+        const paint = (await within(margins).findByText("Paint")).closest("tr") as HTMLElement;
+        expect(paint).toHaveTextContent(money.exact(840));
+        expect(paint).toHaveTextContent(money.exact(966));
+        expect(paint).toHaveTextContent(`+${money.exact(126)}`);
+        expect(paint).toHaveTextContent("15%");
+        expect(paint).toHaveTextContent("Sent Sep 30");
+        expect(within(margins).getByText("Sent to the client").closest("tr")).toHaveTextContent("4 of 4 · counted in revenue");
+        expect(within(await moneyPanel()).queryByText("Not sent yet")).not.toBeInTheDocument();
+    });
+
+    it("counts materials not sent yet apart, and won't complete the site until they are", async () => {
+        const loft = site.losingProject;
+        renderApp(`/execution/projects/${loft.id}?complete=1`, karim, ...siteHandlers);
+        const dialog = await screen.findByRole("dialog", { name: `Close ${loft.title}` });
+        expect(within(dialog).getByText("4 materials haven't been sent to the client.")).toBeInTheDocument();
+        expect(within(dialog).getByRole("button", { name: "Complete project" })).toBeDisabled();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+        const owed = (await within(await moneyPanel()).findByText("Not sent yet")).closest("div") as HTMLElement;
+        expect(owed).toHaveTextContent(money.exact(loft.money!.unsentMaterialCharge!));
+        expect(owed).toHaveTextContent("4 materials at client prices - a statement adds them");
+        const margins = (await screen.findByText("Material margins")).closest(".panel") as HTMLElement;
+        expect(await within(margins).findAllByText("Not yet")).toHaveLength(4);
+    });
+
     it("says so when the site is losing money", async () => {
         renderApp(`/execution/projects/${site.losingProject.id}`, karim, ...siteHandlers);
         const health = (await screen.findByText("Ground labour and profit")).closest(".panel") as HTMLElement;

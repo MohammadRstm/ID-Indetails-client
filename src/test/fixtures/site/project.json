@@ -81,6 +81,8 @@
     "costPerHour": 0,
     "cashProfit": 964,
     "materialProfit": 905.4,
-    "unconvertedMaterials": 0
+    "unconvertedMaterials": 0,
+    "unsentMaterialCharge": 0,
+    "unsentMaterials": 0
   }
 }
