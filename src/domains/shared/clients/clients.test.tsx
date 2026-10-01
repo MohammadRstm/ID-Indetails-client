@@ -15,6 +15,13 @@ const client = fixtures.client;
 const clientWithoutMoney = { ...client, money: null, projectMoney: null };
 
 describe("the clients list", () => {
+    it("opens the new client form when the address asks for it (from search)", async () => {
+        renderApp("/design/clients?new=1", personas.designAdmin, ...projectHandlers);
+        expect(await screen.findByRole("dialog", { name: "Add client" })).toBeInTheDocument();
+        await userEvent.click(within(screen.getByRole("dialog", { name: "Add client" })).getByRole("button", { name: "Cancel" }));
+        await waitFor(() => expect(window.location.search).toBe(""));
+    });
+
     it("shows revenue and profit to people with financial:view", async () => {
         renderApp("/design/clients", admin, ...projectHandlers);
         expect(await screen.findByRole("columnheader", { name: /revenue/i })).toBeInTheDocument();

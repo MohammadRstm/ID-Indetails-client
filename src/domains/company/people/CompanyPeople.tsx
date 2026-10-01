@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useSearchParams } from "react-router";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { loadFailed } from "@/api/queryState";
@@ -46,6 +47,13 @@ export default function CompanyPeople() {
     const query = usePeople({ search: typed, status: status === "all" ? undefined : status, ...whereParams(where), page, pageSize: PAGE });
     const list = query.data;
     const canInvite = permissions.hasAny(P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN);
+    // ?invite=1 (from search) opens the invitation
+    const [params, setParams] = useSearchParams();
+    const asked = params.get("invite") === "1" && canInvite;
+    const closeInvite = () => {
+        setInviting(false);
+        if (asked) { params.delete("invite"); setParams(params, { replace: true }); }
+    };
     // a filter starts again from the first page
     const filter = <T,>(set: (v: T) => void) => (v: T) => { set(v); setPage(1); };
 
@@ -90,7 +98,7 @@ export default function CompanyPeople() {
                 Their work, pay and messages stay either way. Their details are on their profile.
             </p>
 
-            {inviting && <InviteModal domain={null} onClose={() => setInviting(false)} />}
+            {(inviting || asked) && <InviteModal domain={null} onClose={closeInvite} />}
         </div>
     );
 }
