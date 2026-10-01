@@ -101,7 +101,7 @@ function Figures({ tabs }: { tabs: ReactNode }) {
             <div className="panel-head">
                 <div>
                     <div className="panel-title">What the company keeps</div>
-                    <div className="panel-sub">{period.label}. Each business earns its own profit. Company expenses belong to neither, so they come out once, here.</div>
+                    <div className="panel-sub">{period.label}. Each business earns its own profit. Company expenses and the super admins' salaries belong to neither, so they come out once, here.</div>
                 </div>
             </div>
             <div className="panel-body">
@@ -110,14 +110,17 @@ function Figures({ tabs }: { tabs: ReactNode }) {
                         {t.domains.map((d) => <Line key={d.domain} label={`${label(d.domain)} profit`} value={d.profit} tone="auto" />)}
                         <Line label="Combined" value={t.grossProfit} rule />
                         <Line label="Company expenses" value={-t.overhead} />
+                        <Line label="Super admins' salaries" value={-t.superAdminSalaries} />
                         <Line label="Company net profit" value={t.netProfit} strong tone="auto" />
                     </div>
                 )}
                 {t && t.unconvertedOverhead.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedOverhead.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
+                {t && t.unconvertedSuperAdminSalaries.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedSuperAdminSalaries.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
                 <p className="hint mt">
                     Revenue is the money received from clients in this window, on the day it arrived; costs are the labour, expenses, materials and site labour dated inside it.
                     Company expenses are the monthly pool of subscriptions and running costs, counted day by day for the {days} day{days === 1 ? "" : "s"} shown
-                    - never charged to a project or a client.
+                    - never charged to a project or a client. Super admins log no hours, so no project carries their pay: their salaries are counted the same way.
+                    Everyone else's pay is already in the businesses' costs, through the hours they log.
                 </p>
             </div>
         </div>

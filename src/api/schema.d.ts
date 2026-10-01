@@ -8220,10 +8220,13 @@ export interface components {
             projectsWithActivity: number;
             /** Format: double */
             revenue: number;
+            /** Format: double */
+            superAdminSalaries: number;
             /** Format: date */
             to: string;
             unconvertedInvoices: components["schemas"]["UnconvertedInvoicesResponse"][];
             unconvertedOverhead: components["schemas"]["CurrencyTotalResponse"][];
+            unconvertedSuperAdminSalaries: components["schemas"]["CurrencyTotalResponse"][];
         };
         CompanySettingsResponse: {
             address: null | string;
