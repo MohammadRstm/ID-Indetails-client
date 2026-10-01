@@ -4,7 +4,7 @@
 # browser sees one origin (the refresh cookie is SameSite=Strict, Path=/api/auth). See docs/deployment.md.
 
 ARG NODE_VERSION=24
-ARG NGINX_VERSION=1.28
+ARG NGINX_VERSION=1.30
 
 # --- build: install from the lockfile, type-check and bundle -------------------------------------------------
 FROM node:${NODE_VERSION}-alpine AS build
