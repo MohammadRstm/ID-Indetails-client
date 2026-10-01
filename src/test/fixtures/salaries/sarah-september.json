@@ -216,5 +216,31 @@
       "date": "2026-09-30",
       "requiredMinutes": 420
     }
+  ],
+  "projects": [
+    {
+      "projectId": 1,
+      "title": "Haddad Holdings HQ fit-out",
+      "icon": "building",
+      "tint": "#0C6B69",
+      "entries": 14,
+      "normalMinutes": 4900,
+      "madeUpMinutes": 400,
+      "overtimeMinutes": 0,
+      "pay": 917.32,
+      "currency": "USD"
+    },
+    {
+      "projectId": 2,
+      "title": "Villa Mounir interiors",
+      "icon": "palette",
+      "tint": "#8A5A2B",
+      "entries": 11,
+      "normalMinutes": 3270,
+      "madeUpMinutes": 250,
+      "overtimeMinutes": 130,
+      "pay": 631.74,
+      "currency": "USD"
+    }
   ]
 }

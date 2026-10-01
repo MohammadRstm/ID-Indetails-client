@@ -10434,8 +10434,27 @@ export interface components {
             paidBreakDays: number;
             /** Format: double */
             paidBreakPay: number;
+            projects: components["schemas"]["SalaryProjectResponse"][];
             salary: components["schemas"]["SalaryRowResponse"];
             workingDays: components["schemas"]["SalaryDayResponse"][];
+        };
+        SalaryProjectResponse: {
+            currency: string;
+            /** Format: int32 */
+            entries: number;
+            icon: null | string;
+            /** Format: int32 */
+            madeUpMinutes: number;
+            /** Format: int32 */
+            normalMinutes: number;
+            /** Format: int32 */
+            overtimeMinutes: number;
+            /** Format: double */
+            pay: number;
+            /** Format: int64 */
+            projectId: number;
+            tint: null | string;
+            title: string;
         };
         SalaryRowResponse: {
             /** Format: double */
