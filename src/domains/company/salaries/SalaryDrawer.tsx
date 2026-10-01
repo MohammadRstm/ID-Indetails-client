@@ -91,7 +91,7 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openPro
                 <Kpi label="To pay" value={cash(s.total, cur)} />
                 {s.tracksHours
                     ? <Kpi label="Hours" value={fmtH(s.normalMinutes + otLogged)} sub={<span>{fmtH(s.normalMinutes)} normal · <span className="ot-text">{fmtH(otLogged)} overtime</span></span>} />
-                    : <Kpi label="Hours" value="-" sub={<span>not tracked in Execution</span>} />}
+                    : <Kpi label="Hours" value="-" sub={<span>{s.domain ? "not tracked in Execution" : "a super admin's salary doesn't depend on hours"}</span>} />}
             </div>
 
             {ruled && (

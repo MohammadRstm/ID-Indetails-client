@@ -13,7 +13,11 @@ import MenuButton from "@/shared/components/Overlays/MenuButton";
 import Modal from "@/shared/components/Overlays/Modal";
 import { addDays, companyToday, fmtDateY, fmtMonthY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import { useChangeRole, useDeactivate, useEndSessions, useMoveEmployee, useReactivate, useResendInvitation, useRestoreSignIn, useTeams } from "./peopleWorkApi";
+import { loadFailed } from "@/api/queryState";
+import LoadError from "@/shared/components/Feedback/LoadError";
+import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
+import EditProfileModal from "./EditProfileModal";
+import { useChangeRole, useDeactivate, useEmployee, useEndSessions, useMoveEmployee, useReactivate, useResendInvitation, useRestoreSignIn, useTeams } from "./peopleWorkApi";
 
 export type Account = {
     id: number;
@@ -26,7 +30,7 @@ export type Account = {
     sessionsRevokedAt?: string | null;
 };
 
-type Dialog = "role" | "move" | "deactivate" | "reactivate" | "end-sessions" | "restore-sign-in" | null;
+type Dialog = "profile" | "role" | "move" | "deactivate" | "reactivate" | "end-sessions" | "restore-sign-in" | null;
 
 const ROLES = [{ value: "employee", label: "Employee" }, { value: "admin", label: "Admin" }, { value: "super_admin", label: "Super admin" }] as const;
 const other = (d: string | null): Domain => (d === "design" ? "execution" : "design");
@@ -61,8 +65,10 @@ export default function PersonActions({ account }: { account: Account }) {
     const suspended = !!account.sessionsRevokedAt;
     const canEndSessions = manage && permissions.isSuperAdmin && account.status === "active" && !suspended;
     const canRestore = manage && permissions.isSuperAdmin && suspended;
+    // a super admin has no profile page to edit them from, so their details and salary are edited here
+    const canEditProfile = account.role === "super_admin" && !deactivated && (manage || permissions.has(P.EMPLOYEE_PAY_MANAGE));
     // nobody changes their own account (an admin can reach their own profile from a notice or the feed)
-    if (account.id === me.id || (!manage && !canResend)) return null;
+    if (account.id === me.id || (!manage && !canResend && !canEditProfile)) return null;
 
     function sendAgain() {
         resend.mutate(undefined, {
@@ -76,6 +82,7 @@ export default function PersonActions({ account }: { account: Account }) {
             <MenuButton icon="dots" label="More actions" width={220}>
                 {(close) => (
                     <div>
+                        {canEditProfile && <button className="pop-item" onClick={() => { close(); setDialog("profile"); }}><Icon name="edit" />Edit profile and pay…</button>}
                         {canResend && <button className="pop-item" disabled={resend.isPending} onClick={() => { close(); sendAgain(); }}><Icon name="send" />Resend invitation</button>}
                         {manage && !deactivated && !invited && <button className="pop-item" onClick={() => { close(); setDialog("role"); }}><Icon name="shield" />Change role…</button>}
                         {canMove && <button className="pop-item" onClick={() => { close(); setDialog("move"); }}><Icon name="arrowRight" />Move to {AREAS[other(account.domain)].label}…</button>}
@@ -86,6 +93,7 @@ export default function PersonActions({ account }: { account: Account }) {
                     </div>
                 )}
             </MenuButton>
+            {dialog === "profile" && <SuperAdminProfile account={account} onClose={() => setDialog(null)} />}
             {dialog === "role" && <RoleModal account={account} onClose={() => setDialog(null)} />}
             {dialog === "move" && <MoveModal account={account} onClose={() => setDialog(null)} />}
             {dialog === "deactivate" && <DeactivateModal account={account} onClose={() => setDialog(null)} />}
@@ -93,6 +101,25 @@ export default function PersonActions({ account }: { account: Account }) {
             {dialog === "end-sessions" && <EndSessionsModal account={account} onClose={() => setDialog(null)} />}
             {dialog === "restore-sign-in" && <RestoreSignInModal account={account} onClose={() => setDialog(null)} />}
         </>
+    );
+}
+
+/** A super admin's details and salary, loaded before the form opens. */
+function SuperAdminProfile({ account, onClose }: { account: Account; onClose: () => void }) {
+    const employee = useEmployee(account.id);
+    const e = employee.data;
+    if (!e) {
+        return (
+            <Modal title={`Edit ${account.name.split(" ")[0]}'s profile`} onClose={onClose}>
+                {loadFailed(employee) ? <LoadError error={employee.error} retry={() => employee.refetch()} what={`${account.name}'s profile`} /> : <SkeletonLines lines={5} />}
+            </Modal>
+        );
+    }
+    return (
+        <EditProfileModal self={false} onClose={onClose} person={{
+            id: e.id, firstName: e.firstName, lastName: e.lastName, email: e.email, phone: e.phone, photoFileId: e.photoFileId,
+            position: e.position, team: e.team, domain: e.domain, role: e.role,
+        }} />
     );
 }
 
