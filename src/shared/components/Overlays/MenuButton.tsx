@@ -14,11 +14,12 @@ type MenuButtonProps = {
     children: ReactNode | ((close: () => void) => ReactNode);
 };
 
-/** A button opening a menu of .pop-item actions (the prototype's UI.MenuButton). */
+/** A button opening a menu of .pop-item actions (the prototype's UI.MenuButton), floating over the page. */
 export default function MenuButton({ icon, text, label = "More", buttonClass = "icon-btn", align, width, children }: MenuButtonProps) {
     return (
         <Popover
             align={align}
+            floating
             width={width}
             trigger={(open, toggle) => (
                 <button className={cx(buttonClass, open && "on")} onClick={toggle} aria-label={label}>

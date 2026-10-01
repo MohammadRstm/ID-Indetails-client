@@ -1,4 +1,5 @@
 import { useEffect, useEffectEvent, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 
@@ -46,7 +47,8 @@ export default function Modal({ title, sub, onClose, size, flush, foot, headTool
         return () => document.removeEventListener("keydown", onKey);
     }, []);
 
-    return (
+    // drawn on the page itself, so a dialog opened from a table cell or a menu takes none of their alignment or size
+    return createPortal(
         <div
             ref={ref}
             className={cx("scrim", scrimClass)}
@@ -72,7 +74,8 @@ export default function Modal({ title, sub, onClose, size, flush, foot, headTool
                 <div className={cx("modal-body", flush && "flush")}>{children}</div>
                 {foot && <div className="modal-foot">{foot}</div>}
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }
 
