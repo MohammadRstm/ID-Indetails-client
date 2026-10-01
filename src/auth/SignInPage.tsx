@@ -45,7 +45,7 @@ export default function SignInPage() {
                 </div>
             )}
             <form className="stack" onSubmit={submit} noValidate>
-                <Field id="si-email" label="Work email" error={form.errors.email}>
+                <Field id="si-email" label="Work email" required error={form.errors.email}>
                     <input
                         id="si-email"
                         className="input"
@@ -56,7 +56,7 @@ export default function SignInPage() {
                         onChange={(e) => form.set("email", e.target.value)}
                     />
                 </Field>
-                <Field id="si-pass" label="Password" error={form.errors.password}>
+                <Field id="si-pass" label="Password" required error={form.errors.password}>
                     <input
                         id="si-pass"
                         className="input"

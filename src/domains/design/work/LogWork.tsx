@@ -168,20 +168,21 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayEnd
             <form onSubmit={submit}>
                 <div className="grid g-2">
                     <div className="field">
-                        <label className="label" htmlFor="lw-project">Project</label>
+                        <label className="label required" htmlFor="lw-project">Project</label>
                         <Select id="lw-project" value={projectId == null ? "" : String(projectId)} onChange={(v) => setProjectId(+v)}
                             options={choices.map((p) => ({ value: String(p.id), label: p.title }))} />
                         <div className="hint">Only active projects accept new work.</div>
                     </div>
                     <div className="field">
-                        <label className="label">Day</label>
+                        <label className="label required">Day</label>
                         <DayChips value={date} onChange={pickDay} count={5} />
                     </div>
                 </div>
 
                 <div className="field mt">
-                    <label className="label" htmlFor="lw-desc">What did you work on?</label>
-                    <textarea id="lw-desc" className="textarea" autoFocus placeholder="e.g. Detailed the kitchen joinery drawings for the client review"
+                    <label className={settings.requireDescription ? "label required" : "label"} htmlFor="lw-desc">What did you work on?</label>
+                    <textarea id="lw-desc" className="textarea" autoFocus
+                        placeholder={`${settings.requireDescription ? "" : "Optional - "}e.g. Detailed the kitchen joinery drawings for the client review`}
                         value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)}
                         onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit(); }} />
                 </div>

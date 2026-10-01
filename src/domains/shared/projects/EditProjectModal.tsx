@@ -48,24 +48,24 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
             }>
             <form onSubmit={submit}>
                 <div className="field">
-                    <label className="label" htmlFor="ep-title">Project name</label>
+                    <label className="label required" htmlFor="ep-title">Project name</label>
                     <input id="ep-title" className="input" autoFocus value={title} onChange={(e) => setTitle(e.target.value)} onBlur={errors.touch("title")} />
                     <FieldError message={errors.show("title", titleError)} />
                 </div>
                 <div className="field mt">
                     <label className="label" htmlFor="ep-desc">Description</label>
-                    <textarea id="ep-desc" className="textarea" style={{ minHeight: 60 }} placeholder="What is this project about?"
+                    <textarea id="ep-desc" className="textarea" style={{ minHeight: 60 }} placeholder="Optional - what is this project about?"
                         value={description} onChange={(e) => setDescription(e.target.value)} />
                 </div>
                 <div className="grid g-2 mt">
                     <div className="field">
-                        <label className="label" htmlFor="ep-location">Location <span className="muted">· optional</span></label>
-                        <input id="ep-location" className="input" maxLength={200} placeholder={project.domain === "execution" ? "e.g. Achrafieh, Beirut" : "e.g. Broummana, Mount Lebanon"}
+                        <label className="label" htmlFor="ep-location">Location</label>
+                        <input id="ep-location" className="input" maxLength={200} placeholder={`Optional - e.g. ${project.domain === "execution" ? "Achrafieh, Beirut" : "Broummana, Mount Lebanon"}`}
                             value={location} onChange={(e) => setLocation(e.target.value)} />
                     </div>
                     <div className="field">
                         <label className="label" htmlFor="ep-target">Target completion</label>
-                        <DateInput id="ep-target" className="input mono" value={target} onChange={setTarget} />
+                        <DateInput id="ep-target" className="input mono" value={target} placeholder="Optional" onChange={setTarget} />
                     </div>
                 </div>
             </form>

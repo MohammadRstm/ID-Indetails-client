@@ -129,7 +129,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
         >
             <form onSubmit={submit}>
                 <div className="field">
-                    <label className="label" htmlFor="np-title">Project name</label>
+                    <label className="label required" htmlFor="np-title">Project name</label>
                     <input id="np-title" className="input" style={{ height: 44, fontSize: 16, fontWeight: 600 }} autoFocus placeholder={execution ? "e.g. Achrafieh apartment fit-out" : "e.g. Villa Mounir interiors"}
                         value={title} onChange={(e) => setTitle(e.target.value)} onBlur={errors.touch("title")} />
                     {errors.show("title", titleError) ? <FieldError message={errors.show("title", titleError)} />
@@ -141,14 +141,14 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                 ) : (
                     <div className="grid g-2 mt">
                         <div className="field">
-                            <label className="label">Project type</label>
+                            <label className="label required">Project type</label>
                             <div className="seg">
                                 <button type="button" className={cx("seg-btn", billing === "client" && "on")} onClick={() => setBilling("client")}>Client project</button>
                                 <button type="button" className={cx("seg-btn", billing === "internal" && "on")} onClick={() => setBilling("internal")}>Internal</button>
                             </div>
                         </div>
                         <div className="field">
-                            <label className="label" htmlFor="np-pay">Customer payment</label>
+                            <label className="label optional" htmlFor="np-pay">Customer payment</label>
                             {billing === "client"
                                 ? <AmountField id="np-pay" value={revenue} currencies={false} onChange={setRevenue} />
                                 : <div className="hint" style={{ paddingTop: 9 }}>Internal project - labour and expenses are tracked as company cost.</div>}
@@ -161,7 +161,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
 
                 {billing === "client" ? (
                     <div className="field mt">
-                        <label className="label">Client</label>
+                        <label className="label required">Client</label>
                         <ClientPicker domain={domain} value={clientId} onChange={setClientId}
                             onCreate={permissions.has(P.CLIENT_CREATE) ? (typed) => setNewClient(typed) : undefined} />
                         {errors.show("client", clientError) ? <FieldError message={errors.show("client", clientError)} />
@@ -172,8 +172,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                 )}
 
                 <div className="field mt">
-                    <label className="label" htmlFor="np-location">Location <span className="muted">· optional</span></label>
-                    <input id="np-location" className="input" maxLength={200} placeholder={execution ? "e.g. Achrafieh, Beirut" : "e.g. Broummana, Mount Lebanon"}
+                    <label className="label" htmlFor="np-location">Location</label>
+                    <input id="np-location" className="input" maxLength={200} placeholder={`Optional - e.g. ${execution ? "Achrafieh, Beirut" : "Broummana, Mount Lebanon"}`}
                         value={location} onChange={(e) => setLocation(e.target.value)} />
                 </div>
 
@@ -182,16 +182,16 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                         <div className="u" style={{ marginBottom: 8 }}>Money</div>
                         {takesPayment && <div className="grid g-2">
                             <div className="field">
-                                <label className="label" htmlFor="np-init">Initial payment received</label>
+                                <label className="label optional" htmlFor="np-init">Initial payment received</label>
                                 <AmountField id="np-init" value={initialPay} currencies={false} onChange={setInitialPay} />
                             </div>
                             <div className="grid g-2" style={{ gap: 8 }}>
                                 <div className="field">
-                                    <label className="label" htmlFor="np-paydate">Received on</label>
+                                    <label className="label required" htmlFor="np-paydate">Received on</label>
                                     <DateInput id="np-paydate" className="input mono" value={payDate} max={companyToday()} required onChange={setPayDate} />
                                 </div>
                                 <div className="field">
-                                    <label className="label" htmlFor="np-paymethod">Method</label>
+                                    <label className="label required" htmlFor="np-paymethod">Method</label>
                                     <Select id="np-paymethod" value={payMethod} onChange={setPayMethod}
                                         options={Object.entries(PAYMENT_METHODS).map(([value, label]) => ({ value, label }))} />
                                 </div>
@@ -199,11 +199,11 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                         </div>}
                         <div className={takesPayment ? "grid g-2 mt-s" : "grid g-2"}>
                             <div className="field">
-                                <label className="label" htmlFor="np-fee">Project fee <span className="muted">· optional</span></label>
+                                <label className="label optional" htmlFor="np-fee">Project fee</label>
                                 <AmountField id="np-fee" value={fee} currencies={false} onChange={setFee} />
                             </div>
                             <div className="field">
-                                <label className="label">Default material profit</label>
+                                <label className="label required">Default material profit</label>
                                 <div className="row wrap" style={{ gap: 5, alignItems: "center" }}>
                                     {[0, 5, 10, 25].map((v) => (
                                         <button key={v} type="button" className={cx("chip", +markupPct === v && "on")} onClick={() => setMarkupPct(v)}>{v}%</button>
@@ -228,17 +228,17 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                     <div className="stack mt">
                         <div className="field">
                             <label className="label" htmlFor="np-desc">Description</label>
-                            <textarea id="np-desc" className="textarea" style={{ minHeight: 60 }} placeholder="What is this project about?"
+                            <textarea id="np-desc" className="textarea" style={{ minHeight: 60 }} placeholder="Optional - what is this project about?"
                                 value={description} onChange={(e) => setDescription(e.target.value)} />
                         </div>
                         <div className="grid g-2">
                             <div className="field">
-                                <label className="label" htmlFor="np-owner">Project owner</label>
+                                <label className="label required" htmlFor="np-owner">Project owner</label>
                                 <Select id="np-owner" value={owner} onChange={setOwner} options={owners} />
                             </div>
                             <div className="field">
                                 <label className="label" htmlFor="np-target">Target completion</label>
-                                <DateInput id="np-target" className="input mono" value={target} min={companyToday()} onChange={setTarget} />
+                                <DateInput id="np-target" className="input mono" value={target} min={companyToday()} placeholder="Optional" onChange={setTarget} />
                             </div>
                         </div>
                         {execution && (
@@ -246,11 +246,11 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                                 <div className="grid g-2">
                                     <div className="field">
                                         <label className="label" htmlFor="np-workers">Ground workers per day (avg)</label>
-                                        <input id="np-workers" className="input mono" type="number" min="0" step="1" placeholder="e.g. 8"
+                                        <input id="np-workers" className="input mono" type="number" min="0" step="1" placeholder="Optional - e.g. 8"
                                             value={workers} onChange={(e) => setWorkers(e.target.value)} />
                                     </div>
                                     <div className="field">
-                                        <label className="label" htmlFor="np-daypay">Cost per ground worker per day (avg)</label>
+                                        <label className="label optional" htmlFor="np-daypay">Cost per ground worker per day (avg)</label>
                                         <AmountField id="np-daypay" value={dailyPay} currencies={false} onChange={setDailyPay} />
                                     </div>
                                 </div>

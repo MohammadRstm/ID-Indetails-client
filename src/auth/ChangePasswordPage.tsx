@@ -50,15 +50,15 @@ export default function ChangePasswordPage() {
             sub={required ? "You signed in with a temporary password. Pick one of your own to carry on." : "Every other device you're signed in on is signed out."}
         >
             <form className="stack" onSubmit={submit} noValidate>
-                <Field id="cp-current" label={required ? "Temporary password" : "Current password"} error={form.errors.currentPassword}>
+                <Field id="cp-current" label={required ? "Temporary password" : "Current password"} required error={form.errors.currentPassword}>
                     <input id="cp-current" className="input" type="password" autoComplete="current-password" autoFocus
                         value={form.values.currentPassword} onChange={(e) => form.set("currentPassword", e.target.value)} />
                 </Field>
-                <Field id="cp-new" label="New password" error={form.errors.newPassword} hint={PASSWORD_HINT}>
+                <Field id="cp-new" label="New password" required error={form.errors.newPassword} hint={PASSWORD_HINT}>
                     <input id="cp-new" className="input" type="password" autoComplete="new-password"
                         value={form.values.newPassword} onChange={(e) => form.set("newPassword", e.target.value)} />
                 </Field>
-                <Field id="cp-repeat" label="Repeat it" error={form.errors.repeat}>
+                <Field id="cp-repeat" label="Repeat it" required error={form.errors.repeat}>
                     <input id="cp-repeat" className="input" type="password" autoComplete="new-password"
                         value={form.values.repeat} onChange={(e) => form.set("repeat", e.target.value)} />
                 </Field>

@@ -103,7 +103,7 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
             }>
             {!project && (
                 <div className="field" style={{ marginBottom: 12 }}>
-                    <label className="label" htmlFor="mtg-project">Project</label>
+                    <label className="label required" htmlFor="mtg-project">Project</label>
                     <Select id="mtg-project" value={String(chosen ?? "")} onChange={setProjectId}
                         options={choices.length ? choices.map((x) => ({ value: String(x.id), label: x.title })) : [{ value: "", label: open.isPending ? "Loading…" : "No open projects" }]} />
                     <FieldError message={errors.show("project", projectError)} />
@@ -111,11 +111,11 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
             )}
             <div className="grid g-2">
                 <div className="field">
-                    <label className="label" htmlFor="mtg-date">Date</label>
+                    <label className="label required" htmlFor="mtg-date">Date</label>
                     <DateInput id="mtg-date" className="input mono" value={day} required onChange={(v) => v && setDay(v)} />
                 </div>
                 <div className="field">
-                    <label className="label">Time</label>
+                    <label className="label required">Time</label>
                     <div className="row" style={{ gap: 6 }}>
                         <div style={{ flex: 1 }}><TimeField value={start} label="Start" onChange={(m) => { setStart(m); if (end <= m) setEnd(m + 60); }} /></div>
                         <span className="muted">–</span>

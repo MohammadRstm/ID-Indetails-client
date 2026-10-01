@@ -66,25 +66,25 @@ export default function OverheadModal({ line, onClose }: { line: OverheadLine | 
                 </>
             }>
             <div className="field">
-                <label className="label" htmlFor="ov-name">Name</label>
+                <label className="label required" htmlFor="ov-name">Name</label>
                 <input id="ov-name" className="input" autoFocus placeholder="e.g. AutoCAD licences" value={name} onChange={(e) => setName(e.target.value)} onBlur={errors.touch("name")} />
                 <FieldError message={errors.show("name", nameError)} />
             </div>
             <div className="grid g-2 mt">
                 <div className="field">
-                    <label className="label" htmlFor="ov-amount">Monthly cost</label>
+                    <label className="label required" htmlFor="ov-amount">Monthly cost</label>
                     <AmountField id="ov-amount" value={amount} currency={currency} onChange={setAmount} onCurrency={setCurrency} onBlur={errors.touch("amount")} />
                     <FieldError message={errors.show("amount", amountError)} />
                 </div>
                 <div className="field">
-                    <label className="label" htmlFor="ov-group">Group</label>
+                    <label className="label required" htmlFor="ov-group">Group</label>
                     <Select id="ov-group" value={group} onChange={setGroup}
                         options={(Object.keys(GROUP_LABEL) as OverheadGroup[]).map((g) => ({ value: g, label: GROUP_LABEL[g] }))} />
                 </div>
             </div>
             {(newAmount || newCurrency) && (
                 <div className="field mt">
-                    <label className="label" htmlFor="ov-from">Applies from</label>
+                    <label className="label required" htmlFor="ov-from">Applies from</label>
                     <Select id="ov-from" value={from} onChange={setFrom}
                         options={[0, 1, 2, 3].map((n) => { const m = addMonths(thisMonth, n); return { value: m, label: fmtMonthY(m) }; })} />
                     <div className="hint">{newCurrency ? "A line already charged in its old currency ends there, and one in the new currency takes over." : "Earlier months keep the amount they were charged."}</div>

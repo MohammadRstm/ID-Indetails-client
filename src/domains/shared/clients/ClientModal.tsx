@@ -117,13 +117,13 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
         >
             <div className="grid g-2">
                 <div className="field">
-                    <label className="label" htmlFor="cl-name">Full name</label>
+                    <label className="label required" htmlFor="cl-name">Full name</label>
                     <input id="cl-name" className="input" autoFocus placeholder="e.g. Rania Khoury" value={name} onChange={(e) => setName(e.target.value)} onBlur={errors.touch("name")} />
                     <FieldError message={errors.show("name", nameError)} />
                 </div>
                 <div className="field">
-                    <label className="label" htmlFor="cl-org">Organisation <span className="muted">(optional)</span></label>
-                    <input id="cl-org" className="input" placeholder={domain === "execution" ? "e.g. Cedar Developers SAL" : "e.g. Haddad Holdings"} value={organisation} onChange={(e) => setOrganisation(e.target.value)} />
+                    <label className="label" htmlFor="cl-org">Organisation</label>
+                    <input id="cl-org" className="input" placeholder={`Optional - e.g. ${domain === "execution" ? "Cedar Developers SAL" : "Haddad Holdings"}`} value={organisation} onChange={(e) => setOrganisation(e.target.value)} />
                 </div>
             </div>
 
@@ -135,7 +135,7 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
             )}
 
             <div className="field mt">
-                <label className="label">
+                <label className="label required">
                     Label
                     <HelpTip label="a client's label">
                         <b>What kind of client this is</b>: a key account, a retainer, an agency, a lead or anything you type. It shows
@@ -154,7 +154,7 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
             </div>
 
             <div className="field mt">
-                <label className="label">Contact details</label>
+                <label className="label required">Contact details</label>
                 <div className="stack" style={{ gap: 8 }}>
                     {contacts.map((c, i) => (
                         <div key={i}>
@@ -187,8 +187,8 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
             </div>
 
             <div className="field mt">
-                <label className="label" htmlFor="cl-note">Note <span className="muted">(optional)</span></label>
-                <input id="cl-note" className="input" placeholder="One line of context" value={note} onChange={(e) => setNote(e.target.value)} />
+                <label className="label" htmlFor="cl-note">Note</label>
+                <input id="cl-note" className="input" placeholder="Optional - one line of context" value={note} onChange={(e) => setNote(e.target.value)} />
             </div>
         </Modal>
     );

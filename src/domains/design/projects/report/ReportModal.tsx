@@ -404,7 +404,7 @@ export default function ReportModal({ project, onClose }: { project: Project; on
                     <p className="hint">{client ? "Hours, timeline and billing only. No rates, labour cost, expenses, profit or margin." : "The full picture, including everything the client never sees."}</p>
 
                     <div className="field mt">
-                        <label className="label" htmlFor="rep-range">Date range</label>
+                        <label className="label required" htmlFor="rep-range">Date range</label>
                         <Select id="rep-range" className="select sm" value={rangeKey} onChange={(v) => setRangeKey(v as RangeKey)}
                             options={(Object.keys(ranges) as RangeKey[]).map((k) => ({ value: k, label: ranges[k].label }))} />
                     </div>

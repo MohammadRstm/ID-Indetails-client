@@ -117,12 +117,12 @@ function RoleModal({ account, onClose }: { account: Account; onClose: () => void
         <Modal title="Change role" sub={account.name} onClose={onClose}
             foot={<Foot error={change.error} busy={change.isPending} label={`Make ${label.toLowerCase()}`} onCancel={onClose} onGo={go} />}>
             <div className="field">
-                <label className="label">New role</label>
+                <label className="label required">New role</label>
                 <Segmented aria-label="New role" value={role} onChange={setRole} options={options.map((o) => ({ value: o.value, label: o.label }))} />
             </div>
             {needsDomain && (
                 <div className="field mt">
-                    <label className="label">Business they join</label>
+                    <label className="label required">Business they join</label>
                     <Segmented aria-label="Business they join" value={domain} onChange={setDomain}
                         options={(["design", "execution"] as Domain[]).map((d) => ({ value: d, label: AREAS[d].label }))} />
                 </div>
@@ -183,7 +183,7 @@ function DeactivateModal({ account, onClose }: { account: Account; onClose: () =
             foot={<Foot error={deactivate.error} busy={deactivate.isPending} danger label={invited ? "Cancel invitation" : "Deactivate"} disabled={!invited && !lastDay} onCancel={onClose} onGo={go} />}>
             {!invited && (
                 <div className="field">
-                    <label className="label" htmlFor="last-day">Last working day</label>
+                    <label className="label required" htmlFor="last-day">Last working day</label>
                     <DateInput id="last-day" value={lastDay} onChange={setLastDay} />
                     <div className="hint">Paid up to and including this day.</div>
                 </div>
@@ -271,7 +271,7 @@ function ReactivateModal({ account, onClose }: { account: Account; onClose: () =
             foot={<Foot error={reactivate.error} busy={reactivate.isPending} label="Reactivate" onCancel={onClose} onGo={go} />}>
             {askGap && (
                 <div className="field">
-                    <label className="label">The days they were away in {fmtMonthY(account.leftOn!)}</label>
+                    <label className="label required">The days they were away in {fmtMonthY(account.leftOn!)}</label>
                     <Segmented aria-label="Time away" value={payGap} onChange={setPayGap} options={[{ value: "unpaid", label: "Unpaid" }, { value: "paid", label: "Paid" }]} />
                 </div>
             )}

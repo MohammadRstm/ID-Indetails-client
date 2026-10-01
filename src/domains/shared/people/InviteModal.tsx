@@ -133,7 +133,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                 </div>
                 <div className="grow stack">
                     <div className="field">
-                        <label className="label" htmlFor="ae-email">Work email</label>
+                        <label className="label required" htmlFor="ae-email">Work email</label>
                         <input id="ae-email" className="input" type="email" autoFocus placeholder="name@company.com" value={email}
                             onChange={(e) => setEmail(e.target.value)} onBlur={errors.touch("email")} />
                         <FieldError message={errors.show("email", emailError)} />
@@ -141,7 +141,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                     <div className="grid g-2">
                         <div className="field">
                             <label className="label" htmlFor="ae-pos">Position</label>
-                            <input id="ae-pos" className="input" placeholder={design ? "e.g. Interior Architect" : "e.g. Site Engineer"} value={position} onChange={(e) => setPosition(e.target.value)} />
+                            <input id="ae-pos" className="input" placeholder={`Optional - e.g. ${design ? "Interior Architect" : "Site Engineer"}`} value={position} onChange={(e) => setPosition(e.target.value)} />
                         </div>
                         <div className="field">
                             <label className="label" htmlFor="ae-team">Team</label>
@@ -151,7 +151,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                     {setsPay && (
                         <div className="field">
                             <div className="spread" style={{ alignItems: "center" }}>
-                                <label className="label" htmlFor="ae-rate" style={{ margin: 0 }}>Pay</label>
+                                <label className="label required" htmlFor="ae-rate" style={{ margin: 0 }}>Pay</label>
                                 <Segmented value={basis} onChange={setBasis} aria-label="Pay basis" options={[{ value: "hourly", label: "Per hour" }, { value: "monthly", label: "Per month" }]} />
                             </div>
                             <div className="grid g-2 mt-s">
@@ -172,7 +172,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                         </div>
                     )}
                     <div className="field">
-                        <label className="label">Access</label>
+                        <label className="label required">Access</label>
                         <Segmented value={role} onChange={setRole} aria-label="Access" options={roles.map((r) => ({ value: r, label: ACCESS[r].label }))} />
                         <div className="hint">{ACCESS[role].sub}</div>
                     </div>
@@ -186,7 +186,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                         </div>
                     ) : (
                         <div className="field">
-                            <label className="label">Business they join</label>
+                            <label className="label required">Business they join</label>
                             <Segmented value={domain} onChange={choose} aria-label="Business they join"
                                 options={(["design", "execution"] as Domain[]).map((d) => ({ value: d, label: DOMAIN_LABEL[d] }))} />
                         </div>

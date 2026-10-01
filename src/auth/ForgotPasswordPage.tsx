@@ -48,7 +48,7 @@ export default function ForgotPasswordPage() {
     return (
         <AuthLayout title="Reset your password" sub="We'll email you a link to choose a new one.">
             <form className="stack" onSubmit={submit} noValidate>
-                <Field id="fp-email" label="Work email" error={form.errors.email}>
+                <Field id="fp-email" label="Work email" required error={form.errors.email}>
                     <input
                         id="fp-email"
                         className="input"

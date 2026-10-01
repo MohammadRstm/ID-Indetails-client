@@ -60,7 +60,7 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
                 </>
             }>
             <div className="field">
-                <label className="label">Project type</label>
+                <label className="label required">Project type</label>
                 <Segmented value={billing} onChange={setBilling} aria-label="Project type" options={[{ value: "client", label: "Client project" }, { value: "internal", label: "Internal" }]} />
                 <div className="hint">
                     {billing === "client" ? "A client project carries a payment amount and can show profit and margin."
@@ -69,7 +69,7 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
             </div>
             {needsClient && (
                 <div className="field mt">
-                    <label className="label" htmlFor="pay-client">Client</label>
+                    <label className="label required" htmlFor="pay-client">Client</label>
                     <Select id="pay-client" value={clientId} onChange={setClientId}
                         options={[{ value: "", label: "Choose the client" }, ...clients.map((c) => ({ value: String(c.id), label: c.displayName }))]} />
                     <FieldError message={errors.show("client", clientError)} />
@@ -77,7 +77,7 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
             )}
             {billing === "client" && (
                 <div className="field mt">
-                    <label className="label" htmlFor="pay-amount">Customer payment</label>
+                    <label className="label optional" htmlFor="pay-amount">Customer payment</label>
                     <AmountField id="pay-amount" value={amount} currency="USD" currencies={false} onChange={setAmount} />
                     <div className="hint">Total amount the company is paid for this project.</div>
                 </div>

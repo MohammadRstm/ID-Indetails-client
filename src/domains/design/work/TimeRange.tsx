@@ -38,14 +38,14 @@ export default function TimeRange({ date, startMin: s, duration: dur, preview, o
             </div>
             <div className="row wrap" style={{ gap: 12, alignItems: "flex-end", marginTop: 10 }}>
                 <div className="field" style={{ width: 132 }}>
-                    <label className="label">Start</label>
+                    <label className="label required">Start</label>
                     <TimeField label="Start time" value={s} onChange={(v) => onChange(v, dur)} />
                 </div>
                 {mode === "end" ? (
                     <>
                         <div className="muted" style={{ paddingBottom: 8, fontSize: 16 }}>→</div>
                         <div className="field" style={{ width: 132 }}>
-                            <label className="label">End</label>
+                            <label className="label required">End</label>
                             <TimeField label="End time" value={endMin} min={s} onChange={(v) => {
                                 let d2 = (v % DAY) - s;
                                 if (d2 <= 0) d2 += DAY;
@@ -57,7 +57,7 @@ export default function TimeRange({ date, startMin: s, duration: dur, preview, o
                     <>
                         <div className="muted" style={{ paddingBottom: 8, fontSize: 16 }}>+</div>
                         <div className="field">
-                            <label className="label">Worked for</label>
+                            <label className="label required">Worked for</label>
                             <div className="row" style={{ gap: 6 }}>
                                 <input type="number" className="input mono trange-num" min="0" max="16" aria-label="Hours" value={hh}
                                     onChange={(e) => setDur(Math.max(0, parseInt(e.target.value || "0", 10) || 0), mm)} /><span className="muted">h</span>

@@ -51,12 +51,12 @@ export default function LabourDefaultsModal({ project, defaults, onClose }: { pr
             }>
             <div className="grid g-2">
                 <div className="field">
-                    <label className="label" htmlFor="ld-workers">Ground workers per day (avg)</label>
+                    <label className={editable ? "label required" : "label"} htmlFor="ld-workers">Ground workers per day (avg)</label>
                     <input id="ld-workers" className="input mono" type="number" min={0} step={1} value={workers} disabled={!editable}
                         onKeyDown={next("ld-pay")} onChange={(e) => setWorkers(e.target.value)} />
                 </div>
                 <div className="field">
-                    <label className="label" htmlFor="ld-pay">Cost per worker per day (avg)</label>
+                    <label className={editable ? "label required" : "label"} htmlFor="ld-pay">Cost per worker per day (avg)</label>
                     {editable ? <AmountField id="ld-pay" value={pay} currencies={false} onChange={setPay} onKeyDown={next("ld-save")} />
                         : <div className="lab-defaults-val mono">{money.exact(cur.dailyPay)}</div>}
                 </div>

@@ -94,7 +94,7 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
                 </>
             }>
             <div className="field">
-                <label className="label" htmlFor="pay-inv">Against which invoice?</label>
+                <label className="label required" htmlFor="pay-inv">Against which invoice?</label>
                 <Select id="pay-inv" value={invoiceId} onChange={pick} options={[
                     ...open.map((i) => ({ value: String(i.id), label: `${i.number} - ${money.exact(i.balance ?? 0, "USD", { cents: true })} outstanding${invoiceStateOf(i) === "overdue" ? " · overdue" : ""}` })),
                     { value: "", label: "On account - no invoice yet" },
@@ -108,20 +108,20 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
 
             <div className="grid g-2 mt">
                 <div className="field">
-                    <label className="label" htmlFor="pay-amt">Amount received</label>
+                    <label className="label required" htmlFor="pay-amt">Amount received</label>
                     <AmountField id="pay-amt" value={value} currency={currency} onChange={setAmount} onCurrency={(c) => { setCurrency(c); setAmount(null); }} onBlur={errors.touch("amount")} />
                     {errors.show("amount", amountError) ? <FieldError message={errors.show("amount", amountError)} />
                         : currency === "LBP" && <div className="hint">= {money.exact(usd)} at the rate below</div>}
                 </div>
                 <div className="field">
-                    <label className="label" htmlFor="pay-date">Date received</label>
+                    <label className="label required" htmlFor="pay-date">Date received</label>
                     <DateInput id="pay-date" className="input mono" value={date} max={today} onChange={(v) => { if (v) setDate(v); }} />
                 </div>
             </div>
 
             {currency === "LBP" && (
                 <div className="field mt">
-                    <label className="label" htmlFor="pay-fx">Exchange rate on the day</label>
+                    <label className="label required" htmlFor="pay-fx">Exchange rate on the day</label>
                     <div className="row" style={{ gap: 8 }}>
                         <input id="pay-fx" className="input mono" style={{ maxWidth: 160 }} inputMode="numeric" value={fx ? String(fx) : ""}
                             onChange={(e) => setRate(Math.max(1, Number(e.target.value.replace(/[^0-9.]/g, "")) || 1))} />
@@ -134,14 +134,14 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
 
             <div className="grid g-2 mt">
                 <div className="field">
-                    <label className="label" htmlFor="pay-method">How it arrived</label>
+                    <label className="label required" htmlFor="pay-method">How it arrived</label>
                     <Select id="pay-method" value={method} onChange={(v) => setMethod(v as Method)}
                         options={Object.entries(PAYMENT_METHODS).map(([k, label]) => ({ value: k, label }))} />
                 </div>
                 <div className="field">
                     <label className="label" htmlFor="pay-ref">Reference</label>
                     <input id="pay-ref" className="input" value={reference} onChange={(e) => setReference(e.target.value)}
-                        placeholder={method === "cheque" ? "Cheque number" : method === "bank" ? "Transfer reference" : "Receipt number"} />
+                        placeholder={`Optional - ${method === "cheque" ? "cheque number" : method === "bank" ? "transfer reference" : "receipt number"}`} />
                 </div>
             </div>
 
