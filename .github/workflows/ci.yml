@@ -1,0 +1,120 @@
+# Checks every pull request to main, and main itself after each merge. Nothing is published or deployed here:
+# deployment is started by hand from the API repository (see docs/deployment.md).
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# A newer push to the same pull request replaces the run still going; main's runs all finish.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Types, lint, tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install from the lockfile
+        run: npm ci --no-audit --no-fund
+
+      - name: Type-check
+        run: npx tsc -b
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      # tsc already ran above, so only the bundle is built here
+      - name: Build
+        run: npx vite build
+
+      # Anything that looks like a secret or a development address must never ship to every visitor.
+      - name: Check the bundle for secrets and local addresses
+        run: |
+          if grep -rEn 'localhost:[0-9]|127\.0\.0\.1|BEGIN [A-Z ]*PRIVATE KEY|AKIA[0-9A-Z]{16}|sk_live_|ghp_[A-Za-z0-9]{20}' dist; then
+            echo "::error::The build contains a secret or a development address (above)."
+            exit 1
+          fi
+          if ls dist/assets/*.map >/dev/null 2>&1; then
+            echo "::error::Source maps would expose the source code: the build must not ship them."
+            exit 1
+          fi
+
+      # Only what reaches the browser: build tools aren't shipped.
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+  image:
+    name: Docker image
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build the image (not pushed)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          load: true
+          push: false
+          tags: id-indetails-client:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Run it as it would be deployed (read-only, no capabilities) and check what it serves. The API isn't
+      # there, so /api isn't checked; any address works for API_UPSTREAM.
+      - name: Smoke-test the container
+        run: |
+          docker run -d --name web -p 8080:8080 -e API_UPSTREAM=http://127.0.0.1:9 \
+            --read-only --tmpfs /tmp:uid=101,gid=101 --tmpfs /etc/nginx/conf.d:uid=101,gid=101 \
+            --cap-drop ALL --security-opt no-new-privileges id-indetails-client:ci
+          for i in $(seq 1 20); do curl -fs http://localhost:8080/healthz >/dev/null && break; sleep 1; done
+          fail() { echo "::error::$1"; docker logs web; exit 1; }
+          [ "$(docker exec web id -u)" = "101" ] || fail "nginx doesn't run as uid 101"
+          curl -fs http://localhost:8080/healthz | grep -q ok || fail "/healthz"
+          # an app route is drawn by the app: the server answers with index.html, never cached
+          headers=$(curl -fsSI http://localhost:8080/design/projects) || fail "a deep link isn't served"
+          echo "$headers" | grep -qi '^content-type: text/html' || fail "a deep link doesn't get index.html"
+          echo "$headers" | grep -qi '^cache-control: no-cache' || fail "index.html is cached"
+          for h in content-security-policy x-content-type-options referrer-policy x-frame-options; do
+            echo "$headers" | grep -qi "^$h:" || fail "missing header $h"
+          done
+          asset=$(curl -fs http://localhost:8080/ | grep -o '/assets/[^"]*\.js' | head -1)
+          curl -fsSI "http://localhost:8080$asset" | grep -qi 'immutable' || fail "hashed assets aren't cached for good"
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/assets/missing.js)" = "404" ] || fail "a missing asset isn't a 404"
+          docker rm -f web >/dev/null
+          # without the API's address the container must refuse to start (124: still running when the timeout hit)
+          status=0; timeout 15 docker run --rm id-indetails-client:ci >/dev/null 2>&1 || status=$?
+          [ "$status" -ne 0 ] && [ "$status" -ne 124 ] || fail "it started without API_UPSTREAM"
+
+      - name: Scan the image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: id-indetails-client:ci
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"

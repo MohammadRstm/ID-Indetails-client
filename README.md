@@ -58,3 +58,8 @@ The client never calculates money or decides access. Every figure comes from the
 - Vitest with Testing Library, in jsdom.
 - MSW stands in for the API. A request with no handler fails the test.
 - Pages are tested as each kind of user (super admin, Design and Execution admins and employees), to check what they can and can't see.
+
+## Deployment
+
+Development needs no Docker. In production the app runs as a Docker image: nginx serves the build and proxies `/api` and `/hubs` to the API. CI (`.github/workflows/ci.yml`) checks every pull request and `main`, including the image. Deployment is started by hand from the API repository. See [docs/deployment.md](docs/deployment.md).
+
