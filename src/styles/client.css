@@ -39,3 +39,6 @@ table { line-height: normal; font-weight: normal; }
 
 /* Space under a banner that opens a window, above what follows it. */
 .mb { margin-bottom: 14px; }
+
+/* A menu drawn over the page beside its button (Popover floating): never inside a table it would stretch. */
+.pop.floating { position: fixed; z-index: 300; }

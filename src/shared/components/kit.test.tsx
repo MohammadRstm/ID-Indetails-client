@@ -191,3 +191,34 @@ describe("small pieces", () => {
         expect(periodRange("30d", "2026-09-30")).toMatchObject({ from: "2026-09-01" });
     });
 });
+
+describe("menus and dialogs opened from a table", () => {
+    function Row() {
+        const [open, setOpen] = useState(false);
+        return (
+            <div className="tbl-wrap" data-testid="table">
+                <table><tbody><tr><td className="r">
+                    <MenuButton icon="dots" label="More actions">
+                        {(close) => <button className="pop-item" onClick={() => { close(); setOpen(true); }}>Deactivate</button>}
+                    </MenuButton>
+                    {open && <Modal title="Deactivate account" onClose={() => setOpen(false)}>Their history stays.</Modal>}
+                </td></tr></tbody></table>
+            </div>
+        );
+    }
+
+    it("float over the page instead of growing the table", async () => {
+        render(<Row />);
+        const table = screen.getByTestId("table");
+        await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+        const item = screen.getByRole("button", { name: "Deactivate" });
+        expect(table.contains(item)).toBe(false);
+        expect(item.closest(".pop")).toHaveClass("floating");
+
+        await userEvent.click(item);
+        const dialog = screen.getByRole("dialog", { name: "Deactivate account" });
+        // drawn on the page, so it takes nothing from the cell (its right-aligned text, its width)
+        expect(table.contains(dialog)).toBe(false);
+        expect(screen.queryByRole("button", { name: "Deactivate" })).not.toBeInTheDocument();
+    });
+});

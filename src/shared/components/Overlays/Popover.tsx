@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cx } from "@/shared/utils/cx";
 
 type PopoverProps = {
@@ -11,17 +12,28 @@ type PopoverProps = {
     width?: number;
     hostClass?: string;
     className?: string;
+    /**
+     * Drawn over the page beside its button, instead of inside the button's container: for menus in tables and
+     * other scrolling boxes, which would otherwise grow to make room for the panel.
+     */
+    floating?: boolean;
 };
 
+const GAP = 6;
+const EDGE = 8;
+
 /** A panel under a button, closed by a click outside or Escape (the prototype's UI.Popover). */
-export default function Popover({ trigger, children, align = "right", width, hostClass, className }: PopoverProps) {
+export default function Popover({ trigger, children, align = "right", width, hostClass, className, floating }: PopoverProps) {
     const [open, setOpen] = useState(false);
+    const [place, setPlace] = useState<CSSProperties | null>(null);
     const ref = useRef<HTMLDivElement>(null);
+    const panelRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!open) return;
         const onDoc = (e: MouseEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+            const target = e.target as Node;
+            if (!ref.current?.contains(target) && !panelRef.current?.contains(target)) setOpen(false);
         };
         // Escape closes the menu only, not a dialog it sits in: caught first, on the way down, and stopped there
         const onKey = (e: KeyboardEvent) => {
@@ -37,30 +49,59 @@ export default function Popover({ trigger, children, align = "right", width, hos
         };
     }, [open]);
 
+    // A floating panel follows its button: below it, or above when there's no room below, and kept on screen.
+    useLayoutEffect(() => {
+        if (!open || !floating) return;
+        function measure() {
+            const host = ref.current?.getBoundingClientRect();
+            const pop = panelRef.current;
+            if (!host || !pop) return;
+            const vw = document.documentElement.clientWidth || window.innerWidth;
+            const vh = window.innerHeight;
+            const w = pop.offsetWidth, h = pop.offsetHeight;
+            const left = Math.max(EDGE, Math.min(align === "right" ? host.right - w : host.left, vw - EDGE - w));
+            const below = host.bottom + GAP;
+            const top = below + h > vh - EDGE && host.top - GAP - h > EDGE ? host.top - GAP - h : below;
+            setPlace({ top: Math.round(top), left: Math.round(left) });
+        }
+        measure();
+        window.addEventListener("resize", measure);
+        window.addEventListener("scroll", measure, true);
+        return () => {
+            window.removeEventListener("resize", measure);
+            window.removeEventListener("scroll", measure, true);
+        };
+    }, [open, floating, align]);
+
     // A trigger near either edge (phones, wrapped header rows) must not push the panel off-screen.
     useLayoutEffect(() => {
-        if (!open || !ref.current) return;
-        const pop = ref.current.querySelector<HTMLElement>(".pop");
-        if (!pop) return;
+        if (!open || floating || !panelRef.current) return;
+        const pop = panelRef.current;
         pop.style.transform = "";
         const r = pop.getBoundingClientRect();
         const vw = document.documentElement.clientWidth;
         if (!vw || !r.width) return;
         let dx = 0;
-        if (r.right > vw - 8) dx = vw - 8 - r.right;
-        if (r.left + dx < 8) dx = 8 - r.left;
+        if (r.right > vw - EDGE) dx = vw - EDGE - r.right;
+        if (r.left + dx < EDGE) dx = EDGE - r.left;
         if (dx) pop.style.transform = `translateX(${Math.round(dx)}px)`;
-    }, [open]);
+    }, [open, floating]);
 
-    const close = () => setOpen(false);
+    const close = () => {
+        setOpen(false);
+        setPlace(null);
+    };
+    // a floating panel is hidden until it has been placed, so it never flashes at the top of the page
+    const at: CSSProperties | null = floating ? place ?? { top: 0, left: 0, visibility: "hidden" } : null;
+    const panel = open && (
+        <div ref={panelRef} className={cx("pop", floating ? "floating" : align, className)} style={{ ...(width ? { minWidth: width } : null), ...at }}>
+            {typeof children === "function" ? children(close) : children}
+        </div>
+    );
     return (
         <div className={cx("pop-host", hostClass)} ref={ref}>
-            {trigger(open, () => setOpen((o) => !o))}
-            {open && (
-                <div className={cx("pop", align, className)} style={width ? { minWidth: width } : undefined}>
-                    {typeof children === "function" ? children(close) : children}
-                </div>
-            )}
+            {trigger(open, () => (open ? close() : setOpen(true)))}
+            {floating && panel ? createPortal(panel, document.body) : panel}
         </div>
     );
 }
