@@ -12,6 +12,7 @@ import Avatar from "@/shared/components/Identity/Avatar";
 import { Drawer } from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { companyToday, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange } from "@/shared/format/time";
+import { clickable } from "@/shared/utils/clickable";
 import { cx } from "@/shared/utils/cx";
 import { HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
 import { useMyOvertime } from "@/domains/design/work/workApi";
@@ -58,14 +59,23 @@ export default function SalaryDrawer({ row, month, multiplier, onClose }: Salary
             }>
             {loadFailed(detail) ? <LoadError error={detail.error} retry={() => detail.refetch()} what={`${row.name.split(" ")[0]}'s pay`} />
                 : !d ? <SkeletonLines lines={8} />
-                    : <DetailBody detail={d} month={month} multiplier={multiplier} canExcuse={permissions.has(P.HOURS_EXCUSE)} seesWork={permissions.has(P.WORK_ENTRY_VIEW_ALL)} />}
+                    : <DetailBody detail={d} month={month} multiplier={multiplier} canExcuse={permissions.has(P.HOURS_EXCUSE)} seesWork={permissions.has(P.WORK_ENTRY_VIEW_ALL)}
+                        openProject={(id) => canOpen(permissions, "design", `projects/${id}`) ? () => { onClose(); navigate(`/design/projects/${id}`); } : null} />}
         </Drawer>
     );
 }
 
-type BodyProps = { detail: SalaryDetail; month: string; multiplier: number; canExcuse: boolean; seesWork: boolean };
+type BodyProps = {
+    detail: SalaryDetail;
+    month: string;
+    multiplier: number;
+    canExcuse: boolean;
+    seesWork: boolean;
+    /** How to open a project from the list, when this person may. */
+    openProject: (projectId: number) => (() => void) | null;
+};
 
-function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork }: BodyProps) {
+function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openProject }: BodyProps) {
     const s = d.salary;
     const cur = s.currency;
     const ruled = s.expectedMinutes != null;
@@ -148,8 +158,63 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork }: BodyP
                 )}
             </div>
 
+            {s.tracksHours && d.projects.length > 0 && <HoursByProject detail={d} multiplier={multiplier} openProject={openProject} />}
             {s.tracksHours && seesWork && <OvertimeDays userId={s.userId} month={month} />}
         </>
+    );
+}
+
+/** Where the month's hours and overtime went, project by project, and what those hours were paid. */
+function HoursByProject({ detail: d, multiplier, openProject }: { detail: SalaryDetail; multiplier: number; openProject: BodyProps["openProject"] }) {
+    const s = d.salary;
+    return (
+        <div className="mt">
+            <div className="spread">
+                <div className="u">Where the hours went</div>
+                <div className="muted" style={{ fontSize: "11.5px" }}>{d.projects.length} project{d.projects.length === 1 ? "" : "s"}</div>
+            </div>
+            <div className="tbl-wrap mt-s">
+                <table className="tbl tbl-min">
+                    <thead>
+                        <tr>
+                            <th>Project</th>
+                            <th className="r" title="Logged inside their scheduled hours, with overtime that made up missing hours">In hours</th>
+                            <th className="r" title="Overtime left after making up - paid at the overtime rate">Overtime</th>
+                            <th className="r">Paid</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {d.projects.map((p) => {
+                            const open = openProject(p.projectId);
+                            return (
+                                <tr key={`${p.projectId}-${p.currency}`} className={open ? "click" : undefined} {...clickable(open)}>
+                                    <td>
+                                        <div className="row" style={{ gap: 9, minWidth: 0 }}>
+                                            <ProjectTile icon={p.icon} tint={p.tint} size="sm" />
+                                            <div style={{ minWidth: 0 }}>
+                                                <div className="trunc" style={{ fontWeight: 600 }}>{p.title}</div>
+                                                <div className="muted" style={{ fontSize: "11.5px" }}>
+                                                    {p.entries} entr{p.entries === 1 ? "y" : "ies"}{p.madeUpMinutes ? ` · ${fmtH(p.madeUpMinutes)} made up` : ""}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="r mono">{fmtH(p.normalMinutes + p.madeUpMinutes)}</td>
+                                    <td className={p.overtimeMinutes ? "r mono ot-text" : "r mono"}>{p.overtimeMinutes ? fmtH(p.overtimeMinutes) : "-"}</td>
+                                    <td className="r mono">{cash(p.pay, p.currency)}</td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+            <div className="hint mt-s">
+                Hours are priced at their rate on the day worked{multiplier !== 1 ? `, overtime at ×${multiplier}` : ""}.
+                {s.basis === "monthly"
+                    ? " The salary is paid whatever the projects, and its deductions belong to none, so these don't add up to it."
+                    : " Paid breaks belong to no project, so these don't add up to the pay."}
+            </div>
+        </div>
     );
 }
 

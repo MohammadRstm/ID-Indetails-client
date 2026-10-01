@@ -145,6 +145,28 @@ describe("A person's salary", () => {
         expect(within(drawer).getByRole("button", { name: "Open profile" })).toBeInTheDocument();
     });
 
+    it("shows where the hours went, project by project, and opens a project from there", async () => {
+        renderApp("/company/salaries", rana, ...salaryHandlers);
+        const drawer = await openDetails("Sarah Haddad");
+        expect(await within(drawer).findByText("Where the hours went")).toBeInTheDocument();
+        const hq = within(drawer).getByText("Haddad Holdings HQ fit-out").closest("tr") as HTMLElement;
+        expect(hq).toHaveTextContent("14 entries · 6h 40m made up");
+        expect(hq).toHaveTextContent("88h 20m");
+        expect(hq).toHaveTextContent(money.exact(917.32));
+        const villa = within(drawer).getByText("Villa Mounir interiors").closest("tr") as HTMLElement;
+        expect(villa).toHaveTextContent("2h 10m");
+        expect(within(drawer).getByText(/The salary is paid whatever the projects/)).toBeInTheDocument();
+        await userEvent.click(hq);
+        await waitFor(() => expect(window.location.pathname).toBe("/design/projects/1"));
+    });
+
+    it("lists no projects for someone who doesn't log hours", async () => {
+        renderApp("/company/salaries?month=2026-08", rana, ...salaryHandlers);
+        const drawer = await openDetails("Omar Fares");
+        expect(await within(drawer).findByText("How the pay adds up")).toBeInTheDocument();
+        expect(within(drawer).queryByText("Where the hours went")).not.toBeInTheDocument();
+    });
+
     it("prices hourly work with each day's paid break", async () => {
         renderApp("/company/salaries", rana, ...salaryHandlers);
         const drawer = await openDetails("Rami Aoun");

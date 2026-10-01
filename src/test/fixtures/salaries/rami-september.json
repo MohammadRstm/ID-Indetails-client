@@ -239,5 +239,19 @@
       "date": "2026-09-30",
       "requiredMinutes": 420
     }
+  ],
+  "projects": [
+    {
+      "projectId": 2,
+      "title": "Villa Mounir interiors",
+      "icon": "palette",
+      "tint": "#8A5A2B",
+      "entries": 17,
+      "normalMinutes": 7460,
+      "madeUpMinutes": 540,
+      "overtimeMinutes": 0,
+      "pay": 1866.67,
+      "currency": "USD"
+    }
   ]
 }
