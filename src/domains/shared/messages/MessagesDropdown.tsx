@@ -9,6 +9,7 @@ import { cx } from "@/shared/utils/cx";
 import GroupTile from "./GroupTile";
 import { firstName, snippet } from "./messageText";
 import { chatQuery, useConversations, type Conversation } from "./messagesApi";
+import SoundToggle from "./SoundToggle";
 import { loadFailed } from "@/api/queryState";
 import { clickable } from "@/shared/utils/clickable";
 
@@ -22,7 +23,7 @@ export default function MessagesDropdown({ messagesPath, close }: { messagesPath
 
     return (
         <div style={{ width: 356, maxWidth: "80vw" }}>
-            <div className="pop-head"><div className="grow"><b>Messages</b></div></div>
+            <div className="pop-head"><div className="grow"><b>Messages</b></div><SoundToggle /></div>
             <div className="notif-list">
                 {loadFailed(conversations) ? <div style={{ padding: 10 }}><LoadError error={conversations.error} retry={() => conversations.refetch()} what="your messages" /></div>
                     : !conversations.data ? <div style={{ padding: 10 }}><SkeletonLines lines={4} /></div>

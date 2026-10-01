@@ -17,6 +17,8 @@ import Composer from "./Composer";
 import GroupTile from "./GroupTile";
 import { mentionParts, startsRun } from "./messageText";
 import { chatKey, useMarkChatRead, usePresence, useSendMessage, useTeamMembers, useThread, type Chat, type Contact, type Message } from "./messagesApi";
+import { playReceived, playSent } from "./messageSounds";
+import SoundToggle from "./SoundToggle";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
 
@@ -111,6 +113,17 @@ export default function Thread({ chat, person, team, meId }: ThreadProps) {
         if (loaded) markChat(kind === "group" ? { kind, teamId: id } : { kind, userId: id });
     }, [kind, id, newest, loaded, markChat]);
 
+    // someone else's message arriving in the open chat chimes (marking it read keeps the badge from doing so)
+    const seen = useRef<{ key: string; id: number } | null>(null);
+    const latest = messages[messages.length - 1];
+    const fromOthers = !!latest && latest.sender.id !== meId;
+    useEffect(() => {
+        if (!loaded) return;
+        const before = seen.current;
+        if (before && before.key === key && newest > before.id && fromOthers) playReceived();
+        seen.current = { key, id: newest };
+    }, [key, newest, loaded, fromOthers]);
+
     // the newest at the bottom, in view
     useEffect(() => {
         const el = listRef.current;
@@ -153,6 +166,7 @@ export default function Thread({ chat, person, team, meId }: ThreadProps) {
                     </div>
                 ) : null}
                 <div className="grow" />
+                <SoundToggle />
             </div>
             <div className="msg-list" ref={listRef}>
                 {loadFailed(thread) ? <div className="mt"><LoadError error={thread.error} retry={() => thread.refetch()} what="the messages" /></div>
@@ -188,7 +202,11 @@ export default function Thread({ chat, person, team, meId }: ThreadProps) {
                     )}
             </div>
             <Composer key={key} members={chat.kind === "group" ? members.data ?? [] : null} meId={meId} sending={send.isPending} error={send.error}
-                onSend={(body) => send.mutateAsync(body)} />
+                onSend={async (body) => {
+                    const sent = await send.mutateAsync(body);
+                    playSent();
+                    return sent;
+                }} />
         </>
     );
 }
