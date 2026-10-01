@@ -72,6 +72,24 @@ describe("Schedules", () => {
         expect(await screen.findByText("Elie's schedule saved")).toBeInTheDocument();
     });
 
+    it("warn that a schedule changes pay, in the terms of each kind of person", async () => {
+        renderApp("/company/schedules", rana, ...companyPayHandlers);
+        const open = async (name: string) => {
+            await userEvent.click(await screen.findByRole("button", { name: `Edit ${name}'s schedule` }));
+            return screen.findByRole("dialog", { name: `${name}'s schedule` });
+        };
+        let dialog = await open("Elie Khalil");
+        expect(within(dialog).getByRole("note")).toHaveTextContent("This changes Elie's pay from Sep 30.");
+        expect(within(dialog).getByRole("note")).toHaveTextContent("the hours they owe each month - a salary loses the hours still short");
+        expect(within(dialog).getByRole("note")).toHaveTextContent("Past days are paid as they were.");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+        dialog = await open("Nadia Karam");
+        expect(within(dialog).getByRole("note")).toHaveTextContent("which of their hours are normal: time logged outside these hours is overtime");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+        dialog = await open("Joe Hanna");
+        expect(within(dialog).getByRole("note")).toHaveTextContent("how a salary is pro-rated in a month they join or leave, and what an unpaid day off costs");
+    });
+
     it("put someone back on the company week from tomorrow when a change already starts today", async () => {
         const { sent, handler } = saving();
         renderApp("/company/schedules", rana, handler,

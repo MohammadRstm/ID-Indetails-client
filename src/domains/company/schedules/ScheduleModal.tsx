@@ -13,6 +13,18 @@ import { daysText, hoursText, weekOrder } from "@/domains/shared/settings/workin
 import { useSetSchedule, type PersonSchedule } from "./schedulesApi";
 import { companyWeekOf, sameWeek, weekMinutes, weekOf, workDaysOf, type Week } from "./weekDays";
 
+/** What a schedule decides about this person's pay, from the rules Salaries uses. */
+function payEffect(person: PersonSchedule, multiplier: number): string {
+    const overtime = `time logged outside these hours is overtime${multiplier !== 1 ? `, paid at ×${multiplier}` : ""}`;
+    if (person.role === "super_admin" || person.domain === "execution") {
+        return "Their working days decide how a salary is pro-rated in a month they join or leave, and what an unpaid day off costs.";
+    }
+    if (person.role === "employee") {
+        return `Their schedule sets the hours they owe each month - a salary loses the hours still short at the month's end - and ${overtime}.`;
+    }
+    return `It decides which of their hours are normal: ${overtime}.`;
+}
+
 type ScheduleModalProps = {
     person: PersonSchedule;
     companyWeek: Schemas["WorkingTimePolicyResponse"];
@@ -67,6 +79,10 @@ export default function ScheduleModal({ person, companyWeek, onClose }: Schedule
                     <button className="btn btn-primary" disabled={save.isPending} onClick={() => submit(false)}>Save</button>
                 </>
             }>
+            <div className="banner hold" role="note" style={{ marginBottom: 12 }}>
+                <Icon name="alert" />
+                <div><b>This changes {first}'s pay</b> from {fmtDate(from)}. {payEffect(person, companyWeek.overtimeMultiplier)} Past days are paid as they were.</div>
+            </div>
             <div className="row wrap" style={{ gap: 8, marginBottom: 10 }}>
                 <span className="muted" style={{ fontSize: 12 }}>{person.isOwn ? "Has their own schedule." : "Follows the company default - changing any day gives them their own."}</span>
                 <span className="grow" />

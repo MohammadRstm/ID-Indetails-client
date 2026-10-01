@@ -9,7 +9,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { SwitchRow, Toggle } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import TimeField from "@/shared/components/Forms/TimeField";
-import { companyToday, DAYS, fmtH } from "@/shared/format/time";
+import { companyToday, DAYS, fmtDate, fmtH } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useDomainSettings, type DomainSettings } from "../../design/work/workApi";
@@ -106,6 +106,15 @@ function WeekEditor({ wt }: { wt: WorkingTime }) {
                 <span className="muted" style={{ fontSize: 12 }}>{fmtH(required)} required a day{base.breakMinutes && end - start > 360 ? ` after the ${fmtH(base.breakMinutes)} break` : ""}</span>
                 {changed && <button className="btn btn-sm btn-primary" disabled={!days.length || setWt.isPending} onClick={save}>Save</button>}
             </div>
+            {changed && days.length > 0 && (
+                <div className="banner hold mt-s" role="note">
+                    <Icon name="alert" />
+                    <div>
+                        <b>This changes pay</b> for everyone on the company week from {fmtDate(change.from)}: the hours they owe each month, which hours count as overtime,
+                        and how a salary is pro-rated. Past days are paid as they were.
+                    </div>
+                </div>
+            )}
             {days.length === 0 && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" />Pick at least one working day.</div>}
             {setWt.error != null && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(setWt.error)}</div>}
         </div>
