@@ -6,7 +6,8 @@ import { usePermissions } from "@/app/permissions/usePermissions";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
-import { plural } from "@/shared/format/labels";
+import { FieldError } from "@/shared/components/Forms/Field";
+import { DOMAIN_LABEL, plural } from "@/shared/format/labels";
 import Icon from "@/shared/icons/Icon";
 import { useTeams } from "../../design/people/peopleWorkApi";
 import { useDeleteTeam, useSaveTeam, type Team } from "./settingsApi";
@@ -14,10 +15,11 @@ import { saved } from "./settingsToasts";
 import { loadFailed } from "@/api/queryState";
 
 /**
- * The business's teams: what each person belongs to, shown on their profile and in the schedules. The
- * prototype had them fixed; the API lets them be added, renamed and removed (team:manage).
+ * A business's teams: what each person belongs to, shown on their profile and in the schedules. The
+ * prototype had them fixed; the API lets them be added, renamed and removed (team:manage). Shown in the
+ * company overview for both businesses (named), and in a business's settings for its admins.
  */
-export default function TeamsSettings({ domain }: { domain: Domain }) {
+export default function TeamsSettings({ domain, named }: { domain: Domain; named?: boolean }) {
     const permissions = usePermissions();
     const canEdit = permissions.has(P.TEAM_MANAGE);
     const teams = useTeams(domain);
@@ -27,7 +29,10 @@ export default function TeamsSettings({ domain }: { domain: Domain }) {
     return (
         <div className="panel">
             <div className="panel-head">
-                <div><div className="panel-title">Teams</div><div className="panel-sub">Who works with whom. A person's team is shown on their profile and groups the schedules.</div></div>
+                <div>
+                    <div className="panel-title">{named ? `${DOMAIN_LABEL[domain]} teams` : "Teams"}</div>
+                    <div className="panel-sub">Who works with whom. A person's team is shown on their profile and groups the schedules.</div>
+                </div>
                 {canEdit && !adding && <div className="panel-tools"><button className="btn btn-sm" onClick={() => setAdding(true)}><Icon name="plus" />Add team</button></div>}
             </div>
             <div className="panel-body">
@@ -50,11 +55,14 @@ function TeamRow({ domain, team, canEdit, onDone }: { domain: Domain; team: Team
     const remove = useDeleteTeam();
     const [name, setName] = useState<string | null>(team ? null : "");
     const [confirming, setConfirming] = useState(false);
+    const [tried, setTried] = useState(false);
     const editing = name != null;
     const error = save.error ?? remove.error;
+    const nameError = tried && !name?.trim() ? "Give the team a name." : undefined;
 
     function submit() {
-        if (!name?.trim()) return;
+        if (save.isPending) return;
+        if (!name?.trim()) return setTried(true);
         save.mutate({ id: team?.id ?? null, name: name.trim(), domain }, {
             onSuccess: () => { saved(team ? "Team renamed" : "Team added", name.trim())(); setName(null); onDone?.(); },
         });
@@ -64,8 +72,11 @@ function TeamRow({ domain, team, canEdit, onDone }: { domain: Domain; team: Team
         <div className="switch-row">
             <div className="grow">
                 {editing ? (
-                    <input className="input" autoFocus aria-label="Team name" placeholder="e.g. Interiors" value={name} maxLength={100}
-                        onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") { setName(team ? null : ""); onDone?.(); } }} />
+                    <>
+                        <input className="input" autoFocus aria-label="Team name" placeholder={domain === "execution" ? "e.g. Finishing crew" : "e.g. Interiors"} value={name} maxLength={100}
+                            onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") { setName(team ? null : ""); onDone?.(); } }} />
+                        <FieldError message={nameError} />
+                    </>
                 ) : (
                     <>
                         <div style={{ fontWeight: 600 }}>{team!.name}</div>
@@ -76,8 +87,8 @@ function TeamRow({ domain, team, canEdit, onDone }: { domain: Domain; team: Team
             </div>
             {canEdit && (editing ? (
                 <div className="row" style={{ gap: 6 }}>
-                    <button className="btn btn-sm btn-primary" disabled={!name?.trim() || save.isPending} onClick={submit}>{team ? "Save" : "Add"}</button>
-                    <button className="btn btn-sm" onClick={() => { setName(team ? null : ""); save.reset(); onDone?.(); }}>Cancel</button>
+                    <button className="btn btn-sm btn-primary" disabled={save.isPending} onClick={submit}>{team ? "Save" : "Add"}</button>
+                    <button className="btn btn-sm" onClick={() => { setName(team ? null : ""); setTried(false); save.reset(); onDone?.(); }}>Cancel</button>
                 </div>
             ) : confirming ? (
                 <div className="row" style={{ gap: 6 }}>

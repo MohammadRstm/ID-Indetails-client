@@ -9,6 +9,8 @@ import {
     ClientsPage,
     CompanyExpensesPage,
     CompanyOverviewPage,
+    CompanyProfilePage,
+    CompanySettingsPage,
     EmployeeProjectRoute,
     EmployeeProjectsRoute,
     FinancialsRoute,
@@ -188,6 +190,9 @@ export const companyRoutes: CompanyRoute[] = [
     { path: "salaries", nav: { label: "Salaries", icon: "people" }, element: <SalariesPage />, access: (p) => p.has(P.SALARY_VIEW) },
     { path: "project-pay", nav: { label: "Project pay", icon: "briefcase" }, element: <ProjectPayPage />, access: (p) => p.has(P.SALARY_VIEW) },
     { path: "schedules", nav: { label: "Schedules", icon: "calendar" }, element: <SchedulesPage />, access: (p) => p.has(P.SCHEDULE_MANAGE) },
+    // the company's own settings and each business's, for whoever reaches the company area
+    { path: "settings", nav: { label: "Settings", icon: "settings", section: "workspace" }, element: <CompanySettingsPage />, access: (p) => p.has(P.COMPANY_VIEW) && p.hasAny(...SETTINGS_CODES) },
+    { path: "profile", element: <CompanyProfilePage />, access: () => true },
     { path: "notifications", element: <NotificationsPage />, access: () => true },
     { path: "messages", element: <MessagesPage />, access: () => true },
 ];
@@ -221,6 +226,6 @@ export function domainNav(p: Permissions, domain: Domain): NavItem[] {
 export function companyNav(p: Permissions): NavItem[] {
     return companyRoutes.flatMap((route) => {
         if (!route.nav || !route.access(p)) return [];
-        return [{ key: route.path, path: route.path, label: route.nav.label as string, icon: route.nav.icon }];
+        return [{ key: route.path, path: route.path, label: route.nav.label as string, icon: route.nav.icon, section: route.nav.section }];
     });
 }

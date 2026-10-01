@@ -29,6 +29,21 @@ function recorder(method: "put" | "post" | "delete", path: string, reply: object
 }
 
 describe("Settings", () => {
+    it("are in the company area too, with the business picked for its own sections", async () => {
+        const asked: string[] = [];
+        renderApp("/company/settings?section=finance", rana,
+            http.get("/api/billing-settings/:domain", ({ params }) => { asked.push(String(params.domain)); return HttpResponse.json(billing.settings); }),
+            ...settingsHandlers);
+        expect(await screen.findByText("Invoicing and payments")).toBeInTheDocument();
+        await waitFor(() => expect(asked).toEqual(["design"]));
+        await userEvent.click(screen.getByRole("tab", { name: "Execution" }));
+        await waitFor(() => expect(asked).toEqual(["design", "execution"]));
+        // the company's own section is the same for both
+        await userEvent.click(screen.getByRole("button", { name: "Company" }));
+        expect(await screen.findByLabelText("Company name")).toBeInTheDocument();
+        expect(screen.queryByRole("tablist", { name: "Business" })).not.toBeInTheDocument();
+    });
+
     it("opens on the company, which only a super admin can change", async () => {
         renderApp("/design/settings", nadia, ...settingsHandlers);
         expect(await screen.findByText("Only a super admin can change these.")).toBeInTheDocument();
