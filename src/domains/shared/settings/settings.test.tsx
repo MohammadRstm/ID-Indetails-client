@@ -128,6 +128,14 @@ describe("the working time", () => {
         }]));
     });
 
+    it("warns that changing the company week changes everyone's pay", async () => {
+        renderApp(page("time"), rana, ...settingsHandlers);
+        const fri = await screen.findByRole("button", { name: "Fri" });
+        expect(screen.queryByRole("note")).not.toBeInTheDocument();
+        await userEvent.click(fri);
+        expect(screen.getByRole("note")).toHaveTextContent("This changes pay for everyone on the company week from Sep 30");
+    });
+
     it("applies a second change made today from tomorrow, on top of the first", async () => {
         const today = { ...settings.workingTime.current, id: 2, effectiveFrom: "2026-09-30", breakMinutes: 30 };
         const post = recorder("post", "/api/company/working-time", settings.workingTime);
