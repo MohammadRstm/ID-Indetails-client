@@ -1,29 +1,16 @@
-# Weekly update pull requests, grouped so each ecosystem sends one. They go through CI like any other change and
-# are merged by hand: nothing upgrades itself.
+# Security updates only. Dependabot opens a pull request when a package this repository uses has a known
+# vulnerability with a fix (the repository's "Dependabot security updates" setting, which is on). Routine version
+# updates are off: open-pull-requests-limit 0 stops them. Every pull request goes through CI and is merged by hand.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
-    groups:
-      npm:
-        patterns: ["*"]
-        update-types: [minor, patch]
-
-  - package-ecosystem: docker
-    directory: /
-    schedule:
-      interval: weekly
-    groups:
-      base-images:
-        patterns: ["*"]
+    open-pull-requests-limit: 0
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
-    groups:
-      actions:
-        patterns: ["*"]
+    open-pull-requests-limit: 0
