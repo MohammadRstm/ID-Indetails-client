@@ -10,11 +10,12 @@ import { addDays, companyToday, fmtDateY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useClient } from "../clients/clientsApi";
-import { useSendInvoice, type Invoice } from "./billingApi";
+import { useBillingSetupMissing, useSendInvoice, type Invoice } from "./billingApi";
+import BillingSetupNotice from "./BillingSetupNotice";
 import { channelsOf, waLink } from "./channels";
 
 /**
- * Sending an invoice (the prototype's P.SendModal): by email, which Hourline sends with the PDF attached,
+ * Sending an invoice (the prototype's P.SendModal): by email, which ID InDetails sends with the PDF attached,
  * on WhatsApp, which opens the chat with the message ready, or as a PDF the admin sends themselves. A
  * draft is issued on the way, which numbers it and starts the payment clock.
  */
@@ -28,6 +29,9 @@ export default function SendInvoiceModal({ invoice: inv, onClose }: { invoice: I
     const chosenKey = pick ?? channels[0]?.key ?? "download";
     const chosen = channels.find((c) => c.key === chosenKey) ?? null;
     const first = !inv.issuedAt;
+    // a draft is numbered on the way out, which needs the domain's invoicing set up
+    const notSetUp = useBillingSetupMissing(inv.domain);
+    const blocked = first && notSetUp;
     const firstName = (inv.billToName ?? inv.client.displayName).split(" ")[0];
     const number = inv.number ?? "(numbered when sent)";
     const amount = money.exact(inv.balance ?? inv.total);
@@ -73,12 +77,13 @@ export default function SendInvoiceModal({ invoice: inv, onClose }: { invoice: I
                             : first ? "Sending issues the invoice and starts the payment clock." : "Already sent - this records another delivery."}
                     </div>
                     <button className="btn" disabled={send.isPending} onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" disabled={send.isPending} onClick={submit}>
+                    <button className="btn btn-primary" disabled={send.isPending || blocked} onClick={submit}>
                         <Icon name={chosen?.channel === "whatsapp" ? "send" : chosen ? "mail" : "download"} />
                         {send.isPending ? "Sending…" : chosen?.channel === "whatsapp" ? "Open WhatsApp" : chosen ? "Send email" : "Download"}
                     </button>
                 </>
             }>
+            {first && <BillingSetupNotice domain={inv.domain} className="mb" />}
             <div className="u" style={{ marginBottom: 6 }}>How should it reach {firstName}?</div>
             {client && channels.length === 0 && (
                 <div className="banner hold">
@@ -129,8 +134,8 @@ export default function SendInvoiceModal({ invoice: inv, onClose }: { invoice: I
                 <div className="grow">
                     <b>How it is sent</b>
                     <div className="muted" style={{ fontSize: "11.5px" }}>
-                        Email goes out from Hourline with the invoice attached as a PDF. The WhatsApp link opens the chat with the message ready,
-                        and you send it from your own account. Either way, Hourline records who it went to and when.
+                        Email goes out from ID InDetails with the invoice attached as a PDF. The WhatsApp link opens the chat with the message ready,
+                        and you send it from your own account. Either way, ID InDetails records who it went to and when.
                     </div>
                 </div>
             </div>

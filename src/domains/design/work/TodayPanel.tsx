@@ -164,7 +164,7 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                         </div>
                         <div className="field">
                             <label className="label" htmlFor="dc-desc">What did you work on?</label>
-                            <input id="dc-desc" className="input" placeholder="e.g. Built the pricing table for tablet" value={desc}
+                            <input id="dc-desc" className="input" placeholder="e.g. Revised the ground-floor plan" value={desc}
                                 onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)} />
                         </div>
                     </div>
@@ -177,7 +177,7 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                         <span className="grow">
                             {error || save.error ? <span className="err"><Icon name="alert" />{error ?? errorMessage(save.error)}</span> : null}
                         </span>
-                        <button type="submit" className="btn btn-primary" disabled={blocked}><Icon name="plus" />Add log</button>
+                        <button type="submit" className="btn btn-primary" disabled={!slot || attachment.uploading || save.isPending}><Icon name="plus" />Add log</button>
                     </div>
                 </form>
             </div>

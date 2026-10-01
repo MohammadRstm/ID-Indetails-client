@@ -160,7 +160,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayEnd
                             : <span className="muted">{fmtDayDate(startAt)} · <span className="mono">{fmtRange(startAt, endAt)}</span>{nextDay ? " (ends next day)" : ""}</span>}
                     </div>
                     <button className="btn" onClick={closeLogWork}>Cancel</button>
-                    <button className="btn btn-primary" disabled={blocked} onClick={() => submit()}>
+                    <button className="btn btn-primary" disabled={attachment.uploading || save.isPending} onClick={() => submit()}>
                         {ed ? "Save changes" : `Log ${fmtDur(duration)}`}{ot ? ` · ${fmtDur(ot)} overtime` : ""}
                     </button>
                 </>
@@ -181,7 +181,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayEnd
 
                 <div className="field mt">
                     <label className="label" htmlFor="lw-desc">What did you work on?</label>
-                    <textarea id="lw-desc" className="textarea" autoFocus placeholder="e.g. Implemented authentication middleware and fixed refresh-token handling"
+                    <textarea id="lw-desc" className="textarea" autoFocus placeholder="e.g. Detailed the kitchen joinery drawings for the client review"
                         value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)}
                         onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit(); }} />
                 </div>

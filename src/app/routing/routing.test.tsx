@@ -28,7 +28,7 @@ describe("the route table", () => {
         expect(navLabels(personas.superAdmin, "execution"))
             .toEqual(["Dashboard", "Projects", "Clients", "Financials", "Meetings", "Settings"]);
         expect(companyNav(permissionsOf(personas.superAdmin)).map((i) => i.label))
-            .toEqual(["Overview", "Expenses", "Salaries", "Project pay", "Schedules"]);
+            .toEqual(["Overview", "Expenses", "Salaries", "Project pay", "Schedules", "Settings"]);
         expect(companyNav(permissionsOf(personas.designAdmin))).toEqual([]);
     });
 

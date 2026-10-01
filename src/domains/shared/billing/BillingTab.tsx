@@ -83,8 +83,8 @@ export default function BillingTab({ domain, tiles }: { domain: Domain; tiles: M
                             <Columns height={210} labelEvery={Math.max(1, Math.ceil(b.monthly.length / 7))} seriesLabel="Invoiced" ghostLabel="Collected" format={(v) => money.short(v)}
                                 data={b.monthly.map((m) => ({ label: MONTHS[+m.month.slice(5, 7) - 1], tip: fmtMonthY(m.month), value: m.invoiced, ghost: m.collected }))} />
                             <div className="chart-note">
-                                Both bars are cash movements: the solid bar is what we asked for that month, the pale bar is what arrived.
-                                Neither is revenue - revenue is recognised as the work is done, on the Overview tab.
+                                The solid bar is what we asked for that month, the pale bar is what arrived. What arrived is the revenue the
+                                Overview tab counts; an invoice is only a request.
                             </div>
                         </>
                     )}
@@ -118,7 +118,7 @@ export default function BillingTab({ domain, tiles }: { domain: Domain; tiles: M
                     {!b ? <SkeletonLines lines={4} /> : (
                         <>
                             <RankBars format={(v) => money.short(v)} unit="Collected" showPct items={b.byMethod.map((m) => ({ label: PAYMENT_METHODS[m.method] ?? m.method, value: m.amount }))} />
-                            <div className="chart-note">Hourline never touches the money: it records what arrived, how it arrived, and against which invoice.</div>
+                            <div className="chart-note">ID InDetails never touches the money: it records what arrived, how it arrived, and against which invoice.</div>
                         </>
                     )}
                 </Figure>

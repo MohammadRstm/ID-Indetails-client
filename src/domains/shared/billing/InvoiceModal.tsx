@@ -7,6 +7,7 @@ import { CostRow } from "@/shared/components/Data/Money";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
+import { FieldError } from "@/shared/components/Forms/Field";
 import Modal from "@/shared/components/Overlays/Modal";
 import { PAYMENT_METHODS } from "@/shared/format/labels";
 import { money } from "@/shared/format/money";
@@ -42,6 +43,7 @@ export default function InvoiceModal({ invoiceId, onClose, onSend, onEdit, onPay
     const discard = useDiscardInvoice();
     const [confirmVoid, setConfirmVoid] = useState(false);
     const [reason, setReason] = useState("");
+    const [voidTried, setVoidTried] = useState(false);
 
     if (!inv) {
         return (
@@ -129,9 +131,10 @@ export default function InvoiceModal({ invoiceId, onClose, onSend, onEdit, onPay
                             ) : !permissions.has(P.INVOICE_VOID) ? null : confirmVoid ? (
                                 <div className="mt-s">
                                     <input className="input" autoFocus placeholder="Why is it being voided?" aria-label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} />
+                                    <FieldError message={voidTried && !reason.trim() ? "Say why it is being voided: the reason stays in the register." : undefined} />
                                     <div className="row mt-s" style={{ gap: 6 }}>
                                         <button className="btn btn-sm" onClick={() => setConfirmVoid(false)}>Cancel</button>
-                                        <button className="btn btn-sm btn-danger" disabled={!reason.trim() || voidIt.isPending} onClick={() => voidIt.mutate({ id: inv.id, reason: reason.trim() }, {
+                                        <button className="btn btn-sm btn-danger" disabled={voidIt.isPending} onClick={() => !reason.trim() ? setVoidTried(true) : voidIt.mutate({ id: inv.id, reason: reason.trim() }, {
                                             onSuccess: () => { toast({ text: `${inv.number} voided`, sub: "The number stays in the register with its reason.", icon: "x" }); onClose(); },
                                         })}>Void {inv.number}</button>
                                     </div>

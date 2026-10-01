@@ -18,7 +18,7 @@ export default function AuthLayout({ title, sub, children }: AuthLayoutProps) {
                     <div className="row" style={{ gap: 10 }}>
                         <Logo size={34} />
                         <div>
-                            <div className="logo-name" style={{ fontSize: 16 }}>Hourline</div>
+                            <div className="logo-name" style={{ fontSize: 16 }}>ID InDetails</div>
                             <div className="logo-sub">{branding.data?.name ?? ""}</div>
                         </div>
                     </div>

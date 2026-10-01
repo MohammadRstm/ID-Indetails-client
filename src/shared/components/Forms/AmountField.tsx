@@ -16,13 +16,15 @@ type AmountFieldProps = {
     r?: number;
     c?: number;
     onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
+    /** Leaving the field, for forms that say what is wrong once a field has been filled in. */
+    onBlur?: () => void;
 };
 
 const shown = (value: number | null) => (value === 0 || value ? String(value) : "");
 const parsed = (text: string) => (text === "" ? 0 : Number(text) || 0);
 
 /** An amount with its currency sign and an optional USD / LBP picker (the prototype's UI.AmountField). */
-export default function AmountField({ value, onChange, currency = "USD", onCurrency, currencies = true, id, placeholder = "0", r, c, onKeyDown, ...rest }: AmountFieldProps) {
+export default function AmountField({ value, onChange, currency = "USD", onCurrency, currencies = true, id, placeholder = "0", r, c, onKeyDown, onBlur, ...rest }: AmountFieldProps) {
     // The text as typed, so "42." and "42.50" stay as they are while the amount they give is handed up;
     // an amount set from outside replaces it.
     const [text, setText] = useState(() => shown(value));
@@ -45,6 +47,7 @@ export default function AmountField({ value, onChange, currency = "USD", onCurre
                 data-r={r}
                 data-c={c}
                 onKeyDown={onKeyDown}
+                onBlur={onBlur}
                 onChange={(e) => {
                     const raw = e.target.value.replace(/[^0-9.]/g, "");
                     setText(raw);

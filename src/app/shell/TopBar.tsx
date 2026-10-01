@@ -11,6 +11,7 @@ import NotificationBell from "@/domains/shared/notifications/NotificationBell";
 import TimerControl from "@/domains/design/work/TimerControl";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import { myProfilePath } from "./profilePath";
 import { useUnreadBadges } from "./shellQueries";
 import type { ShellArea } from "./useArea";
 
@@ -25,6 +26,7 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
     const base = area.kind === "domain" ? `/${area.domain}` : "/company";
     const me = { name: fullName(user), photoFileId: user.photoFileId, online: true };
     const unreadMessages = badges.messages?.unread ?? 0;
+    const profilePath = myProfilePath(permissions, area, user.id);
 
     return (
         <header className="top">
@@ -84,8 +86,8 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
                             <button className="pop-item" onClick={() => { close(); navigate(`${base}/notifications`); }}>
                                 <Icon name="bell" />Notifications {badges.notifications > 0 && <span className="chk num">{badges.notifications}</span>}
                             </button>
-                            {!permissions.isAdmin && area.kind === "domain" && (
-                                <button className="pop-item" onClick={() => { close(); navigate(`${base}/profile`); }}>
+                            {profilePath && (
+                                <button className="pop-item" onClick={() => { close(); navigate(profilePath); }}>
                                     <Icon name="user" />My profile
                                 </button>
                             )}

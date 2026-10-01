@@ -209,7 +209,7 @@ function ProjectCard({ project: p, today, canLog, paused }: { project: MyProject
                         <span className="pcard-title trunc">{p.title}</span>
                         {isNew && <span className="badge badge-new">New</span>}
                     </div>
-                    {p.clientName && <div className="muted trunc" style={{ fontSize: "11.5px", marginTop: 2 }}>for {p.clientName}</div>}
+                    {(p.clientName || p.location) && <div className="muted trunc" style={{ fontSize: "11.5px", marginTop: 2 }}>{[p.clientName && `for ${p.clientName}`, p.location].filter(Boolean).join(" · ")}</div>}
                     <div className="muted clamp2" style={{ fontSize: "11.5px", marginTop: 2 }}>{p.description}</div>
                 </div>
                 <StatusBadge status={p.status} />

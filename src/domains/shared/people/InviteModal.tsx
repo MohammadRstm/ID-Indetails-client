@@ -9,13 +9,16 @@ import { canOpen } from "@/app/routing/routeTable";
 import { useCompanySettings } from "@/app/shell/shellQueries";
 import { StatusBadge } from "@/shared/components/Data/Pills";
 import AmountField from "@/shared/components/Forms/AmountField";
+import { FieldError } from "@/shared/components/Forms/Field";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { DOMAIN_LABEL } from "@/shared/format/labels";
+import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
+import { isEmail } from "@/shared/utils/email";
 import { HOURS_PER_MONTH, monthlyToHourly } from "../../design/pay/payRules";
 import { useInvite, useTeams } from "../../design/people/peopleWorkApi";
 
@@ -33,12 +36,20 @@ const nameFromEmail = (email: string) => email.split("@")[0].replace(/[._-]+/g, 
  * Add employee (the prototype's P.AddEmployee): they get an invitation and appear in the employee list
  * straight away. They give their own name when they accept.
  */
-export default function InviteModal({ domain, initialRole = "employee", onClose }: { domain: Domain; initialRole?: Role; onClose: () => void }) {
+export default function InviteModal({ domain: fixed, initialRole = "employee", onClose }: {
+    /** The business they join; null from the company area, where it is chosen here. */
+    domain: Domain | null;
+    initialRole?: Role;
+    onClose: () => void;
+}) {
     const navigate = useNavigate();
     const permissions = usePermissions();
     const company = useCompanySettings().data;
-    const teams = useTeams(domain).data ?? [];
     const invite = useInvite();
+    const errors = useFormErrors();
+    const [chosen, setChosen] = useState<Domain>("design");
+    const domain = fixed ?? chosen;
+    const teams = useTeams(domain).data ?? [];
     const design = domain === "design";
     const roles: Role[] = ["employee", "admin", ...(permissions.has(P.EMPLOYEE_INVITE_SUPER_ADMIN) ? ["super_admin" as const] : [])];
     const [email, setEmail] = useState("");
@@ -52,11 +63,20 @@ export default function InviteModal({ domain, initialRole = "employee", onClose 
     const [sent, setSent] = useState<Schemas["InvitationResponse"] | null>(null);
     const monthly = basis === "monthly";
     const setsPay = role === "employee" && permissions.has(P.EMPLOYEE_PAY_MANAGE);
-    const valid = /\S+@\S+\.\S+/.test(email.trim()) && (!setsPay || amount > 0);
+    const emailError = !email.trim() ? "Enter their work email." : !isEmail(email) && "Enter an email like name@company.com.";
+    const payError = setsPay && !(amount > 0) && `Enter their pay ${monthly ? "per month" : "per hour"}.`;
     const team = teams.find((t) => String(t.id) === teamId);
 
+    function choose(next: Domain) {
+        // another business: its own teams, and its usual way of paying
+        setChosen(next);
+        setTeamId("");
+        setBasis(next === "design" ? "hourly" : "monthly");
+    }
+
     function send() {
-        if (!valid) return;
+        if (invite.isPending) return;
+        if (emailError || payError) return errors.tried();
         invite.mutate({
             email: email.trim(), role, domainCode: role === "super_admin" ? null : domain, teamId: teamId ? +teamId : null,
             position: position.trim() || null, pay: setsPay ? { basis, amount, currency } : null,
@@ -86,7 +106,7 @@ export default function InviteModal({ domain, initialRole = "employee", onClose 
                 <div className="panel" style={{ background: "var(--surface-2)" }}>
                     <div className="panel-body">
                         <div className="muted" style={{ fontSize: 11 }}>To: {sent.email}</div>
-                        <div style={{ fontWeight: 650, marginTop: 6 }}>You have been invited to Hourline</div>
+                        <div style={{ fontWeight: 650, marginTop: 6 }}>You have been invited to ID InDetails</div>
                         <p className="sec mt-s" style={{ fontSize: "12.5px" }}>
                             You were added to {company?.name ?? "the company"}. Accept the invitation, set your name and password, and you can see the projects you work on.
                         </p>
@@ -98,12 +118,12 @@ export default function InviteModal({ domain, initialRole = "employee", onClose 
     }
 
     return (
-        <Modal title="Add employee" sub="They get an invitation and appear in the employee list straight away." onClose={onClose}
+        <Modal title={fixed ? "Add employee" : "Add person"} sub={`They get an invitation and appear in the ${fixed ? "employee" : "people"} list straight away.`} onClose={onClose}
             foot={
                 <>
                     <div className="grow">{invite.error ? <span className="err"><Icon name="alert" />{errorMessage(invite.error)}</span> : null}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" disabled={!valid || invite.isPending} onClick={send}>Send invitation</button>
+                    <button className="btn btn-primary" disabled={invite.isPending} onClick={send}>{invite.isPending ? "Sending…" : "Send invitation"}</button>
                 </>
             }>
             <div className="row" style={{ gap: 14, alignItems: "flex-start" }}>
@@ -114,12 +134,14 @@ export default function InviteModal({ domain, initialRole = "employee", onClose 
                 <div className="grow stack">
                     <div className="field">
                         <label className="label" htmlFor="ae-email">Work email</label>
-                        <input id="ae-email" className="input" type="email" autoFocus placeholder="name@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                        <input id="ae-email" className="input" type="email" autoFocus placeholder="name@company.com" value={email}
+                            onChange={(e) => setEmail(e.target.value)} onBlur={errors.touch("email")} />
+                        <FieldError message={errors.show("email", emailError)} />
                     </div>
                     <div className="grid g-2">
                         <div className="field">
                             <label className="label" htmlFor="ae-pos">Position</label>
-                            <input id="ae-pos" className="input" placeholder="e.g. Product Designer" value={position} onChange={(e) => setPosition(e.target.value)} />
+                            <input id="ae-pos" className="input" placeholder={design ? "e.g. Interior Architect" : "e.g. Site Engineer"} value={position} onChange={(e) => setPosition(e.target.value)} />
                         </div>
                         <div className="field">
                             <label className="label" htmlFor="ae-team">Team</label>
@@ -134,8 +156,9 @@ export default function InviteModal({ domain, initialRole = "employee", onClose 
                             </div>
                             <div className="grid g-2 mt-s">
                                 <div className="field">
-                                    <AmountField id="ae-rate" value={amount} currency={currency} onChange={setAmount} onCurrency={setCurrency} />
-                                    <div className="hint">{monthly ? "Monthly salary." : "Paid per hour worked."} Never shown to the employee.</div>
+                                    <AmountField id="ae-rate" value={amount} currency={currency} onChange={setAmount} onCurrency={setCurrency} onBlur={errors.touch("pay")} />
+                                    {errors.show("pay", payError) ? <FieldError message={errors.show("pay", payError)} />
+                                        : <div className="hint">{monthly ? "Monthly salary." : "Paid per hour worked."} Never shown to the employee.</div>}
                                 </div>
                                 <div className="field">
                                     <div className="u">{monthly ? "Works out at" : "A full month is"}</div>
@@ -153,7 +176,7 @@ export default function InviteModal({ domain, initialRole = "employee", onClose 
                         <Segmented value={role} onChange={setRole} aria-label="Access" options={roles.map((r) => ({ value: r, label: ACCESS[r].label }))} />
                         <div className="hint">{ACCESS[role].sub}</div>
                     </div>
-                    {role !== "super_admin" && (
+                    {role !== "super_admin" && (fixed ? (
                         <div className="field">
                             <label className="label">Domain</label>
                             <div className="row" style={{ gap: 8, paddingTop: 2 }}>
@@ -161,7 +184,13 @@ export default function InviteModal({ domain, initialRole = "employee", onClose 
                                 <span className="hint">They join the business you are managing. Only a super admin can move someone between businesses.</span>
                             </div>
                         </div>
-                    )}
+                    ) : (
+                        <div className="field">
+                            <label className="label">Business they join</label>
+                            <Segmented value={domain} onChange={choose} aria-label="Business they join"
+                                options={(["design", "execution"] as Domain[]).map((d) => ({ value: d, label: DOMAIN_LABEL[d] }))} />
+                        </div>
+                    ))}
                 </div>
             </div>
         </Modal>

@@ -11,6 +11,7 @@ import Popover from "@/shared/components/Overlays/Popover";
 import Icon from "@/shared/icons/Icon";
 import { openLogWork } from "@/domains/design/work/logWorkStore";
 import { cx } from "@/shared/utils/cx";
+import { myProfilePath } from "./profilePath";
 import { useCompanySettings, useNavCounts } from "./shellQueries";
 import type { ShellArea } from "./useArea";
 
@@ -33,7 +34,7 @@ export default function Sidebar({ area }: { area: ShellArea }) {
     // Design employees log work from anywhere
     const canLog = domain === "design" && !permissions.isAdmin && permissions.has(P.WORK_ENTRY_CREATE);
     const peopleItem = items.find((item) => item.key === "people");
-    const profileItem = items.find((item) => item.key === "profile");
+    const profilePath = myProfilePath(permissions, area, user.id);
     const settingsItem = workspace.find((item) => item.key === "settings");
 
     const countOf = (item: NavItem) => (item.count ? counts[item.count] : undefined);
@@ -57,7 +58,7 @@ export default function Sidebar({ area }: { area: ShellArea }) {
             <div className="side-head">
                 <Logo />
                 <div className="logo-text">
-                    <div className="logo-name">Hourline</div>
+                    <div className="logo-name">ID InDetails</div>
                     <div className="logo-sub">{company.data?.name ?? ""}</div>
                 </div>
             </div>
@@ -119,8 +120,8 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                                     <Icon name="user" />Browse employees
                                 </button>
                             )}
-                            {!permissions.isAdmin && profileItem && (
-                                <button className="pop-item" onClick={() => { close(); navigate(`${base}/profile`); }}>
+                            {profilePath && (
+                                <button className="pop-item" onClick={() => { close(); navigate(profilePath); }}>
                                     <Icon name="user" />My profile
                                 </button>
                             )}

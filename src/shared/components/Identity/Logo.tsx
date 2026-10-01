@@ -1,6 +1,6 @@
 import { useBranding } from "./useBranding";
 
-/** The company logo when one is uploaded, otherwise Hourline's mark. */
+/** The company logo when one is uploaded, otherwise the ID InDetails mark. */
 export default function Logo({ size = 27 }: { size?: number }) {
     const branding = useBranding();
     if (branding.data?.hasLogo) {

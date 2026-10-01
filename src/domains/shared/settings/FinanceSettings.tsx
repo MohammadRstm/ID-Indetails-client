@@ -11,8 +11,11 @@ import DateInput from "@/shared/components/Forms/DateInput";
 import { SwitchRow } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import { addDays, companyToday, fmtDateY, fmtNumber } from "@/shared/format/time";
+import { FieldError } from "@/shared/components/Forms/Field";
+import { DOMAIN_LABEL } from "@/shared/format/labels";
+import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
-import { useBillingSettings, type BillingSettings } from "../billing/billingApi";
+import { billingSettingsMissing, useBillingSettings, type BillingSettings } from "../billing/billingApi";
 import { Always, OnlyFor } from "./SettingBits";
 import { useAddExchangeRate, useExchangeRates, useSaveBillingSettings, useSaveCompanySettings, useSetWorkingTime, useWorkingTime } from "./settingsApi";
 import { notSaved, saved } from "./settingsToasts";
@@ -72,7 +75,7 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
                             <SwitchRow title="Pay changes apply forward only" description="Past hours keep the rate they were logged at, so closed projects and paid months never change value." control={<Always />} />
                             <SwitchRow title="Company expenses" description="Subscriptions and running costs belong to the company, not to this business. They are managed above it and never reach a project or a client." control={<span className="badge">Company level</span>} />
                             <SwitchRow title="Who can see financials" description="Cost rates, pay, revenue and profit." control={<Always>Admins only</Always>} />
-                            <SwitchRow title="Revenue recognition" description="How revenue is spread across months: in step with each project's progress (its requirements)." control={<Always>By progress</Always>} />
+                            <SwitchRow title="Revenue" description="How revenue counts on the overview, the dashboards and Financials: the money received from clients, on the day it arrives." control={<Always>As received</Always>} />
                         </>
                     )}
                 </div>
@@ -84,7 +87,8 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
                         <div><div className="panel-title">Invoicing and payments</div><div className="panel-sub">Invoices request money; payments record what arrived. Neither one changes revenue or profit.</div></div>
                     </div>
                     <div className="panel-body">
-                        {loadFailed(billingQuery) ? <LoadError error={billingQuery.error} retry={() => billingQuery.refetch()} what="the invoicing settings" />
+                        {billingSettingsMissing(billingQuery.error) ? <SetUpInvoicing domain={domain} />
+                            : loadFailed(billingQuery) ? <LoadError error={billingQuery.error} retry={() => billingQuery.refetch()} what="the invoicing settings" />
                             : !billing ? <SkeletonLines lines={6} /> : <Invoicing domain={domain} billing={billing} />}
                     </div>
                 </div>
@@ -94,6 +98,119 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
 }
 
 type Bank = { bankAccount: string; bankName: string; iban: string; swift: string; termsText: string; footer: string };
+
+const PREFIX = /^[A-Z][A-Z0-9]{0,7}$/;
+const SWIFT = /^[A-Za-z0-9]{8}([A-Za-z0-9]{3})?$/;
+const text = (v: string) => v.trim() || null;
+
+/** What is wrong with bank details, as the API checks them. The account name and IBAN are what a client pays with. */
+function bankErrors(bank: Bank) {
+    return {
+        bankAccount: !bank.bankAccount.trim() && "Say whose account the client pays into.",
+        iban: !bank.iban.trim() && "Enter the IBAN the client pays into.",
+        swift: bank.swift.trim() !== "" && !SWIFT.test(bank.swift.trim()) && "A SWIFT code is 8 or 11 letters or digits.",
+    };
+}
+const bankOk = (bank: Bank) => Object.values(bankErrors(bank)).every((e) => !e);
+
+/** The bank details' fields, for setting them up and for changing them. */
+function BankFields({ bank, onChange, errors }: { bank: Bank; onChange: (bank: Bank) => void; errors: ReturnType<typeof useFormErrors> }) {
+    const wrong = bankErrors(bank);
+    return (
+        <>
+            <div className="grid g-2 mt-s">
+                <div className="field">
+                    <label className="label" htmlFor="b-account">Account name</label>
+                    <input id="b-account" className="input" placeholder="e.g. ID InDetails SAL" value={bank.bankAccount} onBlur={errors.touch("bankAccount")}
+                        onChange={(e) => onChange({ ...bank, bankAccount: e.target.value })} />
+                    <FieldError message={errors.show("bankAccount", wrong.bankAccount)} />
+                </div>
+                <div className="field">
+                    <label className="label" htmlFor="b-bank">Bank</label>
+                    <input id="b-bank" className="input" placeholder="e.g. Bank of Beirut" value={bank.bankName} onChange={(e) => onChange({ ...bank, bankName: e.target.value })} />
+                </div>
+            </div>
+            <div className="grid g-2 mt-s">
+                <div className="field">
+                    <label className="label" htmlFor="b-iban">IBAN</label>
+                    <input id="b-iban" className="input mono" value={bank.iban} onBlur={errors.touch("iban")} onChange={(e) => onChange({ ...bank, iban: e.target.value })} />
+                    <FieldError message={errors.show("iban", wrong.iban)} />
+                </div>
+                <div className="field">
+                    <label className="label" htmlFor="b-swift">SWIFT</label>
+                    <input id="b-swift" className="input mono" value={bank.swift} onBlur={errors.touch("swift")} onChange={(e) => onChange({ ...bank, swift: e.target.value })} />
+                    <FieldError message={errors.show("swift", wrong.swift)} />
+                </div>
+            </div>
+            <div className="field mt-s">
+                <label className="label" htmlFor="b-terms">Payment terms text</label>
+                <input id="b-terms" className="input" placeholder="e.g. Late payments may incur a fee." value={bank.termsText} onChange={(e) => onChange({ ...bank, termsText: e.target.value })} />
+                <div className="hint">Printed after the due date under "How to pay".</div>
+            </div>
+            <div className="field mt-s">
+                <label className="label" htmlFor="b-footer">Invoice footer</label>
+                <input id="b-footer" className="input" placeholder="e.g. Thank you for your business." value={bank.footer} onChange={(e) => onChange({ ...bank, footer: e.target.value })} />
+            </div>
+        </>
+    );
+}
+
+/**
+ * A domain's invoicing the first time (billing_settings:manage). Until it is saved, invoices can be drafted but
+ * none can be numbered and sent. The prototype had these settings from the start, so it had no such step.
+ */
+function SetUpInvoicing({ domain }: { domain: Domain }) {
+    const permissions = usePermissions();
+    const save = useSaveBillingSettings(domain);
+    const errors = useFormErrors();
+    const [prefix, setPrefix] = useState(domain === "execution" ? "EX" : "ID");
+    const [terms, setTerms] = useState(30);
+    const [bank, setBank] = useState<Bank>({ bankAccount: "", bankName: "", iban: "", swift: "", termsText: "", footer: "" });
+    const name = DOMAIN_LABEL[domain] ?? domain;
+
+    if (!permissions.has(P.BILLING_SETTINGS_MANAGE)) {
+        return <p className="muted">Invoicing isn't set up for {name} yet, so invoices can be drafted but not sent. An admin who manages the billing settings sets it up here.</p>;
+    }
+
+    const prefixError = !PREFIX.test(prefix) && "Use 1 to 8 capital letters or digits, starting with a letter.";
+    function submit() {
+        if (save.isPending) return;
+        if (prefixError || !bankOk(bank)) return errors.tried();
+        save.mutate({
+            invoicePrefix: prefix, defaultTermsDays: terms, bankAccount: text(bank.bankAccount), bankName: text(bank.bankName), iban: text(bank.iban),
+            swift: text(bank.swift), termsText: text(bank.termsText), footer: text(bank.footer),
+        }, { onSuccess: saved("Invoicing set up", `${name} invoices can now be sent`) });
+    }
+
+    return (
+        <div>
+            <div className="banner hold">
+                <Icon name="info" />
+                <div className="grow"><b>Invoicing isn't set up for {name} yet.</b> Invoices can be drafted, but none can be sent until their numbering and the bank details they print are set.</div>
+            </div>
+            <div className="grid g-2 mt">
+                <div className="field">
+                    <label className="label" htmlFor="b-prefix">Invoice numbering</label>
+                    <input id="b-prefix" className="input mono" maxLength={8} value={prefix} onBlur={errors.touch("prefix")}
+                        onChange={(e) => setPrefix(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))} />
+                    <FieldError message={errors.show("prefix", prefixError)} />
+                    {!prefixError && <div className="hint">This year's first invoice is {prefix}-{companyToday().slice(0, 4)}-001. The other business needs a prefix of its own.</div>}
+                </div>
+                <div className="field">
+                    <label className="label" htmlFor="b-days">Default payment terms</label>
+                    <Select id="b-days" value={String(terms)} onChange={(v) => setTerms(+v)} options={TERMS} />
+                    <div className="hint">Sets each new invoice's due date.</div>
+                </div>
+            </div>
+            <div className="u mt">Bank details printed on every invoice</div>
+            <BankFields bank={bank} onChange={setBank} errors={errors} />
+            <div className="row mt" style={{ gap: 10 }}>
+                <button className="btn btn-primary" disabled={save.isPending} onClick={submit}>{save.isPending ? "Saving…" : "Set up invoicing"}</button>
+                {save.error != null && <FieldError message={errorMessage(save.error)} />}
+            </div>
+        </div>
+    );
+}
 
 function Invoicing({ domain, billing: b }: { domain: Domain; billing: BillingSettings }) {
     const permissions = usePermissions();
@@ -106,7 +223,8 @@ function Invoicing({ domain, billing: b }: { domain: Domain; billing: BillingSet
         bankAccount: b.bankAccount, bankName: b.bankName, iban: b.iban, swift: b.swift, termsText: b.termsText, footer: b.footer,
         defaultTermsDays: b.defaultTermsDays, invoicePrefix: b.invoicePrefix,
     };
-    const text = (v: string) => v.trim() || null;
+    const errors = useFormErrors();
+    const prefixError = prefix != null && !PREFIX.test(prefix) && "Use 1 to 8 capital letters or digits, starting with a letter.";
     const bankLine = [b.bankAccount, b.bankName, b.iban, b.swift].filter(Boolean).join(" · ") || "Not set yet";
 
     return (
@@ -124,12 +242,13 @@ function Invoicing({ domain, billing: b }: { domain: Domain; billing: BillingSet
                     </div>
                 } />
             ) : (
-                <SwitchRow title="Invoice numbering" description="The letters before the year. Invoices already numbered keep theirs." control={
+                <SwitchRow title="Invoice numbering"
+                    description={<>The letters before the year. Invoices already numbered keep theirs.{prefixError && <span className="err"> {prefixError}</span>}</>} control={
                     <div className="row" style={{ gap: 6 }}>
                         <input className="input mono" style={{ width: 90 }} aria-label="Invoice prefix" value={prefix} maxLength={8}
                             onChange={(e) => setPrefix(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))} />
-                        <button className="btn btn-sm btn-primary" disabled={!prefix || save.isPending}
-                            onClick={() => save.mutate({ ...body, invoicePrefix: prefix }, { onSuccess: () => { saved("Invoice numbering updated", `Next invoice: ${prefix}-${year}-…`)(); setPrefix(null); }, onError: notSaved })}>Save</button>
+                        <button className="btn btn-sm btn-primary" disabled={save.isPending}
+                            onClick={() => !prefixError && save.mutate({ ...body, invoicePrefix: prefix }, { onSuccess: () => { saved("Invoice numbering updated", `Next invoice: ${prefix}-${year}-…`)(); setPrefix(null); }, onError: notSaved })}>Save</button>
                         <button className="btn btn-sm" onClick={() => setPrefix(null)}>Cancel</button>
                     </div>
                 } />
@@ -140,31 +259,15 @@ function Invoicing({ domain, billing: b }: { domain: Domain; billing: BillingSet
                 <div className="switch-row" style={{ alignItems: "flex-start" }}>
                     <div className="grow">
                         <div style={{ fontWeight: 600 }}>Bank details printed on every invoice</div>
-                        <div className="grid g-2 mt-s">
-                            <div className="field"><label className="label" htmlFor="b-account">Account name</label><input id="b-account" className="input" value={bank.bankAccount} onChange={(e) => setBank({ ...bank, bankAccount: e.target.value })} /></div>
-                            <div className="field"><label className="label" htmlFor="b-bank">Bank</label><input id="b-bank" className="input" value={bank.bankName} onChange={(e) => setBank({ ...bank, bankName: e.target.value })} /></div>
-                        </div>
-                        <div className="grid g-2 mt-s">
-                            <div className="field"><label className="label" htmlFor="b-iban">IBAN</label><input id="b-iban" className="input mono" value={bank.iban} onChange={(e) => setBank({ ...bank, iban: e.target.value })} /></div>
-                            <div className="field"><label className="label" htmlFor="b-swift">SWIFT</label><input id="b-swift" className="input mono" value={bank.swift} onChange={(e) => setBank({ ...bank, swift: e.target.value })} /></div>
-                        </div>
-                        <div className="field mt-s">
-                            <label className="label" htmlFor="b-terms">Payment terms text</label>
-                            <input id="b-terms" className="input" placeholder="e.g. Late payments may incur a fee." value={bank.termsText} onChange={(e) => setBank({ ...bank, termsText: e.target.value })} />
-                            <div className="hint">Printed after the due date under "How to pay".</div>
-                        </div>
-                        <div className="field mt-s">
-                            <label className="label" htmlFor="b-footer">Invoice footer</label>
-                            <input id="b-footer" className="input" placeholder="e.g. Thank you for your business." value={bank.footer} onChange={(e) => setBank({ ...bank, footer: e.target.value })} />
-                        </div>
+                        <BankFields bank={bank} onChange={setBank} errors={errors} />
                         {save.error != null && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(save.error)}</div>}
                     </div>
                     <div className="stack" style={{ gap: 6 }}>
-                        <button className="btn btn-sm btn-primary" disabled={!bank.bankAccount.trim() || !bank.iban.trim() || save.isPending}
-                            onClick={() => save.mutate({
+                        <button className="btn btn-sm btn-primary" disabled={save.isPending}
+                            onClick={() => bankOk(bank) ? save.mutate({
                                 ...body, bankAccount: text(bank.bankAccount), bankName: text(bank.bankName), iban: text(bank.iban), swift: text(bank.swift),
                                 termsText: text(bank.termsText), footer: text(bank.footer),
-                            }, { onSuccess: () => { saved("Bank details updated")(); setBank(null); } })}>Save</button>
+                            }, { onSuccess: () => { saved("Bank details updated")(); setBank(null); } }) : errors.tried()}>Save</button>
                         <button className="btn btn-sm" onClick={() => { setBank(null); save.reset(); }}>Cancel</button>
                     </div>
                 </div>
@@ -203,6 +306,10 @@ function LbpRate() {
                     A payment can be received in LBP and converted at the rate of its day. Both amounts are kept, and payments already recorded keep their rate.
                     {earlier.length > 0 && <span className="muted"> Before: {earlier.map((r) => `${fmtNumber(r.ratePerUsd)} from ${fmtDateY(r.effectiveFrom)}`).join(" · ")}.</span>}
                     {add.error != null && <span className="err"> {errorMessage(add.error)}</span>}
+                    {editing && !editing.rate && <span className="err"> Enter how many LBP make a dollar.</span>}
+                    {editing && editing.rate !== "" && editing.rate > 0 && !dayOk(editing.from) && (
+                        <span className="err"> {firstDay ? `Pick a day from ${fmtDateY(firstDay)} to today.` : "Pick a day up to today."}</span>
+                    )}
                 </>
             }
             control={editing ? (

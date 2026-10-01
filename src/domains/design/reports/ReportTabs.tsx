@@ -221,7 +221,7 @@ export function MoneyTab({ report, people }: TabProps) {
                 <Kpi label="Client profit (all time)" value={money.short(m.clientProfit)} />
             </div>
             <div className="grid g-8-4 mt">
-                <Figure title="Revenue against cost" sub="Revenue recognised by progress, month by month.">
+                <Figure title="Revenue against cost" sub="Revenue received from clients, month by month.">
                     {loadFailed(months) ? <LoadError error={months.error} retry={() => months.refetch()} what="the months" />
                         : !months.data ? <SkeletonLines lines={5} /> : (
                             <Columns height={200} labelEvery={1} seriesLabel="Revenue" ghostLabel="Cost" format={(v) => money.short(v)}

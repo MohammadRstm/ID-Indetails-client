@@ -7,10 +7,12 @@ import AmountField from "@/shared/components/Forms/AmountField";
 import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
+import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { useClient } from "../clients/clientsApi";
 import type { Project } from "../projects/projectsApi";
-import { useBillingSettings, useSaveInvoice, type Invoice } from "./billingApi";
+import { useBillingSettings, useBillingSetupMissing, useSaveInvoice, type Invoice } from "./billingApi";
+import BillingSetupNotice from "./BillingSetupNotice";
 import InvoiceDoc, { ScaledDoc } from "./InvoiceDoc";
 import { billToContactOf, type DocFlash } from "./invoiceDocData";
 
@@ -34,6 +36,7 @@ type InvoiceEditorProps = {
 export default function InvoiceEditor({ project, invoice: existing = null, onClose, onSend }: InvoiceEditorProps) {
     const permissions = usePermissions();
     const settings = useBillingSettings(project.domain).data;
+    const notSetUp = useBillingSetupMissing(project.domain);
     const client = useClient(project.client?.id).data;
     const save = useSaveInvoice(project.id, existing?.id ?? null);
     const m = project.money;
@@ -42,7 +45,7 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
     // Execution: what is still owed after every payment (on account ones too), less what is invoiced and unpaid
     const remaining = project.domain === "execution"
         ? Math.max(0, Math.round((m?.billing.owed ?? 0) - (m?.billing.outstanding ?? 0) - drafts))
-        : Math.max(0, (m?.billing.notYetInvoiced ?? 0) - drafts);
+        : Math.max(0, (m?.billing.leftToInvoice ?? 0) - drafts);
 
     const [lines, setLines] = useState<Line[]>(existing ? existing.lines.map((l) => ({ description: l.description, amount: l.amount }))
         : [{ description: "", amount: remaining > 0 ? Math.round(remaining) : 0 }]);
@@ -59,6 +62,8 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
     // said once a line has been described: before that, the empty description is plainly still to do
     const sayIncomplete = incomplete && filled.some((l) => l.description.trim());
     const valid = total > 0 && filled.length > 0 && !incomplete;
+    const errors = useFormErrors();
+    const linesError = incomplete ? "Each line needs a description and an amount." : !valid && "Add a line: what is billed and its amount.";
     const over = total > remaining + 0.5;
     const termOptions = TERMS.some((t) => +t.value === termsDays) ? TERMS : [...TERMS, { value: String(termsDays), label: `Net ${termsDays} - due in ${termsDays} days` }];
     const clientName = client?.displayName ?? project.client?.displayName ?? "the client";
@@ -72,7 +77,8 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
         touched("total");
     }
     function submit(send: boolean) {
-        if (!valid) return;
+        if (save.isPending) return;
+        if (!valid) return errors.tried();
         save.mutate({
             lines: filled.map((l) => ({ description: l.description.trim(), amount: l.amount })),
             notes: notes.trim() || null,
@@ -99,12 +105,12 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
                 <>
                     <div className="grow mono" style={{ fontSize: "12.5px", fontWeight: 650 }}>
                         {save.error ? <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span>
-                            : sayIncomplete ? <span className="err"><Icon name="alert" />Each line needs a description and an amount.</span> : money.exact(total)}
+                            : sayIncomplete || errors.show("lines", linesError) ? <span className="err"><Icon name="alert" />{linesError}</span> : money.exact(total)}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn" disabled={!valid || save.isPending} onClick={() => submit(false)}>Save draft</button>
+                    <button className="btn" disabled={save.isPending} onClick={() => submit(false)}>Save draft</button>
                     {permissions.has(P.INVOICE_SEND) && (
-                        <button className="btn btn-primary" disabled={!valid || save.isPending} onClick={() => submit(true)}><Icon name="send" />Save and send…</button>
+                        <button className="btn btn-primary" disabled={save.isPending || notSetUp} onClick={() => submit(true)}><Icon name="send" />Save and send…</button>
                     )}
                 </>
             }>
@@ -154,6 +160,8 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
                             </div>
                         </div>
                     )}
+
+                    <BillingSetupNotice domain={project.domain} />
 
                     <p className="hint mt">No tax is applied: these are milestones of an agreed project value. Invoicing never changes the project's revenue, profit or margin.</p>
                 </div>

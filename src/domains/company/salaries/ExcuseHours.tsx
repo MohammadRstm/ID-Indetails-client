@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { errorMessage } from "@/api/errors";
+import { FieldError } from "@/shared/components/Forms/Field";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import { toast } from "@/shared/components/Feedback/toast";
 import { DAYS, fmtDate, fmtH, fmtMonthY } from "@/shared/format/time";
@@ -42,6 +43,7 @@ export default function ExcuseHours({ detail, month, canExcuse }: ExcuseHoursPro
     const [picked, setPicked] = useState<string[]>([]);
     const [unpaid, setUnpaid] = useState(!ruled);
     const mins = Math.round((parseFloat(hours) || 0) * 60);
+    const [hoursTried, setHoursTried] = useState(false);
     const done = new Set(detail.excuses.flatMap((x) => x.days));
     const pickedMins = detail.workingDays.filter((d) => picked.includes(d.date)).reduce((t, d) => t + d.requiredMinutes, 0);
     // only a salary loses anything for unpaid time; without the hours rule there is nothing else to excuse
@@ -137,6 +139,7 @@ export default function ExcuseHours({ detail, month, canExcuse }: ExcuseHoursPro
                                 <div className="field" style={{ width: 110 }}>
                                     <label className="label" htmlFor="ex-hours">Hours</label>
                                     <input id="ex-hours" className="input mono" inputMode="decimal" value={hours} onChange={(e) => setHours(e.target.value.replace(/[^0-9.]/g, ""))} />
+                                    <FieldError message={hoursTried && !mins ? "Enter the hours." : undefined} />
                                 </div>
                                 <div className="field grow">
                                     <label className="label" htmlFor="ex-note">Reason</label>
@@ -146,7 +149,7 @@ export default function ExcuseHours({ detail, month, canExcuse }: ExcuseHoursPro
                             <div className="row mt-s" style={{ gap: 6, justifyContent: "flex-end" }}>
                                 <button className="btn btn-sm btn-quiet" onClick={() => setOpen(false)}>Cancel</button>
                                 <button className="btn btn-sm" disabled={add.isPending} onClick={() => save("whole_month")}>{unpaid ? "Whole month unpaid" : "Excuse whole month"}</button>
-                                <button className="btn btn-sm btn-primary" disabled={!mins || add.isPending} onClick={() => save("minutes")}>
+                                <button className="btn btn-sm btn-primary" disabled={add.isPending} onClick={() => (mins ? save("minutes") : setHoursTried(true))}>
                                     {unpaid ? "Record" : "Excuse"} {mins ? fmtH(mins) : "hours"}
                                 </button>
                             </div>

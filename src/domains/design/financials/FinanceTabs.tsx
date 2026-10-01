@@ -67,11 +67,11 @@ export function OverviewTab({ summary: s, months, projects, failed, label, tiles
     return (
         <div>
             <div className="grid g-8-4">
-                <Figure title="Revenue against cost, month by month" sub="Revenue is recognised by progress - a project earns its payment as the work is done."
+                <Figure title="Revenue against cost, month by month" sub="Revenue is the money received from clients, in the month it arrived."
                     table={{ cols: [{ label: "Month" }, { label: "Revenue", right: true }, { label: "Cost", right: true }, { label: "Profit", right: true }], rows: list.map((m) => [fmtMonthY(m.month), money.fmt(m.revenue), money.fmt(m.cost), money.fmt(m.profit)]) }}>
                     {!months ? <Pending failed={failed.months} lines={8} what="the monthly figures" /> : (
                         <>
-                            <Columns height={210} labelEvery={Math.max(1, Math.ceil(list.length / 7))} seriesLabel="Revenue recognised" ghostLabel="Total cost" format={(v) => money.short(v)}
+                            <Columns height={210} labelEvery={Math.max(1, Math.ceil(list.length / 7))} seriesLabel="Revenue received" ghostLabel="Total cost" format={(v) => money.short(v)}
                                 data={list.map((m) => ({ label: monthLabel(m.month), tip: fmtMonthY(m.month), value: m.revenue, ghost: m.cost, note: `profit ${money.fmt(m.profit)}` }))} />
                             <div className="mt">
                                 <div className="u" style={{ marginBottom: 2 }}>Profit per month</div>
@@ -89,7 +89,7 @@ export function OverviewTab({ summary: s, months, projects, failed, label, tiles
                     ]} />
                     <div className="chart-note">
                         {costWords(domain)} include internal work.
-                        {s.stillToEarn > 1000 && <span> Running projects have {money.short(s.stillToEarn)} of contracted payment still to earn.</span>}
+                        {s.stillToEarn > 1000 && <span> Client projects have {money.short(s.stillToEarn)} of agreed payments still to collect.</span>}
                     </div>
                 </Figure>
             </div>

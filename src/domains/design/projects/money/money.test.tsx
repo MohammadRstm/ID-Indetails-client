@@ -70,7 +70,10 @@ describe("a project's money", () => {
         const dialog = await screen.findByRole("dialog", { name: "Customer payment" });
         await userEvent.click(within(dialog).getByRole("tab", { name: "Client project" }));
         const save = within(dialog).getByRole("button", { name: "Save" });
-        expect(save).toBeDisabled();
+        // client work needs its client: saving without one says so
+        await userEvent.click(save);
+        expect(within(dialog).getByText("Choose the client this work is for.")).toBeInTheDocument();
+        expect(saved).toEqual([]);
         await userEvent.click(within(dialog).getByLabelText("Client"));
         await userEvent.click(screen.getByRole("option", { name: "Cedar Bank SAL" }));
         await userEvent.type(within(dialog).getByLabelText("Customer payment"), "12000");
@@ -86,7 +89,10 @@ describe("a project's money", () => {
         await userEvent.click(await screen.findByRole("button", { name: "Add expense" }));
         const dialog = await screen.findByRole("dialog", { name: "Add project expense" });
         const add = within(dialog).getByRole("button", { name: "Add expense" });
-        expect(add).toBeDisabled();
+        await userEvent.click(add);
+        expect(within(dialog).getByText("Say what the money went on.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Enter the amount spent.")).toBeInTheDocument();
+        expect(added).toEqual([]);
         await userEvent.type(within(dialog).getByLabelText("What was it?"), "Taxi to the site");
         await userEvent.type(within(dialog).getByLabelText("Amount"), "25");
         await userEvent.click(within(dialog).getByLabelText("Category"));

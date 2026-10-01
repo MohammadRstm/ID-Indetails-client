@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useState, type ReactNode } from "react";
+import { useNavigate, useSearchParams } from "react-router";
+import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { AREAS } from "@/app/routing/areas";
@@ -7,15 +8,18 @@ import { domainHome } from "@/app/routing/home";
 import Board, { BoardButton } from "@/shared/components/Board/Board";
 import { Kpi } from "@/shared/components/Data/Kpi";
 import { CostRow, MixedCurrency, Money } from "@/shared/components/Data/Money";
+import Tabs from "@/shared/components/Data/Tabs";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { money } from "@/shared/format/money";
 import { companyToday, daysBetween, fmtNumber } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import TeamsSettings from "../shared/settings/TeamsSettings";
 import { useCompanyOverview, type CompanyOverview } from "./companyApi";
 import { companyPeriod, lastChoice, rememberChoice, type PeriodChoice } from "./companyPeriod";
 import PeriodBar from "./PeriodBar";
+import CompanyPeople from "./people/CompanyPeople";
 import { loadFailed } from "@/api/queryState";
 
 /** One amount per currency (costs come per source: materials, labour, expenses). */
@@ -23,6 +27,7 @@ const merged = (amounts: { currency: string; amount: number }[]) =>
     [...amounts.reduce((m, a) => m.set(a.currency, (m.get(a.currency) ?? 0) + a.amount), new Map<string, number>())].map(([currency, amount]) => ({ currency, amount }));
 
 type DomainFigures = CompanyOverview["domains"][number];
+type Tab = "overview" | "people" | "teams";
 
 function Line({ label, value, strong, rule, tone }: { label: string; value: number; strong?: boolean; rule?: boolean; tone?: "auto" }) {
     return (
@@ -36,8 +41,49 @@ function Line({ label, value, strong, rule, tone }: { label: string; value: numb
 /**
  * Both businesses and what the company keeps, over one window (the prototype's P.CompanyOverview). Each
  * business earns its own profit; the company's expenses belong to neither, so they come out once, here.
+ * Its People and Teams tabs are the API's: the prototype had a fixed staff and fixed teams.
  */
 export default function CompanyOverviewPage() {
+    const permissions = usePermissions();
+    const [params, setParams] = useSearchParams();
+    const tabs: { key: Tab; label: string }[] = [
+        { key: "overview", label: "Overview" },
+        ...(permissions.has(P.EMPLOYEE_VIEW) ? [{ key: "people" as const, label: "People" }] : []),
+        { key: "teams", label: "Teams" },
+    ];
+    const requested = params.get("tab");
+    const tab = tabs.find((t) => t.key === requested)?.key ?? "overview";
+    const open = (next: Tab) => {
+        if (next === "overview") params.delete("tab");
+        else params.set("tab", next);
+        setParams(params, { replace: true });
+    };
+
+    return (
+        <div className="page">
+            {tab === "overview" ? <Figures tabs={<Tabs value={tab} onChange={open} items={tabs} />} /> : (
+                <>
+                    <div className="page-head">
+                        <div>
+                            <h1 className="page-title">Company overview</h1>
+                            <div className="page-sub">{tab === "people" ? "Everyone in Design, Execution and above them" : "The teams of both businesses"}</div>
+                        </div>
+                    </div>
+                    <Tabs value={tab} onChange={open} items={tabs} />
+                    {tab === "people" ? <CompanyPeople /> : (
+                        <div className="grid g-2">
+                            <TeamsSettings domain="design" named />
+                            <TeamsSettings domain="execution" named />
+                        </div>
+                    )}
+                </>
+            )}
+        </div>
+    );
+}
+
+/** The overview tab: the period, the company's result and each business's figures. */
+function Figures({ tabs }: { tabs: ReactNode }) {
     const navigate = useNavigate();
     const permissions = usePermissions();
     const [choice, setChoice] = useState<PeriodChoice>(lastChoice);
@@ -69,7 +115,7 @@ export default function CompanyOverviewPage() {
                 )}
                 {t && t.unconvertedOverhead.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedOverhead.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
                 <p className="hint mt">
-                    Revenue is recognised as projects progress; costs are the labour, expenses, materials and site labour dated inside this window.
+                    Revenue is the money received from clients in this window, on the day it arrived; costs are the labour, expenses, materials and site labour dated inside it.
                     Company expenses are the monthly pool of subscriptions and running costs, counted day by day for the {days} day{days === 1 ? "" : "s"} shown
                     - never charged to a project or a client.
                 </p>
@@ -134,7 +180,7 @@ export default function CompanyOverviewPage() {
     };
 
     return (
-        <div className="page">
+        <>
             <div className="page-head">
                 <div>
                     <h1 className="page-title">Company overview</h1>
@@ -146,6 +192,7 @@ export default function CompanyOverviewPage() {
                 </div>
             </div>
 
+            {tabs}
             <PeriodBar choice={choice} period={period} onChange={choose} />
 
             <div className="mt">
@@ -157,6 +204,6 @@ export default function CompanyOverviewPage() {
                     ]} />
                 )}
             </div>
-        </div>
+        </>
     );
 }

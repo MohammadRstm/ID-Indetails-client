@@ -5,11 +5,13 @@ import { usePermissions } from "@/app/permissions/usePermissions";
 import { CostRow } from "@/shared/components/Data/Money";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
+import { FieldError } from "@/shared/components/Forms/Field";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { fmtDateY } from "@/shared/format/time";
+import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { useClients } from "../../../shared/clients/clientsApi";
 import type { Project } from "../../../shared/projects/projectsApi";
@@ -30,10 +32,12 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
     const needsClient = billing === "client" && !project.client;
     const clients = useClients({ domain: project.domain, pageSize: 100 }, needsClient).data?.items ?? [];
     const history = useRevenueHistory(project.id, permissions.has(P.ACTIVITY_VIEW)).data ?? [];
-    const valid = billing === "internal" || !!clientId;
+    const errors = useFormErrors();
+    const clientError = billing === "client" && !clientId && "Choose the client this work is for.";
 
     function submit() {
-        if (!valid) return;
+        if (save.isPending) return;
+        if (clientError) return errors.tried();
         save.mutate({
             billingType: billing,
             clientId: billing === "internal" ? null : +clientId,
@@ -52,7 +56,7 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
                 <>
                     <div className="grow">{save.error ? <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span> : "The amount can be changed until the project is completed."}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" disabled={!valid || save.isPending} onClick={submit}>Save</button>
+                    <button className="btn btn-primary" disabled={save.isPending} onClick={submit}>Save</button>
                 </>
             }>
             <div className="field">
@@ -68,6 +72,7 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
                     <label className="label" htmlFor="pay-client">Client</label>
                     <Select id="pay-client" value={clientId} onChange={setClientId}
                         options={[{ value: "", label: "Choose the client" }, ...clients.map((c) => ({ value: String(c.id), label: c.displayName }))]} />
+                    <FieldError message={errors.show("client", clientError)} />
                 </div>
             )}
             {billing === "client" && (

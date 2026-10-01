@@ -48,7 +48,7 @@
       "outstanding": 6500,
       "received": 10000,
       "onAccount": 10000,
-      "notYetInvoiced": 12441.4,
+      "notYetInvoiced": 2441.4,
       "owed": 8941.4,
       "paidAhead": 0,
       "issuedCount": 1,
@@ -57,7 +57,8 @@
       "overdueCount": 0,
       "oldestOverdueDays": null,
       "drafts": 0,
-      "unconvertedInvoices": []
+      "unconvertedInvoices": [],
+      "leftToInvoice": 12441.4
     },
     "cost": {
       "labour": 0,

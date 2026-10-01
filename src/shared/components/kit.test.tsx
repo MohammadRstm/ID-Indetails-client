@@ -11,6 +11,7 @@ import DataTable, { type SortState } from "./Data-Tables/DataTable";
 import Pager from "./Data-Tables/Pager";
 import { ChipGroup } from "./Forms/Filters";
 import Select from "./Forms/Select";
+import HelpTip from "./Feedback/HelpTip";
 import MenuButton from "./Overlays/MenuButton";
 import Modal from "./Overlays/Modal";
 
@@ -148,6 +149,20 @@ describe("small pieces", () => {
         // with the menu closed, Escape is the modal's again
         await userEvent.keyboard("{Escape}");
         expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("a help tip explains its field on focus or a click, and Escape closes it", async () => {
+        render(<label>Label <HelpTip label="a client's label">What kind of client this is.</HelpTip></label>);
+        const tip = screen.getByRole("button", { name: "What is a client's label?" });
+        expect(screen.queryByRole("tooltip")).toBeNull();
+        await userEvent.tab();
+        expect(tip).toHaveFocus();
+        expect(screen.getByRole("tooltip")).toHaveTextContent("What kind of client this is.");
+        expect(tip).toHaveAttribute("aria-describedby", screen.getByRole("tooltip").id);
+        await userEvent.keyboard("{Escape}");
+        expect(screen.queryByRole("tooltip")).toBeNull();
+        await userEvent.click(tip);
+        expect(screen.getByRole("tooltip")).toBeInTheDocument();
     });
 
     it("a modal takes the keyboard focus, and gives it back when it closes", () => {

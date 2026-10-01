@@ -102,10 +102,10 @@ describe("a project's billing", () => {
         await userEvent.click(within(dialog).getByRole("button", { name: /Add line/ }));
         await userEvent.type(within(dialog).getByLabelText("Line 2 amount"), "2000");
         expect(await within(dialog).findByText("Each line needs a description and an amount.")).toBeInTheDocument();
-        expect(within(dialog).getByRole("button", { name: "Save draft" })).toBeDisabled();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save draft" }));
+        expect(saved).toBe(false);
         await userEvent.type(within(dialog).getByLabelText("Line 2"), "Site visits");
         expect(within(dialog).queryByText("Each line needs a description and an amount.")).toBeNull();
-        expect(within(dialog).getByRole("button", { name: "Save draft" })).toBeEnabled();
         expect(saved).toBe(false);
     });
 
@@ -226,6 +226,43 @@ describe("a project's billing", () => {
         await screen.findByText("Who put the hours in. Click a person to see their entries on this project.");
         expect(screen.queryByText("Client payments")).not.toBeInTheDocument();
         expect(asked).toEqual([]);
+    });
+});
+
+describe("a domain whose invoicing isn't set up", () => {
+    const notSetUp = http.get("/api/billing-settings/:domain", () => HttpResponse.json(
+        { type: "not_found", code: "billing_settings_missing", message: "Billing settings have not been set up for this domain yet." }, { status: 404 }));
+
+    it("says so beside the invoices, with the way to set it up", async () => {
+        renderApp(path, admin, notSetUp, ...handlers);
+        const panel = await band();
+        expect(await within(panel).findByText("Invoicing isn't set up for Design yet.")).toBeInTheDocument();
+        expect(within(panel).getByRole("link", { name: "Set up invoicing" })).toHaveAttribute("href", "/design/settings?section=finance");
+        // drafts are still fine
+        expect(within(panel).getByRole("button", { name: "New invoice" })).toBeEnabled();
+    });
+
+    it("tells someone who can't set it up who can", async () => {
+        renderApp(path, withPermissions(admin, { revoke: [P.BILLING_SETTINGS_MANAGE] }), notSetUp, ...handlers);
+        const panel = await band();
+        expect(await within(panel).findByText(/Ask an admin who manages the billing settings to set it up/)).toBeInTheDocument();
+        expect(within(panel).queryByRole("link", { name: "Set up invoicing" })).not.toBeInTheDocument();
+    });
+
+    it("keeps a draft from being sent", async () => {
+        renderApp(`${path}?send=${billing.draft.id}`, admin, notSetUp, ...handlers);
+        const send = await screen.findByRole("dialog", { name: "Send invoice" });
+        expect(await within(send).findByText("Invoicing isn't set up for Design yet.")).toBeInTheDocument();
+        expect(within(send).getByRole("button", { name: "Send email" })).toBeDisabled();
+    });
+
+    it("saves a new invoice as a draft only", async () => {
+        renderApp(`${path}?invoice=new`, admin, notSetUp, ...handlers);
+        const dialog = await screen.findByRole("dialog", { name: "New invoice" });
+        expect(await within(dialog).findByText("Invoicing isn't set up for Design yet.")).toBeInTheDocument();
+        await userEvent.type(within(dialog).getByLabelText("Line 1"), "Second milestone");
+        expect(within(dialog).getByRole("button", { name: "Save draft" })).toBeEnabled();
+        expect(within(dialog).getByRole("button", { name: "Save and send…" })).toBeDisabled();
     });
 });
 

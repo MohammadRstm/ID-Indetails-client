@@ -5,12 +5,14 @@ import { usePermissions } from "@/app/permissions/usePermissions";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
+import { FieldError } from "@/shared/components/Forms/Field";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { companyToday, fmtDateY } from "@/shared/format/time";
+import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { currentPay, HOURS_PER_MONTH, monthlyToHourly } from "../pay/payRules";
 import { uploadFile } from "../work/workApi";
@@ -58,7 +60,10 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     if (pays && pay == null && history.data) setPay({ basis: terms?.basis ?? "hourly", amount: terms?.amount ?? 0, currency: terms?.currency ?? "USD" });
     // someone with no pay yet (an invited admin) keeps none until an amount is typed
     const payChanged = !!pay && (terms ? pay.basis !== terms.basis || pay.currency !== terms.currency || Math.abs(pay.amount - terms.amount) > 0.004 : pay.amount > 0);
-    const valid = !!name.trim() && (!manages || !!position.trim()) && (!payChanged || pay.amount > 0);
+    const errors = useFormErrors();
+    const nameError = !name.trim() && "Enter the full name.";
+    const positionError = manages && !position.trim() && "Enter their position.";
+    const payError = payChanged && !((pay?.amount ?? 0) > 0) && "Enter the new pay.";
     const busy = updateMine.isPending || updateEmployee.isPending || setPhoto.isPending || changePay.isPending || uploading;
     const error = updateMine.error ?? updateEmployee.error ?? setPhoto.error ?? changePay.error;
 
@@ -74,7 +79,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     }
 
     async function save() {
-        if (!valid) return;
+        if (busy) return;
+        if (nameError || positionError || payError) return errors.tried();
         const [firstName, ...rest] = name.trim().split(/\s+/);
         const lastName = rest.join(" ");
         try {
@@ -100,7 +106,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                             : self ? "Position, team and pay are set by your admin." : "Changes are recorded; pay changes apply forward only."}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" disabled={!valid || busy} onClick={save}><Icon name="check" />Save</button>
+                    <button className="btn btn-primary" disabled={busy} onClick={save}><Icon name="check" />Save</button>
                 </>
             }>
             <div className="row" style={{ gap: 14, alignItems: "flex-start" }}>
@@ -120,7 +126,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                     <div className="grid g-2">
                         <div className="field">
                             <label className="label" htmlFor="ep-name">Full name</label>
-                            <input id="ep-name" className="input" value={name} onChange={(e) => setName(e.target.value)} />
+                            <input id="ep-name" className="input" value={name} onChange={(e) => setName(e.target.value)} onBlur={errors.touch("name")} />
+                            <FieldError message={errors.show("name", nameError)} />
                         </div>
                         <div className="field">
                             <label className="label" htmlFor="ep-phone">Phone</label>
@@ -136,7 +143,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                         <div className="grid g-2">
                             <div className="field">
                                 <label className="label" htmlFor="ep-pos">Position</label>
-                                <input id="ep-pos" className="input" value={position} onChange={(e) => setPosition(e.target.value)} />
+                                <input id="ep-pos" className="input" value={position} onChange={(e) => setPosition(e.target.value)} onBlur={errors.touch("position")} />
+                                <FieldError message={errors.show("position", positionError)} />
                             </div>
                             <div className="field">
                                 <label className="label" htmlFor="ep-team">Team</label>
@@ -158,7 +166,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                             </div>
                             <div className="grid g-2 mt-s">
                                 <div className="field">
-                                    <AmountField id="ep-pay" value={pay.amount} currency={pay.currency} onChange={(amount) => setPay({ ...pay, amount })} onCurrency={(currency) => setPay({ ...pay, currency })} />
+                                    <AmountField id="ep-pay" value={pay.amount} currency={pay.currency} onChange={(amount) => setPay({ ...pay, amount })} onCurrency={(currency) => setPay({ ...pay, currency })} onBlur={errors.touch("pay")} />
+                                    <FieldError message={errors.show("pay", payError)} />
                                     <div className="hint">
                                         {pay.basis === "monthly"
                                             ? (pay.amount ? `= ${money.fmt(monthlyToHourly(pay.amount), pay.currency, { cents: true })} / hour at 40 paid hours a week` : "Monthly salary.")

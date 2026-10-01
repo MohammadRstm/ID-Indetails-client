@@ -61,8 +61,10 @@ describe("logging work", () => {
         // the overtime preview comes from the API
         const save = await within(dialog).findByRole("button", { name: "Log 1h 00m · 1h 00m overtime" });
         expect(within(dialog).getByText(/This (is all|includes) overtime/)).toBeInTheDocument();
-        // a description is required by the domain's settings
-        expect(save).toBeDisabled();
+        // a description is required by the domain's settings, and pressing Log without one says so
+        await userEvent.click(save);
+        expect(within(dialog).getByText("Say what you worked on.")).toBeInTheDocument();
+        expect(body).toBeNull();
 
         await userEvent.type(within(dialog).getByLabelText("What did you work on?"), "Revised the lounge elevations");
         await userEvent.click(save);

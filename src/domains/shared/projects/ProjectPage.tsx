@@ -35,6 +35,7 @@ import PricingModal from "../../execution/projects/PricingModal";
 import StatementHost from "../../execution/statements/StatementHost";
 import { useStatementLinks } from "../../execution/statements/statementLinks";
 import CompleteProjectModal from "./CompleteProjectModal";
+import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
 
@@ -86,6 +87,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const requirements = useRequirements(project.id, permissions.has(P.REQUIREMENT_VIEW));
     const meetings = useProjectMeetings(project.id);
     const [showDone, setShowDone] = useState(false);
+    const [editing, setEditing] = useState(false);
     // the report opens through the link too (?report=1), as the projects list's menu does
     const showReport = params.get("report") === "1";
     const setShowReport = (show: boolean) => {
@@ -127,6 +129,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const canStatement = site && client && permissions.has(P.STATEMENT_CREATE) && materialCount > 0;
     const statements = useStatementLinks();
     const moneyItems = canAddExpense || canEditPayment || canEditPricing || canStatement || canNewInvoice || canRecordPayment;
+    // name, description, location and target date, while the project is open
+    const canEditDetails = permissions.has(P.PROJECT_EDIT) && project.status !== "completed" && project.status !== "archived";
 
     function switchTab(k: TabKey) {
         if (k === "overview") params.delete("tab");
@@ -168,6 +172,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                         </div>
                         {project.description && <div className="page-sub" style={{ maxWidth: "70ch" }}>{project.description}</div>}
                         <div className="row wrap mt-s" style={{ gap: 14, fontSize: 12, color: "var(--ink-3)" }}>
+                            {project.location && <span className="row" style={{ gap: 6 }}><Icon name="pin" style={{ width: 14, height: 14 }} /><b className="sec">{project.location}</b></span>}
                             <span className="row" style={{ gap: 6 }}><Icon name="calendar" style={{ width: 14, height: 14 }} />Started <b className="sec">{fmtDateY(project.startDate)}</b></span>
                             {project.completedAt ? (
                                 <span className="row" style={{ gap: 6 }}><Icon name="checkCircle" style={{ width: 14, height: 14 }} />Completed <b className="sec">{fmtDateY(project.completedAt)}</b></span>
@@ -210,10 +215,12 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     ) : (
                         <button className="btn btn-primary" onClick={() => setShowDone(true)}><Icon name="check" />Mark as done</button>
                     ))}
-                    {((canChangeStatus && !closed) || moneyItems) && (
+                    {((canChangeStatus && !closed) || moneyItems || canEditDetails) && (
                         <MenuButton icon="dots" label="More actions">
                             {(close) => (
                                 <div>
+                                    {canEditDetails && <button className="pop-item" onClick={() => { close(); setEditing(true); }}><Icon name="edit" />Edit details</button>}
+                                    {canEditDetails && ((canChangeStatus && !closed) || moneyItems) && <div className="pop-sep" />}
                                     {canChangeStatus && !closed && (
                                         <>
                                             {project.status !== "hold" && (
@@ -285,6 +292,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             <BillingModalHost project={project} />
             {site && <StatementHost project={project} />}
             {showReport && canReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}
+            {editing && canEditDetails && <EditProjectModal project={project} onClose={() => setEditing(false)} />}
         </div>
     );
 }
@@ -311,7 +319,7 @@ function OwnerLine({ project }: { project: Project }) {
     function changeOwner(id: number, name: string) {
         if (id === project.owner.id) return;
         update.mutate(
-            { title: project.title, description: project.description, icon: project.icon, tint: project.tint, targetDate: project.targetDate, ownerId: id },
+            { title: project.title, description: project.description, location: project.location, icon: project.icon, tint: project.tint, targetDate: project.targetDate, ownerId: id },
             {
                 onSuccess: () => toast({ text: `${name.replace(" (you)", "")} is now the owner of ${project.title}`, sub: "Recorded in Activity", icon: "checkCircle" }),
                 onError: (e) => toast({ text: "The owner didn't change", sub: errorMessage(e), icon: "alert" }),

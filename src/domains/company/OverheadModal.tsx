@@ -2,10 +2,12 @@ import { useState } from "react";
 import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
+import { FieldError } from "@/shared/components/Forms/Field";
 import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { addMonths, companyToday, fmtMonthY } from "@/shared/format/time";
+import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { useAddOverhead, useChangeOverhead, type OverheadChange, type OverheadGroup, type OverheadLine } from "./companyApi";
 import { GROUP_LABEL } from "./overheadGroups";
@@ -28,9 +30,13 @@ export default function OverheadModal({ line, onClose }: { line: OverheadLine | 
     const newCurrency = !!line && currency !== line.currency;
     const newAmount = !!line && !newCurrency && amount !== (line.currentAmount ?? 0);
     const fromMonth = `${from}-01`;
+    const errors = useFormErrors();
+    const nameError = !name.trim() && "Name the expense.";
+    const amountError = !(amount > 0) && "Enter what it costs each month.";
 
     function submit() {
-        if (!name.trim() || !amount) return;
+        if (pending) return;
+        if (nameError || amountError) return errors.tried();
         const done = () => {
             toast({ text: `${name.trim()} · ${money.fmt(amount, currency)} per month`, sub: line && (newAmount || newCurrency) ? `From ${fmtMonthY(fromMonth)}` : undefined, icon: "checkCircle" });
             onClose();
@@ -56,17 +62,19 @@ export default function OverheadModal({ line, onClose }: { line: OverheadLine | 
                             : line ? "Past months keep the cost they carried." : "It joins this month's pool straight away."}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" disabled={!name.trim() || !amount || pending} onClick={submit}>{line ? "Save" : "Add expense"}</button>
+                    <button className="btn btn-primary" disabled={pending} onClick={submit}>{line ? "Save" : "Add expense"}</button>
                 </>
             }>
             <div className="field">
                 <label className="label" htmlFor="ov-name">Name</label>
-                <input id="ov-name" className="input" autoFocus placeholder="e.g. AWS" value={name} onChange={(e) => setName(e.target.value)} />
+                <input id="ov-name" className="input" autoFocus placeholder="e.g. AutoCAD licences" value={name} onChange={(e) => setName(e.target.value)} onBlur={errors.touch("name")} />
+                <FieldError message={errors.show("name", nameError)} />
             </div>
             <div className="grid g-2 mt">
                 <div className="field">
                     <label className="label" htmlFor="ov-amount">Monthly cost</label>
-                    <AmountField id="ov-amount" value={amount} currency={currency} onChange={setAmount} onCurrency={setCurrency} />
+                    <AmountField id="ov-amount" value={amount} currency={currency} onChange={setAmount} onCurrency={setCurrency} onBlur={errors.touch("amount")} />
+                    <FieldError message={errors.show("amount", amountError)} />
                 </div>
                 <div className="field">
                     <label className="label" htmlFor="ov-group">Group</label>

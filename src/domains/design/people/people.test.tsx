@@ -84,8 +84,9 @@ describe("Add employee", () => {
         const dialog = await screen.findByRole("dialog", { name: "Add employee" });
         const send = within(dialog).getByRole("button", { name: "Send invitation" });
         await userEvent.type(within(dialog).getByLabelText("Work email"), "amara@id-indetails.test");
-        // pay is required for an employee when the admin sets pay
-        expect(send).toBeDisabled();
+        // pay is required for an employee when the admin sets pay: pressing Send says so
+        await userEvent.click(send);
+        expect(within(dialog).getByText("Enter their pay per hour.")).toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Position"), "Junior designer");
         await userEvent.click(within(dialog).getByLabelText("Team"));
         await userEvent.click(screen.getByRole("option", { name: "Interiors" }));

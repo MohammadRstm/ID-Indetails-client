@@ -14,6 +14,7 @@ import { money } from "@/shared/format/money";
 import { PAYMENT_METHODS } from "@/shared/format/labels";
 import { companyToday } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import { cx } from "@/shared/utils/cx";
 import ClientModal from "../clients/ClientModal";
 import ClientPicker from "../clients/ClientPicker";
@@ -39,6 +40,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const [title, setTitle] = useState("");
     const [more, setMore] = useState(false);
     const [description, setDescription] = useState("");
+    const [location, setLocation] = useState("");
     const [owner, setOwner] = useState(String(me.id));
     const [target, setTarget] = useState("");
     const [billing, setBilling] = useState<"client" | "internal">("client");
@@ -56,7 +58,10 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const execMoney = execution && billing === "client";
     // the API refuses the whole project if the payment comes from someone who can't record payments
     const takesPayment = execMoney && permissions.has(P.PAYMENT_RECORD);
-    const ok = title.trim() !== "" && (billing === "internal" || clientId != null) && !create.isPending;
+    const errors = useFormErrors();
+    const titleError = title.trim() === "" && "Give the project a name.";
+    const clientError = billing === "client" && clientId == null && "Choose who the project is for, or make it internal.";
+    const ok = !titleError && !clientError;
 
     // Who can own it: the person creating it, and the people of this domain.
     const owners = [
@@ -66,11 +71,16 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
 
     async function submit(e?: FormEvent) {
         e?.preventDefault();
-        if (!ok) return;
+        if (create.isPending) return;
+        if (!ok) {
+            errors.tried();
+            return;
+        }
         try {
             const project = await create.mutateAsync({
                 title: title.trim(),
                 description: description.trim() || null,
+                location: location.trim() || null,
                 domainCode: domain,
                 billingType: execution ? "client" : billing,
                 clientId: billing === "client" ? clientId : null,
@@ -113,16 +123,17 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                                 : "Starts today · becomes active"}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" disabled={!ok} onClick={() => submit()}>{create.isPending ? "Creating…" : "Create project"}</button>
+                    <button className="btn btn-primary" disabled={create.isPending} onClick={() => submit()}>{create.isPending ? "Creating…" : "Create project"}</button>
                 </>
             }
         >
             <form onSubmit={submit}>
                 <div className="field">
                     <label className="label" htmlFor="np-title">Project name</label>
-                    <input id="np-title" className="input" style={{ height: 44, fontSize: 16, fontWeight: 600 }} autoFocus placeholder="e.g. Website Redesign"
-                        value={title} onChange={(e) => setTitle(e.target.value)} />
-                    <div className="hint">Press Enter to create. You can add details later.</div>
+                    <input id="np-title" className="input" style={{ height: 44, fontSize: 16, fontWeight: 600 }} autoFocus placeholder={execution ? "e.g. Achrafieh apartment fit-out" : "e.g. Villa Mounir interiors"}
+                        value={title} onChange={(e) => setTitle(e.target.value)} onBlur={errors.touch("title")} />
+                    {errors.show("title", titleError) ? <FieldError message={errors.show("title", titleError)} />
+                        : <div className="hint">Press Enter to create. You can add details later.</div>}
                 </div>
 
                 {execution ? (
@@ -153,11 +164,18 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                         <label className="label">Client</label>
                         <ClientPicker domain={domain} value={clientId} onChange={setClientId}
                             onCreate={permissions.has(P.CLIENT_CREATE) ? (typed) => setNewClient(typed) : undefined} />
-                        <div className="hint">Required - this is how the project's revenue is attributed. Clients never sign in.</div>
+                        {errors.show("client", clientError) ? <FieldError message={errors.show("client", clientError)} />
+                            : <div className="hint">Required - this is how the project's revenue is attributed. Clients never sign in.</div>}
                     </div>
                 ) : (
                     <div className="hint mt">Internal projects have no client: their labour and expenses are tracked as company cost.</div>
                 )}
+
+                <div className="field mt">
+                    <label className="label" htmlFor="np-location">Location <span className="muted">· optional</span></label>
+                    <input id="np-location" className="input" maxLength={200} placeholder={execution ? "e.g. Achrafieh, Beirut" : "e.g. Broummana, Mount Lebanon"}
+                        value={location} onChange={(e) => setLocation(e.target.value)} />
+                </div>
 
                 {execMoney && (
                     <div className="np-money mt">

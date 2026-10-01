@@ -237,7 +237,7 @@ function NewStatement({ project, onMade, onClose }: { project: Project; onMade: 
     // nothing chosen: the document with no materials on it, as the last preview had it
     const doc: Statement | undefined = pool > 0 ? preview.data : project.client ? {
         ...(preview.data ?? {
-            id: null, number: "New statement", projectId: project.id, projectTitle: project.title, client: project.client, date: companyToday(),
+            id: null, number: "New statement", projectId: project.id, projectTitle: project.title, projectLocation: project.location, client: project.client, date: companyToday(),
             createdAt: new Date().toISOString(), createdBy: null, currency: "USD", deliveries: [], isPreview: true, since: null,
             received: x?.received ?? 0, remaining: x?.owed ?? 0, paidAhead: x?.credit ?? 0, agreed: x?.agreed ?? 0,
         }),
@@ -438,7 +438,7 @@ function SendPicker({ number, client, channels, busy, onSend, onClose }: SendPic
                             </label>
                         ))}
                     </div>
-                    <div className="hint mt-s">WhatsApp opens with a short summary ready to send. Email goes out from Hourline with the statement attached as a PDF.</div>
+                    <div className="hint mt-s">WhatsApp opens with a short summary ready to send. Email goes out from ID InDetails with the statement attached as a PDF.</div>
                 </>
             ) : (
                 <div className="banner hold">
