@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Schemas } from "@/api/types";
 import { P } from "@/app/permissions/codes";
 import { companyHandlers } from "@/test/fixtures/company";
+import { people } from "@/test/fixtures/people";
 import { settings, settingsHandlers } from "@/test/fixtures/settings";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
@@ -89,6 +90,28 @@ describe("the company's people", () => {
             email: "sami@id-indetails.test", role: "employee", domainCode: "execution", teamId: 15, position: null,
             pay: { basis: "monthly", amount: 900, currency: "USD" },
         }]);
+    });
+
+    it("edits another super admin's profile and monthly salary, as they have no profile page", async () => {
+        const partner: Row = { ...settings.superAdmins[0], id: 43, email: "sami@id-indetails.test", firstName: "Sami", lastName: "Khoury" };
+        const pays: unknown[] = [];
+        renderApp("/company/overview?tab=people", rana,
+            http.get("/api/employees", () => HttpResponse.json({ items: [settings.superAdmins[0], partner], page: 1, pageSize: 25, totalCount: 2 })),
+            http.get("/api/employees/43", () => HttpResponse.json({ ...people.employee, id: 43, firstName: "Sami", lastName: "Khoury", email: partner.email, role: "super_admin", domain: null, team: null })),
+            http.get("/api/employees/43/pay", () => HttpResponse.json([])),
+            http.put("/api/employees/43", () => HttpResponse.json(people.employee)),
+            http.post("/api/employees/43/pay", async ({ request }) => { pays.push(await request.json()); return HttpResponse.json({}); }),
+            ...handlers);
+        const row = (await screen.findByText("Sami Khoury")).closest("tr") as HTMLElement;
+        await userEvent.click(within(row).getByRole("button", { name: "More actions" }));
+        await userEvent.click(screen.getByRole("button", { name: "Edit profile and pay…" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit Sami's profile" });
+        // a super admin's pay is a salary: no choice of hourly pay
+        expect(await within(dialog).findByText("Monthly salary")).toBeInTheDocument();
+        expect(within(dialog).queryByRole("tablist", { name: "Pay basis" })).not.toBeInTheDocument();
+        await userEvent.type(within(dialog).getByLabelText("Pay"), "4500");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(pays).toEqual([{ basis: "monthly", amount: 4500, currency: "USD", effectiveFrom: "2026-09-30" }]));
     });
 
     it("deactivates someone who left, and takes back someone who returns", async () => {
