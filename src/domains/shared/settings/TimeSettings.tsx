@@ -106,6 +106,7 @@ function WeekEditor({ wt }: { wt: WorkingTime }) {
                 <span className="muted" style={{ fontSize: 12 }}>{fmtH(required)} required a day{base.breakMinutes && end - start > 360 ? ` after the ${fmtH(base.breakMinutes)} break` : ""}</span>
                 {changed && <button className="btn btn-sm btn-primary" disabled={!days.length || setWt.isPending} onClick={save}>Save</button>}
             </div>
+            {days.length === 0 && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" />Pick at least one working day.</div>}
             {setWt.error != null && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(setWt.error)}</div>}
         </div>
     );

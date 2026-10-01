@@ -160,7 +160,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayEnd
                             : <span className="muted">{fmtDayDate(startAt)} · <span className="mono">{fmtRange(startAt, endAt)}</span>{nextDay ? " (ends next day)" : ""}</span>}
                     </div>
                     <button className="btn" onClick={closeLogWork}>Cancel</button>
-                    <button className="btn btn-primary" disabled={blocked} onClick={() => submit()}>
+                    <button className="btn btn-primary" disabled={attachment.uploading || save.isPending} onClick={() => submit()}>
                         {ed ? "Save changes" : `Log ${fmtDur(duration)}`}{ot ? ` · ${fmtDur(ot)} overtime` : ""}
                     </button>
                 </>

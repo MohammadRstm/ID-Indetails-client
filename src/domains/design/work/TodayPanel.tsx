@@ -177,7 +177,7 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                         <span className="grow">
                             {error || save.error ? <span className="err"><Icon name="alert" />{error ?? errorMessage(save.error)}</span> : null}
                         </span>
-                        <button type="submit" className="btn btn-primary" disabled={blocked}><Icon name="plus" />Add log</button>
+                        <button type="submit" className="btn btn-primary" disabled={!slot || attachment.uploading || save.isPending}><Icon name="plus" />Add log</button>
                     </div>
                 </form>
             </div>

@@ -3,11 +3,13 @@ import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
+import { FieldError } from "@/shared/components/Forms/Field";
 import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import { PAYMENT_METHODS } from "@/shared/format/labels";
 import { money } from "@/shared/format/money";
 import { companyToday, fmtDateY } from "@/shared/format/time";
+import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import type { Schemas } from "@/api/types";
 import type { Project } from "../projects/projectsApi";
@@ -51,15 +53,18 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
     const received = project.money?.billing.received ?? 0;
     const overInvoice = !!target && cents(usd) > cents(balance);
     const overProject = !target && usd + received > (project.money?.revenue ?? 0) + 0.5;
-    // without the invoices it can't tell an invoice from money on account, so it waits for them
-    const valid = !!invoices && usd > 0 && !overInvoice && (currency === "USD" || fx > 0);
+    const errors = useFormErrors();
+    const amountError = !(value > 0) && "Enter the amount received.";
+    const rateError = currency !== "USD" && !(fx > 0) && "Enter the exchange rate of the day.";
 
     function pick(id: string) {
         setPicked(id);
         setAmount(null);
     }
     function submit() {
-        if (!valid) return;
+        // without the invoices it can't tell an invoice from money on account, so it waits for them
+        if (!invoices || record.isPending) return;
+        if (amountError || rateError || overInvoice) return errors.tried();
         record.mutate({
             amount: value, currency, fxRate: currency === "USD" ? null : fx, invoiceId: target?.id ?? null,
             method, receivedOn: date, reference: reference.trim() || null,
@@ -85,7 +90,7 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
                             : currency === "USD" ? money.exact(usd) : `${money.exact(value, "LBP")} = ${money.exact(usd)}`}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" disabled={!valid || record.isPending} onClick={submit}><Icon name="check" />Record payment</button>
+                    <button className="btn btn-primary" disabled={!invoices || record.isPending} onClick={submit}><Icon name="check" />Record payment</button>
                 </>
             }>
             <div className="field">
@@ -104,8 +109,9 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
             <div className="grid g-2 mt">
                 <div className="field">
                     <label className="label" htmlFor="pay-amt">Amount received</label>
-                    <AmountField id="pay-amt" value={value} currency={currency} onChange={setAmount} onCurrency={(c) => { setCurrency(c); setAmount(null); }} />
-                    {currency === "LBP" && <div className="hint">= {money.exact(usd)} at the rate below</div>}
+                    <AmountField id="pay-amt" value={value} currency={currency} onChange={setAmount} onCurrency={(c) => { setCurrency(c); setAmount(null); }} onBlur={errors.touch("amount")} />
+                    {errors.show("amount", amountError) ? <FieldError message={errors.show("amount", amountError)} />
+                        : currency === "LBP" && <div className="hint">= {money.exact(usd)} at the rate below</div>}
                 </div>
                 <div className="field">
                     <label className="label" htmlFor="pay-date">Date received</label>
@@ -121,6 +127,7 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
                             onChange={(e) => setRate(Math.max(1, Number(e.target.value.replace(/[^0-9.]/g, "")) || 1))} />
                         <span className="muted" style={{ fontSize: 12, alignSelf: "center" }}>LBP per US dollar</span>
                     </div>
+                    <FieldError message={errors.show("rate", rateError)} />
                     <div className="hint">Both amounts are kept: the LBP the client actually sent, and the dollar value at the moment it arrived. Collections totals are always in dollars.</div>
                 </div>
             )}

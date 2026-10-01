@@ -6,9 +6,11 @@ import { FieldError } from "@/shared/components/Forms/Field";
 import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import useDebounce from "@/shared/hooks/useDebounce";
+import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import { CLIENT_LABELS } from "@/shared/format/labels";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import { isEmail } from "@/shared/utils/email";
 import { checkClient, useSaveClient, type Client } from "./clientsApi";
 import HelpTip from "@/shared/components/Feedback/HelpTip";
 
@@ -48,14 +50,20 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
         staleTime: 30_000,
     });
     const taken = check.data?.contactTakenBy;
-    const ok = name.trim() !== "" && label.trim() !== "" && filled.length > 0 && !taken && !save.isPending;
+    const errors = useFormErrors();
+    const nameError = !name.trim() && "Enter the client's name.";
+    const labelError = !label.trim() && "Pick a label above, or type one.";
+    const contactsError = filled.length === 0 && "Add an email or a phone number to reach them.";
+    const emailError = (c: ContactDraft) => c.kind === "email" && c.value.trim() !== "" && !isEmail(c.value) && "Enter an email like name@company.com.";
+    const ok = !nameError && !labelError && !contactsError && !contacts.some(emailError) && !taken;
 
     function setContact(i: number, patch: Partial<ContactDraft>) {
         setContacts(contacts.map((c, j) => (j === i ? { ...c, ...patch } : c)));
     }
 
     async function submit() {
-        if (!ok) return;
+        if (save.isPending) return;
+        if (!ok) return errors.tried();
         try {
             const saved = await save.mutateAsync({
                 name: name.trim(),
@@ -101,7 +109,7 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
                         ) : "Name, label and at least one contact are required."}
                     </div>
                     <button className="btn" onClick={() => onClose()}>Cancel</button>
-                    <button className="btn btn-primary" disabled={!ok} onClick={submit}>
+                    <button className="btn btn-primary" disabled={save.isPending} onClick={submit}>
                         {save.isPending ? "Saving…" : client ? "Save client" : "Add client"}
                     </button>
                 </>
@@ -110,7 +118,8 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
             <div className="grid g-2">
                 <div className="field">
                     <label className="label" htmlFor="cl-name">Full name</label>
-                    <input id="cl-name" className="input" autoFocus placeholder="e.g. Rania Khoury" value={name} onChange={(e) => setName(e.target.value)} />
+                    <input id="cl-name" className="input" autoFocus placeholder="e.g. Rania Khoury" value={name} onChange={(e) => setName(e.target.value)} onBlur={errors.touch("name")} />
+                    <FieldError message={errors.show("name", nameError)} />
                 </div>
                 <div className="field">
                     <label className="label" htmlFor="cl-org">Organisation <span className="muted">(optional)</span></label>
@@ -139,32 +148,37 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
                         <button key={l} type="button" className={cx("chip", label === l && "on")} onClick={() => setLabel(l)}>{l}</button>
                     ))}
                 </div>
-                <input className="input mt-s" placeholder="or type your own label" aria-label="Your own label" value={label} onChange={(e) => setLabel(e.target.value)} />
-                <div className="hint">A descriptive tag only - it grants no access and changes no figures.</div>
+                <input className="input mt-s" placeholder="or type your own label" aria-label="Your own label" value={label} onChange={(e) => setLabel(e.target.value)} onBlur={errors.touch("label")} />
+                {errors.show("label", labelError) ? <FieldError message={errors.show("label", labelError)} />
+                    : <div className="hint">A descriptive tag only - it grants no access and changes no figures.</div>}
             </div>
 
             <div className="field mt">
                 <label className="label">Contact details</label>
                 <div className="stack" style={{ gap: 8 }}>
                     {contacts.map((c, i) => (
-                        <div key={i} className="contact-edit">
-                            <Select className="select sm" style={{ width: 94 }} aria-label="Kind" value={c.kind}
-                                options={[{ value: "email", label: "Email" }, { value: "phone", label: "Phone" }]}
-                                onChange={(kind) => setContact(i, { kind, isWhatsapp: kind === "phone" ? c.isWhatsapp : false })} />
-                            <input className="input grow" placeholder={c.kind === "email" ? "name@company.com" : "+961 3 555 142"} aria-label={c.kind === "email" ? "Email address" : "Phone number"} value={c.value}
-                                onChange={(e) => setContact(i, { value: e.target.value })} />
-                            <input className="input" style={{ width: 108 }} placeholder="e.g. Office" aria-label="Contact label" value={c.label} onChange={(e) => setContact(i, { label: e.target.value })} />
-                            {c.kind === "phone" && (
-                                <button type="button" className={cx("chip", c.isWhatsapp && "on")} title="Reachable on WhatsApp"
-                                    onClick={() => setContact(i, { isWhatsapp: !c.isWhatsapp })}>WhatsApp</button>
-                            )}
-                            <button type="button" className="icon-btn" aria-label="Remove contact" disabled={contacts.length === 1}
-                                onClick={() => setContacts(contacts.filter((_, j) => j !== i))}>
-                                <Icon name="x" />
-                            </button>
+                        <div key={i}>
+                            <div className="contact-edit">
+                                <Select className="select sm" style={{ width: 94 }} aria-label="Kind" value={c.kind}
+                                    options={[{ value: "email", label: "Email" }, { value: "phone", label: "Phone" }]}
+                                    onChange={(kind) => setContact(i, { kind, isWhatsapp: kind === "phone" ? c.isWhatsapp : false })} />
+                                <input className="input grow" placeholder={c.kind === "email" ? "name@company.com" : "+961 3 555 142"} aria-label={c.kind === "email" ? "Email address" : "Phone number"} value={c.value}
+                                    onChange={(e) => setContact(i, { value: e.target.value })} onBlur={errors.touch(`contact-${i}`)} />
+                                <input className="input" style={{ width: 108 }} placeholder="e.g. Office" aria-label="Contact label" value={c.label} onChange={(e) => setContact(i, { label: e.target.value })} />
+                                {c.kind === "phone" && (
+                                    <button type="button" className={cx("chip", c.isWhatsapp && "on")} title="Reachable on WhatsApp"
+                                        onClick={() => setContact(i, { isWhatsapp: !c.isWhatsapp })}>WhatsApp</button>
+                                )}
+                                <button type="button" className="icon-btn" aria-label="Remove contact" disabled={contacts.length === 1}
+                                    onClick={() => setContacts(contacts.filter((_, j) => j !== i))}>
+                                    <Icon name="x" />
+                                </button>
+                            </div>
+                            <FieldError message={errors.show(`contact-${i}`, emailError(c))} />
                         </div>
                     ))}
                 </div>
+                <FieldError message={errors.show("contacts", contactsError)} />
                 <button type="button" className="btn btn-sm btn-quiet mt-s"
                     onClick={() => setContacts([...contacts, { kind: "phone", value: "", label: "", isWhatsapp: true }])}>
                     <Icon name="plus" />Add another contact

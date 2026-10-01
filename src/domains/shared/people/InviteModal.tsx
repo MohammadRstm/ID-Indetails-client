@@ -18,6 +18,7 @@ import { money } from "@/shared/format/money";
 import { DOMAIN_LABEL } from "@/shared/format/labels";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
+import { isEmail } from "@/shared/utils/email";
 import { HOURS_PER_MONTH, monthlyToHourly } from "../../design/pay/payRules";
 import { useInvite, useTeams } from "../../design/people/peopleWorkApi";
 
@@ -27,8 +28,6 @@ const ACCESS: Record<Role, { label: string; sub: string }> = {
     admin: { label: "Admin", sub: "Everything inside one domain" },
     super_admin: { label: "Super admin", sub: "Both domains and the company view" },
 };
-
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** "amara" from "amara@studio.com", for the avatar until they give their name. */
 const nameFromEmail = (email: string) => email.split("@")[0].replace(/[._-]+/g, " ").trim() || "New Person";
@@ -64,7 +63,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     const [sent, setSent] = useState<Schemas["InvitationResponse"] | null>(null);
     const monthly = basis === "monthly";
     const setsPay = role === "employee" && permissions.has(P.EMPLOYEE_PAY_MANAGE);
-    const emailError = !email.trim() ? "Enter their work email." : !EMAIL.test(email.trim()) && "Enter an email like name@company.com.";
+    const emailError = !email.trim() ? "Enter their work email." : !isEmail(email) && "Enter an email like name@company.com.";
     const payError = setsPay && !(amount > 0) && `Enter their pay ${monthly ? "per month" : "per hour"}.`;
     const team = teams.find((t) => String(t.id) === teamId);
 

@@ -306,6 +306,10 @@ function LbpRate() {
                     A payment can be received in LBP and converted at the rate of its day. Both amounts are kept, and payments already recorded keep their rate.
                     {earlier.length > 0 && <span className="muted"> Before: {earlier.map((r) => `${fmtNumber(r.ratePerUsd)} from ${fmtDateY(r.effectiveFrom)}`).join(" · ")}.</span>}
                     {add.error != null && <span className="err"> {errorMessage(add.error)}</span>}
+                    {editing && !editing.rate && <span className="err"> Enter how many LBP make a dollar.</span>}
+                    {editing && editing.rate !== "" && editing.rate > 0 && !dayOk(editing.from) && (
+                        <span className="err"> {firstDay ? `Pick a day from ${fmtDateY(firstDay)} to today.` : "Pick a day up to today."}</span>
+                    )}
                 </>
             }
             control={editing ? (

@@ -102,10 +102,10 @@ describe("a project's billing", () => {
         await userEvent.click(within(dialog).getByRole("button", { name: /Add line/ }));
         await userEvent.type(within(dialog).getByLabelText("Line 2 amount"), "2000");
         expect(await within(dialog).findByText("Each line needs a description and an amount.")).toBeInTheDocument();
-        expect(within(dialog).getByRole("button", { name: "Save draft" })).toBeDisabled();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save draft" }));
+        expect(saved).toBe(false);
         await userEvent.type(within(dialog).getByLabelText("Line 2"), "Site visits");
         expect(within(dialog).queryByText("Each line needs a description and an amount.")).toBeNull();
-        expect(within(dialog).getByRole("button", { name: "Save draft" })).toBeEnabled();
         expect(saved).toBe(false);
     });
 

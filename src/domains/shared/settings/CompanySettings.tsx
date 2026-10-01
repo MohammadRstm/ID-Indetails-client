@@ -5,6 +5,7 @@ import { usePermissions } from "@/app/permissions/usePermissions";
 import { useCompanySettings } from "@/app/shell/shellQueries";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
+import { FieldError } from "@/shared/components/Forms/Field";
 import { Segmented, SwitchRow } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import Logo from "@/shared/components/Identity/Logo";
@@ -100,13 +101,14 @@ function Company({ settings: s }: { settings: CompanySettings }) {
                         <label className="label" htmlFor="s-name">Company name</label>
                         <input id="s-name" className="input" value={name} disabled={!canEdit} onChange={(e) => setName(e.target.value)}
                             onKeyDown={(e) => { if (e.key === "Enter") saveDetails(); }} />
-                        <div className="hint">Shown on the launcher, invoices, reports and emails.</div>
+                        {canEdit && !name.trim() ? <FieldError message="The company needs a name." />
+                            : <div className="hint">Shown on the launcher, invoices, reports and emails.</div>}
                     </div>
                     <div className="field">
                         <label className="label" htmlFor="s-website">Website</label>
                         <input id="s-website" className="input" placeholder="e.g. id-indetails.com" value={website} disabled={!canEdit}
                             onChange={(e) => setWebsite(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") saveDetails(); }} />
-                        <div className="hint">Printed under the company name on invoices and statements.</div>
+                        <div className="hint">Printed under the company name on invoices and statements, with the address.</div>
                     </div>
                 </div>
                 <div className="field mt-s">
@@ -118,11 +120,11 @@ function Company({ settings: s }: { settings: CompanySettings }) {
                     <div className="row mt-s" style={{ gap: 8, justifyContent: "flex-end" }}>
                         {save.error != null && <span className="err" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(save.error)}</span>}
                         <button className="btn btn-sm" onClick={() => { setName(s.name); setWebsite(s.website ?? ""); setAddress(s.address ?? ""); }}>Cancel</button>
-                        <button className="btn btn-sm btn-primary" disabled={!name.trim() || save.isPending} onClick={saveDetails}>Save</button>
+                        <button className="btn btn-sm btn-primary" disabled={save.isPending} onClick={saveDetails}>Save</button>
                     </div>
                 )}
                 <div className="mt">
-                    <SwitchRow title="Logo" description="Used in the sidebar, the launcher and the sign-in page." control={
+                    <SwitchRow title="Logo" description="Used in the sidebar, the launcher and the sign-in page, and printed on invoices and statements when it is a PNG or JPEG." control={
                         <div className="row" style={{ gap: 8 }}>
                             <Logo size={34} />
                             {canEdit && (

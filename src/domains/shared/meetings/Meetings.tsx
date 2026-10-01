@@ -22,6 +22,7 @@ import { DOMAIN_LABEL } from "@/shared/format/labels";
 import {
     companyTimeToUtc, companyToday, DAYS, dayKey, fmtDayDate, fmtDur, fmtRange, fmtTime, MONTHS, minutesOfDay, partsOf,
 } from "@/shared/format/time";
+import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useProjects } from "../projects/projectsApi";
@@ -69,10 +70,13 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
     const [end, setEnd] = useState(() => Math.min(23 * 60 + 59, start + 60));
     const [topic, setTopic] = useState("");
     const [description, setDescription] = useState("");
-    const ok = chosen != null && day !== "" && end > start && !create.isPending;
+    const errors = useFormErrors();
+    const projectError = chosen == null && "Choose the project it is about.";
+    const timeError = end <= start && "It has to end after it starts.";
 
     function submit() {
-        if (!ok) return;
+        if (create.isPending) return;
+        if (projectError || timeError) return errors.tried();
         const startsAt = companyTimeToUtc(day, start), endsAt = companyTimeToUtc(day, end);
         create.mutate({
             projectId: chosen!,
@@ -94,7 +98,7 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
                             : `Everyone in ${DOMAIN_LABEL[domain] ?? domain} sees it${permissions.isAdmin ? "" : "; your admin is notified"}.`}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" disabled={!ok} onClick={submit}>Schedule meeting</button>
+                    <button className="btn btn-primary" disabled={create.isPending} onClick={submit}>Schedule meeting</button>
                 </>
             }>
             {!project && (
@@ -102,6 +106,7 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
                     <label className="label" htmlFor="mtg-project">Project</label>
                     <Select id="mtg-project" value={String(chosen ?? "")} onChange={setProjectId}
                         options={choices.length ? choices.map((x) => ({ value: String(x.id), label: x.title })) : [{ value: "", label: open.isPending ? "Loading…" : "No open projects" }]} />
+                    <FieldError message={errors.show("project", projectError)} />
                 </div>
             )}
             <div className="grid g-2">
@@ -116,6 +121,8 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
                         <span className="muted">–</span>
                         <div style={{ flex: 1 }}><TimeField value={end} label="End" min={start} onChange={setEnd} /></div>
                     </div>
+                    {/* the end follows the start, so this is said at once */}
+                    <FieldError message={timeError || undefined} />
                 </div>
             </div>
             <div className="field mt">

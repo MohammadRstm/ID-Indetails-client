@@ -3,6 +3,7 @@ import { errorMessage } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { toast } from "@/shared/components/Feedback/toast";
+import { FieldError } from "@/shared/components/Forms/Field";
 import Select from "@/shared/components/Forms/Select";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
 import Modal from "@/shared/components/Overlays/Modal";
@@ -78,8 +79,10 @@ function ApplyModal({ payment, onClose }: { payment: Payment; onClose: () => voi
 function VoidModal({ payment, onClose }: { payment: Payment; onClose: () => void }) {
     const voidIt = useVoidPayment();
     const [reason, setReason] = useState("");
+    const [tried, setTried] = useState(false);
 
     function go() {
+        if (!reason.trim()) return setTried(true);
         voidIt.mutate({ id: payment.id, reason: reason.trim() }, {
             onSuccess: () => { toast({ text: "Payment voided", sub: `${money.fmt(payment.amountUsd)} · ${payment.project.title}. It stays in the register with its reason.`, icon: "x" }); onClose(); },
         });
@@ -91,12 +94,13 @@ function VoidModal({ payment, onClose }: { payment: Payment; onClose: () => void
                 <>
                     <div className="grow">{voidIt.error ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(voidIt.error)}</span> : null}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-danger" disabled={!reason.trim() || voidIt.isPending} onClick={go}>Void payment</button>
+                    <button className="btn btn-danger" disabled={voidIt.isPending} onClick={go}>Void payment</button>
                 </>
             }>
             <div className="field">
                 <label className="label" htmlFor="void-reason">Reason</label>
                 <input id="void-reason" className="input" autoFocus placeholder="e.g. Recorded twice" value={reason} onChange={(e) => setReason(e.target.value)} />
+                <FieldError message={tried && !reason.trim() ? "Say why it is being voided: the reason stays in the register." : undefined} />
             </div>
             <p className="hint mt">{payment.invoiceNumber ? `${payment.invoiceNumber} goes back to owing this amount. ` : ""}Collections drop by it; profit is unchanged.</p>
         </Modal>

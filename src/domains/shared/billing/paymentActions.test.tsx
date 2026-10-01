@@ -33,7 +33,10 @@ describe("Correcting a payment", () => {
         await userEvent.click(await within(panel).findByRole("button", { name: "Payment of Sep 28 actions" }));
         await userEvent.click(screen.getByRole("button", { name: "Void payment…" }));
         const dialog = await screen.findByRole("dialog", { name: "Void payment" });
-        expect(within(dialog).getByRole("button", { name: "Void payment" })).toBeDisabled();
+        // the reason is required, and pressing Void without one says so
+        await userEvent.click(within(dialog).getByRole("button", { name: "Void payment" }));
+        expect(within(dialog).getByText("Say why it is being voided: the reason stays in the register.")).toBeInTheDocument();
+        expect(voided).toEqual([]);
         await userEvent.type(within(dialog).getByLabelText("Reason"), "Recorded twice");
         await userEvent.click(within(dialog).getByRole("button", { name: "Void payment" }));
         await waitFor(() => expect(voided).toEqual([{ id: String(paid.id), reason: "Recorded twice" }]));
