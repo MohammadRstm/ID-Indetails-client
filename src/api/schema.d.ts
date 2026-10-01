@@ -2412,6 +2412,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/employees/{userId}/sessions/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EmployeeResponse"];
+                        "text/json": components["schemas"]["EmployeeResponse"];
+                        "text/plain": components["schemas"]["EmployeeResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/{userId}/sessions/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EmployeeResponse"];
+                        "text/json": components["schemas"]["EmployeeResponse"];
+                        "text/plain": components["schemas"]["EmployeeResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/employees/{userId}/site-records": {
         parameters: {
             query?: never;
@@ -8449,6 +8527,8 @@ export interface components {
             photoFileId: null | number;
             position: null | string;
             role: string;
+            /** Format: date-time */
+            sessionsRevokedAt: null | string;
             status: components["schemas"]["UserStatus"];
             team: null | components["schemas"]["TeamSummaryResponse"];
         };
@@ -8471,6 +8551,8 @@ export interface components {
             photoFileId: null | number;
             position: null | string;
             role: string;
+            /** Format: date-time */
+            sessionsRevokedAt: null | string;
             status: components["schemas"]["UserStatus"];
             team: null | components["schemas"]["TeamSummaryResponse"];
         };

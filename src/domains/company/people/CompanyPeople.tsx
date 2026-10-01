@@ -106,10 +106,11 @@ function PersonRow({ person: p }: { person: EmployeeSummary }) {
             <td className="nowrap">
                 {p.status === "invited" ? <StatusBadge status="invited" />
                     : p.status === "deactivated" ? <span className="badge badge-archived"><Icon name="lock" />{p.leftOn ? `Left ${fmtDateY(p.leftOn)}` : "Deactivated"}</span>
-                        : <Presence online={p.online} lastSeenAt={p.lastSeenAt} />}
+                        : p.sessionsRevokedAt ? <span className="badge badge-hold" title={`Sessions ended ${fmtDateY(p.sessionsRevokedAt)}`}><Icon name="lock" />Sign-in suspended</span>
+                            : <Presence online={p.online} lastSeenAt={p.lastSeenAt} />}
             </td>
             <td className="muted nowrap">{p.joinedOn ? fmtDateY(p.joinedOn) : "-"}</td>
-            <td className="r"><PersonActions account={{ id: p.id, name, role: p.role, domain: p.domain, status: p.status, leftOn: p.leftOn }} /></td>
+            <td className="r"><PersonActions account={{ id: p.id, name, role: p.role, domain: p.domain, status: p.status, leftOn: p.leftOn, sessionsRevokedAt: p.sessionsRevokedAt }} /></td>
         </tr>
     );
 }

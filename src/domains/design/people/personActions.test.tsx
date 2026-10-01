@@ -116,6 +116,38 @@ describe("Someone's account", () => {
         expect(screen.queryByRole("button", { name: /^Move to/ })).not.toBeInTheDocument();
     });
 
+    it("can have every session ended by a super admin, and sign-in restored", async () => {
+        const ended = recording("post", "/api/employees/:id/sessions/end");
+        renderApp("/design/people/9", rana, ended.handler, ...peopleHandlers);
+        await menu();
+        expect(screen.queryByRole("button", { name: "Restore sign-in…" })).not.toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "End all sessions…" }));
+        const dialog = await screen.findByRole("dialog", { name: "End all sessions" });
+        expect(within(dialog).getByText(/can't sign in again, even with the right password/)).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "End sessions" }));
+        await waitFor(() => expect(ended.sent).toHaveLength(1));
+        expect(await screen.findByText(`${yara.firstName} ${yara.lastName} is signed out everywhere`)).toBeInTheDocument();
+    });
+
+    it("shows a suspended sign-in, which a super admin restores", async () => {
+        const restored = recording("post", "/api/employees/:id/sessions/restore");
+        renderApp("/design/people/9", rana, as({ sessionsRevokedAt: "2026-09-29T10:00:00Z" }), restored.handler, ...peopleHandlers);
+        expect(await screen.findByText("Sign-in suspended since Sep 29, 2026")).toBeInTheDocument();
+        await menu();
+        expect(screen.queryByRole("button", { name: "End all sessions…" })).not.toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "Restore sign-in…" }));
+        await userEvent.click(within(await screen.findByRole("dialog", { name: "Restore sign-in" })).getByRole("button", { name: "Restore sign-in" }));
+        await waitFor(() => expect(restored.sent).toHaveLength(1));
+    });
+
+    it("leaves sessions to super admins", async () => {
+        renderApp("/design/people/9", personas.designAdmin, as({ sessionsRevokedAt: "2026-09-29T10:00:00Z" }), ...peopleHandlers);
+        await menu();
+        expect(screen.getByRole("button", { name: "Deactivate…" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "End all sessions…" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Restore sign-in…" })).not.toBeInTheDocument();
+    });
+
     it("is out of reach without employee:manage", async () => {
         renderApp("/design/people/9", withPermissions(personas.designAdmin, { revoke: [P.EMPLOYEE_MANAGE] }), ...peopleHandlers);
         expect(await screen.findByRole("button", { name: "Send message" })).toBeInTheDocument();
