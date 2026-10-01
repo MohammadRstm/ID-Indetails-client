@@ -9,8 +9,8 @@ import { money } from "@/shared/format/money";
 import { addMonths, companyToday, fmtMonthY } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
-import { useAddOverhead, useChangeOverhead, type OverheadChange, type OverheadGroup, type OverheadLine } from "./companyApi";
-import { GROUP_LABEL } from "./overheadGroups";
+import { usePermissions } from "@/app/permissions/usePermissions";
+import { useAddOverhead, useChangeOverhead, useOverheadGroups, type OverheadChange, type OverheadLine } from "./companyApi";
 
 /**
  * A recurring company expense, added or changed (the prototype's OverheadModal). A new amount or currency
@@ -23,7 +23,9 @@ export default function OverheadModal({ line, onClose }: { line: OverheadLine | 
     const [name, setName] = useState(line?.name ?? "");
     const [amount, setAmount] = useState(line?.currentAmount ?? 0);
     const [currency, setCurrency] = useState(line?.currency ?? "USD");
-    const [group, setGroup] = useState<OverheadGroup>(line?.costGroup ?? "software");
+    const groups = useOverheadGroups().data ?? [];
+    const superAdmin = usePermissions().isSuperAdmin;
+    const [groupId, setGroupId] = useState(line ? String(line.group.id) : "");
     const [from, setFrom] = useState(thisMonth);
     const pending = add.isPending || change.isPending;
     const error = add.error ?? change.error;
@@ -33,20 +35,21 @@ export default function OverheadModal({ line, onClose }: { line: OverheadLine | 
     const errors = useFormErrors();
     const nameError = !name.trim() && "Name the expense.";
     const amountError = !(amount > 0) && "Enter what it costs each month.";
+    const groupError = !groupId && "Choose the category.";
 
     function submit() {
         if (pending) return;
-        if (nameError || amountError) return errors.tried();
+        if (nameError || amountError || groupError) return errors.tried();
         const done = () => {
             toast({ text: `${name.trim()} · ${money.fmt(amount, currency)} per month`, sub: line && (newAmount || newCurrency) ? `From ${fmtMonthY(fromMonth)}` : undefined, icon: "checkCircle" });
             onClose();
         };
         if (!line) {
-            add.mutate({ name: name.trim(), amount, currency, costGroup: group }, { onSuccess: done });
+            add.mutate({ name: name.trim(), amount, currency, groupId: +groupId }, { onSuccess: done });
             return;
         }
         const changes: OverheadChange[] = [];
-        if (name.trim() !== line.name || group !== line.costGroup) changes.push({ kind: "details", body: { name: name.trim(), costGroup: group } });
+        if (name.trim() !== line.name || +groupId !== line.group.id) changes.push({ kind: "details", body: { name: name.trim(), groupId: +groupId } });
         if (newCurrency) changes.push({ kind: "currency", body: { amount, currency, fromMonth } });
         else if (newAmount) changes.push({ kind: "amount", body: { amount, fromMonth } });
         if (!changes.length) { onClose(); return; }
@@ -78,8 +81,10 @@ export default function OverheadModal({ line, onClose }: { line: OverheadLine | 
                 </div>
                 <div className="field">
                     <label className="label required" htmlFor="ov-group">Group</label>
-                    <Select id="ov-group" value={group} onChange={setGroup}
-                        options={(Object.keys(GROUP_LABEL) as OverheadGroup[]).map((g) => ({ value: g, label: GROUP_LABEL[g] }))} />
+                    <Select id="ov-group" value={groupId} onChange={(v) => { setGroupId(v); errors.touch("group")(); }}
+                        options={[{ value: "", label: "Choose a category", disabled: true }, ...groups.map((g) => ({ value: String(g.id), label: g.name }))]} />
+                    {errors.show("group", groupError) ? <FieldError message={errors.show("group", groupError)} />
+                        : superAdmin && <div className="hint">Add or rename categories from Categories on the expenses page.</div>}
                 </div>
             </div>
             {(newAmount || newCurrency) && (

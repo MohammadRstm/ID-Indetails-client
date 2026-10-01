@@ -16,13 +16,15 @@ import MenuButton from "@/shared/components/Overlays/MenuButton";
 import { money } from "@/shared/format/money";
 import { addDays, companyToday, fmtDate, fmtDateY, fmtMonthY, MONTHS, partsOf } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import { useCancelOverhead, useCompanyMonths, useCompanyYear, useOverhead, useOverheadMonths, type OverheadGroup, type OverheadLine } from "./companyApi";
+import { useCancelOverhead, useCompanyMonths, useCompanyYear, useOverhead, useOverheadMonths, type OverheadLine } from "./companyApi";
 import { YEARS_BACK } from "./companyPeriod";
 import OverheadModal from "./OverheadModal";
-import { GROUP_LABEL } from "./overheadGroups";
+import OverheadGroupsModal from "./OverheadGroupsModal";
 import { loadFailed } from "@/api/queryState";
 
 const monthLabel = (m: string) => MONTHS[+m.slice(5, 7) - 1];
+/** The composition bar's colours, one per category shown. */
+const PALETTE = ["var(--heat-3)", "var(--cost)", "var(--now)", "var(--ok)", "var(--warn-mark)", "var(--heat-1)"];
 const usd = (totals: { currency: string; total: number }[]) => totals.find((t) => t.currency === "USD")?.total ?? 0;
 const others = (totals: { currency: string; total: number }[]) => totals.filter((t) => t.currency !== "USD").map((t) => ({ currency: t.currency, amount: t.total }));
 
@@ -62,11 +64,15 @@ export default function CompanyExpensesPage() {
     const active = (o?.lines ?? []).filter((l) => !l.isCancelled);
     // a cancelled line can be taken back until the end of the month it stops after, unless another line with
     // its name carries on from the next day (a change of currency, or it was added again): both would charge
-    const carriedOn = (l: OverheadLine) => (o?.lines ?? []).some((x) => x.id !== l.id && x.name.toLowerCase() === l.name.toLowerCase() && x.costGroup === l.costGroup
+    const carriedOn = (l: OverheadLine) => (o?.lines ?? []).some((x) => x.id !== l.id && x.name.toLowerCase() === l.name.toLowerCase() && x.group.id === l.group.id
         && l.endedOn != null && x.startedOn === addDays(l.endedOn, 1));
     const canResume = (l: OverheadLine) => l.isCancelled && l.endedOn != null && l.endedOn >= companyToday() && !carriedOn(l);
     const perMonth = usd(o?.monthTotals ?? []);
-    const groups = (["software", "operating"] as OverheadGroup[]).map((g) => ({ group: g, total: usd((o?.groupTotals ?? []).filter((t) => t.costGroup === g)) }));
+    // this month's categories in USD, largest first: the two biggest have a tile, the bar shows five and the rest together
+    const groups = (o?.groupTotals ?? []).filter((t) => t.currency === "USD" && t.total > 0).sort((a, b) => b.total - a.total)
+        .map((t) => ({ id: t.groupId, name: t.name, total: t.total }));
+    const shownGroups = groups.length > 6 ? [...groups.slice(0, 5), { id: 0, name: "Everything else", total: groups.slice(5).reduce((s, g) => s + g.total, 0) }] : groups;
+    const [managing, setManaging] = useState(false);
     const year = (perMonthRows ?? []).reduce((t, m) => t + m.overhead, 0);
     const current = list[list.length - 1];
     const currentCost = current ? current.labour + current.expenses + current.materials + current.groundLabour + current.overhead : 0;
@@ -101,8 +107,8 @@ export default function CompanyExpensesPage() {
                             key: "month", label: "Company expenses per month", value: money.fmt(perMonth),
                             sub: <span>{active.length} recurring lines{others(o?.monthTotals ?? []).length > 0 && <> · <MixedCurrency amounts={others(o!.monthTotals)} /></>}</span>,
                         },
-                        ...groups.map((g) => ({
-                            key: g.group, label: GROUP_LABEL[g.group], value: money.fmt(g.total),
+                        ...groups.slice(0, 2).map((g) => ({
+                            key: `group-${g.id}`, label: g.name, value: money.fmt(g.total),
                             sub: <span>{Math.round((g.total / (perMonth || 1)) * 100)}% of company expenses</span>,
                         })),
                         { key: "year", label: "Last 13 months", value: money.short(year), sub: <span>charged to the company</span> },
@@ -149,7 +155,7 @@ export default function CompanyExpensesPage() {
                                 )}
                             </Figure>
                             <Figure title="What it is made of" sub={perMonthRows?.length ? fmtMonthY(perMonthRows[perMonthRows.length - 1].month) : ""}>
-                                <CompositionBar height={18} parts={groups.map((g, i) => ({ label: GROUP_LABEL[g.group], value: g.total, color: i === 0 ? "var(--heat-3)" : "var(--cost)" }))} />
+                                <CompositionBar height={18} parts={shownGroups.map((g, i) => ({ label: g.name, value: g.total, color: PALETTE[i % PALETTE.length] }))} />
                                 <div className="chart-note">Company expenses are company-wide - they are never charged to a project or a client.</div>
                             </Figure>
                         </div>
@@ -161,17 +167,22 @@ export default function CompanyExpensesPage() {
                                 <div className="panel-title">Recurring monthly expenses</div>
                                 <div className="panel-sub">Subscriptions and running costs. They repeat every month and come out of the company's net profit.</div>
                             </div>
-                            {canEdit && <div className="panel-tools"><button className="btn btn-sm btn-primary" onClick={() => setEditing(true)}><Icon name="plus" />Add expense</button></div>}
+                            {(canEdit || permissions.isSuperAdmin) && (
+                                <div className="panel-tools">
+                                    {permissions.isSuperAdmin && <button className="btn btn-sm" onClick={() => setManaging(true)}><Icon name="list" />Categories</button>}
+                                    {canEdit && <button className="btn btn-sm btn-primary" onClick={() => setEditing(true)}><Icon name="plus" />Add expense</button>}
+                                </div>
+                            )}
                         </div>
                         {!o ? <div className="panel-body"><SkeletonLines lines={5} /></div> : (
                             <div className="tbl-wrap">
                                 <table className="tbl tbl-min-sm">
-                                    <thead><tr><th>Name</th><th>Group</th><th className="r">Monthly</th><th className="r">Per year</th><th>Status</th><th>Since</th>{canEdit && <th />}</tr></thead>
+                                    <thead><tr><th>Name</th><th>Category</th><th className="r">Monthly</th><th className="r">Per year</th><th>Status</th><th>Since</th>{canEdit && <th />}</tr></thead>
                                     <tbody>
                                         {o.lines.slice().sort((a, b) => (b.currentAmount ?? 0) - (a.currentAmount ?? 0)).map((line) => (
                                             <tr key={line.id}>
                                                 <td><b>{line.name}</b></td>
-                                                <td className="muted">{GROUP_LABEL[line.costGroup]}</td>
+                                                <td className="muted">{line.group.name}</td>
                                                 <td className="r mono">{line.currentAmount != null ? money.fmt(line.currentAmount, line.currency) : <span className="muted">-</span>}</td>
                                                 <td className="r mono muted">{line.perYear != null && !line.isCancelled ? money.short(line.perYear, line.currency) : "-"}</td>
                                                 <td>
@@ -207,6 +218,7 @@ export default function CompanyExpensesPage() {
                     </div>
                 </>
             )}
+            {managing && <OverheadGroupsModal onClose={() => setManaging(false)} />}
             {(editing || asked) && <OverheadModal line={editing && editing !== true ? editing : null} onClose={closeEditing} />}
         </div>
     );

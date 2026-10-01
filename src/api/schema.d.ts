@@ -1139,6 +1139,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/company/overhead/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OverheadGroupResponse"][];
+                        "text/json": components["schemas"]["OverheadGroupResponse"][];
+                        "text/plain": components["schemas"]["OverheadGroupResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["OverheadGroupRequest"];
+                    "application/json": components["schemas"]["OverheadGroupRequest"];
+                    "text/json": components["schemas"]["OverheadGroupRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OverheadGroupResponse"];
+                        "text/json": components["schemas"]["OverheadGroupResponse"];
+                        "text/plain": components["schemas"]["OverheadGroupResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company/overhead/groups/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["OverheadGroupRequest"];
+                    "application/json": components["schemas"]["OverheadGroupRequest"];
+                    "text/json": components["schemas"]["OverheadGroupRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OverheadGroupResponse"];
+                        "text/json": components["schemas"]["OverheadGroupResponse"];
+                        "text/plain": components["schemas"]["OverheadGroupResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/company/overhead/monthly": {
         parameters: {
             query?: never;
@@ -8330,8 +8458,9 @@ export interface components {
         CreateOverheadRequest: {
             /** Format: double */
             amount?: number;
-            costGroup?: components["schemas"]["OverheadCostGroup"];
             currency?: string;
+            /** Format: int64 */
+            groupId?: number;
             name?: string;
             /** Format: date */
             startMonth?: null | string;
@@ -9518,22 +9647,37 @@ export interface components {
             /** Format: date */
             effectiveFrom: string;
         };
-        /** @enum {unknown} */
-        OverheadCostGroup: "software" | "operating";
+        OverheadGroupRequest: {
+            name?: string;
+        };
+        OverheadGroupResponse: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            lines: number;
+            name: string;
+        };
+        OverheadGroupSummaryResponse: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+        };
         OverheadGroupTotalResponse: {
-            costGroup: components["schemas"]["OverheadCostGroup"];
             currency: string;
+            /** Format: int64 */
+            groupId: number;
+            name: string;
             /** Format: double */
             total: number;
         };
         OverheadLineResponse: {
             amounts: components["schemas"]["OverheadAmountResponse"][];
-            costGroup: components["schemas"]["OverheadCostGroup"];
             currency: string;
             /** Format: double */
             currentAmount: null | number;
             /** Format: date */
             endedOn: null | string;
+            group: components["schemas"]["OverheadGroupSummaryResponse"];
             /** Format: int64 */
             id: number;
             isCancelled: boolean;
@@ -11033,7 +11177,8 @@ export interface components {
             phone?: null | string;
         };
         UpdateOverheadRequest: {
-            costGroup?: components["schemas"]["OverheadCostGroup"];
+            /** Format: int64 */
+            groupId?: number;
             name?: string;
         };
         UpdateProjectBillingRequest: {

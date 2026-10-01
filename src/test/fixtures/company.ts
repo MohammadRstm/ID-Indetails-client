@@ -9,8 +9,15 @@ import overviewJson from "./company/overview.json";
  * here, in the API's shape: two lines charged in dollars and one cancelled at the end of this month.
  */
 
+/** The seeded categories, with how many of the lines below use each. */
+const groupNames = ["Software & services", "Operating costs", "Rent & utilities", "Internet & phone", "Marketing & advertising", "Professional fees",
+    "Insurance", "Office supplies", "Equipment & maintenance", "Vehicles & transport", "Bank fees", "Taxes & licences", "Training & memberships", "Other"];
+const groups: Schemas["OverheadGroupResponse"][] = groupNames.map((name, i) => ({ id: i + 1, name, lines: i === 0 ? 2 : i === 1 ? 1 : 0 }));
+const software = { id: 1, name: "Software & services" };
+const operating = { id: 2, name: "Operating costs" };
+
 const line = (patch: Partial<Schemas["OverheadLineResponse"]>): Schemas["OverheadLineResponse"] => ({
-    id: 1, name: "AWS", costGroup: "software", currency: "USD", currentAmount: 420, perYear: 5040, amounts: [{ amount: 420, effectiveFrom: "2025-03-01" }],
+    id: 1, name: "AWS", group: software, currency: "USD", currentAmount: 420, perYear: 5040, amounts: [{ amount: 420, effectiveFrom: "2025-03-01" }],
     startedOn: "2025-03-01", endedOn: null, isCancelled: false, ...patch,
 });
 
@@ -20,17 +27,19 @@ export const company = {
     overhead: {
         lines: [
             line({}),
-            line({ id: 2, name: "Office rent", costGroup: "operating", currentAmount: 1800, perYear: 21600, amounts: [{ amount: 1800, effectiveFrom: "2024-01-01" }], startedOn: "2024-01-01" }),
+            line({ id: 2, name: "Office rent", group: operating, currentAmount: 1800, perYear: 21600, amounts: [{ amount: 1800, effectiveFrom: "2024-01-01" }], startedOn: "2024-01-01" }),
             line({ id: 3, name: "Figma", currentAmount: 90, perYear: 1080, isCancelled: true, endedOn: "2026-09-30", startedOn: "2025-06-01" }),
         ],
-        groupTotals: [{ costGroup: "software", currency: "USD", total: 510 }, { costGroup: "operating", currency: "USD", total: 1800 }],
+        groupTotals: [{ groupId: 2, name: "Operating costs", currency: "USD", total: 1800 }, { groupId: 1, name: "Software & services", currency: "USD", total: 510 }],
         monthTotals: [{ currency: "USD", total: 2310 }],
     } as Schemas["OverheadResponse"],
+    groups,
 };
 
 export const companyHandlers = [
     http.get("/api/company/overview", () => HttpResponse.json(company.overview)),
     http.get("/api/company/overview/monthly", () => HttpResponse.json(company.months)),
     http.get("/api/company/overhead", () => HttpResponse.json(company.overhead)),
+    http.get("/api/company/overhead/groups", () => HttpResponse.json(company.groups)),
     http.get("/api/me/board-layouts/:key", ({ params }) => HttpResponse.json({ key: params.key, order: null, savedAt: null })),
 ];
