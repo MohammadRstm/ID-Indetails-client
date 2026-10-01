@@ -8,6 +8,9 @@ export type PeriodChoice =
 
 export type CompanyPeriod = { from: string; to: string; label: string };
 
+/** How many years before this one the company area's pickers reach. */
+export const YEARS_BACK = 5;
+
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** The prototype's HL.companyPeriod: a window never runs past today. */

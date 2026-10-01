@@ -4,9 +4,7 @@ import Select from "@/shared/components/Forms/Select";
 import { companyToday, MONTHS, partsOf } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import type { CompanyPeriod, PeriodChoice } from "./companyPeriod";
-
-const YEARS_BACK = 5;
+import { YEARS_BACK, type CompanyPeriod, type PeriodChoice } from "./companyPeriod";
 
 /** The window picker (the prototype's PeriodBar): quick presets, a year or quarter, and a free from–to range. */
 export default function PeriodBar({ choice, period, onChange }: { choice: PeriodChoice; period: CompanyPeriod; onChange: (choice: PeriodChoice) => void }) {

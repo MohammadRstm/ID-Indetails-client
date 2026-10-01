@@ -140,6 +140,26 @@ describe("Company expenses", () => {
         expect(screen.getByText("It hadn't started yet, so it was never charged.")).toBeInTheDocument();
     });
 
+    it("chart what they do to each month a year at a time, this year first", async () => {
+        const years: string[] = [];
+        renderApp("/company/overhead", rana,
+            http.get("/api/company/overview/monthly", ({ request }) => {
+                const year = new URL(request.url).searchParams.get("year");
+                if (year) years.push(year);
+                return HttpResponse.json(company.months.filter((m) => !year || m.month.startsWith(year)));
+            }),
+            ...companyHandlers);
+        expect(await screen.findByText("What company expenses do to each month · 2026")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Next year" })).toBeDisabled();
+        await userEvent.click(screen.getByRole("button", { name: "Previous year" }));
+        expect(await screen.findByText("What company expenses do to each month · 2025")).toBeInTheDocument();
+        await waitFor(() => expect(years).toEqual(["2026", "2025"]));
+        // the table lists that year's months only
+        await userEvent.click(within(screen.getByText(/· 2025$/).closest(".panel") as HTMLElement).getByRole("button", { name: "Table" }));
+        expect(await screen.findByText("September 2025")).toBeInTheDocument();
+        expect(screen.queryByText("January 2026")).toBeNull();
+    });
+
     it("show overhead:manage alone the expenses by month, without the company's profit", async () => {
         let askedCompany = false;
         renderApp("/company/overhead", withPermissions(rana, { revoke: [P.COMPANY_VIEW] }),
