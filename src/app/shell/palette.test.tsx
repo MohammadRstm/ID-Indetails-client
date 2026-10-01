@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { fixtures, projectHandlers } from "@/test/fixtures";
+import { companyHandlers } from "@/test/fixtures/company";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
@@ -57,6 +58,27 @@ describe("the search palette", () => {
         await userEvent.click(within(dialog).getByText(target.title));
         await waitFor(() => expect(window.location.pathname).toBe(`/design/projects/${target.id}`));
         expect(screen.queryByRole("dialog", { name: "Search" })).toBeNull();
+    });
+
+    it("finds a page by another name for it, ahead of the API's matches", async () => {
+        renderApp("/company/overview", personas.superAdmin,
+            http.get("/api/search", () => HttpResponse.json(fixtures.search)),
+            ...companyHandlers);
+        const dialog = await openPalette(false);
+        await userEvent.type(within(dialog).getByRole("textbox", { name: "Search" }), "payroll");
+        await waitFor(() => expect(within(dialog).getAllByRole("option")[0]).toHaveTextContent("Open salaries"));
+        await userEvent.keyboard("{Enter}");
+        await waitFor(() => expect(window.location.pathname).toBe("/company/salaries"));
+    });
+
+    it("takes a business's admin to the teams in their Settings", async () => {
+        renderApp("/design/projects", personas.designAdmin,
+            http.get("/api/search", () => HttpResponse.json({ projects: [], clients: [], people: [] })),
+            ...projectHandlers);
+        const dialog = await openPalette(false);
+        await userEvent.type(within(dialog).getByRole("textbox", { name: "Search" }), "departments");
+        await userEvent.click(await within(dialog).findByText("Open teams"));
+        await waitFor(() => expect(`${window.location.pathname}${window.location.search}`).toBe("/design/settings?section=teams"));
     });
 
     it("moves with the arrow keys and closes with escape", async () => {

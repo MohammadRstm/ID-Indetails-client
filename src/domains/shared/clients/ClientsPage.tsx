@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { useDomain } from "@/app/routing/domainContext";
@@ -41,6 +41,13 @@ export default function ClientsPage() {
     const [sort, setSort] = useState<SortState>({ key: seesMoney ? "revenue" : "name", dir: seesMoney ? "desc" : "asc" });
     const [showArchived, setShowArchived] = useState(false);
     const [showAdd, setShowAdd] = useState(false);
+    // ?new=1 (from search) opens the new client form
+    const [params, setParams] = useSearchParams();
+    const asked = params.get("new") === "1" && permissions.has(P.CLIENT_CREATE);
+    const closeAdd = () => {
+        setShowAdd(false);
+        if (asked) { params.delete("new"); setParams(params, { replace: true }); }
+    };
     const [page, setPage] = useState(1);
     const search = useDebounce({ value: q, debounceTimeMs: 250 });
 
@@ -194,7 +201,7 @@ export default function ClientsPage() {
                 )}
             </div>
 
-            {showAdd && <ClientModal domain={domain} onClose={() => setShowAdd(false)} />}
+            {(showAdd || asked) && <ClientModal domain={domain} onClose={closeAdd} />}
         </div>
     );
 }

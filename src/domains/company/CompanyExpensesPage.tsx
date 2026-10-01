@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { errorMessage } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -47,6 +47,13 @@ export default function CompanyExpensesPage() {
     const monthsQuery = seesCompany ? months : overheadMonths;
     const cancel = useCancelOverhead();
     const [editing, setEditing] = useState<OverheadLine | true | null>(null);
+    // ?add=1 (from search) opens the new expense form
+    const [params, setParams] = useSearchParams();
+    const asked = params.get("add") === "1" && canEdit;
+    const closeEditing = () => {
+        setEditing(null);
+        if (asked) { params.delete("add"); setParams(params, { replace: true }); }
+    };
     const o = overhead.data;
     const list = months.data ?? [];
     // company expenses per month, from whichever the person may see
@@ -200,7 +207,7 @@ export default function CompanyExpensesPage() {
                     </div>
                 </>
             )}
-            {editing && <OverheadModal line={editing === true ? null : editing} onClose={() => setEditing(null)} />}
+            {(editing || asked) && <OverheadModal line={editing && editing !== true ? editing : null} onClose={closeEditing} />}
         </div>
     );
 }

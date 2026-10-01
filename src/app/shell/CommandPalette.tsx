@@ -4,10 +4,10 @@ import { useNavigate } from "react-router";
 import { http } from "@/api/http";
 import { keys } from "@/api/keys";
 import type { Schemas } from "@/api/types";
-import { P } from "@/app/permissions/codes";
 import type { Domain, Permissions } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
-import { canOpen, companyNav } from "@/app/routing/routeTable";
+import { canOpen } from "@/app/routing/routeTable";
+import { useCurrentUser, useSession } from "@/app/session/useSession";
 import { openLogWork } from "@/domains/design/work/logWorkStore";
 import { ProjectTile } from "@/shared/components/Data/Bits";
 import { PROJECT_STATUS } from "@/shared/components/Data/status";
@@ -17,23 +17,29 @@ import Avatar from "@/shared/components/Identity/Avatar";
 import useDebounce from "@/shared/hooks/useDebounce";
 import { DOMAIN_LABEL } from "@/shared/format/labels";
 import Icon from "@/shared/icons/Icon";
-import type { IconName } from "@/shared/icons/icons";
+import { toggleTheme, useTheme } from "@/shared/theme";
 import { cx } from "@/shared/utils/cx";
+import { findPlaces, STRONG, type Found, type PlaceContext } from "./searchPlaces";
 import type { ShellArea } from "./useArea";
 import { loadFailed } from "@/api/queryState";
 
 type SearchResponse = Schemas["SearchResponse"];
 
 type Item = { key: string; kind: string; label: string; sub?: string | null; node: ReactNode; go?: string; act?: () => void };
-/** A quick action: a page to open, or something to do (open Log work). */
-type Action = { label: string; icon: IconName; path?: string; act?: () => void; when?: boolean };
 
 const MAX = 12;
 
-/** Search and quick actions (the prototype's P.CommandPalette), opened with Ctrl/Cmd+K or the top bar. */
+/**
+ * Search and quick actions (the prototype's P.CommandPalette), opened with Ctrl/Cmd+K or the top bar. Pages and
+ * actions are found by the many ways people name them (searchPlaces.ts); a close match comes before the
+ * projects, clients and people the API finds.
+ */
 export default function CommandPalette({ area, onClose }: { area: ShellArea; onClose: () => void }) {
     const navigate = useNavigate();
     const p = usePermissions();
+    const me = useCurrentUser();
+    const { signOut } = useSession();
+    const dark = useTheme() === "dark";
     const [q, setQ] = useState("");
     const [sel, setSel] = useState(0);
     const text = useDebounce({ value: q.trim(), debounceTimeMs: 150 });
@@ -45,10 +51,12 @@ export default function CommandPalette({ area, onClose }: { area: ShellArea; onC
     });
 
     const domain = area.kind === "domain" ? area.domain : null;
-    const s = q.trim().toLowerCase();
+    const ctx: PlaceContext = { p, area, userId: me.id, dark, run: { logWork: openLogWork, toggleTheme, signOut: () => void signOut() } };
+    const places = findPlaces(ctx, q);
     const items = [
+        ...places.filter((f) => f.score >= STRONG).map(placeItem),
         ...resultItems(found.data, p, domain),
-        ...actionItems(p, area).filter((a) => !s || a.label.toLowerCase().includes(s)),
+        ...places.filter((f) => f.score < STRONG).map(placeItem),
     ].slice(0, MAX);
     const at = Math.min(sel, items.length - 1);
 
@@ -128,30 +136,8 @@ function resultItems(data: SearchResponse | undefined, p: Permissions, current: 
     return out;
 }
 
-/** The quick actions of the area, each shown only where this person may follow it. */
-function actionItems(p: Permissions, area: ShellArea): Item[] {
-    if (area.kind === "company") {
-        return companyNav(p).map((n) => ({ key: `a${n.path}`, kind: "Action", label: `Open ${n.label.toLowerCase()}`, node: <Icon name={n.icon} />, go: `/company/${n.path}` }));
-    }
-    const d = area.domain;
-    const actions: Action[] = p.isAdmin
-        ? [
-            { label: "New project", icon: "plus", path: "projects?new=1", when: p.has(P.PROJECT_CREATE) },
-            { label: "Add employee", icon: "userPlus", path: "people?invite=1", when: p.has(P.EMPLOYEE_INVITE) },
-            { label: "Open clients", icon: "briefcase", path: "clients" },
-            { label: "Open financials", icon: "card", path: "financials" },
-            { label: "Billing and invoices", icon: "file", path: "financials?tab=billing" },
-            { label: "Overdue invoices", icon: "alert", path: "financials?tab=billing&overdue=1" },
-            { label: "Open reports", icon: "reports", path: "reports" },
-            { label: "Open activity", icon: "activity", path: "activity" },
-            { label: "Settings", icon: "settings", path: "settings" },
-        ]
-        : [
-            { label: "Log work", icon: "plus", act: () => openLogWork(), when: d === "design" && p.has(P.WORK_ENTRY_CREATE) },
-            { label: "My work", icon: "clock", path: "my-work" },
-            { label: "My profile", icon: "user", path: "profile" },
-        ];
-    return actions
-        .filter((a) => a.when !== false && (a.act ? p.canSeeDomain(d) : canOpen(p, d, a.path!)))
-        .map((a) => ({ key: `a${a.label}`, kind: "Action", label: a.label, node: <Icon name={a.icon} />, go: a.path && `/${d}/${a.path}`, act: a.act }));
+/** A page or action found by its name. */
+function placeItem(f: Found): Item {
+    const go = "path" in f.target ? f.target.path : undefined;
+    return { key: `a${f.key}`, kind: go ? "Page" : "Action", label: f.label, sub: f.target.sub, node: <Icon name={f.icon} />, go, act: "act" in f.target ? f.target.act : undefined };
 }
