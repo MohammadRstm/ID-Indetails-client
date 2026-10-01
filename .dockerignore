@@ -1,0 +1,18 @@
+# Only what the build needs goes into the image's build context.
+node_modules
+dist
+dist-ssr
+coverage
+.git
+.github
+.vscode
+.idea
+docs
+*.log
+*.local
+.env
+.env.*
+!.env.example
+Dockerfile
+docker-compose.yml
+.dockerignore
