@@ -69,17 +69,64 @@ describe("Company expenses", () => {
         expect(within(table).getByText("Cancelled Sep 30")).toBeInTheDocument();
     });
 
-    it("are added, with their group and currency", async () => {
+    it("are added, with their category and currency", async () => {
         const added: unknown[] = [];
         renderApp("/company/overhead", rana,
             http.post("/api/company/overhead", async ({ request }) => { added.push(await request.json()); return HttpResponse.json(company.overhead.lines[0], { status: 201 }); }),
             ...companyHandlers);
         await userEvent.click((await screen.findAllByRole("button", { name: "Add expense" }))[0]);
         const dialog = await screen.findByRole("dialog", { name: "Add recurring expense" });
-        await userEvent.type(within(dialog).getByLabelText("Name"), "Slack");
+        await userEvent.type(within(dialog).getByLabelText("Name"), "Office cleaning");
         await userEvent.type(within(dialog).getByLabelText("Monthly cost"), "87.5");
+        // the category has to be chosen
         await userEvent.click(within(dialog).getByRole("button", { name: "Add expense" }));
-        await waitFor(() => expect(added).toEqual([{ name: "Slack", amount: 87.5, currency: "USD", costGroup: "software" }]));
+        expect(within(dialog).getByText("Choose the category.")).toBeInTheDocument();
+        expect(added).toEqual([]);
+        await userEvent.click(within(dialog).getByLabelText("Group"));
+        await userEvent.click(screen.getByRole("option", { name: "Rent & utilities" }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Add expense" }));
+        await waitFor(() => expect(added).toEqual([{ name: "Office cleaning", amount: 87.5, currency: "USD", groupId: 3 }]));
+    });
+
+    it("show this month's biggest categories, and let a super admin manage the categories", async () => {
+        const calls: string[] = [];
+        renderApp("/company/overhead", rana,
+            http.post("/api/company/overhead/groups", async ({ request }) => {
+                const { name } = await request.json() as { name: string };
+                calls.push(`add ${name}`);
+                return HttpResponse.json({ id: 15, name, lines: 0 }, { status: 201 });
+            }),
+            http.put("/api/company/overhead/groups/:id", async ({ params, request }) => {
+                const { name } = await request.json() as { name: string };
+                calls.push(`rename ${params.id} ${name}`);
+                return HttpResponse.json({ id: Number(params.id), name, lines: 0 });
+            }),
+            http.delete("/api/company/overhead/groups/:id", ({ params }) => { calls.push(`remove ${params.id}`); return new HttpResponse(null, { status: 204 }); }),
+            ...companyHandlers);
+        // the two biggest categories this month have a tile each
+        const strip = (await screen.findByText("Operating costs", { selector: ".kpi-label" })).closest(".kpis") as HTMLElement;
+        expect(within(strip).getByText("Software & services", { selector: ".kpi-label" })).toBeInTheDocument();
+        expect(within(screen.getByText("Recurring monthly expenses").closest(".panel") as HTMLElement).getAllByText("Software & services")).toHaveLength(2);
+
+        await userEvent.click(screen.getByRole("button", { name: "Categories" }));
+        const dialog = await screen.findByRole("dialog", { name: "Expense categories" });
+        expect(await within(dialog).findByText("Other")).toBeInTheDocument();
+        // one in use stays; an unused one goes
+        expect(within(dialog).getByRole("button", { name: "Remove Software & services" })).toBeDisabled();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Remove Insurance" }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Rename Bank fees" }));
+        const rename = within(dialog).getByLabelText("New name for Bank fees");
+        await userEvent.clear(rename);
+        await userEvent.type(rename, "Bank charges{Enter}");
+        await userEvent.type(within(dialog).getByLabelText("New category"), "Cleaning");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Add" }));
+        await waitFor(() => expect(calls).toEqual(["remove 7", "rename 11 Bank charges", "add Cleaning"]));
+    });
+
+    it("keep managing the categories to super admins", async () => {
+        renderApp("/company/overhead", withPermissions(personas.designAdmin, { grant: [P.OVERHEAD_MANAGE, P.COMPANY_VIEW] }), ...companyHandlers);
+        expect(await screen.findByText("Recurring monthly expenses")).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Categories" })).not.toBeInTheDocument();
     });
 
     it("change their amount from a month, and their name on its own", async () => {

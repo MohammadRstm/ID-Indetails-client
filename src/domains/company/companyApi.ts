@@ -7,7 +7,7 @@ export type CompanyOverview = Schemas["CompanyOverviewResponse"];
 export type CompanyMonth = Schemas["CompanyMonthResponse"];
 export type Overhead = Schemas["OverheadResponse"];
 export type OverheadLine = Schemas["OverheadLineResponse"];
-export type OverheadGroup = Schemas["OverheadCostGroup"];
+export type OverheadGroup = Schemas["OverheadGroupResponse"];
 
 /** Both domains and the company's own expenses over a window, this month to date by default (company:view). */
 export function useCompanyOverview(range: { from: string; to: string }) {
@@ -57,6 +57,15 @@ export function useOverhead() {
     });
 }
 
+/** The categories of company expenses, first to last ("Other" last), with how many expenses use each. */
+export function useOverheadGroups() {
+    return useQuery({
+        queryKey: [...overheadKey, "groups"],
+        queryFn: async () => (await http.get<OverheadGroup[]>("/company/overhead/groups")).data,
+        staleTime: 60_000,
+    });
+}
+
 /** A change to the company's expenses moves its overview, its months and the launcher's figures. */
 function useRefreshCompany() {
     const invalidate = useInvalidate();
@@ -89,6 +98,33 @@ export function useChangeOverhead(id: number) {
             }
         },
         onSettled: refresh,
+    });
+}
+
+/** Adds a category, before "Other" (super admins only). */
+export function useAddOverheadGroup() {
+    const refresh = useRefreshCompany();
+    return useMutation({
+        mutationFn: async (name: string) => (await http.post<OverheadGroup>("/company/overhead/groups", { name })).data,
+        onSuccess: refresh,
+    });
+}
+
+/** Renames a category; its expenses keep it (super admins only). */
+export function useRenameOverheadGroup() {
+    const refresh = useRefreshCompany();
+    return useMutation({
+        mutationFn: async ({ id, name }: { id: number; name: string }) => (await http.put<OverheadGroup>(`/company/overhead/groups/${id}`, { name })).data,
+        onSuccess: refresh,
+    });
+}
+
+/** Removes a category no expense uses (super admins only). */
+export function useRemoveOverheadGroup() {
+    const refresh = useRefreshCompany();
+    return useMutation({
+        mutationFn: async (id: number) => { await http.delete(`/company/overhead/groups/${id}`); },
+        onSuccess: refresh,
     });
 }
 
