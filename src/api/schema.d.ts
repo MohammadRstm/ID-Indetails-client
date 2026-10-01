@@ -1229,6 +1229,7 @@ export interface paths {
             parameters: {
                 query?: {
                     months?: number;
+                    year?: number;
                 };
                 header?: never;
                 path?: never;

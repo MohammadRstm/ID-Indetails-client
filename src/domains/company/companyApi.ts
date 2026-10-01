@@ -28,6 +28,16 @@ export function useCompanyMonths(months: number, enabled = true) {
     });
 }
 
+/** The same for a year's months, January first, up to this month in the current year (company:view). */
+export function useCompanyYear(year: number, enabled = true) {
+    return useQuery({
+        queryKey: ["company", "months", "year", year],
+        queryFn: async () => (await http.get<CompanyMonth[]>("/company/overview/monthly", { params: { year } })).data,
+        placeholderData: keepPreviousData,
+        enabled,
+    });
+}
+
 /** Company expenses alone, month by month and per currency (company:view or overhead:manage). */
 export function useOverheadMonths(months: number, enabled = true) {
     return useQuery({

@@ -14,9 +14,10 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
 import { money } from "@/shared/format/money";
-import { addDays, companyToday, fmtDate, fmtDateY, fmtMonthY, MONTHS } from "@/shared/format/time";
+import { addDays, companyToday, fmtDate, fmtDateY, fmtMonthY, MONTHS, partsOf } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import { useCancelOverhead, useCompanyMonths, useOverhead, useOverheadMonths, type OverheadGroup, type OverheadLine } from "./companyApi";
+import { useCancelOverhead, useCompanyMonths, useCompanyYear, useOverhead, useOverheadMonths, type OverheadGroup, type OverheadLine } from "./companyApi";
+import { YEARS_BACK } from "./companyPeriod";
 import OverheadModal from "./OverheadModal";
 import { GROUP_LABEL } from "./overheadGroups";
 import { loadFailed } from "@/api/queryState";
@@ -37,6 +38,11 @@ export default function CompanyExpensesPage() {
     // the company's profit and total cost need company:view; overhead:manage alone sees the expenses themselves
     const seesCompany = permissions.has(P.COMPANY_VIEW);
     const months = useCompanyMonths(13, seesCompany);
+    // the profit chart shows one year at a time, this one first
+    const thisYear = partsOf(companyToday()).year;
+    const [chartYear, setChartYear] = useState(thisYear);
+    const yearMonths = useCompanyYear(chartYear, seesCompany);
+    const yearList = yearMonths.data ?? [];
     const overheadMonths = useOverheadMonths(13, !seesCompany);
     const monthsQuery = seesCompany ? months : overheadMonths;
     const cancel = useCancelOverhead();
@@ -101,19 +107,29 @@ export default function CompanyExpensesPage() {
                     {loadFailed(monthsQuery) && <div className="mt-s"><LoadError error={monthsQuery.error} retry={() => monthsQuery.refetch()} what="the months" /></div>}
 
                     <div className={seesCompany ? "grid g-8-4 mt" : "mt"}>
-                        {seesCompany && <Figure title="What company expenses do to each month" sub="Company profit with company expenses taken out, against what it would have been without it."
+                        {seesCompany && <Figure title={`What company expenses do to each month · ${chartYear}`}
+                            sub="Company profit with company expenses taken out, against what it would have been without it."
+                            tools={
+                                <div className="row" style={{ gap: 4 }}>
+                                    <button className="icon-btn" aria-label="Previous year" disabled={chartYear <= thisYear - YEARS_BACK} onClick={() => setChartYear((y) => y - 1)}><Icon name="chevronLeft" /></button>
+                                    <b className="mono" style={{ minWidth: 44, textAlign: "center" }}>{chartYear}</b>
+                                    <button className="icon-btn" aria-label="Next year" disabled={chartYear >= thisYear} onClick={() => setChartYear((y) => y + 1)}><Icon name="chevronRight" /></button>
+                                </div>
+                            }
                             table={{
                                 cols: [{ label: "Month" }, { label: "Company expenses", right: true }, { label: "Profit before", right: true }, { label: "Profit after", right: true }],
-                                rows: list.map((m) => [fmtMonthY(m.month), money.fmt(m.overhead), money.fmt(m.profitBeforeOverhead), money.fmt(m.profitAfterOverhead)]),
+                                rows: yearList.map((m) => [fmtMonthY(m.month), money.fmt(m.overhead), money.fmt(m.profitBeforeOverhead), money.fmt(m.profitAfterOverhead)]),
                             }}>
-                            {!months.data ? <SkeletonLines lines={7} /> : (
+                            {loadFailed(yearMonths) ? <LoadError error={yearMonths.error} retry={() => yearMonths.refetch()} what={`${chartYear}'s months`} />
+                                : !yearMonths.data ? <SkeletonLines lines={7} /> : (
                                 <>
                                     <LineChart height={210} tickEvery={2} format={(v) => money.short(v)} series={[
-                                        { label: "Profit before company expenses", ghost: true, dash: true, points: list.map((m) => ({ y: m.profitBeforeOverhead, label: monthLabel(m.month), tip: fmtMonthY(m.month) })) },
-                                        { label: "Profit after company expenses", area: true, points: list.map((m) => ({ y: m.profitAfterOverhead, label: monthLabel(m.month), tip: fmtMonthY(m.month) })) },
+                                        { label: "Profit before company expenses", ghost: true, dash: true, points: yearList.map((m) => ({ y: m.profitBeforeOverhead, label: monthLabel(m.month), tip: fmtMonthY(m.month) })) },
+                                        { label: "Profit after company expenses", area: true, points: yearList.map((m) => ({ y: m.profitAfterOverhead, label: monthLabel(m.month), tip: fmtMonthY(m.month) })) },
                                     ]} />
                                     <div className="chart-note">
-                                        The gap between the two lines is company expenses - {money.fmt(perMonth)} a month, carried by the company rather than by any one project.
+                                        The gap between the two lines is company expenses - {money.fmt(yearList.reduce((t, m) => t + m.overhead, 0))} in {chartYear}{chartYear === thisYear ? " so far" : ""},
+                                        carried by the company rather than by any one project.
                                     </div>
                                 </>
                             )}
