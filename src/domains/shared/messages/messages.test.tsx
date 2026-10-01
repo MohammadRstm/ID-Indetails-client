@@ -124,6 +124,17 @@ describe("Messages", () => {
         await waitFor(() => expect(asked).toEqual([null, "202"]));
     });
 
+    it("turn their sounds off and on from the open chat, remembered in this browser", async () => {
+        renderApp("/design/messages", rana, ...messageHandlers);
+        await screen.findByText("Morning! The Villa Mounir samples arrived.");
+        await userEvent.click(within(thread()).getByRole("button", { name: "Turn message sounds off" }));
+        expect(localStorage.getItem("hl-message-sounds")).toBe("off");
+        const toggle = within(thread()).getByRole("button", { name: "Turn message sounds on" });
+        expect(toggle).toHaveAttribute("aria-pressed", "false");
+        await userEvent.click(toggle);
+        expect(localStorage.getItem("hl-message-sounds")).toBe("on");
+    });
+
     it("refresh when the live connection says a chat changed", async () => {
         let unread = 0;
         renderApp("/design/messages?with=2", rana,

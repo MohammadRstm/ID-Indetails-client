@@ -12,6 +12,7 @@ import TimerControl from "@/domains/design/work/TimerControl";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { myProfilePath } from "./profilePath";
+import { useArrivalChime } from "@/domains/shared/messages/messageSounds";
 import { useUnreadBadges } from "./shellQueries";
 import type { ShellArea } from "./useArea";
 
@@ -23,6 +24,8 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
     const user = useCurrentUser();
     const { signOut } = useSession();
     const badges = useUnreadBadges();
+    // a message arriving anywhere chimes once, wherever the person is in the app
+    useArrivalChime(badges.messages?.unread);
     const base = area.kind === "domain" ? `/${area.domain}` : "/company";
     const me = { name: fullName(user), photoFileId: user.photoFileId, online: true };
     const unreadMessages = badges.messages?.unread ?? 0;
