@@ -71,6 +71,26 @@ export function useSaveInvoice(projectId: number, invoiceId: number | null) {
     });
 }
 
+/** Auto invoice (invoice:create and invoice:send): drafts that go out on their own days; any dated today are sent now. */
+export function useCreateInvoicePlan(projectId: number) {
+    const refresh = useInvalidateBilling();
+    return useMutation({
+        mutationFn: async (body: Schemas["InvoicePlanRequest"]) => (await http.post<Invoice[]>(`/projects/${projectId}/invoice-plan`, body)).data,
+        onSuccess: refresh,
+    });
+}
+
+/** Moves a draft's day or address, or with `null` cancels its schedule (invoice:send). */
+export function useScheduleInvoice(invoiceId: number) {
+    const refresh = useInvalidateBilling();
+    return useMutation({
+        mutationFn: async (schedule: Schemas["ScheduleInvoiceRequest"] | null) => (schedule
+            ? await http.put<Invoice>(`/invoices/${invoiceId}/schedule`, schedule)
+            : await http.delete<Invoice>(`/invoices/${invoiceId}/schedule`)).data,
+        onSuccess: refresh,
+    });
+}
+
 export function useDiscardInvoice() {
     const refresh = useInvalidateBilling();
     return useMutation({

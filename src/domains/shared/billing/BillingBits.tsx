@@ -61,14 +61,17 @@ export function BillingMeter({ value, invoiced, paid, outstanding, notYetInvoice
 }
 
 /** One invoice on a list: number, dates, state, amount and what is still due (the prototype's BL.InvoiceLine). */
-export function InvoiceLine({ invoice, onOpen }: { invoice: InvoiceLike & { id: number; number: string | null; total: number; issuedAt: string | null; balance?: number | null }; onOpen?: () => void }) {
+export function InvoiceLine({ invoice, onOpen }: {
+    invoice: InvoiceLike & { id: number; number: string | null; total: number; issuedAt: string | null; balance?: number | null; sendOn?: string | null };
+    onOpen?: () => void;
+}) {
     const state = invoiceStateOf(invoice);
     const balance = invoice.balance ?? 0;
     return (
         <div className={cx("cost-row", onOpen && "click")} {...clickable(onOpen, "button")}>
             <span className="mono nowrap" style={{ fontWeight: 600, fontSize: 12 }}>{invoice.number ?? "Draft"}</span>
             <span className="grow muted trunc" style={{ fontSize: "11.5px" }}>
-                {state === "draft" ? "not issued" : `${invoice.issuedAt ? fmtDate(invoice.issuedAt) : ""}${invoice.dueOn ? ` · due ${fmtDate(invoice.dueOn)}` : ""}`}
+                {state === "draft" ? (invoice.sendOn ? `goes out ${fmtDate(invoice.sendOn)}` : "not issued") : `${invoice.issuedAt ? fmtDate(invoice.issuedAt) : ""}${invoice.dueOn ? ` · due ${fmtDate(invoice.dueOn)}` : ""}`}
             </span>
             <InvoiceStatusPill invoice={invoice} />
             <span className="mono" style={{ minWidth: 72, textAlign: "right" }}>{money.fmt(invoice.total)}</span>

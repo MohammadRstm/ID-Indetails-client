@@ -7,6 +7,7 @@ import { CostRow } from "@/shared/components/Data/Money";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
+import DateInput from "@/shared/components/Forms/DateInput";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Modal from "@/shared/components/Overlays/Modal";
 import { PAYMENT_METHODS } from "@/shared/format/labels";
@@ -14,7 +15,7 @@ import { money } from "@/shared/format/money";
 import { companyToday, daysBetween, fmtDate, fmtDateY, fmtNumber } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import PaymentActions from "./PaymentActions";
-import { useBillingSettings, useDiscardInvoice, useInvoice, usePayments, useVoidInvoice, type Invoice } from "./billingApi";
+import { useBillingSettings, useDiscardInvoice, useInvoice, usePayments, useScheduleInvoice, useVoidInvoice, type Invoice } from "./billingApi";
 import { InvoiceStatusPill } from "./BillingBits";
 import InvoiceDoc from "./InvoiceDoc";
 import { docOf } from "./invoiceDocData";
@@ -91,6 +92,7 @@ export default function InvoiceModal({ invoiceId, onClose, onSend, onEdit, onPay
                     <div className="mt-s"><InvoiceStatusPill invoice={inv} /></div>
                     {state === "overdue" && <p className="hint" style={{ color: "var(--now)" }}>{late} days past the due date of {fmtDateY(inv.dueOn!)}.</p>}
                     {state === "draft" && <p className="hint">Not issued. A draft can still be edited - once it is sent the figures are fixed and a correction means voiding it and reissuing.</p>}
+                    {state === "draft" && <ScheduleNote invoice={inv} />}
 
                     <div className="u mt">History</div>
                     <div className="mt-s">
@@ -153,5 +155,31 @@ export default function InvoiceModal({ invoiceId, onClose, onSend, onEdit, onPay
                 </div>
             </div>
         </Modal>
+    );
+}
+
+/** A scheduled draft: when it goes out and where, moved or cancelled by whoever may send invoices. */
+function ScheduleNote({ invoice: inv }: { invoice: Invoice }) {
+    const permissions = usePermissions();
+    const schedule = useScheduleInvoice(inv.id);
+    if (!inv.sendOn) return null;
+    const by = inv.scheduledBy ? ` Scheduled by ${inv.scheduledBy.name.split(" ")[0]}.` : "";
+    return (
+        <div className="mt-s">
+            <p className="hint">
+                <Icon name="calendar" />{" "}
+                {inv.sendTo ? `Goes out on ${fmtDateY(inv.sendOn)} from 9:00, emailed to ${inv.sendTo}.` : `Due to go out on ${fmtDateY(inv.sendOn)}: whoever scheduled it is reminded to send it.`}{by}
+            </p>
+            {permissions.has(P.INVOICE_SEND) && (
+                <div className="row mt-s" style={{ gap: 6 }}>
+                    <DateInput className="input mono" style={{ width: 140 }} aria-label="Goes out on" value={inv.sendOn} min={companyToday()}
+                        onChange={(day) => { if (day && day !== inv.sendOn) schedule.mutate({ sendOn: day, sendTo: inv.sendTo ?? null }); }} />
+                    <button className="btn btn-sm" disabled={schedule.isPending} onClick={() => schedule.mutate(null, {
+                        onSuccess: () => toast({ text: "Schedule cancelled", sub: "It stays a draft, to send yourself", icon: "calendar" }),
+                    })}>Cancel schedule</button>
+                </div>
+            )}
+            {schedule.error && <FieldError message={errorMessage(schedule.error)} />}
+        </div>
     );
 }

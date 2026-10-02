@@ -4,7 +4,7 @@ const PARAMS = ["invoice", "edit", "send", "pay"] as const;
 
 /**
  * Opens the billing windows through the link, so an invoice can be linked to and the back button closes it:
- * ?invoice=new (a new invoice), ?invoice=12 (one invoice), ?edit=12 (a draft), ?send=12, ?pay=1 or ?pay=12.
+ * ?invoice=new (a new invoice), ?invoice=auto (Auto invoice), ?invoice=12 (one invoice), ?edit=12 (a draft), ?send=12, ?pay=1 or ?pay=12.
  */
 export function useBillingLinks() {
     const [params, setParams] = useSearchParams();
@@ -15,6 +15,7 @@ export function useBillingLinks() {
     };
     return {
         newInvoice: () => open("invoice", "new"),
+        autoInvoice: () => open("invoice", "auto"),
         openInvoice: (id: number) => open("invoice", String(id)),
         editDraft: (id: number) => open("edit", String(id)),
         send: (id: number) => open("send", String(id)),
