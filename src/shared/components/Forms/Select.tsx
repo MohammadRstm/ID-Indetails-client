@@ -4,7 +4,13 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { stop, useFloating } from "./useFloating";
 
-export type SelectOption<V extends string = string> = { value: V; label: string; disabled?: boolean };
+export type SelectOption<V extends string = string> = {
+    value: V;
+    label: string;
+    disabled?: boolean;
+    /** Shown on the button instead of the label, for a narrow one ("+961" for "Lebanon +961"). */
+    short?: string;
+};
 
 type SelectProps<V extends string> = {
     value: V;
@@ -121,7 +127,7 @@ export default function Select<V extends string>({ value, options, onChange, id,
                 onClick={() => (open ? close(false) : openMenu())}
                 onKeyDown={onKey}
             >
-                <span className={cx("sel-val", !shown && "muted")}>{shown?.label ?? "Choose…"}</span>
+                <span className={cx("sel-val", !shown && "muted")}>{shown ? shown.short ?? shown.label : "Choose…"}</span>
                 <Icon name="chevronDown" className="sel-chev" />
             </button>
             {open && createPortal(

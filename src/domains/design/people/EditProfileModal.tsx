@@ -6,6 +6,7 @@ import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { FieldError } from "@/shared/components/Forms/Field";
+import PhoneField from "@/shared/components/Forms/PhoneField";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import Avatar from "@/shared/components/Identity/Avatar";
@@ -134,7 +135,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                         </div>
                         <div className="field">
                             <label className="label" htmlFor="ep-phone">Phone</label>
-                            <input id="ep-phone" className="input" type="tel" placeholder="Optional - +961 …" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                            <PhoneField id="ep-phone" placeholder="Optional - 3 555 142" value={phone} onChange={setPhone} />
                         </div>
                     </div>
                     <div className="field">
