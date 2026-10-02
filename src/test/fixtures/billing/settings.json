@@ -8,5 +8,9 @@
   "swift": "AUDBLBBX",
   "termsText": "Bank transfer, cheque or cash are all accepted.",
   "footer": "Thank you for working with ID-Indetails.",
-  "updatedAt": "2026-09-30T04:51:22.678Z"
+  "updatedAt": "2026-09-30T04:51:22.678Z",
+  "remindersEnabled": false,
+  "reminderFirstAfterDays": 1,
+  "reminderEveryDays": 7,
+  "reminderMax": 3
 }

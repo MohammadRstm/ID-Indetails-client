@@ -8,11 +8,11 @@ import { useCompanySettings } from "@/app/shell/shellQueries";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import DateInput from "@/shared/components/Forms/DateInput";
-import { SwitchRow } from "@/shared/components/Forms/Filters";
+import { SwitchRow, Toggle } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import { addDays, companyToday, fmtDateY, fmtNumber } from "@/shared/format/time";
 import { FieldError } from "@/shared/components/Forms/Field";
-import { DOMAIN_LABEL } from "@/shared/format/labels";
+import { DOMAIN_LABEL, plural } from "@/shared/format/labels";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { billingSettingsMissing, useBillingSettings, type BillingSettings } from "../billing/billingApi";
@@ -26,6 +26,17 @@ const TERMS = [
     { value: "0", label: "Due on receipt" }, { value: "15", label: "Net 15 - due in 15 days" }, { value: "30", label: "Net 30 - due in 30 days" },
     { value: "45", label: "Net 45 - due in 45 days" }, { value: "60", label: "Net 60 - due in 60 days" },
 ];
+// overdue reminders: when the first goes, how far apart the next ones are, and how many at most
+const FIRST = [
+    { value: "1", label: "The day after it's due" }, { value: "3", label: "3 days after" }, { value: "7", label: "A week after" },
+    { value: "14", label: "2 weeks after" }, { value: "30", label: "30 days after" },
+];
+const APART = [{ value: "3", label: "Then every 3 days" }, { value: "7", label: "Then every week" }, { value: "14", label: "Then every 2 weeks" }, { value: "30", label: "Then every 30 days" }];
+const AT_MOST = [1, 2, 3, 4, 5, 10].map((n) => ({ value: String(n), label: `At most ${plural(n, "reminder")}` }));
+/** The options, with the saved value added when it isn't one of them. */
+const withValue = (options: { value: string; label: string }[], value: number, label: string) =>
+    options.some((o) => +o.value === value) ? options : [...options, { value: String(value), label }];
+
 const OVERTIME = [{ value: "1", label: "×1 - same as normal" }, { value: "1.25", label: "×1.25" }, { value: "1.5", label: "×1.5" }, { value: "2", label: "×2" }];
 
 /** The prototype's Settings → Finance: the rules behind revenue, cost and pay, and invoicing and payments. */
@@ -222,7 +233,10 @@ function Invoicing({ domain, billing: b }: { domain: Domain; billing: BillingSet
     const body: Schemas["SaveBillingSettingsRequest"] = {
         bankAccount: b.bankAccount, bankName: b.bankName, iban: b.iban, swift: b.swift, termsText: b.termsText, footer: b.footer,
         defaultTermsDays: b.defaultTermsDays, invoicePrefix: b.invoicePrefix,
+        remindersEnabled: b.remindersEnabled, reminderFirstAfterDays: b.reminderFirstAfterDays, reminderEveryDays: b.reminderEveryDays, reminderMax: b.reminderMax,
     };
+    const remind = (change: Partial<Schemas["SaveBillingSettingsRequest"]>, title: string) =>
+        save.mutate({ ...body, ...change }, { onSuccess: saved(title), onError: notSaved });
     const errors = useFormErrors();
     const prefixError = prefix != null && !PREFIX.test(prefix) && "Use 1 to 8 capital letters or digits, starting with a letter.";
     const bankLine = [b.bankAccount, b.bankName, b.iban, b.swift].filter(Boolean).join(" · ") || "Not set yet";
@@ -252,6 +266,29 @@ function Invoicing({ domain, billing: b }: { domain: Domain; billing: BillingSet
                         <button className="btn btn-sm" onClick={() => setPrefix(null)}>Cancel</button>
                     </div>
                 } />
+            )}
+            <SwitchRow title="Remind clients of overdue invoices"
+                description={b.remindersEnabled
+                    ? `Each overdue invoice is emailed again with what is still owed, from 9:00, to the address it was sent to, until it is paid. A client with no email address is left to you to chase.`
+                    : "Off: nobody is reminded automatically. Turned on, an overdue invoice is emailed to the client again on a schedule until it is paid."}
+                control={<Toggle label="Remind clients of overdue invoices" checked={b.remindersEnabled} disabled={!canEdit || save.isPending}
+                    onChange={(on) => remind({ remindersEnabled: on }, on ? "Reminders turned on" : "Reminders turned off")} />} />
+            {b.remindersEnabled && (
+                <SwitchRow title="Reminder schedule"
+                    description={`The first ${b.reminderFirstAfterDays === 1 ? "the day after" : `${b.reminderFirstAfterDays} days after`} the due date, then every ${plural(b.reminderEveryDays, "day")}, ${plural(b.reminderMax, "reminder")} at most.`}
+                    control={
+                        <div className="row wrap" style={{ gap: 6 }}>
+                            <Select className="select sm" style={{ width: 175 }} aria-label="First reminder" disabled={!canEdit || save.isPending} value={String(b.reminderFirstAfterDays)}
+                                options={withValue(FIRST, b.reminderFirstAfterDays, `${b.reminderFirstAfterDays} days after`)}
+                                onChange={(v) => remind({ reminderFirstAfterDays: +v }, "Reminder schedule updated")} />
+                            <Select className="select sm" style={{ width: 165 }} aria-label="Then every" disabled={!canEdit || save.isPending} value={String(b.reminderEveryDays)}
+                                options={withValue(APART, b.reminderEveryDays, `Then every ${b.reminderEveryDays} days`)}
+                                onChange={(v) => remind({ reminderEveryDays: +v }, "Reminder schedule updated")} />
+                            <Select className="select sm" style={{ width: 160 }} aria-label="At most" disabled={!canEdit || save.isPending} value={String(b.reminderMax)}
+                                options={withValue(AT_MOST, b.reminderMax, `At most ${plural(b.reminderMax, "reminder")}`)}
+                                onChange={(v) => remind({ reminderMax: +v }, "Reminder schedule updated")} />
+                        </div>
+                    } />
             )}
             <SwitchRow title="Tax on invoices" description="Invoices bill milestones of an agreed project value, so no tax line is applied in this version." control={<span className="badge">Not applied</span>} />
             <LbpRate />

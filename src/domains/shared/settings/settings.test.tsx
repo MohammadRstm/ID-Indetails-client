@@ -197,6 +197,26 @@ describe("invoicing settings", () => {
         expect(within(row).queryByRole("button", { name: "Change" })).not.toBeInTheDocument();
     });
 
+    it("turn overdue reminders on and set their schedule, keeping the rest", async () => {
+        const on = { ...billing.settings, remindersEnabled: true };
+        const put = recorder("put", "/api/billing-settings/design", on);
+        renderApp(page("finance"), nadia, put.handler, ...settingsHandlers);
+        expect(await screen.findByText(/Off: nobody is reminded automatically/)).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("switch", { name: "Remind clients of overdue invoices" }));
+        await waitFor(() => expect(put.bodies).toHaveLength(1));
+        expect(put.bodies[0]).toMatchObject({ remindersEnabled: true, reminderFirstAfterDays: 1, reminderEveryDays: 7, reminderMax: 3, iban: billing.settings.iban });
+    });
+
+    it("show the reminder schedule once they are on", async () => {
+        const put = recorder("put", "/api/billing-settings/design", billing.settings);
+        renderApp(page("finance"), nadia, put.handler,
+            http.get("/api/billing-settings/:domain", () => HttpResponse.json({ ...billing.settings, remindersEnabled: true })), ...settingsHandlers);
+        expect(await screen.findByText("The first the day after the due date, then every 7 days, 3 reminders at most.")).toBeInTheDocument();
+        await userEvent.click(screen.getByLabelText("At most"));
+        await userEvent.click(screen.getByRole("option", { name: "At most 5 reminders" }));
+        await waitFor(() => expect(put.bodies).toEqual([expect.objectContaining({ remindersEnabled: true, reminderMax: 5, defaultTermsDays: billing.settings.defaultTermsDays })]));
+    });
+
     const notSetUp = http.get("/api/billing-settings/:domain", () => HttpResponse.json(
         { type: "not_found", code: "billing_settings_missing", message: "Billing settings have not been set up for this domain yet." }, { status: 404 }));
 
