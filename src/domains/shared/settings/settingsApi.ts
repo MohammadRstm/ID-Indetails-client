@@ -11,7 +11,7 @@ export type WorkingTimePolicy = Schemas["WorkingTimePolicyResponse"];
 export type ExchangeRate = Schemas["ExchangeRateResponse"];
 export type Team = Schemas["TeamResponse"];
 export type UserPermissions = Schemas["UserPermissionsResponse"];
-export type HeldPermission = Schemas["HeldPermissionResponse"];
+export type MyPermission = Schemas["MyPermissionResponse"];
 export type PermissionDefinition = Schemas["PermissionDefinitionResponse"];
 
 /*
@@ -163,11 +163,11 @@ export function usePermissionCatalog(enabled: boolean) {
     });
 }
 
-/** What the signed-in person holds, described; refreshed whenever their session's details are. */
+/** The signed-in person's permissions and the ones taken away from their role, explained; refreshed with their session's details. */
 export function useMyPermissions() {
     return useQuery({
         queryKey: [...ME_KEY, "permissions"],
-        queryFn: async () => (await http.get<HeldPermission[]>("/me/permissions")).data,
+        queryFn: async () => (await http.get<MyPermission[]>("/me/permissions")).data,
     });
 }
 

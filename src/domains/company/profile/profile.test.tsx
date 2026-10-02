@@ -25,7 +25,7 @@ describe("my profile", () => {
 
     it("lists a super admin's permissions, described", async () => {
         renderApp("/company/profile", personas.superAdmin, ...companyHandlers,
-            http.get("/api/me/permissions", () => HttpResponse.json([{ code: "salary:view", description: "See everyone's salaries", fromRole: true }])));
+            http.get("/api/me/permissions", () => HttpResponse.json([{ code: "salary:view", description: "See everyone's salaries", explanation: "See what each person is owed each month.", source: "role" }])));
         await userEvent.click(await screen.findByRole("button", { name: /^View \d+ permissions?$/ }));
         const dialog = await screen.findByRole("dialog", { name: "Your permissions" });
         expect(await within(dialog).findByText("See everyone's salaries")).toBeInTheDocument();

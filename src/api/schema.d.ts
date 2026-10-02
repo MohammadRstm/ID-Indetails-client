@@ -4181,9 +4181,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["HeldPermissionResponse"][];
-                        "text/json": components["schemas"]["HeldPermissionResponse"][];
-                        "text/plain": components["schemas"]["HeldPermissionResponse"][];
+                        "application/json": components["schemas"]["MyPermissionResponse"][];
+                        "text/json": components["schemas"]["MyPermissionResponse"][];
+                        "text/plain": components["schemas"]["MyPermissionResponse"][];
                     };
                 };
             };
@@ -9131,11 +9131,6 @@ export interface components {
         ForgotPasswordRequest: {
             email?: string;
         };
-        HeldPermissionResponse: {
-            code: string;
-            description: string;
-            fromRole: boolean;
-        };
         HourCellResponse: {
             /** Format: int32 */
             hour: number;
@@ -9703,6 +9698,12 @@ export interface components {
             month: string;
             salary: null | components["schemas"]["MySalaryResponse"];
         };
+        MyPermissionResponse: {
+            code: string;
+            description: string;
+            explanation: string;
+            source: components["schemas"]["PermissionSource"];
+        };
         MyProjectResponse: {
             acceptsWork: boolean;
             clientName: null | string;
@@ -10213,6 +10214,7 @@ export interface components {
             defaultFor: string[];
             description: string;
             domain: null | string;
+            explanation: string;
         };
         /** @enum {unknown} */
         PermissionEffect: "grant" | "revoke";
@@ -10225,6 +10227,8 @@ export interface components {
             /** Format: date-time */
             setAt: string;
         };
+        /** @enum {unknown} */
+        PermissionSource: "role" | "granted" | "removed";
         PersonCostResponse: {
             /** Format: int32 */
             minutes: number;
