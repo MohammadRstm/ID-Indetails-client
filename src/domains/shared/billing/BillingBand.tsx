@@ -52,8 +52,6 @@ export default function BillingBand({ project }: { project: Project }) {
     // what a new invoice can still be for: money already paid on account can be invoiced too, for the record
     const canInvoice = b.leftToInvoice - b.drafts > 0.5;
     const paidInFull = m.revenue > 0.5 && b.received >= m.revenue - 0.5;
-    // an Execution site takes payments on account, without an invoice
-    const canPay = site || b.invoiced > 0 || b.drafts > 0;
 
     return (
         <div className="panel mt bill-panel">
@@ -121,11 +119,13 @@ export default function BillingBand({ project }: { project: Project }) {
                             <button className="btn btn-sm btn-primary" disabled={!canInvoice} onClick={links.newInvoice}><Icon name="file" />New invoice</button>
                         )}
                         {permissions.has(P.PAYMENT_RECORD) && (
-                            <button className="btn btn-sm" disabled={!canPay} onClick={() => links.recordPayment()}><Icon name="card" />Record payment</button>
+                            <button className="btn btn-sm" onClick={() => links.recordPayment()}><Icon name="card" />Record payment</button>
                         )}
                     </div>
                     {permissions.hasAny(P.INVOICE_CREATE, P.INVOICE_SEND) && <BillingSetupNotice domain={project.domain} />}
-                    {site && <p className="hint mt-s">Payments can be recorded on account, without an invoice - the initial payment usually is.</p>}
+                    <p className="hint mt-s">
+                        Payments can be recorded without an invoice{site ? " - the initial payment usually is" : ""}: they are held on account, and pay the next invoice issued.
+                    </p>
                     <div className="alloc-total mt">
                         <Icon name="info" />
                         <div className="grow">
