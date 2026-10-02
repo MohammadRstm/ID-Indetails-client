@@ -99,6 +99,7 @@ export default function PermissionsModal({ person, onClose }: { person: Target; 
                                                     onChange={(e) => { setWant((w) => ({ ...w, [d.code]: e.target.checked })); setResets((r) => r.filter((c) => c !== d.code)); }} />
                                                 <div className="grow" style={{ minWidth: 0 }}>
                                                     <div style={{ fontSize: "12.5px", fontWeight: 600 }}>{d.description}</div>
+                                                    {d.explanation && <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{d.explanation}</div>}
                                                     <div className="muted mono" style={{ fontSize: 11 }}>
                                                         {d.code}{defaults.has(d.code) ? " · role default" : ""}
                                                         {override ? ` · ${override.effect === "grant" ? "granted" : "revoked"} by hand${override.reason ? `: ${override.reason}` : ""}` : ""}

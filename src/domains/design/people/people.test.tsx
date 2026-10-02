@@ -251,17 +251,21 @@ describe("Your own profile", () => {
         expect(screen.queryByRole("button", { name: "Send message" })).not.toBeInTheDocument();
     });
 
-    it("lists what each of your permissions allows, and which were given just to you", async () => {
+    it("explains each of your permissions, which were given just to you and which were taken away", async () => {
         renderApp("/design/profile", sarah, ...workHandlers,
             http.get("/api/me/permissions", () => HttpResponse.json([
-                { code: "work_entry:create", description: "Log your own hours", fromRole: true },
-                { code: "requirement:view", description: "See requirements", fromRole: true },
-                { code: "client:create", description: "Add clients", fromRole: false },
+                { code: "work_entry:create", description: "Log your own hours", explanation: "Log the hours you work on projects.", source: "role" },
+                { code: "requirement:view", description: "See requirements", explanation: "See the list of requirements.", source: "role" },
+                { code: "client:create", description: "Add clients", explanation: "Add new clients.", source: "granted" },
+                { code: "meeting:create", description: "Set meetings", explanation: "Set meetings on projects.", source: "removed" },
             ])));
         await userEvent.click(await screen.findByRole("button", { name: "View permissions" }));
         const dialog = await screen.findByRole("dialog", { name: "Your permissions" });
         expect(await within(dialog).findByText("Log your own hours")).toBeInTheDocument();
-        expect(within(dialog).getByText("Employee · 3 permissions · 1 given just to you")).toBeInTheDocument();
+        expect(within(dialog).getByText("Employee · 3 permissions · 1 given just to you · 1 taken away")).toBeInTheDocument();
+        expect(within(dialog).getByText("Log the hours you work on projects.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Taken away from your role")).toBeInTheDocument();
+        expect(within(dialog).getByText("meeting:create · your role has it, but it was taken away from you")).toBeInTheDocument();
         expect(within(dialog).getByText("Clients")).toBeInTheDocument();
         expect(within(dialog).getByText("client:create · given just to you")).toBeInTheDocument();
         expect(within(dialog).getByText("work_entry:create")).toBeInTheDocument();
