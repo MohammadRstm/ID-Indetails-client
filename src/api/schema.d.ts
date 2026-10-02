@@ -8252,6 +8252,13 @@ export interface components {
             footer: null | string;
             iban: null | string;
             invoicePrefix: string;
+            /** Format: int32 */
+            reminderEveryDays: number;
+            /** Format: int32 */
+            reminderFirstAfterDays: number;
+            /** Format: int32 */
+            reminderMax: number;
+            remindersEnabled: boolean;
             swift: null | string;
             termsText: null | string;
             /** Format: date-time */
@@ -9206,6 +9213,8 @@ export interface components {
             channel: components["schemas"]["DeliveryChannel"];
             /** Format: int64 */
             id: number;
+            /** @default false */
+            isReminder: boolean;
             note: null | string;
             recipient: null | string;
             /** Format: date-time */
@@ -10975,6 +10984,13 @@ export interface components {
             footer?: null | string;
             iban?: null | string;
             invoicePrefix?: string;
+            /** Format: int32 */
+            reminderEveryDays?: number;
+            /** Format: int32 */
+            reminderFirstAfterDays?: number;
+            /** Format: int32 */
+            reminderMax?: number;
+            remindersEnabled?: boolean;
             swift?: null | string;
             termsText?: null | string;
         };

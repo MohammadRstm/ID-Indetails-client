@@ -97,7 +97,7 @@ export default function InvoiceModal({ invoiceId, onClose, onSend, onEdit, onPay
                     <div className="u mt">History</div>
                     <div className="mt-s">
                         <CostRow label="Created" meta={inv.createdBy?.name.split(" ")[0] ?? ""} value={fmtDate(inv.createdAt)} />
-                        {inv.deliveries.map((d) => <CostRow key={d.id} label={DELIVERED[d.channel] ?? d.channel} meta={d.recipient ?? ""} value={fmtDate(d.sentAt)} />)}
+                        {inv.deliveries.map((d) => <CostRow key={d.id} label={d.isReminder ? "Reminder emailed" : DELIVERED[d.channel] ?? d.channel} meta={d.recipient ?? ""} value={fmtDate(d.sentAt)} />)}
                         {inv.dueOn && (
                             <CostRow label="Due" value={fmtDate(inv.dueOn)}
                                 meta={state === "paid" ? "settled" : state === "overdue" ? `${late}d late` : `in ${-late}d`} />

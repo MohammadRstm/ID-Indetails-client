@@ -144,6 +144,11 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 text: `A scheduled invoice on ${title} couldn't be emailed`, sub: `${p.sendTo ? `To ${s(p.sendTo)} · ` : ""}it is tried again every hour`,
                 icon: "alert", route: project && note.subjectId ? `${project}?invoice=${note.subjectId}` : project,
             };
+        case "invoice_reminder_due":
+            return {
+                text: `${s(p.number) || "An invoice"} is due a reminder`, sub: `${title} · the client has no email address - chase it yourself`,
+                icon: "alert", route: project && note.subjectId ? `${project}?send=${note.subjectId}` : project,
+            };
         case "invoice_draft_waiting":
             return {
                 text: `A draft invoice on ${title} is still waiting`, sub: p.createdOn ? `Drafted ${fmtDate(s(p.createdOn))} · ready to send to the client` : "Ready to send to the client",

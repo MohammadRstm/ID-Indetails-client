@@ -129,7 +129,9 @@ const WORDS: Record<string, Words> = {
     invoice_issued: { icon: "file", text: (e, p) => `issued ${str(p.number) ?? "an invoice"} for ${project(e)}${dash(e.amount)}${p.automatic ? ", as scheduled" : ""}` },
     invoice_sent: {
         icon: "send",
-        text: (e, p) => `sent ${str(p.number) ?? "an invoice"} to ${client(e)}${p.channel === "whatsapp" ? " on WhatsApp" : p.channel === "email" ? " by email" : ""}${p.automatic ? ", as scheduled" : ""}`,
+        text: (e, p) => (typeof p.reminder === "number"
+            ? `Reminder ${p.reminder} for ${str(p.number) ?? "an overdue invoice"} was emailed to ${client(e)}`
+            : `sent ${str(p.number) ?? "an invoice"} to ${client(e)}${p.channel === "whatsapp" ? " on WhatsApp" : p.channel === "email" ? " by email" : ""}${p.automatic ? ", as scheduled" : ""}`),
     },
     invoice_voided: { icon: "x", text: (_e, p) => `voided ${str(p.number) ?? "an invoice"}${str(p.reason) ? ` - ${str(p.reason)}` : ""}` },
     payment_recorded: {
