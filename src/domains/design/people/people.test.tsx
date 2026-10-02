@@ -251,6 +251,24 @@ describe("Your own profile", () => {
         expect(screen.queryByRole("button", { name: "Send message" })).not.toBeInTheDocument();
     });
 
+    it("lists what each of your permissions allows, and which were given just to you", async () => {
+        renderApp("/design/profile", sarah, ...workHandlers,
+            http.get("/api/me/permissions", () => HttpResponse.json([
+                { code: "work_entry:create", description: "Log your own hours", fromRole: true },
+                { code: "requirement:view", description: "See requirements", fromRole: true },
+                { code: "client:create", description: "Add clients", fromRole: false },
+            ])));
+        await userEvent.click(await screen.findByRole("button", { name: "View permissions" }));
+        const dialog = await screen.findByRole("dialog", { name: "Your permissions" });
+        expect(await within(dialog).findByText("Log your own hours")).toBeInTheDocument();
+        expect(within(dialog).getByText("Employee · 3 permissions · 1 given just to you")).toBeInTheDocument();
+        expect(within(dialog).getByText("Clients")).toBeInTheDocument();
+        expect(within(dialog).getByText("client:create · given just to you")).toBeInTheDocument();
+        expect(within(dialog).getByText("work_entry:create")).toBeInTheDocument();
+        // nothing to tick: nobody changes their own
+        expect(within(dialog).queryByRole("checkbox")).not.toBeInTheDocument();
+    });
+
     it("edits your name and keeps your phone, and leaves position and pay to the admin", async () => {
         const bodies: unknown[] = [];
         renderApp("/design/profile", sarah,

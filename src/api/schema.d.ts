@@ -4091,6 +4091,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HeldPermissionResponse"][];
+                        "text/json": components["schemas"]["HeldPermissionResponse"][];
+                        "text/plain": components["schemas"]["HeldPermissionResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/photo": {
         parameters: {
             query?: never;
@@ -8980,6 +9017,11 @@ export interface components {
         };
         ForgotPasswordRequest: {
             email?: string;
+        };
+        HeldPermissionResponse: {
+            code: string;
+            description: string;
+            fromRole: boolean;
         };
         HourCellResponse: {
             /** Format: int32 */

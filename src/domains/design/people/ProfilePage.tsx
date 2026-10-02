@@ -35,6 +35,7 @@ import EntryRow from "../work/EntryRow";
 import OvertimePanel from "../work/OvertimePanel";
 import type { WorkEntry } from "../work/workApi";
 import SiteWork from "../../execution/staff/SiteWork";
+import MyPermissionsModal from "../../shared/settings/MyPermissionsModal";
 import PermissionsModal from "../../shared/settings/PermissionsModal";
 import EditProfileModal, { type ProfilePerson } from "./EditProfileModal";
 import PersonActions from "./PersonActions";
@@ -92,6 +93,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
     const [params, setParams] = useSearchParams();
     const [editing, setEditing] = useState(false);
     const [permissionsOpen, setPermissionsOpen] = useState(false);
+    const [viewingMine, setViewingMine] = useState(false);
     const name = fullNameOf(person);
     const first = name.split(" ")[0];
     const execution = person.domain === "execution";
@@ -141,9 +143,13 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                 </div>
                 <div className="page-actions">
                     {self ? (
-                        <button className="btn" onClick={() => setEditing(true)}><Icon name="edit" />Edit profile</button>
+                        <div className="row" style={{ gap: 8 }}>
+                            <button className="btn" onClick={() => setViewingMine(true)}><Icon name="shield" />View permissions</button>
+                            <button className="btn" onClick={() => setEditing(true)}><Icon name="edit" />Edit profile</button>
+                        </div>
                     ) : (
                         <div className="row" style={{ gap: 8 }}>
+                            {own && <button className="btn" onClick={() => setViewingMine(true)}><Icon name="shield" />View permissions</button>}
                             {extra.status === "active" && !own && <button className="btn" onClick={() => navigate(`/${domain}/messages?with=${person.id}`)}><Icon name="chat" />Send message</button>}
                             {permissions.hasAny(P.EMPLOYEE_MANAGE, P.EMPLOYEE_PAY_MANAGE) && <button className="btn" onClick={() => setEditing(true)}><Icon name="edit" />Edit profile</button>}
                             {permissions.has(P.PERMISSION_MANAGE) && !own && extra.role !== "super_admin" && extra.status !== "deactivated" && (
@@ -165,6 +171,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
             ) : null}
 
             {editing && <EditProfileModal person={{ ...person, role: extra.role, status: extra.status }} self={self} onClose={() => setEditing(false)} />}
+            {viewingMine && <MyPermissionsModal onClose={() => setViewingMine(false)} />}
             {permissionsOpen && <PermissionsModal person={{ id: person.id, name, domain: person.domain }} onClose={() => setPermissionsOpen(false)} />}
         </div>
     );

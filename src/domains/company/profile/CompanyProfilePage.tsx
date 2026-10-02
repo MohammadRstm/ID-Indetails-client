@@ -9,6 +9,7 @@ import { DOMAIN_LABEL, plural } from "@/shared/format/labels";
 import { fmtDateY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import EditProfileModal from "../../design/people/EditProfileModal";
+import MyPermissionsModal from "../../shared/settings/MyPermissionsModal";
 
 /**
  * The signed-in person's own profile in the company area, where super admins work: who they are, what they
@@ -20,6 +21,7 @@ export default function CompanyProfilePage() {
     const permissions = usePermissions();
     const me = useCurrentUser();
     const [editing, setEditing] = useState(false);
+    const [viewingPermissions, setViewingPermissions] = useState(false);
     const name = fullName(me);
     const access = accessLabel(permissions, me.position);
 
@@ -52,10 +54,11 @@ export default function CompanyProfilePage() {
                     <SwitchRow title="Businesses" description="The businesses whose projects, clients and people you see."
                         control={<span className="badge">{me.visibleDomains.map((d) => DOMAIN_LABEL[d] ?? d).join(" · ") || "None"}</span>} />
                     <SwitchRow title="Permissions" description="Everything you may do, from your role and anything set just for you."
-                        control={<span className="badge">{plural(me.permissions.length, "permission")}</span>} />
+                        control={<button className="btn btn-sm" onClick={() => setViewingPermissions(true)}><Icon name="shield" />View {plural(me.permissions.length, "permission")}</button>} />
                 </div>
             </div>
 
+            {viewingPermissions && <MyPermissionsModal onClose={() => setViewingPermissions(false)} />}
             {editing && (
                 <EditProfileModal self onClose={() => setEditing(false)} person={{
                     id: me.id, firstName: me.firstName, lastName: me.lastName, email: me.email, phone: me.phone, photoFileId: me.photoFileId,
