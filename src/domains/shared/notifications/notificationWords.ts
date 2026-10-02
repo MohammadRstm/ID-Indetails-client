@@ -129,6 +129,21 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             const days = p.dueOn ? daysBetween(s(p.dueOn), companyToday()) : 0;
             return { text: `${s(p.number) || "An invoice"} is ${days > 0 ? `${plural(days, "day")} overdue` : "overdue"}`, sub: title, icon: "alert", route: project && note.subjectId ? `${project}?invoice=${note.subjectId}` : project };
         }
+        case "invoice_sent_automatically":
+            return {
+                text: p.to ? `${s(p.number) || "An invoice"} was emailed to ${s(p.to)}` : `${s(p.number) || "An invoice"} was issued - already paid on account, so not emailed`,
+                sub: `${title} · as you scheduled`, icon: "send", route: project && note.subjectId ? `${project}?invoice=${note.subjectId}` : project,
+            };
+        case "invoice_send_due":
+            return {
+                text: `A scheduled invoice on ${title} is due to go out`, sub: "There's no email address to send it to - send it yourself",
+                icon: "calendar", route: project && note.subjectId ? `${project}?send=${note.subjectId}` : project,
+            };
+        case "invoice_send_failed":
+            return {
+                text: `A scheduled invoice on ${title} couldn't be emailed`, sub: `${p.sendTo ? `To ${s(p.sendTo)} · ` : ""}it is tried again every hour`,
+                icon: "alert", route: project && note.subjectId ? `${project}?invoice=${note.subjectId}` : project,
+            };
         case "invoice_draft_waiting":
             return {
                 text: `A draft invoice on ${title} is still waiting`, sub: p.createdOn ? `Drafted ${fmtDate(s(p.createdOn))} · ready to send to the client` : "Ready to send to the client",

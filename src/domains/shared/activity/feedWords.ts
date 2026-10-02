@@ -116,13 +116,20 @@ const WORDS: Record<string, Words> = {
     project_finalized: { icon: "checkCircle", text: (e) => `closed ${project(e)}${e.amount == null ? "" : ` at ${money.fmt(e.amount)} revenue`}` },
 
     // billing
-    invoice_created: { icon: "file", text: (e, p) => `drafted ${str(p.number) ? `invoice ${str(p.number)}` : "an invoice"} for ${project(e)}${dash(e.amount)}` },
+    invoice_created: {
+        icon: "file",
+        text: (e, p) => `drafted ${str(p.number) ? `invoice ${str(p.number)}` : "an invoice"} for ${project(e)}${dash(e.amount)}${str(p.sendOn) ? `, to go out on ${fmtDate(str(p.sendOn)!)}` : ""}`,
+    },
+    invoice_scheduled: {
+        icon: "calendar",
+        text: (e, p) => (str(p.sendOn) ? `scheduled a draft invoice for ${project(e)} to go out on ${fmtDate(str(p.sendOn)!)}` : `cancelled the schedule of a draft invoice for ${project(e)}`),
+    },
     invoice_updated: { icon: "edit", text: (e) => `edited a draft invoice for ${project(e)}${dash(e.amount)}` },
     invoice_discarded: { icon: "trash", text: (e) => `discarded a draft invoice for ${project(e)}` },
-    invoice_issued: { icon: "file", text: (e, p) => `issued ${str(p.number) ?? "an invoice"} for ${project(e)}${dash(e.amount)}` },
+    invoice_issued: { icon: "file", text: (e, p) => `issued ${str(p.number) ?? "an invoice"} for ${project(e)}${dash(e.amount)}${p.automatic ? ", as scheduled" : ""}` },
     invoice_sent: {
         icon: "send",
-        text: (e, p) => `sent ${str(p.number) ?? "an invoice"} to ${client(e)}${p.channel === "whatsapp" ? " on WhatsApp" : p.channel === "email" ? " by email" : ""}`,
+        text: (e, p) => `sent ${str(p.number) ?? "an invoice"} to ${client(e)}${p.channel === "whatsapp" ? " on WhatsApp" : p.channel === "email" ? " by email" : ""}${p.automatic ? ", as scheduled" : ""}`,
     },
     invoice_voided: { icon: "x", text: (_e, p) => `voided ${str(p.number) ?? "an invoice"}${str(p.reason) ? ` - ${str(p.reason)}` : ""}` },
     payment_recorded: {

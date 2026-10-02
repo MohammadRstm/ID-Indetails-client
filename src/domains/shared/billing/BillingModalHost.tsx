@@ -6,6 +6,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Modal from "@/shared/components/Overlays/Modal";
 import { useProject, type Project } from "../projects/projectsApi";
 import { useInvoice } from "./billingApi";
+import AutoInvoiceModal from "./AutoInvoiceModal";
 import { useBillingLinks } from "./billingLinks";
 import InvoiceEditor from "./InvoiceEditor";
 import InvoiceModal from "./InvoiceModal";
@@ -71,6 +72,9 @@ export default function BillingModalHost({ project }: { project?: Project }) {
     if (invoice === "new") {
         return project && permissions.has(P.INVOICE_CREATE)
             ? <InvoiceEditor project={project} onClose={links.close} onSend={(saved) => links.send(saved.id)} /> : null;
+    }
+    if (invoice === "auto") {
+        return project && permissions.hasAll(P.INVOICE_CREATE, P.INVOICE_SEND) ? <AutoInvoiceModal project={project} onClose={links.close} /> : null;
     }
     if (id("invoice") != null) {
         return (

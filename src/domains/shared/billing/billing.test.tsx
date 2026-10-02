@@ -239,6 +239,66 @@ describe("a project's billing", () => {
         await waitFor(() => expect(discarded).toBe(true));
     });
 
+    it("splits what is left into invoices that go out on their own days", async () => {
+        const planned: unknown[] = [];
+        renderApp(path, admin,
+            http.post(`/api/projects/${project.id}/invoice-plan`, async ({ request }) => {
+                planned.push(await request.json());
+                return HttpResponse.json([inv, { ...billing.draft, sendOn: "2026-10-30" }, { ...billing.draft, sendOn: "2026-11-30" }], { status: 201 });
+            }),
+            ...handlers);
+        await userEvent.click(within(await band()).getByRole("button", { name: "Auto invoice" }));
+        const dialog = await screen.findByRole("dialog", { name: "Auto invoice" });
+        // the 18,200 left, in three a month apart from today; the last takes the leftover cents
+        const cents = (amount: number) => money.exact(amount, "USD", { cents: true });
+        expect(within(dialog).getAllByText(cents(6066.66))).toHaveLength(2);
+        expect(within(dialog).getByText(cents(6066.68))).toBeInTheDocument();
+        expect(await within(dialog).findByText(/emailed to mounir.aoun@mail.test with its PDF from 9:00 on its day - today's as soon as you schedule them/)).toBeInTheDocument();
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Schedule 3 invoices" }));
+        await waitFor(() => expect(planned).toEqual([{
+            invoices: [
+                { sendOn: "2026-09-30", amount: 6066.66, description: `${project.title} - payment 1 of 3` },
+                { sendOn: "2026-10-30", amount: 6066.66, description: `${project.title} - payment 2 of 3` },
+                { sendOn: "2026-11-30", amount: 6066.68, description: `${project.title} - payment 3 of 3` },
+            ],
+            termsDays: 30,
+            notes: null,
+            sendTo: "mounir.aoun@mail.test",
+        }]));
+        expect(await screen.findByText("3 invoices scheduled")).toBeInTheDocument();
+    });
+
+    it("keeps custom amounts to the amount being split", async () => {
+        let planned = false;
+        renderApp(path, admin,
+            http.post(`/api/projects/${project.id}/invoice-plan`, () => { planned = true; return HttpResponse.json([], { status: 201 }); }),
+            ...handlers);
+        await userEvent.click(within(await band()).getByRole("button", { name: "Auto invoice" }));
+        const dialog = await screen.findByRole("dialog", { name: "Auto invoice" });
+        await userEvent.click(within(dialog).getByRole("tab", { name: "Custom amounts" }));
+        const firstAmount = within(dialog).getByLabelText("Invoice 1 amount");
+        await userEvent.clear(firstAmount);
+        await userEvent.type(firstAmount, "5000");
+        expect(within(dialog).getByText(/The invoices add up to .* short of/)).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Schedule 3 invoices" }));
+        expect(planned).toBe(false);
+    });
+
+    it("says when a scheduled draft goes out, and cancels its schedule", async () => {
+        const scheduled = { ...billing.draft, sendOn: "2026-10-30", sendTo: "mounir.aoun@mail.test", scheduledBy: { id: admin.id, name: "Nadia Karam" } };
+        let cancelled = false;
+        renderApp(`${path}?invoice=${scheduled.id}`, admin,
+            http.get(`/api/invoices/${scheduled.id}`, () => HttpResponse.json(cancelled ? billing.draft : scheduled)),
+            http.delete(`/api/invoices/${scheduled.id}/schedule`, () => { cancelled = true; return HttpResponse.json(billing.draft); }),
+            ...handlers);
+        const dialog = await screen.findByRole("dialog", { name: "Draft invoice" });
+        expect(await within(dialog).findByText(/from 9:00, emailed to mounir.aoun@mail.test\. Scheduled by Nadia\./)).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Cancel schedule" }));
+        await waitFor(() => expect(cancelled).toBe(true));
+        expect(await screen.findByText("Schedule cancelled")).toBeInTheDocument();
+    });
+
     it("keeps invoicing, payments and voiding to the people who may", async () => {
         renderApp(`${path}?invoice=${inv.id}`, withPermissions(admin, { revoke: [P.INVOICE_CREATE, P.PAYMENT_RECORD, P.INVOICE_VOID] }), ...handlers);
         const dialog = await screen.findByRole("dialog", { name: inv.number! });

@@ -3760,6 +3760,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/invoices/{invoiceId}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    invoiceId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ScheduleInvoiceRequest"];
+                    "application/json": components["schemas"]["ScheduleInvoiceRequest"];
+                    "text/json": components["schemas"]["ScheduleInvoiceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InvoiceResponse"];
+                        "text/json": components["schemas"]["InvoiceResponse"];
+                        "text/plain": components["schemas"]["InvoiceResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    invoiceId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InvoiceResponse"];
+                        "text/json": components["schemas"]["InvoiceResponse"];
+                        "text/plain": components["schemas"]["InvoiceResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/invoices/{invoiceId}/void": {
         parameters: {
             query?: never;
@@ -5828,6 +5896,51 @@ export interface paths {
                         "application/json": components["schemas"]["ProjectResponse"];
                         "text/json": components["schemas"]["ProjectResponse"];
                         "text/plain": components["schemas"]["ProjectResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/invoice-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["InvoicePlanRequest"];
+                    "application/json": components["schemas"]["InvoicePlanRequest"];
+                    "text/json": components["schemas"]["InvoicePlanRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InvoiceResponse"][];
+                        "text/json": components["schemas"]["InvoiceResponse"][];
+                        "text/plain": components["schemas"]["InvoiceResponse"][];
                     };
                 };
             };
@@ -9117,6 +9230,13 @@ export interface components {
             /** Format: int32 */
             position: number;
         };
+        InvoicePlanRequest: {
+            invoices?: components["schemas"]["PlannedInvoiceRequest"][];
+            notes?: null | string;
+            sendTo?: null | string;
+            /** Format: int32 */
+            termsDays?: null | number;
+        };
         InvoiceProjectResponse: {
             /** Format: int64 */
             id: number;
@@ -9148,6 +9268,10 @@ export interface components {
             /** Format: double */
             paid: null | number;
             project: components["schemas"]["InvoiceProjectResponse"];
+            scheduledBy: null | components["schemas"]["PersonRefResponse"];
+            /** Format: date */
+            sendOn: null | string;
+            sendTo: null | string;
             status: components["schemas"]["InvoiceStatus"];
             /** Format: int32 */
             termsDays: number;
@@ -9178,6 +9302,8 @@ export interface components {
             /** Format: double */
             paid: null | number;
             project: components["schemas"]["InvoiceProjectResponse"];
+            /** Format: date */
+            sendOn: null | string;
             status: components["schemas"]["InvoiceStatus"];
             /** Format: double */
             total: number;
@@ -10174,6 +10300,13 @@ export interface components {
             /** Format: int32 */
             weekMinutes: number;
         };
+        PlannedInvoiceRequest: {
+            /** Format: double */
+            amount?: number;
+            description?: string;
+            /** Format: date */
+            sendOn?: string;
+        };
         PresenceResponse: {
             online: number[];
         };
@@ -10909,6 +11042,11 @@ export interface components {
             startMinute: number;
             /** Format: int32 */
             weekday: number;
+        };
+        ScheduleInvoiceRequest: {
+            /** Format: date */
+            sendOn?: string;
+            sendTo?: null | string;
         };
         SchedulesResponse: {
             companyWeek: components["schemas"]["WorkingTimePolicyResponse"];

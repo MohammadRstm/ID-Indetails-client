@@ -15,13 +15,9 @@ import { useBillingSettings, useBillingSetupMissing, useSaveInvoice, type Invoic
 import BillingSetupNotice from "./BillingSetupNotice";
 import InvoiceDoc, { ScaledDoc } from "./InvoiceDoc";
 import { billToContactOf, type DocFlash } from "./invoiceDocData";
+import { leftToInvoice, termOptions } from "./invoicePlan";
 
 type Line = { description: string; amount: number };
-
-const TERMS = [
-    { value: "0", label: "Due on receipt" }, { value: "15", label: "Net 15 - due in 15 days" },
-    { value: "30", label: "Net 30 - due in 30 days" }, { value: "45", label: "Net 45 - due in 45 days" },
-];
 
 type InvoiceEditorProps = {
     project: Project;
@@ -41,11 +37,7 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
     const save = useSaveInvoice(project.id, existing?.id ?? null);
     const m = project.money;
     const value = m?.revenue ?? 0;
-    const drafts = existing ? 0 : m?.billing.drafts ?? 0;
-    // Execution: what is still owed after every payment (on account ones too), less what is invoiced and unpaid
-    const remaining = project.domain === "execution"
-        ? Math.max(0, Math.round((m?.billing.owed ?? 0) - (m?.billing.outstanding ?? 0) - drafts))
-        : Math.max(0, (m?.billing.leftToInvoice ?? 0) - drafts);
+    const remaining = leftToInvoice(project, existing ? 0 : m?.billing.drafts ?? 0);
 
     const [lines, setLines] = useState<Line[]>(existing ? existing.lines.map((l) => ({ description: l.description, amount: l.amount }))
         : [{ description: "", amount: remaining > 0 ? Math.round(remaining) : 0 }]);
@@ -65,7 +57,6 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
     const errors = useFormErrors();
     const linesError = incomplete ? "Each line needs a description and an amount." : !valid && "Add a line: what is billed and its amount.";
     const over = total > remaining + 0.5;
-    const termOptions = TERMS.some((t) => +t.value === termsDays) ? TERMS : [...TERMS, { value: String(termsDays), label: `Net ${termsDays} - due in ${termsDays} days` }];
     const clientName = client?.displayName ?? project.client?.displayName ?? "the client";
 
     function setLine(i: number, patch: Partial<Line>) {
@@ -141,7 +132,7 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
                     <div className="grid g-2 mt">
                         <div className="field">
                             <label className="label required" htmlFor="inv-terms">Payment terms</label>
-                            <Select id="inv-terms" value={String(termsDays)} onChange={(v) => { setTerms(+v); touched("terms"); }} options={termOptions} />
+                            <Select id="inv-terms" value={String(termsDays)} onChange={(v) => { setTerms(+v); touched("terms"); }} options={termOptions(termsDays)} />
                             <div className="hint">The due date is set when the invoice is sent.</div>
                         </div>
                         <div className="field">

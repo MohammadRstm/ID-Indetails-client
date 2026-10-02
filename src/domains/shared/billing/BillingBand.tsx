@@ -118,6 +118,10 @@ export default function BillingBand({ project }: { project: Project }) {
                         {permissions.has(P.INVOICE_CREATE) && (
                             <button className="btn btn-sm btn-primary" disabled={!canInvoice} onClick={links.newInvoice}><Icon name="file" />New invoice</button>
                         )}
+                        {permissions.hasAll(P.INVOICE_CREATE, P.INVOICE_SEND) && (
+                            <button className="btn btn-sm" disabled={!canInvoice} onClick={links.autoInvoice}
+                                title="Split what is left into invoices that go out on their own days"><Icon name="calendar" />Auto invoice</button>
+                        )}
                         {permissions.has(P.PAYMENT_RECORD) && (
                             <button className="btn btn-sm" onClick={() => links.recordPayment()}><Icon name="card" />Record payment</button>
                         )}
