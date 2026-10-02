@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "@/shared/components/Feedback/toast";
 import { FieldError } from "@/shared/components/Forms/Field";
+import PhoneField from "@/shared/components/Forms/PhoneField";
 import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import useDebounce from "@/shared/hooks/useDebounce";
@@ -162,8 +163,13 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
                                 <Select className="select sm" style={{ width: 94 }} aria-label="Kind" value={c.kind}
                                     options={[{ value: "email", label: "Email" }, { value: "phone", label: "Phone" }]}
                                     onChange={(kind) => setContact(i, { kind, isWhatsapp: kind === "phone" ? c.isWhatsapp : false })} />
-                                <input className="input grow" placeholder={c.kind === "email" ? "name@company.com" : "+961 3 555 142"} aria-label={c.kind === "email" ? "Email address" : "Phone number"} value={c.value}
-                                    onChange={(e) => setContact(i, { value: e.target.value })} onBlur={errors.touch(`contact-${i}`)} />
+                                {c.kind === "email" ? (
+                                    <input className="input grow" placeholder="name@company.com" aria-label="Email address" value={c.value}
+                                        onChange={(e) => setContact(i, { value: e.target.value })} onBlur={errors.touch(`contact-${i}`)} />
+                                ) : (
+                                    <PhoneField placeholder="3 555 142" aria-label="Phone number" value={c.value}
+                                        onChange={(value) => setContact(i, { value })} onBlur={errors.touch(`contact-${i}`)} />
+                                )}
                                 <input className="input" style={{ width: 108 }} placeholder="e.g. Office" aria-label="Contact label" value={c.label} onChange={(e) => setContact(i, { label: e.target.value })} />
                                 {c.kind === "phone" && (
                                     <button type="button" className={cx("chip", c.isWhatsapp && "on")} title="Reachable on WhatsApp"

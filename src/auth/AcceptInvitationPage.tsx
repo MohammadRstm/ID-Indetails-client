@@ -8,6 +8,7 @@ import { useSession } from "@/app/session/useSession";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import Field, { FieldError } from "@/shared/components/Forms/Field";
+import PhoneField from "@/shared/components/Forms/PhoneField";
 import { useForm } from "@/shared/components/Forms/useForm";
 import { fmtDateY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -115,8 +116,7 @@ export default function AcceptInvitationPage() {
                     </Field>
                 </div>
                 <Field id="ai-phone" label="Phone" error={form.errors.phone}>
-                    <input id="ai-phone" className="input" type="tel" autoComplete="tel" placeholder="Optional"
-                        value={form.values.phone} onChange={(e) => form.set("phone", e.target.value)} />
+                    <PhoneField id="ai-phone" placeholder="Optional" value={form.values.phone} onChange={(phone) => form.set("phone", phone)} />
                 </Field>
                 <Field id="ai-pass" label="Password" required error={form.errors.password} hint={PASSWORD_HINT}>
                     <input id="ai-pass" className="input" type="password" autoComplete="new-password"
