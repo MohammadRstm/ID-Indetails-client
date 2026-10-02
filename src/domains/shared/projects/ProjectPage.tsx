@@ -123,8 +123,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const bill = m?.billing;
     const client = !!m && !!project.client && project.billingType === "client";
     const canNewInvoice = client && permissions.has(P.INVOICE_CREATE) && (bill?.notYetInvoiced ?? 0) - (bill?.drafts ?? 0) > 0.5;
-    // an Execution site takes payments on account, without an invoice
-    const canRecordPayment = client && permissions.has(P.PAYMENT_RECORD) && (site || (bill?.invoiced ?? 0) > 0 || (bill?.drafts ?? 0) > 0);
+    // a payment needs no invoice: it is held on account until an invoice is issued
+    const canRecordPayment = client && permissions.has(P.PAYMENT_RECORD);
     const materialCount = useMaterials(project.id, {}, site && client && permissions.has(P.STATEMENT_CREATE)).data?.all.count ?? 0;
     const canStatement = site && client && permissions.has(P.STATEMENT_CREATE) && materialCount > 0;
     const statements = useStatementLinks();

@@ -122,6 +122,38 @@ describe("a project's billing", () => {
         await waitFor(() => expect(delivered).toEqual([{ channel: "download", recipient: null }]));
     });
 
+    it("records a payment before anything is invoiced, held on account", async () => {
+        const recorded: unknown[] = [];
+        const uninvoiced = {
+            ...project,
+            money: { ...project.money!, billing: { ...project.money!.billing, invoiced: 0, outstanding: 0, overdue: 0, drafts: 0, issuedCount: 0, received: 0, onAccount: 0 } },
+        };
+        renderApp(path, admin,
+            http.get(`/api/projects/${project.id}`, () => HttpResponse.json(uninvoiced)),
+            http.get("/api/invoices", () => HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 })),
+            http.post(`/api/projects/${project.id}/payments`, async ({ request }) => {
+                recorded.push(await request.json());
+                return HttpResponse.json(billing.domainPayments.items[0], { status: 201 });
+            }),
+            ...handlers);
+        const record = within(await band()).getByRole("button", { name: "Record payment" });
+        expect(record).toBeEnabled();
+        expect(within(await band()).getByText(/they are held on account, and pay the next invoice issued/)).toBeInTheDocument();
+        await userEvent.click(record);
+        const dialog = await screen.findByRole("dialog", { name: "Record a client payment" });
+        expect(await within(dialog).findByText("On account - no invoice yet")).toBeInTheDocument();
+        await userEvent.type(within(dialog).getByLabelText("Amount received"), "2500");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
+        await waitFor(() => expect(recorded).toEqual([expect.objectContaining({ amount: 2500, invoiceId: null })]));
+    });
+
+    it("says money paid on account will pay the invoice being written", async () => {
+        const onAccount = { ...project, money: { ...project.money!, billing: { ...project.money!.billing, onAccount: 1200 } } };
+        renderApp(`${path}?invoice=new`, admin, http.get(`/api/projects/${project.id}`, () => HttpResponse.json(onAccount)), ...handlers);
+        const dialog = await screen.findByRole("dialog", { name: /invoice/i });
+        expect(await within(dialog).findByText(`${money.exact(1200)} was paid on account.`)).toBeInTheDocument();
+    });
+
     it("records a payment against the open invoice, for its balance", async () => {
         const recorded: unknown[] = [];
         renderApp(path, admin,

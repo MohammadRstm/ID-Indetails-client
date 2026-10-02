@@ -161,6 +161,16 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
                         </div>
                     )}
 
+                    {(m?.billing.onAccount ?? 0) > 0.5 && (
+                        <div className="banner mt">
+                            <Icon name="info" />
+                            <div className="grow">
+                                <b>{money.exact(m!.billing.onAccount)} was paid on account.</b> Issuing this invoice applies it, oldest payment first,
+                                each one that fits what the invoice asks for - so the client isn't asked twice for money already received.
+                            </div>
+                        </div>
+                    )}
+
                     <BillingSetupNotice domain={project.domain} />
 
                     <p className="hint mt">No tax is applied: these are milestones of an agreed project value. Invoicing never changes the project's revenue, profit or margin.</p>

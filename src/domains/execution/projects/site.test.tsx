@@ -43,7 +43,7 @@ describe("an Execution site's overview", () => {
         const health = (await screen.findByText("Ground labour and profit")).closest(".panel") as HTMLElement;
         expect(await within(health).findByText("Thu, Oct 8")).toBeInTheDocument();
         expect(within(health).getByText(/≈ 7 working days of ground labour at 6 workers/)).toBeInTheDocument();
-        expect(screen.getByText(/Payments can be recorded on account/)).toBeInTheDocument();
+        expect(screen.getByText(/Payments can be recorded without an invoice/)).toBeInTheDocument();
     });
 
     it("shows each material's margin, and that the lobby's were all sent to the client", async () => {
