@@ -210,6 +210,14 @@ describe("Someone's profile", () => {
         expect(paid).toBe(false);
     });
 
+    it("shows an admin the sign-in address without letting them change it", async () => {
+        renderApp("/design/people/9", nadia, ...peopleHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
+        expect(within(dialog).getByLabelText("Work email")).toHaveAttribute("readonly");
+        expect(within(dialog).getByText("Their sign-in address - only a super admin changes it.")).toBeInTheDocument();
+    });
+
     it("lets pay be changed without the rest of the profile, which it doesn't send", async () => {
         let updated = false;
         const pays: unknown[] = [];

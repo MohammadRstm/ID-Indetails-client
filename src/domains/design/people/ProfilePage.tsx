@@ -164,7 +164,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                 <DesignWork userId={self ? null : person.id} first={first} self={self} />
             ) : null}
 
-            {editing && <EditProfileModal person={person} self={self} onClose={() => setEditing(false)} />}
+            {editing && <EditProfileModal person={{ ...person, role: extra.role, status: extra.status }} self={self} onClose={() => setEditing(false)} />}
             {permissionsOpen && <PermissionsModal person={{ id: person.id, name, domain: person.domain }} onClose={() => setPermissionsOpen(false)} />}
         </div>
     );

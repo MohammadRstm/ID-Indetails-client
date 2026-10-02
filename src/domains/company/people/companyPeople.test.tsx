@@ -114,6 +114,42 @@ describe("the company's people", () => {
         await waitFor(() => expect(pays).toEqual([{ basis: "monthly", amount: 4500, currency: "USD", effectiveFrom: "2026-09-30" }]));
     });
 
+    it("changes another super admin's sign-in address, saying next to it when the address is taken", async () => {
+        const partner: Row = { ...settings.superAdmins[0], id: 43, email: "sami@id-indetails.test", firstName: "Sami", lastName: "Khoury" };
+        const sent: unknown[] = [];
+        renderApp("/company/overview?tab=people", rana,
+            http.get("/api/employees", () => HttpResponse.json({ items: [settings.superAdmins[0], partner], page: 1, pageSize: 25, totalCount: 2 })),
+            http.get("/api/employees/43", () => HttpResponse.json({ ...people.employee, id: 43, firstName: "Sami", lastName: "Khoury", email: partner.email, role: "super_admin", domain: null, team: null })),
+            http.get("/api/employees/43/pay", () => HttpResponse.json([])),
+            http.put("/api/employees/43", () => HttpResponse.json(people.employee)),
+            http.put("/api/employees/43/email", async ({ request }) => {
+                sent.push(await request.json());
+                return sent.length === 1
+                    ? HttpResponse.json({ type: "conflict", code: "email_already_registered", message: "Someone else is already registered or invited with this email.", errors: null }, { status: 409 })
+                    : HttpResponse.json(people.employee);
+            }),
+            ...handlers);
+        const row = (await screen.findByText("Sami Khoury")).closest("tr") as HTMLElement;
+        await userEvent.click(within(row).getByRole("button", { name: "More actions" }));
+        await userEvent.click(screen.getByRole("button", { name: "Edit profile and pay…" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit Sami's profile" });
+        const email = within(dialog).getByLabelText("Work email");
+        expect(within(dialog).getByText(/Changing it signs them out everywhere, and both addresses are emailed/)).toBeInTheDocument();
+
+        await userEvent.clear(email);
+        await userEvent.type(email, "nadia@id-indetails.test");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        expect(await within(dialog).findByText("Someone else is already registered or invited with this email.")).toBeInTheDocument();
+
+        await userEvent.clear(email);
+        await userEvent.type(email, "Sami.Khoury@id-indetails.test");
+        expect(within(dialog).queryByText("Someone else is already registered or invited with this email.")).not.toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+        expect(sent).toEqual([{ email: "nadia@id-indetails.test" }, { email: "sami.khoury@id-indetails.test" }]);
+        expect(await screen.findByText(/They now sign in with sami.khoury@id-indetails.test/)).toBeInTheDocument();
+    });
+
     it("deactivates someone who left, and takes back someone who returns", async () => {
         const calls: string[] = [];
         renderApp("/company/overview?tab=people", rana, peopleList(),
