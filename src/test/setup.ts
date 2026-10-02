@@ -2,7 +2,10 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, configure } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { server } from "./server";
-import { clearToasts } from "@/shared/components/Feedback/toast";
+import { clearToasts, TOAST_MS } from "@/shared/components/Feedback/toast";
+
+// Toasts stay put through a test, however slowly it runs (toast.test.ts checks the real timings).
+TOAST_MS.short = TOAST_MS.long = 60_000;
 
 // Pages load on demand, so the first test to open one waits for its code as well as its data.
 configure({ asyncUtilTimeout: 5000 });
