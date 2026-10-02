@@ -145,6 +145,7 @@ const WORDS: Record<string, Words> = {
     employee_reactivated: { icon: "refresh", text: (e, _p, names) => `reactivated ${subject(e, names)}` },
     sessions_ended: { icon: "lock", text: (e, _p, names) => `ended every session of ${subject(e, names)} and suspended their sign-in` },
     sign_in_restored: { icon: "refresh", text: (e, _p, names) => `restored ${subject(e, names)}'s sign-in` },
+    employee_email_changed: { icon: "mail", text: (e, _p, names) => (e.subjectId === e.actor?.id ? "changed their sign-in address" : `changed ${subject(e, names)}'s sign-in address`) },
     role_changed: { icon: "shield", text: (e, p, names) => `changed ${subject(e, names)}'s access${str(p.to) ? ` to ${str(p.to)!.replace("_", " ")}` : ""}` },
     employee_moved: { icon: "arrowRight", text: (e, p, names) => `moved ${subject(e, names)} to ${DOMAIN_LABEL[str(p.to) ?? ""] ?? "another business"}` },
     pay_changed: { icon: "card", text: (e, p, names) => `changed ${subject(e, names)}'s pay${str(p.effectiveFrom) ? ` from ${fmtDate(str(p.effectiveFrom)!)}` : ""}` },

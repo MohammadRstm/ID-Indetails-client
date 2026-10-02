@@ -118,7 +118,7 @@ function SuperAdminProfile({ account, onClose }: { account: Account; onClose: ()
     return (
         <EditProfileModal self={false} onClose={onClose} person={{
             id: e.id, firstName: e.firstName, lastName: e.lastName, email: e.email, phone: e.phone, photoFileId: e.photoFileId,
-            position: e.position, team: e.team, domain: e.domain, role: e.role,
+            position: e.position, team: e.team, domain: e.domain, role: e.role, status: e.status,
         }} />
     );
 }

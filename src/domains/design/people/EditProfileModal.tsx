@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { errorMessage, toApiError } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { toast } from "@/shared/components/Feedback/toast";
@@ -14,9 +14,11 @@ import { money } from "@/shared/format/money";
 import { companyToday, fmtDateY } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
+import { cx } from "@/shared/utils/cx";
+import { isEmail } from "@/shared/utils/email";
 import { currentPay, HOURS_PER_MONTH, monthlyToHourly } from "../pay/payRules";
 import { uploadFile } from "../work/workApi";
-import { useChangePay, usePayHistory, useSetPhoto, useTeams, useUpdateEmployee, useUpdateMyProfile } from "./peopleWorkApi";
+import { useChangeEmail, useChangeMyEmail, useChangePay, usePayHistory, useSetPhoto, useTeams, useUpdateEmployee, useUpdateMyProfile } from "./peopleWorkApi";
 
 export type ProfilePerson = {
     id: number;
@@ -30,11 +32,13 @@ export type ProfilePerson = {
     domain: string | null;
     /** A super admin's pay is always a monthly salary. */
     role?: string;
+    status?: string;
 };
 
 /**
  * Editing a profile (the prototype's P.EditProfile): anyone their own name, phone and photo; with
  * employee:manage someone's position and team too, and with employee:pay_manage their pay from a date on.
+ * A super admin also changes sign-in addresses: someone's, or their own with their password.
  */
 export default function EditProfileModal({ person, self, onClose }: { person: ProfilePerson; self: boolean; onClose: () => void }) {
     const permissions = usePermissions();
@@ -48,6 +52,9 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     const updateEmployee = useUpdateEmployee(person.id);
     const setPhoto = useSetPhoto(self ? "me" : person.id);
     const changePay = useChangePay(person.id);
+    const changeEmail = useChangeEmail(person.id);
+    const changeMyEmail = useChangeMyEmail();
+    const emailCall = self ? changeMyEmail : changeEmail;
     const fileRef = useRef<HTMLInputElement>(null);
 
     const [name, setName] = useState(`${person.firstName ?? ""} ${person.lastName ?? ""}`.trim());
@@ -56,6 +63,10 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     const [uploading, setUploading] = useState(false);
     const [position, setPosition] = useState(person.position ?? "");
     const [teamId, setTeamId] = useState(person.team ? String(person.team.id) : "");
+    const changesEmail = permissions.isSuperAdmin && person.status !== "deactivated";
+    const [email, setEmail] = useState(person.email);
+    const [password, setPassword] = useState("");
+    const emailChanged = changesEmail && email.trim().toLowerCase() !== person.email.toLowerCase();
     // pay, once its history has loaded
     const [pay, setPay] = useState<{ basis: "hourly" | "monthly"; amount: number; currency: string } | null>(null);
     const [from, setFrom] = useState(today);
@@ -67,8 +78,14 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     const nameError = !name.trim() && "Enter the full name.";
     const positionError = manages && !position.trim() && "Enter their position.";
     const payError = payChanged && !((pay?.amount ?? 0) > 0) && "Enter the new pay.";
-    const busy = updateMine.isPending || updateEmployee.isPending || setPhoto.isPending || changePay.isPending || uploading;
-    const error = updateMine.error ?? updateEmployee.error ?? setPhoto.error ?? changePay.error;
+    const emailError = emailChanged && !isEmail(email) && "Enter an email like name@company.com.";
+    const passwordError = self && emailChanged && !password && "Enter your password to change your sign-in address.";
+    // what the API says about the address or the password is shown next to that field
+    const refused = emailCall.error ? toApiError(emailCall.error) : null;
+    const refusedEmail = refused && (refused.fieldErrors.email ?? (refused.status === 409 || refused.code === "email_unchanged" ? refused.message : undefined));
+    const refusedPassword = refused?.fieldErrors.currentPassword;
+    const busy = updateMine.isPending || updateEmployee.isPending || setPhoto.isPending || changePay.isPending || emailCall.isPending || uploading;
+    const error = (refusedEmail || refusedPassword ? null : emailCall.error) ?? updateMine.error ?? updateEmployee.error ?? setPhoto.error ?? changePay.error;
 
     async function pick(f: File) {
         setUploading(true);
@@ -83,16 +100,26 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
 
     async function save() {
         if (busy) return;
-        if (nameError || positionError || payError) return errors.tried();
+        if (nameError || positionError || payError || emailError || passwordError) return errors.tried();
         const [firstName, ...rest] = name.trim().split(/\s+/);
         const lastName = rest.join(" ");
+        const newEmail = email.trim().toLowerCase();
         try {
+            if (emailChanged) {
+                if (self) await changeMyEmail.mutateAsync({ email: newEmail, currentPassword: password });
+                else await changeEmail.mutateAsync({ email: newEmail });
+            }
             if (self) await updateMine.mutateAsync({ firstName, lastName, phone: phone.trim() || null });
             // someone who may only change pay (employee:pay_manage) doesn't send the rest, which needs employee:manage
             else if (manages) await updateEmployee.mutateAsync({ firstName, lastName, phone: phone.trim() || null, position: position.trim(), teamId: teamId ? +teamId : null });
             if (photo !== person.photoFileId) await setPhoto.mutateAsync(photo);
             if (payChanged && pay) await changePay.mutateAsync({ basis: pay.basis, amount: pay.amount, currency: pay.currency, effectiveFrom: from });
-            toast({ text: "Profile updated", icon: "checkCircle", sub: payChanged ? `New pay applies from ${fmtDateY(from)} - earlier months are unchanged` : undefined });
+            const emailNote = !emailChanged ? null
+                : self ? `You now sign in with ${newEmail} - your other devices were signed out`
+                    : person.status === "invited" ? `Their invitation was sent again, to ${newEmail}`
+                        : `They now sign in with ${newEmail} - their sessions ended, and both addresses were emailed`;
+            const payNote = payChanged ? `New pay applies from ${fmtDateY(from)} - earlier months are unchanged` : null;
+            toast({ text: "Profile updated", icon: "checkCircle", sub: [emailNote, payNote].filter(Boolean).join(". ") || undefined });
             onClose();
         } catch {
             // the error is shown next to the buttons
@@ -138,10 +165,26 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                         </div>
                     </div>
                     <div className="field">
-                        <label className="label" htmlFor="ep-email">Work email</label>
-                        <input id="ep-email" className="input" value={person.email} readOnly />
-                        <div className="hint">{self ? "Your" : "Their"} sign-in address - changed by the company, not here.</div>
+                        <label className={cx("label", changesEmail && "required")} htmlFor="ep-email">Work email</label>
+                        <input id="ep-email" className="input" type="email" value={email} readOnly={!changesEmail} onBlur={errors.touch("email")}
+                            onChange={(e) => { setEmail(e.target.value); emailCall.reset(); }} />
+                        <FieldError message={refusedEmail || errors.show("email", emailError)} />
+                        <div className="hint">
+                            {!changesEmail ? `${self ? "Your" : "Their"} sign-in address${permissions.isSuperAdmin ? " - reactivate them to change it." : " - only a super admin changes it."}`
+                                : self ? "Your sign-in address. Changing it signs you out on your other devices, and both addresses are emailed."
+                                    : person.status === "invited" ? "Their invitation goes again to a new address; the link sent to this one stops working."
+                                        : "Their sign-in address. Changing it signs them out everywhere, and both addresses are emailed."}
+                        </div>
                     </div>
+                    {self && emailChanged && (
+                        <div className="field">
+                            <label className="label required" htmlFor="ep-password">Your password</label>
+                            <input id="ep-password" className="input" type="password" autoComplete="current-password" value={password} onBlur={errors.touch("password")}
+                                onChange={(e) => { setPassword(e.target.value); emailCall.reset(); }} />
+                            <FieldError message={refusedPassword || errors.show("password", passwordError)} />
+                            <div className="hint">To confirm it's you before your sign-in address changes.</div>
+                        </div>
+                    )}
                     {manages ? (
                         <div className="grid g-2">
                             <div className="field">

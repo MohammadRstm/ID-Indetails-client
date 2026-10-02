@@ -84,6 +84,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/change-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ChangeMyEmailRequest"];
+                    "application/json": components["schemas"]["ChangeMyEmailRequest"];
+                    "text/json": components["schemas"]["ChangeMyEmailRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuthResponse"];
+                        "text/json": components["schemas"]["AuthResponse"];
+                        "text/plain": components["schemas"]["AuthResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/change-password": {
         parameters: {
             query?: never;
@@ -2081,6 +2124,51 @@ export interface paths {
                     "application/*+json": components["schemas"]["MoveEmployeeRequest"];
                     "application/json": components["schemas"]["MoveEmployeeRequest"];
                     "text/json": components["schemas"]["MoveEmployeeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EmployeeResponse"];
+                        "text/json": components["schemas"]["EmployeeResponse"];
+                        "text/plain": components["schemas"]["EmployeeResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/{userId}/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ChangeEmailRequest"];
+                    "application/json": components["schemas"]["ChangeEmailRequest"];
+                    "text/json": components["schemas"]["ChangeEmailRequest"];
                 };
             };
             responses: {
@@ -8067,6 +8155,13 @@ export interface components {
             category: string;
             /** Format: double */
             usd: number;
+        };
+        ChangeEmailRequest: {
+            email?: string;
+        };
+        ChangeMyEmailRequest: {
+            currentPassword?: string;
+            email?: string;
         };
         ChangeOverheadAmountRequest: {
             /** Format: double */

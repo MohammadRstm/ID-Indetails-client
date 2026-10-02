@@ -1,8 +1,9 @@
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
-import type { Paged, Schemas } from "@/api/types";
+import type { AuthResponse, Paged, Schemas } from "@/api/types";
 import { ME_KEY } from "@/app/session/sessionContext";
+import { useSession } from "@/app/session/useSession";
 
 /* People and their profiles: the list with each person's work, one person, and changing them. */
 
@@ -180,6 +181,28 @@ export function useUpdateMyProfile() {
     return useMutation({
         mutationFn: async (body: Schemas["UpdateMyProfileRequest"]) => (await http.put(`/me/profile`, body)).data,
         onSuccess: changed,
+    });
+}
+
+/** Someone's new sign-in address (super admins): their sessions end; someone invited is invited again there. */
+export function useChangeEmail(userId: number) {
+    const changed = usePeopleChanged();
+    return useMutation({
+        mutationFn: async (body: Schemas["ChangeEmailRequest"]) => (await http.put<Employee>(`/employees/${userId}/email`, body)).data,
+        onSuccess: changed,
+    });
+}
+
+/** A super admin's own new sign-in address, with their password. The answer is a new session, taken on here. */
+export function useChangeMyEmail() {
+    const { adopt } = useSession();
+    const changed = usePeopleChanged();
+    return useMutation({
+        mutationFn: async (body: Schemas["ChangeMyEmailRequest"]) => (await http.post<AuthResponse>("/auth/change-email", body)).data,
+        onSuccess: (auth) => {
+            adopt(auth);
+            changed();
+        },
     });
 }
 
