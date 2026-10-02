@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
 import type { Paged, Schemas } from "@/api/types";
+import { ME_KEY } from "@/app/session/sessionContext";
 
 export type DomainSettings = Schemas["DomainSettingsResponse"];
 export type CompanySettings = Schemas["CompanySettingsResponse"];
@@ -10,6 +11,7 @@ export type WorkingTimePolicy = Schemas["WorkingTimePolicyResponse"];
 export type ExchangeRate = Schemas["ExchangeRateResponse"];
 export type Team = Schemas["TeamResponse"];
 export type UserPermissions = Schemas["UserPermissionsResponse"];
+export type HeldPermission = Schemas["HeldPermissionResponse"];
 export type PermissionDefinition = Schemas["PermissionDefinitionResponse"];
 
 /*
@@ -158,6 +160,14 @@ export function usePermissionCatalog(enabled: boolean) {
         queryFn: async () => (await http.get<PermissionDefinition[]>("/permissions")).data,
         enabled,
         staleTime: 30 * 60_000,
+    });
+}
+
+/** What the signed-in person holds, described; refreshed whenever their session's details are. */
+export function useMyPermissions() {
+    return useQuery({
+        queryKey: [...ME_KEY, "permissions"],
+        queryFn: async () => (await http.get<HeldPermission[]>("/me/permissions")).data,
     });
 }
 

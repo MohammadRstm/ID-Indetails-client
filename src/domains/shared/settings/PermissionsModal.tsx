@@ -11,20 +11,9 @@ import Modal from "@/shared/components/Overlays/Modal";
 import { DOMAIN_LABEL } from "@/shared/format/labels";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import { usePermissionCatalog, useUpdateUserPermissions, useUserPermissions, type PermissionDefinition } from "./settingsApi";
+import { byArea, ROLE_LABEL } from "./permissionWords";
+import { usePermissionCatalog, useUpdateUserPermissions, useUserPermissions } from "./settingsApi";
 import { loadFailed } from "@/api/queryState";
-
-// the part of a code before the colon, as people would call it
-const AREAS: Record<string, string> = {
-    project: "Projects", statement: "Statements", requirement: "Requirements", meeting: "Meetings", expense: "Expenses",
-    work_entry: "Work entries", material: "Materials", labour_report: "Labour", client: "Clients", financial: "Money",
-    invoice: "Invoices", payment: "Payments", billing_settings: "Billing settings", exchange_rate: "Exchange rates",
-    employee: "People", permission: "Permissions", team: "Teams", activity: "Activity", report: "Reports",
-    domain_settings: "Settings", company: "Company", overhead: "Company expenses", salary: "Salaries",
-    company_settings: "Company settings", working_time: "Working time", schedule: "Schedules", hours: "Hours",
-};
-const ROLE_LABEL: Record<string, string> = { super_admin: "Super admin", admin: "Admin", employee: "Employee" };
-const areaOf = (code: string) => code.split(":")[0];
 
 type Target = { id: number; name: string; domain: string | null };
 
@@ -51,8 +40,6 @@ export default function PermissionsModal({ person, onClose }: { person: Target; 
     const defaults = new Set(u?.roleDefaults ?? []);
     const overrides = new Map((u?.overrides ?? []).map((o) => [o.code, o]));
     const relevant = (catalog.data ?? []).filter((d) => d.domain == null || d.domain === person.domain);
-    const groups = new Map<string, PermissionDefinition[]>();
-    for (const d of relevant) groups.set(areaOf(d.code), [...(groups.get(areaOf(d.code)) ?? []), d]);
     const changes: Schemas["PermissionChangeRequest"][] = [
         ...Object.entries(want).filter(([code, on]) => on !== held.has(code)).map(([code, on]) => ({ action: on ? "grant" as const : "revoke" as const, code, reason: reason.trim() || null })),
         ...resets.filter((code) => want[code] == null).map((code) => ({ action: "reset" as const, code, reason: reason.trim() || null })),
@@ -99,9 +86,9 @@ export default function PermissionsModal({ person, onClose }: { person: Target; 
                                     <input id="perm-reason" className="input" placeholder="Optional - e.g. covering invoicing while Nadia is away" value={reason} onChange={(e) => setReason(e.target.value)} />
                                 </div>
                             )}
-                            {[...groups.entries()].map(([area, list]) => (
+                            {byArea(relevant).map(([area, list]) => (
                                 <div key={area} style={{ marginBottom: 12 }}>
-                                    <div className="u" style={{ marginBottom: 4 }}>{AREAS[area] ?? area}</div>
+                                    <div className="u" style={{ marginBottom: 4 }}>{area}</div>
                                     {list.map((d) => {
                                         const on = want[d.code] ?? (resets.includes(d.code) ? defaults.has(d.code) : held.has(d.code));
                                         const override = resets.includes(d.code) ? undefined : overrides.get(d.code);

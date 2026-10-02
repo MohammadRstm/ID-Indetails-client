@@ -23,6 +23,15 @@ describe("my profile", () => {
         expect(within(dialog).getByDisplayValue("Rana Test")).toBeInTheDocument();
     });
 
+    it("lists a super admin's permissions, described", async () => {
+        renderApp("/company/profile", personas.superAdmin, ...companyHandlers,
+            http.get("/api/me/permissions", () => HttpResponse.json([{ code: "salary:view", description: "See everyone's salaries", fromRole: true }])));
+        await userEvent.click(await screen.findByRole("button", { name: /^View \d+ permissions?$/ }));
+        const dialog = await screen.findByRole("dialog", { name: "Your permissions" });
+        expect(await within(dialog).findByText("See everyone's salaries")).toBeInTheDocument();
+        expect(within(dialog).getByText("A super admin holds every permission.")).toBeInTheDocument();
+    });
+
     it("changes a super admin's own sign-in address only with their password", async () => {
         const sent: unknown[] = [];
         const rana = personas.superAdmin;
