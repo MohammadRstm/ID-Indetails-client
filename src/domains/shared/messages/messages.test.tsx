@@ -127,9 +127,9 @@ describe("Messages", () => {
     it("turn their sounds off and on from the open chat, remembered in this browser", async () => {
         renderApp("/design/messages", rana, ...messageHandlers);
         await screen.findByText("Morning! The Villa Mounir samples arrived.");
-        await userEvent.click(within(thread()).getByRole("button", { name: "Turn message sounds off" }));
+        await userEvent.click(within(thread()).getByRole("button", { name: "Turn sounds off" }));
         expect(localStorage.getItem("hl-message-sounds")).toBe("off");
-        const toggle = within(thread()).getByRole("button", { name: "Turn message sounds on" });
+        const toggle = within(thread()).getByRole("button", { name: "Turn sounds on" });
         expect(toggle).toHaveAttribute("aria-pressed", "false");
         await userEvent.click(toggle);
         expect(localStorage.getItem("hl-message-sounds")).toBe("on");
