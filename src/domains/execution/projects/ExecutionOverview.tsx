@@ -3,6 +3,7 @@ import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { Bar } from "@/shared/components/Data/Bits";
 import { KpiStrip, type KpiProps } from "@/shared/components/Data/Kpi";
+import { Avatars } from "@/shared/components/Identity/People";
 import { money } from "@/shared/format/money";
 import BillingBand from "../../shared/billing/BillingBand";
 import { useBillingLinks } from "../../shared/billing/billingLinks";
@@ -19,9 +20,9 @@ import MaterialMargins from "../materials/MaterialMargins";
 import SiteMoneyPanel from "./SiteMoneyPanel";
 
 /**
- * An Execution site's Overview tab, for admins (the Execution side of the prototype's AdminProject): progress,
- * requirements, materials and ground labour, and for those who see money, what the client has paid against
- * what the site has cost.
+ * An Execution site's Overview tab (the Execution side of the prototype's AdminProject and P.EmpProject):
+ * progress, requirements, materials and ground labour, and for those who see money, what the client has paid
+ * against what the site has cost.
  */
 export default function ExecutionOverview({ project }: { project: Project }) {
     const permissions = usePermissions();
@@ -83,4 +84,10 @@ function SiteKpis({ project }: { project: Project }) {
         });
     }
     return <KpiStrip loading={materialList.isPending || weeks.isPending} items={items} />;
+}
+
+/** "Team [avatars]" in the site's head: who records on it, latest first. */
+export function SiteTeamLine({ project }: { project: Project }) {
+    if (!project.team?.count) return null;
+    return <span className="row" style={{ gap: 6 }}>Team <Avatars people={project.team.people} max={5} /></span>;
 }

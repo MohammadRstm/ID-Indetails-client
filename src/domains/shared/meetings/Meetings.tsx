@@ -95,7 +95,7 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
                 <>
                     <div className="grow">
                         {create.error ? <FieldError message={errorMessage(create.error)} />
-                            : `Everyone in ${DOMAIN_LABEL[domain] ?? domain} sees it${permissions.isAdmin ? "" : "; your admin is notified"}.`}
+                            : `Everyone in ${DOMAIN_LABEL[domain] ?? domain} sees it${permissions.has(P.MEETING_MANAGE) ? "" : "; your admin is notified"}.`}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={create.isPending} onClick={submit}>Schedule meeting</button>

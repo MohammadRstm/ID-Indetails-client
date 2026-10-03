@@ -42,10 +42,12 @@ const ACTIVITY = ["No activity", "Quiet", "Steady", "Busy"];
 const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
 /**
- * A Design project's Overview tab, for admins (the prototype's AdminProject): the work KPIs, who put the
- * hours in, the work timeline and the analytics.
+ * A Design project's Overview tab (the prototype's AdminProject), by permission: the work KPIs, who put the
+ * hours in, the work timeline and the analytics for those who see everyone's work, and its money for those who
+ * see money. `bareProgress`: someone who sees neither gets the project's progress on its own (not when their own
+ * work above already shows it).
  */
-export default function DesignOverview({ project }: { project: Project }) {
+export default function DesignOverview({ project, bareProgress = true }: { project: Project; bareProgress?: boolean }) {
     const permissions = usePermissions();
     const { today } = companyNow();
     const seesWork = permissions.has(P.WORK_ENTRY_VIEW_ALL);
@@ -84,7 +86,7 @@ export default function DesignOverview({ project }: { project: Project }) {
             canRemoveExpenses={permissions.has(P.EXPENSE_MANAGE)} />
     );
 
-    if (!seesWork) return <><Kpis project={project} work={undefined} />{band}{breakdown}</>;
+    if (!seesWork) return <>{bareProgress && <Kpis project={project} work={undefined} />}{band}{breakdown}</>;
     return (
         <>
             {loadFailed(all) ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="the project's work" /></div></div>

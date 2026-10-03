@@ -41,8 +41,8 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
             </button>
 
             <div className="top-actions">
-                {/* Design employees log work; the timer is one way to do it */}
-                {area.kind === "domain" && area.domain === "design" && !permissions.isAdmin && permissions.has(P.WORK_ENTRY_CREATE) && <TimerControl />}
+                {/* whoever logs Design work may time it */}
+                {area.kind === "domain" && area.domain === "design" && permissions.hasAll(P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN) && <TimerControl />}
 
                 {area.kind === "domain" && permissions.has(P.PROJECT_CREATE) && (
                     <button className="btn btn-sm" onClick={() => navigate(`/${area.domain}/projects?new=1`)}>

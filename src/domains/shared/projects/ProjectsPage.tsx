@@ -22,10 +22,13 @@ import { companyToday, fmtH, fmtNumber, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useOverview } from "../../design/dashboard/overviewApi";
+import { MyActiveCount, MyLogButtons, MyProjectCards, MyWorkBand } from "../../design/work/EmployeeHome";
+import { SiteActiveCount, SiteCards } from "../../execution/staff/SiteHome";
 import { ClientBadge } from "../clients/ClientBits";
 import { useClients } from "../clients/clientsApi";
 import { useDomainPeople, personName } from "../people/peopleApi";
 import CreateProjectModal from "./CreateProjectModal";
+import GreetingHead from "./GreetingHead";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useProjects, useProjectStatusCounts, useProjectTotals, type ProjectListParams, type ProjectSort, type ProjectStatus, type ProjectSummary } from "./projectsApi";
 import { loadFailed } from "@/api/queryState";
@@ -42,8 +45,43 @@ const SORTS: { value: ProjectSort; label: string }[] = [
 ];
 const PAGE_SIZE = 50;
 
-/** The domain's projects (the prototype's P.AdminProjects). */
+/**
+ * The projects page, for everyone, its parts by permission. Someone who logs work (work_entry:view_own) is
+ * greeted and gets their week, today and overtime (the prototype's P.EmpProjects). Someone who oversees the
+ * business - its money, everyone's work or project status - gets the table of all its projects (the prototype's
+ * P.AdminProjects); anyone else gets the cards of the projects they work on.
+ */
 export default function ProjectsPage() {
+    const domain = useDomain();
+    const permissions = usePermissions();
+    const [params, setParams] = useSearchParams();
+    const design = domain === "design";
+    const own = design && permissions.has(P.WORK_ENTRY_VIEW_OWN);
+    const records = !design && permissions.hasAny(P.MATERIAL_CREATE, P.MATERIAL_MANAGE, P.LABOUR_REPORT_CREATE, P.LABOUR_REPORT_MANAGE);
+    const oversees = permissions.hasAny(P.FINANCIAL_VIEW, P.WORK_ENTRY_VIEW_ALL, P.PROJECT_CHANGE_STATUS);
+    // the cards list only what one works on, so they give way to the table once someone oversees more
+    const cards = (design ? own : records) && !oversees;
+    const greeting = design ? own : cards;
+    const closeNew = () => { params.delete("new"); params.delete("client"); setParams(params, { replace: true }); };
+
+    return (
+        <div className="page">
+            {greeting && (
+                <GreetingHead sub={design ? <MyActiveCount /> : <SiteActiveCount />}
+                    actions={own && permissions.has(P.WORK_ENTRY_CREATE) && <MyLogButtons />} />
+            )}
+            {own && <MyWorkBand />}
+            {cards ? (design ? <MyProjectCards /> : <SiteCards />) : <ProjectTable section={greeting} />}
+            {params.get("new") === "1" && permissions.has(P.PROJECT_CREATE) && <CreateProjectModal domain={domain} initialClient={params.get("client")} onClose={closeNew} />}
+        </div>
+    );
+}
+
+/**
+ * All the business's projects in a table (the prototype's P.AdminProjects): the page's own head, or a section
+ * under the greeting.
+ */
+function ProjectTable({ section }: { section: boolean }) {
     const domain = useDomain();
     const navigate = useNavigate();
     const permissions = usePermissions();
@@ -83,11 +121,9 @@ export default function ProjectsPage() {
     const thisQuarter = useOverview("quarter", domain === "design" && permissions.has(P.REPORT_VIEW)).data;
     const clients = useClients({ domain, includeArchived: true, sort: "name", pageSize: 100 }, permissions.has(P.CLIENT_VIEW));
     const people = useDomainPeople(domain, permissions.has(P.EMPLOYEE_VIEW), { status: "active" });
-    const showNew = params.get("new") === "1";
 
     const reset = (fn: () => void) => { fn(); setPage(1); };
     const clearFilters = () => reset(() => { setSearch(""); setStatus("all"); setQuarter(null); setOwner("all"); setType("all"); setClient("all"); });
-    const closeNew = () => { params.delete("new"); params.delete("client"); setParams(params, { replace: true }); };
 
     const columns: Column<ProjectSummary>[] = [
         {
@@ -105,7 +141,7 @@ export default function ProjectsPage() {
                 </div>
             ),
         },
-        { key: "client", header: "Client", cell: (p) => <ClientBadge client={p.client && { id: p.client.id, displayName: p.client.displayName }} sub={false} /> },
+        { key: "client", header: "Client", cell: (p) => <ClientBadge client={p.client && { id: p.client.id, displayName: p.client.displayName }} sub={false} link={permissions.has(P.CLIENT_VIEW)} /> },
         { key: "status", header: "Status", cell: (p) => <StatusBadge status={p.status} /> },
         { key: "progress", header: "Progress", width: 110, cell: (p) => <Bar value={p.progressPct} tone={p.status === "completed" ? "ok" : p.status === "hold" ? "warn" : ""} /> },
         ...(seesWork ? [{ key: "hours", header: "Hours", right: true, mono: true, cell: (p: ProjectSummary) => fmtH(p.work?.totalMinutes ?? 0) }] : []),
@@ -171,15 +207,20 @@ export default function ProjectsPage() {
 
     const total = counts.all;
     const t = totals.data;
+    const sub = total == null ? " " : `${total} project${total === 1 ? "" : "s"} · ${counts.active ?? 0} active${thisQuarter ? ` · ${fmtNumber(Math.round(thisQuarter.minutes / 60))}h logged this quarter` : ""}`;
+    const newProject = permissions.has(P.PROJECT_CREATE) && (
+        <button className="btn btn-primary" onClick={() => { params.set("new", "1"); setParams(params); }}><Icon name="plus" />New project</button>
+    );
     return (
-        <div className="page">
-            <PageHead
-                title="Projects"
-                sub={total == null ? " " : `${total} project${total === 1 ? "" : "s"} · ${counts.active ?? 0} active${thisQuarter ? ` · ${fmtNumber(Math.round(thisQuarter.minutes / 60))}h logged this quarter` : ""}`}
-                actions={permissions.has(P.PROJECT_CREATE) && (
-                    <button className="btn btn-primary" onClick={() => { params.set("new", "1"); setParams(params); }}><Icon name="plus" />New project</button>
-                )}
-            />
+        <>
+            {section ? (
+                <div className="row wrap" style={{ gap: 10, margin: "22px 0 10px", alignItems: "baseline" }}>
+                    <h2 className="page-title" style={{ fontSize: 15 }}>All projects</h2>
+                    <span className="muted" style={{ fontSize: 12 }}>{sub}</span>
+                    <div className="grow" />
+                    {newProject}
+                </div>
+            ) : <PageHead title="Projects" sub={sub} actions={newProject} />}
 
             {seesMoney && loadFailed(totals) && (
                 <div className="panel" style={{ marginBottom: 12 }}><div className="panel-body"><LoadError error={totals.error} retry={() => totals.refetch()} what="the projects' money" /></div></div>
@@ -264,8 +305,6 @@ export default function ProjectsPage() {
                     </div>
                 )}
             </div>
-
-            {showNew && permissions.has(P.PROJECT_CREATE) && <CreateProjectModal domain={domain} initialClient={params.get("client")} onClose={closeNew} />}
-        </div>
+        </>
     );
 }

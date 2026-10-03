@@ -42,15 +42,23 @@ import { useChangeProjectStatus, useProject, useUpdateProject, type Project, typ
 type TabKey = "overview" | "requirements" | "timeline" | "meetings";
 
 /**
- * What goes on a project's Overview tab and Timeline tab. Each domain supplies its own (Design: work, money
- * and analytics; Execution: the site's money, materials and labour), registered where the routes are built.
+ * What goes on a project's Overview tab and Timeline tab, and the domain's own bits of its head. Each domain
+ * supplies its own (Design: work, money and analytics; Execution: the site's money, materials and labour),
+ * registered where the routes are built.
  */
 export type ProjectPanels = {
     overview: (project: Project) => ReactNode;
     timeline?: (project: Project) => ReactNode;
+    /** Beside the project's own buttons, such as Log work. */
+    actions?: (project: Project) => ReactNode;
+    /** On the line of facts under the title, such as the team. */
+    meta?: (project: Project) => ReactNode;
 };
 
-/** A project, for admins (the prototype's P.AdminProject). */
+/**
+ * A project, for everyone, its parts by permission (the prototype's P.AdminProject and P.EmpProject): someone
+ * who holds every permission sees what a super admin sees.
+ */
 export default function ProjectPage({ panels }: { panels: ProjectPanels }) {
     const { id } = useParams();
     const domain = useDomain();
@@ -181,9 +189,10 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                             ) : null}
                             <span className="row" style={{ gap: 6 }}><Icon name="clock" style={{ width: 14, height: 14 }} />{days} days</span>
                             <OwnerLine project={project} />
+                            {panels.meta?.(project)}
                             {project.client && (
                                 <span className="row" style={{ gap: 7 }}>Client
-                                    <ClientBadge client={{ id: project.client.id, displayName: project.client.displayName }} sub={false} />
+                                    <ClientBadge client={{ id: project.client.id, displayName: project.client.displayName }} sub={false} link={permissions.has(P.CLIENT_VIEW)} />
                                 </span>
                             )}
                             {m && (project.billingType === "internal" ? (
@@ -207,6 +216,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     </div>
                 </div>
                 <div className="page-actions">
+                    {panels.actions?.(project)}
                     {canReport && (
                         <button className="btn" onClick={() => setShowReport(true)}><Icon name="download" />Export report</button>
                     )}
@@ -251,8 +261,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                 <div className="banner done" style={{ marginBottom: 14 }}>
                     <Icon name="checkCircle" />
                     <div className="grow">
-                        <b>Completed {fmtDateY(project.completedAt)}.</b> It has left every employee's active project list and no new work can be logged against it.
-                        Everything recorded stays available here and in reports.
+                        <b>Completed {fmtDateY(project.completedAt)}.</b>{" "}
+                        {canChangeStatus ? "It has left every employee's active project list and no new work can be logged against it. Everything recorded stays available here and in reports."
+                            : site ? "No new materials can be added; everything recorded stays here." : "New work can't be logged against it; everything recorded stays here."}
                     </div>
                     {canChangeStatus && <button className="btn btn-sm" onClick={() => run("reopen", `${project.title} is active again`)}>Reopen</button>}
                 </div>
@@ -260,7 +271,11 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {project.status === "hold" && (
                 <div className="banner hold" style={{ marginBottom: 14 }}>
                     <Icon name="pause" />
-                    <div className="grow"><b>On hold{project.heldSince ? ` since ${fmtDateY(project.heldSince)}` : ""}.</b> Employees can still see it, but work entries are paused.</div>
+                    <div className="grow">
+                        <b>On hold{project.heldSince ? ` since ${fmtDateY(project.heldSince)}` : ""}.</b>{" "}
+                        {canChangeStatus ? "Employees can still see it, but work entries are paused."
+                            : site ? "Materials can still be recorded; nothing new is scheduled until it resumes." : "You can still see it, but new work entries are paused until it resumes."}
+                    </div>
                     {canChangeStatus && <button className="btn btn-sm" onClick={() => run("resume", `${project.title} is active again`)}>Resume</button>}
                 </div>
             )}

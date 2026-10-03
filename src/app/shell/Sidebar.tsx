@@ -31,8 +31,8 @@ export default function Sidebar({ area }: { area: ShellArea }) {
     const me = { name: fullName(user), photoFileId: user.photoFileId, online: true };
     const label = accessLabel(permissions, user.position);
 
-    // Design employees log work from anywhere
-    const canLog = domain === "design" && !permissions.isAdmin && permissions.has(P.WORK_ENTRY_CREATE);
+    // whoever logs Design work does it from anywhere
+    const canLog = domain === "design" && permissions.hasAll(P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN);
     const peopleItem = items.find((item) => item.key === "people");
     const profilePath = myProfilePath(permissions, area, user.id);
     const settingsItem = workspace.find((item) => item.key === "settings");

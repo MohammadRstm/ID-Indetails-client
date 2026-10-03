@@ -214,7 +214,10 @@ function ordered(items: Requirement[]): Requirement[] {
         || (a.isDone ? (b.doneAt ?? "").localeCompare(a.doneAt ?? "") : a.createdAt.localeCompare(b.createdAt)));
 }
 
-/** A project's Requirements tab, for admins (the prototype's P.ProjectRequirements). */
+/**
+ * A project's Requirements tab (the prototype's P.ProjectRequirements), for everyone with requirement:view:
+ * requirement:manage adds, edits and ticks any, requirement:complete_own ticks one's own.
+ */
 export function ProjectRequirementsTab({ project }: { project: { id: number; domain: string; status: string } }) {
     const permissions = usePermissions();
     const me = useCurrentUser().id;
@@ -227,10 +230,12 @@ export function ProjectRequirementsTab({ project }: { project: { id: number; dom
     const [show, setShow] = useState<"all" | "open" | "done">("all");
     const locked = project.status === "completed" || project.status === "archived";
     const canManage = permissions.has(P.REQUIREMENT_MANAGE) && !locked;
+    const canTickOwn = permissions.has(P.REQUIREMENT_COMPLETE_OWN) && !locked;
 
     const data = query.data;
     const list = ordered(data?.items ?? []);
     const open = list.filter((r) => !r.isDone).length;
+    const mineOpen = list.filter((r) => !r.isDone && r.assignees.some((a) => a.id === me)).length;
     const shown = show === "open" ? list.filter((r) => !r.isDone) : show === "done" ? list.filter((r) => r.isDone) : list;
 
     function onToggle(r: Requirement, done: boolean) {
@@ -270,7 +275,8 @@ export function ProjectRequirementsTab({ project }: { project: { id: number; dom
                 </Panel>
             )}
 
-            <Panel className="mt" bodyStyle={{ paddingTop: 2 }} title="Requirements" sub="Tick one when it is achieved - the project's progress follows."
+            <Panel className="mt" bodyStyle={{ paddingTop: 2 }} title="Requirements"
+                sub={`${canManage || canTickOwn ? "Tick one when it is achieved - the project's progress follows." : "The project's progress is worked out from how many are done."}${mineOpen ? ` ${mineOpen} open assigned to you.` : ""}`}
                 tools={data && (
                     <Segmented value={show} onChange={setShow} options={[
                         { value: "all", label: `All ${data.total}` }, { value: "open", label: `Open ${open}` }, { value: "done", label: `Done ${data.done}` },
@@ -279,7 +285,7 @@ export function ProjectRequirementsTab({ project }: { project: { id: number; dom
                 {query.isPending ? <SkeletonLines lines={4} />
                         : loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the requirements" />
                             : shown.length ? (
-                                <ReqList list={shown} me={me} canManage={canManage} canTickOwn={permissions.has(P.REQUIREMENT_COMPLETE_OWN) && !locked}
+                                <ReqList list={shown} me={me} canManage={canManage} canTickOwn={canTickOwn}
                                     onToggle={onToggle} onEdit={setEditing} onDelete={onDelete} />
                             ) : (
                                 <Empty art="done" title={data?.total ? "Nothing here" : "No requirements yet"}
@@ -297,32 +303,5 @@ export function ProjectRequirementsTab({ project }: { project: { id: number; dom
                 </Modal>
             )}
         </div>
-    );
-}
-
-/** An employee's view of a project's requirements: their own marked, and tickable where the API lets them. */
-export function RequirementsPanel({ project }: { project: { id: number; status: string } }) {
-    const permissions = usePermissions();
-    const me = useCurrentUser().id;
-    const query = useRequirements(project.id, permissions.has(P.REQUIREMENT_VIEW));
-    const tick = useTickRequirement(project.id);
-    const locked = project.status === "completed" || project.status === "archived";
-    const list = ordered(query.data?.items ?? []);
-    const mineOpen = list.filter((r) => !r.isDone && r.assignees.some((a) => a.id === me)).length;
-
-    return (
-        <Panel title="Requirements" sub={query.data
-            ? `${query.data.done} of ${query.data.total} done · the project's progress is worked out from these${mineOpen ? ` · ${mineOpen} open assigned to you` : ""}`
-            : " "} bodyStyle={{ paddingTop: 2 }}>
-                {query.isPending ? <SkeletonLines lines={3} />
-                    : loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the requirements" />
-                        : list.length ? (
-                            <ReqList list={list} me={me} canManage={false} canTickOwn={permissions.has(P.REQUIREMENT_COMPLETE_OWN) && !locked}
-                                onToggle={(r, done) => tick.mutate({ id: r.id, done }, {
-                                    onSuccess: () => toast({ text: done ? "Requirement done" : "Requirement reopened", icon: "checkCircle" }),
-                                    onError: (e) => toast({ text: "That didn't save", sub: errorMessage(e), icon: "alert" }),
-                                })} />
-                        ) : <div className="muted" style={{ fontSize: "12.5px", padding: "6px 0" }}>No requirements have been added to this project yet.</div>}
-        </Panel>
     );
 }
