@@ -1,4 +1,6 @@
 import { useState, type KeyboardEvent } from "react";
+import { AMOUNT, fitNumber, upTo } from "@/shared/format/limits";
+import { FieldError } from "./Field";
 import Select from "./Select";
 
 type AmountFieldProps = {
@@ -23,11 +25,15 @@ type AmountFieldProps = {
 const shown = (value: number | null) => (value === 0 || value ? String(value) : "");
 const parsed = (text: string) => (text === "" ? 0 : Number(text) || 0);
 
-/** An amount with its currency sign and an optional USD / LBP picker (the prototype's UI.AmountField). */
+/**
+ * An amount with its currency sign and an optional USD / LBP picker (the prototype's UI.AmountField). It takes no
+ * more digits or decimals than an amount can have, and says so under itself when a key is refused.
+ */
 export default function AmountField({ value, onChange, currency = "USD", onCurrency, currencies = true, id, placeholder = "0", r, c, onKeyDown, onBlur, ...rest }: AmountFieldProps) {
     // The text as typed, so "42." and "42.50" stay as they are while the amount they give is handed up;
     // an amount set from outside replaces it.
     const [text, setText] = useState(() => shown(value));
+    const [refused, setRefused] = useState(false);
     const [last, setLast] = useState(value);
     if (value !== last) {
         setLast(value);
@@ -35,6 +41,7 @@ export default function AmountField({ value, onChange, currency = "USD", onCurre
     }
 
     return (
+        <>
         <div className="amount-field">
             <span className="amount-cur">{currency === "LBP" ? "LBP" : "$"}</span>
             <input
@@ -47,9 +54,14 @@ export default function AmountField({ value, onChange, currency = "USD", onCurre
                 data-r={r}
                 data-c={c}
                 onKeyDown={onKeyDown}
-                onBlur={onBlur}
+                onBlur={() => {
+                    setRefused(false);
+                    onBlur?.();
+                }}
                 onChange={(e) => {
-                    const raw = e.target.value.replace(/[^0-9.]/g, "");
+                    const raw = fitNumber(e.target.value, AMOUNT, text);
+                    setRefused(raw == null);
+                    if (raw == null) return;
                     setText(raw);
                     onChange(parsed(raw));
                 }}
@@ -64,5 +76,7 @@ export default function AmountField({ value, onChange, currency = "USD", onCurre
                 />
             )}
         </div>
+        {refused && <FieldError message={upTo(AMOUNT)} />}
+        </>
     );
 }

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { errorMessage } from "@/api/errors";
 import { FieldError } from "@/shared/components/Forms/Field";
 import { Segmented } from "@/shared/components/Forms/Filters";
+import NumberField from "@/shared/components/Forms/NumberField";
+import { MONTH_HOURS } from "@/shared/format/limits";
 import { toast } from "@/shared/components/Feedback/toast";
 import { DAYS, fmtDate, fmtH, fmtMonthY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -138,7 +140,7 @@ export default function ExcuseHours({ detail, month, canExcuse }: ExcuseHoursPro
                             <div className="row" style={{ gap: 8 }}>
                                 <div className="field" style={{ width: 110 }}>
                                     <label className="label required" htmlFor="ex-hours">Hours</label>
-                                    <input id="ex-hours" className="input mono" inputMode="decimal" value={hours} onChange={(e) => setHours(e.target.value.replace(/[^0-9.]/g, ""))} />
+                                    <NumberField id="ex-hours" shape={MONTH_HOURS} value={hours} onChange={setHours} />
                                     <FieldError message={hoursTried && !mins ? "Enter the hours." : undefined} />
                                 </div>
                                 <div className="field grow">

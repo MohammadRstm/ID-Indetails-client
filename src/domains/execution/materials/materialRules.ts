@@ -1,4 +1,5 @@
 import type { Schemas } from "@/api/types";
+import { AMOUNT, largest, QUANTITY, UNIT_COST, upTo } from "@/shared/format/limits";
 import type { Material } from "./materialsApi";
 
 /*
@@ -68,6 +69,11 @@ export function problems(r: Row): RowProblems {
     }
     if (decimals(r.quantity) > 3) bad.quantity = "At most 3 decimals";
     if (decimals(r.unitCost) > 4) bad.unitCost = "At most 4 decimals";
+    // no larger than the API can keep
+    if (Number(r.quantity) > largest(QUANTITY)) bad.quantity = upTo(QUANTITY);
+    if (Number(r.unitCost) > largest(UNIT_COST)) bad.unitCost = upTo(UNIT_COST);
+    if (Number(r.clientPrice) > largest(AMOUNT)) bad.clientPrice = upTo(AMOUNT);
+    if (q && uc ? q * uc > largest(AMOUNT) : Number(r.amount) > largest(AMOUNT)) bad.amount = q && uc ? "Quantity × unit cost is too large" : upTo(AMOUNT);
     // the API's limits, so a long paste is caught before any of it is sent
     for (const [k, max] of [["name", 200], ["unit", 20], ["supplier", 200], ["note", 500]] as const) {
         if (r[k].trim().length > max) bad[k] = `At most ${max} characters`;

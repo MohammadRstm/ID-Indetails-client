@@ -101,6 +101,24 @@ describe("a project's money", () => {
         await waitFor(() => expect(added).toEqual([{ label: "Taxi to the site", amount: 25, currency: "USD", category: "travel", spentOn: "2026-09-30" }]));
     });
 
+    it("takes no amount larger than the system keeps, and says so beside it", async () => {
+        const added: Array<{ amount: number }> = [];
+        renderApp(path, admin,
+            http.post(`/api/projects/${project.id}/expenses`, async ({ request }) => { added.push(await request.json() as { amount: number }); return HttpResponse.json(projectWork.expenses.items[0], { status: 201 }); }),
+            ...projectWorkHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Add expense" }));
+        const dialog = await screen.findByRole("dialog", { name: "Add project expense" });
+        await userEvent.type(within(dialog).getByLabelText("What was it?"), "Marble");
+        const amount = within(dialog).getByLabelText("Amount");
+        await userEvent.type(amount, "99999999999999999999");
+        // thirteen digits, after the 0 the field starts with
+        expect(amount).toHaveValue("09999999999999");
+        expect(within(dialog).getByText("Up to 9,999,999,999,999.99, with at most 2 decimals.")).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Add expense" }));
+        await waitFor(() => expect(added).toHaveLength(1));
+        expect(added[0].amount).toBe(9_999_999_999_999);
+    });
+
     it("removes an expense after asking", async () => {
         let removed: string | null = null;
         const x = projectWork.expenses.items[0];

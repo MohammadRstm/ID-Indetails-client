@@ -12,6 +12,8 @@ import { SwitchRow, Toggle } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import { addDays, companyToday, fmtDateY, fmtNumber } from "@/shared/format/time";
 import { FieldError } from "@/shared/components/Forms/Field";
+import NumberField from "@/shared/components/Forms/NumberField";
+import { RATE } from "@/shared/format/limits";
 import { DOMAIN_LABEL, plural } from "@/shared/format/labels";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
@@ -351,8 +353,8 @@ function LbpRate() {
             }
             control={editing ? (
                 <div className="row wrap" style={{ gap: 6 }}>
-                    <input className="input mono" style={{ width: 110 }} inputMode="numeric" aria-label="LBP per dollar" value={editing.rate}
-                        onChange={(e) => setEditing({ ...editing, rate: e.target.value === "" ? "" : +e.target.value.replace(/[^0-9.]/g, "") || 0 })} />
+                    <NumberField shape={RATE} style={{ width: 110 }} aria-label="LBP per dollar" value={editing.rate}
+                        onChange={(text) => setEditing({ ...editing, rate: text === "" ? "" : +text || 0 })} />
                     <div style={{ width: 150 }}><DateInput value={editing.from} min={firstDay ?? undefined} max={today} onChange={(from) => setEditing({ ...editing, from })} aria-label="From" /></div>
                     <button className="btn btn-sm btn-primary" disabled={!editing.rate || !dayOk(editing.from) || add.isPending}
                         onClick={() => add.mutate({ currency: "LBP", ratePerUsd: +editing.rate, effectiveFrom: editing.from },

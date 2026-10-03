@@ -5,6 +5,8 @@ import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Select from "@/shared/components/Forms/Select";
+import NumberField from "@/shared/components/Forms/NumberField";
+import { RATE } from "@/shared/format/limits";
 import Modal from "@/shared/components/Overlays/Modal";
 import { PAYMENT_METHODS } from "@/shared/format/labels";
 import { money } from "@/shared/format/money";
@@ -123,8 +125,8 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
                 <div className="field mt">
                     <label className="label required" htmlFor="pay-fx">Exchange rate on the day</label>
                     <div className="row" style={{ gap: 8 }}>
-                        <input id="pay-fx" className="input mono" style={{ maxWidth: 160 }} inputMode="numeric" value={fx ? String(fx) : ""}
-                            onChange={(e) => setRate(Math.max(1, Number(e.target.value.replace(/[^0-9.]/g, "")) || 1))} />
+                        <NumberField id="pay-fx" shape={RATE} style={{ maxWidth: 160 }} value={fx || ""}
+                            onChange={(text) => setRate(Math.max(1, Number(text) || 1))} />
                         <span className="muted" style={{ fontSize: 12, alignSelf: "center" }}>LBP per US dollar</span>
                     </div>
                     <FieldError message={errors.show("rate", rateError)} />
