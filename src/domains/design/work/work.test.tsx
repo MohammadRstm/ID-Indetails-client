@@ -241,6 +241,32 @@ describe("the timer", () => {
         expect(within(dialog).getByLabelText("Start time")).toHaveValue("7:00 PM");
     });
 
+    it("fills in the minute it started and the minute it stopped, not a rounded length", async () => {
+        // started at 7:00:10 PM, stopped at 7:06:50 PM: the clock read 7:00 and 7:06
+        vi.setSystemTime(new Date("2026-09-28T16:00:10Z"));
+        renderApp("/design/projects", sarah, ...workHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: /start timer/i }));
+        vi.setSystemTime(new Date("2026-09-28T16:06:50Z"));
+        await userEvent.click(await screen.findByRole("button", { name: /stop/i }));
+        const dialog = await logWindow();
+        expect(await within(dialog).findByRole("button", { name: /^Log 6m/ })).toBeInTheDocument();
+        expect(within(dialog).getByLabelText("Start time")).toHaveValue("7:00 PM");
+        expect(within(dialog).getByLabelText("End time")).toHaveValue("7:06 PM");
+        expect(within(dialog).queryByText(/Your timer ran/)).toBeNull();
+    });
+
+    it("logs a run shorter than an entry's 5 minutes as 5, and says so", async () => {
+        vi.setSystemTime(new Date("2026-09-28T16:00:00Z"));
+        renderApp("/design/projects", sarah, ...workHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: /start timer/i }));
+        vi.setSystemTime(new Date("2026-09-28T16:01:05Z"));
+        await userEvent.click(await screen.findByRole("button", { name: /stop/i }));
+        const dialog = await logWindow();
+        expect(await within(dialog).findByRole("button", { name: /^Log 5m/ })).toBeInTheDocument();
+        expect(within(dialog).getByLabelText("End time")).toHaveValue("7:05 PM");
+        expect(within(dialog).getByText(/Your timer ran 1m\. An entry is at least 5 minutes, so it is logged as 5/)).toBeInTheDocument();
+    });
+
     it("keeps the evening part of a timer stopped after midnight", async () => {
         // 11:30 PM in Beirut, stopped at 12:45 AM
         vi.setSystemTime(new Date("2026-09-28T20:30:00Z"));

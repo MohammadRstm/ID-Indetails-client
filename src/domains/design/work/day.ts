@@ -13,6 +13,8 @@ export type Span = { s: number; e: number };
 export type Moves = Record<number, Span>;
 
 export const DAY = 1440;
+/** The shortest entry the API takes, in minutes. */
+export const MIN_ENTRY = 5;
 /** Where a day starts when the schedule doesn't say (9 AM). */
 export const DEFAULT_START = 9 * 60;
 /** What a day off's timeline shows before anything is logged on it: 7 AM to 9 PM. */
@@ -114,7 +116,7 @@ export function checkLog(o: LogCheck): string | null {
     const start = companyTimeToUtc(o.day, o.startMin);
     const end = new Date(+start + o.duration * 60_000);
     if (!o.projectId) return "Pick a project.";
-    if (o.duration < 5) return "An entry needs to be at least 5 minutes.";
+    if (o.duration < MIN_ENTRY) return `An entry needs to be at least ${MIN_ENTRY} minutes.`;
     if (end > new Date() && !o.allowFuture) return `That ends in the future - work can only be logged up to ${fmtTime(new Date())} today.`;
     if (o.allowOverlap) return null;
     const clash = o.others

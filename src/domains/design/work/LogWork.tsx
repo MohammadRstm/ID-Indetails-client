@@ -200,6 +200,11 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                                 onChange={(s, d, sw) => { setStartMin(s); setDuration(d); if (sw) setSwaps(sw); }} />
                         </div>
                         {tooLong && <div className="hint mt-s">That is a long stretch - if it spanned a break, two entries will read better in reports.</div>}
+                        {options.shortTimer != null && (
+                            <div className="hint mt-s">
+                                Your timer ran {options.shortTimer < 1 ? "under a minute" : fmtDur(options.shortTimer)}. An entry is at least 5 minutes, so it is logged as 5 - change the times if that isn't right.
+                            </div>
+                        )}
                     </div>
                 </div>
 
