@@ -18,8 +18,9 @@ RUN npm run build
 FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine AS runtime
 
 # The image's own example site is replaced by ours; the template is filled in with API_UPSTREAM when it starts.
+# Alpine's security fixes are taken at every build, as the base image can lag behind them.
 USER root
-RUN rm -f /etc/nginx/conf.d/default.conf
+RUN apk upgrade --no-cache && rm -f /etc/nginx/conf.d/default.conf
 COPY deploy/nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY deploy/nginx/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --chmod=755 deploy/nginx/10-require-api-upstream.sh /docker-entrypoint.d/10-require-api-upstream.sh
