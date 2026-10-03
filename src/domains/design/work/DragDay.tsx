@@ -1,4 +1,4 @@
-import { useRef, useState, type FocusEvent, type KeyboardEvent, type MouseEvent, type PointerEvent } from "react";
+import { useEffect, useEffectEvent, useRef, useState, type FocusEvent, type KeyboardEvent, type MouseEvent, type PointerEvent } from "react";
 import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import ContextMenu from "@/shared/components/Overlays/ContextMenu";
@@ -10,7 +10,7 @@ import { useCanChangeMeeting } from "../../shared/meetings/meetingsApi";
 import { checkLog, clamp, companyNow, DAY, DAY_OFF_HOURS, dayText, isoAt, movesFor, rangeFor, spanOn, wholeOn, workHoursOf, type Moves, type Span } from "./day";
 import DayTrack, { type TrackEntry, type TrackMeeting } from "./DayTrack";
 import { BOX, dayModel, type Block, type DayTask, type Stuck } from "./dragModel";
-import { useDeleteEntry, useDomainSettings, useMyDay, useMySchedule, useOvertimeFor, useResizeMeeting, useRestoreEntry } from "./workApi";
+import { useDomainSettings, useMyDay, useMySchedule, useOvertimeFor, useResizeMeeting } from "./workApi";
 
 type Mode = "draw" | "l" | "r" | "move" | "task-press" | "task" | "task-l" | "task-r" | "mtg-l" | "mtg-r";
 
@@ -51,32 +51,35 @@ type DragDayProps = {
     /** Logged tasks the box traded places with, or pushed along: saved with the log. */
     swaps: Moves;
     onChange: (startMin: number, duration: number, swaps?: Moves) => void;
+    /** Logged tasks deleted on the timeline, in the order they were: only hidden until the log is saved. */
+    deleted: number[];
+    onDeleted: (ids: number[]) => void;
 };
 
 /**
  * The one way to pick a time on a timeline, wherever work is logged (the prototype's UI.DragDay). Press on
  * free time and drag to draw the entry; pressing on a logged task starts it where that task ends. Logged
  * tasks can be moved and resized (pushing their neighbours), and meetings' ends dragged. A logged task is
- * deleted from its right-click menu, or by selecting it (double-click, or Enter) and pressing Delete.
+ * deleted from its right-click menu, or by selecting it (double-click, or Enter) and pressing Delete: it only
+ * leaves the timeline, Ctrl+Z brings it back, and it is deleted when the log is saved.
  */
-export default function DragDay({ date, startMin, duration, projectId, ignoreId, swaps, onChange }: DragDayProps) {
+export default function DragDay({ date, startMin, duration, projectId, ignoreId, swaps, onChange, deleted, onDeleted }: DragDayProps) {
     const { today, minute: nowMin } = companyNow();
     const isToday = date === today;
     const day = useMyDay(date);
     const schedule = useMySchedule(date);
     const settings = useDomainSettings("design").data;
-    const remove = useDeleteEntry();
-    const restore = useRestoreEntry();
     const resize = useResizeMeeting();
     const canChangeMeeting = useCanChangeMeeting();
     const [drag, setDrag] = useState<Drag | null>(null);
     const [selected, setSelected] = useState<number | null>(null);
     const [menu, setMenu] = useState<{ id: number; x: number; y: number } | null>(null);
     const trackRef = useRef<HTMLDivElement>(null);
+    const rootRef = useRef<HTMLDivElement>(null);
 
     const scheduleDay = schedule.data?.day;
     const workHours = workHoursOf(scheduleDay);
-    const list = (day.data?.entries ?? []).filter((e) => e.id !== ignoreId);
+    const list = (day.data?.entries ?? []).filter((e) => e.id !== ignoreId && !deleted.includes(e.id));
     const tasks: DayTask[] = list.map((e) => ({ id: e.id, span: spanOn(e, date), whole: wholeOn(e, date), locked: !e.canEdit }));
 
     const taskMode = drag != null && (drag.mode === "task" || drag.mode === "task-l" || drag.mode === "task-r");
@@ -121,13 +124,8 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
         }
         tip.hide();
         setSelected(null);
-        remove.mutate(id, {
-            onSuccess: () => toast({
-                text: `Deleted “${e.description}”`, sub: `${fmtRange(e.startedAt, e.endedAt)} · ${fmtDur(e.minutes)}`, icon: "trash",
-                actionLabel: "Undo", action: () => restore.mutate(id),
-            }),
-            onError: (err) => toast({ text: "That log wasn't deleted", sub: errorMessage(err), icon: "alert" }),
-        });
+        // nothing is sent: the log is deleted with the save
+        onDeleted([...deleted, id]);
         if (swaps[id]) {
             const rest = { ...swaps };
             delete rest[id];
@@ -139,6 +137,25 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
             el?.focus();
         }, 0);
     }
+
+    // Ctrl+Z brings back the last log deleted, until the log is saved. A text field undoes its own typing, and
+    // only the topmost window answers (the home page's timeline stays put under an open Log work).
+    const undoDelete = useEffectEvent((ev: globalThis.KeyboardEvent) => {
+        if (!deleted.length || !(ev.ctrlKey || ev.metaKey) || ev.shiftKey || ev.altKey || ev.key.toLowerCase() !== "z") return;
+        const t = ev.target as HTMLElement | null;
+        if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+        const layers = document.querySelectorAll(".scrim");
+        const top = layers[layers.length - 1];
+        if (top ? !top.contains(rootRef.current) : !!rootRef.current?.closest(".scrim")) return;
+        ev.preventDefault();
+        onDeleted(deleted.slice(0, -1));
+    });
+    useEffect(() => {
+        const onKey = (ev: globalThis.KeyboardEvent) => undoDelete(ev);
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, []);
+    const gone = deleted.map((id) => day.data?.entries.find((e) => e.id === id)).filter((e) => e != null);
 
     function resizeMeeting(id: number, s0: number, e0: number, s1: number, e1: number) {
         if (s0 === s1 && e0 === e1) return;
@@ -390,7 +407,7 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
     const lab = carrying || sizingMtg ? { s: drag!.s, e: drag!.e } : sel;
     const len = lab.e - lab.s;
     const { preview } = useOvertimeFor(len > 0 && !sizingMtg
-        ? { startedAt: isoAt(date, lab.s), endedAt: isoAt(date, lab.e), entryId: carrying ? carrying.id : ignoreId ?? null, moves: movesFor(date, live) }
+        ? { startedAt: isoAt(date, lab.s), endedAt: isoAt(date, lab.e), entryId: carrying ? carrying.id : ignoreId ?? null, moves: movesFor(date, live), deletes: deleted }
         : null);
     const ot = preview?.overtimeMinutes ?? 0;
     const bad = !drag && !!checkLog({
@@ -423,7 +440,7 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
     }));
 
     return (
-        <div className={cx("dd", drag && "dragging", drag && `dd-${drag.mode}`, meetings.length > 0 && "has-mtg")}>
+        <div ref={rootRef} className={cx("dd", drag && "dragging", drag && `dd-${drag.mode}`, meetings.length > 0 && "has-mtg")}>
             <div className="dd-label-row">
                 {len > 0 ? (
                     <span className={cx("dd-label", drag && drag.mode !== "task-press" && "dd-live", carrying && "dd-task", sizingMtg && "dd-mtg", bad && "bad")} style={labelPos}>
@@ -456,7 +473,18 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
                 {isToday && <span><i className="lg-now" />now {fmtTime(new Date())}</span>}
             </div>
             <div className="dd-keys"><Icon name="info" />Keyboard: Tab to a block, then <kbd>←</kbd> <kbd>→</kbd> move it 5 min (<kbd>Ctrl</kbd> for 15);
-                {" "}<kbd>Shift</kbd> + arrows change its end, <kbd>Alt</kbd> + arrows its start. Double-click a logged task (or <kbd>Enter</kbd>) to select it, then <kbd>Delete</kbd> removes it.</div>
+                {" "}<kbd>Shift</kbd> + arrows change its end, <kbd>Alt</kbd> + arrows its start. Double-click a logged task (or <kbd>Enter</kbd>) to select it, then <kbd>Delete</kbd> removes it;
+                {" "}<kbd>Ctrl</kbd> + <kbd>Z</kbd> brings it back until you save.</div>
+            {gone.length > 0 && !drag && (
+                <div className="dd-swapped">
+                    <Icon name="trash" />
+                    <span className="grow">
+                        {gone.length === 1 ? `“${gone[0].description}” is deleted` : `${gone.length} logged tasks are deleted`} when you save this log
+                        {gone.length > 1 ? `: ${gone.map((e) => e.description).join("; ")}` : ""}. <kbd>Ctrl</kbd> + <kbd>Z</kbd> brings {gone.length === 1 ? "it" : "the last one"} back.
+                    </span>
+                    <button type="button" className="link" onClick={() => onDeleted([])}>Bring {gone.length === 1 ? "it" : "them"} back</button>
+                </div>
+            )}
             {nSwapped > 0 && !drag && (
                 <div className="dd-swapped">
                     <Icon name="refresh" />

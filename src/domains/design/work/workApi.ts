@@ -175,15 +175,17 @@ export function useDeleteEntry() {
 }
 
 /**
- * Undoes a new log: deletes it, then puts back the entries it moved. One step, so it finishes even though the
- * form it came from has closed (a per-call callback on a closed form never runs).
+ * Undoes a save: deletes the new log (when there is one), puts back the entries it moved or the one it changed,
+ * then the logs it deleted. One step, so it finishes even though the form it came from has closed (a per-call
+ * callback on a closed form never runs).
  */
 export function useUndoLog() {
     const changed = useWorkChanged();
     return useMutation({
-        mutationFn: async ({ id, restore }: { id: number; restore: { id: number; body: SaveEntryBody } | null }) => {
-            await http.delete(`/work-entries/${id}`);
+        mutationFn: async ({ id, restore, deleted = [] }: { id?: number; restore: { id: number; body: SaveEntryBody } | null; deleted?: number[] }) => {
+            if (id != null) await http.delete(`/work-entries/${id}`);
             if (restore) await http.put<WorkEntry>(`/work-entries/${restore.id}`, restore.body);
+            for (const gone of deleted) await http.post<WorkEntry>(`/work-entries/${gone}/restore`);
         },
         onSuccess: changed,
     });

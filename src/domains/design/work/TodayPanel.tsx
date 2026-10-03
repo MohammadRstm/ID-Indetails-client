@@ -85,6 +85,8 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
     const [desc, setDesc] = useState("");
     const [touched, setTouched] = useState(false);
     const [swaps, setSwaps] = useState<Moves>({});
+    // logs deleted on the timeline, sent with the save
+    const [deletes, setDeletes] = useState<number[]>([]);
     const attachment = useAttachment();
     const save = useSaveEntry();
     const undo = useUndoLog();
@@ -98,8 +100,8 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
     const pid = projectId ?? choices[0]?.id ?? null;
     const startMin = slot?.s ?? DEFAULT_START, duration = slot?.d ?? 60;
     const startAt = isoAt(date, startMin), endAt = isoAt(date, startMin + duration);
-    const list = day.data?.entries ?? [];
-    const { preview } = useOvertimeFor(slot ? { startedAt: startAt, endedAt: endAt, entryId: null, moves: movesFor(date, swaps) } : null);
+    const list = (day.data?.entries ?? []).filter((e) => !deletes.includes(e.id));
+    const { preview } = useOvertimeFor(slot ? { startedAt: startAt, endedAt: endAt, entryId: null, moves: movesFor(date, swaps), deletes } : null);
     const requireDesc = !!settings?.requireDescription;
     const error = checkLog({
         projectId: pid, day: date, startMin, duration, others: list, moves: swaps,
@@ -110,6 +112,7 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
     function pickDay(d: string) {
         setDate(d);
         setSwaps({});
+        setDeletes([]);
         setSlotFor(d);
     }
 
@@ -120,18 +123,20 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
         const title = choices.find((p) => p.id === pid)?.title ?? "the project";
         // what Undo puts back, worked out before the day reloads with the entries moved
         const restore = restoreOf(list, date, swaps);
-        save.mutate({ body: { projectId: pid, description: desc, startedAt: startAt, endedAt: endAt, attachmentFileId: attachment.file?.id ?? null, moves: movesFor(date, swaps) } }, {
+        const deleted = deletes;
+        save.mutate({ body: { projectId: pid, description: desc, startedAt: startAt, endedAt: endAt, attachmentFileId: attachment.file?.id ?? null, moves: movesFor(date, swaps), deletes } }, {
             onSuccess: (entry) => {
                 toast({
                     text: `${fmtDur(entry.minutes)} logged on ${title}`,
                     sub: `${fmtRange(entry.startedAt, entry.endedAt)}${entry.overtimeMinutes ? ` · ${fmtDur(entry.overtimeMinutes)} overtime` : ""}`,
-                    icon: "checkCircle", actionLabel: "Undo", action: () => undo.mutate({ id: entry.id, restore }),
+                    icon: "checkCircle", actionLabel: "Undo", action: () => undo.mutate({ id: entry.id, restore, deleted }),
                 });
                 // stay here, ready for the next one: it starts where this one ended
                 const end = minutesOfDay(entry.endedAt);
                 const room = isToday ? nowMin - end : 60;
                 setSlot({ s: end, d: room >= 5 ? Math.min(60, Math.floor(room / 5) * 5) : 60 });
                 setSwaps({});
+                setDeletes([]);
                 setDesc("");
                 attachment.clear();
                 setTouched(false);
@@ -151,7 +156,7 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
             <div className="panel-body">
                 <DayChips value={date} onChange={pickDay} count={5} />
                 <div className="mt">
-                    <DragDay date={date} startMin={startMin} duration={duration} projectId={pid} swaps={swaps}
+                    <DragDay date={date} startMin={startMin} duration={duration} projectId={pid} swaps={swaps} deleted={deletes} onDeleted={setDeletes}
                         onChange={(s, d, sw) => { setSlot({ s, d }); if (sw) setSwaps(sw); }} />
                 </div>
 

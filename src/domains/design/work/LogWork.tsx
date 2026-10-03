@@ -75,6 +75,8 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
     const [desc, setDesc] = useState(ed?.description ?? "");
     const [touched, setTouched] = useState(false);
     const [swaps, setSwaps] = useState<Moves>({});
+    // logs deleted on the timeline, sent with the save
+    const [deletes, setDeletes] = useState<number[]>([]);
     // a plain new log moves to another day's first free time once that day has loaded
     const [slotFor, setSlotFor] = useState<string | null>(null);
     const attachment = useAttachment(ed?.attachment ?? null);
@@ -91,12 +93,12 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
         setDuration(sl.d);
     }
 
-    const list = (day.data?.entries ?? []).filter((e) => e.id !== ed?.id);
+    const list = (day.data?.entries ?? []).filter((e) => e.id !== ed?.id && !deletes.includes(e.id));
     const startAt = isoAt(date, startMin), endAt = isoAt(date, startMin + duration);
     const nextDay = startMin + duration >= DAY;
     const tooLong = duration > 12 * 60;
     const project = projects.find((p) => p.id === projectId);
-    const { preview } = useOvertimeFor({ startedAt: startAt, endedAt: endAt, entryId: ed?.id ?? null, moves: movesFor(date, swaps) });
+    const { preview } = useOvertimeFor({ startedAt: startAt, endedAt: endAt, entryId: ed?.id ?? null, moves: movesFor(date, swaps), deletes });
     const ot = preview?.overtimeMinutes ?? 0;
     const error = checkLog({
         projectId, day: date, startMin, duration, others: list, moves: swaps, ignoreId: ed?.id,
@@ -109,6 +111,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
     function pickDay(d: string) {
         setDate(d);
         setSwaps({});
+        setDeletes([]);
         if (plain) setSlotFor(d);
     }
 
@@ -129,7 +132,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
         const back = movesBack();
         // worked out now, while the day is loaded: the form has closed by the time Undo is pressed
         const restore = restoreOf(list, date, swaps);
-        const body = { projectId, description: desc, startedAt: startAt, endedAt: endAt, attachmentFileId: attachment.file?.id ?? null, moves: movesFor(date, swaps) };
+        const body = { projectId, description: desc, startedAt: startAt, endedAt: endAt, attachmentFileId: attachment.file?.id ?? null, moves: movesFor(date, swaps), deletes };
         const title = project?.title ?? "the project";
         save.mutate({ id: ed?.id, body }, {
             onSuccess: (saved) => {
@@ -137,13 +140,13 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                 if (ed) {
                     toast({
                         text: "Entry updated", sub: `${title} · ${fmtDayDate(startAt)} · ${fmtRange(startAt, endAt)}`, icon: "checkCircle",
-                        actionLabel: "Undo", action: () => save.mutate({ id: ed.id, body: { ...entryBody(ed), moves: movesFor(date, back) } }),
+                        actionLabel: "Undo", action: () => undo.mutate({ restore: { id: ed.id, body: { ...entryBody(ed), moves: movesFor(date, back) } }, deleted: deletes }),
                     });
                     return;
                 }
                 toast({
                     text: `${fmtDur(saved.minutes)} logged on ${title}`, sub: `${fmtDayDate(startAt)} · ${fmtRange(startAt, endAt)}`, icon: "checkCircle",
-                    actionLabel: "Undo", action: () => undo.mutate({ id: saved.id, restore }),
+                    actionLabel: "Undo", action: () => undo.mutate({ id: saved.id, restore, deleted: deletes }),
                 });
             },
         });
@@ -197,6 +200,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                             onChange={(s, d) => { setStartMin(s); setDuration(d); }} />
                         <div className="mt">
                             <DragDay date={date} startMin={startMin} duration={duration} projectId={projectId} ignoreId={ed?.id} swaps={swaps}
+                                deleted={deletes} onDeleted={setDeletes}
                                 onChange={(s, d, sw) => { setStartMin(s); setDuration(d); if (sw) setSwaps(sw); }} />
                         </div>
                         {tooLong && <div className="hint mt-s">That is a long stretch - if it spanned a break, two entries will read better in reports.</div>}
