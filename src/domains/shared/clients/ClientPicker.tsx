@@ -29,6 +29,7 @@ export default function ClientPicker({ domain, value, onChange, onCreate, invali
     return (
         <Popover
             align="left"
+            floating
             width={320}
             trigger={(open, toggle) => (
                 <button type="button" className={cx("client-select", open && "on", invalid && "invalid")} onClick={toggle}>

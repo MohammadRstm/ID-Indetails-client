@@ -59,7 +59,7 @@ function AssigneePicker({ value, onChange, options }: { value: number[]; onChang
     const chosen = options.filter((x) => value.includes(x.id));
     const toggle = (id: number) => onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
     return (
-        <Popover width={260} trigger={(open, t) => (
+        <Popover width={260} floating trigger={(open, t) => (
             <button type="button" className={cx("input req-pick", open && "on")} onClick={t}>
                 {chosen.length ? (
                     <>

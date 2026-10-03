@@ -61,6 +61,15 @@ describe("the projects list", () => {
         expect(screen.queryByRole("button", { name: /new project/i })).toBeNull();
     });
 
+    it("opens the client list of New project over the page, not inside the window", async () => {
+        renderApp("/design/projects", admin, ...projectHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: /new project/i }));
+        const dialog = await screen.findByRole("dialog");
+        await userEvent.click(within(dialog).getByRole("button", { name: /search clients/i }));
+        const find = await screen.findByLabelText("Find a client");
+        expect(dialog.contains(find)).toBe(false);
+    });
+
     it("keeps the row menu to what the person may do", async () => {
         renderApp("/design/projects", admin, ...projectHandlers);
         await userEvent.click(within(await firstRow()).getByRole("button", { name: "Project actions" }));
@@ -263,6 +272,16 @@ describe("meetings", () => {
         await screen.findByRole("button", { name: /new meeting/i });
         await waitFor(() => expect(asked.length).toBeGreaterThan(0));
         expect(new Set(asked)).toEqual(new Set(["design"]));
+    });
+
+    it("keep the New meeting window its size while the end time's list is open", async () => {
+        renderApp("/design/meetings", personas.designEmployee, ...projectHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: /new meeting/i }));
+        const dialog = await screen.findByRole("dialog");
+        await userEvent.click(within(dialog).getByLabelText("End"));
+        const list = document.querySelector(".pop.floating");
+        expect(list).not.toBeNull();
+        expect(dialog.contains(list)).toBe(false);
     });
 
     it("are read-only without meeting:create", async () => {
