@@ -1,6 +1,7 @@
-import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useRef, useState, type FocusEvent, type KeyboardEvent, type MouseEvent, type PointerEvent } from "react";
 import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
+import ContextMenu from "@/shared/components/Overlays/ContextMenu";
 import { tip } from "@/shared/components/Overlays/tip";
 import { dayKey, fmtDur, fmtHourLabel, fmtRange, fmtTime, minutesOfDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -55,7 +56,8 @@ type DragDayProps = {
 /**
  * The one way to pick a time on a timeline, wherever work is logged (the prototype's UI.DragDay). Press on
  * free time and drag to draw the entry; pressing on a logged task starts it where that task ends. Logged
- * tasks can be moved, resized (pushing their neighbours) and deleted, and meetings' ends dragged.
+ * tasks can be moved and resized (pushing their neighbours), and meetings' ends dragged. A logged task is
+ * deleted from its right-click menu, or by selecting it (double-click, or Enter) and pressing Delete.
  */
 export default function DragDay({ date, startMin, duration, projectId, ignoreId, swaps, onChange }: DragDayProps) {
     const { today, minute: nowMin } = companyNow();
@@ -68,6 +70,8 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
     const resize = useResizeMeeting();
     const canChangeMeeting = useCanChangeMeeting();
     const [drag, setDrag] = useState<Drag | null>(null);
+    const [selected, setSelected] = useState<number | null>(null);
+    const [menu, setMenu] = useState<{ id: number; x: number; y: number } | null>(null);
     const trackRef = useRef<HTMLDivElement>(null);
 
     const scheduleDay = schedule.data?.day;
@@ -112,6 +116,7 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
             return;
         }
         tip.hide();
+        setSelected(null);
         remove.mutate(id, {
             onSuccess: () => toast({
                 text: `Deleted “${e.description}”`, sub: `${fmtRange(e.startedAt, e.endedAt)} · ${fmtDur(e.minutes)}`, icon: "trash",
@@ -153,9 +158,35 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
         onChange(startMin, duration, mv);
     }
 
+    /** The editable logged task an event happened on. */
+    const taskOf = (target: EventTarget) => (target as HTMLElement).closest<HTMLElement>("[data-eid]");
+
+    function select(ev: MouseEvent<HTMLDivElement>) {
+        const el = taskOf(ev.target);
+        if (!el) return;
+        setSelected(Number(el.getAttribute("data-eid")));
+        el.focus();
+    }
+
+    function openMenu(ev: MouseEvent<HTMLDivElement>) {
+        const el = taskOf(ev.target);
+        if (!el) return;
+        ev.preventDefault();
+        tip.hide();
+        setMenu({ id: Number(el.getAttribute("data-eid")), x: ev.clientX, y: ev.clientY });
+    }
+
+    // the selection goes with the focus, so Delete never removes a task the person has moved away from
+    function blur(ev: FocusEvent<HTMLDivElement>) {
+        if (selected == null) return;
+        const next = ev.relatedTarget as HTMLElement | null;
+        if (!next || Number(taskOf(next)?.getAttribute("data-eid")) !== selected) setSelected(null);
+    }
+
     function down(ev: PointerEvent<HTMLDivElement>) {
         if (ev.button !== 0) return;
         const t = ev.target as HTMLElement;
+        if (selected != null && Number(taskOf(t)?.getAttribute("data-eid")) !== selected) setSelected(null);
         const handle = t.closest("[data-h]");
         const onBox = t.closest(".dt-sel");
         // an end of a meeting: resize the meeting
@@ -166,12 +197,6 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
             const id = Number(mh.closest("[data-mid]")!.getAttribute("data-mid"));
             const mm = meetings.find((x) => x.m.id === id);
             if (mm) setDrag({ mode: mh.getAttribute("data-mh") === "l" ? "mtg-l" : "mtg-r", id, s: mm.s, e: mm.e, s0: mm.s, e0: mm.e, swaps });
-            return;
-        }
-        const del = t.closest("[data-x]");
-        if (del) {
-            ev.preventDefault();
-            removeTask(Number(del.closest("[data-eid]")!.getAttribute("data-eid")));
             return;
         }
         // no capture: the drag still works while the pointer stays on the track
@@ -289,7 +314,7 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
     }
 
     // Keyboard: Tab to the box or a logged task, then ← → move it five minutes (Ctrl: fifteen);
-    // Shift + ← → changes its end, Alt + ← → its start. Delete removes a logged task.
+    // Shift + ← → changes its end, Alt + ← → its start. Enter selects a logged task and Delete removes it.
     function key(ev: KeyboardEvent<HTMLDivElement>) {
         const k = ev.key, t = ev.target as HTMLElement;
         const mEl = t.closest("[data-mid]");
@@ -303,11 +328,19 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
             else resizeMeeting(mx.m.id, mx.s, mx.e, clamp(mx.s + stp, r[0], mx.e - 5), mx.e);
             return;
         }
-        if (k === "Delete" || k === "Backspace") {
-            const del = t.closest("[data-eid]");
-            if (del) {
+        if (k === "Enter" || k === " ") {
+            const el = taskOf(t);
+            if (el) {
                 ev.preventDefault();
-                removeTask(Number(del.getAttribute("data-eid")));
+                setSelected(Number(el.getAttribute("data-eid")));
+            }
+            return;
+        }
+        if (k === "Delete" || k === "Backspace") {
+            const id = Number(taskOf(t)?.getAttribute("data-eid"));
+            if (id && id === selected) {
+                ev.preventDefault();
+                removeTask(id);
             }
             return;
         }
@@ -401,9 +434,17 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
                 ) : <span className="dd-hint">Press on free time and drag</span>}
             </div>
             <DayTrack big lo={r[0]} hi={r[1]} workHours={workHours} entries={shown} meetings={trackMeetings} nowMin={isToday ? nowMin : null}
-                sel={sel} selBad={bad} editable held={held} ref={trackRef} onPointerDown={down} onPointerMove={move} onPointerUp={up} onKeyDown={key} />
+                sel={sel} selBad={bad} selected={selected} editable held={held} ref={trackRef} onPointerDown={down} onPointerMove={move} onPointerUp={up}
+                onDoubleClick={select} onContextMenu={openMenu} onKeyDown={key} onBlur={blur} />
+            {menu && (
+                <ContextMenu x={menu.x} y={menu.y} label="Logged task" onClose={() => setMenu(null)}>
+                    <button type="button" role="menuitem" className="pop-item danger" onClick={() => { setMenu(null); removeTask(menu.id); }}>
+                        <Icon name="trash" />Delete this log
+                    </button>
+                </ContextMenu>
+            )}
             <div className="row wrap mt-s legend-row">
-                <span><i className="lg-e" />logged ({list.length}), drag to move, edges to resize (pushing neighbours along), × to delete</span>
+                <span><i className="lg-e" />logged ({list.length}), drag to move, edges to resize (pushing neighbours along), right-click to delete</span>
                 <span><i className="lg-sel" />{ignoreId ? "this entry" : "new log"} - drag it to move, its edges to resize</span>
                 {meetings.length > 0 && <span><i className="lg-mtg" />meetings ({meetings.length}), drag their ends to resize</span>}
                 {workHours && <span><i className="lg-wd" />your working day, {dayText(scheduleDay)}</span>}
@@ -411,7 +452,7 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
                 {isToday && <span><i className="lg-now" />now {fmtTime(new Date())}</span>}
             </div>
             <div className="dd-keys"><Icon name="info" />Keyboard: Tab to a block, then <kbd>←</kbd> <kbd>→</kbd> move it 5 min (<kbd>Ctrl</kbd> for 15);
-                {" "}<kbd>Shift</kbd> + arrows change its end, <kbd>Alt</kbd> + arrows its start; <kbd>Delete</kbd> removes a logged task.</div>
+                {" "}<kbd>Shift</kbd> + arrows change its end, <kbd>Alt</kbd> + arrows its start. Double-click a logged task (or <kbd>Enter</kbd>) to select it, then <kbd>Delete</kbd> removes it.</div>
             {nSwapped > 0 && !drag && (
                 <div className="dd-swapped">
                     <Icon name="refresh" />
