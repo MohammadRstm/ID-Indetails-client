@@ -52,9 +52,8 @@ describe("the route table", () => {
         expect(plus(P.CLIENT_VIEW)).toContain("Clients");
         expect(plus(P.FINANCIAL_VIEW)).toContain("Financials");
         expect(plus(P.TEAM_MANAGE)).toContain("Settings");
-        // the Employees list is built on everyone's hours: both are needed
-        expect(plus(P.EMPLOYEE_VIEW)).not.toContain("Employees");
-        expect(plus(P.EMPLOYEE_VIEW, P.WORK_ENTRY_VIEW_ALL)).toContain("Employees");
+        // the Employees list, with everyone's hours once they may see them
+        expect(plus(P.EMPLOYEE_VIEW)).toContain("Employees");
         expect(canOpen(permissionsOf(withPermissions(employee, { grant: [P.EMPLOYEE_VIEW] })), "design", "people/12")).toBe(true);
         // an action alone, without what shows it, opens nothing
         expect(plus(P.CLIENT_CREATE)).toEqual(navLabels(employee, "design"));

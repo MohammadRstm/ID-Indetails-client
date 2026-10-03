@@ -61,6 +61,15 @@ describe("the projects list", () => {
         expect(screen.queryByRole("button", { name: /new project/i })).toBeNull();
     });
 
+    it("makes a new project internal for someone who can't see the clients, and says why", async () => {
+        renderApp("/design/projects", withPermissions(admin, { revoke: [P.CLIENT_VIEW] }), ...projectHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: /new project/i }));
+        const dialog = await screen.findByRole("dialog");
+        expect(within(dialog).getByRole("button", { name: "Client project" })).toBeDisabled();
+        expect(within(dialog).getByRole("button", { name: "Internal" })).toHaveClass("on");
+        expect(within(dialog).queryByRole("button", { name: /search clients/i })).toBeNull();
+    });
+
     it("opens the client list of New project over the page, not inside the window", async () => {
         renderApp("/design/projects", admin, ...projectHandlers);
         await userEvent.click(await screen.findByRole("button", { name: /new project/i }));

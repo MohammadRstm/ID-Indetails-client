@@ -2,6 +2,7 @@ import { useState } from "react";
 import { errorMessage } from "@/api/errors";
 import type { Schemas } from "@/api/types";
 import type { PermissionCode } from "@/app/permissions/codes";
+import { NEEDS, neededBy } from "@/app/permissions/needs";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { useCurrentUser } from "@/app/session/useSession";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -20,7 +21,8 @@ type Target = { id: number; name: string; domain: string | null };
 /**
  * What one person may do, beyond or short of their role (permission:manage). The API keeps only the
  * differences from the role's defaults, moves someone to the other role when their permissions come to match
- * it, and never lets anyone change a super admin, themselves, or a permission they don't hold.
+ * it, and never lets anyone change a super admin, themselves, or a permission they don't hold. Ticking an
+ * action ticks the permission it needs to be usable (see NEEDS), and says so.
  */
 export default function PermissionsModal({ person, onClose }: { person: Target; onClose: () => void }) {
     const me = useCurrentUser();
@@ -31,6 +33,8 @@ export default function PermissionsModal({ person, onClose }: { person: Target; 
     const [want, setWant] = useState<Record<string, boolean>>({});
     const [resets, setResets] = useState<string[]>([]);
     const [reason, setReason] = useState("");
+    // the permissions ticked for an action that needs them, by that action
+    const [added, setAdded] = useState<Record<string, string>>({});
     const u = query.data;
     const self = person.id === me.id;
     const locked = !!u?.isLocked;
@@ -46,6 +50,21 @@ export default function PermissionsModal({ person, onClose }: { person: Target; 
     ];
     // anyone but a super admin may only hand out, or take back, what they hold themselves
     const canChange = (code: string) => !locked && !self && (iAmSuper || mine.has(code as PermissionCode));
+    const isOn = (code: string) => want[code] ?? (resets.includes(code) ? defaults.has(code) : held.has(code));
+    const nameOf = (code: string) => catalog.data?.find((d) => d.code === code)?.description ?? code;
+
+    function toggle(code: string, on: boolean) {
+        const need = NEEDS[code as PermissionCode];
+        const alsoNeed = on && need && !isOn(need) && canChange(need) ? need : null;
+        setWant((w) => ({ ...w, [code]: on, ...(alsoNeed ? { [alsoNeed]: true } : {}) }));
+        setResets((r) => r.filter((c) => c !== code && c !== alsoNeed));
+        setAdded((a) => {
+            const next = { ...a };
+            if (alsoNeed) next[code] = alsoNeed;
+            else delete next[code];
+            return next;
+        });
+    }
 
     function submit() {
         if (!changes.length) return;
@@ -90,13 +109,19 @@ export default function PermissionsModal({ person, onClose }: { person: Target; 
                                 <div key={area} style={{ marginBottom: 12 }}>
                                     <div className="u" style={{ marginBottom: 4 }}>{area}</div>
                                     {list.map((d) => {
-                                        const on = want[d.code] ?? (resets.includes(d.code) ? defaults.has(d.code) : held.has(d.code));
+                                        const on = isOn(d.code);
+                                        const need = NEEDS[d.code as PermissionCode];
+                                        // the actions ticked that can't be used without this one
+                                        const stranded = on ? [] : neededBy(d.code).filter(isOn);
+                                        const note = added[d.code] && on ? `Also grants “${nameOf(added[d.code])}”, which this needs to be usable.`
+                                            : on && need && !isOn(need) ? `Needs “${nameOf(need)}” to be usable${canChange(need) ? "" : ", which you can't grant"}.`
+                                                : stranded.length ? `Without it, ${stranded.map((c) => `“${nameOf(c)}”`).join(", ")} can't be used.` : null;
                                         const override = resets.includes(d.code) ? undefined : overrides.get(d.code);
                                         const changed = on !== held.has(d.code) || resets.includes(d.code);
                                         return (
                                             <label key={d.code} className={cx("pick-row", on && "on")} style={{ cursor: canChange(d.code) ? "pointer" : "default" }}>
                                                 <input type="checkbox" checked={on} disabled={!canChange(d.code)} aria-label={d.description}
-                                                    onChange={(e) => { setWant((w) => ({ ...w, [d.code]: e.target.checked })); setResets((r) => r.filter((c) => c !== d.code)); }} />
+                                                    onChange={(e) => toggle(d.code, e.target.checked)} />
                                                 <div className="grow" style={{ minWidth: 0 }}>
                                                     <div style={{ fontSize: "12.5px", fontWeight: 600 }}>{d.description}</div>
                                                     {d.explanation && <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{d.explanation}</div>}
@@ -105,6 +130,7 @@ export default function PermissionsModal({ person, onClose }: { person: Target; 
                                                         {override ? ` · ${override.effect === "grant" ? "granted" : "revoked"} by hand${override.reason ? `: ${override.reason}` : ""}` : ""}
                                                         {changed ? " · changed" : ""}
                                                     </div>
+                                                    {note && <div className={added[d.code] && on ? "hint" : "err"} style={{ marginTop: 3 }}>{note}</div>}
                                                 </div>
                                                 {override && canChange(d.code) && (
                                                     <button type="button" className="btn btn-sm btn-quiet" onClick={(e) => {

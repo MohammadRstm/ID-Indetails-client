@@ -57,14 +57,30 @@ describe("Employees", () => {
         expect(screen.queryByRole("dialog", { name: "Add employee" })).not.toBeInTheDocument();
     });
 
-    it("is for admins who see everyone's work", async () => {
+    it("shows the plain list of people, without hours, to an admin who can't see everyone's work", async () => {
         renderApp("/design/people", withPermissions(nadia, { revoke: [P.WORK_ENTRY_VIEW_ALL] }), ...peopleHandlers);
-        expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
+        expect(await screen.findByText("Everyone in Design. Their hours show to whoever may see everyone's work.")).toBeInTheDocument();
+        expect(screen.queryByText("Hours this week")).not.toBeInTheDocument();
     });
 
     it("stay closed to an employee without the permissions, and open to one given them", async () => {
         renderApp("/design/people", personas.designEmployee, ...workHandlers);
         expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
+    });
+
+    it("open as a plain list of people to an employee given only employee:view", async () => {
+        const asked: string[] = [];
+        renderApp("/design/people", withPermissions(personas.designEmployee, { grant: [P.EMPLOYEE_VIEW] }),
+            http.get("/api/work/people", () => { asked.push("work"); return HttpResponse.json([]); }),
+            http.get("/api/employees", ({ request }) => {
+                asked.push(new URL(request.url).searchParams.get("domain") ?? "");
+                return HttpResponse.json({ items: [], page: 1, pageSize: 25, totalCount: 0 });
+            }),
+            ...workHandlers);
+        expect(await screen.findByText("Everyone in Design. Their hours show to whoever may see everyone's work.")).toBeInTheDocument();
+        await waitFor(() => expect(asked).toContain("design"));
+        expect(asked).not.toContain("work");
+        expect(screen.queryByText("Hours this week")).not.toBeInTheDocument();
     });
 
     it("open to an employee given employee:view and work_entry:view_all", async () => {

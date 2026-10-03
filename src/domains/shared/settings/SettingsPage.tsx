@@ -1,5 +1,5 @@
 import { useSearchParams } from "react-router";
-import { P } from "@/app/permissions/codes";
+import { P, type PermissionCode } from "@/app/permissions/codes";
 import { DOMAINS, type Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { DomainContext, useDomain } from "@/app/routing/domainContext";
@@ -25,6 +25,17 @@ const SECTIONS: [Section, string, IconName][] = [
 ];
 /** The same whichever business is being looked at. */
 const COMPANY_WIDE: Section[] = ["general", "admins"];
+/** What lets someone change each section: it shows only to them. The first one's appearance is everyone's. */
+const MANAGED_BY: Record<Section, PermissionCode[] | null> = {
+    general: null,
+    time: [P.DOMAIN_SETTINGS_MANAGE, P.WORKING_TIME_MANAGE],
+    finance: [P.BILLING_SETTINGS_MANAGE, P.EXCHANGE_RATE_MANAGE, P.COMPANY_SETTINGS_MANAGE, P.WORKING_TIME_MANAGE],
+    projects: [P.DOMAIN_SETTINGS_MANAGE],
+    notifications: [P.DOMAIN_SETTINGS_MANAGE],
+    teams: [P.TEAM_MANAGE],
+    admins: [P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN, P.PERMISSION_MANAGE],
+    data: [P.WORK_ENTRY_VIEW_ALL],
+};
 
 type Choice = { domains: Domain[]; pick: (domain: Domain) => void };
 
@@ -52,15 +63,18 @@ export function CompanySettingsPage() {
 }
 
 /**
- * The prototype's P.AdminSettings. Everyone who reaches it sees every section; what they may change follows
- * their permissions: the domain's rules, billing and teams for its admins, the company's name, week, working
- * time, exchange rates and anyone's permissions for a super admin. Whoever reaches the company overview
- * manages the teams there instead.
+ * The prototype's P.AdminSettings. Each section shows to whoever may change something in it (MANAGED_BY):
+ * the domain's rules, billing and teams for its admins, the company's name, week, working time, exchange
+ * rates and anyone's permissions for a super admin. The theme is everyone's. Whoever reaches the company
+ * overview manages the teams there instead.
  */
 function Settings({ domain, choice }: { domain: Domain; choice?: Choice }) {
     const permissions = usePermissions();
     const [params, setParams] = useSearchParams();
-    const sections = SECTIONS.filter(([k]) => k !== "teams" || !permissions.has(P.COMPANY_VIEW));
+    const sections = SECTIONS
+        .filter(([k]) => (k !== "teams" || !permissions.has(P.COMPANY_VIEW)) && (MANAGED_BY[k] == null || permissions.hasAny(...MANAGED_BY[k])))
+        // without the company's settings to change, the first section is only the theme
+        .map(([k, label, icon]): [Section, string, IconName] => (k === "general" && !permissions.has(P.COMPANY_SETTINGS_MANAGE) ? [k, "Appearance", "sun"] : [k, label, icon]));
     const requested = params.get("section") as Section | null;
     const section: Section = requested && sections.some(([k]) => k === requested) ? requested : "general";
     const open = (k: Section) => { params.set("section", k); setParams(params, { replace: true }); };

@@ -31,8 +31,12 @@ async function squareLogo(file: File): Promise<File> {
 // Icons draw as blocks (.ic); inline, each sits beside its word instead of above it.
 const themeIcon = { width: 13, height: 13, display: "inline-block", marginRight: 6, verticalAlign: -2 } as const;
 
-/** The prototype's Settings → Company: how the app looks here, and the company's name, logo, week and time format. */
+/**
+ * The prototype's Settings → Company: how the app looks here, for everyone, and the company's name, logo, week
+ * and time format, for whoever may change them.
+ */
 export default function CompanySettingsSection() {
+    const manages = usePermissions().has(P.COMPANY_SETTINGS_MANAGE);
     const query = useCompanySettings();
     const settings = query.data;
     const theme = useTheme();
@@ -54,7 +58,7 @@ export default function CompanySettingsSection() {
                     } />
                 </div>
             </div>
-            {settings ? <Company settings={settings} />
+            {!manages ? null : settings ? <Company settings={settings} />
                 : <div className="panel"><div className="panel-body">
                     {loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the company's settings" /> : <SkeletonLines lines={6} />}
                 </div></div>}

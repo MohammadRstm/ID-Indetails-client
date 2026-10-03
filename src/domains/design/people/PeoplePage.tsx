@@ -20,6 +20,7 @@ import { money } from "@/shared/format/money";
 import { fmtDur, fmtH, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import CompanyPeople from "../../company/people/CompanyPeople";
 import InviteModal from "../../shared/people/InviteModal";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { usePeopleWork, type PersonWork } from "./peopleWorkApi";
@@ -28,8 +29,20 @@ import { loadFailed } from "@/api/queryState";
 
 type PresenceFilter = "all" | "online" | "offline" | "invited";
 
-/** Design's employees and what they are working on (the prototype's P.AdminPeople). */
+/**
+ * Design's employees: what they are working on for whoever may see everyone's work (the prototype's
+ * P.AdminPeople), or the plain list of people for someone who may only see who they are.
+ */
 export default function PeoplePage() {
+    return usePermissions().has(P.WORK_ENTRY_VIEW_ALL) ? <PeopleWork /> : (
+        <div className="page">
+            <PageHead title="Employees" sub="Everyone in Design. Their hours show to whoever may see everyone's work." />
+            <CompanyPeople domain="design" />
+        </div>
+    );
+}
+
+function PeopleWork() {
     const navigate = useNavigate();
     const permissions = usePermissions();
     const [params, setParams] = useSearchParams();
