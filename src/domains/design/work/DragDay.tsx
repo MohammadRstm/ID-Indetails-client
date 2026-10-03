@@ -7,7 +7,7 @@ import { dayKey, fmtDur, fmtHourLabel, fmtRange, fmtTime, minutesOfDay } from "@
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useCanChangeMeeting } from "../../shared/meetings/meetingsApi";
-import { checkLog, clamp, companyNow, DAY, dayText, isoAt, movesFor, rangeFor, spanOn, wholeOn, workHoursOf, type Moves, type Span } from "./day";
+import { checkLog, clamp, companyNow, DAY, DAY_OFF_HOURS, dayText, isoAt, movesFor, rangeFor, spanOn, wholeOn, workHoursOf, type Moves, type Span } from "./day";
 import DayTrack, { type TrackEntry, type TrackMeeting } from "./DayTrack";
 import { BOX, dayModel, type Block, type DayTask, type Stuck } from "./dragModel";
 import { useDeleteEntry, useDomainSettings, useMyDay, useMySchedule, useOvertimeFor, useResizeMeeting, useRestoreEntry } from "./workApi";
@@ -93,10 +93,14 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
         return x;
     });
 
-    let r = rangeFor(tasks.map((t) => t.span), [7 * 60, 21 * 60]);
+    // the person's working hours that day, in whole hours (a day off: 7 AM to 9 PM), stretched to what is logged
+    // and the meetings
+    let r = rangeFor(tasks.map((t) => t.span), workHours ? [Math.floor(workHours.s / 60) * 60, Math.ceil(workHours.e / 60) * 60] : DAY_OFF_HOURS);
     for (const x of meetings) r = [Math.min(r[0], Math.floor(x.s0 / 60) * 60), Math.max(r[1], Math.ceil(x.e0 / 60) * 60)];
     // keep the entry being edited in view, even at 6 AM or late at night
     r = [Math.min(r[0], Math.floor(startMin / 60) * 60), Math.max(r[1], Math.min(DAY, Math.ceil((startMin + duration) / 60) * 60))];
+    // today, once the working day is over, up to now, so the evening's overtime can be drawn (as on the Today card)
+    if (isToday && nowMin > r[1]) r = [r[0], Math.min(DAY, Math.ceil(nowMin / 60) * 60)];
     const limit = isToday && !settings?.allowFutureEntries ? Math.min(nowMin, r[1]) : r[1];
     const selNow = { s: startMin, e: startMin + duration };
     const model = dayModel({ tasks, range: r, limit, workHours, box: duration > 0 ? selNow : null, live });

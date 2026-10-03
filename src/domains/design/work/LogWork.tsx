@@ -10,7 +10,7 @@ import { dayKey, fmtDayDate, fmtDur, fmtH, fmtRange, minutesOfDay } from "@/shar
 import Icon from "@/shared/icons/Icon";
 import { useAttachment } from "./attachments";
 import { AttachmentField } from "./AttachmentField";
-import { checkLog, companyNow, DAY, defaultSlot, isoAt, movesFor, restoreOf, spanOn, workHoursOf, type Moves } from "./day";
+import { checkLog, companyNow, DAY, DEFAULT_START, defaultSlot, isoAt, movesFor, restoreOf, spanOn, workHoursOf, type Moves } from "./day";
 import DayChips from "./DayChips";
 import DragDay from "./DragDay";
 import { closeLogWork, type LogWorkOptions } from "./logWorkStore";
@@ -44,8 +44,9 @@ export default function LogWorkModal({ options }: { options: LogWorkOptions }) {
             </Modal>
         );
     }
+    const hours = workHoursOf(schedule.data.day);
     return <LogWorkForm options={options} firstDay={firstDay} projects={projects.data} settings={settings.data} dayEntries={day.data.entries}
-        dayEnd={workHoursOf(schedule.data.day)?.e ?? null} />;
+        dayStart={hours?.s ?? DEFAULT_START} dayEnd={hours?.e ?? null} />;
 }
 
 type FormProps = {
@@ -54,18 +55,19 @@ type FormProps = {
     projects: MyProject[];
     settings: DomainSettings;
     dayEntries: WorkEntry[];
-    /** Where the working day ends: "Log overtime" starts there. */
-    /** When the working day ends; null on a day off. */
+    /** When the working day starts: an empty day's first log starts there. 9 AM on a day off. */
+    dayStart: number;
+    /** When the working day ends ("Log overtime" starts there); null on a day off. */
     dayEnd: number | null;
 };
 
 /** The window itself (the prototype's P.LogWork): what was done, when, and on which project. */
-function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayEnd }: FormProps) {
+function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayStart, dayEnd }: FormProps) {
     const me = useCurrentUser();
     const { today, minute: nowMin } = companyNow();
     const ed = options.edit ?? null;
     const choices = loggableProjects(projects, ed?.project.id);
-    const [initial] = useState(() => firstSlot(options, firstDay, dayEntries, dayEnd, today, nowMin));
+    const [initial] = useState(() => firstSlot(options, firstDay, dayEntries, dayStart, dayEnd, today, nowMin));
     const [projectId, setProjectId] = useState<number | null>(ed ? ed.project.id : options.projectId ?? choices[0]?.id ?? null);
     const [date, setDate] = useState(firstDay);
     const [startMin, setStartMin] = useState(initial.s);
@@ -83,7 +85,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayEnd
     const plain = !ed && !options.overtime && options.startMin == null && options.endMin == null;
 
     if (slotFor && slotFor === date && day.data && !day.isPlaceholderData && day.data.date.slice(0, 10) === date) {
-        const sl = defaultSlot(day.data.entries.map((e) => spanOn(e, date)), workHoursOf(schedule.data?.day)?.s ?? 9 * 60, date === today, nowMin);
+        const sl = defaultSlot(day.data.entries.map((e) => spanOn(e, date)), workHoursOf(schedule.data?.day)?.s ?? DEFAULT_START, date === today, nowMin);
         setSlotFor(null);
         setStartMin(sl.s);
         setDuration(sl.d);
@@ -219,13 +221,13 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, dayEnd
  * Where the window opens (the prototype's rules): an edited entry where it is; overtime from the end of
  * the working day up to now; given times as given; otherwise the day's first free time.
  */
-function firstSlot(o: LogWorkOptions, day: string, entries: WorkEntry[], dayEnd: number | null, today: string, nowMin: number): { s: number; d: number } {
+function firstSlot(o: LogWorkOptions, day: string, entries: WorkEntry[], dayStart: number, dayEnd: number | null, today: string, nowMin: number): { s: number; d: number } {
     if (o.edit) return { s: minutesOfDay(o.edit.startedAt), d: o.edit.minutes };
     const isToday = day === today;
     // a day off is all overtime, and today's overtime can't start before the working day ends: the usual slot
     const noOvertimeStart = dayEnd == null || (isToday && nowMin <= dayEnd);
     if ((!o.overtime || noOvertimeStart) && o.startMin == null && o.endMin == null) {
-        return defaultSlot(entries.map((e) => spanOn(e, day)), 9 * 60, isToday, nowMin);
+        return defaultSlot(entries.map((e) => spanOn(e, day)), dayStart, isToday, nowMin);
     }
     const workEnd = dayEnd ?? 17 * 60;
     const end = o.endMin ?? (o.overtime && isToday && nowMin > workEnd ? Math.floor(nowMin / 5) * 5

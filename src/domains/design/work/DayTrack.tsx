@@ -1,6 +1,6 @@
 import type { FocusEvent, KeyboardEvent, MouseEvent, PointerEvent, Ref } from "react";
 import { tip } from "@/shared/components/Overlays/tip";
-import { fmtDur, fmtHourLabel } from "@/shared/format/time";
+import { fmtDur, fmtHourLabel, fmtMinutes } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
 import { clamp, type Span } from "./day";
 
@@ -65,6 +65,8 @@ export default function DayTrack({
     const ticks: number[] = [];
     for (let t = Math.ceil(lo / step) * step; t <= hi; t += step) ticks.push(t);
     const edges = workHours ? [workHours.s, workHours.e] : [];
+    // a working-day edge at either end of the track is the track's own edge: drawn by the hour labels there
+    const inner = edges.filter((m) => m > lo && m < hi);
 
     return (
         <div className={cx("dt", big && "big")}>
@@ -73,9 +75,9 @@ export default function DayTrack({
                 onKeyDown={onKeyDown} onBlur={onBlur} title={title}>
                 {workHours ? [zone(lo, workHours.s, "dt-ot", "a"), zone(workHours.e, hi, "dt-ot", "b")] : zone(lo, hi, "dt-ot", "w")}
                 {nowMin != null && zone(nowMin, hi, "dt-future", "f")}
-                {edges.map((m, k) => (m > lo && m < hi
-                    ? <i key={`wd${k}`} className={cx("dt-wd", k ? "end" : "start", held === m && "held")} style={{ left: `${pct(m)}%` }} />
-                    : null))}
+                {inner.map((m) => (
+                    <i key={`wd${m}`} className={cx("dt-wd", m === workHours?.e ? "end" : "start", held === m && "held")} style={{ left: `${pct(m)}%` }} />
+                ))}
                 {entries.map((e) => {
                     const canEdit = editable && !e.locked;
                     return (
@@ -135,13 +137,13 @@ export default function DayTrack({
             </div>
             <div className="dt-scale">
                 {/* the working day's own labels take the place of hour labels right next to them */}
-                {ticks.filter((t) => !workHours || !big || (Math.abs(t - workHours.s) > 70 && Math.abs(t - workHours.e) > 70)).map((t) => (
+                {ticks.filter((t) => !big || inner.every((m) => Math.abs(t - m) > 70)).map((t) => (
                     <span key={t} style={{ left: `${pct(t)}%` }}>{fmtHourLabel(t)}</span>
                 ))}
-                {big && edges.map((m, k) => (m > lo && m < hi ? (
-                    <span key={`wd${k}`} className={cx("dt-wd-tag", held === m && "held")} style={{ left: `${pct(m)}%` }}
-                        title={k ? "Your working day ends" : "Your working day starts"}>{fmtHourLabel(m)}</span>
-                ) : null))}
+                {big && inner.map((m) => (
+                    <span key={`wd${m}`} className={cx("dt-wd-tag", held === m && "held")} style={{ left: `${pct(m)}%` }}
+                        title={m === workHours?.e ? "Your working day ends" : "Your working day starts"}>{m % 60 ? fmtMinutes(m) : fmtHourLabel(m)}</span>
+                ))}
             </div>
         </div>
     );

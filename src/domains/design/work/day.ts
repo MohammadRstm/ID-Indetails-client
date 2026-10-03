@@ -15,6 +15,8 @@ export type Moves = Record<number, Span>;
 export const DAY = 1440;
 /** Where a day starts when the schedule doesn't say (9 AM). */
 export const DEFAULT_START = 9 * 60;
+/** What a day off's timeline shows before anything is logged on it: 7 AM to 9 PM. */
+export const DAY_OFF_HOURS: [number, number] = [7 * 60, 21 * 60];
 
 export const snap = (m: number, step = 5) => Math.round(m / step) * step;
 export const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));

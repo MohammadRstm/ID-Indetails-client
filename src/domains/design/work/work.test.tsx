@@ -129,6 +129,48 @@ describe("logging work", () => {
     });
 });
 
+describe("the Log work timeline", () => {
+    const scale = (dialog: HTMLElement) => [...dialog.querySelectorAll(".dd .dt-scale > span:not(.dt-wd-tag)")].map((s) => s.textContent);
+    const scheduled = (day: Partial<typeof work.schedule.day>) => http.get("/api/me/schedule", ({ request }) =>
+        HttpResponse.json({ ...work.schedule, day: { ...work.schedule.day, ...day, date: new URL(request.url).searchParams.get("date") } }));
+    const empty = http.get("/api/me/day", ({ request }) =>
+        HttpResponse.json({ ...work.day, date: new URL(request.url).searchParams.get("date"), entries: [], meetings: [], loggedMinutes: 0, overtimeMinutes: 0 }));
+
+    it("runs over the person's working hours that day, and the first log starts when the day does", async () => {
+        // Monday 11:30 AM in Beirut, a day of 10 AM to 4 PM with nothing logged yet
+        vi.setSystemTime(new Date("2026-09-28T08:30:00Z"));
+        renderApp("/design/projects", sarah, scheduled({ startMinute: 600, endMinute: 960, requiredMinutes: 300 }), empty, ...workHandlers);
+        await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
+        const dialog = await logWindow();
+        expect(await within(dialog).findByLabelText("Start time")).toHaveValue("10:00 AM");
+        const hours = scale(dialog);
+        expect(hours[0]).toBe("10 AM");
+        expect(hours[hours.length - 1]).toBe("4 PM");
+    });
+
+    it("stretches to the work logged outside them, and up to now once the day is over", async () => {
+        // 7 PM: the fixture's 9 AM to 5 PM day has work up to 6 PM
+        renderApp("/design/projects", sarah, ...workHandlers);
+        await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
+        const dialog = await logWindow();
+        await within(dialog).findByRole("button", { name: /^Furniture schedule,/ });
+        const hours = scale(dialog);
+        expect(hours[0]).toBe("9 AM");
+        expect(hours[hours.length - 1]).toBe("7 PM");
+    });
+
+    it("shows 7 AM to 9 PM on a day off", async () => {
+        // Saturday 3 October, 11 AM in Beirut
+        vi.setSystemTime(new Date("2026-10-03T08:00:00Z"));
+        renderApp("/design/projects", sarah, scheduled({ isWorkingDay: false, startMinute: null, endMinute: null, requiredMinutes: 0 }), empty, ...workHandlers);
+        await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
+        const dialog = await logWindow();
+        await within(dialog).findByLabelText("Start time");
+        // fourteen hours, labelled every two
+        expect(scale(dialog)).toEqual(["8 AM", "10 AM", "12 PM", "2 PM", "4 PM", "6 PM", "8 PM"]);
+    });
+});
+
 describe("deleting a logged task on the Log work timeline", () => {
     async function openDay() {
         const deleted: string[] = [];
