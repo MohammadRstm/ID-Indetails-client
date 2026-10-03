@@ -156,6 +156,8 @@ export const domainRoutes: DomainRoute[] = [
         path: "activity",
         nav: { label: "Activity", icon: "activity" },
         admin: { element: <ActivityPage />, access: designOnly(all(P.ACTIVITY_VIEW)) },
+        // an employee given activity:view sees it too; the feed leaves out what their other permissions don't cover
+        employee: { element: <ActivityPage />, access: designOnly(all(P.ACTIVITY_VIEW)) },
     },
     {
         path: "reports",

@@ -33,8 +33,8 @@ const MATRIX: Record<PersonaName, Record<Domain, string>> = {
     superAdmin:        { design: "oooooooohhooohooo", execution: "ooooodoohhoddhooo" },
     designAdmin:       { design: "oooooooohhooohooo", execution: "hhhhhhhhhhhhhhhhh" },
     executionAdmin:    { design: "hhhhhhhhhhhhhhhhh", execution: "ooooodoohhoddhooo" },
-    designEmployee:    { design: "hoohhhhhooohhohoo", execution: "hhhhhhhhhhhhhhhhh" },
-    executionEmployee: { design: "hhhhhhhhhhhhhhhhh", execution: "hoohhhhhodohhohoo" },
+    designEmployee:    { design: "hoohhhhhooodhohoo", execution: "hhhhhhhhhhhhhhhhh" },
+    executionEmployee: { design: "hhhhhhhhhhhhhhhhh", execution: "hoohhhhhododhohoo" },
 };
 
 const LETTER: Record<string, Outcome> = { o: "open", h: "home", d: "denied" };

@@ -25,6 +25,23 @@ function recordFeed(asked: URLSearchParams[]) {
 }
 
 describe("Activity", () => {
+    it("opens to an employee given activity:view, without today's work or people they may not see", async () => {
+        const asked: string[] = [];
+        renderApp("/design/activity", withPermissions(personas.designEmployee, { grant: [P.ACTIVITY_VIEW] }),
+            http.get("/api/activity/today", () => { asked.push("today"); return HttpResponse.json(activity.today); }),
+            ...activityHandlers);
+        expect(await screen.findByText("Today · Sep 30, 2026")).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Activity" })).toBeInTheDocument();
+        expect(screen.queryByText("Today at a glance")).toBeNull();
+        expect(screen.queryByRole("button", { name: "Work logged" })).toBeNull();
+        expect(asked).toEqual([]);
+    });
+
+    it("stays closed to an employee without activity:view", async () => {
+        renderApp("/design/activity", personas.designEmployee, ...activityHandlers);
+        expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
+    });
+
     it("lists what happened day by day, and opens logged work", async () => {
         renderApp("/design/activity", nadia, ...activityHandlers);
         expect(await screen.findByText("Today · Sep 30, 2026")).toBeInTheDocument();
@@ -86,10 +103,5 @@ describe("Activity", () => {
     it("needs activity:view", async () => {
         renderApp("/design/activity", withPermissions(nadia, { revoke: [P.ACTIVITY_VIEW] }), ...activityHandlers);
         expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
-    });
-
-    it("keeps employees out", async () => {
-        renderApp("/design/activity", personas.designEmployee);
-        await waitFor(() => expect(window.location.pathname).toBe("/design/projects"));
     });
 });
