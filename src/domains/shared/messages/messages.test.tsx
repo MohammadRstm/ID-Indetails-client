@@ -101,6 +101,25 @@ describe("Messages", () => {
         await waitFor(() => expect(read).toEqual(["direct/2"]));
     });
 
+    it("on a phone, show the chats first, then the one picked, with a way back", async () => {
+        renderApp("/design/messages", rana, ...messageHandlers);
+        // the newest chat opens beside the list, but a phone shows the list until one is picked
+        await screen.findByText("Morning! The Villa Mounir samples arrived.");
+        const page = document.querySelector(".msg-page") as HTMLElement;
+        expect(page).not.toHaveClass("reading");
+
+        await userEvent.click(within(sidebar()).getByText("Interiors"));
+        expect(page).toHaveClass("reading");
+        await userEvent.click(within(thread()).getByRole("button", { name: "Back to chats" }));
+        expect(page).not.toHaveClass("reading");
+    });
+
+    it("open on the chat a link names, even on a phone", async () => {
+        renderApp("/design/messages?with=2", rana, ...messageHandlers);
+        await screen.findByText("Can we talk about the Q4 plan?");
+        expect(document.querySelector(".msg-page")).toHaveClass("reading");
+    });
+
     it("keep what was written when a message isn't sent, and say why", async () => {
         renderApp("/design/messages?with=2", rana,
             http.post("/api/messages/direct/2", () => HttpResponse.json({ code: "validation_failed", message: "A message is at most 4000 characters." }, { status: 400 })),

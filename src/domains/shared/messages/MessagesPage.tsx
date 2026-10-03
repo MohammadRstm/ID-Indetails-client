@@ -29,14 +29,17 @@ function chatFrom(params: URLSearchParams): Chat | null {
 
 /**
  * Team chats and direct messages (the prototype's P.Messages): the chats down the side, the one open beside
- * them. Who talks to whom follows the API: a team's chat has its people, their business's admins and the
- * super admins; anyone messages their own business and the super admins.
+ * them, at every width. On a phone there is room for one at a time, as in WhatsApp: the chats, then the one
+ * picked, with a way back. Who talks to whom follows the API: a team's chat has its people, their business's
+ * admins and the super admins; anyone messages their own business and the super admins.
  */
 export default function MessagesPage() {
     const permissions = usePermissions();
     const me = useCurrentUser();
     const [params, setParams] = useSearchParams();
     const [search, setSearch] = useState("");
+    // on a phone: the open chat rather than the list, once one is picked (or the link names one)
+    const [reading, setReading] = useState(() => chatFrom(params) != null);
     const conversations = useConversations();
     const contacts = useContacts();
     const presence = usePresence();
@@ -61,7 +64,10 @@ export default function MessagesPage() {
     const groups = list.filter((c) => c.type === "group" && c.team && (!q || `${c.team.name} ${areaLabel(c.team.domain)}`.toLowerCase().includes(q)))
         .sort((a, b) => a.team!.domain.localeCompare(b.team!.domain) || a.team!.name.localeCompare(b.team!.name));
     const people = (contacts.data ?? []).filter((c) => !q || c.name.toLowerCase().includes(q));
-    const select = (next: Chat) => setParams(next.kind === "group" ? { group: String(next.teamId) } : { with: String(next.userId) });
+    const select = (next: Chat) => {
+        setReading(true);
+        setParams(next.kind === "group" ? { group: String(next.teamId) } : { with: String(next.userId) });
+    };
     const person = chat?.kind === "dm" ? (contacts.data ?? []).find((c) => c.id === chat.userId) ?? open?.person ?? null : null;
     const team = chat?.kind === "group" ? open?.team ?? null : null;
 
@@ -69,7 +75,7 @@ export default function MessagesPage() {
 
     return (
         <div className="msg-full-page">
-            <div className="msg-page">
+            <div className={cx("msg-page", reading && "reading")}>
                 <div className="msg-sidebar">
                     <div className="search" style={{ margin: "0 0 10px" }}>
                         <Icon name="search" />
@@ -123,7 +129,7 @@ export default function MessagesPage() {
 
                 <div className="msg-thread">
                     {!chat ? (conversations.data ? <Empty art="done" title="Pick a conversation" text="Choose someone or a group from the list to start." /> : null)
-                        : <Thread key={chatKey(chat)} chat={chat} person={person} team={team} meId={me.id} />}
+                        : <Thread key={chatKey(chat)} chat={chat} person={person} team={team} meId={me.id} onBack={() => setReading(false)} />}
                 </div>
             </div>
         </div>

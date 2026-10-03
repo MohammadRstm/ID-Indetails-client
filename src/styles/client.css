@@ -40,6 +40,16 @@ table { line-height: normal; font-weight: normal; }
 /* Space under a banner that opens a window, above what follows it. */
 .mb { margin-bottom: 14px; }
 
+/* Messages keeps the chats on the left and the open one on the right at every width (the prototype stacked them
+   on narrow screens). A phone has room for one at a time, as in WhatsApp: the chats, or the open chat with a way back. */
+.msg-back { display: none; }
+@media (max-width: 640px) {
+  .msg-full-page { height: calc(100dvh - 54px); }
+  .msg-sidebar { width: 100%; border-right: none; }
+  .msg-page.reading .msg-sidebar, .msg-page:not(.reading) .msg-thread { display: none; }
+  .msg-back { display: inline-grid; margin-left: -6px; }
+}
+
 /* A menu drawn over the page beside its button (Popover floating): never inside a table it would stretch. */
 .pop.floating { position: fixed; z-index: 300; }
 /* A menu item that deletes something. */
