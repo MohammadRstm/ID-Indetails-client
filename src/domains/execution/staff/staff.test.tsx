@@ -85,7 +85,7 @@ describe("a site, for an Execution employee", () => {
                 items: site.openMaterials.items.map((m) => ({ ...m, clientPrice: null, markup: null, priceSource: null })),
             })),
             ...siteHandlers);
-        expect(await screen.findByText("Material cost so far")).toBeInTheDocument();
+        expect(await screen.findByText("Materials", { selector: ".kpi-label" })).toBeInTheDocument();
         expect(await screen.findByLabelText("Type 1")).toHaveValue("Plasterboard");
         expect(screen.getByText("Weekly labour")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Add materials" })).toBeInTheDocument();

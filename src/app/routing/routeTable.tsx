@@ -11,7 +11,6 @@ import {
     CompanyOverviewPage,
     CompanyProfilePage,
     CompanySettingsPage,
-    EmployeeProjectRoute,
     FinancialsRoute,
     MeetingsPage,
     MessagesPage,
@@ -104,7 +103,6 @@ export const domainRoutes: DomainRoute[] = [
         path: "projects/:id",
         navKey: "projects",
         admin: { element: <ProjectRoute />, access: all(P.PROJECT_VIEW) },
-        employee: { element: <EmployeeProjectRoute />, access: all(P.PROJECT_VIEW) },
     },
     {
         path: "clients",

@@ -9,6 +9,10 @@ import { server } from "./server";
 /** Someone's own work when they have logged none: what an admin's projects page shows them unless a test says more. */
 const nothingLogged = [
     http.get("/api/me/projects", () => HttpResponse.json([])),
+    http.get("/api/me/projects/:id/work", ({ params }) => HttpResponse.json({
+        ...work.projectWork, projectId: Number(params.id), myMinutes: 0, myOvertimeMinutes: 0, myEntries: 0, myThisWeekMinutes: 0, recent: [],
+        weekly: work.projectWork.weekly.map((w) => ({ ...w, minutes: 0 })),
+    })),
     http.get("/api/me/work-summary", () => HttpResponse.json({
         ...work.summary, todayMinutes: 0, thisWeekMinutes: 0, lastWeekMinutes: 0, week: work.summary.week.map((d) => ({ ...d, minutes: 0 })),
     })),

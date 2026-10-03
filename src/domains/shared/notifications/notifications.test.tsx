@@ -10,8 +10,8 @@ import { renderApp } from "@/test/renderApp";
 import { describe, type Reader } from "./notificationWords";
 
 const rana = personas.superAdmin;
-const admin: Reader = { userId: 2, isAdmin: true, domain: "design" };
-const designer: Reader = { userId: 4, isAdmin: false, domain: "design" };
+const admin: Reader = { userId: 2, isAdmin: true, logsWork: false, domain: "design" };
+const designer: Reader = { userId: 4, isAdmin: false, logsWork: true, domain: "design" };
 const byKind = (kind: string) => notifications.rana.items.find((n) => n.kind === kind)!;
 const project = { id: 5, title: "Studio Nour brand space", domain: "design", icon: null, tint: null };
 const nadia = { id: 2, name: "Nadia Karam", photoFileId: null };
@@ -31,14 +31,15 @@ group("A notification's words", () => {
             .toMatchObject({ text: "Today's work: 3 entries logged · 2h 30m", sub: "Latest: Sarah Haddad on Villa Mounir interiors", route: "/design/activity" });
     });
 
-    it("speak to the reader: an employee's requirements are on their project, an admin's on its tab", () => {
+    it("speak to the reader: requirements open the project's tab, and those who log work hear about logging", () => {
         const assigned = note("requirement_assigned", { text: "Mood board", deadline: "2026-10-02", projectTitle: project.title }, { actor: nadia, project });
-        expect(describe(assigned, designer)).toMatchObject({ text: "Nadia Karam assigned you a requirement on Studio Nour brand space", sub: "Mood board · due Oct 2", route: "/design/projects/5" });
+        expect(describe(assigned, designer)).toMatchObject({ text: "Nadia Karam assigned you a requirement on Studio Nour brand space", sub: "Mood board · due Oct 2", route: "/design/projects/5?tab=requirements" });
         expect(describe(assigned, admin).route).toBe("/design/projects/5?tab=requirements");
 
         const completed = note("project_status_changed", { projectTitle: project.title, change: "complete" }, { actor: nadia, project });
         expect(describe(completed, designer).sub).toBe("It has been removed from your active projects - your logged work is still in My Work");
         expect(describe(completed, admin).sub).toBe("By Nadia Karam");
+        expect(describe(completed, { ...designer, logsWork: false }).sub).toBe("By Nadia Karam");
     });
 
     it("tell people about their own account", () => {

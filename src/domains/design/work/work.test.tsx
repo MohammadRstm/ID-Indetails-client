@@ -412,6 +412,6 @@ describe("an employee's project", () => {
             http.get("/api/projects/:id", () => HttpResponse.json({ ...work.project, status: "hold" })),
             ...workHandlers);
         expect(await screen.findByText("Logging closed")).toBeInTheDocument();
-        expect(screen.getByText("This project is on hold.")).toBeInTheDocument();
+        expect(screen.getByText(/new work entries are paused until it resumes/)).toBeInTheDocument();
     });
 });

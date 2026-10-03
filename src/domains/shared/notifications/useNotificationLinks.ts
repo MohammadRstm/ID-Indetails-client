@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import { http } from "@/api/http";
 import type { Schemas } from "@/api/types";
+import { P } from "@/app/permissions/codes";
 import type { Domain, Permissions } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { canOpen, companyRoutes } from "@/app/routing/routeTable";
@@ -15,7 +16,7 @@ export function useReader(): Reader {
     const area = useArea();
     const visible = (["design", "execution"] as Domain[]).filter((d) => permissions.canSeeDomain(d));
     const domain = area.kind === "domain" ? area.domain : (user.domain as Domain | null) ?? visible[0] ?? null;
-    return { userId: user.id, isAdmin: permissions.isAdmin, domain };
+    return { userId: user.id, isAdmin: permissions.isAdmin, logsWork: permissions.has(P.WORK_ENTRY_CREATE) && canOpen(permissions, "design", "my-work"), domain };
 }
 
 /** Whether this person may open a page: a business's page by its route's rules, a company page by its own. */

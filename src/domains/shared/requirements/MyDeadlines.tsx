@@ -30,7 +30,7 @@ export default function MyDeadlines() {
                 {loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="your requirements" />
                     : !query.data ? <SkeletonLines lines={3} />
                         : dated.length ? dated.map((r) => (
-                            <div key={r.id} className="req click" {...clickable(() => navigate(`/${domain}/projects/${r.project.id}`), "link")}>
+                            <div key={r.id} className="req click" {...clickable(() => navigate(`/${domain}/projects/${r.project.id}?tab=requirements`), "link")}>
                                 <ProjectTile icon={r.project.icon} tint={r.project.tint} size="sm" />
                                 <div className="grow" style={{ minWidth: 0 }}>
                                     <div className="req-text">{r.text}</div>

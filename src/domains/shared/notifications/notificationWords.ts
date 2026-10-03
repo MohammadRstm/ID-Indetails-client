@@ -9,6 +9,8 @@ export type Notification = Schemas["NotificationResponse"];
 export type Reader = {
     userId: number;
     isAdmin: boolean;
+    /** They log Design work and keep it in My work: the words about logging are for them. */
+    logsWork: boolean;
     /** Their own business, or the one they are looking at; a notification about a project uses the project's. */
     domain: "design" | "execution" | null;
 };
@@ -42,8 +44,8 @@ export function describe(note: Notification, reader: Reader): NotificationView {
     const title = note.project?.title ?? s(p.projectTitle);
     const d = (note.project?.domain as Reader["domain"]) ?? reader.domain;
     const project = note.project && d ? `/${d}/projects/${note.project.id}` : undefined;
-    const requirements = project && reader.isAdmin ? `${project}?tab=requirements` : project;
-    const logsWork = !reader.isAdmin && d === "design";
+    const requirements = project && `${project}?tab=requirements`;
+    const logsWork = reader.logsWork && d === "design";
     // pages about the reader themself: an employee's own profile or pay; admins have none of their own
     const mine = !reader.isAdmin && reader.domain ? `/${reader.domain}/profile` : undefined;
     const by = note.actor ? `By ${who}` : undefined;

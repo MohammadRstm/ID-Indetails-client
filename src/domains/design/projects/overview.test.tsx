@@ -40,10 +40,10 @@ describe("a Design project's overview", () => {
         expect(screen.queryByText("Payment status")).toBeNull();
     });
 
-    it("shows only the progress without work_entry:view_all, and never asks for everyone's work", async () => {
+    it("shows only the progress without anyone's work, and never asks for everyone's", async () => {
         const asked: string[] = [];
         const refuse = (what: string) => () => { asked.push(what); return HttpResponse.json({ code: "forbidden" }, { status: 403 }); };
-        renderApp(path, withPermissions(admin, { revoke: [P.WORK_ENTRY_VIEW_ALL] }),
+        renderApp(path, withPermissions(admin, { revoke: [P.WORK_ENTRY_VIEW_ALL, P.WORK_ENTRY_VIEW_OWN] }),
             http.get("/api/projects/:id/work", refuse("work")),
             http.get("/api/projects/:id/timeline", refuse("timeline")),
             http.get("/api/work-entries", refuse("entries")),
