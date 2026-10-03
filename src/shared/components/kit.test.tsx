@@ -5,12 +5,14 @@ import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/api/errors";
 import { parseDateText } from "@/shared/format/parseDate";
 import { parseTime } from "@/shared/format/parseTime";
+import { WORKERS } from "@/shared/format/limits";
 import { periodRange } from "@/shared/format/periods";
 import { Delta } from "./Charts/Bars";
 import DataTable, { type SortState } from "./Data-Tables/DataTable";
 import Pager from "./Data-Tables/Pager";
 import DateInput from "./Forms/DateInput";
 import { ChipGroup } from "./Forms/Filters";
+import NumberField from "./Forms/NumberField";
 import Select from "./Forms/Select";
 import TimeField from "./Forms/TimeField";
 import HelpTip from "./Feedback/HelpTip";
@@ -273,6 +275,24 @@ describe("dropdowns in a dialog", () => {
         expect(screen.getByRole("button", { name: /^11:15 AM/ })).toBeInTheDocument();
         await userEvent.tab();
         expect(screen.queryByRole("button", { name: /^11:15 AM/ })).toBeNull();
+    });
+});
+
+describe("a number field", () => {
+    it("refuses the key that would go past what the API allows, says so, and forgets it once left", async () => {
+        const onChange = vi.fn();
+        function Workers() {
+            const [workers, setWorkers] = useState("");
+            return <NumberField aria-label="Workers" shape={WORKERS} value={workers} onChange={(t) => { setWorkers(t); onChange(t); }} />;
+        }
+        render(<Workers />);
+        const box = screen.getByLabelText("Workers");
+        await userEvent.type(box, "12345");
+        expect(box).toHaveValue("1234");
+        expect(onChange).not.toHaveBeenCalledWith("12345");
+        expect(screen.getByText("Up to 10,000.")).toBeInTheDocument();
+        await userEvent.tab();
+        expect(screen.queryByText("Up to 10,000.")).toBeNull();
     });
 });
 

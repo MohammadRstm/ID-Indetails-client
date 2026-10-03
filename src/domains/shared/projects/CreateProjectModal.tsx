@@ -9,6 +9,8 @@ import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Select from "@/shared/components/Forms/Select";
+import NumberField from "@/shared/components/Forms/NumberField";
+import { MARKUP_PERCENT, WORKERS } from "@/shared/format/limits";
 import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { PAYMENT_METHODS } from "@/shared/format/labels";
@@ -208,8 +210,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                                     {[0, 5, 10, 25].map((v) => (
                                         <button key={v} type="button" className={cx("chip", +markupPct === v && "on")} onClick={() => setMarkupPct(v)}>{v}%</button>
                                     ))}
-                                    <input className="input mono" type="number" min="0" step="0.5" style={{ width: 70 }} aria-label="Material profit percent"
-                                        value={markupPct} onChange={(e) => setMarkupPct(e.target.value === "" ? "" : +e.target.value)} />
+                                    <NumberField shape={MARKUP_PERCENT} style={{ width: 70 }} aria-label="Material profit percent"
+                                        value={markupPct} onChange={(text) => setMarkupPct(text === "" ? "" : +text)} />
                                     <span className="muted">%</span>
                                 </div>
                             </div>
@@ -246,8 +248,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                                 <div className="grid g-2">
                                     <div className="field">
                                         <label className="label" htmlFor="np-workers">Ground workers per day (avg)</label>
-                                        <input id="np-workers" className="input mono" type="number" min="0" step="1" placeholder="Optional - e.g. 8"
-                                            value={workers} onChange={(e) => setWorkers(e.target.value)} />
+                                        <NumberField id="np-workers" shape={WORKERS} placeholder="Optional - e.g. 8" value={workers} onChange={setWorkers} />
                                     </div>
                                     <div className="field">
                                         <label className="label optional" htmlFor="np-daypay">Cost per ground worker per day (avg)</label>

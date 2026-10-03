@@ -2,6 +2,8 @@ import { useState } from "react";
 import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
+import NumberField from "@/shared/components/Forms/NumberField";
+import { MARKUP_PERCENT } from "@/shared/format/limits";
 import Modal from "@/shared/components/Overlays/Modal";
 import { plural } from "@/shared/format/labels";
 import { money } from "@/shared/format/money";
@@ -78,8 +80,8 @@ export default function PricingModal({ project, onClose }: { project: Project; o
                     {MARKUPS.map((v) => (
                         <button key={v} type="button" className={cx("chip", markup === v && pct !== "" && "on")} onClick={() => setPct(v)}>{v}%</button>
                     ))}
-                    <input id="xm-markup" className="input mono" type="number" min={0} max={500} step={0.5} style={{ width: 80 }} aria-label="Material profit percent"
-                        value={pct} onChange={(e) => setPct(e.target.value === "" ? "" : +e.target.value)} />
+                    <NumberField id="xm-markup" shape={MARKUP_PERCENT} style={{ width: 80 }} aria-label="Material profit percent"
+                        value={pct} onChange={(text) => setPct(text === "" ? "" : +text)} />
                     <span className="muted">%</span>
                 </div>
                 <div className={cx("hint", !valid && "down")}>

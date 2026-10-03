@@ -26,6 +26,13 @@ describe("a material's cost", () => {
         expect(problems(row({ name: "Sand", quantity: "1.2345", unitCost: "3" }))?.quantity).toBe("At most 3 decimals");
     });
 
+    it("says so on the cell when a number is larger than the API can keep", () => {
+        expect(problems(row({ name: "Marble", quantity: "100000000000", unitCost: "1" }))?.quantity).toBe("Up to 99,999,999,999.999, with at most 3 decimals.");
+        expect(problems(row({ name: "Marble", quantity: "99999999999", unitCost: "1000000" }))?.amount).toBe("Quantity × unit cost is too large");
+        expect(problems(row({ name: "Marble", amount: "10000000000000" }))?.amount).toBe("Up to 9,999,999,999,999.99, with at most 2 decimals.");
+        expect(problems(row({ name: "Marble", amount: "10", clientPrice: "10000000000000" }))?.clientPrice).toBe("Up to 9,999,999,999,999.99, with at most 2 decimals.");
+    });
+
     it("goes to the API without a total when quantity and unit cost give it", () => {
         expect(entryOf(row({ name: " Sand ", quantity: "2", unit: "tonne", unitCost: "30", amount: "60" })))
             .toEqual({ name: "Sand", quantity: 2, unit: "tonne", unitCost: 30, amount: null, supplier: null, note: null });

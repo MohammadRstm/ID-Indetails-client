@@ -2,6 +2,8 @@ import { useState, type KeyboardEvent } from "react";
 import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
+import NumberField from "@/shared/components/Forms/NumberField";
+import { WORKERS } from "@/shared/format/limits";
 import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { addDays, companyToday, fmtDate, fmtDateY } from "@/shared/format/time";
@@ -52,8 +54,7 @@ export default function LabourDefaultsModal({ project, defaults, onClose }: { pr
             <div className="grid g-2">
                 <div className="field">
                     <label className={editable ? "label required" : "label"} htmlFor="ld-workers">Ground workers per day (avg)</label>
-                    <input id="ld-workers" className="input mono" type="number" min={0} step={1} value={workers} disabled={!editable}
-                        onKeyDown={next("ld-pay")} onChange={(e) => setWorkers(e.target.value)} />
+                    <NumberField id="ld-workers" shape={WORKERS} value={workers} disabled={!editable} onKeyDown={next("ld-pay")} onChange={setWorkers} />
                 </div>
                 <div className="field">
                     <label className={editable ? "label required" : "label"} htmlFor="ld-pay">Cost per worker per day (avg)</label>

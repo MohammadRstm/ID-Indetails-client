@@ -7,9 +7,11 @@ import { useCompanySettings } from "@/app/shell/shellQueries";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
+import { FieldError } from "@/shared/components/Forms/Field";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import Modal from "@/shared/components/Overlays/Modal";
 import { plural } from "@/shared/format/labels";
+import { AMOUNT, fitNumber, upTo } from "@/shared/format/limits";
 import { money } from "@/shared/format/money";
 import { companyToday, fmtDateY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -203,6 +205,8 @@ function NewStatement({ project, onMade, onClose }: { project: Project; onMade: 
     const [off, setOff] = useState<Record<number, boolean>>({});
     const [unlisted, setUnlisted] = useState<Record<string, boolean>>({});
     const [typing, setTyping] = useState<Record<number, string>>({});
+    // the material whose price refused a key: no amount that large can be kept
+    const [refused, setRefused] = useState<number | null>(null);
     const [flash, setFlash] = useState<DocFlash>({ key: null, n: 0 });
     const [sending, setSending] = useState(false);
     const ping = (key: string) => setFlash((f) => ({ key, n: f.n + 1 }));
@@ -338,9 +342,14 @@ function NewStatement({ project, onMade, onClose }: { project: Project; onMade: 
                                                     )}
                                                     <input className="input mono stmt-price" inputMode="decimal" aria-label={`Client price for ${m.name}`} disabled={!canPrice}
                                                         value={typing[m.id] ?? String(price)}
-                                                        onChange={(e) => setTyping((t) => ({ ...t, [m.id]: e.target.value.replace(/[^0-9.]/g, "") }))}
-                                                        onBlur={() => commitTyping(m)}
+                                                        onChange={(e) => {
+                                                            const v = fitNumber(e.target.value, AMOUNT, typing[m.id] ?? String(price));
+                                                            setRefused(v == null ? m.id : null);
+                                                            if (v != null) setTyping((t) => ({ ...t, [m.id]: v }));
+                                                        }}
+                                                        onBlur={() => { setRefused(null); commitTyping(m); }}
                                                         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } }} />
+                                                    {refused === m.id && <FieldError message={upTo(AMOUNT)} />}
                                                 </div>
                                             );
                                         })}

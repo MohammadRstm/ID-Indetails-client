@@ -6,6 +6,8 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import Select from "@/shared/components/Forms/Select";
+import NumberField from "@/shared/components/Forms/NumberField";
+import { WORKERS } from "@/shared/format/limits";
 import { money } from "@/shared/format/money";
 import { companyToday, DAYS, fmtDate, fmtDateY, partsOf } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -140,8 +142,7 @@ function DefaultsBar({ projectId, defaults, onHistory, onNav }: { projectId: num
                 <div className="field">
                     <label className={editable ? "label required" : "label"} htmlFor="ldb-workers">Ground workers per day</label>
                     {editable ? (
-                        <input id="ldb-workers" className="input mono" type="number" min={0} step={1} value={workers} data-r={-1} data-c={0}
-                            onKeyDown={onEnter(0)} onChange={(e) => setWorkers(e.target.value)} />
+                        <NumberField id="ldb-workers" shape={WORKERS} value={workers} r={-1} c={0} onKeyDown={onEnter(0)} onChange={setWorkers} />
                     ) : <div className="lab-defaults-val mono">{cur.workers}</div>}
                 </div>
                 <span className="lab-defaults-x">×</span>
@@ -226,9 +227,9 @@ function WeekEditor({ projectId, week, defaults, onNav }: { projectId: number; w
                                 <td><b>{DAYS[partsOf(d.date).weekday]}</b> <span className="muted">{fmtDate(d.date)}</span></td>
                                 <td className="r">
                                     {editable ? (
-                                        <input className="input mono r" style={{ width: 80, textAlign: "right" }} type="number" min={0} step={1}
-                                            aria-label={`Workers on ${fmtDate(d.date)}`} data-r={i} data-c={0} onKeyDown={onEnter(i, 0)}
-                                            value={d.workers} onChange={(e) => setDay(i, { workers: e.target.value === "" ? "" : +e.target.value })} />
+                                        <NumberField className="r" style={{ width: 80, textAlign: "right" }} shape={WORKERS}
+                                            aria-label={`Workers on ${fmtDate(d.date)}`} r={i} c={0} onKeyDown={onEnter(i, 0)}
+                                            value={d.workers} onChange={(text) => setDay(i, { workers: text === "" ? "" : +text })} />
                                     ) : <span className="mono">{d.workers}</span>}
                                 </td>
                                 <td className="r">

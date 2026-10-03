@@ -22,7 +22,7 @@ describe("weekly labour", () => {
     it("opens on the latest week reported, with its days and total", async () => {
         renderApp(path, karim, ...siteHandlers);
         const p = await panel();
-        expect(await within(p).findByLabelText("Workers on Sep 21")).toHaveValue(5);
+        expect(await within(p).findByLabelText("Workers on Sep 21")).toHaveValue("5");
         expect(within(p).getByLabelText("Week")).toHaveTextContent("Week of Sep 21, 2026 - $725");
         expect(within(p).getAllByRole("row")).toHaveLength(8);
         expect(within(p).getByText("Weekly total").closest("tr")).toHaveTextContent("$725");
@@ -34,7 +34,7 @@ describe("weekly labour", () => {
         const p = await panel();
         await userEvent.click(await within(p).findByLabelText("Week"));
         await userEvent.click(screen.getByRole("option", { name: "Week of Sep 28, 2026 - no report yet" }));
-        expect(await within(p).findByLabelText("Workers on Sep 30")).toHaveValue(6);
+        expect(await within(p).findByLabelText("Workers on Sep 30")).toHaveValue("6");
         expect(within(p).queryByLabelText("Workers on Oct 1")).not.toBeInTheDocument();
         expect(within(p).getByText(/Filled in with the project's defaults - change any day/)).toBeInTheDocument();
         expect(within(p).getByRole("button", { name: "Submit week" })).toBeInTheDocument();
@@ -120,12 +120,12 @@ describe("the labour defaults", () => {
         const p = await panel();
         await userEvent.click(await within(p).findByLabelText("Week"));
         await userEvent.click(screen.getByRole("option", { name: "Week of Sep 28, 2026 - no report yet" }));
-        expect(await within(p).findByLabelText("Workers on Sep 30")).toHaveValue(6);
+        expect(await within(p).findByLabelText("Workers on Sep 30")).toHaveValue("6");
         const workers = within(p).getByLabelText("Ground workers per day");
         await userEvent.clear(workers);
         await userEvent.type(workers, "8");
         await userEvent.click(within(p).getByRole("button", { name: "Save defaults" }));
-        await waitFor(() => expect(within(p).getByLabelText("Workers on Sep 30")).toHaveValue(8));
+        await waitFor(() => expect(within(p).getByLabelText("Workers on Sep 30")).toHaveValue("8"));
     });
 
     it("say so when they can't be loaded", async () => {
