@@ -45,7 +45,9 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const [location, setLocation] = useState("");
     const [owner, setOwner] = useState(String(me.id));
     const [target, setTarget] = useState("");
-    const [billing, setBilling] = useState<"client" | "internal">("client");
+    // a client is picked from the client list: without client:view, a Design project can only be internal
+    const seesClients = permissions.has(P.CLIENT_VIEW);
+    const [billing, setBilling] = useState<"client" | "internal">(seesClients || execution ? "client" : "internal");
     const [revenue, setRevenue] = useState(0);
     const [clientId, setClientId] = useState<number | null>(initialClient ? +initialClient : null);
     const [newClient, setNewClient] = useState<string | null>(null);
@@ -145,7 +147,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                         <div className="field">
                             <label className="label required">Project type</label>
                             <div className="seg">
-                                <button type="button" className={cx("seg-btn", billing === "client" && "on")} onClick={() => setBilling("client")}>Client project</button>
+                                <button type="button" className={cx("seg-btn", billing === "client" && "on")} disabled={!seesClients}
+                                    title={seesClients ? undefined : "Picking a client needs “View clients”"} onClick={() => setBilling("client")}>Client project</button>
                                 <button type="button" className={cx("seg-btn", billing === "internal" && "on")} onClick={() => setBilling("internal")}>Internal</button>
                             </div>
                         </div>
@@ -164,10 +167,14 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                 {billing === "client" ? (
                     <div className="field mt">
                         <label className="label required">Client</label>
-                        <ClientPicker domain={domain} value={clientId} onChange={setClientId}
-                            onCreate={permissions.has(P.CLIENT_CREATE) ? (typed) => setNewClient(typed) : undefined} />
-                        {errors.show("client", clientError) ? <FieldError message={errors.show("client", clientError)} />
-                            : <div className="hint">Required - this is how the project's revenue is attributed. Clients never sign in.</div>}
+                        {seesClients ? (
+                            <>
+                                <ClientPicker domain={domain} value={clientId} onChange={setClientId}
+                                    onCreate={permissions.has(P.CLIENT_CREATE) ? (typed) => setNewClient(typed) : undefined} />
+                                {errors.show("client", clientError) ? <FieldError message={errors.show("client", clientError)} />
+                                    : <div className="hint">Required - this is how the project's revenue is attributed. Clients never sign in.</div>}
+                            </>
+                        ) : <FieldError message="Picking a client needs “View clients”, which you don't have." />}
                     </div>
                 ) : (
                     <div className="hint mt">Internal projects have no client: their labour and expenses are tracked as company cost.</div>

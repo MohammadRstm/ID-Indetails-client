@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { P } from "@/app/permissions/codes";
+import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { loadFailed } from "@/api/queryState";
 import { Presence } from "@/shared/components/Data/Bits";
@@ -34,12 +35,14 @@ const whereParams = (where: Where) =>
  * Everyone in the company, in both businesses and above them (employee:view): who is working, who is still
  * invited and who has left. People are added by invitation, and never edited here: their account is ended and
  * started again (deactivate and reactivate), which keeps their history. Their details are on their profile.
+ * Given a business, it lists only that business's people (its Employees page, for someone who can't see
+ * everyone's hours).
  */
-export default function CompanyPeople() {
+export default function CompanyPeople({ domain }: { domain?: Domain }) {
     const permissions = usePermissions();
     const [search, setSearch] = useState("");
     const [status, setStatus] = useState<Status>("all");
-    const [where, setWhere] = useState<Where>("all");
+    const [where, setWhere] = useState<Where>(domain ?? "all");
     const [page, setPage] = useState(1);
     const [inviting, setInviting] = useState(false);
     const topRef = useRef<HTMLDivElement>(null);
@@ -65,9 +68,11 @@ export default function CompanyPeople() {
                     { value: "all", label: "Everyone" }, { value: "active", label: "Active" }, { value: "invited", label: "Invited" }, { value: "deactivated", label: "Left" },
                 ]} />
                 <div className="grow" />
-                <Select className="select sm" style={{ width: 170 }} aria-label="Business" value={where} onChange={filter(setWhere)} options={[
-                    { value: "all", label: "Both businesses" }, { value: "design", label: "Design" }, { value: "execution", label: "Execution" }, { value: "company", label: "Super admins" },
-                ]} />
+                {!domain && (
+                    <Select className="select sm" style={{ width: 170 }} aria-label="Business" value={where} onChange={filter(setWhere)} options={[
+                        { value: "all", label: "Both businesses" }, { value: "design", label: "Design" }, { value: "execution", label: "Execution" }, { value: "company", label: "Super admins" },
+                    ]} />
+                )}
                 {canInvite && <button className="btn btn-primary btn-sm" onClick={() => setInviting(true)}><Icon name="userPlus" />Add person</button>}
             </div>
 
@@ -82,9 +87,9 @@ export default function CompanyPeople() {
                                 <div className="tbl-wrap">
                                     <table className="tbl tbl-min">
                                         <thead>
-                                            <tr><th>Person</th><th>Access</th><th>Business</th><th>Team</th><th>Status</th><th>Joined</th><th aria-label="Actions" /></tr>
+                                            <tr><th>Person</th><th>Access</th>{!domain && <th>Business</th>}<th>Team</th><th>Status</th><th>Joined</th><th aria-label="Actions" /></tr>
                                         </thead>
-                                        <tbody>{list.items.map((p) => <PersonRow key={p.id} person={p} />)}</tbody>
+                                        <tbody>{list.items.map((p) => <PersonRow key={p.id} person={p} business={!domain} />)}</tbody>
                                     </table>
                                 </div>
                                 <div className="panel-body" style={{ paddingTop: 0 }}>
@@ -98,18 +103,18 @@ export default function CompanyPeople() {
                 Their work, pay and messages stay either way. Their details are on their profile.
             </p>
 
-            {(inviting || asked) && <InviteModal domain={null} onClose={closeInvite} />}
+            {(inviting || asked) && <InviteModal domain={domain ?? null} onClose={closeInvite} />}
         </div>
     );
 }
 
-function PersonRow({ person: p }: { person: EmployeeSummary }) {
+function PersonRow({ person: p, business }: { person: EmployeeSummary; business: boolean }) {
     const name = personName(p);
     return (
         <tr>
             <td><PersonLine person={{ id: p.id, name, photoFileId: p.photoFileId, online: p.online, domain: p.domain }} size={30} presence link sub={p.position || (name !== p.email && p.email)} /></td>
             <td className="nowrap">{ROLE[p.role] ?? p.role}{p.isJoker && <span className="badge" style={{ marginLeft: 6 }} title="Holds a different set of permissions from the role's">Custom</span>}</td>
-            <td className="muted nowrap">{p.domain ? DOMAIN_LABEL[p.domain] ?? p.domain : "Company"}</td>
+            {business && <td className="muted nowrap">{p.domain ? DOMAIN_LABEL[p.domain] ?? p.domain : "Company"}</td>}
             <td className="muted nowrap">{p.team?.name ?? "-"}</td>
             <td className="nowrap">
                 {p.status === "invited" ? <StatusBadge status="invited" />

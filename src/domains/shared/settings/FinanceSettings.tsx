@@ -62,6 +62,8 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
 
     return (
         <>
+            {/* the currency and overtime rate, with the fixed rules beside them, for whoever may change either */}
+            {(canCompany || canTime) && (
             <div className="panel">
                 <div className="panel-head"><div><div className="panel-title">Finance</div><div className="panel-sub">Rules behind revenue, cost and pay in this business.</div></div></div>
                 <div className="panel-body">
@@ -87,12 +89,13 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
                             <SwitchRow title="Lock the payment when a project is completed" description="Stops the revenue figure moving after the result is final." control={<Always />} />
                             <SwitchRow title="Pay changes apply forward only" description="Past hours keep the rate they were logged at, so closed projects and paid months never change value." control={<Always />} />
                             <SwitchRow title="Company expenses" description="Subscriptions and running costs belong to the company, not to this business. They are managed above it and never reach a project or a client." control={<span className="badge">Company level</span>} />
-                            <SwitchRow title="Who can see financials" description="Cost rates, pay, revenue and profit." control={<Always>Admins only</Always>} />
+                            <SwitchRow title="Who can see financials" description="Cost rates, pay, revenue and profit." control={<Always>Whoever is given it</Always>} />
                             <SwitchRow title="Revenue" description="How revenue counts on the overview, the dashboards and Financials: the money received from clients, on the day it arrives." control={<Always>As received</Always>} />
                         </>
                     )}
                 </div>
             </div>
+            )}
 
             {seesBilling && (
                 <div className="panel mt">
@@ -104,6 +107,13 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
                             : loadFailed(billingQuery) ? <LoadError error={billingQuery.error} retry={() => billingQuery.refetch()} what="the invoicing settings" />
                             : !billing ? <SkeletonLines lines={6} /> : <Invoicing domain={domain} billing={billing} />}
                     </div>
+                </div>
+            )}
+            {/* the rate sits with invoicing; someone who only sets it gets it on its own */}
+            {!seesBilling && permissions.has(P.EXCHANGE_RATE_MANAGE) && (
+                <div className="panel mt">
+                    <div className="panel-head"><div><div className="panel-title">Exchange rate</div><div className="panel-sub">What payments received in LBP are converted at.</div></div></div>
+                    <div className="panel-body"><LbpRate /></div>
                 </div>
             )}
         </>
@@ -318,7 +328,7 @@ function Invoicing({ domain, billing: b }: { domain: Domain; billing: BillingSet
                 ) : null} />
             )}
             <SwitchRow title="Internal projects are never invoiced" description="They have no client and no payment - they are company cost only." control={<Always>Enforced</Always>} />
-            <SwitchRow title="Who can see billing" description="Invoices, payments and outstanding balances. Employees see none of it." control={<Always>Admins only</Always>} />
+            <SwitchRow title="Who can see billing" description="Invoices, payments and outstanding balances, for whoever is given financial:view." control={<Always>By permission</Always>} />
         </>
     );
 }
@@ -327,7 +337,7 @@ function Invoicing({ domain, billing: b }: { domain: Domain; billing: BillingSet
 function LbpRate() {
     const permissions = usePermissions();
     const canSet = permissions.has(P.EXCHANGE_RATE_MANAGE);
-    const rates = useExchangeRates("LBP", permissions.has(P.FINANCIAL_VIEW)).data ?? [];
+    const rates = useExchangeRates("LBP", permissions.hasAny(P.FINANCIAL_VIEW, P.EXCHANGE_RATE_MANAGE)).data ?? [];
     const add = useAddExchangeRate();
     const [editing, setEditing] = useState<{ rate: number | ""; from: string } | null>(null);
     const today = companyToday();

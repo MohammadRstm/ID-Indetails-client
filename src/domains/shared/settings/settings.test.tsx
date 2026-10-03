@@ -44,12 +44,27 @@ describe("Settings", () => {
         expect(screen.queryByRole("tablist", { name: "Business" })).not.toBeInTheDocument();
     });
 
-    it("opens on the company, which only a super admin can change", async () => {
+    it("show only the sections a person can change, opening on the theme for an admin", async () => {
         renderApp("/design/settings", nadia, ...settingsHandlers);
-        expect(await screen.findByText("Only a super admin can change these.")).toBeInTheDocument();
-        expect(screen.getByLabelText("Company name")).toBeDisabled();
-        expect(screen.getByLabelText("Company name")).toHaveValue(settings.company.name);
-        expect(screen.queryByRole("button", { name: "Replace" })).not.toBeInTheDocument();
+        const nav = await screen.findByRole("navigation", { name: "Settings" });
+        expect(within(nav).getAllByRole("button").map((b) => b.textContent))
+            .toEqual(["Appearance", "Time tracking", "Finance", "Projects", "Notifications", "Teams", "Admins & access", "Data & export"]);
+        expect(await screen.findByText("Applies to this browser only. The sun / moon button in the top bar does the same.")).toBeInTheDocument();
+        expect(screen.queryByLabelText("Company name")).not.toBeInTheDocument();
+    });
+
+    it("give someone with only team:manage the theme and the teams", async () => {
+        renderApp("/design/settings", withPermissions(personas.designEmployee, { grant: [P.TEAM_MANAGE] }), ...settingsHandlers);
+        const nav = await screen.findByRole("navigation", { name: "Settings" });
+        expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Appearance", "Teams"]);
+    });
+
+    it("let someone with only exchange_rate:manage set the rate, without the billing around it", async () => {
+        renderApp(page("finance"), withPermissions(personas.designEmployee, { grant: [P.EXCHANGE_RATE_MANAGE] }), ...settingsHandlers);
+        const nav = await screen.findByRole("navigation", { name: "Settings" });
+        expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Appearance", "Finance"]);
+        expect(await screen.findByText("Payments in another currency")).toBeInTheDocument();
+        expect(screen.queryByText("Invoicing and payments")).not.toBeInTheDocument();
     });
 
     it("saves the company's details for a super admin, with the rest as they were", async () => {
@@ -103,10 +118,12 @@ describe("Settings", () => {
         expect(await screen.findByRole("button", { name: "Try again" })).toBeInTheDocument();
     });
 
-    it("keeps the domain's rules fixed without domain_settings:manage", async () => {
+    it("leaves out the domain's rules without domain_settings:manage", async () => {
         renderApp(page("notifications"), withPermissions(nadia, { revoke: [P.DOMAIN_SETTINGS_MANAGE] }), ...settingsHandlers);
-        expect(await screen.findByRole("switch", { name: "Weekly summary" })).toBeDisabled();
-        expect(screen.getByLabelText("Work entry notifications")).toBeDisabled();
+        const nav = await screen.findByRole("navigation", { name: "Settings" });
+        expect(within(nav).queryByRole("button", { name: "Notifications" })).not.toBeInTheDocument();
+        expect(within(nav).queryByRole("button", { name: "Projects" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("switch", { name: "Weekly summary" })).not.toBeInTheDocument();
     });
 });
 
@@ -247,9 +264,10 @@ describe("invoicing settings", () => {
         expect(screen.queryByText("Invoicing isn't set up for Design yet.")).not.toBeInTheDocument();
     });
 
-    it("say who sets them up to someone who can only see them", async () => {
+    it("aren't offered to someone who can only see them", async () => {
         renderApp(page("finance"), withPermissions(nadia, { revoke: [P.BILLING_SETTINGS_MANAGE] }), notSetUp, ...settingsHandlers);
-        expect(await screen.findByText(/An admin who manages the billing settings sets it up here/)).toBeInTheDocument();
+        const nav = await screen.findByRole("navigation", { name: "Settings" });
+        expect(within(nav).queryByRole("button", { name: "Finance" })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Set up invoicing" })).not.toBeInTheDocument();
     });
 });
@@ -280,9 +298,11 @@ describe("teams", () => {
         expect(await screen.findByText("Team removed")).toBeInTheDocument();
     });
 
-    it("are only listed without team:manage", async () => {
+    it("aren't offered without team:manage", async () => {
         renderApp(page("teams"), withPermissions(nadia, { revoke: [P.TEAM_MANAGE] }), ...settingsHandlers);
-        expect(await screen.findByText("Architecture")).toBeInTheDocument();
+        const nav = await screen.findByRole("navigation", { name: "Settings" });
+        expect(within(nav).queryByRole("button", { name: "Teams" })).not.toBeInTheDocument();
+        expect(screen.queryByText("Architecture")).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Add team" })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Rename" })).not.toBeInTheDocument();
     });
@@ -313,6 +333,30 @@ describe("admins and access", () => {
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
         await waitFor(() => expect(put.bodies).toEqual([{ changes: [{ action: "grant", code: "company:view", reason: "Covers the quarterly review" }] }]));
         expect(await screen.findByText("Nadia Karam's permissions updated")).toBeInTheDocument();
+    });
+
+    it("grant what an action needs to be usable with it, and say so", async () => {
+        const put = recorder("put", "/api/users/:id/permissions", { ...settings.nadiaPermissions, isJoker: true });
+        renderApp(page("admins"), rana, put.handler, ...settingsHandlers);
+        const row = (await screen.findByText("Nadia Karam")).closest("tr") as HTMLElement;
+        await userEvent.click(within(row).getByRole("button", { name: "Permissions" }));
+        const dialog = await screen.findByRole("dialog", { name: "Nadia Karam's permissions" });
+        const excuse = await within(dialog).findByRole("checkbox", { name: "Excuse hours and days off in the hours ledger" });
+        const owed = within(dialog).getByRole("checkbox", { name: "View what each employee is owed" });
+        expect(owed).not.toBeChecked();
+
+        await userEvent.click(excuse);
+        expect(owed).toBeChecked();
+        expect(within(dialog).getByText("Also grants “View what each employee is owed”, which this needs to be usable.")).toBeInTheDocument();
+        // taking the view back away warns that the action can't be used
+        await userEvent.click(owed);
+        expect(within(dialog).getByText("Without it, “Excuse hours and days off in the hours ledger” can't be used.")).toBeInTheDocument();
+        await userEvent.click(owed);
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(put.bodies).toHaveLength(1));
+        expect((put.bodies[0] as { changes: { code: string; action: string }[] }).changes.map((c) => `${c.action} ${c.code}`).sort())
+            .toEqual(["grant hours:excuse", "grant salary:view"]);
     });
 
     it("never offer a super admin's permissions to change", async () => {

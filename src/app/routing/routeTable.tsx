@@ -122,7 +122,7 @@ export const domainRoutes: DomainRoute[] = [
         // Built on logged hours, so Design only; an Execution person's profile is still reachable from their name.
         path: "people",
         nav: { label: "Employees", icon: "people", count: "people" },
-        admin: { element: <PeoplePage />, access: designOnly(all(P.EMPLOYEE_VIEW, P.WORK_ENTRY_VIEW_ALL)) },
+        admin: { element: <PeoplePage />, access: designOnly(all(P.EMPLOYEE_VIEW)) },
     },
     {
         path: "people/:id",
