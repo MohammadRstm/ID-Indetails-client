@@ -1074,9 +1074,7 @@ tr.voided .mono, .cost-row.voided .mono { text-decoration: line-through; }
 .mention-pop { position: absolute; left: 14px; right: 14px; bottom: 100%; margin-bottom: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r2); box-shadow: var(--shadow-2); padding: 5px; max-height: 220px; overflow-y: auto; z-index: 10; }
 
 @media (max-width: 860px) {
-  .msg-full-page { height: auto; }
-  .msg-page { flex-direction: column; }
-  .msg-sidebar { width: 100%; max-height: 220px; border-right: none; border-bottom: 1px solid var(--line); }
+  .msg-sidebar { width: 240px; }
   .msg-bubble { max-width: 84%; }
   .msg-bubble.task-card { width: auto; max-width: 100%; }
 }

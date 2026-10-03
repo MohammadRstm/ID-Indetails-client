@@ -85,13 +85,20 @@ function Body({ m, mine, showName, names }: { m: Message; mine: boolean; showNam
     );
 }
 
-type ThreadProps = { chat: Chat; person: Contact | null; team: { id: number; name: string; domain: string } | null; meId: number };
+type ThreadProps = {
+    chat: Chat;
+    person: Contact | null;
+    team: { id: number; name: string; domain: string } | null;
+    meId: number;
+    /** Back to the list of chats, where the two don't fit side by side (a phone). */
+    onBack?: () => void;
+};
 
 /**
  * One chat (the prototype's thread): who it is with, the messages by day, and the composer. Opening it, and
  * each new message while it is open, marks it read.
  */
-export default function Thread({ chat, person, team, meId }: ThreadProps) {
+export default function Thread({ chat, person, team, meId, onBack }: ThreadProps) {
     const navigate = useNavigate();
     const permissions = usePermissions();
     const thread = useThread(chat);
@@ -144,6 +151,7 @@ export default function Thread({ chat, person, team, meId }: ThreadProps) {
     return (
         <>
             <div className="msg-thread-head">
+                {onBack && <button type="button" className="icon-btn msg-back" aria-label="Back to chats" onClick={onBack}><Icon name="chevronLeft" /></button>}
                 {person && who ? (
                     <div className={profile ? "msg-thread-person" : undefined} {...clickable(profile ? () => navigate(profile) : undefined, "link")} title={profile ? "View profile" : undefined}>
                         <div className="row" style={{ gap: 10 }}>
