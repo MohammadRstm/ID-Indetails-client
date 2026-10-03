@@ -62,9 +62,14 @@ describe("Employees", () => {
         expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
     });
 
-    it("keeps employees out", async () => {
+    it("stay closed to an employee without the permissions, and open to one given them", async () => {
         renderApp("/design/people", personas.designEmployee, ...workHandlers);
-        await waitFor(() => expect(window.location.pathname).toBe("/design/projects"));
+        expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
+    });
+
+    it("open to an employee given employee:view and work_entry:view_all", async () => {
+        renderApp("/design/people", withPermissions(personas.designEmployee, { grant: [P.EMPLOYEE_VIEW, P.WORK_ENTRY_VIEW_ALL] }), ...peopleHandlers, ...workHandlers);
+        expect(await screen.findByRole("heading", { name: "Employees" })).toBeInTheDocument();
     });
 });
 

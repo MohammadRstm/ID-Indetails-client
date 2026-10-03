@@ -121,8 +121,9 @@ export function useAddExchangeRate() {
 }
 
 /** Admins and super admins the viewer can see. */
-export function useAdmins(domain: string | null) {
+export function useAdmins(domain: string | null, enabled = true) {
     return useQuery({
+        enabled,
         queryKey: [...keys.employees.all, "admins", domain],
         queryFn: async () => {
             const list = async (role: string) =>

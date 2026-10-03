@@ -44,7 +44,7 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
                 {/* Design employees log work; the timer is one way to do it */}
                 {area.kind === "domain" && area.domain === "design" && !permissions.isAdmin && permissions.has(P.WORK_ENTRY_CREATE) && <TimerControl />}
 
-                {area.kind === "domain" && permissions.isAdmin && permissions.has(P.PROJECT_CREATE) && (
+                {area.kind === "domain" && permissions.has(P.PROJECT_CREATE) && (
                     <button className="btn btn-sm" onClick={() => navigate(`/${area.domain}/projects?new=1`)}>
                         <Icon name="plus" />New project
                     </button>

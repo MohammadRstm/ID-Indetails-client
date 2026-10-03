@@ -54,7 +54,7 @@ export default function ReportsPage() {
         userId: personId === "all" ? undefined : +personId,
     };
     const query = useWorkReport(scope);
-    const projects = useProjects({ domain: "design", pageSize: 100 }).data?.items ?? [];
+    const projects = useProjects({ domain: "design", pageSize: 100 }, permissions.has(P.PROJECT_VIEW)).data?.items ?? [];
     const peopleWork = usePeopleWork(seesWork).data ?? [];
     const tiles = new Map<number, Tile>(projects.map((p) => [p.id, { icon: p.icon, tint: p.tint }]));
     const people = new Map<number, ReportPerson>(peopleWork.map((r) => [r.id, { id: r.id, name: r.name, photoFileId: r.photoFileId, team: r.teamName }]));

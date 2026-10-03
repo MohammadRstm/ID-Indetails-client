@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { downloadFile } from "@/api/download";
 import { errorMessage } from "@/api/errors";
+import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
+import { usePermissions } from "@/app/permissions/usePermissions";
 import { useDomain } from "@/app/routing/domainContext";
 import { KpiStrip } from "@/shared/components/Data/Kpi";
 import { PageHead } from "@/shared/components/Data/Panel";
@@ -65,7 +67,7 @@ function FinancialsPage({ domain }: { domain: Domain }) {
     const clients = useFinanceClients(domain, true);
     const costs = useFinanceCosts(domain, range, tab === "costs");
     const invoiceCount = useInvoices({ domain, pageSize: 1 }).data?.totalCount;
-    const tiles = new Map<number, Tile>((useProjects({ domain, pageSize: 100 }).data?.items ?? []).map((p) => [p.id, { icon: p.icon, tint: p.tint }]));
+    const tiles = new Map<number, Tile>((useProjects({ domain, pageSize: 100 }, usePermissions().has(P.PROJECT_VIEW)).data?.items ?? []).map((p) => [p.id, { icon: p.icon, tint: p.tint }]));
     const s = summary.data;
     // Design spends on its employees' hours and expenses; a site on materials, ground labour and expenses
     const costTiles = domain === "design"

@@ -33,9 +33,9 @@ async function countOf(url: string, params: Record<string, unknown>): Promise<nu
     return data.totalCount;
 }
 
-/** The counts beside Projects, Clients and Employees in an admin's sidebar. */
+/** The counts beside Projects, Clients and Employees in the sidebar, each for whoever may see that list. */
 export function useNavCounts(domain: Domain | null, p: Permissions) {
-    const enabled = domain != null && p.isAdmin;
+    const enabled = domain != null;
     const projects = useQuery({
         queryKey: ["projects", "count", domain],
         queryFn: () => countOf("/projects", { domain, status: "active" }),

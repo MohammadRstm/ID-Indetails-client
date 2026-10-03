@@ -34,8 +34,9 @@ import {
 
 /*
  * Every screen, once. A route names the page an admin sees and the page an employee sees, what each needs,
- * and its place in the sidebar. The route guard and the sidebar both read this table, so a nav item and the
- * route behind it can never disagree.
+ * and its place in the sidebar. A page that has only an admin version is the one an employee gets too, as
+ * soon as their permissions allow it: what they see in it then follows their permissions, part by part. The
+ * route guard and the sidebar both read this table, so a nav item and the route behind it can never disagree.
  *
  * Access here decides what the client shows; the API checks every request again.
  */
@@ -199,9 +200,12 @@ export const companyRoutes: CompanyRoute[] = [
     { path: "messages", element: <MessagesPage />, access: () => true },
 ];
 
-/** The page a person gets on a route: the admin page for admins, the employee page for employees. */
+/**
+ * The page a person gets on a route: the admin page for admins; for employees their own page, or the admin
+ * page where there is no employee version (it shows them what their permissions cover).
+ */
 export function pageFor(route: DomainRoute, p: Permissions): RoutePage | undefined {
-    return p.isAdmin ? route.admin : route.employee;
+    return p.isAdmin ? route.admin : route.employee ?? route.admin;
 }
 
 /** Whether this person may open a domain page, such as "clients/12" or "financials?tab=billing". */

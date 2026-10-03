@@ -204,7 +204,7 @@ export function MeetingsPage() {
         const p = partsOf(m.startsAt);
         const today = dayKey(m.startsAt) === companyToday();
         const live = m.startsAt <= now && m.endsAt >= now;
-        const route = `/${domain}/projects/${m.project.id}${permissions.isAdmin ? "?tab=meetings" : ""}`;
+        const route = `/${domain}/projects/${m.project.id}?tab=meetings`;
         return (
             <div key={m.id} className={cx("mtg-row", live && "live-now")}>
                 <div className="mtg-date"><span>{MONTHS[p.month]}</span><b>{p.day}</b><span>{DAYS[p.weekday]}</span></div>

@@ -67,7 +67,7 @@ function OverviewPage({ domain }: { domain: Domain }) {
     const deadlines = useUpcomingDeadlines(domain, design);
     const clientOverview = useClientOverview(domain, seesClients);
     const peopleWork = usePeopleWork(seesWork);
-    const projectList = useProjects({ domain, pageSize: 100 });
+    const projectList = useProjects({ domain, pageSize: 100 }, permissions.has(P.PROJECT_VIEW));
     const summary = useFinanceSummary(domain, { from: range.from, to: range.to }, seesMoney);
     const monthly = useFinanceMonthly(domain, months, seesMoney);
     const finProjects = useFinanceProjects(domain, seesMoney);
