@@ -42,6 +42,12 @@ table { line-height: normal; font-weight: normal; }
 
 /* A menu drawn over the page beside its button (Popover floating): never inside a table it would stretch. */
 .pop.floating { position: fixed; z-index: 300; }
+/* A menu item that deletes something. */
+.pop-item.danger, .pop-item.danger .ic { color: var(--now); }
+.pop-item.danger:hover { background: var(--now-soft); }
+
+/* A logged task picked on the timeline (double-click, or Enter), which Delete removes; the prototype deleted with an × instead. */
+.dt-track > i.dt-e.selected { box-shadow: inset 0 0 0 2px var(--ink), 0 0 0 3px var(--now-soft); z-index: 4; }
 
 /* A required field's label ends with a star. An optional field says so in its placeholder, or by its label when it has no
    text to type ("· optional"). Both are drawn here, so the label's text stays the field's name. */

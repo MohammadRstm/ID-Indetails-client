@@ -1,7 +1,6 @@
-import type { KeyboardEvent, PointerEvent, Ref } from "react";
+import type { FocusEvent, KeyboardEvent, MouseEvent, PointerEvent, Ref } from "react";
 import { tip } from "@/shared/components/Overlays/tip";
 import { fmtDur, fmtHourLabel } from "@/shared/format/time";
-import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { clamp, type Span } from "./day";
 
@@ -29,6 +28,8 @@ type DayTrackProps = {
     nowMin?: number | null;
     sel?: Span | null;
     selBad?: boolean;
+    /** The logged entry picked to be deleted (double-clicked, or Enter on it). */
+    selected?: number | null;
     editable?: boolean;
     /** A working-day edge an edge is held at, while dragging. */
     held?: number | null;
@@ -39,7 +40,10 @@ type DayTrackProps = {
     onPointerMove?: (e: PointerEvent<HTMLDivElement>) => void;
     onPointerUp?: (e: PointerEvent<HTMLDivElement>) => void;
     onClick?: () => void;
+    onDoubleClick?: (e: MouseEvent<HTMLDivElement>) => void;
+    onContextMenu?: (e: MouseEvent<HTMLDivElement>) => void;
     onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
+    onBlur?: (e: FocusEvent<HTMLDivElement>) => void;
 };
 
 /**
@@ -47,8 +51,8 @@ type DayTrackProps = {
  * entries, meetings, an optional selection and the now line.
  */
 export default function DayTrack({
-    lo, hi, workHours, entries, meetings, nowMin, sel, selBad, editable, held, big, title, ref,
-    onPointerDown, onPointerMove, onPointerUp, onClick, onKeyDown,
+    lo, hi, workHours, entries, meetings, nowMin, sel, selBad, selected, editable, held, big, title, ref,
+    onPointerDown, onPointerMove, onPointerUp, onClick, onDoubleClick, onContextMenu, onKeyDown, onBlur,
 }: DayTrackProps) {
     const range = hi - lo;
     const pct = (m: number) => clamp(((m - lo) / range) * 100, 0, 100);
@@ -65,7 +69,8 @@ export default function DayTrack({
     return (
         <div className={cx("dt", big && "big")}>
             <div className="dt-track" ref={ref} onPointerDown={onPointerDown} onPointerMove={onPointerMove}
-                onPointerUp={onPointerUp} onClick={onClick} onKeyDown={onKeyDown} title={title}>
+                onPointerUp={onPointerUp} onClick={onClick} onDoubleClick={onDoubleClick} onContextMenu={onContextMenu}
+                onKeyDown={onKeyDown} onBlur={onBlur} title={title}>
                 {workHours ? [zone(lo, workHours.s, "dt-ot", "a"), zone(workHours.e, hi, "dt-ot", "b")] : zone(lo, hi, "dt-ot", "w")}
                 {nowMin != null && zone(nowMin, hi, "dt-future", "f")}
                 {edges.map((m, k) => (m > lo && m < hi
@@ -75,10 +80,11 @@ export default function DayTrack({
                     const canEdit = editable && !e.locked;
                     return (
                         <i key={e.id} data-eid={canEdit ? e.id : undefined}
-                            className={cx("dt-e", e.isNew && "new", e.moved && "moved", canEdit && "grab", editable && e.locked && "locked")}
+                            className={cx("dt-e", e.isNew && "new", e.moved && "moved", canEdit && "grab", editable && e.locked && "locked", canEdit && selected === e.id && "selected")}
                             style={{ left: `${pct(e.s)}%`, width: `${Math.max(0.6, pct(e.e) - pct(e.s))}%` }}
                             tabIndex={canEdit ? 0 : undefined} role={canEdit ? "button" : undefined}
-                            aria-label={canEdit ? `${e.description}, ${e.range}. Left and right arrows move it; Shift with an arrow changes its end, Alt its start; Delete removes it.` : undefined}
+                            aria-pressed={canEdit ? selected === e.id : undefined}
+                            aria-label={canEdit ? `${e.description}, ${e.range}. Left and right arrows move it; Shift with an arrow changes its end, Alt its start; Enter selects it and Delete then removes it.` : undefined}
                             onMouseMove={(ev) => tip.show(ev, [{ big: e.description }, { k: "Project", v: e.projectTitle }, { k: "Time", v: e.range },
                                 e.overtime ? { k: "Overtime", v: fmtDur(e.overtime) } : null])}
                             onMouseLeave={tip.hide}>
@@ -87,7 +93,6 @@ export default function DayTrack({
                                 <>
                                     <b className="dt-h in l" data-h="l" title="Drag to change when it started" />
                                     <b className="dt-h in r" data-h="r" title="Drag to change when it ended" />
-                                    <b className="dt-x" data-x="1" title="Delete this log" aria-hidden="true"><Icon name="x" /></b>
                                 </>
                             )}
                         </i>

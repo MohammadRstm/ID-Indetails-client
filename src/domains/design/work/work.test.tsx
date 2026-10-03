@@ -129,6 +129,63 @@ describe("logging work", () => {
     });
 });
 
+describe("deleting a logged task on the Log work timeline", () => {
+    async function openDay() {
+        const deleted: string[] = [];
+        renderApp("/design/projects", sarah,
+            http.delete("/api/work-entries/:id", ({ params }) => { deleted.push(String(params.id)); return new HttpResponse(null, { status: 204 }); }),
+            ...workHandlers);
+        await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
+        const dialog = await logWindow();
+        const task = await within(dialog).findByRole("button", { name: /^Furniture schedule,/ });
+        return { dialog, task, deleted };
+    }
+
+    it("offers Delete on a right-click, with no × on the task", async () => {
+        const { dialog, task, deleted } = await openDay();
+        expect(within(dialog).queryByTitle("Delete this log")).toBeNull();
+
+        // Escape closes the menu only, not the window under it
+        await userEvent.pointer({ keys: "[MouseRight]", target: task });
+        expect(await screen.findByRole("menu", { name: "Logged task" })).toBeInTheDocument();
+        await userEvent.keyboard("{Escape}");
+        expect(screen.queryByRole("menu")).toBeNull();
+        expect(dialog).toBeInTheDocument();
+        expect(deleted).toEqual([]);
+
+        await userEvent.pointer({ keys: "[MouseRight]", target: task });
+        await userEvent.click(await screen.findByRole("menuitem", { name: "Delete this log" }));
+        await waitFor(() => expect(deleted).toEqual(["74"]));
+        expect(await screen.findByText("Deleted “Furniture schedule”")).toBeInTheDocument();
+        expect(screen.queryByRole("menu")).toBeNull();
+        expect(dialog).toBeInTheDocument();
+    });
+
+    it("deletes a task selected with a double-click when Delete is pressed, and never one only clicked", async () => {
+        const { task, deleted } = await openDay();
+        await userEvent.click(task);
+        await userEvent.keyboard("{Delete}");
+        expect(deleted).toEqual([]);
+        expect(task).toHaveAttribute("aria-pressed", "false");
+
+        await userEvent.dblClick(task);
+        expect(task).toHaveAttribute("aria-pressed", "true");
+        await userEvent.keyboard("{Delete}");
+        await waitFor(() => expect(deleted).toEqual(["74"]));
+    });
+
+    it("selects a task with Enter from the keyboard, then Delete removes it", async () => {
+        const { task, deleted } = await openDay();
+        act(() => task.focus());
+        await userEvent.keyboard("{Backspace}");
+        expect(deleted).toEqual([]);
+        await userEvent.keyboard("{Enter}");
+        expect(task).toHaveAttribute("aria-pressed", "true");
+        await userEvent.keyboard("{Backspace}");
+        await waitFor(() => expect(deleted).toEqual(["74"]));
+    });
+});
+
 describe("the timer", () => {
     it("fills in the times when stopped", async () => {
         renderApp("/design/projects", sarah, ...workHandlers);

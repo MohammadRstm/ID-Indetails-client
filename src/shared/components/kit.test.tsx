@@ -9,8 +9,10 @@ import { periodRange } from "@/shared/format/periods";
 import { Delta } from "./Charts/Bars";
 import DataTable, { type SortState } from "./Data-Tables/DataTable";
 import Pager from "./Data-Tables/Pager";
+import DateInput from "./Forms/DateInput";
 import { ChipGroup } from "./Forms/Filters";
 import Select from "./Forms/Select";
+import TimeField from "./Forms/TimeField";
 import HelpTip from "./Feedback/HelpTip";
 import MenuButton from "./Overlays/MenuButton";
 import Modal from "./Overlays/Modal";
@@ -214,6 +216,63 @@ describe("the hover popup", () => {
         show();
         fireEvent.blur(window);
         expect(popup).not.toBeVisible();
+    });
+});
+
+describe("dropdowns in a dialog", () => {
+    function Meeting() {
+        const [end, setEnd] = useState(10 * 60);
+        const [project, setProject] = useState("a");
+        const [day, setDay] = useState("2026-10-01");
+        return (
+            <Modal title="New meeting" onClose={vi.fn()}>
+                <TimeField label="End" value={end} min={9 * 60} onChange={setEnd} />
+                <Select aria-label="Project" value={project} onChange={setProject}
+                    options={[{ value: "a", label: "Villa Mounir" }, { value: "b", label: "Haddad HQ" }]} />
+                <DateInput aria-label="Day" value={day} onChange={setDay} />
+            </Modal>
+        );
+    }
+
+    it("float over the page, so opening one never stretches the dialog", async () => {
+        render(<Meeting />);
+        const dialog = screen.getByRole("dialog", { name: "New meeting" });
+
+        await userEvent.click(screen.getByLabelText("End"));
+        const time = screen.getByRole("button", { name: /^11:00 AM/ });
+        expect(dialog.contains(time)).toBe(false);
+        expect(time.closest(".pop")).toHaveClass("floating");
+
+        await userEvent.click(screen.getByRole("button", { name: "Project" }));
+        expect(dialog.contains(screen.getByRole("listbox"))).toBe(false);
+        await userEvent.keyboard("{Escape}");
+
+        await userEvent.click(screen.getByRole("button", { name: "Open calendar" }));
+        const calendar = screen.getByRole("button", { name: "Previous month" }).closest(".cal")!;
+        expect(dialog.contains(calendar)).toBe(false);
+    });
+
+    it("a time list picks, closes with Escape without closing the dialog, and closes when the field is left", async () => {
+        render(<Meeting />);
+        const dialog = screen.getByRole("dialog", { name: "New meeting" });
+        const end = screen.getByLabelText("End");
+
+        await userEvent.click(end);
+        await userEvent.keyboard("{Escape}");
+        expect(screen.queryByRole("button", { name: /^11:00 AM/ })).toBeNull();
+        expect(dialog).toBeInTheDocument();
+
+        await userEvent.tab();
+        await userEvent.click(end);
+        await userEvent.click(screen.getByRole("button", { name: /^11:00 AM/ }));
+        expect(end).toHaveValue("11:00 AM");
+        expect(screen.queryByRole("button", { name: /^11:15 AM/ })).toBeNull();
+
+        await userEvent.tab({ shift: true });
+        await userEvent.click(end);
+        expect(screen.getByRole("button", { name: /^11:15 AM/ })).toBeInTheDocument();
+        await userEvent.tab();
+        expect(screen.queryByRole("button", { name: /^11:15 AM/ })).toBeNull();
     });
 });
 
