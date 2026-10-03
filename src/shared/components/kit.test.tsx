@@ -16,6 +16,8 @@ import TimeField from "./Forms/TimeField";
 import HelpTip from "./Feedback/HelpTip";
 import MenuButton from "./Overlays/MenuButton";
 import Modal from "./Overlays/Modal";
+import { tip } from "./Overlays/tip";
+import TipHost from "./Overlays/TipHost";
 
 describe("Select", () => {
     function Harness({ count = 3, onChange = vi.fn() }: { count?: number; onChange?: (v: string) => void }) {
@@ -191,6 +193,29 @@ describe("small pieces", () => {
         expect(periodRange("month", "2026-09-30")).toMatchObject({ from: "2026-09-01", to: "2026-09-30", prevFrom: "2026-08-01", prevTo: "2026-08-30" });
         expect(periodRange("quarter", "2026-09-30")).toMatchObject({ from: "2026-07-01", label: "Q3 2026 to date", prevFrom: "2026-04-01", prevLabel: "Q2 2026" });
         expect(periodRange("30d", "2026-09-30")).toMatchObject({ from: "2026-09-01" });
+    });
+});
+
+describe("the hover popup", () => {
+    it("hides on a press, a key, a scroll or leaving the window, as what it described may be gone or covered", () => {
+        render(<TipHost />);
+        const popup = document.getElementById("tip")!;
+        const show = () => {
+            tip.show({ clientX: 20, clientY: 20 }, [{ big: "Ceiling plan drawings" }, { k: "Time", v: "9:00 AM – 11:30 AM" }]);
+            expect(popup).toBeVisible();
+        };
+        show();
+        fireEvent.pointerDown(document.body);
+        expect(popup).not.toBeVisible();
+        show();
+        fireEvent.keyDown(document.body, { key: "Enter" });
+        expect(popup).not.toBeVisible();
+        show();
+        fireEvent.scroll(window);
+        expect(popup).not.toBeVisible();
+        show();
+        fireEvent.blur(window);
+        expect(popup).not.toBeVisible();
     });
 });
 
