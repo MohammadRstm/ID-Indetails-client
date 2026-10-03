@@ -35,6 +35,19 @@ describe("the Design employee home", () => {
         expect(screen.getByRole("button", { name: "Log overtime" })).toBeInTheDocument();
     });
 
+    it("offers New project to an employee given project:create, and opens it on their own page", async () => {
+        renderApp("/design/projects", withPermissions(sarah, { grant: [P.PROJECT_CREATE] }), ...workHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "New project" }));
+        expect(await screen.findByRole("dialog", { name: "New project" })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Good evening, Sarah" })).toBeInTheDocument();
+    });
+
+    it("offers no New project without project:create", async () => {
+        renderApp("/design/projects", sarah, ...workHandlers);
+        await screen.findByText(work.myProjects[0].title);
+        expect(screen.queryByRole("button", { name: "New project" })).toBeNull();
+    });
+
     it("offers no logging to someone without work_entry:create", async () => {
         renderApp("/design/projects", cannotLog, ...workHandlers);
         await screen.findByText(work.myProjects[0].title);

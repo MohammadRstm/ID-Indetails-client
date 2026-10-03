@@ -50,8 +50,8 @@ export function DomainGuard() {
 }
 
 /**
- * One route of a domain: the admin or employee page, if the person may open it. A route that has no page
- * for their workspace sends them home (as the prototype does); one they lack the permission for says so.
+ * One route of a domain: the page the person gets (see pageFor), if they may open it. A route with no page for
+ * them sends them home (as the prototype does); one they lack the permission for says so.
  */
 export function DomainPage({ route }: { route: DomainRoute }) {
     const permissions = usePermissions();

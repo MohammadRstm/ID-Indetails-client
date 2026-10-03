@@ -304,7 +304,7 @@ export function ProjectRequirementsTab({ project }: { project: { id: number; dom
 export function RequirementsPanel({ project }: { project: { id: number; status: string } }) {
     const permissions = usePermissions();
     const me = useCurrentUser().id;
-    const query = useRequirements(project.id);
+    const query = useRequirements(project.id, permissions.has(P.REQUIREMENT_VIEW));
     const tick = useTickRequirement(project.id);
     const locked = project.status === "completed" || project.status === "archived";
     const list = ordered(query.data?.items ?? []);

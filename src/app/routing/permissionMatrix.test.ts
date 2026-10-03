@@ -7,8 +7,9 @@ import { companyRoutes, domainRoutes, pageFor } from "./routeTable";
 
 /*
  * The whole matrix: what each kind of person gets on every route of both businesses and of the company
- * area, with the permissions the API gives their role. "open" shows the page, "home" sends them home (their
- * workspace has no such page, or the business isn't theirs), "denied" says they lack the permission.
+ * area, with the permissions the API gives their role. "open" shows the page, "home" sends them home (the
+ * business isn't theirs, or no page fits them), "denied" says they lack the permission. An employee gets an
+ * admin page when it has no employee version, so without its permission they are denied, not sent home.
  * A change to any route's rule shows up here, to be looked at on purpose.
  */
 
@@ -33,8 +34,8 @@ const MATRIX: Record<PersonaName, Record<Domain, string>> = {
     superAdmin:        { design: "oooooooohhooohooo", execution: "ooooodoohhoddhooo" },
     designAdmin:       { design: "oooooooohhooohooo", execution: "hhhhhhhhhhhhhhhhh" },
     executionAdmin:    { design: "hhhhhhhhhhhhhhhhh", execution: "ooooodoohhoddhooo" },
-    designEmployee:    { design: "hoohhhhhooodhohoo", execution: "hhhhhhhhhhhhhhhhh" },
-    executionEmployee: { design: "hhhhhhhhhhhhhhhhh", execution: "hoohhhhhododhohoo" },
+    designEmployee:    { design: "doodddddoooddodoo", execution: "hhhhhhhhhhhhhhhhh" },
+    executionEmployee: { design: "hhhhhhhhhhhhhhhhh", execution: "doodddddododdodoo" },
 };
 
 const LETTER: Record<string, Outcome> = { o: "open", h: "home", d: "denied" };

@@ -26,7 +26,7 @@ export default function AccessSettings({ domain }: { domain: Domain }) {
     const permissions = usePermissions();
     const me = useCurrentUser();
     const superAdmin = me.role === "super_admin";
-    const admins = useAdmins(superAdmin ? null : domain);
+    const admins = useAdmins(superAdmin ? null : domain, permissions.has(P.EMPLOYEE_VIEW));
     const [inviting, setInviting] = useState(false);
     const [editing, setEditing] = useState<Target | null>(null);
     const canInvite = permissions.has(P.EMPLOYEE_INVITE);

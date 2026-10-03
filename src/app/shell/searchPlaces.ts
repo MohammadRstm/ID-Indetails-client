@@ -1,5 +1,6 @@
 import { P } from "@/app/permissions/codes";
 import { DOMAINS, type Domain, type Permissions } from "@/app/permissions/permissions";
+import { hasSeveralAreas } from "@/app/routing/areas";
 import { domainHome } from "@/app/routing/home";
 import { canOpen, companyRoutes } from "@/app/routing/routeTable";
 import { DOMAIN_LABEL } from "@/shared/format/labels";
@@ -351,7 +352,7 @@ export const PLACES: Place[] = [
     {
         key: "areas", icon: "grid", label: "All areas",
         words: ["all areas", "areas", "launcher", "switch business", "switch area", "choose business", "home", "start"],
-        targets: (ctx) => when(ctx.p.isSuperAdmin, () => [{ path: "/company" }]),
+        targets: (ctx) => when(hasSeveralAreas(ctx.p), () => [{ path: "/company" }]),
     },
     ...DOMAINS.map((d): Place => ({
         key: `go-${d}`, icon: d === "design" ? "palette" : "building", label: `Go to ${DOMAIN_LABEL[d]}`,

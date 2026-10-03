@@ -71,7 +71,7 @@ function ClientView({ client }: { client: Client }) {
     const [showEdit, setShowEdit] = useState(false);
     const [showDelete, setShowDelete] = useState(false);
     // The list gives each project its tile; money viewers get the figures from the client itself.
-    const projects = useProjects({ domain, clientId: client.id, sort: "start", pageSize: 100 });
+    const projects = useProjects({ domain, clientId: client.id, sort: "start", pageSize: 100 }, permissions.has(P.PROJECT_VIEW));
     // A client rarely has more than a page of invoices; the oldest overdue one is found among them.
     const invoices = useInvoices({ clientId: client.id, pageSize: 50 }, seesMoney);
     const payments = usePayments({ clientId: client.id, pageSize: 4 }, seesMoney);

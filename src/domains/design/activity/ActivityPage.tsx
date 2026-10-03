@@ -49,7 +49,7 @@ export default function ActivityPage() {
     const today = useActivityToday(seesWork);
     const peopleWork = usePeopleWork(seesWork);
     const clients = useClients({ domain: "design", includeArchived: true, pageSize: 100 }, permissions.has(P.CLIENT_VIEW)).data?.items ?? [];
-    const projects = useProjects({ domain: "design", pageSize: 100 }).data?.items ?? [];
+    const projects = useProjects({ domain: "design", pageSize: 100 }, permissions.has(P.PROJECT_VIEW)).data?.items ?? [];
 
     const rows = peopleWork.data ?? [];
     const people = new Map<number, Person>(rows.map((r) => [r.id, { id: r.id, name: r.name, photoFileId: r.photoFileId, online: r.online }]));

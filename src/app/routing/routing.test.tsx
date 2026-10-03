@@ -45,6 +45,26 @@ describe("the route table", () => {
         expect(navLabels(withPermissions(personas.executionEmployee, { grant: [P.ACTIVITY_VIEW] }), "execution")).not.toContain("Activity");
     });
 
+    it("gives an employee each admin page as soon as a permission opens it, and takes it away again", () => {
+        const employee = personas.designEmployee;
+        const plus = (...grant: (typeof P)[keyof typeof P][]) => navLabels(withPermissions(employee, { grant }), "design");
+        expect(plus(P.REPORT_VIEW)).toEqual(["Overview", "Projects", "My work", "My pay", "Meetings", "Reports", "Profile"]);
+        expect(plus(P.CLIENT_VIEW)).toContain("Clients");
+        expect(plus(P.FINANCIAL_VIEW)).toContain("Financials");
+        expect(plus(P.TEAM_MANAGE)).toContain("Settings");
+        // the Employees list is built on everyone's hours: both are needed
+        expect(plus(P.EMPLOYEE_VIEW)).not.toContain("Employees");
+        expect(plus(P.EMPLOYEE_VIEW, P.WORK_ENTRY_VIEW_ALL)).toContain("Employees");
+        expect(canOpen(permissionsOf(withPermissions(employee, { grant: [P.EMPLOYEE_VIEW] })), "design", "people/12")).toBe(true);
+        // an action alone, without what shows it, opens nothing
+        expect(plus(P.CLIENT_CREATE)).toEqual(navLabels(employee, "design"));
+        // with everything, the admin's pages and their own
+        const all = withPermissions(employee, { grant: Object.values(P) });
+        expect(navLabels(all, "design")).toEqual(
+            ["Overview", "Projects", "Clients", "Employees", "Financials", "My work", "My pay", "Meetings", "Activity", "Reports", "Profile", "Settings"]);
+        expect(navLabels(withPermissions(all, { revoke: [P.FINANCIAL_VIEW, P.CLIENT_VIEW] }), "design")).not.toContain("Clients");
+    });
+
     it("starts each person in the right place", () => {
         expect(homePath(permissionsOf(personas.superAdmin))).toBe("/company");
         expect(homePath(permissionsOf(personas.designAdmin))).toBe("/design/overview");
@@ -85,9 +105,9 @@ describe("the guards", () => {
         expect(window.location.pathname).toBe("/login");
     });
 
-    it("keeps employees out of admin pages by sending them home", async () => {
+    it("says an employee has no access to an admin page their permissions don't open", async () => {
         renderApp("/design/financials", personas.designEmployee);
-        await waitFor(() => expect(window.location.pathname).toBe("/design/projects"));
+        expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
     });
 
     it("keeps people out of a domain they can't see", async () => {

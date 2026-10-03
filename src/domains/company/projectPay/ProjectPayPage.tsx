@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { fetchBlob, saveBlob } from "@/api/download";
 import { errorMessage } from "@/api/errors";
+import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { canOpen } from "@/app/routing/routeTable";
 import { ProjectTile } from "@/shared/components/Data/Bits";
@@ -45,7 +46,7 @@ export default function ProjectPayPage() {
     const [period, setPeriod] = useState<PayPeriod>(() => periodOf("week", today));
     const [projectId, setProjectId] = useState("all");
     const pay = useProjectPay({ unit, date: period.from, projectId: projectId === "all" ? null : +projectId });
-    const projects = useProjects({ domain: "design", pageSize: 100 }).data?.items ?? [];
+    const projects = useProjects({ domain: "design", pageSize: 100 }, permissions.has(P.PROJECT_VIEW)).data?.items ?? [];
     // the company's overtime rate for the period shown
     const multiplier = policyOn(useWorkingTime().data, period.from)?.overtimeMultiplier;
     const r = pay.data;

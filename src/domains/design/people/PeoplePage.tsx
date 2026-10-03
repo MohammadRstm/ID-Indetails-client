@@ -35,7 +35,7 @@ export default function PeoplePage() {
     const [params, setParams] = useSearchParams();
     const query = usePeopleWork();
     // the focus project's tile
-    const tiles = new Map((useProjects({ domain: "design", pageSize: 100 }).data?.items ?? []).map((p) => [p.id, p]));
+    const tiles = new Map((useProjects({ domain: "design", pageSize: 100 }, permissions.has(P.PROJECT_VIEW)).data?.items ?? []).map((p) => [p.id, p]));
     const [search, setSearch] = useState("");
     const [team, setTeam] = useState("all");
     const [presence, setPresence] = useState<PresenceFilter>("all");
