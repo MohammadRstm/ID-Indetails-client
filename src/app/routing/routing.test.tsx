@@ -38,6 +38,11 @@ describe("the route table", () => {
         expect(navLabels(noMoney, "design")).not.toContain("Overview");
         const noActivity = withPermissions(personas.designAdmin, { revoke: [P.ACTIVITY_VIEW] });
         expect(navLabels(noActivity, "design")).not.toContain("Activity");
+        // an employee given activity:view gets the page, and loses it again when it is taken back
+        const watcher = withPermissions(personas.designEmployee, { grant: [P.ACTIVITY_VIEW] });
+        expect(navLabels(watcher, "design")).toEqual(["Projects", "My work", "My pay", "Meetings", "Activity", "Profile"]);
+        expect(navLabels(withPermissions(watcher, { revoke: [P.ACTIVITY_VIEW] }), "design")).not.toContain("Activity");
+        expect(navLabels(withPermissions(personas.executionEmployee, { grant: [P.ACTIVITY_VIEW] }), "execution")).not.toContain("Activity");
     });
 
     it("starts each person in the right place", () => {
