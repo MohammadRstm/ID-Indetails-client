@@ -67,5 +67,5 @@ export function useUnreadBadges() {
         queryKey: ["messages", "badge"],
         queryFn: async () => (await http.get<Schemas["MessagesBadgeResponse"]>("/messages/badge")).data,
     });
-    return { notifications: notifications.data ?? 0, messages: messages.data };
+    return { notifications: notifications.data ?? 0, notificationsLoaded: notifications.data != null, messages: messages.data };
 }

@@ -99,6 +99,43 @@ group("The bell", () => {
         act(() => live.emit("notifications"));
         await waitFor(() => expect(bell.querySelector(".pip")).not.toBeNull());
     });
+
+    it("rings when a notification comes in, not for those already there, and its list has the sound switch", async () => {
+        let played = 0;
+        vi.stubGlobal("AudioContext", class {
+            state = "running";
+            currentTime = 0;
+            destination = {};
+            createOscillator() {
+                played++;
+                return { type: "", frequency: { setValueAtTime() {} }, connect: (n: unknown) => n, start() {}, stop() {} };
+            }
+            createGain() {
+                return { gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect: (n: unknown) => n };
+            }
+            resume() {
+                return Promise.resolve();
+            }
+        });
+        let unread = 2;
+        renderApp("/design/overview", rana,
+            http.get("/api/notifications/unread-count", () => HttpResponse.json({ unread })),
+            ...notificationHandlers());
+        const bell = await screen.findByRole("button", { name: "Notifications" });
+        await waitFor(() => expect(bell.querySelector(".pip")).not.toBeNull());
+        await waitFor(() => expect(live.connected).toBeGreaterThan(0));
+        expect(played).toBe(0);
+
+        // well after the ring of the test before, at the same frozen time
+        vi.setSystemTime(new Date("2026-09-30T09:05:00Z"));
+        unread = 3;
+        act(() => live.emit("notifications"));
+        await waitFor(() => expect(played).toBe(2));
+
+        await userEvent.click(bell);
+        expect(await screen.findByRole("button", { name: "Turn sounds off" })).toBeInTheDocument();
+        vi.unstubAllGlobals();
+    });
 });
 
 group("The notifications page", () => {

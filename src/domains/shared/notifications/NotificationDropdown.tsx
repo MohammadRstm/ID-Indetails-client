@@ -2,6 +2,7 @@ import { useNavigate } from "react-router";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
+import SoundToggle from "../messages/SoundToggle";
 import NotificationItem from "./NotificationItem";
 import { useLatestNotifications, useMarkRead } from "./notificationsApi";
 import { loadFailed } from "@/api/queryState";
@@ -17,6 +18,7 @@ export default function NotificationDropdown({ unread, allPath, close }: { unrea
         <div style={{ width: 356, maxWidth: "80vw" }}>
             <div className="pop-head">
                 <div className="grow"><b>Notifications</b>{unread > 0 && <span className="muted"> · {unread} unread</span>}</div>
+                <SoundToggle />
                 <button className="btn btn-sm btn-quiet" disabled={markRead.isPending || unread === 0} onClick={() => markRead.mutate("all")}>Mark all read</button>
             </div>
             <div className="notif-list">

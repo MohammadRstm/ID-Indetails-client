@@ -1,15 +1,16 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 
 /*
- * The messages' sounds: a short rising tone when a message is sent, a soft two-note chime when one arrives.
- * They are drawn with the Web Audio API, so there are no sound files to load. Messages arriving together,
- * or one after another within a couple of seconds, chime once. The switch in Messages is remembered in this
- * browser; if storage is blocked, the sounds simply stay on.
+ * The app's sounds: a short rising tone when a message is sent, a soft two-note chime when one arrives, and a
+ * falling bell when a notification comes in. They are drawn with the Web Audio API, so there are no sound files
+ * to load. A burst of arrivals sounds once: the first chimes, and the ones that follow stay quiet until nothing
+ * has arrived for QUIET_MS. Messages and notifications are grouped apart. One switch turns them all off; it is
+ * remembered in this browser, and if storage is blocked the sounds simply stay on.
  */
 
 const KEY = "hl-message-sounds";
-/** Arrivals this close together chime once. */
-export const QUIET_MS = 2500;
+/** How long arrivals must stop before the next one chimes again. */
+export const QUIET_MS = 1500;
 
 const listeners = new Set<() => void>();
 
@@ -23,7 +24,6 @@ function read(): boolean {
 
 let on = read();
 let context: AudioContext | null = null;
-let lastChime = -Infinity;
 
 export function setMessageSounds(next: boolean) {
     on = next;
@@ -57,11 +57,23 @@ function audio(): AudioContext | null {
     }
 }
 
-/** One soft sine note: a quick rise, then a fade. */
-function note(ctx: AudioContext, frequency: number, start: number, length: number, peak: number) {
+// Browsers only let a page play sound once the person has used it: the audio is woken by their first press or
+// key, so the first message that arrives after that is heard.
+if (typeof document !== "undefined") {
+    const wake = () => {
+        if (on) audio();
+        document.removeEventListener("pointerdown", wake, true);
+        document.removeEventListener("keydown", wake, true);
+    };
+    document.addEventListener("pointerdown", wake, true);
+    document.addEventListener("keydown", wake, true);
+}
+
+/** One soft note: a quick rise, then a fade. */
+function note(ctx: AudioContext, frequency: number, start: number, length: number, peak: number, type: OscillatorType = "sine") {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = "sine";
+    osc.type = type;
     osc.frequency.setValueAtTime(frequency, start);
     gain.gain.setValueAtTime(0.0001, start);
     gain.gain.exponentialRampToValueAtTime(peak, start + 0.012);
@@ -71,36 +83,60 @@ function note(ctx: AudioContext, frequency: number, start: number, length: numbe
     osc.stop(start + length + 0.02);
 }
 
+/** True for the first of a burst: nothing has arrived for QUIET_MS. Every arrival restarts the wait. */
+function burst() {
+    let last = -Infinity;
+    return (now: number) => {
+        const first = now - last >= QUIET_MS;
+        last = now;
+        return first;
+    };
+}
+const messageBurst = burst();
+const notificationBurst = burst();
+
 /** A message went out. */
 export function playSent() {
     if (!on) return;
     const ctx = audio();
     if (!ctx) return;
     const t = ctx.currentTime;
-    note(ctx, 620, t, 0.09, 0.08);
-    note(ctx, 930, t + 0.06, 0.12, 0.06);
+    note(ctx, 620, t, 0.09, 0.11);
+    note(ctx, 930, t + 0.06, 0.12, 0.08);
 }
 
 /** A message came in: once for a burst of them. */
 export function playReceived(now = Date.now()) {
-    if (!on || now - lastChime < QUIET_MS) return;
-    lastChime = now;
+    if (!messageBurst(now) || !on) return;
     const ctx = audio();
     if (!ctx) return;
     const t = ctx.currentTime;
-    note(ctx, 880, t, 0.18, 0.07);
-    note(ctx, 1320, t + 0.11, 0.26, 0.05);
+    note(ctx, 880, t, 0.18, 0.12);
+    note(ctx, 1320, t + 0.11, 0.26, 0.09);
 }
 
-/**
- * Chimes when the unread count goes up: someone else's message arrived (one's own never raise it). The first
- * count, as the page loads, is only remembered.
- */
-export function useArrivalChime(unread: number | undefined) {
+/** A notification came in: once for a burst of them. */
+export function playNotification(now = Date.now()) {
+    if (!notificationBurst(now) || !on) return;
+    const ctx = audio();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    note(ctx, 1568, t, 0.32, 0.1, "triangle");
+    note(ctx, 1175, t + 0.14, 0.5, 0.1, "triangle");
+}
+
+/** Plays `sound` when a count goes up. The first count, as the page loads, is only remembered. */
+function useChimeOnRise(count: number | undefined, sound: () => void) {
     const last = useRef<number | undefined>(undefined);
     useEffect(() => {
-        if (unread == null) return;
-        if (last.current != null && unread > last.current) playReceived();
-        last.current = unread;
-    }, [unread]);
+        if (count == null) return;
+        if (last.current != null && count > last.current) sound();
+        last.current = count;
+    }, [count, sound]);
 }
+
+/** Chimes when the unread messages go up: someone else's message arrived (one's own never raise it). */
+export const useArrivalChime = (unread: number | undefined) => useChimeOnRise(unread, playReceived);
+
+/** Rings when the unread notifications go up. */
+export const useNotificationChime = (unread: number | undefined) => useChimeOnRise(unread, playNotification);
