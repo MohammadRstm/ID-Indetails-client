@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { useCurrentUser } from "@/app/session/useSession";
 import { Bar, ProjectTile } from "@/shared/components/Data/Bits";
 import { StatusBadge } from "@/shared/components/Data/Pills";
 import Empty from "@/shared/components/Feedback/Empty";
@@ -10,7 +9,7 @@ import { SearchInput } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import { Avatars } from "@/shared/components/Identity/People";
 import { money } from "@/shared/format/money";
-import { addDays, dayKey, fmtDate, fmtDayDateY, monthKey, relTime, startOfWeek } from "@/shared/format/time";
+import { addDays, dayKey, fmtDate, monthKey, relTime, startOfWeek } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useProjects, type ProjectSummary } from "../../shared/projects/projectsApi";
 import { companyNow } from "../../design/work/day";
@@ -20,13 +19,18 @@ import { loadFailed } from "@/api/queryState";
 
 type LastWorked = "any" | "week" | "month" | "older" | "never";
 
+/** "3 active projects", for the greeting. */
+export function SiteActiveCount() {
+    const active = useProjects({ domain: "execution", status: "active", pageSize: 100 });
+    return <>{active.data ? `${active.data.items.length} active projects` : "…"}</>;
+}
+
 /**
- * An Execution employee's home (the Execution side of the prototype's P.EmpProjects): no hours to greet them
- * with, just the sites they record materials and labour on, most recently recorded first.
+ * The sites someone records materials and labour on (the Execution side of the prototype's P.EmpProjects): no
+ * hours to show them, just the sites, most recently recorded first, then the paused ones.
  */
-export default function SiteHome() {
-    const me = useCurrentUser();
-    const { today, minute } = companyNow();
+export function SiteCards() {
+    const { today } = companyNow();
     const activeQuery = useProjects({ domain: "execution", status: "active", pageSize: 100 });
     const heldQuery = useProjects({ domain: "execution", status: "hold", pageSize: 100 });
     const allActive = activeQuery.data?.items ?? [];
@@ -37,7 +41,6 @@ export default function SiteHome() {
     const [fClient, setFClient] = useState("");
     const [fLast, setFLast] = useState<LastWorked>("any");
 
-    const hour = Math.floor(minute / 60);
     const lastOf = (p: ProjectSummary) => byId.get(p.id)?.myLastRecordedAt ?? null;
     const weekStart = startOfWeek(today), monthStart = `${monthKey(today)}-01`, monthAgo = addDays(today, -30);
     const filtering = !!(fq.trim() || fClient || fLast !== "any");
@@ -68,14 +71,7 @@ export default function SiteHome() {
     const error = [activeQuery, heldQuery].find(loadFailed)?.error;
 
     return (
-        <div className="page">
-            <div className="page-head">
-                <div>
-                    <h1 className="page-title">Good {hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening"}, {me.firstName}</h1>
-                    <div className="page-sub">{fmtDayDateY(today)} · {activeQuery.data ? `${allActive.length} active projects` : "…"}</div>
-                </div>
-            </div>
-
+        <>
             <div className="row wrap" style={{ gap: 10, margin: "22px 0 10px", alignItems: "baseline" }}>
                 <h2 className="page-title" style={{ fontSize: 15 }}>Active projects</h2>
                 <span className="muted" style={{ fontSize: 12 }}>most recently worked on first</span>
@@ -111,7 +107,7 @@ export default function SiteHome() {
                             <div className="panel">
                                 {filtering
                                     ? <Empty art="search" title="No active projects match" text="Try another search or clear the filters." action={<button className="btn" onClick={clear}>Clear filters</button>} />
-                                    : <Empty art="projects" title="No active projects" text="When an admin creates a project it appears here and you can start recording materials against it." />}
+                                    : <Empty art="projects" title="No active projects" text="When a project is created it appears here and you can start recording materials against it." />}
                             </div>
                         )}
                         {held.length > 0 && (
@@ -123,7 +119,7 @@ export default function SiteHome() {
                         )}
                     </>
                 )}
-        </div>
+        </>
     );
 }
 

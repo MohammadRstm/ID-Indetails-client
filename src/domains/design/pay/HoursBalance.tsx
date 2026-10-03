@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router";
 import type { Schemas } from "@/api/types";
+import { usePermissions } from "@/app/permissions/usePermissions";
+import { canOpen } from "@/app/routing/routeTable";
 import { fmtDur, fmtH, fmtMonthY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useMyHours, useMyPay } from "../work/workApi";
@@ -84,6 +86,7 @@ export function MyHoursBalance() {
  */
 export function BehindNotice() {
     const navigate = useNavigate();
+    const seesPay = canOpen(usePermissions(), "design", "pay");
     const hours = useMyHours();
     const months = hours.data?.applies ? hours.data.months : [];
     const cur = months.find((m) => m.inProgress);
@@ -113,7 +116,7 @@ export function BehindNotice() {
         <div className="banner attn mt pay-behind" role="status">
             <Icon name="clock" />
             <div className="grow">{lines}</div>
-            <button className="btn btn-sm" onClick={() => navigate("/design/pay")}>See my hours & pay</button>
+            {seesPay && <button className="btn btn-sm" onClick={() => navigate("/design/pay")}>See my hours & pay</button>}
         </div>
     );
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
-import { useCurrentUser } from "@/app/session/useSession";
+import { canOpen } from "@/app/routing/routeTable";
 import { Delta } from "@/shared/components/Charts/Bars";
 import { Bar, ProjectTile } from "@/shared/components/Data/Bits";
 import { StatusBadge } from "@/shared/components/Data/Pills";
@@ -13,7 +13,7 @@ import Select from "@/shared/components/Forms/Select";
 import { SearchInput } from "@/shared/components/Forms/Filters";
 import { Avatars } from "@/shared/components/Identity/People";
 import { tip } from "@/shared/components/Overlays/tip";
-import { addDays, DAYS, dayKey, daysBetween, fmtDate, fmtDayDate, fmtDayDateY, fmtDur, fmtH, monthKey, partsOf, relTime, startOfWeek } from "@/shared/format/time";
+import { addDays, DAYS, dayKey, daysBetween, fmtDate, fmtDayDate, fmtDur, fmtH, monthKey, partsOf, relTime, startOfWeek } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { BehindNotice, MyHoursBalance } from "../pay/HoursBalance";
 import { companyNow, workHoursOf } from "./day";
@@ -24,28 +24,71 @@ import { useDomainSettings, useMyProjects, useMySchedule, useMyWorkSummary, type
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
 
+/*
+ * The parts of a Design person's own work on the projects page (the prototype's P.EmpProjects): their week,
+ * today, overtime and hours, and the projects they log against. Each is for someone who may see their own work
+ * (work_entry:view_own); logging also needs work_entry:create. ProjectsPage puts them together.
+ */
+
 type LastWorked = "any" | "week" | "month" | "older" | "never";
 
 const firstName = (name: string) => name.split(" ")[0];
 
-/** A Design employee's home: their week, today, overtime, and the projects they log against (the prototype's P.EmpProjects). */
-export default function EmployeeHome() {
-    const me = useCurrentUser();
+/** "12 active projects", for the greeting. */
+export function MyActiveCount() {
+    const projects = useMyProjects();
+    return <>{projects.data ? `${projects.data.filter((p) => p.status === "active").length} active projects` : "…"}</>;
+}
+
+/** Log overtime (once the working day is over) and Log work, for the greeting. */
+export function MyLogButtons() {
+    const { today, minute: nowMin } = companyNow();
+    const schedule = useMySchedule(today);
+    const workHours = workHoursOf(schedule.data?.day);
+    const overtimeNow = schedule.data != null && (!workHours || nowMin >= workHours.e);
+    return (
+        <>
+            {overtimeNow && <button className="btn btn-lg" onClick={() => openLogWork({ overtime: true })}><Icon name="clock" />Log overtime</button>}
+            <button className="btn btn-primary btn-lg" onClick={() => openLogWork()}><Icon name="plus" />Log work</button>
+        </>
+    );
+}
+
+/** Their week, a reminder to log today, hours they are behind on, today's timeline, overtime and hours balance. */
+export function MyWorkBand() {
     const permissions = usePermissions();
     const { today, minute: nowMin } = companyNow();
     const summary = useMyWorkSummary();
-    const projects = useMyProjects();
     const schedule = useMySchedule(today);
     const settings = useDomainSettings("design").data;
+    const canLog = permissions.has(P.WORK_ENTRY_CREATE);
+    const workHours = workHoursOf(schedule.data?.day);
+    const s = summary.data;
+    return (
+        <>
+            <WeekPanel summary={s} error={loadFailed(summary) ? summary.error : null} retry={() => summary.refetch()} today={today} />
+            {settings?.logReminder && workHours && nowMin >= 15 * 60 && s && !s.todayMinutes && canLog && (
+                <div className="banner attn mt"><Icon name="bell" />
+                    <div className="grow"><b>Nothing logged today yet.</b> Add what you worked on before you finish - it takes a few seconds on the timeline below.</div>
+                </div>
+            )}
+            <BehindNotice />
+            {canLog && <TodayPanel />}
+            <OvertimePanel />
+            <MyHoursBalance />
+        </>
+    );
+}
+
+/** The projects they log against: active ones first, most recently worked on, then the paused ones. */
+export function MyProjectCards() {
+    const permissions = usePermissions();
+    const { today } = companyNow();
+    const projects = useMyProjects();
     const canLog = permissions.has(P.WORK_ENTRY_CREATE);
     const [fq, setFq] = useState("");
     const [fClient, setFClient] = useState("");
     const [fLast, setFLast] = useState<LastWorked>("any");
-
-    const hour = Math.floor(nowMin / 60);
-    const workHours = workHoursOf(schedule.data?.day);
-    const overtimeNow = schedule.data != null && (!workHours || nowMin >= workHours.e);
-    const s = summary.data;
 
     const all = projects.data ?? [];
     const allActive = all.filter((p) => p.status === "active");
@@ -71,32 +114,7 @@ export default function EmployeeHome() {
     const clear = () => { setFq(""); setFClient(""); setFLast("any"); };
 
     return (
-        <div className="page">
-            <div className="page-head">
-                <div>
-                    <h1 className="page-title">Good {hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening"}, {me.firstName}</h1>
-                    <div className="page-sub">{fmtDayDateY(today)} · {projects.data ? `${allActive.length} active projects` : "…"}</div>
-                </div>
-                {canLog && (
-                    <div className="page-actions">
-                        {overtimeNow && <button className="btn btn-lg" onClick={() => openLogWork({ overtime: true })}><Icon name="clock" />Log overtime</button>}
-                        <button className="btn btn-primary btn-lg" onClick={() => openLogWork()}><Icon name="plus" />Log work</button>
-                    </div>
-                )}
-            </div>
-
-            <WeekPanel summary={s} error={loadFailed(summary) ? summary.error : null} retry={() => summary.refetch()} today={today} />
-
-            {settings?.logReminder && workHours && nowMin >= 15 * 60 && s && !s.todayMinutes && canLog && (
-                <div className="banner attn mt"><Icon name="bell" />
-                    <div className="grow"><b>Nothing logged today yet.</b> Add what you worked on before you finish - it takes a few seconds on the timeline below.</div>
-                </div>
-            )}
-            {permissions.has(P.WORK_ENTRY_VIEW_OWN) && <BehindNotice />}
-            {canLog && <TodayPanel />}
-            {permissions.has(P.WORK_ENTRY_VIEW_OWN) && <OvertimePanel />}
-            {permissions.has(P.WORK_ENTRY_VIEW_OWN) && <MyHoursBalance />}
-
+        <>
             <div className="row wrap" style={{ gap: 10, margin: "22px 0 10px", alignItems: "baseline" }}>
                 <h2 className="page-title" style={{ fontSize: 15 }}>Active projects</h2>
                 <span className="muted" style={{ fontSize: 12 }}>most recently worked on first</span>
@@ -129,7 +147,7 @@ export default function EmployeeHome() {
                             <div className="panel">
                                 {filtering
                                     ? <Empty art="search" title="No active projects match" text="Try another search or clear the filters." action={<button className="btn" onClick={clear}>Clear filters</button>} />
-                                    : <Empty art="projects" title="No active projects" text="When an admin creates a project it appears here and you can start logging work against it." />}
+                                    : <Empty art="projects" title="No active projects" text="When a project is created it appears here and you can start logging work against it." />}
                             </div>
                         )}
                         {held.length > 0 && (
@@ -141,7 +159,7 @@ export default function EmployeeHome() {
                         )}
                     </>
                 )}
-        </div>
+        </>
     );
 }
 
@@ -150,6 +168,7 @@ type Summary = ReturnType<typeof useMyWorkSummary>["data"];
 /** "Your week so far": the total, against last week, and a bar a day. */
 function WeekPanel({ summary: s, error, retry, today }: { summary: Summary; error: unknown; retry: () => void; today: string }) {
     const navigate = useNavigate();
+    const permissions = usePermissions();
     const maxDay = Math.max(60, ...(s?.week ?? []).map((d) => d.minutes));
     return (
         <div className="panel">
@@ -186,7 +205,7 @@ function WeekPanel({ summary: s, error, retry, today }: { summary: Summary; erro
                         <div style={{ textAlign: "right" }}>
                             <div className="u">Logged today</div>
                             <div className="mono" style={{ fontSize: 18, fontWeight: 650 }}>{s ? fmtH(s.todayMinutes) : "…"}</div>
-                            <button className="btn btn-sm mt-s" onClick={() => navigate("/design/my-work")}>Open My work</button>
+                            {canOpen(permissions, "design", "my-work") && <button className="btn btn-sm mt-s" onClick={() => navigate("/design/my-work")}>Open My work</button>}
                         </div>
                     </div>
                 )}

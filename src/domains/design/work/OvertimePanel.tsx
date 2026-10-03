@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { usePermissions } from "@/app/permissions/usePermissions";
+import { canOpen } from "@/app/routing/routeTable";
 import { ProjectTile } from "@/shared/components/Data/Bits";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
@@ -21,6 +23,9 @@ export default function OvertimePanel({ userId }: OvertimePanelProps) {
     const [open, setOpen] = useState(false);
     const query = useMyOvertime(month, userId ?? null);
     const entryPath = (id: number) => (userId == null ? `/design/profile?entry=${id}` : `/design/people/${userId}?entry=${id}`);
+    // one's own entries open on one's profile, which not everyone who logs work has (yet)
+    const permissions = usePermissions();
+    const linked = userId != null || canOpen(permissions, "design", "profile");
     const ot = query.data;
     const isThisMonth = month === thisMonth;
     const days = ot?.days ?? [];
@@ -67,9 +72,11 @@ export default function OvertimePanel({ userId }: OvertimePanelProps) {
                                             <b className="mono ot-text">{fmtDur(d.overtimeMinutes)}</b>
                                         </div>
                                         {d.entries.map((e) => (
-                                            <div key={e.workEntryId} className="ot-item" role="link" tabIndex={0} title="Open this entry"
-                                                onClick={() => navigate(entryPath(e.workEntryId))}
-                                                onKeyDown={(ev) => { if (ev.key === "Enter") navigate(entryPath(e.workEntryId)); }}>
+                                            <div key={e.workEntryId} className="ot-item" {...(linked ? {
+                                                role: "link", tabIndex: 0, title: "Open this entry",
+                                                onClick: () => navigate(entryPath(e.workEntryId)),
+                                                onKeyDown: (ev: { key: string }) => { if (ev.key === "Enter") navigate(entryPath(e.workEntryId)); },
+                                            } : {})}>
                                                 <ProjectTile icon={e.projectIcon} tint={e.projectTint} size="sm" />
                                                 <div className="grow" style={{ minWidth: 0 }}>
                                                     <div className="trunc">{e.description}</div>

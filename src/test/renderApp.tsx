@@ -3,7 +3,23 @@ import { http, HttpResponse, type RequestHandler } from "msw";
 import App from "@/App";
 import type { CurrentUser } from "@/api/types";
 import { tokenStore } from "@/api/tokenStore";
+import { work } from "./fixtures/work";
 import { server } from "./server";
+
+/** Someone's own work when they have logged none: what an admin's projects page shows them unless a test says more. */
+const nothingLogged = [
+    http.get("/api/me/projects", () => HttpResponse.json([])),
+    http.get("/api/me/work-summary", () => HttpResponse.json({
+        ...work.summary, todayMinutes: 0, thisWeekMinutes: 0, lastWeekMinutes: 0, week: work.summary.week.map((d) => ({ ...d, minutes: 0 })),
+    })),
+    http.get("/api/me/day", ({ request }) => HttpResponse.json({
+        ...work.day, date: new URL(request.url).searchParams.get("date"), entries: [], meetings: [], loggedMinutes: 0, overtimeMinutes: 0,
+    })),
+    http.get("/api/me/schedule", ({ request }) => HttpResponse.json({ ...work.schedule, day: { ...work.schedule.day, date: new URL(request.url).searchParams.get("date") } })),
+    http.get("/api/me/overtime", () => HttpResponse.json({ ...work.overtime, overtimeMinutes: 0, madeUpMinutes: 0, paidMinutes: 0, entries: 0, days: [] })),
+    http.get("/api/me/hours", () => HttpResponse.json({ ...work.hours, applies: false, months: [], totalMonths: 0 })),
+    http.get("/api/domain-settings/:domain", () => HttpResponse.json(work.settings)),
+];
 
 /** The API calls every signed-in page makes (settings, branding, badges, counts), answered with calm defaults. */
 export const shellHandlers = [
@@ -18,6 +34,7 @@ export const shellHandlers = [
     http.get("/api/clients", () => HttpResponse.json({ items: [], page: 1, pageSize: 1, totalCount: 5 })),
     http.get("/api/employees", () => HttpResponse.json({ items: [], page: 1, pageSize: 1, totalCount: 9 })),
     http.get("/api/company/overview", () => HttpResponse.json({ netProfit: 12000, domains: [] })),
+    ...nothingLogged,
 ];
 
 /**
