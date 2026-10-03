@@ -17,6 +17,8 @@ export type LogWorkOptions = {
     overtime?: boolean;
     /** Editing an entry rather than logging a new one. */
     edit?: WorkEntry;
+    /** A timer stopped before an entry's 5 minutes: how many minutes it ran, as it is logged as 5. */
+    shortTimer?: number;
 };
 
 type Open = LogWorkOptions & { n: number };
