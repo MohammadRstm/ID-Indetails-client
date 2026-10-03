@@ -9980,6 +9980,7 @@ export interface components {
             monthTotals: components["schemas"]["CurrencyTotalResponse"][];
         };
         OvertimePreviewRequest: {
+            deletes?: number[];
             /** Format: date-time */
             endedAt?: string;
             /** Format: int64 */
@@ -11036,6 +11037,7 @@ export interface components {
         SaveWorkEntryRequest: {
             /** Format: int64 */
             attachmentFileId?: null | number;
+            deletes?: number[];
             description?: null | string;
             /** Format: date-time */
             endedAt?: string;

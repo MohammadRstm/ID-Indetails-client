@@ -173,18 +173,31 @@ describe("the Log work timeline", () => {
 
 describe("deleting a logged task on the Log work timeline", () => {
     async function openDay() {
-        const deleted: string[] = [];
+        const sent: string[] = [];
+        const posted: Record<string, unknown>[] = [];
         renderApp("/design/projects", sarah,
-            http.delete("/api/work-entries/:id", ({ params }) => { deleted.push(String(params.id)); return new HttpResponse(null, { status: 204 }); }),
+            http.delete("/api/work-entries/:id", ({ params }) => { sent.push(`delete ${params.id}`); return new HttpResponse(null, { status: 204 }); }),
+            http.post("/api/work-entries/:id/restore", ({ params }) => { sent.push(`restore ${params.id}`); return HttpResponse.json(work.day.entries[0]); }),
+            http.post("/api/work-entries", async ({ request }) => {
+                const body = (await request.json()) as Record<string, unknown>;
+                posted.push(body);
+                return HttpResponse.json({ ...work.day.entries[0], id: 999, minutes: 60, startedAt: body.startedAt, endedAt: body.endedAt });
+            }),
             ...workHandlers);
         await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
         const dialog = await logWindow();
         const task = await within(dialog).findByRole("button", { name: /^Furniture schedule,/ });
-        return { dialog, task, deleted };
+        return { dialog, task, sent, posted };
     }
+    const shown = (dialog: HTMLElement, name: RegExp) => within(dialog).queryByRole("button", { name });
+    async function deleteByMenu(dialog: HTMLElement, name: RegExp) {
+        await userEvent.pointer({ keys: "[MouseRight]", target: within(dialog).getByRole("button", { name }) });
+        await userEvent.click(await screen.findByRole("menuitem", { name: "Delete this log" }));
+    }
+    const ctrlZ = () => userEvent.keyboard("{Control>}z{/Control}");
 
-    it("offers Delete on a right-click, with no × on the task", async () => {
-        const { dialog, task, deleted } = await openDay();
+    it("offers Delete on a right-click, with no × on the task, and only takes it off the timeline", async () => {
+        const { dialog, task, sent } = await openDay();
         expect(within(dialog).queryByTitle("Delete this log")).toBeNull();
 
         // Escape closes the menu only, not the window under it
@@ -193,38 +206,112 @@ describe("deleting a logged task on the Log work timeline", () => {
         await userEvent.keyboard("{Escape}");
         expect(screen.queryByRole("menu")).toBeNull();
         expect(dialog).toBeInTheDocument();
-        expect(deleted).toEqual([]);
 
-        await userEvent.pointer({ keys: "[MouseRight]", target: task });
-        await userEvent.click(await screen.findByRole("menuitem", { name: "Delete this log" }));
-        await waitFor(() => expect(deleted).toEqual(["74"]));
-        expect(await screen.findByText("Deleted “Furniture schedule”")).toBeInTheDocument();
+        await deleteByMenu(dialog, /^Furniture schedule,/);
+        expect(shown(dialog, /^Furniture schedule,/)).toBeNull();
+        expect(within(dialog).getByText(/“Furniture schedule” is deleted when you save this log/)).toBeInTheDocument();
         expect(screen.queryByRole("menu")).toBeNull();
         expect(dialog).toBeInTheDocument();
+        expect(sent).toEqual([]);
     });
 
-    it("deletes a task selected with a double-click when Delete is pressed, and never one only clicked", async () => {
-        const { task, deleted } = await openDay();
+    it("takes off a task selected with a double-click when Delete is pressed, and never one only clicked", async () => {
+        const { dialog, task, sent } = await openDay();
         await userEvent.click(task);
         await userEvent.keyboard("{Delete}");
-        expect(deleted).toEqual([]);
+        expect(shown(dialog, /^Furniture schedule,/)).not.toBeNull();
         expect(task).toHaveAttribute("aria-pressed", "false");
 
         await userEvent.dblClick(task);
         expect(task).toHaveAttribute("aria-pressed", "true");
         await userEvent.keyboard("{Delete}");
-        await waitFor(() => expect(deleted).toEqual(["74"]));
+        expect(shown(dialog, /^Furniture schedule,/)).toBeNull();
+        expect(sent).toEqual([]);
     });
 
-    it("selects a task with Enter from the keyboard, then Delete removes it", async () => {
-        const { task, deleted } = await openDay();
+    it("selects a task with Enter from the keyboard, then Delete takes it off", async () => {
+        const { dialog, task } = await openDay();
         act(() => task.focus());
         await userEvent.keyboard("{Backspace}");
-        expect(deleted).toEqual([]);
+        expect(shown(dialog, /^Furniture schedule,/)).not.toBeNull();
         await userEvent.keyboard("{Enter}");
         expect(task).toHaveAttribute("aria-pressed", "true");
         await userEvent.keyboard("{Backspace}");
-        await waitFor(() => expect(deleted).toEqual(["74"]));
+        expect(shown(dialog, /^Furniture schedule,/)).toBeNull();
+    });
+
+    it("brings back the last one deleted with Ctrl+Z, but not while typing, and all of them on request", async () => {
+        const { dialog } = await openDay();
+        await deleteByMenu(dialog, /^Furniture schedule,/);
+        await deleteByMenu(dialog, /^Space planning for level 3,/);
+        expect(within(dialog).getByText(/2 logged tasks are deleted when you save this log/)).toBeInTheDocument();
+
+        await ctrlZ();
+        expect(shown(dialog, /^Space planning for level 3,/)).not.toBeNull();
+        expect(shown(dialog, /^Furniture schedule,/)).toBeNull();
+
+        // in the description, Ctrl+Z is the text's own
+        await userEvent.click(within(dialog).getByLabelText("What did you work on?"));
+        await ctrlZ();
+        expect(shown(dialog, /^Furniture schedule,/)).toBeNull();
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Bring it back" }));
+        expect(shown(dialog, /^Furniture schedule,/)).not.toBeNull();
+        expect(within(dialog).queryByText(/is deleted when you save/)).toBeNull();
+    });
+
+    it("deletes them with the save, in the same call; afterwards Ctrl+Z does nothing, and Undo puts them back", async () => {
+        const { dialog, sent, posted } = await openDay();
+        await deleteByMenu(dialog, /^Furniture schedule,/);
+        await userEvent.type(within(dialog).getByLabelText("What did you work on?"), "Redid the schedule");
+        await userEvent.click(within(dialog).getByRole("button", { name: /^Log 1h 00m/ }));
+
+        await waitFor(() => expect(posted).toHaveLength(1));
+        expect(posted[0]).toMatchObject({ description: "Redid the schedule", deletes: [74] });
+        expect(sent).toEqual([]);
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: /log work/i })).toBeNull());
+
+        await ctrlZ();
+        expect(sent).toEqual([]);
+
+        const logged = (await screen.findByText(/logged on/)).closest(".toast") as HTMLElement;
+        await userEvent.click(within(logged).getByRole("button", { name: "Undo" }));
+        await waitFor(() => expect(sent).toEqual(["delete 999", "restore 74"]));
+    });
+
+    it("works the same on the home page's Add logs timeline", async () => {
+        const posted: Record<string, unknown>[] = [];
+        const sent: string[] = [];
+        renderApp("/design/projects", sarah,
+            http.delete("/api/work-entries/:id", ({ params }) => { sent.push(`delete ${params.id}`); return new HttpResponse(null, { status: 204 }); }),
+            http.post("/api/work-entries", async ({ request }) => {
+                const body = (await request.json()) as Record<string, unknown>;
+                posted.push(body);
+                return HttpResponse.json({ ...work.day.entries[0], id: 999, minutes: 60, startedAt: body.startedAt, endedAt: body.endedAt });
+            }),
+            ...workHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Add logs" }));
+        const panel = (await screen.findByText(/^Add logs · /)).closest(".panel") as HTMLElement;
+        await deleteByMenu(panel, /^Furniture schedule,/);
+        expect(shown(panel, /^Furniture schedule,/)).toBeNull();
+        await ctrlZ();
+        expect(shown(panel, /^Furniture schedule,/)).not.toBeNull();
+        await deleteByMenu(panel, /^Furniture schedule,/);
+
+        await userEvent.type(within(panel).getByLabelText("What did you work on?"), "Redid the schedule");
+        await userEvent.click(within(panel).getByRole("button", { name: "Add log" }));
+        await waitFor(() => expect(posted).toHaveLength(1));
+        expect(posted[0]).toMatchObject({ deletes: [74] });
+        expect(sent).toEqual([]);
+    });
+
+    it("deletes nothing when the window is closed without saving", async () => {
+        const { dialog, sent, posted } = await openDay();
+        await deleteByMenu(dialog, /^Furniture schedule,/);
+        await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: /log work/i })).toBeNull());
+        expect(sent).toEqual([]);
+        expect(posted).toEqual([]);
     });
 });
 
