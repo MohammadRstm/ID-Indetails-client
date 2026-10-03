@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -131,6 +131,25 @@ describe("the work timeline and analytics", () => {
         await userEvent.click(within(timeline).getByRole("tab", { name: "Week" }));
         expect((await within(timeline).findAllByText(projectWork.timelineEntries[0].description)).length).toBeGreaterThan(0);
         expect(timeline.querySelectorAll(".tl-chip")).toHaveLength(projectWork.timelineEntries.length);
+    });
+
+    it("hides a task's hover popup once it is clicked, even with the mouse still over it", async () => {
+        renderApp(path, admin, ...projectWorkHandlers);
+        const timeline = (await screen.findByText("Work timeline")).closest(".panel") as HTMLElement;
+        await within(timeline).findByText(sarah.name);
+        const day = await waitFor(() => {
+            const seg = timeline.querySelector<HTMLElement>(".tl-seg:not(.h0)");
+            expect(seg).not.toBeNull();
+            return seg!;
+        });
+        const popup = document.getElementById("tip")!;
+        fireEvent.mouseMove(day, { clientX: 200, clientY: 200 });
+        expect(popup).toBeVisible();
+        expect(popup).toHaveTextContent(sarah.name);
+
+        // clicking zooms in and redraws the timeline under the mouse: no mouseleave ever comes
+        await userEvent.click(day);
+        expect(popup).not.toBeVisible();
     });
 
     it("opens the four charts on request", async () => {
