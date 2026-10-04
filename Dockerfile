@@ -18,8 +18,10 @@ RUN npm run build
 FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine AS runtime
 
 # The image's own example site is replaced by ours; the template is filled in with API_UPSTREAM when it starts.
+# pcre2 is upgraded for CVE-2026-103111 (fixed in 10.49-r0) until the base image ships it; only that package, as a
+# full upgrade could replace nginx.org's nginx with Alpine's.
 USER root
-RUN rm -f /etc/nginx/conf.d/default.conf
+RUN apk upgrade --no-cache pcre2 && rm -f /etc/nginx/conf.d/default.conf
 COPY deploy/nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY deploy/nginx/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --chmod=755 deploy/nginx/10-require-api-upstream.sh /docker-entrypoint.d/10-require-api-upstream.sh
