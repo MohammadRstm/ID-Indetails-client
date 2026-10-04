@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { lastSeen } from "@/shared/format/time";
-import type { IconName } from "@/shared/icons/icons";
+import { icons, type IconName } from "@/shared/icons/icons";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 
@@ -40,7 +40,7 @@ export function Presence({ online, lastSeenAt }: { online: boolean; lastSeenAt?:
 export function ProjectTile({ icon, tint, size }: { icon?: string | null; tint?: string | null; size?: "sm" | "lg" }) {
     return (
         <span className={cx("ptile", size)} style={{ background: tint || "var(--accent)" }}>
-            <Icon name={(icon as IconName) || "folder"} />
+            <Icon name={icon && Object.hasOwn(icons, icon) ? (icon as IconName) : "folder"} />
         </span>
     );
 }

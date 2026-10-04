@@ -16,7 +16,7 @@ export default function Icon({ name, className, style }: IconProps) {
             viewBox="0 0 24 24"
             style={style}
             aria-hidden="true"
-            dangerouslySetInnerHTML={{ __html: icons[name] }}
+            dangerouslySetInnerHTML={{ __html: Object.hasOwn(icons, name) ? icons[name] : "" }}
         />
     );
 }

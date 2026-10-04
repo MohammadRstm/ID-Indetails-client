@@ -39,7 +39,8 @@ function TaskCard({ m, mine }: { m: Message; mine: boolean }) {
     const [viewing, setViewing] = useState(false);
     const t = m.taskComment;
     if (!t) return null;
-    const end = new Date(new Date(t.startedAt).getTime() + t.minutes * 60_000).toISOString();
+    // how long it took shows only to those who may read the entry: colleagues' hours stay private
+    const when = t.minutes == null ? fmtTime(t.startedAt) : fmtRange(t.startedAt, new Date(new Date(t.startedAt).getTime() + t.minutes * 60_000).toISOString());
     return (
         <div className={cx("msg-bubble task-card", mine && "mine")}>
             <div className="tc-head">
@@ -52,7 +53,7 @@ function TaskCard({ m, mine }: { m: Message; mine: boolean }) {
                 <Avatar person={{ name: t.author.name, photoFileId: t.author.photoFileId }} size={22} />
                 <div style={{ minWidth: 0 }}>
                     <b><PersonName person={{ id: t.author.id, name: t.author.name, domain: "design" }} /></b>
-                    <div className="muted mono" style={{ fontSize: "10.5px" }}>{fmtDayDate(t.startedAt)} · {fmtRange(t.startedAt, end)}</div>
+                    <div className="muted mono" style={{ fontSize: "10.5px" }}>{fmtDayDate(t.startedAt)} · {when}</div>
                 </div>
             </div>
             {t.attachment && <Media file={t.attachment} className="tc-att" onOpen={() => setViewing(true)} />}
