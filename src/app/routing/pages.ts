@@ -62,7 +62,7 @@ export const PeoplePage = page(() => import("@/domains/design/people/PeoplePage"
 export const PersonProfilePage = named(() => import("@/domains/design/people/ProfilePage"), "PersonProfilePage");
 export const MyProfilePage = named(() => import("@/domains/design/people/ProfilePage"), "MyProfilePage");
 export const ReportsPage = page(() => import("@/domains/design/reports/ReportsPage"));
-export const KitGallery = page(() => import("@/app/pages/KitGallery"));
+export const KitGallery = import.meta.env.DEV ? page(() => import("@/app/pages/KitGallery")) : () => null;
 
 // signed-out pages: someone signed in never needs them
 export const SignInPage = page(() => import("@/auth/SignInPage"));

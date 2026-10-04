@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { P } from "@/app/permissions/codes";
 import { accessLabel } from "@/app/permissions/permissions";
@@ -12,6 +13,7 @@ import Icon from "@/shared/icons/Icon";
 import { openLogWork } from "@/domains/design/work/logWorkStore";
 import { cx } from "@/shared/utils/cx";
 import { myProfilePath } from "./profilePath";
+import ReportBugModal from "./ReportBugModal";
 import { useCompanySettings, useNavCounts } from "./shellQueries";
 import type { ShellArea } from "./useArea";
 
@@ -20,6 +22,7 @@ export default function Sidebar({ area }: { area: ShellArea }) {
     const permissions = usePermissions();
     const user = useCurrentUser();
     const { signOut } = useSession();
+    const [reporting, setReporting] = useState(false);
     const company = useCompanySettings();
     const domain = area.kind === "domain" ? area.domain : null;
     const counts = useNavCounts(domain, permissions);
@@ -130,6 +133,9 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                                     <Icon name="settings" />Settings
                                 </button>
                             )}
+                            <button className="pop-item" onClick={() => { close(); setReporting(true); }}>
+                                <Icon name="flag" />Report a bug
+                            </button>
                             <div className="pop-sep" />
                             <button className="pop-item" onClick={() => { close(); signOut(); }}>
                                 <Icon name="logout" />Sign out
@@ -138,6 +144,7 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                     )}
                 </Popover>
             </div>
+            {reporting && <ReportBugModal onClose={() => setReporting(false)} />}
         </aside>
     );
 }

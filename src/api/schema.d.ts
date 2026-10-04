@@ -11350,7 +11350,7 @@ export interface components {
             /** Format: int64 */
             entryId: number;
             /** Format: int32 */
-            minutes: number;
+            minutes: number | null;
             /** Format: int64 */
             projectId: number;
             projectTitle: string;

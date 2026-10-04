@@ -74,6 +74,18 @@ describe("resetting a password", () => {
         expect(await screen.findByRole("heading", { name: "This link doesn't work any more" })).toBeInTheDocument();
     });
 
+    it("takes the link's token out of the address bar, and still uses it", async () => {
+        const sent: unknown[] = [];
+        server.use(http.post("/api/auth/reset-password", async ({ request }) => { sent.push(await request.json()); return new HttpResponse(null, { status: 204 }); }));
+        renderApp("/reset-password?token=abc", null);
+
+        await userEvent.type(await screen.findByLabelText("New password"), "correct horse battery");
+        await waitFor(() => expect(window.location.search).toBe(""));
+        await userEvent.type(screen.getByLabelText("Repeat it"), "correct horse battery");
+        await userEvent.click(screen.getByRole("button", { name: "Save the new password" }));
+        await waitFor(() => expect(sent).toEqual([{ token: "abc", password: "correct horse battery" }]));
+    });
+
     it("insists on the API's minimum length", async () => {
         renderApp("/reset-password?token=abc", null);
         await userEvent.type(await screen.findByLabelText("New password"), "short");

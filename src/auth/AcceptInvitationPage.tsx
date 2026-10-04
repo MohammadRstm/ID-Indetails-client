@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { z } from "zod";
 import { anonymous } from "@/api/http";
@@ -31,8 +31,13 @@ const ROLE_LABEL: Record<string, string> = { super_admin: "super admin", admin: 
 
 /** Creates the account an invitation was sent for (?token=), and signs the person in. */
 export default function AcceptInvitationPage() {
-    const [params] = useSearchParams();
-    const token = params.get("token") ?? "";
+    const [params, setParams] = useSearchParams();
+    // Read once, then taken out of the address bar and the history: the link's token isn't left behind on the
+    // device, nor sent along with the page's requests.
+    const [token] = useState(() => params.get("token") ?? "");
+    useEffect(() => {
+        if (params.has("token")) setParams({}, { replace: true });
+    }, [params, setParams]);
     const navigate = useNavigate();
     const { adopt } = useSession();
     const form = useForm({ firstName: "", lastName: "", phone: "", password: "", repeat: "" }, schema);

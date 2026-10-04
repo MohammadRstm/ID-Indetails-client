@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router";
 import { z } from "zod";
 import { toApiError } from "@/api/errors";
@@ -15,8 +15,13 @@ const schema = z
 
 /** Chooses a new password from the emailed link (?token=). */
 export default function ResetPasswordPage() {
-    const [params] = useSearchParams();
-    const token = params.get("token") ?? "";
+    const [params, setParams] = useSearchParams();
+    // Read once, then taken out of the address bar and the history: the link's token isn't left behind on the
+    // device, nor sent along with the page's requests.
+    const [token] = useState(() => params.get("token") ?? "");
+    useEffect(() => {
+        if (params.has("token")) setParams({}, { replace: true });
+    }, [params, setParams]);
     const form = useForm({ password: "", repeat: "" }, schema);
     const [busy, setBusy] = useState(false);
     const [state, setState] = useState<"form" | "done" | "invalid">(token ? "form" : "invalid");

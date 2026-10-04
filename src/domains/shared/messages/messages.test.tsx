@@ -2,7 +2,7 @@ import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { messageHandlers, messages, people } from "@/test/fixtures/messages";
+import { interiors, messageHandlers, messages, people } from "@/test/fixtures/messages";
 import { live } from "@/test/liveHub";
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
@@ -59,6 +59,19 @@ describe("Messages", () => {
         expect(within(card).getByText("Villa Mounir interiors")).toBeInTheDocument();
         expect(within(card).getByText("Stair details")).toBeInTheDocument();
         expect(within(card).getByText("Lovely detail on the landing")).toHaveClass("tc-quote");
+        // whoever may read the entry sees how long it took
+        expect(within(card).getByText(/→/)).toBeInTheDocument();
+    });
+
+    it("show a teammate a shared task comment without how long their colleague worked", async () => {
+        const [first, second, mention, card] = interiors;
+        const privateCard = { ...card, taskComment: { ...card.taskComment!, minutes: null } };
+        renderApp("/design/messages?group=13", rana,
+            http.get("/api/messages/teams/13", () => HttpResponse.json({ items: [first, second, mention, privateCard], hasMore: false })),
+            ...messageHandlers);
+        const t = await screen.findByText("Stair details").then(() => thread());
+        const shown = within(t).getByText("Task comment").closest(".task-card") as HTMLElement;
+        expect(within(shown).queryByText(/→/)).not.toBeInTheDocument();
     });
 
     it("send a message with a mention picked from the group's members", async () => {
