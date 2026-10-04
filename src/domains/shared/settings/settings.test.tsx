@@ -344,6 +344,9 @@ describe("admins and access", () => {
         const excuse = await within(dialog).findByRole("checkbox", { name: "Excuse hours and days off in the hours ledger" });
         const owed = within(dialog).getByRole("checkbox", { name: "View what each employee is owed" });
         expect(owed).not.toBeChecked();
+        // codes of one area stay together: sessions with people, categories with the company's expenses
+        expect(within(dialog).getAllByText("People")).toHaveLength(1);
+        expect(within(dialog).getAllByText("Company expenses")).toHaveLength(1);
 
         await userEvent.click(excuse);
         expect(owed).toBeChecked();

@@ -125,10 +125,17 @@ describe("Company expenses", () => {
         await waitFor(() => expect(calls).toEqual(["remove 7", "rename 11 Bank charges", "add Cleaning"]));
     });
 
-    it("keep managing the categories to super admins", async () => {
+    it("keep managing the categories to overhead_category:manage, which overhead:manage doesn't include", async () => {
         renderApp("/company/overhead", withPermissions(personas.designAdmin, { grant: [P.OVERHEAD_MANAGE, P.COMPANY_VIEW] }), ...companyHandlers);
         expect(await screen.findByText("Recurring monthly expenses")).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Categories" })).not.toBeInTheDocument();
+    });
+
+    it("let someone given overhead_category:manage sort the expenses into categories", async () => {
+        renderApp("/company/overhead", withPermissions(personas.designAdmin, { grant: [P.COMPANY_VIEW, P.OVERHEAD_CATEGORY_MANAGE] }), ...companyHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Categories" }));
+        expect(await screen.findByRole("dialog", { name: "Expense categories" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Add expense" })).not.toBeInTheDocument();
     });
 
     it("change their amount from a month, and their name on its own", async () => {

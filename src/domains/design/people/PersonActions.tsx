@@ -56,19 +56,21 @@ export default function PersonActions({ account }: { account: Account }) {
     const me = useCurrentUser();
     const [dialog, setDialog] = useState<Dialog>(null);
     const resend = useResendInvitation(account.id);
-    const manage = permissions.has(P.EMPLOYEE_MANAGE) && (account.role !== "super_admin" || permissions.has(P.EMPLOYEE_INVITE_SUPER_ADMIN));
+    // a super admin's account needs employee:invite_super_admin for any change
+    const guarded = account.role !== "super_admin" || permissions.has(P.EMPLOYEE_INVITE_SUPER_ADMIN);
+    const manage = permissions.has(P.EMPLOYEE_MANAGE) && guarded;
     const deactivated = account.status === "deactivated";
     const invited = account.status === "invited";
     const canMove = manage && !deactivated && account.role !== "super_admin" && permissions.canSeeDomain("design") && permissions.canSeeDomain("execution");
     const canResend = invited && permissions.hasAny(P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN);
-    // ending and restoring sessions is a super admin's, as the API has it
     const suspended = !!account.sessionsRevokedAt;
-    const canEndSessions = manage && permissions.isSuperAdmin && account.status === "active" && !suspended;
-    const canRestore = manage && permissions.isSuperAdmin && suspended;
+    const sessions = permissions.has(P.SESSION_MANAGE) && guarded;
+    const canEndSessions = sessions && account.status === "active" && !suspended;
+    const canRestore = sessions && suspended;
     // a super admin has no profile page to edit them from, so their details and salary are edited here
-    const canEditProfile = account.role === "super_admin" && !deactivated && (manage || permissions.has(P.EMPLOYEE_PAY_MANAGE));
+    const canEditProfile = account.role === "super_admin" && !deactivated && (manage || permissions.has(P.EMPLOYEE_PAY_MANAGE) || (guarded && permissions.has(P.EMPLOYEE_CHANGE_EMAIL)));
     // nobody changes their own account (an admin can reach their own profile from a notice or the feed)
-    if (account.id === me.id || (!manage && !canResend && !canEditProfile)) return null;
+    if (account.id === me.id || (!manage && !sessions && !canResend && !canEditProfile)) return null;
 
     function sendAgain() {
         resend.mutate(undefined, {

@@ -36,6 +36,7 @@ export default function CompanyExpensesPage() {
     const navigate = useNavigate();
     const permissions = usePermissions();
     const canEdit = permissions.has(P.OVERHEAD_MANAGE);
+    const canSort = permissions.has(P.OVERHEAD_CATEGORY_MANAGE);
     const overhead = useOverhead();
     // the company's profit and total cost need company:view; overhead:manage alone sees the expenses themselves
     const seesCompany = permissions.has(P.COMPANY_VIEW);
@@ -167,9 +168,9 @@ export default function CompanyExpensesPage() {
                                 <div className="panel-title">Recurring monthly expenses</div>
                                 <div className="panel-sub">Subscriptions and running costs. They repeat every month and come out of the company's net profit.</div>
                             </div>
-                            {(canEdit || permissions.isSuperAdmin) && (
+                            {(canEdit || canSort) && (
                                 <div className="panel-tools">
-                                    {permissions.isSuperAdmin && <button className="btn btn-sm" onClick={() => setManaging(true)}><Icon name="list" />Categories</button>}
+                                    {canSort && <button className="btn btn-sm" onClick={() => setManaging(true)}><Icon name="list" />Categories</button>}
                                     {canEdit && <button className="btn btn-sm btn-primary" onClick={() => setEditing(true)}><Icon name="plus" />Add expense</button>}
                                 </div>
                             )}
