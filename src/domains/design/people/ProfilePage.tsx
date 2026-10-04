@@ -151,7 +151,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                         <div className="row" style={{ gap: 8 }}>
                             {own && <button className="btn" onClick={() => setViewingMine(true)}><Icon name="shield" />View permissions</button>}
                             {extra.status === "active" && !own && <button className="btn" onClick={() => navigate(`/${domain}/messages?with=${person.id}`)}><Icon name="chat" />Send message</button>}
-                            {permissions.hasAny(P.EMPLOYEE_MANAGE, P.EMPLOYEE_PAY_MANAGE) && <button className="btn" onClick={() => setEditing(true)}><Icon name="edit" />Edit profile</button>}
+                            {permissions.hasAny(P.EMPLOYEE_MANAGE, P.EMPLOYEE_PAY_MANAGE, P.EMPLOYEE_CHANGE_EMAIL) && <button className="btn" onClick={() => setEditing(true)}><Icon name="edit" />Edit profile</button>}
                             {permissions.has(P.PERMISSION_MANAGE) && !own && extra.role !== "super_admin" && extra.status !== "deactivated" && (
                                 <button className="btn" onClick={() => setPermissionsOpen(true)}><Icon name="shield" />Permissions</button>
                             )}

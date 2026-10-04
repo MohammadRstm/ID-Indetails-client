@@ -87,6 +87,22 @@
     ]
   },
   {
+    "code": "employee:change_email",
+    "description": "Change sign-in addresses",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
+    "code": "session:manage",
+    "description": "End people's sessions and restore their sign-in",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
     "code": "employee:manage",
     "description": "Edit employee profiles, teams and status",
     "domain": null,
@@ -234,6 +250,14 @@
   {
     "code": "overhead:manage",
     "description": "Manage company overhead",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
+    "code": "overhead_category:manage",
+    "description": "Add, rename and remove company expense categories",
     "domain": null,
     "defaultFor": [
       "super_admin"

@@ -9,6 +9,7 @@ import { money } from "@/shared/format/money";
 import { addMonths, companyToday, fmtMonthY } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
+import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { useAddOverhead, useChangeOverhead, useOverheadGroups, type OverheadChange, type OverheadLine } from "./companyApi";
 
@@ -24,7 +25,7 @@ export default function OverheadModal({ line, onClose }: { line: OverheadLine | 
     const [amount, setAmount] = useState(line?.currentAmount ?? 0);
     const [currency, setCurrency] = useState(line?.currency ?? "USD");
     const groups = useOverheadGroups().data ?? [];
-    const superAdmin = usePermissions().isSuperAdmin;
+    const sorts = usePermissions().has(P.OVERHEAD_CATEGORY_MANAGE);
     const [groupId, setGroupId] = useState(line ? String(line.group.id) : "");
     const [from, setFrom] = useState(thisMonth);
     const pending = add.isPending || change.isPending;
@@ -84,7 +85,7 @@ export default function OverheadModal({ line, onClose }: { line: OverheadLine | 
                     <Select id="ov-group" value={groupId} onChange={(v) => { setGroupId(v); errors.touch("group")(); }}
                         options={[{ value: "", label: "Choose a category", disabled: true }, ...groups.map((g) => ({ value: String(g.id), label: g.name }))]} />
                     {errors.show("group", groupError) ? <FieldError message={errors.show("group", groupError)} />
-                        : superAdmin && <div className="hint">Add or rename categories from Categories on the expenses page.</div>}
+                        : sorts && <div className="hint">Add or rename categories from Categories on the expenses page.</div>}
                 </div>
             </div>
             {(newAmount || newCurrency) && (

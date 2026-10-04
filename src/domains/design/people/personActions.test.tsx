@@ -140,12 +140,20 @@ describe("Someone's account", () => {
         await waitFor(() => expect(restored.sent).toHaveLength(1));
     });
 
-    it("leaves sessions to super admins", async () => {
+    it("leaves sessions to whoever holds session:manage", async () => {
         renderApp("/design/people/9", personas.designAdmin, as({ sessionsRevokedAt: "2026-09-29T10:00:00Z" }), ...peopleHandlers);
         await menu();
         expect(screen.getByRole("button", { name: "Deactivate…" })).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "End all sessions…" })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Restore sign-in…" })).not.toBeInTheDocument();
+    });
+
+    it("lets someone given session:manage end sessions without managing the account", async () => {
+        renderApp("/design/people/9", withPermissions(personas.designAdmin, { grant: [P.SESSION_MANAGE], revoke: [P.EMPLOYEE_MANAGE] }), ...peopleHandlers);
+        await menu();
+        expect(screen.getByRole("button", { name: "End all sessions…" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Deactivate…" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Change role…" })).not.toBeInTheDocument();
     });
 
     it("is out of reach without employee:manage", async () => {

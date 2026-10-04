@@ -236,7 +236,28 @@ describe("Someone's profile", () => {
         await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
         expect(within(dialog).getByLabelText("Work email")).toHaveAttribute("readonly");
-        expect(within(dialog).getByText("Their sign-in address - only a super admin changes it.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Their sign-in address - changing it needs the permission to change sign-in addresses.")).toBeInTheDocument();
+    });
+
+    it("lets someone given only employee:change_email change the address and nothing else", async () => {
+        const emails: unknown[] = [];
+        let updated = false;
+        renderApp("/design/people/9", withPermissions(nadia, { grant: [P.EMPLOYEE_CHANGE_EMAIL], revoke: [P.EMPLOYEE_MANAGE, P.EMPLOYEE_PAY_MANAGE] }),
+            http.put("/api/employees/9", () => { updated = true; return HttpResponse.json(yara); }),
+            http.put("/api/employees/9/email", async ({ request }) => { emails.push(await request.json()); return HttpResponse.json(yara); }),
+            ...peopleHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
+        // their name, phone and photo need employee:manage
+        expect(within(dialog).queryByLabelText("Full name")).toBeNull();
+        expect(within(dialog).queryByRole("button", { name: "Photo" })).toBeNull();
+        const email = within(dialog).getByLabelText("Work email");
+        expect(email).not.toHaveAttribute("readonly");
+        await userEvent.clear(email);
+        await userEvent.type(email, "yara.m@hourline.test");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(emails).toEqual([{ email: "yara.m@hourline.test" }]));
+        expect(updated).toBe(false);
     });
 
     it("lets pay be changed without the rest of the profile, which it doesn't send", async () => {

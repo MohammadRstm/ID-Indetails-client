@@ -46,6 +46,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     const today = companyToday();
     const manages = !self && permissions.has(P.EMPLOYEE_MANAGE);
     const pays = !self && permissions.has(P.EMPLOYEE_PAY_MANAGE);
+    // name, phone and photo: one's own, or someone else's with employee:manage
+    const editsDetails = self || manages;
     const teams = useTeams(person.domain ?? "", manages && !!person.domain).data ?? [];
     const history = usePayHistory(person.id, pays);
     const terms = currentPay(history.data, today);
@@ -64,7 +66,9 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     const [uploading, setUploading] = useState(false);
     const [position, setPosition] = useState(person.position ?? "");
     const [teamId, setTeamId] = useState(person.team ? String(person.team.id) : "");
-    const changesEmail = permissions.isSuperAdmin && person.status !== "deactivated";
+    // a super admin's address also needs employee:invite_super_admin, as the API has it
+    const mayChangeEmail = permissions.has(P.EMPLOYEE_CHANGE_EMAIL) && (person.role !== "super_admin" || permissions.has(P.EMPLOYEE_INVITE_SUPER_ADMIN));
+    const changesEmail = mayChangeEmail && person.status !== "deactivated";
     const [email, setEmail] = useState(person.email);
     const [password, setPassword] = useState("");
     const emailChanged = changesEmail && email.trim().toLowerCase() !== person.email.toLowerCase();
@@ -76,7 +80,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     // someone with no pay yet (an invited admin) keeps none until an amount is typed
     const payChanged = !!pay && (terms ? pay.basis !== terms.basis || pay.currency !== terms.currency || Math.abs(pay.amount - terms.amount) > 0.004 : pay.amount > 0);
     const errors = useFormErrors();
-    const nameError = !name.trim() && "Enter the full name.";
+    const nameError = editsDetails && !name.trim() && "Enter the full name.";
     const positionError = manages && !position.trim() && "Enter their position.";
     const payError = payChanged && !((pay?.amount ?? 0) > 0) && "Enter the new pay.";
     const emailError = emailChanged && !isEmail(email) && "Enter an email like name@company.com.";
@@ -113,7 +117,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
             if (self) await updateMine.mutateAsync({ firstName, lastName, phone: phone.trim() || null });
             // someone who may only change pay (employee:pay_manage) doesn't send the rest, which needs employee:manage
             else if (manages) await updateEmployee.mutateAsync({ firstName, lastName, phone: phone.trim() || null, position: position.trim(), teamId: teamId ? +teamId : null });
-            if (photo !== person.photoFileId) await setPhoto.mutateAsync(photo);
+            if (editsDetails && photo !== person.photoFileId) await setPhoto.mutateAsync(photo);
             if (payChanged && pay) await changePay.mutateAsync({ basis: pay.basis, amount: pay.amount, currency: pay.currency, effectiveFrom: from });
             const emailNote = !emailChanged ? null
                 : self ? `You now sign in with ${newEmail} - your other devices were signed out`
@@ -143,10 +147,12 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
             <div className="row" style={{ gap: 14, alignItems: "flex-start" }}>
                 <div style={{ textAlign: "center", width: 96, flex: "none" }}>
                     <Avatar person={{ name: name || person.email, photoFileId: photo }} size={72} />
-                    <div className="stack mt-s" style={{ gap: 4 }}>
-                        <button type="button" className="btn btn-sm btn-quiet" disabled={uploading} onClick={() => fileRef.current?.click()}><Icon name="attach" />{uploading ? "Uploading…" : "Photo"}</button>
-                        {photo != null && <button type="button" className="btn btn-sm btn-quiet" onClick={() => setPhotoId(null)}>Remove</button>}
-                    </div>
+                    {editsDetails && (
+                        <div className="stack mt-s" style={{ gap: 4 }}>
+                            <button type="button" className="btn btn-sm btn-quiet" disabled={uploading} onClick={() => fileRef.current?.click()}><Icon name="attach" />{uploading ? "Uploading…" : "Photo"}</button>
+                            {photo != null && <button type="button" className="btn btn-sm btn-quiet" onClick={() => setPhotoId(null)}>Remove</button>}
+                        </div>
+                    )}
                     <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => {
                         const f = e.target.files?.[0];
                         e.target.value = "";
@@ -154,24 +160,31 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                     }} />
                 </div>
                 <div className="grow stack">
-                    <div className="grid g-2">
-                        <div className="field">
-                            <label className="label required" htmlFor="ep-name">Full name</label>
-                            <input id="ep-name" className="input" value={name} onChange={(e) => setName(e.target.value)} onBlur={errors.touch("name")} />
-                            <FieldError message={errors.show("name", nameError)} />
+                    {editsDetails ? (
+                        <div className="grid g-2">
+                            <div className="field">
+                                <label className="label required" htmlFor="ep-name">Full name</label>
+                                <input id="ep-name" className="input" value={name} onChange={(e) => setName(e.target.value)} onBlur={errors.touch("name")} />
+                                <FieldError message={errors.show("name", nameError)} />
+                            </div>
+                            <div className="field">
+                                <label className="label" htmlFor="ep-phone">Phone</label>
+                                <PhoneField id="ep-phone" placeholder="Optional - 3 555 142" value={phone} onChange={setPhone} />
+                            </div>
                         </div>
-                        <div className="field">
-                            <label className="label" htmlFor="ep-phone">Phone</label>
-                            <PhoneField id="ep-phone" placeholder="Optional - 3 555 142" value={phone} onChange={setPhone} />
+                    ) : (
+                        <div>
+                            <div style={{ fontWeight: 600 }}>{name || person.email}</div>
+                            <div className="muted" style={{ fontSize: 12 }}>{person.phone || "No phone"} · their details need the permission to edit profiles</div>
                         </div>
-                    </div>
+                    )}
                     <div className="field">
                         <label className={cx("label", changesEmail && "required")} htmlFor="ep-email">Work email</label>
                         <input id="ep-email" className="input" type="email" value={email} readOnly={!changesEmail} onBlur={errors.touch("email")}
                             onChange={(e) => { setEmail(e.target.value); emailCall.reset(); }} />
                         <FieldError message={refusedEmail || errors.show("email", emailError)} />
                         <div className="hint">
-                            {!changesEmail ? `${self ? "Your" : "Their"} sign-in address${permissions.isSuperAdmin ? " - reactivate them to change it." : " - only a super admin changes it."}`
+                            {!changesEmail ? `${self ? "Your" : "Their"} sign-in address${mayChangeEmail ? " - reactivate them to change it." : " - changing it needs the permission to change sign-in addresses."}`
                                 : self ? "Your sign-in address. Changing it signs you out on your other devices, and both addresses are emailed."
                                     : person.status === "invited" ? "Their invitation goes again to a new address; the link sent to this one stops working."
                                         : "Their sign-in address. Changing it signs them out everywhere, and both addresses are emailed."}
