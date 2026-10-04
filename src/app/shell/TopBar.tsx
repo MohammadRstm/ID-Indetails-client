@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { P } from "@/app/permissions/codes";
 import { accessLabel } from "@/app/permissions/permissions";
@@ -12,6 +13,7 @@ import TimerControl from "@/domains/design/work/TimerControl";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { myProfilePath } from "./profilePath";
+import ReportBugModal from "./ReportBugModal";
 import { useArrivalChime } from "@/domains/shared/messages/messageSounds";
 import { useUnreadBadges } from "./shellQueries";
 import type { ShellArea } from "./useArea";
@@ -23,6 +25,7 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
     const permissions = usePermissions();
     const user = useCurrentUser();
     const { signOut } = useSession();
+    const [reporting, setReporting] = useState(false);
     const badges = useUnreadBadges();
     // a message arriving anywhere chimes once, wherever the person is in the app
     useArrivalChime(badges.messages?.unread);
@@ -94,6 +97,9 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
                                     <Icon name="user" />My profile
                                 </button>
                             )}
+                            <button className="pop-item" onClick={() => { close(); setReporting(true); }}>
+                                <Icon name="flag" />Report a bug
+                            </button>
                             <div className="pop-sep" />
                             <button className="pop-item" onClick={() => { close(); signOut(); }}>
                                 <Icon name="logout" />Sign out
@@ -102,6 +108,7 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
                     )}
                 </Popover>
             </div>
+            {reporting && <ReportBugModal onClose={() => setReporting(false)} />}
         </header>
     );
 }
