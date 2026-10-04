@@ -43,7 +43,7 @@ export function ClientBadge({ client, sub = true, strong = true, link = true }: 
     );
 }
 
-const contactHref = (c: ClientContact) => (c.kind === "email" ? `mailto:${c.value.split(/[?#&]/)[0]}` : `tel:${c.value.replace(/[^0-9+]/g, "")}`);
+const contactHref = (c: ClientContact) => (c.kind === "email" ? `mailto:${c.value.split("?")[0]}` : `tel:${c.value.replace(/[^0-9+]/g, "")}`);
 const whatsappHref = (c: ClientContact) => `https://wa.me/${c.value.replace(/[^0-9]/g, "")}`;
 
 function copy(value: string) {
