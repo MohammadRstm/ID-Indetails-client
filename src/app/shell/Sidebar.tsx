@@ -9,6 +9,7 @@ import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Logo from "@/shared/components/Identity/Logo";
 import Popover from "@/shared/components/Overlays/Popover";
+import { tip } from "@/shared/components/Overlays/tip";
 import Icon from "@/shared/icons/Icon";
 import { openLogWork } from "@/domains/design/work/logWorkStore";
 import { cx } from "@/shared/utils/cx";
@@ -16,6 +17,20 @@ import { myProfilePath } from "./profilePath";
 import ReportBugModal from "./ReportBugModal";
 import { useCompanySettings, useNavCounts } from "./shellQueries";
 import type { ShellArea } from "./useArea";
+
+/**
+ * A tab's name beside its icon while the sidebar shows icons only (a laptop-sized window): on hover or keyboard focus,
+ * and only when the name itself is hidden.
+ */
+function nameTip(name: string) {
+    const show = (e: { currentTarget: HTMLElement }) => {
+        const label = e.currentTarget.querySelector(".nav-label, .side-cta-label");
+        if (label && getComputedStyle(label).display !== "none") return;
+        const r = e.currentTarget.getBoundingClientRect();
+        tip.show({ clientX: r.right - 4, clientY: r.top - 6 }, name);
+    };
+    return { onMouseEnter: show, onFocus: show, onMouseLeave: tip.hide, onBlur: tip.hide };
+}
 
 export default function Sidebar({ area }: { area: ShellArea }) {
     const navigate = useNavigate();
@@ -47,7 +62,8 @@ export default function Sidebar({ area }: { area: ShellArea }) {
             <button
                 key={item.key}
                 className={cx("nav-item", area.section === item.key && "on")}
-                onClick={() => navigate(`${base}/${item.path}`)}
+                onClick={() => { tip.hide(); navigate(`${base}/${item.path}`); }}
+                {...nameTip(item.label)}
             >
                 <Icon name={item.icon} />
                 <span className="nav-label">{item.label}</span>
@@ -68,7 +84,7 @@ export default function Sidebar({ area }: { area: ShellArea }) {
 
             {canLog && (
                 <div className="side-cta">
-                    <button className="btn btn-primary btn-block" onClick={() => openLogWork()}>
+                    <button className="btn btn-primary btn-block" onClick={() => { tip.hide(); openLogWork(); }} {...nameTip("Log work")}>
                         <Icon name="plus" />
                         <span className="side-cta-label">Log work</span>
                     </button>
@@ -86,7 +102,7 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                 {hasSeveralAreas(permissions) && (
                     <div>
                         <div className="nav-sec">Company</div>
-                        <button className="nav-item" onClick={() => navigate("/company")}>
+                        <button className="nav-item" onClick={() => { tip.hide(); navigate("/company"); }} {...nameTip("All areas")}>
                             <Icon name="grid" />
                             <span className="nav-label">All areas</span>
                         </button>

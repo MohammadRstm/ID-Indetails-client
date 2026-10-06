@@ -11,6 +11,14 @@ table { line-height: normal; font-weight: normal; }
    of reach. It opens upwards instead. */
 .side-foot .pop { top: auto; bottom: calc(100% + 6px); }
 
+/* The menu button shows at every width (the prototype's was phone-only): on a wider screen it hides the sidebar,
+   giving the page the whole width, and shows it again. */
+.hamburger { display: grid; }
+@media (min-width: 821px) {
+  .app.side-hidden { grid-template-columns: minmax(0, 1fr); }
+  .app.side-hidden .side { display: none; }
+}
+
 /* The prototype capped pages at 1520px, which left an empty band on the right of large screens. Pages
    take the whole width beside the sidebar instead. */
 .page { max-width: none; }
