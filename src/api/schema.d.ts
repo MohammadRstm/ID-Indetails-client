@@ -11008,6 +11008,8 @@ export interface components {
             /** Format: double */
             deduction: number;
             domain: null | string;
+            /** Format: double */
+            earnedSoFar: number;
             email: string;
             /** Format: int32 */
             excusedMinutes: number;
@@ -11015,11 +11017,15 @@ export interface components {
             expectedMinutes: null | number;
             flagged: boolean;
             /** Format: double */
+            fullMonthEstimate: null | number;
+            /** Format: double */
             hourlyRate: number;
             /** Format: date */
             leftOn: null | string;
             /** Format: int32 */
             madeUpMinutes: number;
+            /** Format: double */
+            monthlyPay: number;
             name: string;
             /** Format: int32 */
             normalMinutes: number;
@@ -11071,6 +11077,8 @@ export interface components {
             currency: string;
             /** Format: double */
             deduction: number;
+            /** Format: double */
+            earnedSoFar: number;
             /** Format: double */
             overtimePay: number;
             /** Format: int32 */

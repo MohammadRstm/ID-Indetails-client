@@ -32,7 +32,10 @@
     "deduction": 0,
     "basePay": 1500,
     "overtimePay": 0,
-    "total": 1500
+    "total": 1500,
+    "monthlyPay": 1500,
+    "earnedSoFar": 1431.82,
+    "fullMonthEstimate": 1500
   },
   "inProgress": true,
   "paidBreakDays": 0,

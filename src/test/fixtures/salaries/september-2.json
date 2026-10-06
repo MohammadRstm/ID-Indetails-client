@@ -37,7 +37,10 @@
         "deduction": 0,
         "basePay": 1200,
         "overtimePay": 0,
-        "total": 1200
+        "total": 1200,
+        "monthlyPay": 1200,
+        "earnedSoFar": 1145.45,
+        "fullMonthEstimate": 1200
       },
       {
         "userId": 11,
@@ -72,7 +75,10 @@
         "deduction": 0,
         "basePay": 1500,
         "overtimePay": 0,
-        "total": 1500
+        "total": 1500,
+        "monthlyPay": 1500,
+        "earnedSoFar": 1431.82,
+        "fullMonthEstimate": 1500
       },
       {
         "userId": 14,
@@ -107,7 +113,10 @@
         "deduction": 0,
         "basePay": 1300,
         "overtimePay": 0,
-        "total": 1300
+        "total": 1300,
+        "monthlyPay": 1300,
+        "earnedSoFar": 1240.91,
+        "fullMonthEstimate": 1300
       }
     ],
     "page": 2,
@@ -121,7 +130,8 @@
       "basePay": 23482.67,
       "overtimePay": 224.13,
       "deduction": 0,
-      "total": 23706.8
+      "total": 23706.8,
+      "earnedSoFar": 22758.53
     }
   ],
   "summary": {
