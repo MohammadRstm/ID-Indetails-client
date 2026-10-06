@@ -16,6 +16,17 @@ import { useArea } from "./useArea";
 // opened with ⌘K, so it loads then
 const CommandPalette = lazy(load(() => import("./CommandPalette")));
 
+const SIDE_KEY = "hourline.sidebar";
+
+/** Whether this browser was left with the sidebar hidden (wider screens only: a phone opens it as a drawer). */
+function readSideHidden() {
+    try {
+        return localStorage.getItem(SIDE_KEY) === "hidden";
+    } catch {
+        return false;
+    }
+}
+
 /** A page's shape while its code loads, the first time it is opened. */
 function PageLoading() {
     return (
@@ -39,6 +50,7 @@ export default function AppShell() {
     const [navOpenOn, setNavOpenOn] = useState<string | null>(null);
     const navOpen = navOpenOn === location.pathname;
     const setNavOpen = (open: boolean) => setNavOpenOn(open ? location.pathname : null);
+    const [sideHidden, setSideHidden] = useState(readSideHidden);
     const [palette, setPalette] = useState(false);
     const area = useArea();
     const company = useCompanySettings();
@@ -56,17 +68,32 @@ export default function AppShell() {
         return () => window.removeEventListener("keydown", onKey);
     }, []);
 
+    // The menu button opens the drawer on a phone, and hides or shows the sidebar on a wider screen.
+    function toggleMenu() {
+        if (window.matchMedia?.("(max-width: 820px)").matches) {
+            setNavOpen(!navOpen);
+            return;
+        }
+        const next = !sideHidden;
+        setSideHidden(next);
+        try {
+            localStorage.setItem(SIDE_KEY, next ? "hidden" : "shown");
+        } catch {
+            // private window: this session only
+        }
+    }
+
     // Only a new page scrolls to the top: a query change (?tab=, ?entry=) is the same page.
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [location.pathname]);
 
     return (
-        <div className={cx("app", navOpen && "nav-open")}>
+        <div className={cx("app", navOpen && "nav-open", sideHidden && "side-hidden")}>
             <div className="scrim-nav" onClick={() => setNavOpen(false)} />
             <Sidebar area={area} />
             <div className="main">
-                <TopBar area={area} onMenu={() => setNavOpen(!navOpen)} onSearch={() => setPalette(true)} />
+                <TopBar area={area} onMenu={toggleMenu} sideShown={!sideHidden} onSearch={() => setPalette(true)} />
                 {/* a page that fails keeps the shell around it, and moving to another page clears it */}
                 <ErrorBoundary FallbackComponent={CrashScreen} resetKeys={[location.pathname]}>
                     <Suspense fallback={<PageLoading />}>

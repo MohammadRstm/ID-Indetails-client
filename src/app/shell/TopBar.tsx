@@ -18,9 +18,9 @@ import { useArrivalChime } from "@/domains/shared/messages/messageSounds";
 import { useUnreadBadges } from "./shellQueries";
 import type { ShellArea } from "./useArea";
 
-type TopBarProps = { area: ShellArea; onMenu: () => void; onSearch: () => void };
+type TopBarProps = { area: ShellArea; onMenu: () => void; onSearch: () => void; /** Whether a wider screen shows the sidebar. */ sideShown?: boolean };
 
-export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
+export default function TopBar({ area, onMenu, onSearch, sideShown = true }: TopBarProps) {
     const navigate = useNavigate();
     const permissions = usePermissions();
     const user = useCurrentUser();
@@ -36,7 +36,9 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
 
     return (
         <header className="top">
-            <button className="icon-btn hamburger" onClick={onMenu} aria-label="Menu"><Icon name="menu" /></button>
+            <button className="icon-btn hamburger" onClick={onMenu} aria-label="Menu" title={sideShown ? "Hide the sidebar" : "Show the sidebar"}>
+                <Icon name="menu" />
+            </button>
             <button className="top-search" onClick={onSearch}>
                 <Icon name="search" />
                 <span>{permissions.isAdmin ? "Search projects, people…" : "Search projects…"}</span>
