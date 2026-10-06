@@ -45,5 +45,9 @@
         "unpricedMinutes": 0
       }
     }
-  ]
+  ],
+  "hourlyRate": {
+    "currency": "USD",
+    "amount": 9.2309
+  }
 }

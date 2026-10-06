@@ -17,8 +17,11 @@ import { money } from "@/shared/format/money";
 import { addMonths, companyToday, fmtDate, fmtDateY, fmtH, fmtMonthY } from "@/shared/format/time";
 import useDebounce from "@/shared/hooks/useDebounce";
 import Icon from "@/shared/icons/Icon";
-import { HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
+import { hasFixedSalary, HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
+import type { Schemas } from "@/api/types";
+import { Banner } from "@/shared/components/Data/Bits";
 import SalaryDrawer from "./SalaryDrawer";
+import SalaryYear from "./SalaryYear";
 import { useSalaries, type SalaryRow } from "./salariesApi";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
@@ -47,6 +50,19 @@ function monthOf(asked: string | null, thisMonth: string) {
     return asked && /^\d{4}-(0[1-9]|1[0-2])$/.test(asked) && asked <= thisMonth ? asked : thisMonth;
 }
 
+/** A year asked for in the address, never a future one. */
+function yearOf(asked: string | null, thisYear: number) {
+    const year = asked && /^\d{4}$/.test(asked) ? Number(asked) : thisYear;
+    return year >= 2000 && year <= thisYear ? year : thisYear;
+}
+
+/** "Nadia Karam (admin), Omar Saad and 2 more" */
+function someone(people: Schemas["PersonWithoutPayResponse"][]) {
+    const named = people.slice(0, 3).map((p) => (hasFixedSalary(p.role) ? `${p.name} (${p.role === "super_admin" ? "super admin" : "admin"})` : p.name));
+    const more = people.length - named.length;
+    return more ? `${named.join(", ")} and ${more} more` : named.length > 1 ? `${named.slice(0, -1).join(", ")} and ${named[named.length - 1]}` : named[0];
+}
+
 /**
  * What each person is owed for a month (the prototype's P.CompanySalaries): hours from their work entries,
  * pay from their pay records, the hours rule's shortfalls and excuses. Separate from project labour cost.
@@ -56,7 +72,10 @@ export default function SalariesPage() {
     const [params, setParams] = useSearchParams();
     const today = companyToday();
     const thisMonth = today.slice(0, 7);
+    const thisYear = Number(today.slice(0, 4));
+    const byYear = params.get("view") === "year";
     const month = monthOf(params.get("month"), thisMonth);
+    const year = yearOf(params.get("year"), thisYear);
     const [domain, setDomain] = useState<Domain | "all">("all");
     const [q, setQ] = useState("");
     const [page, setPage] = useState(1);
@@ -82,7 +101,18 @@ export default function SalariesPage() {
     const multiplier = r?.overtimeMultiplier ?? 1;
 
     const goMonth = (m: string) => { setPage(1); setParams(m === thisMonth ? {} : { month: m }, { replace: true }); };
+    const goYear = (y: number) => setParams(y === thisYear ? { view: "year" } : { view: "year", year: String(y) }, { replace: true });
     const filter = (next: () => void) => { next(); setPage(1); };
+    const filterBar = (
+        <div className="filters">
+            {domains.length > 1 && (
+                <Segmented aria-label="Business" value={domain} onChange={(v) => filter(() => setDomain(v))}
+                    options={[{ value: "all" as const, label: "All" }, ...domains.map((d) => ({ value: d, label: AREAS[d].label }))]} />
+            )}
+            <SearchInput value={q} onChange={(v) => filter(() => setQ(v))} placeholder="Search by name or email" width={240} />
+            {r && !byYear && <span className="muted" style={{ fontSize: 12 }}>{total} of {filtered ? (everyone.data?.rows.totalCount ?? total) : total}</span>}
+        </div>
+    );
 
     async function exportCsv() {
         setExporting(true);
@@ -106,17 +136,42 @@ export default function SalariesPage() {
                     <div className="page-sub">What each employee is owed for the month - hours from their work entries, pay from their pay records. Separate from project labour cost.</div>
                 </div>
                 <div className="page-actions">
-                    <div className="row" style={{ gap: 4 }}>
-                        <button className="icon-btn" aria-label="Previous month" onClick={() => goMonth(addMonths(month, -1))}><Icon name="chevronLeft" /></button>
-                        <b style={{ minWidth: 130, textAlign: "center" }}>{fmtMonthY(month)}</b>
-                        <button className="icon-btn" aria-label="Next month" disabled={isThisMonth} onClick={() => goMonth(addMonths(month, 1))}><Icon name="chevronRight" /></button>
-                    </div>
-                    {isThisMonth && <span className="badge badge-hold">In progress · to {fmtDate(today)}</span>}
-                    <button className="btn" disabled={!total || exporting} onClick={exportCsv}><Icon name="download" />Export CSV</button>
+                    <Segmented aria-label="Show" value={byYear ? "year" : "month"} onChange={(v) => (v === "year" ? goYear(Number(month.slice(0, 4))) : goMonth(thisMonth))}
+                        options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
+                    {byYear ? (
+                        <div className="row" style={{ gap: 4 }}>
+                            <button className="icon-btn" aria-label="Previous year" disabled={year <= 2000} onClick={() => goYear(year - 1)}><Icon name="chevronLeft" /></button>
+                            <b style={{ minWidth: 60, textAlign: "center" }}>{year}</b>
+                            <button className="icon-btn" aria-label="Next year" disabled={year >= thisYear} onClick={() => goYear(year + 1)}><Icon name="chevronRight" /></button>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="row" style={{ gap: 4 }}>
+                                <button className="icon-btn" aria-label="Previous month" onClick={() => goMonth(addMonths(month, -1))}><Icon name="chevronLeft" /></button>
+                                <b style={{ minWidth: 130, textAlign: "center" }}>{fmtMonthY(month)}</b>
+                                <button className="icon-btn" aria-label="Next month" disabled={isThisMonth} onClick={() => goMonth(addMonths(month, 1))}><Icon name="chevronRight" /></button>
+                            </div>
+                            {isThisMonth && <span className="badge badge-hold">In progress · to {fmtDate(today)}</span>}
+                            <button className="btn" disabled={!total || exporting} onClick={exportCsv}><Icon name="download" />Export CSV</button>
+                        </>
+                    )}
                 </div>
             </div>
 
-            {loadFailed(salaries) ? <div className="panel"><div className="panel-body"><LoadError error={salaries.error} retry={() => salaries.refetch()} what="the salaries" /></div></div> : (
+            {byYear ? (
+                <div className="panel">
+                    <div className="panel-head">
+                        <div className="grow">
+                            <div className="panel-title">{year}, month by month</div>
+                            <div className="panel-sub">What each person was owed every month{year === thisYear ? ", this month so far" : ""}. Open a month for how it adds up.</div>
+                        </div>
+                    </div>
+                    <div className="panel-body">
+                        {filterBar}
+                        <SalaryYear year={year} domain={filters.domain} search={search} onMonth={goMonth} />
+                    </div>
+                </div>
+            ) : loadFailed(salaries) ? <div className="panel"><div className="panel-body"><LoadError error={salaries.error} retry={() => salaries.refetch()} what="the salaries" /></div></div> : (
                 <>
                     <KpiStrip loading={!r} items={[
                         ...(totals.length ? totals : [{ currency: "USD", total: 0, basePay: 0, overtimePay: 0 }]).map((t) => ({
@@ -132,7 +187,7 @@ export default function SalariesPage() {
                             key: "short", label: isThisMonth ? "Behind so far" : "Short on hours", value: String(sum.shortPeople),
                             sub: <span className={sum.shortPeople ? "down" : ""}>{sum.shortPeople ? `${fmtH(sum.shortMinutes)}${isThisMonth ? " behind in total" : " short, flagged"}` : "everyone worked their hours"}</span>,
                         }] : []),
-                        { key: "rate", label: "Overtime rate", value: `×${multiplier}`, sub: <span>{multiplier === 1 ? "paid like a normal hour" : "of the hourly rate"}</span> },
+                        { key: "rate", label: "Overtime rate", value: `×${multiplier}`, sub: <span>{multiplier === 1 ? "paid like a normal hour" : "of the true hourly rate"}</span> },
                     ]} />
 
                     <div className="panel mt" ref={anchor}>
@@ -141,19 +196,20 @@ export default function SalariesPage() {
                                 <div className="panel-title">Employees</div>
                                 <div className="panel-sub">
                                     Everyone owes their scheduled hours each month. Overtime first makes up any hours short (paid as normal), the rest is paid as overtime;
-                                    a salary loses the hours still short at the end of the month. Hourly: hours × rate. Monthly: salary, hours priced at salary ÷ {HOURS_PER_MONTH.toFixed(1)} h.
+                                    a salary loses the hours still short at the end of the month. Hourly: hours × rate. Monthly: the salary, whatever the month's length;
+                                    an hour of it is the salary ÷ the month's paid hours, and overtime is paid from the salary ÷ {HOURS_PER_MONTH.toFixed(1)} h (a standard month).
+                                    Admins and super admins are paid a fixed salary.
                                 </div>
                             </div>
                         </div>
                         <div className="panel-body">
-                            <div className="filters">
-                                {domains.length > 1 && (
-                                    <Segmented aria-label="Business" value={domain} onChange={(v) => filter(() => setDomain(v))}
-                                        options={[{ value: "all" as const, label: "All" }, ...domains.map((d) => ({ value: d, label: AREAS[d].label }))]} />
-                                )}
-                                <SearchInput value={q} onChange={(v) => filter(() => setQ(v))} placeholder="Search by name or email" width={240} />
-                                {r && <span className="muted" style={{ fontSize: 12 }}>{total} of {filtered ? (everyone.data?.rows.totalCount ?? total) : total}</span>}
-                            </div>
+                            {r && r.withoutPay.length > 0 && (
+                                <Banner tone="hold" icon="alert">
+                                    No pay is set for {someone(r.withoutPay)}, so they aren't listed. Set it from their profile
+                                    {r.withoutPay.some((p) => hasFixedSalary(p.role)) ? " - admins and super admins need their monthly salary" : ""}.
+                                </Banner>
+                            )}
+                            {filterBar}
                             {!r ? <SkeletonLines lines={8} /> : (
                                 <>
                                     <div className="tbl-wrap">
@@ -238,7 +294,9 @@ function SalaryLine({ row: r, onOpen }: { row: SalaryRow; onOpen: () => void }) 
             </td>
             <td className="nowrap">
                 <span className="mono">{payLabel(r)}</span>
-                <div className="muted" style={{ fontSize: 11 }}>{r.basis === "monthly" ? `monthly · ${cash(r.hourlyRate, r.currency, true)}/h` : "hourly"}</div>
+                <div className="muted" style={{ fontSize: 11 }} title={r.basis === "monthly" ? "An hour this month: the salary ÷ the month's paid hours" : undefined}>
+                    {hasFixedSalary(r.role) ? "fixed salary" : r.basis === "monthly" ? `monthly · ${cash(r.hourlyRate, r.currency, true)}/h this month` : "hourly"}
+                </div>
             </td>
             {r.tracksHours ? (
                 <>

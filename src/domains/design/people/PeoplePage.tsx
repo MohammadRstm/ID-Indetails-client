@@ -16,6 +16,7 @@ import Select from "@/shared/components/Forms/Select";
 import { ChipGroup, SearchInput } from "@/shared/components/Forms/Filters";
 import Avatar from "@/shared/components/Identity/Avatar";
 import { PersonAvatar, PersonLine } from "@/shared/components/Identity/People";
+import { Money } from "@/shared/components/Data/Money";
 import { money } from "@/shared/format/money";
 import { fmtDur, fmtH, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -171,7 +172,7 @@ function PeopleWork() {
                                                     <td className="r mono">{fmtH(r.totalMinutes)}</td>
                                                     <td className={cx("r mono", r.overtimeMinutesThisMonth ? "ot-text" : "muted")}>{r.overtimeMinutesThisMonth ? fmtH(r.overtimeMinutesThisMonth) : "-"}</td>
                                                     {seesMoney && (
-                                                        <td className="r mono">{r.labourCost?.usd ? money.short(r.labourCost.usd) : r.labourCost?.unconverted[0] ? money.short(r.labourCost.unconverted[0].amount, r.labourCost.unconverted[0].currency) : "-"}</td>
+                                                        <td className="r mono">{r.labourCost?.usd ? <Money short value={r.labourCost.usd} /> : r.labourCost?.unconverted[0] ? <Money short value={r.labourCost.unconverted[0].amount} currency={r.labourCost.unconverted[0].currency} /> : "-"}</td>
                                                     )}
                                                     <td className="nowrap muted">{r.lastStartedAt ? relDay(r.lastStartedAt) : "-"}</td>
                                                 </tr>

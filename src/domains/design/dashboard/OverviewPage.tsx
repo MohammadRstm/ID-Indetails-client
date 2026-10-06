@@ -12,6 +12,7 @@ import { KpiStrip } from "@/shared/components/Data/Kpi";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import { PersonAvatar } from "@/shared/components/Identity/People";
+import { Money } from "@/shared/components/Data/Money";
 import { money } from "@/shared/format/money";
 import { periodRange, quarterLabel, quarterOf, type PeriodKind } from "@/shared/format/periods";
 import { companyToday, DAYS_LONG, fmtDayDateY, fmtH, fmtNumber, isoWeek, partsOf } from "@/shared/format/time";
@@ -114,28 +115,28 @@ function OverviewPage({ domain }: { domain: Domain }) {
     const moneyFigures = orFailed(summary, "the money", (
         <KpiStrip loading={!s} items={[
             {
-                key: "revenue", value: money.short(s?.revenue ?? 0), sub: <span>received from clients</span>,
+                key: "revenue", value: <Money short value={s?.revenue ?? 0} />, sub: <span>received from clients</span>,
                 label: <>Revenue · {range.label}<HelpHint article="revenue" label="revenue">The money clients paid in this period, counted on the day it arrived.</HelpHint></>,
             },
             {
-                key: "expected", value: money.short(s?.expectedRevenue ?? 0),
+                key: "expected", value: <Money short value={s?.expectedRevenue ?? 0} />,
                 label: <>Expected revenue<HelpHint article="expected-revenue" label="expected revenue">What was agreed with clients in this period. Revenue is what they actually paid.</HelpHint></>,
                 sub: <span>{domain === "execution" ? "fees agreed and materials sent, in this period" : "payments agreed on projects, in this period"}</span>,
             },
             {
-                key: "cost", label: "Total cost", value: money.short(s?.cost.total ?? 0),
+                key: "cost", label: "Total cost", value: <Money short value={s?.cost.total ?? 0} />,
                 // "labour $12k · project expenses $1.6k"; a site's "materials $6k · ground labour $3k · project expenses $0"
                 sub: <span>{costPartsOf(domain).map((p) => `${p.key === "labour" ? "labour" : p.label.toLowerCase()} ${money.short(s?.cost[p.key] ?? 0)}`).join(" · ")}</span>,
             },
-            { key: "profit", label: "Net profit", value: money.short(s?.profit ?? 0), sub: <span>revenue less {costWords(domain).toLowerCase()}</span> },
+            { key: "profit", label: "Net profit", value: <Money short value={s?.profit ?? 0} />, sub: <span>revenue less {costWords(domain).toLowerCase()}</span> },
             {
                 key: "margin", value: money.pct(s?.margin), sub: <span>in this period</span>,
                 label: <>Margin<HelpHint article="profit-margin" label="margin">Net profit as a share of the revenue received in this period.</HelpHint></>,
             },
             {
-                key: "outstanding", value: money.short(s?.billing.outstanding ?? 0),
+                key: "outstanding", value: <Money short value={s?.billing.outstanding ?? 0} />,
                 label: <>Outstanding<HelpHint article="billing-terms" label="outstanding">What clients still have to pay on invoices already sent, as of today.</HelpHint></>,
-                sub: <span className={s?.billing.overdue ? "down" : ""}>of {money.short(s?.billing.invoiced ?? 0)} invoiced{s?.billing.overdue ? ` · ${money.short(s.billing.overdue)} overdue` : ""}</span>,
+                sub: <span className={s?.billing.overdue ? "down" : ""}>of <Money short value={s?.billing.invoiced ?? 0} /> invoiced{s?.billing.overdue ? ` · ${money.short(s.billing.overdue)} overdue` : ""}</span>,
             },
         ]} />
     ));

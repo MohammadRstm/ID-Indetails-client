@@ -146,10 +146,10 @@ export default function CompleteProjectModal({ project, openRequirements, contri
 
             {m && (
                 <div className="kpis mt">
-                    {execution ? <Kpi label="Materials" value={money.short(m.cost.materials)} /> : <Kpi label="Hours logged" value={fmtH(Math.round(m.labourHours * 60))} />}
-                    {execution ? <Kpi label="Ground labour" value={money.short(m.cost.groundLabour)} /> : <Kpi label="Contributors" value={contributors ?? "-"} />}
-                    <Kpi label="Project expenses" value={money.short(m.cost.expenses)} />
-                    {execution ? <Kpi label="Total direct cost" value={money.short(m.cost.total)} /> : <Kpi label="Cost per hour" value={money.fmt(m.costPerHour)} />}
+                    {execution ? <Kpi label="Materials" value={<Money short value={m.cost.materials} />} /> : <Kpi label="Hours logged" value={fmtH(Math.round(m.labourHours * 60))} />}
+                    {execution ? <Kpi label="Ground labour" value={<Money short value={m.cost.groundLabour} />} /> : <Kpi label="Contributors" value={contributors ?? "-"} />}
+                    <Kpi label="Project expenses" value={<Money short value={m.cost.expenses} />} />
+                    {execution ? <Kpi label="Total direct cost" value={<Money short value={m.cost.total} />} /> : <Kpi label="Cost per hour" value={money.fmt(m.costPerHour)} />}
                 </div>
             )}
 

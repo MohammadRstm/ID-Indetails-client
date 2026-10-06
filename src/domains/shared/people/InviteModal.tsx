@@ -19,7 +19,7 @@ import { DOMAIN_LABEL } from "@/shared/format/labels";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { isEmail } from "@/shared/utils/email";
-import { HOURS_PER_MONTH, monthlyToHourly } from "../../design/pay/payRules";
+import { hasFixedSalary, HOURS_PER_MONTH, monthlyToHourly } from "../../design/pay/payRules";
 import { useInvite, useTeams } from "../../design/people/peopleWorkApi";
 
 type Role = "employee" | "admin" | "super_admin";
@@ -61,10 +61,12 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     const [amount, setAmount] = useState(0);
     const [currency, setCurrency] = useState(company?.defaultCurrency ?? "USD");
     const [sent, setSent] = useState<Schemas["InvitationResponse"] | null>(null);
-    const monthly = basis === "monthly";
-    const setsPay = role === "employee" && permissions.has(P.EMPLOYEE_PAY_MANAGE);
+    // admins and super admins are paid a fixed monthly salary, which their invitation must carry
+    const fixedSalary = hasFixedSalary(role);
+    const monthly = fixedSalary || basis === "monthly";
+    const setsPay = permissions.has(P.EMPLOYEE_PAY_MANAGE);
     const emailError = !email.trim() ? "Enter their work email." : !isEmail(email) && "Enter an email like name@company.com.";
-    const payError = setsPay && !(amount > 0) && `Enter their pay ${monthly ? "per month" : "per hour"}.`;
+    const payError = setsPay && !(amount > 0) && (fixedSalary ? "Enter their monthly salary." : `Enter their pay ${monthly ? "per month" : "per hour"}.`);
     const team = teams.find((t) => String(t.id) === teamId);
 
     function choose(next: Domain) {
@@ -79,7 +81,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
         if (emailError || payError) return errors.tried();
         invite.mutate({
             email: email.trim(), role, domainCode: role === "super_admin" ? null : domain, teamId: teamId ? +teamId : null,
-            position: position.trim() || null, pay: setsPay ? { basis, amount, currency } : null,
+            position: position.trim() || null, pay: setsPay ? { basis: monthly ? "monthly" : "hourly", amount, currency } : null,
         }, { onSuccess: setSent });
     }
 
@@ -112,7 +114,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                         </p>
                     </div>
                 </div>
-                <p className="hint mt">They appear in the employee list as <b>Invited</b> until they accept. They cannot log work before that.</p>
+                <p className="hint mt">They appear in the employee list as <b>Invited</b> until they accept.{role === "employee" && " They cannot log work before that."}</p>
             </Modal>
         );
     }
@@ -151,23 +153,29 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                     {setsPay && (
                         <div className="field">
                             <div className="spread" style={{ alignItems: "center" }}>
-                                <label className="label required" htmlFor="ae-rate" style={{ margin: 0 }}>Pay</label>
-                                <Segmented value={basis} onChange={setBasis} aria-label="Pay basis" options={[{ value: "hourly", label: "Per hour" }, { value: "monthly", label: "Per month" }]} />
+                                <label className="label required" htmlFor="ae-rate" style={{ margin: 0 }}>{fixedSalary ? "Monthly salary" : "Pay"}</label>
+                                {fixedSalary ? <span className="badge">Fixed salary</span>
+                                    : <Segmented value={basis} onChange={setBasis} aria-label="Pay basis" options={[{ value: "hourly", label: "Per hour" }, { value: "monthly", label: "Per month" }]} />}
                             </div>
                             <div className="grid g-2 mt-s">
                                 <div className="field">
                                     <AmountField id="ae-rate" value={amount} currency={currency} onChange={setAmount} onCurrency={setCurrency} onBlur={errors.touch("pay")} />
                                     {errors.show("pay", payError) ? <FieldError message={errors.show("pay", payError)} />
-                                        : <div className="hint">{monthly ? "Monthly salary." : "Paid per hour worked."} Never shown to the employee.</div>}
+                                        : <div className="hint">{fixedSalary ? "The same every month: admins log no hours, so no overtime. Never shown to them." : `${monthly ? "Monthly salary." : "Paid per hour worked."} Never shown to the employee.`}</div>}
                                 </div>
-                                <div className="field">
-                                    <div className="u">{monthly ? "Works out at" : "A full month is"}</div>
-                                    <div className="mono" style={{ paddingTop: 4, fontSize: 14, fontWeight: 650 }}>
-                                        {monthly ? (amount ? `${money.fmt(monthlyToHourly(amount), currency, { cents: true })} / hour` : "-")
-                                            : (amount ? `${money.fmt(amount * HOURS_PER_MONTH, currency)} / month` : "-")}
+                                {!fixedSalary && (
+                                    <div className="field">
+                                        <div className="u">{monthly ? "Overtime is paid from" : "A standard month is"}</div>
+                                        <div className="mono" style={{ paddingTop: 4, fontSize: 14, fontWeight: 650 }}>
+                                            {monthly ? (amount ? `${money.fmt(monthlyToHourly(amount), currency, { cents: true })} / hour` : "-")
+                                                : (amount ? `${money.fmt(amount * HOURS_PER_MONTH, currency)} / month` : "-")}
+                                        </div>
+                                        <div className="hint">
+                                            {monthly ? "The salary ÷ a standard month: 40 paid hours a week (the 1h break included) × 52 ÷ 12 = "
+                                                : "40 paid hours a week (the 1h break included) × 52 ÷ 12 = "}{HOURS_PER_MONTH.toFixed(1)} h.
+                                        </div>
                                     </div>
-                                    <div className="hint">40 paid hours a week (5 days, the 1h break included) = {HOURS_PER_MONTH.toFixed(1)} h a month.</div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     )}

@@ -466,6 +466,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bug-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ReportBugRequest"];
+                    "application/json": components["schemas"]["ReportBugRequest"];
+                    "text/json": components["schemas"]["ReportBugRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/clients": {
         parameters: {
             query?: never;
@@ -1619,6 +1658,47 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company/salaries/year": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Domain?: string;
+                    Search?: string;
+                    Year?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SalaryYearResponse"];
+                        "text/json": components["schemas"]["SalaryYearResponse"];
+                        "text/plain": components["schemas"]["SalaryYearResponse"];
+                    };
                 };
             };
         };
@@ -8889,6 +8969,7 @@ export interface components {
             byProject: components["schemas"]["ProjectLabourCostResponse"][];
             /** Format: int32 */
             entryCount: number;
+            hourlyRate: null | components["schemas"]["CurrencyAmountResponse"];
             thisQuarter: components["schemas"]["LabourCostResponse"];
             /** Format: int64 */
             userId: number;
@@ -9829,6 +9910,8 @@ export interface components {
             paidBreakPay: number;
             proRated: boolean;
             /** Format: double */
+            standardHourlyRate: number;
+            /** Format: double */
             total: number;
             /** Format: int32 */
             workingDays: number;
@@ -10198,8 +10281,6 @@ export interface components {
             currency: string;
             /** Format: date */
             effectiveFrom: string;
-            /** Format: double */
-            hourlyCostRate: number;
             /** Format: int64 */
             id: number;
             note: null | string;
@@ -10282,6 +10363,13 @@ export interface components {
             requiredMinutesPerWeek: number;
             role: string;
             team: null | components["schemas"]["TeamSummaryResponse"];
+            /** Format: int64 */
+            userId: number;
+        };
+        PersonWithoutPayResponse: {
+            domain: null | string;
+            name: string;
+            role: string;
             /** Format: int64 */
             userId: number;
         };
@@ -10744,6 +10832,12 @@ export interface components {
         RenameTeamRequest: {
             name?: string;
         };
+        ReportBugRequest: {
+            description?: string;
+            page?: null | string;
+            steps?: null | string;
+            title?: string;
+        };
         ReportClientResponse: {
             /** Format: int64 */
             clientId: null | number;
@@ -10862,6 +10956,7 @@ export interface components {
             rows: components["schemas"]["PagedResponseOfSalaryRowResponse"];
             summary: components["schemas"]["SalarySummaryResponse"];
             totals: components["schemas"]["SalaryTotalResponse"][];
+            withoutPay: components["schemas"]["PersonWithoutPayResponse"][];
         };
         SalaryDayResponse: {
             /** Format: date */
@@ -10939,6 +11034,8 @@ export interface components {
             role: string;
             /** Format: int32 */
             shortMinutes: null | number;
+            /** Format: double */
+            standardHourlyRate: number;
             team: null | components["schemas"]["TeamSummaryResponse"];
             /** Format: double */
             total: number;
@@ -10976,6 +11073,45 @@ export interface components {
             deduction: number;
             /** Format: double */
             overtimePay: number;
+            /** Format: int32 */
+            people: number;
+            /** Format: double */
+            total: number;
+        };
+        SalaryYearMonthResponse: {
+            /** Format: double */
+            amount: number;
+            basis: components["schemas"]["PayBasis"];
+            currency: string;
+            /** Format: date */
+            month: string;
+            /** Format: double */
+            total: number;
+        };
+        SalaryYearResponse: {
+            months: string[];
+            rows: components["schemas"]["SalaryYearRowResponse"][];
+            totals: components["schemas"]["SalaryYearTotalResponse"][];
+            /** Format: int32 */
+            year: number;
+        };
+        SalaryYearRowResponse: {
+            domain: null | string;
+            email: string;
+            months: components["schemas"]["SalaryYearMonthResponse"][];
+            name: string;
+            /** Format: int64 */
+            photoFileId: null | number;
+            position: null | string;
+            role: string;
+            team: null | components["schemas"]["TeamSummaryResponse"];
+            /** Format: int64 */
+            userId: number;
+        };
+        SalaryYearTotalResponse: {
+            currency: string;
+            /** Format: date */
+            month: string;
             /** Format: int32 */
             people: number;
             /** Format: double */
@@ -11354,7 +11490,7 @@ export interface components {
             /** Format: int64 */
             entryId: number;
             /** Format: int32 */
-            minutes: number | null;
+            minutes: null | number;
             /** Format: int64 */
             projectId: number;
             projectTitle: string;

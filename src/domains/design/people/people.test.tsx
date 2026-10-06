@@ -122,7 +122,7 @@ describe("Add employee", () => {
         }]);
     });
 
-    it("leaves pay out without employee:pay_manage, and for admins", async () => {
+    it("leaves pay out without employee:pay_manage", async () => {
         const bodies: unknown[] = [];
         renderApp("/design/people?invite=1", withPermissions(nadia, { revoke: [P.EMPLOYEE_PAY_MANAGE] }), sendsTo(bodies), ...peopleHandlers);
         const dialog = await screen.findByRole("dialog", { name: "Add employee" });
@@ -130,10 +130,26 @@ describe("Add employee", () => {
         // only a super admin can invite a super admin
         expect(within(dialog).queryByRole("tab", { name: "Super admin" })).not.toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Work email"), "amara@id-indetails.test");
-        await userEvent.click(within(dialog).getByRole("tab", { name: "Admin" }));
         await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
         await screen.findByRole("dialog", { name: "Invitation sent" });
-        expect(bodies).toEqual([expect.objectContaining({ role: "admin", domainCode: "design", pay: null })]);
+        expect(bodies).toEqual([expect.objectContaining({ role: "employee", domainCode: "design", pay: null })]);
+    });
+
+    it("asks an admin's monthly salary: a fixed salary, never by the hour", async () => {
+        const bodies: unknown[] = [];
+        renderApp("/design/people?invite=1", nadia, sendsTo(bodies), ...peopleHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "Add employee" });
+        await userEvent.type(within(dialog).getByLabelText("Work email"), "omar@id-indetails.test");
+        await userEvent.click(within(dialog).getByRole("tab", { name: "Admin" }));
+        expect(within(dialog).queryByRole("tablist", { name: "Pay basis" })).not.toBeInTheDocument();
+        expect(within(dialog).getByText("Fixed salary")).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
+        expect(within(dialog).getByText("Enter their monthly salary.")).toBeInTheDocument();
+        await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "2500");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
+
+        await screen.findByRole("dialog", { name: "Invitation sent" });
+        expect(bodies).toEqual([expect.objectContaining({ role: "admin", domainCode: "design", pay: { basis: "monthly", amount: 2500, currency: "USD" } })]);
     });
 
     it("says why the invitation failed, next to the button", async () => {
@@ -143,6 +159,7 @@ describe("Add employee", () => {
         const dialog = await screen.findByRole("dialog", { name: "Add employee" });
         await userEvent.type(within(dialog).getByLabelText("Work email"), "yara@id-indetails.test");
         await userEvent.click(within(dialog).getByRole("tab", { name: "Admin" }));
+        await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "2500");
         await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
         expect(await within(dialog).findByText("Someone already uses that email.")).toBeInTheDocument();
     });
@@ -154,7 +171,8 @@ describe("Someone's profile", () => {
         expect(await screen.findByRole("heading", { name: "Yara Mansour" })).toBeInTheDocument();
         expect(screen.getByText(yara.phone!)).toBeInTheDocument();
         expect(await screen.findByText("Cost to the company")).toBeInTheDocument();
-        expect(await screen.findByText("$9/h")).toBeInTheDocument();
+        // what an hour of theirs costs this month, as the API works it out
+        await waitFor(() => expect(screen.getByText("Hourly cost").closest(".kpi")).toHaveTextContent("$9/h"));
         expect(screen.getByText("Overtime", { selector: ".panel-title" })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Edit profile" })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Export timesheet" })).toBeInTheDocument();

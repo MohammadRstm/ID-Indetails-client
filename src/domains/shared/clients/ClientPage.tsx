@@ -157,9 +157,9 @@ function ClientView({ client }: { client: Client }) {
                 { key: "projects", label: "Projects", value: client.projectCount, sub: m ? <span>{m.activeProjects} active · {m.completedProjects} completed</span> : undefined },
                 ...(w ? [{ key: "hours", label: "Hours worked", value: w.totalMinutes ? fmtH(w.totalMinutes) : "-", sub: <span>{plural(w.contributorCount, "person", "people")} · {w.entryCount.toLocaleString("en-US")} entries</span> }] : []),
                 ...(m ? [
-                    { key: "revenue", label: "Revenue", value: money.short(m.revenue), sub: <span>{money.short(m.billing.received)} received so far</span> },
-                    { key: "cost", label: "Cost", value: money.short(m.cost.total), sub: <span>labour {money.short(m.cost.labour)} · expenses {money.short(m.cost.expenses)}</span> },
-                    { key: "profit", label: "Profit", value: money.short(m.profit), sub: <span>payment less labour and expenses</span> },
+                    { key: "revenue", label: "Revenue", value: <Money short value={m.revenue} />, sub: <span><Money short value={m.billing.received} /> received so far</span> },
+                    { key: "cost", label: "Cost", value: <Money short value={m.cost.total} />, sub: <span>labour <Money short value={m.cost.labour} /> · expenses <Money short value={m.cost.expenses} /></span> },
+                    { key: "profit", label: "Profit", value: <Money short value={m.profit} />, sub: <span>payment less labour and expenses</span> },
                     {
                         key: "margin", label: "Margin", value: m.revenue && m.marginKnown ? money.pct(m.margin) : "-",
                         sub: <span>{m.completedRevenue ? `${money.pct(m.completedMargin)} on completed work` : "no completed projects yet"}</span>,
@@ -196,7 +196,7 @@ function ClientView({ client }: { client: Client }) {
                                         <MarginPill value={m.marginKnown ? m.margin : null} />
                                         {m.activeProjects > 0 && (
                                             <span className="muted" style={{ fontSize: "11.5px" }}>
-                                                {plural(m.activeProjects, "project")} still running - {money.short(Math.max(0, m.revenue - m.billing.received))} of the agreed payments still to collect
+                                                {plural(m.activeProjects, "project")} still running - <Money short value={Math.max(0, m.revenue - m.billing.received)} /> of the agreed payments still to collect
                                             </span>
                                         )}
                                     </div>
@@ -358,15 +358,15 @@ function ClientProjects({ client, projects, loading, error, onRetry }: ClientPro
             },
             { key: "status", header: "Status", cell: (p) => <StatusBadge status={p.status} /> },
             { key: "hours", header: "Hours", right: true, mono: true, cell: (p) => fmtH(Math.round(p.hours * 60)) },
-            { key: "revenue", header: "Revenue", right: true, mono: true, cell: (p) => money.short(p.revenue) },
-            { key: "cost", header: "Cost", right: true, mono: true, cell: (p) => money.short(p.cost) },
-            { key: "profit", header: "Profit", right: true, cell: (p) => <span className={cx("mono", p.profit >= 0 ? "up" : "down")}>{money.short(p.profit)}</span> },
+            { key: "revenue", header: "Revenue", right: true, mono: true, cell: (p) => <Money short value={p.revenue} /> },
+            { key: "cost", header: "Cost", right: true, mono: true, cell: (p) => <Money short value={p.cost} /> },
+            { key: "profit", header: "Profit", right: true, cell: (p) => <span className={cx("mono", p.profit >= 0 ? "up" : "down")}><Money short value={p.profit} /></span> },
             { key: "margin", header: "Margin", cell: (p) => <MarginPill value={p.marginKnown ? p.margin : null} label={false} /> },
-            { key: "invoiced", header: "Invoiced", right: true, mono: true, cell: (p) => (p.billing.invoiced > 0.5 ? money.short(p.billing.invoiced) : <span className="muted">-</span>) },
-            { key: "paid", header: "Paid", right: true, mono: true, cell: (p) => (p.billing.received > 0.5 ? money.short(p.billing.received) : <span className="muted">-</span>) },
+            { key: "invoiced", header: "Invoiced", right: true, mono: true, cell: (p) => (p.billing.invoiced > 0.5 ? <Money short value={p.billing.invoiced} /> : <span className="muted">-</span>) },
+            { key: "paid", header: "Paid", right: true, mono: true, cell: (p) => (p.billing.received > 0.5 ? <Money short value={p.billing.received} /> : <span className="muted">-</span>) },
             {
                 key: "outstanding", header: "Outstanding", right: true,
-                cell: (p) => (p.billing.outstanding > 0.5 ? <span className={cx("mono", p.billing.overdue > 0.5 && "down")}>{money.short(p.billing.outstanding)}</span> : <span className="muted">-</span>),
+                cell: (p) => (p.billing.outstanding > 0.5 ? <span className={cx("mono", p.billing.overdue > 0.5 && "down")}><Money short value={p.billing.outstanding} /></span> : <span className="muted">-</span>),
             },
             { key: "started", header: "Started", nowrap: true, cell: (p) => <span className="muted">{fmtDate(p.startDate)}</span> },
         ];

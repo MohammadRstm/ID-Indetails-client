@@ -9,7 +9,7 @@ import { HourHeat } from "@/shared/components/Charts/Heat";
 import LineChart, { type LineSeries } from "@/shared/components/Charts/LineChart";
 import { Bar } from "@/shared/components/Data/Bits";
 import { KpiStrip } from "@/shared/components/Data/Kpi";
-import { MixedCurrency } from "@/shared/components/Data/Money";
+import { MixedCurrency, Money } from "@/shared/components/Data/Money";
 import { activityLevelOf } from "@/shared/components/Data/activity";
 import { SortTh, type SortState } from "@/shared/components/Data-Tables/DataTable";
 import Empty from "@/shared/components/Feedback/Empty";
@@ -143,7 +143,7 @@ function Kpis({ project, work: w }: { project: Project; work: ProjectWork | unde
             progress,
             ...(m && b ? [{
                 key: "payment", label: "Payment status",
-                value: b.invoiced <= 0 ? "Not invoiced" : b.outstanding > 0.5 ? money.short(b.outstanding) : "Paid",
+                value: b.invoiced <= 0 ? "Not invoiced" : b.outstanding > 0.5 ? <Money short value={b.outstanding} /> : "Paid",
                 sub: (
                     <span className={b.overdue > 0.5 ? "down" : ""}>
                         {b.invoiced <= 0 ? `${money.short(m.revenue)} still to bill`

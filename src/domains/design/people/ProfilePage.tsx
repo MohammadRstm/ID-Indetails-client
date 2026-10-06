@@ -14,7 +14,7 @@ import Figure from "@/shared/components/Charts/Figure";
 import { CalendarHeat } from "@/shared/components/Charts/Heat";
 import { Presence, ProjectTile } from "@/shared/components/Data/Bits";
 import { KpiStrip } from "@/shared/components/Data/Kpi";
-import { CostRow } from "@/shared/components/Data/Money";
+import { CostRow, Money } from "@/shared/components/Data/Money";
 import { PROJECT_STATUS } from "@/shared/components/Data/status";
 import { StatusBadge } from "@/shared/components/Data/Pills";
 import Empty from "@/shared/components/Feedback/Empty";
@@ -303,7 +303,7 @@ function CostPanel({ userId, first, entries }: { userId: number; first: string; 
     const current = currentPay(pays.data, today);
     const c = cost.data;
     const show = (l: { usd: number; unconverted: { amount: number; currency: string }[] } | undefined) =>
-        !l ? "-" : l.usd ? money.short(l.usd) : l.unconverted[0] ? money.short(l.unconverted[0].amount, l.unconverted[0].currency) : "-";
+        !l ? "-" : l.usd ? <Money short value={l.usd} /> : l.unconverted[0] ? <Money short value={l.unconverted[0].amount} currency={l.unconverted[0].currency} /> : "-";
     const history = [...(pays.data ?? [])].sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom));
 
     return (
@@ -321,19 +321,21 @@ function CostPanel({ userId, first, entries }: { userId: number; first: string; 
                             <div className="kpis" style={{ border: 0 }}>
                                 <div className="kpi">
                                     <div className="kpi-label">Hourly cost</div>
-                                    <div className="kpi-val">{current ? `${money.short(current.hourlyCostRate, current.currency)}/h` : "-"}</div>
-                                    <div className="kpi-delta"><span>{!current ? "" : current.currency === "USD" ? "internal cost" : `paid in ${current.currency} - not converted`}</span></div>
+                                    <div className="kpi-val">{c?.hourlyRate ? <><Money short value={c.hourlyRate.amount} currency={c.hourlyRate.currency} />/h</> : "-"}</div>
+                                    <div className="kpi-delta"><span>{!c?.hourlyRate ? ""
+                                        : c.hourlyRate.currency !== "USD" ? `paid in ${c.hourlyRate.currency} - not converted`
+                                        : current?.basis === "monthly" ? "this month: the salary ÷ its paid hours" : "internal cost"}</span></div>
                                 </div>
                                 <div className="kpi"><div className="kpi-label">Labour cost (all time)</div><div className="kpi-val">{show(c?.allTime)}</div></div>
                                 <div className="kpi"><div className="kpi-label">This quarter</div><div className="kpi-val">{show(c?.thisQuarter)}</div></div>
                             </div>
                             {history.length > 1 && (
                                 <div className="mt">
-                                    <div className="u" style={{ marginBottom: 4 }}>Rate history</div>
+                                    <div className="u" style={{ marginBottom: 4 }}>Pay history</div>
                                     {history.map((r, i) => (
-                                        <CostRow key={r.id} label={`${money.fmt(r.hourlyCostRate, r.currency)} per hour`} meta={`from ${fmtDateY(r.effectiveFrom)}${r.note ? ` · ${r.note}` : ""}`} value={i === 0 ? "current" : ""} />
+                                        <CostRow key={r.id} label={`${money.fmt(r.amount, r.currency)} ${r.basis === "monthly" ? "a month" : "per hour"}`} meta={`from ${fmtDateY(r.effectiveFrom)}${r.note ? ` · ${r.note}` : ""}`} value={i === 0 ? "current" : ""} />
                                     ))}
-                                    <p className="hint mt-s">Hours keep the rate they were logged at, so closed projects never change value.</p>
+                                    <p className="hint mt-s">Hours are priced at the pay in force the day they were worked; a salary's at that month's rate, the salary ÷ the month's paid hours.</p>
                                 </div>
                             )}
                         </div>

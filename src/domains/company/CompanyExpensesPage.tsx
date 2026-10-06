@@ -8,7 +8,7 @@ import Columns from "@/shared/components/Charts/Columns";
 import Figure from "@/shared/components/Charts/Figure";
 import LineChart from "@/shared/components/Charts/LineChart";
 import { KpiStrip } from "@/shared/components/Data/Kpi";
-import { MixedCurrency } from "@/shared/components/Data/Money";
+import { MixedCurrency, Money } from "@/shared/components/Data/Money";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
@@ -112,10 +112,10 @@ export default function CompanyExpensesPage() {
                             key: `group-${g.id}`, label: g.name, value: money.fmt(g.total),
                             sub: <span>{Math.round((g.total / (perMonth || 1)) * 100)}% of company expenses</span>,
                         })),
-                        { key: "year", label: "Last 13 months", value: money.short(year), sub: <span>charged to the company</span> },
+                        { key: "year", label: "Last 13 months", value: <Money short value={year} />, sub: <span>charged to the company</span> },
                         ...(seesCompany ? [{
                             key: "share", label: "Share of this month's cost", value: currentCost ? `${Math.round(((current?.overhead ?? 0) / currentCost) * 100)}%` : "-",
-                            sub: <span>of {money.short(currentCost)} total cost</span>,
+                            sub: <span>of <Money short value={currentCost} /> total cost</span>,
                         }] : []),
                     ]} />
                     {loadFailed(monthsQuery) && <div className="mt-s"><LoadError error={monthsQuery.error} retry={() => monthsQuery.refetch()} what="the months" /></div>}
@@ -186,7 +186,7 @@ export default function CompanyExpensesPage() {
                                                 <td><b>{line.name}</b></td>
                                                 <td className="muted">{line.group.name}</td>
                                                 <td className="r mono">{line.currentAmount != null ? money.fmt(line.currentAmount, line.currency) : <span className="muted">-</span>}</td>
-                                                <td className="r mono muted">{line.perYear != null && !line.isCancelled ? money.short(line.perYear, line.currency) : "-"}</td>
+                                                <td className="r mono muted">{line.perYear != null && !line.isCancelled ? <Money short value={line.perYear} currency={line.currency} /> : "-"}</td>
                                                 <td>
                                                     {line.isCancelled
                                                         ? <span className="badge badge-archived">Cancelled{line.endedOn ? ` ${fmtDate(line.endedOn)}` : ""}</span>

@@ -10,6 +10,7 @@ import { WORKERS } from "@/shared/format/limits";
 import { periodRange } from "@/shared/format/periods";
 import { Delta } from "./Charts/Bars";
 import DataTable, { type SortState } from "./Data-Tables/DataTable";
+import { Money } from "./Data/Money";
 import Pager from "./Data-Tables/Pager";
 import DateInput from "./Forms/DateInput";
 import { ChipGroup } from "./Forms/Filters";
@@ -211,6 +212,25 @@ describe("small pieces", () => {
         expect(periodRange("month", "2026-09-30")).toMatchObject({ from: "2026-09-01", to: "2026-09-30", prevFrom: "2026-08-01", prevTo: "2026-08-30" });
         expect(periodRange("quarter", "2026-09-30")).toMatchObject({ from: "2026-07-01", label: "Q3 2026 to date", prevFrom: "2026-04-01", prevLabel: "Q2 2026" });
         expect(periodRange("30d", "2026-09-30")).toMatchObject({ from: "2026-09-01" });
+    });
+});
+
+describe("Money", () => {
+    it("shows a shortened amount, and every digit as soon as the pointer is on it", async () => {
+        render(<><TipHost /><Money short value={12151} /></>);
+        const popup = document.getElementById("tip")!;
+        const amount = screen.getByText("$12k");
+        await userEvent.hover(amount);
+        expect(popup).toBeVisible();
+        expect(popup).toHaveTextContent("$12,151");
+        await userEvent.unhover(amount);
+        expect(popup).not.toBeVisible();
+    });
+
+    it("has nothing more to show for an amount already in full", async () => {
+        render(<><TipHost /><Money short value={950} /></>);
+        await userEvent.hover(screen.getByText("$950"));
+        expect(document.getElementById("tip")).not.toBeVisible();
     });
 });
 

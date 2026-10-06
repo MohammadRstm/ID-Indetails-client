@@ -14,13 +14,16 @@ export type Toast = {
     actionLabel?: string;
     action?: () => void;
     duration?: number;
+    /** Fading out: on its way off the screen, no longer held or counted down. */
+    leaving?: boolean;
 };
 
 /**
  * How long a toast stays, in milliseconds: a plain confirmation briefly; one with an action (Undo) or saying what
- * went wrong long enough to act on it or read it. A toast the pointer or focus is on stays until it leaves.
+ * went wrong long enough to act on it or read it. A toast the pointer or focus is on stays until it leaves. `exit` is
+ * how long it takes to fade out (the CSS `toast-out` animation); with 0, or reduced motion, it goes at once.
  */
-export const TOAST_MS = { short: 2000, long: 5000 };
+export const TOAST_MS = { short: 2000, long: 5000, exit: 260 };
 
 let toasts: Toast[] = [];
 let nextId = 1;
@@ -49,20 +52,38 @@ export function toast(t: Omit<Toast, "id">): number {
     return shown.id;
 }
 
-export function dismissToast(id: number) {
+function remove(id: number) {
     stop(id);
     toasts = toasts.filter((t) => t.id !== id);
     emit();
 }
 
+const reducedMotion = () => typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** Fades the toast out, then removes it. */
+export function dismissToast(id: number) {
+    const t = toasts.find((x) => x.id === id);
+    if (!t || t.leaving) return;
+    stop(id);
+    if (!TOAST_MS.exit || reducedMotion()) {
+        remove(id);
+        return;
+    }
+    toasts = toasts.map((x) => (x.id === id ? { ...x, leaving: true } : x));
+    emit();
+    timers.set(id, setTimeout(() => remove(id), TOAST_MS.exit));
+}
+
+const showing = (id: number) => toasts.find((x) => x.id === id && !x.leaving);
+
 /** Keeps a toast while the pointer or focus is on it. */
 export function holdToast(id: number) {
-    stop(id);
+    if (showing(id)) stop(id);
 }
 
 /** Starts its countdown again once the pointer or focus leaves it. */
 export function releaseToast(id: number) {
-    const t = toasts.find((x) => x.id === id);
+    const t = showing(id);
     if (t && !timers.has(id)) countDown(t);
 }
 

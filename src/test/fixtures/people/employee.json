@@ -7,7 +7,6 @@
     "basis": "monthly",
     "amount": 1600,
     "currency": "USD",
-    "hourlyCostRate": 9.2309,
     "note": "Set at invitation",
     "createdAt": "2026-09-30T04:51:24.541Z",
     "createdById": 1

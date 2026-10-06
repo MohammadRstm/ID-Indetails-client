@@ -10,7 +10,7 @@ import Figure from "@/shared/components/Charts/Figure";
 import LineChart from "@/shared/components/Charts/LineChart";
 import Waterfall from "@/shared/components/Charts/Waterfall";
 import { ProjectTile } from "@/shared/components/Data/Bits";
-import { CostRow } from "@/shared/components/Data/Money";
+import { CostRow, Money } from "@/shared/components/Data/Money";
 import { MarginPill, StatusBadge } from "@/shared/components/Data/Pills";
 import { SortTh, type SortState } from "@/shared/components/Data-Tables/DataTable";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -89,7 +89,7 @@ export function OverviewTab({ summary: s, months, projects, failed, label, tiles
                     ]} />
                     <div className="chart-note">
                         {costWords(domain)} include internal work.
-                        {s.stillToEarn > 1000 && <span> Client projects have {money.short(s.stillToEarn)} of agreed payments still to collect.</span>}
+                        {s.stillToEarn > 1000 && <span> Client projects have <Money short value={s.stillToEarn} /> of agreed payments still to collect.</span>}
                     </div>
                 </Figure>
             </div>

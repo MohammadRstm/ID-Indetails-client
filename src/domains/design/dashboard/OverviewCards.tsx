@@ -294,7 +294,7 @@ export function OwedCard({ billing }: { billing: FinanceBilling | undefined }) {
                     <>
                         <div className="row wrap" style={{ gap: 10, alignItems: "baseline", marginBottom: 8 }}>
                             <Money value={b.outstanding} size="lg" />
-                            <span className="muted" style={{ fontSize: "11.5px" }}>{money.short(b.received)} collected of {money.short(b.invoiced)} invoiced</span>
+                            <span className="muted" style={{ fontSize: "11.5px" }}><Money short value={b.received} /> collected of <Money short value={b.invoiced} /> invoiced</span>
                         </div>
                         <BillingMeter value={b.value} invoiced={b.invoiced} paid={b.received} outstanding={b.outstanding} notYetInvoiced={b.notYetInvoiced} height={16} />
                         <div className="mt">
@@ -307,7 +307,7 @@ export function OwedCard({ billing }: { billing: FinanceBilling | undefined }) {
                                             {inv.isOverdue ? `${inv.daysOverdue} days overdue` : `due in ${inv.dueOn ? daysBetween(today, inv.dueOn) : "-"} days`} · {inv.projectTitle}
                                         </div>
                                     </div>
-                                    <div className={inv.isOverdue ? "mono down" : "mono"} style={{ fontSize: 12 }}>{money.short(inv.balance)}</div>
+                                    <div className={inv.isOverdue ? "mono down" : "mono"} style={{ fontSize: 12 }}><Money short value={inv.balance} /></div>
                                 </div>
                             ))}
                             {billing.openInvoices.length === 0 && <p className="muted">Every invoice has been paid.</p>}
@@ -339,7 +339,7 @@ export function TopClientsCard({ clients }: { clients: FinanceClient[] | undefin
                             <div className="muted" style={{ fontSize: 11 }}>{c.money.projects} projects · {c.money.activeProjects} active</div>
                         </div>
                         <div style={{ textAlign: "right" }}>
-                            <div className="mono" style={{ fontSize: 12 }}>{money.short(c.money.revenue)}</div>
+                            <div className="mono" style={{ fontSize: 12 }}><Money short value={c.money.revenue} /></div>
                             <MarginPill value={c.money.marginKnown ? c.money.margin : null} label={false} />
                         </div>
                     </div>

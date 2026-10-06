@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { tip } from "@/shared/components/Overlays/tip";
+import { Money } from "@/shared/components/Data/Money";
 import { money } from "@/shared/format/money";
 import { fmtH, pct } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -55,7 +56,7 @@ export function ProfitBars({ items, unit, onClick }: { items: ProfitItem[]; unit
                             <div className="pb-zero" />
                             <div className={cx("pb-fill", pos ? "pos" : "neg")} style={pos ? { left: "50%", width: `${width}%` } : { right: "50%", width: `${width}%` }} />
                         </div>
-                        <div className={cx("pb-val mono", pos ? "up" : "down")}>{money.short(it.value)}</div>
+                        <div className={cx("pb-val mono", pos ? "up" : "down")}><Money short value={it.value} /></div>
                     </div>
                 );
             })}
@@ -102,7 +103,7 @@ export function CompositionBar({ parts, height = 14 }: { parts: Segment[]; heigh
                 {shown.map((s, i) => (
                     <span key={i}>
                         <i style={{ background: s.color }} />{s.label} <b className="num">{Math.round((s.value / total) * 100)}%</b>{" "}
-                        <span className="muted">{money.short(s.value)}</span>
+                        <span className="muted"><Money short value={s.value} /></span>
                     </span>
                 ))}
             </div>
