@@ -21,6 +21,10 @@ table { line-height: normal; font-weight: normal; }
 /* A long chat message stays a comfortable line length on a wide screen. */
 @media (min-width: 861px) { .msg-bubble { max-width: min(62%, 720px); } }
 
+/* The loading screen shows the company's mark instead of the prototype's spinner, breathing while the app starts. */
+.boot-logo { display: block; color: var(--ink); animation: boot-breathe 1.6s ease-in-out infinite; }
+@keyframes boot-breathe { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.94); } }
+
 /* loading skeletons */
 .skel {
   display: block; border-radius: 5px;
