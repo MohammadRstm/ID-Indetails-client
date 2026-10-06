@@ -21,7 +21,7 @@ import { cx } from "@/shared/utils/cx";
 import ClientModal from "../clients/ClientModal";
 import ClientPicker from "../clients/ClientPicker";
 import { useClient } from "../clients/clientsApi";
-import { personName, useDomainPeople } from "../people/peopleApi";
+import { personName, useProjectOwners } from "../people/peopleApi";
 import { useCreateProject } from "./projectsApi";
 
 type CreateProjectModalProps = {
@@ -37,7 +37,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const me = useCurrentUser();
     const create = useCreateProject();
     const execution = domain === "execution";
-    const people = useDomainPeople(domain, permissions.has(P.EMPLOYEE_VIEW), { status: "active" });
+    const people = useProjectOwners(domain, permissions.has(P.EMPLOYEE_VIEW), permissions.canSeeDomain("design") && permissions.canSeeDomain("execution"));
 
     const [title, setTitle] = useState("");
     const [more, setMore] = useState(false);
@@ -57,7 +57,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const [payDate, setPayDate] = useState(companyToday());
     const [payMethod, setPayMethod] = useState("bank");
     const [fee, setFee] = useState(0);
-    const [markupPct, setMarkupPct] = useState<number | "">(10);
+    // materials are charged as they cost unless a profit is chosen: not every material earns one
+    const [markupPct, setMarkupPct] = useState<number | "">(0);
     const client = useClient(clientId);
     const execMoney = execution && billing === "client";
     // the API refuses the whole project if the payment comes from someone who can't record payments
@@ -67,16 +68,20 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const clientError = billing === "client" && clientId == null && "Choose who the project is for, or make it internal.";
     const ok = !titleError && !clientError;
 
-    // Who can own it: the person creating it, and the people of this domain.
+    // Who can own it: the domain's admins and the super admins (the creator first, when they are one), never an employee.
     const owners = [
-        { value: String(me.id), label: `${fullName(me)} (you)` },
-        ...(people.data ?? []).filter((p) => p.id !== me.id).map((p) => ({ value: String(p.id), label: personName(p) })),
+        ...(permissions.isAdmin ? [{ value: String(me.id), label: `${fullName(me)} (you)` }] : []),
+        ...people.filter((p) => p.id !== me.id).map((p) => ({ value: String(p.id), label: personName(p) })),
     ];
+    const ownerId = owners.some((o) => o.value === owner) ? owner : owners[0]?.value ?? "";
+    const ownerError = !ownerId && "An admin or a super admin owns each project. Ask one to create it, or to give you the permission to see people.";
 
     async function submit(e?: FormEvent) {
         e?.preventDefault();
         if (create.isPending) return;
-        if (!ok) {
+        if (!ok || ownerError) {
+            // the owner sits with the optional details: open them to show why
+            if (ownerError) setMore(true);
             errors.tried();
             return;
         }
@@ -88,7 +93,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                 domainCode: domain,
                 billingType: execution ? "client" : billing,
                 clientId: billing === "client" ? clientId : null,
-                ownerId: +owner,
+                ownerId: +ownerId,
                 targetDate: target || null,
                 revenue: !execution && billing === "client" && revenue ? revenue : null,
                 projectFee: execMoney ? fee || 0 : null,
@@ -215,7 +220,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                                 <label className="label required">Default material profit</label>
                                 <div className="row wrap" style={{ gap: 5, alignItems: "center" }}>
                                     {[0, 5, 10, 25].map((v) => (
-                                        <button key={v} type="button" className={cx("chip", +markupPct === v && "on")} onClick={() => setMarkupPct(v)}>{v}%</button>
+                                        <button key={v} type="button" className={cx("chip", +markupPct === v && "on")} onClick={() => setMarkupPct(v)}>{v ? `${v}%` : "As is"}</button>
                                     ))}
                                     <NumberField shape={MARKUP_PERCENT} style={{ width: 70 }} aria-label="Material profit percent"
                                         value={markupPct} onChange={(text) => setMarkupPct(text === "" ? "" : +text)} />
@@ -243,7 +248,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                         <div className="grid g-2">
                             <div className="field">
                                 <label className="label required" htmlFor="np-owner">Project owner</label>
-                                <Select id="np-owner" value={owner} onChange={setOwner} options={owners} />
+                                <Select id="np-owner" value={ownerId} onChange={setOwner} options={owners} />
+                                <FieldError message={errors.show("owner", ownerError)} />
                             </div>
                             <div className="field">
                                 <label className="label" htmlFor="np-target">Target completion</label>

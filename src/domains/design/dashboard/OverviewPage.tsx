@@ -10,12 +10,13 @@ import Board, { BoardButton } from "@/shared/components/Board/Board";
 import { Delta } from "@/shared/components/Charts/Bars";
 import { KpiStrip } from "@/shared/components/Data/Kpi";
 import LoadError from "@/shared/components/Feedback/LoadError";
+import DateInput from "@/shared/components/Forms/DateInput";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import { PersonAvatar } from "@/shared/components/Identity/People";
 import { Money } from "@/shared/components/Data/Money";
 import { money } from "@/shared/format/money";
-import { periodRange, quarterLabel, quarterOf, type PeriodKind } from "@/shared/format/periods";
-import { companyToday, DAYS_LONG, fmtDayDateY, fmtH, fmtNumber, isoWeek, partsOf } from "@/shared/format/time";
+import { customRange, periodRange, quarterLabel, quarterOf, type PeriodKind } from "@/shared/format/periods";
+import { addDays, companyToday, DAYS_LONG, fmtDayDateY, fmtH, fmtNumber, isoWeek, partsOf } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useClientOverview } from "../../shared/clients/clientsApi";
 import { costPartsOf, costWords } from "../../shared/finance/costParts";
@@ -30,7 +31,7 @@ import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
 import HelpHint from "@/domains/shared/help/HelpHint";
 
-type Period = Extract<PeriodKind, "quarter" | "month" | "30d">;
+type Period = Extract<PeriodKind, "quarter" | "month" | "30d" | "custom">;
 
 /** A card that couldn't load, keeping its place on the board. */
 function Failed({ query, what }: { query: { error: unknown; refetch: () => unknown }; what: string }) {
@@ -61,10 +62,12 @@ function OverviewPage({ domain }: { domain: Domain }) {
     const seesWork = design && permissions.has(P.WORK_ENTRY_VIEW_ALL);
     const seesClients = permissions.has(P.CLIENT_VIEW);
     const today = companyToday();
-    const range = periodRange(period, today);
+    // the days picked for a custom period: the last 30 days until someone changes them
+    const [days, setDays] = useState({ from: addDays(today, -29), to: today });
+    const range = period === "custom" ? customRange(days.from, days.to) : periodRange(period, today);
     const months = period === "30d" ? 8 : 6;
 
-    const overview = useOverview(period === "30d" ? "last30" : period, design);
+    const overview = useOverview(period === "30d" ? "last30" : period, design, days);
     const dashboard = useDashboard(domain);
     const deadlines = useUpcomingDeadlines(domain, design);
     const clientOverview = useClientOverview(domain, seesClients);
@@ -151,7 +154,21 @@ function OverviewPage({ domain }: { domain: Domain }) {
                 <div className="page-actions">
                     <Segmented value={period} onChange={setPeriod} aria-label="Period" options={[
                         { value: "quarter", label: "This quarter" }, { value: "month", label: "This month" }, { value: "30d", label: "Last 30 days" },
+                        { value: "custom", label: "Custom" },
                     ]} />
+                    {period === "custom" && (
+                        <div className="row ov-range" style={{ gap: 6 }}>
+                            <div style={{ width: 142 }}>
+                                <DateInput value={days.from} max={today} aria-label="From"
+                                    onChange={(from) => from && setDays({ from, to: from > days.to ? from : days.to })} />
+                            </div>
+                            <span className="muted">to</span>
+                            <div style={{ width: 142 }}>
+                                <DateInput value={days.to} max={today} aria-label="To"
+                                    onChange={(to) => to && setDays({ from: to < days.from ? to : days.from, to })} />
+                            </div>
+                        </div>
+                    )}
                     <BoardButton editing={editing} onToggle={() => setEditing((e) => !e)} />
                     {permissions.has(P.PROJECT_CREATE) && (
                         <button className="btn btn-primary" onClick={() => navigate(`/${domain}/projects?new=1`)}><Icon name="plus" />New project</button>

@@ -11,9 +11,9 @@ import { money } from "@/shared/format/money";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../shared/projects/projectsApi";
-import { markupText, siteMoneyOf } from "../projects/siteMoney";
+import { siteMoneyOf } from "../projects/siteMoney";
 import MaterialGrid, { type GridRow } from "./MaterialGrid";
-import { BLOCK, blankRows, COLS, COLS_PRICED, costOf, entryOf, link, pasteInto, rowOf, rowProblems, rowUsed, type ColKey, type Row } from "./materialRules";
+import { BLOCK, blankRows, COLS, costOf, entryOf, link, pasteInto, rowOf, rowProblems, rowUsed, type ColKey, type Row } from "./materialRules";
 import { useAddMaterials, useAllMaterials } from "./materialsApi";
 import { loadFailed } from "@/api/queryState";
 
@@ -30,16 +30,14 @@ function dropSaved(list: Row[], count: number) {
 /**
  * The Add materials sheet (the prototype's EX.MaterialSheet): rows typed like a spreadsheet, or pasted straight
  * from Excel, and added together. What is already recorded sits above, read-only, so nothing is typed twice.
- * People who price for the client set each row's client price as they go and watch the profit move.
+ * What the client is charged is set later, on the client statement (a material may go at cost).
  */
 export default function MaterialSheet({ project, onClose }: { project: Project; onClose: () => void }) {
     const saved = useAllMaterials(project.id);
-    const markup = saved.data?.defaultMarkup ?? project.money?.materialMarkup ?? 0;
     const permissions = usePermissions();
     const client = project.billingType === "client" && !!project.client;
-    const canPrice = client && permissions.has(P.PROJECT_PRICING_MANAGE);
     const x = client && permissions.has(P.FINANCIAL_VIEW) && project.money ? siteMoneyOf(project.money) : null;
-    const cols = canPrice ? COLS_PRICED : COLS;
+    const cols = COLS;
     const [rows, setRows] = useState(() => blankRows(BLOCK));
     // a saved batch leaves the sheet at once, so a failure further on never sends it twice
     const add = useAddMaterials(project.id, (count) => setRows((current) => dropSaved(current, count)));
@@ -55,19 +53,13 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
     // the prototype's words are about a missing type or cost; anything else is explained on its red cell
     const otherBad = problems.some((p) => p && Object.values(p).some((m) => m?.startsWith("At most")));
     const total = r2(used.reduce((t, r) => t + costOf(r), 0));
-    // a new row's client price: its own once typed, otherwise its cost at the project's markup
-    const autoPrice = (r: Row) => { const c = costOf(r); return c > 0 ? String(r2(c * (1 + markup))) : ""; };
-    const priceOf = (r: Row) => (r.clientPrice !== "" ? r.clientPrice : autoPrice(r));
-    const charge = canPrice ? r2(used.reduce((t, r) => t + (+priceOf(r) || 0), 0)) : 0;
 
     // live, on every keystroke: quantity or unit cost typed → the total follows; a total over both → the unit cost
     function setCell(r: number, k: ColKey, v: string) {
         setRows((current) => {
             const next = current.slice();
             let row = { ...next[r] };
-            // a client price typed back to what the markup gives stays on the markup
-            if (k === "clientPrice") row.clientPrice = v === "" || +v === +autoPrice(row) ? "" : v;
-            else row[k] = v;
+            row[k] = v;
             if (k === "quantity" || k === "unitCost" || k === "amount") row = link(row, k);
             next[r] = row;
             return grow(next);
@@ -82,7 +74,7 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
     function submit() {
         setTried(true);
         if (nBad || !used.length) return;
-        add.mutate(used.map((r) => ({ ...entryOf(r), clientPrice: canPrice && r.clientPrice !== "" ? +r.clientPrice : null })), {
+        add.mutate(used.map((r) => ({ ...entryOf(r), clientPrice: null })), {
             onSuccess: () => {
                 toast({ text: `Added ${plural(used.length, "material")}`, sub: `${money.exact(total)} in total · ${project.title}`, icon: "checkCircle" });
                 onClose();
@@ -94,7 +86,7 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
         onClose();
     }
 
-    const shown: GridRow[] = recorded.concat(rows.map((r, i) => ({ ...r, clientPrice: canPrice ? priceOf(r) : r.clientPrice, cls: i === 0 && N ? "sh-first-new" : undefined })));
+    const shown: GridRow[] = recorded.concat(rows.map((r, i) => ({ ...r, cls: i === 0 && N ? "sh-first-new" : undefined })));
 
     return (
         <Modal size="xl mat-sheet" flush title="Add materials" sub={project.title} onClose={close}
@@ -119,12 +111,6 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
                     <span>Spent <b className="mono">{money.exact(r2(x.spent + total))}</b>{total > 0 && <> <em className="mono">(+{money.exact(total)} here)</em></>}</span>
                     <span className="muted">→</span>
                     <span>Profit <b className="mono xm-profit">{money.exact(r2(x.received - x.spent - total))}</b>{total > 0 && <> <em className="mono">(−{money.exact(total)})</em></>}</span>
-                    {charge > 0 && (
-                        <>
-                            <span className="grow" />
-                            <span className="muted">Charged to client <b className="mono">{money.exact(charge)}</b> · material profit <b className="mono">+{money.exact(r2(charge - total))}</b></span>
-                        </>
-                    )}
                 </div>
             )}
             <div className="sh-help">
@@ -136,15 +122,12 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
             <div className="sh-help">
                 <span className="muted">
                     Qty and unit cost are optional. With both, Total is worked out for you - type a Total over them and the unit cost is adjusted to match. Without them, type the Total.
-                    {canPrice ? ` Client price starts at the project's ${Math.round(markup * 1000) / 10}% material profit - type over it to charge something else.` : ""}
                 </span>
             </div>
             {loadFailed(saved) ? <div className="panel-body"><LoadError error={saved.error} retry={() => saved.refetch()} what="the materials" /></div>
                 : !saved.data ? <div className="panel-body"><SkeletonLines lines={8} /></div> : (
                 <SheetGrid first={N}>
                     <MaterialGrid cols={cols} rows={shown} eager showBy={N > 0}
-                        after={canPrice ? (row) => <span className="sh-mk">{costOf(row) > 0 && row.clientPrice !== "" ? markupText(+row.clientPrice / costOf(row) - 1) : ""}</span> : undefined}
-                        afterLabel="Material profit"
                         problems={tried ? [...recorded.map(() => null), ...problems] : null}
                         locked={(r) => r < N}
                         canDelete={(r) => r >= N}

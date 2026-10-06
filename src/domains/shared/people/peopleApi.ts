@@ -22,6 +22,22 @@ export function useDomainPeople(domain: string, enabled: boolean, params: { role
     });
 }
 
+/**
+ * Who may own a project of a domain: its active admins, and the super admins for a viewer who sees both businesses
+ * (only they can see super admins). Employees work on projects but never own them.
+ */
+export function useProjectOwners(domain: string, enabled: boolean, seesSuperAdmins: boolean) {
+    const admins = useDomainPeople(domain, enabled, { role: "admin", status: "active" });
+    const p = { role: "super_admin", status: "active", pageSize: 100 };
+    const superAdmins = useQuery({
+        queryKey: keys.employees.list(p),
+        queryFn: async () => (await http.get<Paged<EmployeeSummary>>("/employees", { params: p })).data.items,
+        enabled: enabled && seesSuperAdmins,
+        staleTime: 5 * 60_000,
+    });
+    return [...(superAdmins.data ?? []), ...(admins.data ?? [])];
+}
+
 export type PeopleQuery = { search?: string; domain?: string; role?: string; status?: string; page: number; pageSize: number };
 
 /** Everyone the viewer may see, a page at a time: the company area's list of people (employee:view). */

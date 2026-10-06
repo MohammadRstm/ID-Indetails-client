@@ -1,7 +1,5 @@
 import { useRef, useState } from "react";
 import { errorMessage } from "@/api/errors";
-import { P } from "@/app/permissions/codes";
-import { usePermissions } from "@/app/permissions/usePermissions";
 import { CostRow } from "@/shared/components/Data/Money";
 import Pager from "@/shared/components/Data-Tables/Pager";
 import Empty from "@/shared/components/Feedback/Empty";
@@ -16,11 +14,11 @@ import { addDays, companyToday, startOfWeek } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../shared/projects/projectsApi";
-import { isSiteOpen, markupText, pctOf } from "../projects/siteMoney";
+import { isSiteOpen } from "../projects/siteMoney";
 import MaterialGrid, { type GridRow } from "./MaterialGrid";
 import MaterialSheet from "./MaterialSheet";
-import { COLS, COLS_PRICED, entryOf, link, problems, rowOf, STATED_KEYS, TOTAL_AT, type ColKey, type Row } from "./materialRules";
-import { useDeleteMaterial, useMaterials, useSetMaterialPrice, useUpdateMaterial, type Material, type MaterialQuery } from "./materialsApi";
+import { COLS, entryOf, link, problems, rowOf, STATED_KEYS, TOTAL_AT, type ColKey, type Row } from "./materialRules";
+import { useDeleteMaterial, useMaterials, useUpdateMaterial, type Material, type MaterialQuery } from "./materialsApi";
 import { loadFailed } from "@/api/queryState";
 
 const PER_PAGE = 30;
@@ -41,7 +39,6 @@ function periods(today: string): Record<string, [string, string]> {
  * materials sheet, edited in place: each change is saved when the cell is left.
  */
 export default function MaterialsPanel({ project }: { project: Project }) {
-    const permissions = usePermissions();
     const [type, setType] = useState("");
     const [q, setQ] = useState("");
     const [supplier, setSupplier] = useState("");
@@ -62,13 +59,10 @@ export default function MaterialsPanel({ project }: { project: Project }) {
     const list = useMaterials(project.id, query);
     const update = useUpdateMaterial(project.id);
     const remove = useDeleteMaterial(project.id);
-    const setPrice = useSetMaterialPrice(project.id);
 
     const open = isSiteOpen(project);
-    const client = project.billingType === "client" && !!project.client;
-    const priced = client && (permissions.has(P.FINANCIAL_VIEW) || permissions.has(P.PROJECT_PRICING_MANAGE));
-    const canPrice = client && open && permissions.has(P.PROJECT_PRICING_MANAGE);
-    const cols = priced ? COLS_PRICED : COLS;
+    // what the client is charged, and the profit on it, are in Material margins under this table and on statements
+    const cols = COLS;
     const d = list.data;
     const filtering = !!(type || supplier || by || period || q.trim());
     const onlyType = type && !supplier && !by && !period && !q.trim() ? d?.types.find((t) => t.key === type)?.label : null;
@@ -93,23 +87,11 @@ export default function MaterialsPanel({ project }: { project: Project }) {
         return () => setPending((p) => { const next = { ...p }; held.forEach(([key]) => delete next[key]); return next; });
     }
     const notSaved = (e: unknown) => toast({ text: "Not saved", sub: errorMessage(e), icon: "alert" });
-    const price = (m: Material, clientPrice: number | null, shown: string) => {
-        const release = hold(m, { clientPrice: shown });
-        setPrice.mutate({ id: m.id, clientPrice }, { onSettled: release, onError: notSaved });
-    };
 
     // A cell left with a new value saves the material. A change that would leave it without a type or a
     // cost is refused here, and the cell shows what is saved again.
     function save(r: number, k: ColKey, v: string) {
         const m = items[r];
-        if (k === "clientPrice") {
-            if (v === "") {
-                if (m.priceSource === "manual") price(m, null, v);
-                return;
-            }
-            if (Math.abs(+v - (m.clientPrice ?? 0)) >= 0.005) price(m, +v, v);
-            return;
-        }
         // what the row shows, with any change still being saved
         const row = shownRow(m);
         if (v === row[k]) return;
@@ -143,7 +125,6 @@ export default function MaterialsPanel({ project }: { project: Project }) {
     }));
     const locked = (r: number, k: ColKey) => {
         const m = items[r];
-        if (k === "clientPrice") return !(canPrice && !m.isStated);
         return !m.canEdit || (m.isStated && STATED_KEYS.includes(k));
     };
 
@@ -194,10 +175,6 @@ export default function MaterialsPanel({ project }: { project: Project }) {
                                 ) : (
                                     <CostRow strong label="Material cost" value={money.fmt(d.all.cost)} meta={`${d.all.count} items · ${plural(d.types.length, "type")}`} />
                                 )}
-                                {priced && d.all.charge != null && (
-                                    <CostRow label="Charged to the client" value={money.fmt((filtering ? d.matching.charge : d.all.charge) ?? 0)}
-                                        meta={`material profit ${money.exact(filtering ? (d.matching.charge ?? 0) - d.matching.cost : d.all.charge - d.all.cost)} · default ${pctOf(d.defaultMarkup ?? 0)}`} />
-                                )}
                                 {filtering && d.matching.count === 0 && (
                                     <div className="banner mt-s">
                                         <Icon name="search" />
@@ -210,27 +187,13 @@ export default function MaterialsPanel({ project }: { project: Project }) {
                                         canDelete={(r) => items[r].canEdit && !items[r].isStated}
                                         onCell={(r, k, v, typing) => { if (!typing) save(r, k, v); }}
                                         onDelete={(r) => del(items[r])}
-                                        after={priced ? (_, r) => {
-                                            const m = items[r];
-                                            return (
-                                                <>
-                                                    <span className="sh-mk">{m.markup != null ? markupText(m.markup) : ""}</span>
-                                                    {m.priceSource === "manual" && canPrice && (
-                                                        <button type="button" className="sh-reset" title="Back to the project's default material profit" aria-label={`Put ${m.name} back on the default material profit`}
-                                                            onClick={() => price(m, null, "")}>↺</button>
-                                                    )}
-                                                </>
-                                            );
-                                        } : undefined}
-                                        afterLabel="Material profit"
                                         foot={
                                             <tfoot>
                                                 <tr>
                                                     <td />
                                                     <td colSpan={TOTAL_AT} className="r"><b>{filtering ? `Material cost · ${filterLabel}` : "Material cost"}</b></td>
                                                     <td className="r mono"><b>{money.exact(d.matching.cost)}</b></td>
-                                                    {priced && <td className="r mono"><b>{money.exact(d.matching.charge ?? 0)}</b></td>}
-                                                    <td colSpan={COLS.length - TOTAL_AT - 1 + 2 + (priced ? 1 : 0)}>
+                                                    <td colSpan={COLS.length - TOTAL_AT - 1 + 2}>
                                                         {filtering && <span className="muted">of {money.exact(d.all.cost)} for everything</span>}
                                                     </td>
                                                 </tr>

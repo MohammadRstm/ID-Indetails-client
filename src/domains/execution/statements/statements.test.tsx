@@ -93,6 +93,9 @@ describe("client statements", () => {
         const row = price.closest(".stmt-row") as HTMLElement;
         await userEvent.click(within(row).getByRole("button", { name: "+25%" }));
         await waitFor(() => expect(priced).toEqual([{ clientPrice: 1100 }, { clientPrice: 1050 }]));
+        // or charged at what it cost, with no profit
+        await userEvent.click(within(row).getByRole("button", { name: "As is" }));
+        await waitFor(() => expect(priced).toEqual([{ clientPrice: 1100 }, { clientPrice: 1050 }, { clientPrice: 840 }]));
     });
 
     it("can't be re-priced without project:pricing_manage", async () => {

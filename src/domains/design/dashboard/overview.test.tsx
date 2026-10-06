@@ -56,6 +56,20 @@ describe("Overview", () => {
         expect(await screen.findByText("Hours logged · Last 30 days")).toBeInTheDocument();
     });
 
+    it("takes days picked for a custom period", async () => {
+        const asked: URLSearchParams[] = [];
+        renderApp("/design/overview", nadia,
+            http.get("/api/reports/overview", ({ request }) => { asked.push(new URL(request.url).searchParams); return HttpResponse.json(overview.overview); }),
+            ...overviewHandlers);
+        await userEvent.click(await screen.findByRole("tab", { name: "Custom" }));
+        const from = screen.getByLabelText("From");
+        await userEvent.clear(from);
+        await userEvent.type(from, "Sep 1, 2026");
+        await userEvent.tab();
+        await waitFor(() => expect(asked.some((q) => q.get("period") === "custom" && q.get("from") === "2026-09-01")).toBe(true));
+        expect(asked.find((q) => q.get("from") === "2026-09-01")!.get("to")).toBeTruthy();
+    });
+
     it("keeps the money cards, and every money request, for financial:view", async () => {
         const asked: string[] = [];
         renderApp("/design/overview", withPermissions(nadia, { revoke: [P.FINANCIAL_VIEW] }),

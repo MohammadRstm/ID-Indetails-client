@@ -43,6 +43,17 @@ describe("a project's Timeline tab", () => {
         expect(dialog.querySelectorAll(".ds-card").length).toBeGreaterThan(0);
     });
 
+    it("goes to the very day asked for, not the start of its week", async () => {
+        renderApp(path, personas.designAdmin, ...projectWorkHandlers);
+        const field = await screen.findByLabelText("Go to a date");
+        await userEvent.type(field, "Sep 29, 2026");
+        await userEvent.tab();
+        await userEvent.click(screen.getByRole("button", { name: "Go" }));
+        expect(await screen.findByText("Tuesday, September 29, 2026", { selector: "b" })).toBeInTheDocument();
+        expect(screen.queryByRole("heading", { name: "Monday" })).toBeNull();
+        expect(screen.getByRole("tab", { name: "Day", selected: true })).toBeInTheDocument();
+    });
+
     it("is not there without work_entry:view_all", async () => {
         renderApp(path, withPermissions(personas.designAdmin, { revoke: [P.WORK_ENTRY_VIEW_ALL] }), ...projectWorkHandlers);
         await screen.findByRole("heading", { name: projectWork.project.title });

@@ -1,11 +1,11 @@
-import { addDays, addMonths, companyToday, daysBetween, fmtMonthY } from "./time";
+import { addDays, addMonths, companyToday, daysBetween, fmtDate, fmtMonthY } from "./time";
 
 /*
  * The ranges pages pick from (this quarter, this month, the last 30 days, a year), as the API's "yyyy-MM-dd"
  * days. One definition replaces the prototype's separate copies in each page.
  */
 
-export type PeriodKind = "quarter" | "month" | "30d" | "year";
+export type PeriodKind = "quarter" | "month" | "30d" | "year" | "custom";
 
 export type Period = {
     kind: PeriodKind;
@@ -33,6 +33,17 @@ export function quarterEnd(year: number, quarter: number): string {
 }
 
 export const quarterLabel = (year: number, quarter: number) => `Q${quarter} ${year}`;
+
+/** Days someone picked, against as many days just before them. */
+export function customRange(from: string, to: string): Period {
+    const length = daysBetween(from, to) + 1;
+    return {
+        kind: "custom", from, to,
+        label: from === to ? fmtDate(from) : `${fmtDate(from)} – ${fmtDate(to)}`,
+        prevFrom: addDays(from, -length), prevTo: addDays(from, -1),
+        prevLabel: `the ${length === 1 ? "day" : `${length} days`} before`,
+    };
+}
 
 export function periodRange(kind: PeriodKind, today = companyToday()): Period {
     if (kind === "month") {

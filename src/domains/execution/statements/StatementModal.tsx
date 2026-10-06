@@ -331,6 +331,10 @@ function NewStatement({ project, onMade, onClose }: { project: Project; onMade: 
                                                     </div>
                                                     {canPrice && (
                                                         <div className="stmt-quick">
+                                                            {/* not every material earns a profit: some are charged at what they cost */}
+                                                            <button type="button" className={cx("chip", mk != null && Math.abs(mk) < 0.0005 && "on glow")}
+                                                                aria-pressed={mk != null && Math.abs(mk) < 0.0005} title="Charge what it cost, with no profit"
+                                                                onClick={() => { applyPrice(m, r2(m.cost)); ping("total"); }}>As is</button>
                                                             {quick.map((q) => {
                                                                 const here = mk != null && Math.abs(mk - q / 100) < 0.0005;
                                                                 return (

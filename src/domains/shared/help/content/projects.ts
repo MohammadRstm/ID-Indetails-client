@@ -30,6 +30,7 @@ export const projects: Article[] = [
         blocks: [
             steps(step("Open the project, then **More → Edit details**.", "Projects", "the project", "More")),
             list(
+                "The owner is an admin of the business or a super admin; employees work on projects but don't own them.",
                 "The new owner is told.",
                 "Once a project has an invoice or a payment, it can't move to another client or become internal: invoices and payments keep the client they were made for.",
                 "A finished project can't be edited until it is reopened.",
@@ -146,14 +147,14 @@ export const projects: Article[] = [
         title: "Setting a site's fee and material profit",
         category: "projects",
         who: and(sees("execution"), has(P.PROJECT_PRICING_MANAGE)),
-        summary: "On the site, More → Fee & material profit sets the project fee and the markup on materials. A material's client price can also be set by hand.",
+        summary: "On the site, More → Fee & material profit sets the project fee and the markup on materials. Each material's client price can also be set on the client statement.",
         ask: ["project fee", "markup", "material profit", "client price", "pricing", "fee", "set price"],
         blocks: [
             steps(step("Open the site, then **More → Fee & material profit**.", "Projects", "the site", "More")),
             list(
                 "The **Project fee** is part of what the client pays.",
-                "The **Default material profit** is the markup: 10% charges a $100 material as $110.",
-                "A material's client price can be set by hand in the materials list; a price equal to the automatic one keeps following the markup.",
+                "The **Default material profit** is the markup: 10% charges a $100 material as $110. **As is** (0%, where new sites start) charges materials at what they cost.",
+                "On the client statement, each material can be priced with **As is**, +5%, +10% or +25%, or a price typed in. Material margins, under the materials, shows each one's profit.",
                 "Materials already on a statement keep their price, whatever the markup does later.",
             ),
         ],
