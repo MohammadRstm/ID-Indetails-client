@@ -99,11 +99,11 @@ export const explainedMoney: Article[] = [
         blocks: [
             formula("Cost = labour + paid breaks + expenses + materials + ground labour"),
             list(
-                "**Labour**: each entry's hours × the person's hourly cost that day (overtime at the normal rate).",
+                "**Labour**: each entry's hours × the person's hourly cost that day (overtime at the normal rate). A salary costs the salary ÷ that month's paid hours, so a full month's work adds up to the salary.",
                 "**Paid breaks**: each working day's paid break of everyone who worked inside their hours, shared between that day's projects by time worked.",
                 "**Expenses** and **materials**: converted to USD at the rate of their own day.",
                 "**Ground labour** (Execution): workers × pay per worker, day by day.",
-                "Super admins' hours cost a project nothing: their salary is a company cost.",
+                "Admins and super admins log no hours: they're paid a fixed salary. Hours a super admin logged before that cost a project nothing, as their salary is a company cost.",
                 "Hours of someone with no pay record are listed as unpriced, not counted as 0.",
                 "Amounts with no exchange rate for their day are listed apart as unconverted.",
             ),
