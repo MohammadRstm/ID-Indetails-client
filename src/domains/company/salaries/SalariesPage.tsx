@@ -31,10 +31,6 @@ const PAGE = 10;
 const cash = (v: number, cur: string, cents = false) => money.exact(v, cur, cents ? { cents: true } : undefined);
 const hrs = (m: number) => (m ? fmtH(m) : "-");
 
-function payLabel(r: SalaryRow) {
-    return r.basis === "monthly" ? `${cash(r.amount, r.currency)} / mo` : `${cash(r.hourlyRate, r.currency, true)} / h`;
-}
-
 /** Flagged (a closed month still short), behind (this month so far), excused, or nothing. */
 function ShortCell({ row: r }: { row: SalaryRow }) {
     const short = r.shortMinutes ?? 0;
@@ -174,9 +170,12 @@ export default function SalariesPage() {
             ) : loadFailed(salaries) ? <div className="panel"><div className="panel-body"><LoadError error={salaries.error} retry={() => salaries.refetch()} what="the salaries" /></div></div> : (
                 <>
                     <KpiStrip loading={!r} items={[
-                        ...(totals.length ? totals : [{ currency: "USD", total: 0, basePay: 0, overtimePay: 0 }]).map((t) => ({
-                            key: `pay-${t.currency}`, label: `To pay${totals.length > 1 ? ` · ${t.currency}` : ""}`, value: cash(t.total, t.currency),
-                            sub: <span>{cash(t.basePay, t.currency)} base · {cash(t.overtimePay, t.currency)} overtime</span>,
+                        ...(totals.length ? totals : [{ currency: "USD", total: 0, basePay: 0, overtimePay: 0, earnedSoFar: 0 }]).map((t) => ({
+                            key: `pay-${t.currency}`, label: `${isThisMonth ? "Earned so far" : "To pay"}${totals.length > 1 ? ` · ${t.currency}` : ""}`,
+                            value: cash(isThisMonth ? t.earnedSoFar : t.total, t.currency),
+                            sub: isThisMonth
+                                ? <span>of {cash(t.total, t.currency)} for the full month, as things stand</span>
+                                : <span>{cash(t.basePay, t.currency)} base · {cash(t.overtimePay, t.currency)} overtime</span>,
                         })),
                         { key: "people", label: "Employees", value: String(sum?.people ?? 0), sub: <span>{sum?.onMonthlySalary ?? 0} on a monthly salary</span> },
                         {
@@ -216,28 +215,31 @@ export default function SalariesPage() {
                                         <table className="tbl">
                                             <thead>
                                                 <tr>
-                                                    <th>Employee</th><th>Pay</th>
+                                                    <th>Employee</th>
                                                     <th className="r">Expected<HelpHint article="hours-balance" label="expected">The hours their working days ask for this month (so far, for the current month).</HelpHint></th>
                                                     <th className="r" title="Logged inside their scheduled hours">In hours</th>
                                                     <th className="r">Made up<HelpHint article="hours-balance" label="made up">Overtime that covered missing hours, paid as normal hours.</HelpHint></th>
                                                     <th className="r">Overtime<HelpHint article="overtime" label="overtime">Overtime left after making up missing hours, paid at the overtime rate.</HelpHint></th>
                                                     <th>Short<HelpHint article="deductions" label="short">Hours still missing. On a monthly salary they come off the pay once the month ends, unless excused.</HelpHint></th>
-                                                    <th className="r">Base pay</th><th className="r">Overtime pay</th><th className="r">To pay</th><th />
+                                                    <th className="r">Base pay<HelpHint article="pay" label="base pay">The month's pay as a monthly amount: the salary, or for hourly pay, the rate × the month's paid hours.</HelpHint></th>
+                                                    <th className="r">Hourly pay<HelpHint article="pay" label="hourly pay">What an hour is worth this month: a salary ÷ the month's paid hours, so it changes with the number of working days.</HelpHint></th>
+                                                    <th className="r">Overtime pay</th>
+                                                    <th className="r">To pay<HelpHint article="pay" label="to pay">What they are owed. While the month runs, a salary shows what it has earned so far, with the full month under it.</HelpHint></th><th />
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {rows.map((row) => <SalaryLine key={row.userId} row={row} onOpen={() => setOpen(row)} />)}
+                                                {rows.map((row) => <SalaryLine key={row.userId} row={row} running={isThisMonth} onOpen={() => setOpen(row)} />)}
                                             </tbody>
                                             {total > 0 && sum && (
                                                 <tfoot>
                                                     <tr className="tfoot-head">
-                                                        <th colSpan={2}>Totals</th>
+                                                        <th>Totals</th>
                                                         <th className="r">Expected</th><th className="r">In hours</th><th className="r">Made up</th><th className="r">Overtime</th><th>Short</th>
-                                                        <th className="r">Base pay</th><th className="r">Overtime pay</th><th className="r">To pay</th><th />
+                                                        <th colSpan={2} /><th className="r">Overtime pay</th><th className="r">To pay</th><th />
                                                     </tr>
                                                     {totals.map((t, i) => (
                                                         <tr key={t.currency} className="tfoot-row">
-                                                            <td colSpan={2}>
+                                                            <td>
                                                                 <b>Total{totals.length > 1 ? ` · ${t.currency}` : ""}</b>
                                                                 <div className="muted" style={{ fontSize: 11, fontWeight: 400 }}>
                                                                     all {sum.people} {domain === "all" ? "" : `${AREAS[domain].label} `}employee{sum.people === 1 ? "" : "s"}
@@ -253,9 +255,12 @@ export default function SalariesPage() {
                                                                     <td className={sum.shortMinutes ? "down mono" : "mono"}>{sum.shortMinutes ? fmtH(sum.shortMinutes) : "-"}</td>
                                                                 </>
                                                             ) : <td colSpan={5} />}
-                                                            <td className="r mono">{cash(t.basePay, t.currency)}</td>
+                                                            <td colSpan={2} />
                                                             <td className="r mono">{cash(t.overtimePay, t.currency)}</td>
-                                                            <td className="r mono" style={{ fontWeight: 700 }}>{cash(t.total, t.currency)}</td>
+                                                            <td className="r mono" style={{ fontWeight: 700 }}>
+                                                                {cash(isThisMonth ? t.earnedSoFar : t.total, t.currency)}
+                                                                {isThisMonth && <div className="muted" style={{ fontSize: "10.5px", fontWeight: 400 }}>of {cash(t.total, t.currency)} full month</div>}
+                                                            </td>
                                                             <td />
                                                         </tr>
                                                     ))}
@@ -278,9 +283,13 @@ export default function SalariesPage() {
     );
 }
 
-function SalaryLine({ row: r, onOpen }: { row: SalaryRow; onOpen: () => void }) {
+function SalaryLine({ row: r, running, onOpen }: { row: SalaryRow; running: boolean; onOpen: () => void }) {
     const ruled = r.expectedMinutes != null;
     const otLogged = r.overtimeMinutes + r.madeUpMinutes;
+    const monthly = r.basis === "monthly";
+    // a salary while the month runs: what it has earned so far, with the full month as things stand
+    const accruing = running && r.fullMonthEstimate != null;
+    const paidHours = r.hourlyRate > 0 ? Math.round(r.monthlyPay / r.hourlyRate) : 0;
     return (
         <tr className="click" {...clickable(onOpen)}>
             <td>
@@ -290,12 +299,6 @@ function SalaryLine({ row: r, onOpen }: { row: SalaryRow; onOpen: () => void }) 
                         <div className="trunc" style={{ fontWeight: 600 }}>{r.name}</div>
                         <div className="muted trunc" style={{ fontSize: "11.5px" }}>{r.domain ? AREAS[r.domain as Domain]?.label ?? r.domain : "Company"} · {r.email}</div>
                     </div>
-                </div>
-            </td>
-            <td className="nowrap">
-                <span className="mono">{payLabel(r)}</span>
-                <div className="muted" style={{ fontSize: 11 }} title={r.basis === "monthly" ? "An hour this month: the salary ÷ the month's paid hours" : undefined}>
-                    {hasFixedSalary(r.role) ? "fixed salary" : r.basis === "monthly" ? `monthly · ${cash(r.hourlyRate, r.currency, true)}/h this month` : "hourly"}
                 </div>
             </td>
             {r.tracksHours ? (
@@ -310,17 +313,27 @@ function SalaryLine({ row: r, onOpen }: { row: SalaryRow; onOpen: () => void }) 
                     <td><ShortCell row={r} /></td>
                 </>
             ) : <td className="r muted" colSpan={5}>hours not tracked</td>}
-            <td className="r mono">
-                {cash(r.basePay, r.currency)}
+            <td className="r mono nowrap">
+                {cash(r.monthlyPay, r.currency)}
+                <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }}>
+                    {hasFixedSalary(r.role) ? "fixed salary" : monthly ? "monthly salary" : `hourly · ${paidHours}h month`}
+                </div>
+            </td>
+            <td className="r mono nowrap" title={monthly ? `${cash(r.monthlyPay, r.currency)} ÷ ${paidHours} paid hours this month` : undefined}>
+                {cash(r.hourlyRate, r.currency, true)}/h
+                <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }}>{monthly ? `÷ ${paidHours}h this month` : "their rate"}</div>
+            </td>
+            <td className="r mono">{r.overtimePay ? cash(r.overtimePay, r.currency) : "-"}</td>
+            <td className="r mono nowrap" style={{ fontWeight: 700 }}>
+                {cash(accruing ? r.earnedSoFar : r.total, r.currency)}
+                {accruing && <div className="muted" style={{ fontSize: "10.5px", fontWeight: 400, fontFamily: "inherit" }}>so far · {cash(r.fullMonthEstimate ?? r.total, r.currency)} full month</div>}
                 {r.proRated && (
-                    <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }} title={r.leftOn ? `Left ${fmtDateY(r.leftOn)}` : "Employed for part of the month"}>
+                    <div className="muted" style={{ fontSize: "10.5px", fontWeight: 400, fontFamily: "inherit" }} title={r.leftOn ? `Left ${fmtDateY(r.leftOn)}` : "Employed for part of the month"}>
                         pro-rated · {r.workingDaysPaid}/{r.workingDays} days
                     </div>
                 )}
-                {r.deduction > 0 && <div className="down" style={{ fontSize: "10.5px" }}>−{cash(r.deduction, r.currency)} {r.flagged ? "short" : "unpaid"}</div>}
+                {r.deduction > 0 && <div className="down" style={{ fontSize: "10.5px", fontWeight: 400 }}>−{cash(r.deduction, r.currency)} {r.flagged ? "short" : "unpaid"}</div>}
             </td>
-            <td className="r mono">{r.overtimePay ? cash(r.overtimePay, r.currency) : "-"}</td>
-            <td className="r mono" style={{ fontWeight: 700 }}>{cash(r.total, r.currency)}</td>
             <td className="r"><button className="btn btn-sm" onClick={(e) => { e.stopPropagation(); onOpen(); }}>View details</button></td>
         </tr>
     );

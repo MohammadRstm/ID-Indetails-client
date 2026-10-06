@@ -32,7 +32,10 @@
     "deduction": 0,
     "basePay": 2118.67,
     "overtimePay": 0,
-    "total": 2118.67
+    "total": 2118.67,
+    "monthlyPay": 2464,
+    "earnedSoFar": 2118.67,
+    "fullMonthEstimate": null
   },
   "inProgress": true,
   "paidBreakDays": 18,

@@ -31,7 +31,15 @@ describe("Salaries", () => {
         renderApp("/company/salaries", rana, ...salaryHandlers);
         expect(await screen.findByText("Elie Khalil")).toBeInTheDocument();
         expect(screen.getByText("In progress · to Sep 30")).toBeInTheDocument();
-        expect(kpi("To pay")).toHaveTextContent(money.exact(sep.totals[0].total));
+        // the month is running: earned so far, out of the full month as things stand
+        expect(kpi("Earned so far")).toHaveTextContent(money.exact(sep.totals[0].earnedSoFar));
+        expect(kpi("Earned so far")).toHaveTextContent(`of ${money.exact(sep.totals[0].total)} for the full month`);
+        // each person: the month's pay as a monthly amount, the hour it gives this month, and what is earned so far
+        const salaried = sep.rows.items.find((x) => x.basis === "monthly" && x.fullMonthEstimate != null && !x.proRated)!;
+        const line = rowOf(salaried.name);
+        expect(line).toHaveTextContent(money.exact(salaried.monthlyPay));
+        expect(line).toHaveTextContent(`÷ ${Math.round(salaried.monthlyPay / salaried.hourlyRate)}h this month`);
+        expect(line).toHaveTextContent(`${money.exact(salaried.earnedSoFar)}so far · ${money.exact(salaried.fullMonthEstimate!)} full month`);
         expect(kpi("Employees")).toHaveTextContent("9 on a monthly salary");
         expect(kpi("Behind so far")).toHaveTextContent("2");
         expect(within(table()).getAllByRole("row").filter((r) => r.querySelector(".av, .av-fb"))).toHaveLength(10);
