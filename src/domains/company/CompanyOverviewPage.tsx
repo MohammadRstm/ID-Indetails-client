@@ -21,6 +21,7 @@ import { companyPeriod, lastChoice, rememberChoice, type PeriodChoice } from "./
 import PeriodBar from "./PeriodBar";
 import CompanyPeople from "./people/CompanyPeople";
 import { loadFailed } from "@/api/queryState";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 /** One amount per currency (costs come per source: materials, labour, expenses). */
 const merged = (amounts: { currency: string; amount: number }[]) =>
@@ -100,7 +101,10 @@ function Figures({ tabs }: { tabs: ReactNode }) {
         <div className="panel">
             <div className="panel-head">
                 <div>
-                    <div className="panel-title">What the company keeps</div>
+                    <div className="panel-title">
+                        What the company keeps
+                        <HelpHint article="company-figures" label="what the company keeps">Both businesses' profit, minus company expenses and the super admins' salaries for the period.</HelpHint>
+                    </div>
                     <div className="panel-sub">{period.label}. Each business earns its own profit. Company expenses and the super admins' salaries belong to neither, so they come out once, here.</div>
                 </div>
             </div>

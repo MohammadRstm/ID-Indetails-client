@@ -8568,6 +8568,8 @@ export interface components {
             /** Format: date */
             month: string;
             /** Format: double */
+            netProfit: number;
+            /** Format: double */
             overhead: number;
             /** Format: double */
             profitAfterOverhead: number;
@@ -8575,6 +8577,8 @@ export interface components {
             profitBeforeOverhead: number;
             /** Format: double */
             revenue: number;
+            /** Format: double */
+            superAdminSalaries: number;
         };
         CompanyOverviewResponse: {
             /** Format: int32 */

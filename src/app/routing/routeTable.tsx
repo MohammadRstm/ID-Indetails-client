@@ -12,6 +12,7 @@ import {
     CompanyProfilePage,
     CompanySettingsPage,
     FinancialsRoute,
+    HelpPage,
     MeetingsPage,
     MessagesPage,
     MyPayPage,
@@ -181,6 +182,12 @@ export const domainRoutes: DomainRoute[] = [
         admin: { element: <MessagesPage />, access: signedIn },
         employee: { element: <MessagesPage />, access: signedIn },
     },
+    {
+        // reached from the top bar's "?", the account menu and search; each person reads what fits what they may do
+        path: "help",
+        admin: { element: <HelpPage />, access: signedIn },
+        employee: { element: <HelpPage />, access: signedIn },
+    },
 ];
 
 export const companyRoutes: CompanyRoute[] = [
@@ -194,6 +201,7 @@ export const companyRoutes: CompanyRoute[] = [
     { path: "profile", element: <CompanyProfilePage />, access: () => true },
     { path: "notifications", element: <NotificationsPage />, access: () => true },
     { path: "messages", element: <MessagesPage />, access: () => true },
+    { path: "help", element: <HelpPage />, access: () => true },
 ];
 
 /**

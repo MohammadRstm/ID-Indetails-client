@@ -20,6 +20,7 @@ import ScheduleModal from "./ScheduleModal";
 import { useSchedules, type PersonSchedule } from "./schedulesApi";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 type Day = Schemas["ScheduleDayResponse"];
 
@@ -88,7 +89,7 @@ export default function SchedulesPage() {
         <div className="page">
             <div className="page-head">
                 <div>
-                    <h1 className="page-title">Schedules</h1>
+                    <h1 className="page-title">Schedules<HelpHint article="working-day" label="a schedule">A person's own working days and hours. The break and the overtime rate still come from the company's settings.</HelpHint></h1>
                     <div className="page-sub">When each employee is expected to work, across both businesses</div>
                 </div>
             </div>

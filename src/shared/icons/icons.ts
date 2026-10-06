@@ -44,6 +44,8 @@ export const icons = {
   eye: '<path d="M2.6 12S6.2 6.2 12 6.2 21.4 12 21.4 12 17.8 17.8 12 17.8 2.6 12 2.6 12z"/><circle cx="12" cy="12" r="2.6"/>',
   alert: '<path d="M12 4.4 21 19.6H3z"/><path d="M12 10v4.2"/><circle class="f" cx="12" cy="17" r="1"/>',
   info: '<circle cx="12" cy="12" r="8.4"/><path d="M12 11.2v5"/><circle class="f" cx="12" cy="8.2" r="1"/>',
+  // not in the prototype: drawn like info for the Help page and the "?" bubbles
+  help: '<circle cx="12" cy="12" r="8.4"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.4 2.2c-.7.3-1.1.9-1.1 1.6v.4"/><circle class="f" cx="12" cy="16.6" r="1"/>',
   checkCircle: '<circle cx="12" cy="12" r="8.4"/><path d="m8.2 12.2 2.8 2.8 4.8-5.6"/>',
   circleDot: '<circle cx="12" cy="12" r="8.4"/><circle class="f" cx="12" cy="12" r="3.2"/>',
   timer: '<circle cx="12" cy="13.4" r="7.4"/><path d="M12 13.4V9.8"/><path d="M9.6 3.4h4.8"/><path d="M12 3.4V6"/>',

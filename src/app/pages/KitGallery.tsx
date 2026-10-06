@@ -16,6 +16,7 @@ import Tabs from "@/shared/components/Data/Tabs";
 import DataTable, { type SortState } from "@/shared/components/Data-Tables/DataTable";
 import Pager from "@/shared/components/Data-Tables/Pager";
 import Empty from "@/shared/components/Feedback/Empty";
+import HelpTip from "@/shared/components/Feedback/HelpTip";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonKpis, SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
@@ -161,6 +162,10 @@ export default function KitGallery() {
                     <div className="mt"><SkeletonLines lines={3} /></div>
                 </Panel>
                 <Panel title="A KPI on its own"><Kpi label="Outstanding" value={<Money value={26300} />} sub="3 invoices" /></Panel>
+                <Panel title="Help bubbles" sub="A &quot;?&quot; that explains on the spot, with or without a link to Help">
+                    <p>Margin<HelpTip label="margin">Profit ÷ revenue.</HelpTip></p>
+                    <p>Outstanding<HelpTip label="outstanding" more={{ to: "/design/help?article=billing-terms" }}>What clients still have to pay on invoices already sent.</HelpTip></p>
+                </Panel>
             </div>
 
             {modal && (

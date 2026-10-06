@@ -8,6 +8,7 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../../shared/projects/projectsApi";
 import { COST_COLORS, costParts, profitSteps } from "./moneyParts";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 type ProjectMoney = NonNullable<Project["money"]>;
 
@@ -44,7 +45,12 @@ export default function MoneyBand({ project, money: m, contributors, expenseCoun
                     </div>
                     <div className="row wrap" style={{ gap: 12, alignItems: "baseline", margin: "2px 0 6px" }}>
                         {internal ? <Money value={m.cost.total} size="xl" /> : <Money value={m.profit} size="xl" tone="auto" />}
-                        {internal ? <span className="badge">Internal project</span> : <MarginPill value={m.margin} hint="Needs 5% progress or 10 logged hours" />}
+                        {internal ? <span className="badge">Internal project</span> : (
+                            <span className="row" style={{ gap: 2 }}>
+                                <MarginPill value={m.margin} hint="Needs 5% progress or 10 logged hours" />
+                                <HelpHint article="profit-margin" label="the margin">Profit ÷ revenue. It shows once the project is done, 5% along, or has 10 hours logged.</HelpHint>
+                            </span>
+                        )}
                         {!done && !internal && m.projected && (
                             <span className="muted" style={{ fontSize: "11.5px" }}>
                                 projected <b className={cx("mono", m.projected.profit >= 0 ? "up" : "down")}>{money.short(m.projected.profit)}</b>

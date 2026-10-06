@@ -133,6 +133,9 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                                     <Icon name="settings" />Settings
                                 </button>
                             )}
+                            <button className="pop-item" onClick={() => { close(); navigate(`${base}/help`); }}>
+                                <Icon name="help" />Help
+                            </button>
                             <button className="pop-item" onClick={() => { close(); setReporting(true); }}>
                                 <Icon name="flag" />Report a bug
                             </button>

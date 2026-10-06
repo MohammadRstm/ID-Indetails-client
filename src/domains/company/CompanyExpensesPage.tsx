@@ -16,7 +16,7 @@ import MenuButton from "@/shared/components/Overlays/MenuButton";
 import { money } from "@/shared/format/money";
 import { addDays, companyToday, fmtDate, fmtDateY, fmtMonthY, MONTHS, partsOf } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import { useCancelOverhead, useCompanyMonths, useCompanyYear, useOverhead, useOverheadMonths, type OverheadLine } from "./companyApi";
+import { useCancelOverhead, useCompanyMonths, useCompanyYear, useOverhead, useOverheadMonths, type CompanyMonth, type OverheadLine } from "./companyApi";
 import { YEARS_BACK } from "./companyPeriod";
 import OverheadModal from "./OverheadModal";
 import OverheadGroupsModal from "./OverheadGroupsModal";
@@ -122,7 +122,7 @@ export default function CompanyExpensesPage() {
 
                     <div className={seesCompany ? "grid g-8-4 mt" : "mt"}>
                         {seesCompany && <Figure title={`What company expenses do to each month · ${chartYear}`}
-                            sub="Company profit with company expenses taken out, against what it would have been without it."
+                            sub="The company's net profit, after company expenses and the super admins' salaries, against what it would have been without them."
                             tools={
                                 <div className="row" style={{ gap: 4 }}>
                                     <button className="icon-btn" aria-label="Previous year" disabled={chartYear <= thisYear - YEARS_BACK} onClick={() => setChartYear((y) => y - 1)}><Icon name="chevronLeft" /></button>
@@ -131,18 +131,19 @@ export default function CompanyExpensesPage() {
                                 </div>
                             }
                             table={{
-                                cols: [{ label: "Month" }, { label: "Company expenses", right: true }, { label: "Profit before", right: true }, { label: "Profit after", right: true }],
-                                rows: yearList.map((m) => [fmtMonthY(m.month), money.fmt(m.overhead), money.fmt(m.profitBeforeOverhead), money.fmt(m.profitAfterOverhead)]),
+                                cols: [{ label: "Month" }, { label: "Company expenses", right: true }, { label: "Super admins' salaries", right: true }, { label: "Profit before", right: true }, { label: "Net profit", right: true }],
+                                rows: yearList.map((m) => [fmtMonthY(m.month), money.fmt(m.overhead), money.fmt(salariesOf(m)), money.fmt(m.profitBeforeOverhead), money.fmt(netOf(m))]),
                             }}>
                             {loadFailed(yearMonths) ? <LoadError error={yearMonths.error} retry={() => yearMonths.refetch()} what={`${chartYear}'s months`} />
                                 : !yearMonths.data ? <SkeletonLines lines={7} /> : (
                                 <>
                                     <LineChart height={210} tickEvery={2} format={(v) => money.short(v)} series={[
                                         { label: "Profit before company expenses", ghost: true, dash: true, points: yearList.map((m) => ({ y: m.profitBeforeOverhead, label: monthLabel(m.month), tip: fmtMonthY(m.month) })) },
-                                        { label: "Profit after company expenses", area: true, points: yearList.map((m) => ({ y: m.profitAfterOverhead, label: monthLabel(m.month), tip: fmtMonthY(m.month) })) },
+                                        { label: "Net profit", area: true, points: yearList.map((m) => ({ y: netOf(m), label: monthLabel(m.month), tip: fmtMonthY(m.month) })) },
                                     ]} />
                                     <div className="chart-note">
-                                        The gap between the two lines is company expenses - {money.fmt(yearList.reduce((t, m) => t + m.overhead, 0))} in {chartYear}{chartYear === thisYear ? " so far" : ""},
+                                        The gap between the two lines is company expenses and the super admins' salaries
+                                        - {money.fmt(yearList.reduce((t, m) => t + m.overhead + salariesOf(m), 0))} in {chartYear}{chartYear === thisYear ? " so far" : ""},
                                         carried by the company rather than by any one project.
                                     </div>
                                 </>
@@ -224,3 +225,7 @@ export default function CompanyExpensesPage() {
         </div>
     );
 }
+
+// An API from before super admins' salaries were in each month sends neither field: the net profit is then the profit after overhead.
+const salariesOf = (m: CompanyMonth) => m.superAdminSalaries ?? 0;
+const netOf = (m: CompanyMonth) => m.netProfit ?? m.profitAfterOverhead;

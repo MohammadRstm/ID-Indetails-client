@@ -22,6 +22,7 @@ import SalaryDrawer from "./SalaryDrawer";
 import { useSalaries, type SalaryRow } from "./salariesApi";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 const PAGE = 10;
 const cash = (v: number, cur: string, cents = false) => money.exact(v, cur, cents ? { cents: true } : undefined);
@@ -160,11 +161,11 @@ export default function SalariesPage() {
                                             <thead>
                                                 <tr>
                                                     <th>Employee</th><th>Pay</th>
-                                                    <th className="r" title="Hours their schedule asks for this month (so far, for the current month)">Expected</th>
+                                                    <th className="r">Expected<HelpHint article="hours-balance" label="expected">The hours their working days ask for this month (so far, for the current month).</HelpHint></th>
                                                     <th className="r" title="Logged inside their scheduled hours">In hours</th>
-                                                    <th className="r" title="Overtime that made up missing hours - paid as normal hours">Made up</th>
-                                                    <th className="r" title="Overtime left after making up - paid at the overtime rate">Overtime</th>
-                                                    <th>Short</th>
+                                                    <th className="r">Made up<HelpHint article="hours-balance" label="made up">Overtime that covered missing hours, paid as normal hours.</HelpHint></th>
+                                                    <th className="r">Overtime<HelpHint article="overtime" label="overtime">Overtime left after making up missing hours, paid at the overtime rate.</HelpHint></th>
+                                                    <th>Short<HelpHint article="deductions" label="short">Hours still missing. On a monthly salary they come off the pay once the month ends, unless excused.</HelpHint></th>
                                                     <th className="r">Base pay</th><th className="r">Overtime pay</th><th className="r">To pay</th><th />
                                                 </tr>
                                             </thead>

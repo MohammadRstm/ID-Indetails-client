@@ -11,6 +11,7 @@ import type { Project } from "../../shared/projects/projectsApi";
 import { useSiteTimeline, type SiteTimeline } from "./siteApi";
 import { siteMoneyOf, type SiteMoney } from "./siteMoney";
 import { loadFailed } from "@/api/queryState";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 /**
  * Ground labour against the profit the client's payments have made (the prototype's EX.LabourHealth): how much
@@ -69,7 +70,10 @@ function Health({ x, timeline: { weeks, projection: pr } }: { x: SiteMoney; time
                     </div>
                 </div>
                 <div>
-                    <div className="u" style={{ marginBottom: 6 }}>When would it stop making money?</div>
+                    <div className="u" style={{ marginBottom: 6 }}>
+                        When would it stop making money?
+                        <HelpHint article="site-money" label="this projection">The profit so far divided by today's daily ground labour cost, counted in working days (Monday to Saturday).</HelpHint>
+                    </div>
                     {pr.state === "done" ? (
                         <div className="banner"><Icon name="info" /><div className="grow">The project is closed - nothing left to project.</div></div>
                     ) : pr.state === "losing" ? (

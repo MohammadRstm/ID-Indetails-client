@@ -24,6 +24,7 @@ import { costPartsOf, costWords } from "../../shared/finance/costParts";
 import { useFinanceClients, useFinanceCosts, useFinanceMonthly, useFinanceProjects, useFinanceSummary } from "../../shared/finance/financeApi";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { ClientsTab, CostsTab, OverviewTab, ProjectsTab, type Failure, type Tile } from "./FinanceTabs";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 type PeriodKey = "quarter" | "year" | "all";
 type Tab = "overview" | "projects" | "clients" | "billing" | "costs";
@@ -100,10 +101,16 @@ function FinancialsPage({ domain }: { domain: Domain }) {
             {summary.isError && !summary.data ? <div className="panel"><div className="panel-body"><LoadError error={summary.error} retry={() => summary.refetch()} what="the financials" /></div></div> : (
                 <>
                     <KpiStrip loading={!s} items={[
-                        { key: "revenue", label: "Revenue received", value: money.short(s?.revenue ?? 0), sub: <span>{s?.clientProjects ?? 0} client projects · payments in the period</span> },
+                        {
+                            key: "revenue", value: money.short(s?.revenue ?? 0), sub: <span>{s?.clientProjects ?? 0} client projects · payments in the period</span>,
+                            label: <>Revenue received<HelpHint article="revenue" label="revenue received">The money clients paid in the period, counted on the day it arrived. A project's own revenue is what was agreed.</HelpHint></>,
+                        },
                         ...costTiles,
                         { key: "profit", label: "Net profit", value: money.short(s?.profit ?? 0), sub: <span>revenue less {costWords(domain).toLowerCase()}</span> },
-                        { key: "margin", label: "Margin", value: money.pct(s?.margin), sub: <span>all-time client profit {money.short(s?.allTimeClientProfit ?? 0)}</span> },
+                        {
+                            key: "margin", value: money.pct(s?.margin), sub: <span>all-time client profit {money.short(s?.allTimeClientProfit ?? 0)}</span>,
+                            label: <>Margin<HelpHint article="profit-margin" label="margin">Net profit as a share of the revenue received in the period.</HelpHint></>,
+                        },
                     ]} />
 
                     <Tabs value={tab} onChange={setTab} items={[

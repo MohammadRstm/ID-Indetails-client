@@ -32,10 +32,55 @@ table { line-height: normal; font-weight: normal; }
    focus ring for it, as the prototype's had none. */
 .modal:focus { outline: none; }
 
-/* A "?" beside a field's label that explains the field (HelpTip); the prototype had none. */
-.help-tip { display: inline-grid; place-items: center; width: 15px; height: 15px; margin-left: 5px; padding: 0; vertical-align: -2px;
-    border: 1px solid var(--line-2); border-radius: 50%; background: transparent; color: var(--ink-3); font: 650 9.5px/1 inherit; cursor: help; }
-.help-tip:hover, .help-tip:focus-visible { color: var(--ink); border-color: var(--ink-3); outline: none; }
+/* A "?" in a circle beside a label or a figure that explains it (HelpTip); the prototype had none. */
+.help-tip { display: inline-grid; place-items: center; width: 16px; height: 16px; margin-left: 4px; padding: 0; vertical-align: -3px;
+    border: 0; border-radius: 50%; background: transparent; color: var(--ink-3); cursor: help; flex: none; }
+.help-tip .ic { width: 15px; height: 15px; }
+.help-tip:hover, .help-tip:focus-visible { color: var(--accent); outline: none; }
+.help-tip:focus-visible { box-shadow: 0 0 0 2px var(--accent-soft); }
+/* its bubble: with a "Read more" link it can be pointed at and clicked */
+.help-bubble.with-link { pointer-events: auto; }
+.help-bubble .help-more { display: block; margin-top: 6px; color: inherit; font-weight: 650; text-decoration: underline; text-underline-offset: 2px; }
+.help-bubble .help-more:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 3px; }
+
+/* The Help page (not in the prototype): Settings' layout, a search bar on top, articles drawn from its tokens. */
+.help-search { margin-bottom: 14px; max-width: 760px; }
+.help-search .search .input { height: 40px; font-size: 13.5px; padding-left: 34px; }
+.help-search .search .ic { left: 11px; }
+.help-grid { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 16px; align-items: start; }
+.help-topics { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.help-topic-list { display: flex; flex-direction: column; gap: 7px; font-size: 12.8px; }
+.help-row { display: grid; gap: 2px; width: 100%; text-align: left; padding: 11px 14px; border: 0; border-top: 1px solid var(--line);
+    background: none; color: inherit; cursor: pointer; font: inherit; }
+.help-row:first-child { border-top: 0; }
+.help-row:hover, .help-row.on { background: var(--surface-2); }
+.help-row-title { font-weight: 650; font-size: 13px; }
+.help-row-sub { color: var(--ink-2); font-size: 12.3px; line-height: 1.5; }
+.help-row-topic { color: var(--ink-3); font-size: 11px; }
+.help-back { margin-bottom: 10px; }
+.help-article { max-width: 860px; }
+.help-title { font-size: 17px; font-weight: 650; margin: 3px 0 4px; }
+.help-summary { color: var(--ink-2); margin: 0; font-size: 13px; line-height: 1.55; max-width: 72ch; }
+.help-body { display: flex; flex-direction: column; gap: 12px; font-size: 13px; line-height: 1.6; }
+.help-body p { margin: 0; max-width: 72ch; }
+.help-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 5px; max-width: 72ch; }
+.help-steps { margin: 0; padding: 0; list-style: none; counter-reset: help-step; display: flex; flex-direction: column; gap: 8px; max-width: 72ch; }
+.help-steps li { counter-increment: help-step; display: grid; grid-template-columns: 22px minmax(0, 1fr); column-gap: 8px; }
+.help-steps li::before { content: counter(help-step); grid-row: 1 / span 2; width: 20px; height: 20px; border-radius: 50%; display: grid;
+    place-items: center; background: var(--accent-soft); color: var(--accent-ink); font-size: 11px; font-weight: 650; margin-top: 1px; }
+.help-where { justify-self: start; font-size: 11px; color: var(--ink-3); background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: 5px; padding: 0 6px; margin-bottom: 2px; }
+.help-formula { border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--r1); background: var(--surface-2);
+    padding: 9px 12px; max-width: 72ch; }
+.help-formula-rule { font-weight: 600; }
+.help-formula-example { color: var(--ink-2); margin-top: 4px; font-size: 12.5px; }
+.help-formula-example .u { margin-right: 4px; }
+.help-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.help-links .btn .ic { width: 14px; height: 14px; }
+.help-related { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 12.5px; }
+@media (max-width: 760px) {
+    .help-grid { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* Space under a banner that opens a window, above what follows it. */
 .mb { margin-bottom: 14px; }

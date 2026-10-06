@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
+import HelpTip from "@/shared/components/Feedback/HelpTip";
 import Skeleton from "@/shared/components/Feedback/Skeleton";
 
 export type KpiProps = {
     label: ReactNode;
     value: ReactNode;
     unit?: ReactNode;
-    /** Shown as an ⓘ with a tooltip. */
+    /** A short explanation, behind a "?" beside the label. */
     hint?: string;
     /** A change against a previous period (see Delta). */
     delta?: ReactNode;
@@ -18,7 +19,7 @@ export function Kpi({ label, value, unit, hint, delta, sub }: KpiProps) {
         <div className="kpi">
             <div className="kpi-label">
                 {label}
-                {hint && <span className="muted" title={hint}>ⓘ</span>}
+                {hint && <HelpTip label={typeof label === "string" ? label.toLowerCase() : "this figure"}>{hint}</HelpTip>}
             </div>
             <div className="kpi-val">
                 {value}
