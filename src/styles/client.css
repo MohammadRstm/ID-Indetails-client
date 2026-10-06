@@ -14,6 +14,12 @@ table { line-height: normal; font-weight: normal; }
 /* The prototype capped pages at 1520px, which left an empty band on the right of large screens. Pages
    take the whole width beside the sidebar instead. */
 .page { max-width: none; }
+/* Pages that are read down a column (Settings, Help, Notifications) would leave half a large screen empty beside
+   them, with their buttons far from what they act on: they keep their width and sit in the middle instead. */
+.page.page-narrow { max-width: 1520px; margin-inline: auto; }
+.page.page-reading { max-width: 880px; margin-inline: auto; }
+/* A long chat message stays a comfortable line length on a wide screen. */
+@media (min-width: 861px) { .msg-bubble { max-width: min(62%, 720px); } }
 
 /* loading skeletons */
 .skel {
@@ -86,6 +92,16 @@ table { line-height: normal; font-weight: normal; }
     .help-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* Settings: its sections on the left, the open one on the right (the page stops at 1520px, so a setting's label and
+   its switch stay close). A phone has no room beside the sections: they become a row of tabs above the open one,
+   scrolled sideways. */
+.settings-grid { grid-template-columns: 210px minmax(0, 1fr); gap: 16px; }
+@media (max-width: 760px) {
+  .settings-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .settings-grid .nav { flex-direction: row; overflow-x: auto; scrollbar-width: none; gap: 4px; }
+  .settings-grid .nav-item { width: auto; flex: none; white-space: nowrap; }
+}
+
 /* Space under a banner that opens a window, above what follows it. */
 .mb { margin-bottom: 14px; }
 
@@ -97,6 +113,58 @@ table { line-height: normal; font-weight: normal; }
   .msg-sidebar { width: 100%; border-right: none; }
   .msg-page.reading .msg-sidebar, .msg-page:not(.reading) .msg-thread { display: none; }
   .msg-back { display: inline-grid; margin-left: -6px; }
+}
+
+/* ---------------- phones ----------------
+   The prototype was drawn for a laptop; below 640px its top bar ran off the screen. The top bar's buttons
+   drop their words (their names stay for screen readers) and Help moves to the account menu only. */
+@media (max-width: 640px) {
+  .top { gap: 6px; padding: 0 8px; }
+  .top-actions { gap: 2px; }
+  .top .top-label, .top .timer-title { display: none; }
+  .top .btn-sm { width: 32px; padding: 0; }
+  .top .timer { padding-left: 8px; gap: 6px; }
+  .top .timer .btn-sm { width: 27px; height: 24px; border-radius: 99px; }
+}
+@media (max-width: 420px) {
+  .top-help { display: none; }
+}
+/* A wide table scrolls sideways on a phone; its first column (what each row is) stays put, so a figure far to the
+   right still says whose it is. */
+@media (max-width: 640px) {
+  .tbl-wrap .tbl > * > tr > :first-child { position: sticky; left: 0; z-index: 1; background: var(--surface); box-shadow: inset -1px 0 0 var(--line); }
+  .tbl-wrap .tbl > thead > tr > :first-child, .tbl-wrap .tbl > tfoot > tr > :first-child { background: var(--surface-2); }
+  .tbl-wrap .tbl > tbody > tr.click:hover > :first-child { background: var(--surface-2); }
+  /* and it takes under half the screen: long names end in "…" */
+  .tbl-wrap .tbl > tbody > tr > td:first-child > * { max-width: 42vw; }
+  .tbl-wrap .tbl > tbody > tr > td:first-child { min-width: 140px; }
+}
+/* A window fits the part of the screen the browser leaves visible (100vh on a phone includes the area under its
+   address bar, which hid a window's buttons). On a phone it uses nearly all of the screen, and its footer puts a
+   total or a note on a line of its own above the buttons, which share the next line. */
+.modal { max-height: calc(100dvh - 52px); }
+.side { height: 100dvh; }
+@media (max-width: 640px) {
+  .scrim { padding: 12px 8px; }
+  .modal { max-height: calc(100dvh - 24px); }
+  .modal-head { padding: 13px 14px; }
+  .modal-foot { flex-wrap: wrap; padding: 10px 14px; }
+  .modal-foot > .grow:not(:empty) { flex: 1 1 100%; }
+  .modal-foot > .btn { flex: 1 1 auto; }
+}
+/* The pager's numbers don't fit on a phone: it shows "Page 2 of 5" between its arrows instead. */
+.pager .pager-of { display: none; white-space: nowrap; padding: 0 4px; }
+@media (max-width: 560px) {
+  .pager .pager-num { display: none; }
+  .pager .pager-of { display: inline; }
+}
+/* A page's buttons, or a panel's tools, go onto a second line rather than off the edge, and a setting's control
+   moves under its words when they can't share a line. */
+.page-actions > .row, .panel-tools > .row { flex-wrap: wrap; }
+.page-actions, .panel-tools { max-width: 100%; }
+@media (max-width: 640px) {
+  .switch-row { flex-wrap: wrap; }
+  .switch-row > .grow { flex: 1 1 220px; }
 }
 
 /* A menu drawn over the page beside its button (Popover floating): never inside a table it would stretch. */

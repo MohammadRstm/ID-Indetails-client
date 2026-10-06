@@ -15,6 +15,10 @@ type CalendarHeatProps = {
     note?: string;
 };
 
+const showLatest = (el: HTMLDivElement | null) => {
+    if (el) el.scrollLeft = el.scrollWidth;
+};
+
 /** A contribution grid of days (the prototype's V.CalendarHeat). */
 export function CalendarHeat({ value, end, weeks = 27, scale, cell = 11, onClick, note }: CalendarHeatProps) {
     const today = companyToday();
@@ -38,7 +42,8 @@ export function CalendarHeat({ value, end, weeks = 27, scale, cell = 11, onClick
 
     return (
         <div>
-            <div className="hm-wrap">
+            {/* on a narrow screen the grid scrolls sideways: it opens on the latest weeks */}
+            <div className="hm-wrap" ref={showLatest}>
                 <div style={{ minWidth: cols.length * (cell + gap) + 30 }}>
                     <div className="hm-months" style={{ marginLeft: 26 }}>
                         {months.map((m, i) => <span key={i} style={{ left: m.i * (cell + gap) }}>{m.label}</span>)}

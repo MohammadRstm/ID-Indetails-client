@@ -8,6 +8,7 @@ import { DOMAIN_LABEL } from "@/shared/format/labels";
 import Icon from "@/shared/icons/Icon";
 import type { IconName } from "@/shared/icons/icons";
 import { cx } from "@/shared/utils/cx";
+import { revealInStrip } from "@/shared/utils/revealInStrip";
 import AccessSettings from "./AccessSettings";
 import CompanySettingsSection from "./CompanySettings";
 import DataSettings from "./DataSettings";
@@ -80,20 +81,19 @@ function Settings({ domain, choice }: { domain: Domain; choice?: Choice }) {
     const open = (k: Section) => { params.set("section", k); setParams(params, { replace: true }); };
 
     return (
-        <div className="page">
+        <div className="page page-narrow">
             <div className="page-head">
                 <div>
                     <h1 className="page-title">Settings</h1>
                     <div className="page-sub">Changes apply straight away.</div>
                 </div>
             </div>
-            {/* Pages use the full width, but a setting's label and its switch would drift apart on a large screen:
-                the sections stop at the width they had when pages were capped at 1520px. */}
-            <div className="grid settings-grid" style={{ gridTemplateColumns: "210px minmax(0,1250px)", gap: 16 }}>
+            <div className="grid settings-grid">
                 <div className="panel" style={{ alignSelf: "start" }}>
                     <nav className="nav" style={{ padding: 8 }} aria-label="Settings">
                         {sections.map(([k, label, icon]) => (
-                            <button key={k} className={cx("nav-item", section === k && "on")} aria-current={section === k ? "page" : undefined} onClick={() => open(k)}>
+                            <button key={k} className={cx("nav-item", section === k && "on")} aria-current={section === k ? "page" : undefined}
+                                ref={section === k ? revealInStrip : undefined} onClick={() => open(k)}>
                                 <Icon name={icon} /><span>{label}</span>
                             </button>
                         ))}

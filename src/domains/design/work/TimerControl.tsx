@@ -27,11 +27,11 @@ export default function TimerControl() {
             <div className="timer">
                 <span className="live" />
                 <span className="mono">{two(Math.floor(elapsed / 3600))}:{two(Math.floor(elapsed / 60) % 60)}:{two(elapsed % 60)}</span>
-                {title && <span className="muted trunc" style={{ maxWidth: 120 }}>{title}</span>}
-                <button className="btn btn-sm" onClick={stopTimer}><Icon name="stop" />Stop</button>
+                {title && <span className="muted trunc timer-title" style={{ maxWidth: 120 }}>{title}</span>}
+                <button className="btn btn-sm" onClick={stopTimer} aria-label="Stop"><Icon name="stop" /><span className="top-label">Stop</span></button>
             </div>
         );
     }
     if (!settings?.timerEnabled) return null;
-    return <button className="btn btn-sm btn-quiet" onClick={() => startTimer(me.id)}><Icon name="play" />Start timer</button>;
+    return <button className="btn btn-sm btn-quiet" onClick={() => startTimer(me.id)} aria-label="Start timer"><Icon name="play" /><span className="top-label">Start timer</span></button>;
 }
