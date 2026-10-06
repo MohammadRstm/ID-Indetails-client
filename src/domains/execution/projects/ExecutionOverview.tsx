@@ -44,8 +44,8 @@ export default function ExecutionOverview({ project }: { project: Project }) {
             )}
             {m && client && <BillingBand project={project} />}
             {m && client && <StatementList project={project} />}
-            {m && client && <MaterialMargins project={project} />}
             <MaterialsPanel project={project} />
+            {m && client && <MaterialMargins project={project} />}
             <LabourPanel project={project} />
             {m && client && <LabourHealth project={project} />}
         </>
