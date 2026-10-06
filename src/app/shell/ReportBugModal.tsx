@@ -10,6 +10,10 @@ import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 
 const MAX_TITLE = 120;
+/** Who supports the product, for people who'd rather message than fill in the form. */
+const SUPPORT_WHATSAPP = "96171317958";
+const SUPPORT_WHATSAPP_SHOWN = "+961 71 317 958";
+const SUPPORT_EMAIL = "mohammadrstm2004@gmail.com";
 const MAX_TEXT = 4000;
 
 /**
@@ -30,6 +34,10 @@ export default function ReportBugModal({ onClose }: { onClose: () => void }) {
     const titleError = !title.trim() ? "Say in a few words what went wrong." : title.length > MAX_TITLE && `At most ${MAX_TITLE} characters.`;
     const descriptionError = !description.trim() ? "Describe what happened." : description.length > MAX_TEXT && `At most ${MAX_TEXT} characters.`;
     const stepsError = steps.length > MAX_TEXT && `At most ${MAX_TEXT} characters.`;
+    // whatever has been typed so far goes with the message, with the page it happened on
+    const draft = [title.trim(), description.trim(), steps.trim() && `Steps:\n${steps.trim()}`, `Page: ${pathname}`].filter(Boolean).join("\n\n");
+    const whatsapp = `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(`Bug report (ID InDetails)\n\n${draft}`)}`;
+    const email = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`Bug report: ${title.trim() || "ID InDetails"}`)}&body=${encodeURIComponent(draft)}`;
 
     function submit() {
         if (send.isPending) return;
@@ -72,6 +80,20 @@ export default function ReportBugModal({ onClose }: { onClose: () => void }) {
                     value={steps} onChange={(e) => setSteps(e.target.value)} onBlur={errors.touch("steps")} />
                 <FieldError message={errors.show("steps", stepsError)} />
                 <div className="hint">Please leave out passwords and other private details.</div>
+            </div>
+            <div className="bug-direct">
+                <div>
+                    <div className="strong">Prefer to message us directly?</div>
+                    <div className="hint">Anything you've typed above goes with it.</div>
+                </div>
+                <div className="row wrap" style={{ gap: 8 }}>
+                    <a className="btn btn-sm" href={whatsapp} target="_blank" rel="noreferrer" title={`WhatsApp ${SUPPORT_WHATSAPP_SHOWN}`}>
+                        <Icon name="chat" />WhatsApp
+                    </a>
+                    <a className="btn btn-sm" href={email} title={`Email ${SUPPORT_EMAIL}`}>
+                        <Icon name="mail" />Email
+                    </a>
+                </div>
             </div>
         </Modal>
     );

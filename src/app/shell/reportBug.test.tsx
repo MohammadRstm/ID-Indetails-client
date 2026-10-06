@@ -42,4 +42,17 @@ describe("Report a bug", () => {
         expect(await within(dialog).findByText("Too many requests. Please wait a minute and try again.")).toBeInTheDocument();
         expect(within(dialog).getByLabelText("What went wrong")).toHaveValue("Again");
     });
+
+    it("offers WhatsApp and email instead, carrying what was typed and the page", async () => {
+        renderApp("/design/projects", personas.designEmployee, ...workHandlers);
+        const dialog = await openReport();
+        await userEvent.type(within(dialog).getByLabelText("What went wrong"), "Save does nothing");
+
+        const whatsapp = within(dialog).getByRole("link", { name: "WhatsApp" }).getAttribute("href")!;
+        expect(whatsapp.startsWith("https://wa.me/96171317958?text=")).toBe(true);
+        expect(decodeURIComponent(whatsapp.split("text=")[1])).toBe("Bug report (ID InDetails)\n\nSave does nothing\n\nPage: /design/projects");
+
+        const email = within(dialog).getByRole("link", { name: "Email" }).getAttribute("href")!;
+        expect(email.startsWith("mailto:mohammadrstm2004@gmail.com?subject=Bug%20report%3A%20Save%20does%20nothing&body=")).toBe(true);
+    });
 });
