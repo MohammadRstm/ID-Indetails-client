@@ -8,6 +8,9 @@ export type SalaryRow = Schemas["SalaryRowResponse"];
 export type SalaryDetail = Schemas["SalaryDetailResponse"];
 export type HourExcuse = Schemas["HourExcuseResponse"];
 
+export type SalaryYear = Schemas["SalaryYearResponse"];
+export type SalaryYearRow = Schemas["SalaryYearRowResponse"];
+
 export type SalaryParams = { month: string; domain: string | null; search: string; page: number; pageSize: number };
 
 const salariesKey = ["company", "salaries"] as const;
@@ -19,6 +22,15 @@ export function useSalaries(params: SalaryParams, enabled = true) {
         queryFn: async () => (await http.get<Salaries>("/company/salaries", { params: { ...params, search: params.search || null } })).data,
         placeholderData: keepPreviousData,
         enabled,
+    });
+}
+
+/** What everyone was owed month by month over a year, up to this month (salary:view). */
+export function useSalaryYear(params: { year: number; domain: string | null; search: string }) {
+    return useQuery({
+        queryKey: [...salariesKey, "year", params],
+        queryFn: async () => (await http.get<SalaryYear>("/company/salaries/year", { params: { ...params, search: params.search || null } })).data,
+        placeholderData: keepPreviousData,
     });
 }
 

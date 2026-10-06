@@ -13,6 +13,7 @@
     "amount": 2000,
     "currency": "USD",
     "hourlyRate": 11.5387,
+    "standardHourlyRate": 11.5385,
     "tracksHours": true,
     "expectedMinutes": 8820,
     "normalMinutes": 0,

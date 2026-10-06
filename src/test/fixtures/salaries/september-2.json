@@ -18,6 +18,7 @@
         "amount": 1200,
         "currency": "USD",
         "hourlyRate": 6.9232,
+        "standardHourlyRate": 6.9231,
         "tracksHours": false,
         "expectedMinutes": null,
         "normalMinutes": 0,
@@ -52,6 +53,7 @@
         "amount": 1500,
         "currency": "USD",
         "hourlyRate": 8.654,
+        "standardHourlyRate": 8.6538,
         "tracksHours": false,
         "expectedMinutes": null,
         "normalMinutes": 0,
@@ -86,6 +88,7 @@
         "amount": 1300,
         "currency": "USD",
         "hourlyRate": 7.5001,
+        "standardHourlyRate": 7.5,
         "tracksHours": false,
         "expectedMinutes": null,
         "normalMinutes": 0,
@@ -130,5 +133,6 @@
     "shortPeople": 2,
     "shortMinutes": 930,
     "expectedMinutes": 61740
-  }
+  },
+  "withoutPay": []
 }

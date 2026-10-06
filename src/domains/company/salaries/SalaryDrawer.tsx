@@ -14,7 +14,7 @@ import { money } from "@/shared/format/money";
 import { companyToday, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange } from "@/shared/format/time";
 import { clickable } from "@/shared/utils/clickable";
 import { cx } from "@/shared/utils/cx";
-import { HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
+import { hasFixedSalary, HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
 import { useMyOvertime } from "@/domains/design/work/workApi";
 import { policyOn, useWorkingTime } from "@/domains/shared/settings/settingsApi";
 import ExcuseHours from "./ExcuseHours";
@@ -91,7 +91,7 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openPro
                 <Kpi label="To pay" value={cash(s.total, cur)} />
                 {s.tracksHours
                     ? <Kpi label="Hours" value={fmtH(s.normalMinutes + otLogged)} sub={<span>{fmtH(s.normalMinutes)} normal · <span className="ot-text">{fmtH(otLogged)} overtime</span></span>} />
-                    : <Kpi label="Hours" value="-" sub={<span>{s.domain ? "not tracked in Execution" : "a super admin's salary doesn't depend on hours"}</span>} />}
+                    : <Kpi label="Hours" value="-" sub={<span>{hasFixedSalary(s.role) ? "a fixed salary: no hours are logged" : "not tracked in Execution"}</span>} />}
             </div>
 
             {ruled && (
@@ -143,7 +143,7 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openPro
                     )}
                     {s.tracksHours && (
                         <div>
-                            <span>Overtime · {fmtH(s.overtimeMinutes)}{s.madeUpMinutes ? ` (of ${fmtH(otLogged)} logged)` : ""} at {cash(s.hourlyRate * multiplier, cur, true)}/h{multiplier !== 1 ? ` (×${multiplier})` : ""}</span>
+                            <span>Overtime · {fmtH(s.overtimeMinutes)}{s.madeUpMinutes ? ` (of ${fmtH(otLogged)} logged)` : ""} at {cash(s.standardHourlyRate * multiplier, cur, true)}/h{multiplier !== 1 ? ` (×${multiplier})` : ""}</span>
                             <span className="mono">{cash(s.overtimePay, cur)}</span>
                         </div>
                     )}
@@ -151,8 +151,9 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openPro
                 </div>
                 {monthly && (
                     <div className="hint mt-s">
-                        Salaried: {s.proRated ? "the salary is pro-rated by the working days they were employed" : "the salary is paid in full"};
-                        {" "}hours are priced at {cash(s.amount, cur)} ÷ {HOURS_PER_MONTH.toFixed(1)} h = {cash(s.hourlyRate, cur, true)}/h.
+                        Salaried: {s.proRated ? "the salary is pro-rated by the working days they were employed" : "the salary is paid in full"}.
+                        {" "}An hour this month is {cash(s.amount, cur)} ÷ the month's paid hours = {cash(s.hourlyRate, cur, true)}/h (it prices any deduction)
+                        {s.tracksHours ? `; overtime is paid from the true hourly rate, ${cash(s.amount, cur)} ÷ ${HOURS_PER_MONTH.toFixed(1)} h = ${cash(s.standardHourlyRate, cur, true)}/h, whatever the month` : ""}.
                         {s.deduction > 0 && d.missedDays.length > 0 && !d.inProgress ? " A whole day missed costs the full paid day, its break included." : ""}
                     </div>
                 )}
@@ -209,7 +210,9 @@ function HoursByProject({ detail: d, multiplier, openProject }: { detail: Salary
                 </table>
             </div>
             <div className="hint mt-s">
-                Hours are priced at their rate on the day worked{multiplier !== 1 ? `, overtime at ×${multiplier}` : ""}.
+                {s.basis === "monthly"
+                    ? `Hours are priced at the salary's rate that month, overtime at the true hourly rate${multiplier !== 1 ? ` ×${multiplier}` : ""}.`
+                    : `Hours are priced at their rate on the day worked${multiplier !== 1 ? `, overtime at ×${multiplier}` : ""}.`}
                 {s.basis === "monthly"
                     ? " The salary is paid whatever the projects, and its deductions belong to none, so these don't add up to it."
                     : " Paid breaks belong to no project, so these don't add up to the pay."}

@@ -8,6 +8,7 @@ import { money } from "@/shared/format/money";
 import { addMonths, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, monthKey } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import { HOURS_PER_MONTH } from "./payRules";
 import { companyNow, hoursText } from "../work/day";
 import { openLogWork } from "../work/logWorkStore";
 import { useMyPay, useMySchedule } from "../work/workApi";
@@ -243,7 +244,7 @@ function HowItAddsUp({ pay: r, salary: s, ledger: lg, breakMinutes, typical }: A
                             <span className="mono">−{cash(s.deduction, cur)}</span>
                         </div>
                     )}
-                    <div><span>Overtime · {fmtH(s.overtimeMinutes)} at {cash(s.hourlyRate * s.overtimeMultiplier, cur, true)}/h{s.overtimeMultiplier !== 1 ? ` (×${s.overtimeMultiplier})` : ""}</span>
+                    <div><span>Overtime · {fmtH(s.overtimeMinutes)} at {cash(s.standardHourlyRate * s.overtimeMultiplier, cur, true)}/h{s.overtimeMultiplier !== 1 ? ` (×${s.overtimeMultiplier})` : ""}</span>
                         <span className="mono">{cash(s.overtimePay, cur)}</span></div>
                     <div className="pay-total"><span>{r.inProgress ? "Earned so far" : `Pay for ${fmtMonthY(r.month)}`}</span><span className="mono">{cash(earned, cur)}</span></div>
                 </div>
@@ -251,6 +252,7 @@ function HowItAddsUp({ pay: r, salary: s, ledger: lg, breakMinutes, typical }: A
                     {r.inProgress ? "An estimate that grows as you log work - the final figure is worked out when the month closes. " : ""}
                     {breakMinutes ? (monthly ? `Your break is paid - your salary covers the full ${day}. ` : `Your break is paid - each day you work gets its ${fmtH(breakMinutes)} break on top of the hours you log. `) : ""}
                     Overtime first makes up any hours you're short, at your normal rate; only the rest is paid as overtime.
+                    {monthly ? ` Your salary is the same every month; overtime is paid from your true hourly rate (the salary ÷ ${HOURS_PER_MONTH.toFixed(1)} h, a standard month), whatever the month.` : ""}
                 </div>
             </div>
         </div>

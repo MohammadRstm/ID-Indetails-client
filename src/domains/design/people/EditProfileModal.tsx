@@ -17,7 +17,7 @@ import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { isEmail } from "@/shared/utils/email";
-import { currentPay, HOURS_PER_MONTH, monthlyToHourly } from "../pay/payRules";
+import { currentPay, hasFixedSalary, HOURS_PER_MONTH, monthlyToHourly } from "../pay/payRules";
 import { uploadFile } from "../work/workApi";
 import { useChangeEmail, useChangeMyEmail, useChangePay, usePayHistory, useSetPhoto, useTeams, useUpdateEmployee, useUpdateMyProfile } from "./peopleWorkApi";
 
@@ -75,7 +75,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     // pay, once its history has loaded
     const [pay, setPay] = useState<{ basis: "hourly" | "monthly"; amount: number; currency: string } | null>(null);
     const [from, setFrom] = useState(today);
-    const salaried = person.role === "super_admin";
+    // admins and super admins are paid a fixed monthly salary
+    const salaried = hasFixedSalary(person.role ?? "employee");
     if (pays && pay == null && history.data) setPay({ basis: salaried ? "monthly" : terms?.basis ?? "hourly", amount: terms?.amount ?? 0, currency: terms?.currency ?? "USD" });
     // someone with no pay yet (an invited admin) keeps none until an amount is typed
     const payChanged = !!pay && (terms ? pay.basis !== terms.basis || pay.currency !== terms.currency || Math.abs(pay.amount - terms.amount) > 0.004 : pay.amount > 0);
@@ -220,8 +221,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                     {pays && pay && (
                         <div className="field">
                             <div className="spread" style={{ alignItems: "center" }}>
-                                <label className="label" htmlFor="ep-pay" style={{ margin: 0 }}>Pay</label>
-                                {salaried ? <span className="badge">Monthly salary</span> : (
+                                <label className="label" htmlFor="ep-pay" style={{ margin: 0 }}>{salaried ? "Monthly salary" : "Pay"}</label>
+                                {salaried ? <span className="badge">Fixed salary</span> : (
                                     <Segmented value={pay.basis} onChange={(basis) => setPay({ ...pay, basis })} aria-label="Pay basis"
                                         options={[{ value: "hourly", label: "Per hour" }, { value: "monthly", label: "Per month" }]} />
                                 )}
@@ -231,10 +232,10 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                                     <AmountField id="ep-pay" value={pay.amount} currency={pay.currency} onChange={(amount) => setPay({ ...pay, amount })} onCurrency={(currency) => setPay({ ...pay, currency })} onBlur={errors.touch("pay")} />
                                     <FieldError message={errors.show("pay", payError)} />
                                     <div className="hint">
-                                        {salaried ? "A super admin is paid a monthly salary, whatever hours they log."
+                                        {salaried ? "Admins and super admins are paid a fixed monthly salary: they log no hours, so no overtime."
                                             : pay.basis === "monthly"
-                                            ? (pay.amount ? `= ${money.fmt(monthlyToHourly(pay.amount), pay.currency, { cents: true })} / hour at 40 paid hours a week` : "Monthly salary.")
-                                            : (pay.amount ? `= ${money.fmt(pay.amount * HOURS_PER_MONTH, pay.currency)} for a full month` : "Paid per hour worked.")}
+                                            ? (pay.amount ? `Overtime is paid from ${money.fmt(monthlyToHourly(pay.amount), pay.currency, { cents: true })} / hour (the salary ÷ ${HOURS_PER_MONTH.toFixed(1)} h, a standard month).` : "Monthly salary.")
+                                            : (pay.amount ? `= ${money.fmt(pay.amount * HOURS_PER_MONTH, pay.currency)} for a standard month` : "Paid per hour worked.")}
                                     </div>
                                 </div>
                                 <div className="field">

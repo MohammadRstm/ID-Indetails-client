@@ -134,8 +134,8 @@ export default function ProjectPayPage() {
                     <div className="hint mt-s pp-rule">
                         <Icon name="info" />
                         <span>
-                            Pay is the hours at each person's hourly rate on the day they were worked - salaried staff at their salary ÷ {HOURS_PER_MONTH.toFixed(1)} h;
-                            overtime (outside each person's working hours, or on their days off) × {multiplier ?? "the overtime rate"} - except overtime that made up hours
+                            Pay is the hours at each person's hourly rate on the day they were worked - salaried staff at their salary ÷ that month's paid hours;
+                            overtime (outside each person's working hours, or on their days off) at their true hourly rate (a salary ÷ {HOURS_PER_MONTH.toFixed(1)} h) × {multiplier ?? "the overtime rate"} - except overtime that made up hours
                             someone was short that month, which counts and is paid as normal time. Amounts in different currencies are totalled separately.
                         </span>
                     </div>
@@ -239,7 +239,7 @@ function PersonRow({ row }: { row: ProjectPayPerson }) {
             <td className="r mono">{hrs(row.normalMinutes + row.overtimeMinutes)}</td>
             <td className="r nowrap">
                 <span className="mono">{money.exact(row.hourlyRate, cur, { cents: true })}/h</span>
-                <div className="muted pp-note" title={row.basis === "monthly" && row.monthlySalary != null ? `${money.exact(row.monthlySalary, cur)} a month ÷ ${HOURS_PER_MONTH.toFixed(1)} h` : undefined}>{note}</div>
+                <div className="muted pp-note" title={row.basis === "monthly" && row.monthlySalary != null ? `${money.exact(row.monthlySalary, cur)} a month ÷ the month's paid hours` : undefined}>{note}</div>
             </td>
             <td className="r mono pp-pay">{money.exact(row.pay, cur)}</td>
         </tr>

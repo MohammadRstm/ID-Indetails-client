@@ -47,11 +47,11 @@ describe("the projects list, by permission", () => {
         expect(await screen.findByText("Haddad Holdings HQ fit-out")).toBeInTheDocument();
     });
 
-    it("gives an admin their own work above the table", async () => {
+    it("gives an admin, who logs no hours, the table on its own", async () => {
         renderApp("/design/projects", nadia, ...projectHandlers);
-        expect(await screen.findByRole("heading", { name: "Good afternoon, Nadia" })).toBeInTheDocument();
-        expect(screen.getByRole("heading", { name: "All projects" })).toBeInTheDocument();
+        expect(await screen.findByRole("heading", { name: "Projects" })).toBeInTheDocument();
         expect(await screen.findByText("Haddad Holdings HQ fit-out")).toBeInTheDocument();
+        expect(screen.queryByRole("heading", { name: /^Good / })).toBeNull();
     });
 
     it("gives someone who logs no work the table on its own", async () => {
@@ -97,10 +97,10 @@ describe("a Design project, by permission", () => {
         expect(await logWork()).not.toHaveClass("btn-primary");
     });
 
-    it("shows an admin who logged work here their own hours above the project's", async () => {
+    it("never shows an admin hours of their own: admins log none", async () => {
         renderApp(page, nadia, ...ownWork, ...projectWorkHandlers);
-        expect(await screen.findByText("Your hours here")).toBeInTheDocument();
         expect(await screen.findByText("Total hours")).toBeInTheDocument();
+        expect(screen.queryByText("Your hours here")).toBeNull();
         expect(tabs()).toEqual(["Overview", "Requirements", "Timeline", "Meetings"]);
     });
 
@@ -145,11 +145,11 @@ describe("an Execution site, by permission", () => {
 });
 
 describe("logging work, by permission", () => {
-    it("gives Log work and the timer to whoever may log Design work, admins too", async () => {
+    it("gives an admin neither Log work nor the timer: only employees log hours", async () => {
         renderApp(page, nadia, ...projectWorkHandlers);
         await screen.findByText("Total hours");
-        expect(within(sidebar()).getByRole("button", { name: /log work/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: "Start timer" })).toBeInTheDocument();
+        expect(within(sidebar()).queryByRole("button", { name: /log work/i })).toBeNull();
+        expect(screen.queryByRole("button", { name: "Start timer" })).toBeNull();
     });
 
     it("gives neither, nor their own work, to someone without work_entry:view_own", async () => {

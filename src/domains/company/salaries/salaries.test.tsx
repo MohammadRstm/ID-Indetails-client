@@ -115,6 +115,36 @@ describe("Salaries", () => {
         expect(asked).toEqual([]);
     });
 
+    it("name who has no pay set, so is left out", async () => {
+        const withoutPay = [{ userId: 40, name: "Omar Saad", role: "admin", domain: "design" }];
+        renderApp("/company/salaries", rana, http.get("/api/company/salaries", () => HttpResponse.json({ ...sep, withoutPay })), ...salaryHandlers);
+        expect(await screen.findByText(/No pay is set for Omar Saad \(admin\), so they aren't listed/)).toBeInTheDocument();
+        expect(screen.getByText(/admins and super admins need their monthly salary/)).toBeInTheDocument();
+    });
+
+    it("show a whole year, person by person and month by month, and open a month from it", async () => {
+        renderApp("/company/salaries", rana, ...salaryHandlers);
+        await screen.findByText("Elie Khalil");
+        await userEvent.click(screen.getByRole("tab", { name: "Year" }));
+
+        const year = (await screen.findByText("2026, month by month")).closest(".panel") as HTMLElement;
+        expect(await within(year).findByText("Sarah Haddad")).toBeInTheDocument();
+        expect(within(year).getByRole("columnheader", { name: "Sep" })).toBeInTheDocument();
+        expect(within(year).queryByRole("columnheader", { name: "Oct" })).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Next year" })).toBeDisabled();
+
+        // each month shortened, every digit on hover; currencies never added together
+        const sarah = within(year).getByText("Sarah Haddad").closest("tr") as HTMLElement;
+        expect(within(sarah).getByText("$1.8k")).toHaveAttribute("data-exact", "$1,800");
+        expect(within(sarah).getByText("$18k")).toHaveAttribute("data-exact", "$17,800");
+        expect(within(year).getByText("Total · USD").closest("tr")).toHaveTextContent("$20,300");
+        expect(within(year).getByText("Total · LBP")).toBeInTheDocument();
+
+        await userEvent.click(within(sarah).getByRole("button", { name: "Sarah Haddad, 2026-08" }));
+        expect(await screen.findByText("August 2026")).toBeInTheDocument();
+        expect(await screen.findByText("Short on hours", { selector: ".kpi-label" })).toBeInTheDocument();
+    });
+
     it("show only the business someone may see, without a choice of business", async () => {
         renderApp("/company/salaries", withPermissions(personas.designAdmin, { grant: [P.SALARY_VIEW] }), ...salaryHandlers);
         expect(await screen.findByText("Elie Khalil")).toBeInTheDocument();

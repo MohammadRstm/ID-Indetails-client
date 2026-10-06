@@ -76,8 +76,9 @@ describe("Help's content", () => {
         expect(de).not.toContain("record-materials");
         expect(xa).toEqual(expect.arrayContaining(["set-pricing", "client-statement", "execution-pricing", "site-money"]));
         expect(da).not.toContain("site-money");
-        // the hours balance is Design's employees'
+        // the hours balance is Design's employees', and only employees log hours: admins are paid a fixed salary
         expect(da).not.toContain("hours-balance");
+        for (const admin of [sa, da, xa]) for (const id of ["log-work", "timer", "my-pay"]) expect(admin, id).not.toContain(id);
         // everyone reads the basics
         for (const list of [sa, da, xa, de, xe]) expect(list).toEqual(expect.arrayContaining(["sign-in", "change-password", "privacy", "roles", "report-bug"]));
     });

@@ -107,9 +107,9 @@ describe("the company's people", () => {
         await userEvent.click(screen.getByRole("button", { name: "Edit profile and pay…" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit Sami's profile" });
         // a super admin's pay is a salary: no choice of hourly pay
-        expect(await within(dialog).findByText("Monthly salary")).toBeInTheDocument();
+        expect(await within(dialog).findByText("Fixed salary")).toBeInTheDocument();
         expect(within(dialog).queryByRole("tablist", { name: "Pay basis" })).not.toBeInTheDocument();
-        await userEvent.type(within(dialog).getByLabelText("Pay"), "4500");
+        await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "4500");
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
         await waitFor(() => expect(pays).toEqual([{ basis: "monthly", amount: 4500, currency: "USD", effectiveFrom: "2026-09-30" }]));
     });
