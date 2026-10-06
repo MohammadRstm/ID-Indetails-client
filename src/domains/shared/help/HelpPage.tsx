@@ -52,7 +52,7 @@ export default function HelpPage() {
     const at = Math.min(sel, hits.length - 1);
 
     return (
-        <div className="page">
+        <div className="page page-narrow">
             <PageHead title="Help" sub="What you can do here, step by step, and how the figures you see are worked out. Only what your access covers is shown." />
 
             <div className="help-search" onKeyDown={(e) => {

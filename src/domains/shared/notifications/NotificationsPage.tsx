@@ -29,7 +29,7 @@ export default function NotificationsPage() {
     }
 
     return (
-        <div className="page">
+        <div className="page page-reading">
             <div className="page-head">
                 <div>
                     <h1 className="page-title">Notifications</h1>
@@ -40,7 +40,7 @@ export default function NotificationsPage() {
                     <button className="btn" disabled={markRead.isPending || unread === 0} onClick={() => markRead.mutate("all")}>Mark all read</button>
                 </div>
             </div>
-            <div className="panel" style={{ maxWidth: 760 }}>
+            <div className="panel">
                 <div className="panel-body" style={{ paddingTop: 4 }}>
                     {loadFailed(pages) ? <div className="mt-s"><LoadError error={pages.error} retry={() => pages.refetch()} what="your notifications" /></div>
                         : !pages.data ? <div className="mt-s"><SkeletonLines lines={8} /></div> : (

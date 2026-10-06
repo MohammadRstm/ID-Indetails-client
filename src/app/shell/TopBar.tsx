@@ -48,12 +48,12 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
                 {area.kind === "domain" && area.domain === "design" && permissions.hasAll(P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN) && <TimerControl />}
 
                 {area.kind === "domain" && permissions.has(P.PROJECT_CREATE) && (
-                    <button className="btn btn-sm" onClick={() => navigate(`/${area.domain}/projects?new=1`)}>
-                        <Icon name="plus" />New project
+                    <button className="btn btn-sm" onClick={() => navigate(`/${area.domain}/projects?new=1`)} aria-label="New project">
+                        <Icon name="plus" /><span className="top-label">New project</span>
                     </button>
                 )}
 
-                <button className="icon-btn" onClick={() => navigate(`${base}/help`)} aria-label="Help" title="Help">
+                <button className="icon-btn top-help" onClick={() => navigate(`${base}/help`)} aria-label="Help" title="Help">
                     <Icon name="help" />
                 </button>
 

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cx } from "@/shared/utils/cx";
+import { revealInStrip } from "@/shared/utils/revealInStrip";
 
 export type TabItem<K extends string> = { key: K; label: ReactNode; count?: number | null };
 
@@ -15,7 +16,7 @@ export default function Tabs<K extends string>({ items, value, onChange }: TabsP
         <div className="tabs" role="tablist">
             {items.map((item) => (
                 <button key={item.key} role="tab" aria-selected={value === item.key} className={cx("tab", value === item.key && "on")}
-                    onClick={() => onChange(item.key)}>
+                    ref={value === item.key ? revealInStrip : undefined} onClick={() => onChange(item.key)}>
                     {item.label}
                     {item.count != null && <> <span className="muted num">{item.count}</span></>}
                 </button>

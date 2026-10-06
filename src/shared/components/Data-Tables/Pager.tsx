@@ -34,8 +34,10 @@ export default function Pager({ page, pageSize, total, onPage, anchor }: PagerPr
             <button className="icon-btn" aria-label="Previous page" disabled={page <= 1} onClick={() => go(page - 1)}>
                 <Icon name="chevronLeft" />
             </button>
+            {/* a phone has no room for the page numbers: it says where you are between the arrows */}
+            <span className="pager-of muted">Page {page} of {pages}</span>
             {numbers.map((n, i) => (
-                <span key={n} className="row" style={{ gap: 0 }}>
+                <span key={n} className="row pager-num" style={{ gap: 0 }}>
                     {i > 0 && n - numbers[i - 1] > 1 && <span className="muted" style={{ padding: "0 4px" }}>…</span>}
                     <button className={cx("pager-n", n === page && "on")} aria-current={n === page ? "page" : undefined} onClick={() => go(n)}>
                         {n}

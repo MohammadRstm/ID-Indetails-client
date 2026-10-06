@@ -116,6 +116,8 @@ describe("Pager", () => {
         const onPage = vi.fn();
         render(<Pager page={1} pageSize={30} total={75} onPage={onPage} />);
         expect(screen.getByText("1–30 of 75")).toBeInTheDocument();
+        // what a phone shows instead of the numbers
+        expect(screen.getByText("Page 1 of 3")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Previous page" })).toBeDisabled();
         await userEvent.click(screen.getByRole("button", { name: "3" }));
         expect(onPage).toHaveBeenCalledWith(3);
