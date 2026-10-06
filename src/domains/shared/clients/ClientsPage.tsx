@@ -25,6 +25,7 @@ import { ClientBadge } from "./ClientBits";
 import ClientModal from "./ClientModal";
 import { secondaryLine, useClientOverview, useClients, type ClientFilter, type ClientSort, type ClientSummary } from "./clientsApi";
 import { clickable } from "@/shared/utils/clickable";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 const PAGE_SIZE = 50;
 
@@ -131,10 +132,14 @@ export default function ClientsPage() {
                 { key: "clients", label: "Clients", value: o?.clients ?? 0, sub: <span>{o?.withActiveWork ?? 0} with active work · {o?.withoutProjects ?? 0} without projects</span> },
                 { key: "added", label: "Added this month", value: o?.addedThisMonth ?? 0, sub: <span>newest {o?.newest?.name ?? "-"}</span> },
                 ...(seesMoney ? [
-                    { key: "revenue", label: "Client revenue", value: money.short(revenue), sub: <span>contracted, all time</span> },
+                    {
+                        key: "revenue", value: money.short(revenue), sub: <span>contracted, all time</span>,
+                        label: <>Client revenue<HelpHint article="revenue" label="client revenue">What was agreed with clients for all their projects, all time. It isn't what they have paid.</HelpHint></>,
+                    },
                     { key: "profit", label: "Client profit", value: money.short(s?.allTimeClientProfit ?? 0), sub: <span>{money.pct(revenue ? (s?.allTimeClientProfit ?? 0) / revenue : null)} margin</span> },
                     {
-                        key: "outstanding", label: "Outstanding", value: money.short(s?.billing.outstanding ?? 0),
+                        key: "outstanding", value: money.short(s?.billing.outstanding ?? 0),
+                        label: <>Outstanding<HelpHint article="billing-terms" label="outstanding">What clients still have to pay on invoices already sent.</HelpHint></>,
                         sub: <span className="link" {...clickable(() => navigate(`/${domain}/financials?tab=billing`), "link")}>cash owed, not revenue</span>,
                     },
                     { key: "largest", label: "Largest client", value: top ? money.pct(concentration) : "-", sub: <span>{top ? `${top.name} of all revenue` : "no revenue yet"}</span> },

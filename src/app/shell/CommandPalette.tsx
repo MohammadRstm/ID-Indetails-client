@@ -53,11 +53,19 @@ export default function CommandPalette({ area, onClose }: { area: ShellArea; onC
     const domain = area.kind === "domain" ? area.domain : null;
     const ctx: PlaceContext = { p, area, userId: me.id, dark, run: { logWork: openLogWork, toggleTheme, signOut: () => void signOut() } };
     const places = findPlaces(ctx, q);
+    const asked = q.trim();
     const items = [
         ...places.filter((f) => f.score >= STRONG).map(placeItem),
         ...resultItems(found.data, p, domain),
         ...places.filter((f) => f.score < STRONG).map(placeItem),
-    ].slice(0, MAX);
+    ].slice(0, asked ? MAX - 1 : MAX);
+    // whatever was typed can always be looked up in Help
+    if (asked) {
+        items.push({
+            key: "help-search", kind: "Help", label: `Search Help for “${asked}”`, node: <Icon name="help" />,
+            go: `${domain ? `/${domain}` : "/company"}/help?q=${encodeURIComponent(asked)}`,
+        });
+    }
     const at = Math.min(sel, items.length - 1);
 
     function run(item: Item) {

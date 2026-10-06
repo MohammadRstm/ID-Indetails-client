@@ -15,6 +15,7 @@ import { cx } from "@/shared/utils/cx";
 import { byArea, ROLE_LABEL } from "./permissionWords";
 import { usePermissionCatalog, useUpdateUserPermissions, useUserPermissions } from "./settingsApi";
 import { loadFailed } from "@/api/queryState";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 type Target = { id: number; name: string; domain: string | null };
 
@@ -101,7 +102,10 @@ export default function PermissionsModal({ person, onClose }: { person: Target; 
                             {self && !locked && <div className="banner" style={{ marginBottom: 12 }}><Icon name="info" /><div className="grow">You can't change your own permissions.</div></div>}
                             {!locked && !self && (
                                 <div className="field" style={{ marginBottom: 12 }}>
-                                    <label className="label" htmlFor="perm-reason">Reason <span className="muted">· kept with the change</span></label>
+                                    <div className="row" style={{ gap: 0 }}>
+                                        <label className="label" htmlFor="perm-reason">Reason <span className="muted">· kept with the change</span></label>
+                                        <HelpHint article="manage-permissions" label="giving permissions">You can only give or take away what you hold. One permission of the other business opens that business to them, and their general permissions then apply there too.</HelpHint>
+                                    </div>
                                     <input id="perm-reason" className="input" placeholder="Optional - e.g. covering invoicing while Nadia is away" value={reason} onChange={(e) => setReason(e.target.value)} />
                                 </div>
                             )}

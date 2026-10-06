@@ -53,6 +53,10 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
                     </button>
                 )}
 
+                <button className="icon-btn" onClick={() => navigate(`${base}/help`)} aria-label="Help" title="Help">
+                    <Icon name="help" />
+                </button>
+
                 <ThemeToggle />
 
                 <Popover
@@ -97,6 +101,9 @@ export default function TopBar({ area, onMenu, onSearch }: TopBarProps) {
                                     <Icon name="user" />My profile
                                 </button>
                             )}
+                            <button className="pop-item" onClick={() => { close(); navigate(`${base}/help`); }}>
+                                <Icon name="help" />Help
+                            </button>
                             <button className="pop-item" onClick={() => { close(); setReporting(true); }}>
                                 <Icon name="flag" />Report a bug
                             </button>

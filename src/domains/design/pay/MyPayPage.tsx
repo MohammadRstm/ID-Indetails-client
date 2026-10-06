@@ -12,6 +12,7 @@ import { companyNow, hoursText } from "../work/day";
 import { openLogWork } from "../work/logWorkStore";
 import { useMyPay, useMySchedule } from "../work/workApi";
 import { loadFailed } from "@/api/queryState";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 type Pay = Schemas["MyPayResponse"];
 type Ledger = Schemas["MyLedgerMonthResponse"];
@@ -93,13 +94,18 @@ function PayMonth({ pay: r, month, breakMinutes, typical, allDays, setAllDays }:
         <>
             <KpiStrip items={[
                 ...(s ? [{
-                    key: "earned", label: r.inProgress ? "Earned so far" : "Pay for the month", value: cash(earned, cur),
+                    key: "earned", value: cash(earned, cur),
+                    label: <>{r.inProgress ? "Earned so far" : "Pay for the month"}<HelpHint article="pay" label="this pay">Your base pay for the part of the month so far, plus overtime pay. A month that is over shows its final pay.</HelpHint></>,
                     sub: <span>{r.inProgress ? (monthly ? "salary to date + overtime" : "hours logged + paid breaks") : "final"}</span>,
                 }] : []),
                 { key: "logged", label: "Hours logged", value: fmtH(logged), sub: <span>{fmtH(inside)} normal · <span className="ot-text">{fmtH(overtime)} overtime</span></span> },
-                { key: "hours", label: r.inProgress ? "Hours so far" : "Hours", value: <span className={cx("pay-status", st.cls)}>{st.text}</span>, sub: <span>{st.sub}</span> },
+                {
+                    key: "hours", value: <span className={cx("pay-status", st.cls)}>{st.text}</span>, sub: <span>{st.sub}</span>,
+                    label: <>{r.inProgress ? "Hours so far" : "Hours"}<HelpHint article="hours-balance" label="your hours balance">The hours your working days asked for, against what you worked inside your hours. Overtime makes up missing hours first.</HelpHint></>,
+                },
                 ...(projected != null && s ? [{
-                    key: "projected", label: "Full month, as things stand", value: cash(projected, cur),
+                    key: "projected", value: cash(projected, cur),
+                    label: <>Full month, as things stand<HelpHint article="my-pay-estimates" label="this estimate">The month's base pay plus overtime, minus what you would lose if the month ended as far behind as you are today.</HelpHint></>,
                     sub: <span>salary + overtime so far{s.wouldLose ? " − what you're behind" : ""}</span>,
                 }] : []),
             ]} />

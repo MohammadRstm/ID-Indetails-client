@@ -1,0 +1,286 @@
+import { P } from "@/app/permissions/codes";
+import { or as orFact } from "../helpFacts";
+import { and, has, hasAny, link, links, list, only, para, sees, step, steps, type Article } from "../helpModel";
+
+export const company: Article[] = [
+    {
+        id: "company-details",
+        title: "Changing the company's name, address, website or logo",
+        category: "company",
+        who: has(P.COMPANY_SETTINGS_MANAGE),
+        summary: "Settings → Company has the company's name, address, website and logo, the first day of the week and the time format.",
+        ask: ["company address", "change address", "edit address", "company name", "rename company", "website", "logo", "change logo", "letterhead",
+            "company details", "week start", "first day of the week", "time format", "24 hour", "12 hour"],
+        blocks: [
+            steps(
+                step("Open **Settings** and choose **Company**.", "Settings", "Company"),
+                step("Change the **Company name**, **Website** or **Address**, and save. **Logo file** replaces the logo."),
+            ),
+            para("The name, address and website are printed at the top of invoices and statements."),
+            list(
+                "**Working week**: the first day of the week, for calendars and weekly totals.",
+                "**Time format**: 12-hour (9:00 AM) or 24-hour (09:00), for everyone.",
+            ),
+            links(link("Open company settings", { settings: "general" })),
+        ],
+        related: ["working-hours", "default-currency"],
+    },
+    {
+        id: "working-hours",
+        title: "Changing the working hours and the break",
+        category: "company",
+        who: has(P.WORKING_TIME_MANAGE),
+        summary: "Settings → Time tracking sets the company's working days, start and end time, and the paid break. Changes apply from today or a later day.",
+        ask: ["working hours", "office hours", "work week", "working days", "break", "lunch break", "change hours", "9 to 5"],
+        blocks: [
+            para((f) => `Now: ${orFact(f.days, "the working days")}, ${orFact(f.day, "the working hours")}, with ${orFact(f.breakTime, "the")} break. That's ${orFact(f.required, "the required hours")} of work required and ${orFact(f.paid, "the whole day")} paid a day.`),
+            steps(step("Open **Settings → Time tracking** and change the default working hours, days or break.", "Settings", "Time tracking")),
+            list(
+                "A change applies from today or a later day. Past days keep the hours they had, so past pay and hours don't move.",
+                "A change set for a later day can be replaced before it starts.",
+                "Hours, overtime, pay, salaries and schedules all follow it.",
+                "People with their own schedule keep it; the break and the overtime rate still come from here.",
+            ),
+            links(link("Time tracking settings", { settings: "time" })),
+        ],
+        related: ["working-day", "schedules", "overtime-rate"],
+    },
+    {
+        id: "overtime-rate",
+        title: "Changing the overtime pay rate",
+        category: "company",
+        who: has(P.WORKING_TIME_MANAGE),
+        summary: "Settings → Finance → Overtime pay rate: overtime hours are paid at the hourly rate times this number.",
+        ask: ["overtime rate", "overtime multiplier", "time and a half", "overtime pay", "1.5x"],
+        blocks: [
+            para((f) => `Now: ${orFact(f.multiplier, "the rate set in Settings")}. 1× pays overtime like a normal hour; 1.5× pays half as much again.`),
+            list(
+                "From 1× to 5×, in steps of 0.01.",
+                "A change applies from today: overtime already worked keeps the rate of its day.",
+            ),
+            links(link("Finance settings", { settings: "finance" })),
+        ],
+        related: ["overtime", "pay"],
+    },
+    {
+        id: "default-currency",
+        title: "The default currency",
+        category: "company",
+        who: has(P.COMPANY_SETTINGS_MANAGE),
+        summary: "Settings → Finance → Default currency: the currency forms start with, such as the pay on an invitation. Every amount still says its own currency.",
+        ask: ["default currency", "currency", "dollars", "lira", "lbp", "usd"],
+        blocks: [
+            para("The company works in US dollars (USD) and Lebanese pounds (LBP). Invoices are always in USD; payments, pay, expenses and costs can be in either, and are converted to USD for the totals."),
+            links(link("Finance settings", { settings: "finance" })),
+        ],
+        related: ["exchange-rates"],
+    },
+    {
+        id: "exchange-rate",
+        title: "Setting the exchange rate",
+        category: "company",
+        who: has(P.EXCHANGE_RATE_MANAGE),
+        summary: "Settings → Finance → Exchange rate → Change: how many Lebanese pounds one US dollar buys, from a day.",
+        ask: ["exchange rate", "set rate", "lbp rate", "dollar rate", "lira rate", "currency rate", "conversion"],
+        blocks: [
+            steps(step("Open **Settings → Finance**, find the exchange rate, choose **Change**, and enter the rate and the day it applies from.", "Settings", "Finance")),
+            list(
+                "A rate is never edited: a new one applies from its day, and earlier days keep theirs.",
+                "Each amount is converted at the rate in force on its own day.",
+                "An amount with no rate for its day isn't counted as 0: it's listed apart as unconverted until a rate covers it.",
+            ),
+            links(link("Finance settings", { settings: "finance" })),
+        ],
+        related: ["exchange-rates"],
+    },
+    {
+        id: "company-overview",
+        title: "The company overview",
+        category: "company",
+        who: has(P.COMPANY_VIEW),
+        summary: "Both businesses together for a period: what each made, what the company spent, and what the company keeps.",
+        ask: ["company overview", "company dashboard", "company profit", "net profit", "both businesses", "what the company keeps"],
+        blocks: [
+            list(
+                "Pick the period at the top: a month, a quarter or a year.",
+                "**What the company keeps**: each business's profit, then company expenses and the super admins' salaries, then the company's net profit.",
+                "Each business's card has **Manage**, to step into it.",
+                "**People** and **Teams** tabs cover both businesses.",
+            ),
+            links(link("Open the company overview", { company: "overview" })),
+        ],
+        related: ["company-figures", "company-expenses"],
+    },
+    {
+        id: "company-expenses",
+        title: "Company expenses (rent, subscriptions…)",
+        category: "company",
+        who: hasAny(P.COMPANY_VIEW, P.OVERHEAD_MANAGE),
+        summary: "Company expenses are the company's monthly running costs, like rent and subscriptions. They're never charged to a project.",
+        ask: ["company expenses", "overhead", "rent", "subscription", "running costs", "add expense", "recurring cost", "utilities"],
+        blocks: [
+            only(has(P.OVERHEAD_MANAGE), steps(
+                step("Open **Expenses** (in the company area) and choose **Add expense**.", "Company", "Expenses"),
+                step("Give it a name, a category, a currency (USD or LBP) and its monthly amount."),
+            )),
+            list(
+                "An expense counts in full every month from its start, until it's cancelled.",
+                "Changing the amount applies from this month or a later one; past months keep theirs.",
+                "**Cancel** stops it at the end of this month; until then, **Resume** undoes that.",
+                "Totals are per currency; LBP expenses are converted at the rate on the 1st of each month for the company's profit.",
+            ),
+            only(has(P.OVERHEAD_CATEGORY_MANAGE), para("**Categories** adds, renames and removes the categories.")),
+            links(link("Open company expenses", { company: "overhead" })),
+        ],
+        related: ["company-figures"],
+    },
+    {
+        id: "salaries",
+        title: "Salaries: what everyone is owed for a month",
+        category: "company",
+        who: has(P.SALARY_VIEW),
+        summary: "Salaries lists everyone's pay for a month: base pay, overtime pay, deductions and the total to pay. View details explains a person's month.",
+        ask: ["salaries", "payroll", "pay run", "who to pay", "salary list", "wages", "export salaries", "to pay"],
+        blocks: [
+            list(
+                "Step through the months with the arrows; **Export** downloads the month as CSV.",
+                "**Expected**, **In hours**, **Made up**, **Overtime** and **Short** are the month's hours; **Base pay**, **Overtime pay** and **To pay** its money.",
+                "**View details** shows how a person's month adds up, day by day.",
+                "Totals are per currency; nothing is converted.",
+            ),
+            para("Nothing is stored: each figure is worked out from the hours, pay, excuses and schedules every time, so a late correction shows at once."),
+            links(link("Open salaries", { company: "salaries" })),
+        ],
+        related: ["pay", "hours-balance", "deductions", "excuses"],
+    },
+    {
+        id: "excuse-hours",
+        title: "Excusing hours, days off or unpaid leave",
+        category: "company",
+        who: has(P.HOURS_EXCUSE),
+        summary: "Salaries → View details → Excuse hours or days…, or Record unpaid leave…. Excused hours no longer count as missing.",
+        ask: ["excuse hours", "day off", "sick leave", "vacation", "leave", "unpaid leave", "excused", "holiday", "forgive hours"],
+        blocks: [
+            steps(
+                step("Open **Salaries**, pick the month, then the person's **View details**.", "Company", "Salaries"),
+                step("Choose **Excuse hours or days…** (paid) or **Record unpaid leave…**, pick what to excuse and give a reason."),
+            ),
+            list(
+                "You can excuse a number of hours, particular days, or the whole month.",
+                "Paid: the hours stop counting as missing, and pay is unchanged.",
+                "Unpaid: on a monthly salary the time comes off the pay (an unpaid day costs the whole paid day).",
+                "Not for a future month, and never your own.",
+                "**Remove** takes an excuse back. The person is told when hours are excused.",
+            ),
+        ],
+        related: ["excuses", "deductions"],
+    },
+    {
+        id: "project-pay",
+        title: "Project pay",
+        category: "company",
+        who: has(P.SALARY_VIEW),
+        summary: "Project pay shows what each Design project paid its people for a week, month or quarter.",
+        ask: ["project pay", "labour cost by project", "what projects paid", "pay per project", "people cost"],
+        blocks: [
+            list(
+                "Pick the week, month or quarter, and a project if you like; **Export** downloads it.",
+                "Each project lists who worked on it, their normal and overtime hours, and what that time was paid.",
+            ),
+            links(link("Open project pay", { company: "project-pay" })),
+        ],
+        related: ["project-pay-vs-salaries"],
+    },
+    {
+        id: "schedules",
+        title: "Personal work schedules",
+        category: "company",
+        who: has(P.SCHEDULE_MANAGE),
+        summary: "Schedules gives someone their own working days and hours, instead of the company's.",
+        ask: ["schedule", "personal schedule", "part time", "different hours", "shift", "work days", "days off"],
+        blocks: [
+            steps(step("Open **Schedules** and edit the person's week.", "Company", "Schedules")),
+            list(
+                "Each working day is one stretch of at least 30 minutes; days left out are days off.",
+                "The break and the overtime rate still come from the company's settings.",
+                "A change applies from today or a later day. Choose the company default to return them to it.",
+                "Nobody sets their own schedule. They're told when it changes.",
+            ),
+            links(link("Open schedules", { company: "schedules" })),
+        ],
+        related: ["working-day", "working-hours"],
+    },
+];
+
+export const settings: Article[] = [
+    {
+        id: "time-rules",
+        title: "Rules for logging work",
+        category: "settings",
+        who: and(sees("design"), has(P.DOMAIN_SETTINGS_MANAGE)),
+        summary: "Settings → Time tracking: how long entries can be changed, overlaps, future entries, descriptions, the timer and the daily reminder.",
+        ask: ["edit window", "time tracking settings", "overlapping entries", "future entries", "require description", "timer", "logging reminder"],
+        blocks: [
+            list(
+                "**Edit window**: how long after logging an entry it can still be changed: not at all, 1 day, 7 days, or with no limit.",
+                "**Overlaps**: whether two entries may cover the same time.",
+                "**Future entries**: whether an entry may end after now.",
+                "**Description**: whether every entry needs one.",
+                "**Timer**: whether people can time their work.",
+                "**Reminder**: a reminder in the app for people who haven't logged anything that day.",
+            ),
+            links(link("Time tracking settings", { settings: "time" })),
+        ],
+        related: ["log-work"],
+    },
+    {
+        id: "project-settings",
+        title: "Project settings",
+        category: "settings",
+        who: has(P.DOMAIN_SETTINGS_MANAGE),
+        summary: "Settings → Projects: telling people about projects, logging on projects on hold, and archiving finished projects automatically.",
+        ask: ["project settings", "auto archive", "logging on hold", "notify about projects"],
+        blocks: [
+            list(
+                "**Notify people about projects**: new projects, status changes and new requirements reach the business's people.",
+                "**Logging on hold**: whether work can be logged on a project on hold.",
+                "**Auto-archive**: completed projects are archived once finished for 90 days with nothing new on them.",
+            ),
+            links(link("Project settings", { settings: "projects" })),
+        ],
+        related: ["project-status"],
+    },
+    {
+        id: "notification-settings",
+        title: "Which notifications a business sends",
+        category: "settings",
+        who: has(P.DOMAIN_SETTINGS_MANAGE),
+        summary: "Settings → Notifications: alerts about logged work, project status, idle projects and the weekly summary.",
+        ask: ["notification settings", "too many notifications", "work logged alerts", "weekly summary", "idle project", "daily digest"],
+        blocks: [
+            list(
+                "**Work entries**: tell managers about every entry, only long ones (3 hours or more), one daily digest, or nothing.",
+                "**Idle projects**: a note when an active project has had no work for 7 days.",
+                "**Weekly summary**: on the first day of the week, each person who logs work gets last week's total.",
+            ),
+            links(link("Notification settings", { settings: "notifications" })),
+        ],
+        related: ["notification-kinds"],
+    },
+    {
+        id: "export-data",
+        title: "Exporting all work entries",
+        category: "settings",
+        who: and(sees("design"), has(P.WORK_ENTRY_VIEW_ALL)),
+        summary: "Settings → Data & export downloads every work entry as a CSV file. A person's timesheet is exported from their profile.",
+        ask: ["export", "export data", "csv", "download entries", "timesheet export", "backup", "excel"],
+        blocks: [
+            list(
+                "**Settings → Data & export**: all work entries, as CSV.",
+                "A person's profile: **Export timesheet**.",
+                "**Reports** and **Financials** have their own exports.",
+            ),
+            links(link("Data & export", { settings: "data" })),
+        ],
+    },
+];

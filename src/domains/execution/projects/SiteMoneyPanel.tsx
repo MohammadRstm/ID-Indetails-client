@@ -9,6 +9,7 @@ import { usePayments } from "../../shared/billing/billingApi";
 import type { Project } from "../../shared/projects/projectsApi";
 import { useAllMaterials } from "../materials/materialsApi";
 import { pctOf, SITE_COLORS, siteMoneyOf } from "./siteMoney";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 type SiteMoneyPanelProps = {
     project: Project;
@@ -82,11 +83,11 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onStatement, 
                         sub={<span>{plural(x.payments, "payment")}{initial ? ` · ${money.short(initial.amountUsd)} up front` : ""}</span>} />
                     <Kpi label="Spent so far" value={money.exact(x.spent)}
                         sub={<span>{money.short(x.materialCost)} materials · {money.short(x.labour)} labour{x.other ? ` · ${money.short(x.other)} other` : ""}</span>} />
-                    <Kpi label="Profit so far" value={<span className={x.cashProfit < 0 ? "down" : "up"}>{money.exact(x.cashProfit)}</span>}
+                    <Kpi label={<>Profit so far<HelpHint article="site-money" label="profit so far">What the client has paid, minus what the site has cost.</HelpHint></>} value={<span className={x.cashProfit < 0 ? "down" : "up"}>{money.exact(x.cashProfit)}</span>}
                         sub={<span>received − spent</span>} />
                     <Kpi label={paidAhead ? "Paid ahead" : "Client still owes"} value={money.exact(paidAhead ? x.credit : x.owed)}
                         sub={<span>of {money.exact(x.agreed)} agreed so far</span>} />
-                    <Kpi label="Expected profit" value={<span className={x.expectedProfit < 0 ? "down" : undefined}>{money.exact(x.expectedProfit)}</span>}
+                    <Kpi label={<>Expected profit<HelpHint article="site-money" label="expected profit">What is left once the client has paid everything agreed so far: the agreed amount minus the cost.</HelpHint></>} value={<span className={x.expectedProfit < 0 ? "down" : undefined}>{money.exact(x.expectedProfit)}</span>}
                         sub={<span>once the client has paid it all</span>} />
                 </div>
 

@@ -26,6 +26,9 @@ export type PlaceContext = {
     dark: boolean;
 };
 
+/** Who is asking and where they are: all a page's link needs (Help's links use it too). */
+export type Where = Pick<PlaceContext, "p" | "area">;
+
 /** Where a place leads for this person: a page, or something to do. */
 export type Target = { path: string; sub?: string } | { act: () => void; sub?: string };
 
@@ -47,7 +50,7 @@ export type Found = { key: string; label: string; icon: IconName; target: Target
  * A business page, in the business being looked at, or from the company area in each business this person may
  * open it in (named, when there are several).
  */
-function inBusinesses(ctx: PlaceContext, path: string, only?: Domain): Target[] {
+export function inBusinesses(ctx: Where, path: string, only?: Domain): Target[] {
     const { p, area } = ctx;
     const domains = (area.kind === "domain" ? [area.domain] : DOMAINS.filter((d) => p.canSeeDomain(d)))
         .filter((d) => (!only || d === only) && canOpen(p, d, path));
@@ -55,13 +58,13 @@ function inBusinesses(ctx: PlaceContext, path: string, only?: Domain): Target[] 
 }
 
 /** A company page, when this person may open it. */
-function company(ctx: PlaceContext, path: string): Target[] {
+export function company(ctx: Where, path: string): Target[] {
     const route = companyRoutes.find((r) => r.path === path.split("?")[0]);
     return route?.access(ctx.p) ? [{ path: `/company/${path}` }] : [];
 }
 
 /** A Settings section: in the company area for those who reach it, otherwise in the business. */
-function settings(ctx: PlaceContext, section: string): Target[] {
+export function settings(ctx: Where, section: string): Target[] {
     if (ctx.area.kind === "company") return company(ctx, `settings?section=${section}`);
     return inBusinesses(ctx, `settings?section=${section}`);
 }
@@ -305,6 +308,12 @@ export const PLACES: Place[] = [
         targets: () => [{ path: "/change-password" }],
     },
     {
+        key: "help", icon: "help", label: "Open help",
+        words: ["help", "how do i", "how to", "guide", "guides", "faq", "questions", "manual", "instructions", "support",
+            "explain", "explanation", "what does this mean", "how is it calculated", "glossary", "tutorial"],
+        targets: (ctx) => [{ path: ctx.area.kind === "domain" ? `/${ctx.area.domain}/help` : "/company/help" }],
+    },
+    {
         key: "sign-out", icon: "logout", label: "Sign out",
         words: ["sign out", "log out", "logout", "signout", "exit", "leave"],
         targets: (ctx) => [{ act: ctx.run.signOut }],
@@ -403,7 +412,7 @@ function wordMatch(typed: string, word: string): "exact" | "prefix" | "typo" | n
  * How well a search fits one of a place's terms: 100 for the term itself, 90 for its start, 75 when every typed word
  * starts a word of it (65 when the term has more words than were typed), 55 when that takes a typo. 0 when it doesn't fit.
  */
-function termScore(typed: string[], term: string[]): number {
+export function termScore(typed: string[], term: string[]): number {
     const phrase = typed.join(" "), whole = term.join(" ");
     // "log out" is "logout", "pay slips" is "payslips"
     const joined = typed.join(""), solid = term.join("");

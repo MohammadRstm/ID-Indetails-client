@@ -1,0 +1,182 @@
+import { P } from "@/app/permissions/codes";
+import { everyone, hasAny, isEmployee, isSuperAdmin, link, links, list, not, note, only, para, severalAreas, step, steps, type Article } from "../helpModel";
+
+export const gettingStarted: Article[] = [
+    {
+        id: "sign-in",
+        title: "Signing in, and a forgotten password",
+        category: "start",
+        who: everyone,
+        summary: "Sign in with your work email. If you forget your password, the sign-in page sends you a link to choose a new one.",
+        ask: ["sign in", "log in", "login", "forgot password", "forgotten password", "reset password", "can't sign in", "locked out", "invitation"],
+        blocks: [
+            para("Accounts are made by invitation only: an admin invites you, and the email's link lets you choose your password. An invitation link works for 7 days; after that, ask for a new one."),
+            steps(
+                step("On the sign-in page, choose **Forgot password?** and enter your work email.", "Sign in"),
+                step("Open the email and follow its link. The link works once."),
+                step("Choose a new password of at least 10 characters."),
+            ),
+            note("If the email doesn't arrive, check your spam folder, then ask your admin to check the address on your account."),
+        ],
+        related: ["change-password"],
+    },
+    {
+        id: "change-password",
+        title: "Changing your password",
+        category: "start",
+        who: everyone,
+        summary: "Search for \"Change password\" (Ctrl+K or ⌘K) to open the page. Your other devices are signed out; the one you use stays signed in.",
+        ask: ["change password", "new password", "update password", "password", "security"],
+        blocks: [
+            steps(
+                step("Press **Ctrl+K** (or **⌘K** on a Mac), or click the search bar at the top, and type **password**."),
+                step("Choose **Change password**, enter your current password, then the new one (at least 10 characters)."),
+            ),
+            only(isSuperAdmin, para("Super admins also find **Change password** on their profile.")),
+            note("Changing your password signs you out everywhere else, and cancels any password-reset link that was still waiting."),
+            links(link("Change password", { path: "/change-password" })),
+        ],
+        related: ["sign-in"],
+    },
+    {
+        id: "find-pages",
+        title: "Finding a page or an action fast",
+        category: "start",
+        who: everyone,
+        summary: "Press Ctrl+K (⌘K on a Mac) and type what you're looking for, in your own words.",
+        ask: ["search", "find a page", "where is", "shortcut", "command", "ctrl k", "cmd k", "quick search"],
+        blocks: [
+            para("The search finds pages, actions, projects, clients and people. It understands the words people use: \"payroll\" finds Salaries, \"invoice\" finds billing, and small typos are fine."),
+            list(
+                "**Ctrl+K** or **⌘K**, or the search bar at the top, opens it.",
+                "**↑ ↓** move through the results, **Enter** opens one, **Esc** closes it.",
+                "The last line always offers to search Help for what you typed.",
+            ),
+            para("Only pages you may open are offered."),
+        ],
+    },
+    {
+        id: "my-permissions",
+        title: "What am I allowed to do?",
+        category: "start",
+        who: everyone,
+        summary: "Your profile lists every permission you have, each with a sentence saying what it lets you do.",
+        ask: ["my permissions", "what can i do", "access", "why can't i see", "missing page", "no access", "rights"],
+        blocks: [
+            only(isSuperAdmin, steps(step("Open **My profile** from the menu under your name; the **Access** panel lists your role, your businesses and your permissions.", "My profile"))),
+            only(not(isSuperAdmin), steps(step("Open **My profile** from the menu under your name, then **View permissions**.", "My profile"))),
+            para("Your role gives you a set of permissions; an admin with the right to manage permissions can give you more, or take some away. Anything you can't open isn't shown to you at all."),
+            note("If you need something you don't have, ask a super admin."),
+            links(link("Open my profile", { profile: true })),
+        ],
+        related: ["roles"],
+    },
+    {
+        id: "areas",
+        title: "Moving between Design, Execution and the company",
+        category: "start",
+        who: severalAreas,
+        summary: "\"All areas\" at the bottom of the sidebar opens the start screen, where you pick Design, Execution or the company.",
+        ask: ["switch business", "switch to execution", "switch to design", "all areas", "company area", "launcher", "change area"],
+        blocks: [
+            para("Design and Execution are run separately: inside one business there is no sign of the other. Only the start screen, and the company pages, join them up."),
+            steps(
+                step("In the sidebar, under **Company**, choose **All areas**.", "Sidebar"),
+                step("Pick the business, or the company pages."),
+            ),
+            para("You can also type **Go to Design** or **Go to Execution** in the search (Ctrl+K)."),
+            links(link("Open all areas", { path: "/company" })),
+        ],
+    },
+    {
+        id: "notifications",
+        title: "Notifications",
+        category: "start",
+        who: everyone,
+        summary: "The bell at the top shows what happened that concerns you. Open it to read them, or see them all on their own page.",
+        ask: ["notifications", "bell", "alerts", "mark as read", "unread", "too many notifications"],
+        blocks: [
+            list(
+                "The bell's number is how many you haven't read.",
+                "**Mark all read** clears them; **See all notifications** opens the full list, with an **Unread** filter.",
+                "Click one to open what it is about.",
+            ),
+            para("You are never notified about something you did yourself, and notifications never show money amounts."),
+            only(hasAny(P.DOMAIN_SETTINGS_MANAGE), note("Which notifications a business sends is set in **Settings → Notifications**.")),
+            links(link("Open notifications", { here: "notifications" })),
+        ],
+        related: ["notification-kinds"],
+    },
+    {
+        id: "messages",
+        title: "Messages and team chats",
+        category: "start",
+        who: everyone,
+        summary: "The chat icon at the top opens your chats: your team's group chat and direct messages.",
+        ask: ["messages", "chat", "message someone", "team chat", "group chat", "direct message", "mention"],
+        blocks: [
+            list(
+                "Each team has a group chat: the team, its business's admins and the super admins.",
+                "Direct messages are between two people. Use **Find people or groups** to start one.",
+                "In a group, type **@** and a name to mention someone.",
+                "You can attach files and photos.",
+            ),
+            links(link("Open messages", { here: "messages" })),
+        ],
+    },
+    {
+        id: "my-profile",
+        title: "Your name, phone and photo",
+        category: "start",
+        who: everyone,
+        summary: "Open your profile and choose Edit profile to change your name, phone number or photo.",
+        ask: ["edit profile", "change photo", "profile picture", "avatar", "phone number", "change my name", "my profile"],
+        blocks: [
+            steps(
+                step("Open **My profile** from the menu under your name.", "My profile"),
+                step("Choose **Edit profile**, make the change and save."),
+            ),
+            only(isEmployee, note("Your position, team and pay are set by an admin.")),
+            links(link("Open my profile", { profile: true })),
+        ],
+    },
+    {
+        id: "theme",
+        title: "Light and dark mode",
+        category: "start",
+        who: everyone,
+        summary: "The sun or moon button at the top switches between light and dark. Your choice is kept on this device.",
+        ask: ["dark mode", "light mode", "theme", "night mode", "appearance", "colours"],
+        blocks: [para("Use the sun or moon button in the top bar, or type **dark mode** in the search.")],
+    },
+    {
+        id: "customise-dashboard",
+        title: "Rearranging your dashboard",
+        category: "start",
+        who: hasAny(P.REPORT_VIEW, P.COMPANY_VIEW),
+        summary: "Customize, at the top of the overview, lets you move, hide and show its cards. The order is saved for you.",
+        ask: ["customize dashboard", "customise", "rearrange cards", "hide card", "dashboard layout", "move cards"],
+        blocks: [
+            steps(
+                step("On the overview, choose **Customize**.", "Overview"),
+                step("Drag the cards into the order you like, then finish."),
+            ),
+            para("Your layout is saved to your account, so it follows you to other devices. It only changes your own view."),
+        ],
+    },
+    {
+        id: "report-bug",
+        title: "Reporting a problem",
+        category: "start",
+        who: everyone,
+        summary: "Choose Report a bug in the menu under your name. Say what went wrong; the page you were on is sent with it.",
+        ask: ["report a bug", "bug", "problem", "something is wrong", "error", "not working", "feedback", "contact support"],
+        blocks: [
+            steps(
+                step("Open the menu under your name (or your photo at the top right) and choose **Report a bug**."),
+                step("Fill in **What went wrong** and **What happened**, and the steps to make it happen again if you know them."),
+            ),
+            para("The report goes to the developer by email, with the page you were on. You can send a few an hour."),
+        ],
+    },
+];

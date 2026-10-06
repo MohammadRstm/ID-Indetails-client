@@ -26,16 +26,16 @@ function outcome(user: CurrentUser, domain: Domain, path: string): Outcome {
 
 const PATHS = [
     "overview", "projects", "projects/:id", "clients", "clients/:id", "people", "people/:id", "financials",
-    "my-work", "pay", "meetings", "activity", "reports", "profile", "settings", "notifications", "messages",
+    "my-work", "pay", "meetings", "activity", "reports", "profile", "settings", "notifications", "messages", "help",
 ] as const;
 
 // one letter per path, in PATHS order: o open, h home, d denied
 const MATRIX: Record<PersonaName, Record<Domain, string>> = {
-    superAdmin:        { design: "oooooooohhooohooo", execution: "ooooodoohhoddhooo" },
-    designAdmin:       { design: "oooooooohhooohooo", execution: "hhhhhhhhhhhhhhhhh" },
-    executionAdmin:    { design: "hhhhhhhhhhhhhhhhh", execution: "ooooodoohhoddhooo" },
-    designEmployee:    { design: "doodddddoooddodoo", execution: "hhhhhhhhhhhhhhhhh" },
-    executionEmployee: { design: "hhhhhhhhhhhhhhhhh", execution: "doodddddododdodoo" },
+    superAdmin:        { design: "oooooooohhooohoooo", execution: "ooooodoohhoddhoooo" },
+    designAdmin:       { design: "oooooooohhooohoooo", execution: "hhhhhhhhhhhhhhhhhh" },
+    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhh", execution: "ooooodoohhoddhoooo" },
+    designEmployee:    { design: "doodddddoooddodooo", execution: "hhhhhhhhhhhhhhhhhh" },
+    executionEmployee: { design: "hhhhhhhhhhhhhhhhhh", execution: "doodddddododdodooo" },
 };
 
 const LETTER: Record<string, Outcome> = { o: "open", h: "home", d: "denied" };
@@ -63,7 +63,7 @@ describe("the permission matrix", () => {
         // a domain admin manages settings in their business: the company's Settings need the company area too
         const onlyInbox = {
             overview: "denied", overhead: "denied", salaries: "denied", "project-pay": "denied", schedules: "denied", settings: "denied",
-            profile: "open", notifications: "open", messages: "open",
+            profile: "open", notifications: "open", messages: "open", help: "open",
         };
         expect(company("superAdmin")).toEqual({ ...onlyInbox, overview: "open", overhead: "open", salaries: "open", "project-pay": "open", schedules: "open", settings: "open" });
         for (const name of ["designAdmin", "executionAdmin", "designEmployee", "executionEmployee"] as PersonaName[]) {

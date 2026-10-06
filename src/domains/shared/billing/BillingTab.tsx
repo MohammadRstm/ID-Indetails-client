@@ -20,6 +20,7 @@ import { useBillingLinks } from "./billingLinks";
 import { InvoiceTable, PaymentTable, type Tile } from "./BillingTables";
 import { invoiceStateOf } from "./invoiceStatus";
 import { loadFailed } from "@/api/queryState";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 type Filter = "all" | "open" | "overdue" | "paid" | "draft";
 
@@ -70,8 +71,14 @@ export default function BillingTab({ domain, tiles }: { domain: Domain; tiles: M
                 { key: "value", label: "Project value", value: money.short(p?.value ?? 0), sub: <span>across {b?.byClient.length ?? 0} clients</span> },
                 { key: "invoiced", label: "Invoiced", value: money.short(p?.invoiced ?? 0), sub: <span>{p?.issuedCount ?? 0} issued {p?.issuedCount === 1 ? "invoice" : "invoices"}</span> },
                 { key: "collected", label: "Collected", value: money.short(p?.received ?? 0), sub: <span>{collectedPct}% of what was invoiced</span> },
-                { key: "outstanding", label: "Outstanding", value: money.short(p?.outstanding ?? 0), sub: <span className={p?.overdue ? "down" : ""}>{money.short(p?.overdue ?? 0)} of it overdue</span> },
-                { key: "uninvoiced", label: "Not yet invoiced", value: money.short(p?.notYetInvoiced ?? 0), sub: <span>{p?.drafts ? `${money.short(p.drafts)} sitting in draft` : "work still to bill"}</span> },
+                {
+                    key: "outstanding", value: money.short(p?.outstanding ?? 0), sub: <span className={p?.overdue ? "down" : ""}>{money.short(p?.overdue ?? 0)} of it overdue</span>,
+                    label: <>Outstanding<HelpHint article="billing-terms" label="outstanding">What clients still have to pay on invoices already sent. Money paid on account doesn't reduce it until it's applied to an invoice.</HelpHint></>,
+                },
+                {
+                    key: "uninvoiced", value: money.short(p?.notYetInvoiced ?? 0), sub: <span>{p?.drafts ? `${money.short(p.drafts)} sitting in draft` : "work still to bill"}</span>,
+                    label: <>Not yet invoiced<HelpHint article="billing-terms" label="not yet invoiced">What was agreed, less what was invoiced and what is held on account.</HelpHint></>,
+                },
                 { key: "overdue", label: "Overdue invoices", value: p?.overdueCount ?? 0, sub: <span>{p?.oldestOverdueDays ? `oldest ${p.oldestOverdueDays} days` : "nothing late"}</span> },
             ]} />
 

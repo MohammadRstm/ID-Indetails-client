@@ -27,6 +27,7 @@ import { FollowupsCard, HoursCard, InvoicedCard, OwedCard, ProfitCard, RevenueCo
 import { useDashboard, useOverview, useUpcomingDeadlines } from "./overviewApi";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 type Period = Extract<PeriodKind, "quarter" | "month" | "30d">;
 
@@ -112,9 +113,13 @@ function OverviewPage({ domain }: { domain: Domain }) {
 
     const moneyFigures = orFailed(summary, "the money", (
         <KpiStrip loading={!s} items={[
-            { key: "revenue", label: `Revenue · ${range.label}`, value: money.short(s?.revenue ?? 0), sub: <span>received from clients</span> },
             {
-                key: "expected", label: "Expected revenue", value: money.short(s?.expectedRevenue ?? 0),
+                key: "revenue", value: money.short(s?.revenue ?? 0), sub: <span>received from clients</span>,
+                label: <>Revenue · {range.label}<HelpHint article="revenue" label="revenue">The money clients paid in this period, counted on the day it arrived.</HelpHint></>,
+            },
+            {
+                key: "expected", value: money.short(s?.expectedRevenue ?? 0),
+                label: <>Expected revenue<HelpHint article="expected-revenue" label="expected revenue">What was agreed with clients in this period. Revenue is what they actually paid.</HelpHint></>,
                 sub: <span>{domain === "execution" ? "fees agreed and materials sent, in this period" : "payments agreed on projects, in this period"}</span>,
             },
             {
@@ -123,9 +128,13 @@ function OverviewPage({ domain }: { domain: Domain }) {
                 sub: <span>{costPartsOf(domain).map((p) => `${p.key === "labour" ? "labour" : p.label.toLowerCase()} ${money.short(s?.cost[p.key] ?? 0)}`).join(" · ")}</span>,
             },
             { key: "profit", label: "Net profit", value: money.short(s?.profit ?? 0), sub: <span>revenue less {costWords(domain).toLowerCase()}</span> },
-            { key: "margin", label: "Margin", value: money.pct(s?.margin), sub: <span>in this period</span> },
             {
-                key: "outstanding", label: "Outstanding", value: money.short(s?.billing.outstanding ?? 0),
+                key: "margin", value: money.pct(s?.margin), sub: <span>in this period</span>,
+                label: <>Margin<HelpHint article="profit-margin" label="margin">Net profit as a share of the revenue received in this period.</HelpHint></>,
+            },
+            {
+                key: "outstanding", value: money.short(s?.billing.outstanding ?? 0),
+                label: <>Outstanding<HelpHint article="billing-terms" label="outstanding">What clients still have to pay on invoices already sent, as of today.</HelpHint></>,
                 sub: <span className={s?.billing.overdue ? "down" : ""}>of {money.short(s?.billing.invoiced ?? 0)} invoiced{s?.billing.overdue ? ` · ${money.short(s.billing.overdue)} overdue` : ""}</span>,
             },
         ]} />

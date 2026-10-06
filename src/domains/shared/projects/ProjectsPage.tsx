@@ -33,6 +33,7 @@ import ProjectStatusItems from "./ProjectStatusItems";
 import { useProjects, useProjectStatusCounts, useProjectTotals, type ProjectListParams, type ProjectSort, type ProjectStatus, type ProjectSummary } from "./projectsApi";
 import { loadFailed } from "@/api/queryState";
 import LoadError from "@/shared/components/Feedback/LoadError";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 // Sorting and filtering by money stay on the server's list of what it can sort by (decision M7).
 const SORTS: { value: ProjectSort; label: string }[] = [
@@ -228,8 +229,14 @@ function ProjectTable({ section }: { section: boolean }) {
             {seesMoney && !loadFailed(totals) && (
                 <div style={{ marginBottom: 12 }}>
                     <KpiStrip loading={!t} items={[
-                        { key: "revenue", label: "Revenue", value: money.short(t?.revenue ?? 0), sub: <span>{t?.clientProjects ?? 0} client projects</span> },
-                        { key: "cost", label: "Cost", value: money.short(t?.cost ?? 0), sub: <span>labour and project expenses</span> },
+                        {
+                            key: "revenue", value: money.short(t?.revenue ?? 0), sub: <span>{t?.clientProjects ?? 0} client projects</span>,
+                            label: <>Revenue<HelpHint article="revenue" label="revenue">What was agreed with the clients of these projects, whether paid yet or not.</HelpHint></>,
+                        },
+                        {
+                            key: "cost", value: money.short(t?.cost ?? 0), sub: <span>labour and project expenses</span>,
+                            label: <>Cost<HelpHint article="project-cost" label="cost">The hours logged at each person's rate, a share of paid breaks, and the projects' expenses.</HelpHint></>,
+                        },
                         { key: "profit", label: "Profit", value: money.short(t?.profit ?? 0), sub: <span>client work only</span> },
                         { key: "internal", label: "Internal cost", value: money.short(t?.internalCost ?? 0), sub: <span>{t?.internalProjects ?? 0} internal projects</span> },
                     ]} />

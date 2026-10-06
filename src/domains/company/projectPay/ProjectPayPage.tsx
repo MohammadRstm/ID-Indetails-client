@@ -25,6 +25,7 @@ import { useProjects } from "@/domains/shared/projects/projectsApi";
 import { periodDates, periodLabel, periodOf, stepPeriod, type PayPeriod, type PayUnit } from "./payPeriod";
 import { useProjectPay, type ProjectPayPerson, type ProjectPayProject } from "./projectPayApi";
 import { loadFailed } from "@/api/queryState";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 type Totals = { currency: string; total: number }[];
 type Tile = { icon: string | null; tint: string | null };
@@ -85,7 +86,7 @@ export default function ProjectPayPage() {
         <div className="page">
             <div className="page-head">
                 <div>
-                    <h1 className="page-title">Project pay</h1>
+                    <h1 className="page-title">Project pay<HelpHint article="project-pay-vs-salaries" label="project pay">What each project paid for the hours on it. It leaves out paid breaks and deductions, so it won't match Salaries.</HelpHint></h1>
                     <div className="page-sub">Time spent on each Design project and the pay it represents, by department and employee</div>
                 </div>
                 <div className="page-actions">

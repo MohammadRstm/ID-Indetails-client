@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
+import { MemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/api/errors";
 import { parseDateText } from "@/shared/format/parseDate";
@@ -169,6 +170,21 @@ describe("small pieces", () => {
         expect(screen.queryByRole("tooltip")).toBeNull();
         await userEvent.click(tip);
         expect(screen.getByRole("tooltip")).toBeInTheDocument();
+    });
+
+    it("a help tip's Read more link is reached with Tab, and Escape brings the focus back", async () => {
+        render(<MemoryRouter><p>Outstanding <HelpTip label="outstanding" more={{ to: "/design/help?article=billing-terms" }}>Unpaid on invoices sent.</HelpTip></p><button>After</button></MemoryRouter>);
+        const tip = screen.getByRole("button", { name: "What is outstanding?" });
+        await userEvent.tab();
+        expect(tip).toHaveFocus();
+        const more = screen.getByRole("link", { name: /Read more in Help/ });
+        expect(more).toHaveAttribute("href", "/design/help?article=billing-terms");
+        await userEvent.tab();
+        expect(more).toHaveFocus();
+        expect(screen.getByRole("tooltip")).toHaveTextContent("Unpaid on invoices sent.");
+        await userEvent.keyboard("{Escape}");
+        expect(tip).toHaveFocus();
+        expect(screen.queryByRole("tooltip")).toBeNull();
     });
 
     it("a modal takes the keyboard focus, and gives it back when it closes", () => {

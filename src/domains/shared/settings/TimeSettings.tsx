@@ -19,6 +19,7 @@ import { useSaveDomainRules, useSetWorkingTime, useWorkingTime, type WorkingTime
 import { notSaved, saved } from "./settingsToasts";
 import { BREAKS, breakText, clock, daysText, hoursText, nextChange, requiredOf, weekOrder } from "./workingTime";
 import { loadFailed } from "@/api/queryState";
+import HelpHint from "@/domains/shared/help/HelpHint";
 
 const EDIT_WINDOWS = [
     { value: "none", label: "No editing" }, { value: "one_day", label: "24 hours" }, { value: "seven_days", label: "7 days" }, { value: "unlimited", label: "Always" },
@@ -53,7 +54,7 @@ export default function TimeSettings({ domain }: { domain: Domain }) {
                         <SwitchRow title="Default working hours"
                             description={<>The week everyone works unless they have their own schedule (Company → Schedules). Its hours are also the working day that overtime is measured against.{!canTime && <OnlyFor who="a super admin" />}</>}
                             control={canTime ? <WeekEditor wt={wt} /> : <b className="mono">{daysText(wt.current.workDays, weekStart)} · {hoursText(wt.current)}</b>} />
-                        <SwitchRow title="Break per day"
+                        <SwitchRow title={<>Break per day<HelpHint article="working-day" label="the break">Paid, but not required work: a day asks for its hours minus the break.</HelpHint></>}
                             description={<>One break for everyone, taken whenever suits. The break is paid, but it isn't required work: on every working day longer than 6 hours, 9 to 5 with a 1h break asks for 7h of work and is paid as 8h. Time worked past the 7h counts as overtime.{!canTime && <OnlyFor who="a super admin" />}</>}
                             control={<BreakEditor wt={wt} canEdit={canTime} />} />
                         <SwitchRow title="Entry edit window" description="How long an employee can edit or delete their own entry after logging it." control={
