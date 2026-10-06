@@ -41,7 +41,7 @@ export default function MaterialMargins({ project }: { project: Project }) {
                                 <thead>
                                     <tr>
                                         <th>Material</th><th>Supplier</th><th className="r">Supplier cost</th><th className="r">Client price</th>
-                                        <th className="r">Margin</th><th className="r">%</th><th>Sent to client</th>
+                                        <th className="r">Profit</th><th className="r">%</th><th>Sent to client</th>
                                     </tr>
                                 </thead>
                                 <tbody>
