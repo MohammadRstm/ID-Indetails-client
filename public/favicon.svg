@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28">
-  <rect x="0.6" y="0.6" width="26.8" height="26.8" rx="8" fill="#0C6B69"/>
-  <circle cx="14" cy="14" r="7.6" fill="none" stroke="#FFFFFF" stroke-width="1.7" opacity="0.55"/>
-  <path d="M14 8.6V14h5.2" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The company's mark (from the logo sheet), white on a black tile so it shows on light and dark tab bars. -->
+  <rect width="32" height="32" rx="7" fill="#000000"/>
+  <svg x="8.6" y="3" width="14.8" height="26" viewBox="-12 0 1212 2235">
+    <path fill="#FFFFFF" d="M638 2235C962.8 2185.6 1199.1 1901.5 1187.6 1573.8L1187.6 660.2C1199.1 332.5 962.8 48.4 638 0L638 395.6C736.1 404 808.6 489 801.5 586.5L801.5 1647.5C808.6 1745 736.1 1830 638 1838.4ZM549 2235C225.2 2185.6 -11.1 1901.5 0.4 1573.8L0.4 660.2C-11.1 332.5 225.2 48.4 549 0L549 395.6C452.9 404 380.4 489 387.5 586.5L387.5 1647.5C380.4 1745 452.9 1830 549 1838.4Z"/>
+  </svg>
 </svg>
