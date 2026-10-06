@@ -11,6 +11,10 @@ table { line-height: normal; font-weight: normal; }
    of reach. It opens upwards instead. */
 .side-foot .pop { top: auto; bottom: calc(100% + 6px); }
 
+/* The prototype capped pages at 1520px, which left an empty band on the right of large screens. Pages
+   take the whole width beside the sidebar instead. */
+.page { max-width: none; }
+
 /* loading skeletons */
 .skel {
   display: block; border-radius: 5px;

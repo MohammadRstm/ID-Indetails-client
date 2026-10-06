@@ -87,7 +87,9 @@ function Settings({ domain, choice }: { domain: Domain; choice?: Choice }) {
                     <div className="page-sub">Changes apply straight away.</div>
                 </div>
             </div>
-            <div className="grid settings-grid" style={{ gridTemplateColumns: "210px minmax(0,1fr)", gap: 16 }}>
+            {/* Pages use the full width, but a setting's label and its switch would drift apart on a large screen:
+                the sections stop at the width they had when pages were capped at 1520px. */}
+            <div className="grid settings-grid" style={{ gridTemplateColumns: "210px minmax(0,1250px)", gap: 16 }}>
                 <div className="panel" style={{ alignSelf: "start" }}>
                     <nav className="nav" style={{ padding: 8 }} aria-label="Settings">
                         {sections.map(([k, label, icon]) => (
