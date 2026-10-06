@@ -9,7 +9,7 @@ import { money } from "@/shared/format/money";
 import { MONTHS } from "@/shared/format/time";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
-import { useSalaryYear, type SalaryYearRow } from "./salariesApi";
+import { useSalaryYear, type SalaryRole, type SalaryYearRow } from "./salariesApi";
 
 const byCurrency = (amounts: { currency: string; total: number }[]) =>
     [...amounts.reduce((m, a) => m.set(a.currency, (m.get(a.currency) ?? 0) + a.total), new Map<string, number>())]
@@ -19,18 +19,19 @@ const byCurrency = (amounts: { currency: string; total: number }[]) =>
  * A year of salaries: what each person was owed month by month, as the month view works it out, with totals per
  * month and per person (per currency: they are never added together). A month opens that month's list.
  */
-export default function SalaryYear({ year, domain, search, onMonth }: {
+export default function SalaryYear({ year, domain, role, search, onMonth }: {
     year: number;
     domain: Domain | null;
+    role: SalaryRole | null;
     search: string;
     onMonth: (month: string) => void;
 }) {
-    const query = useSalaryYear({ year, domain, search });
+    const query = useSalaryYear({ year, domain, role, search });
     const y = query.data;
 
     if (loadFailed(query)) return <LoadError error={query.error} retry={() => query.refetch()} what="the year's salaries" />;
     if (!y) return <SkeletonLines lines={8} />;
-    if (y.rows.length === 0) return <Empty art="search" title={`Nobody was paid in ${year}`} text={domain || search ? "Try another business or search." : "People appear here once their pay is set."} />;
+    if (y.rows.length === 0) return <Empty art="search" title={`Nobody was paid in ${year}`} text={domain || role || search ? "Try another business, role or search." : "People appear here once their pay is set."} />;
 
     const months = y.months.map((m) => m.slice(0, 7));
     const currencies = byCurrency(y.totals).map(([c]) => c);

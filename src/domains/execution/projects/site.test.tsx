@@ -46,6 +46,26 @@ describe("an Execution site's overview", () => {
         expect(screen.getByText(/Payments can be recorded without an invoice/)).toBeInTheDocument();
     });
 
+    it("searches and filters the material margins", async () => {
+        renderApp(path, karim, ...siteHandlers);
+        const margins = (await screen.findByText("Material margins")).closest(".panel") as HTMLElement;
+        await within(margins).findByText("Paint");
+        const rows = () => within(margins).getAllByRole("row").filter((r) => r.closest("tbody"));
+        expect(rows()).toHaveLength(4);
+
+        await userEvent.type(within(margins).getByLabelText("Search material margins"), "paint");
+        expect(rows()).toHaveLength(1);
+        expect(within(margins).getByText("1 of 4 shown")).toBeInTheDocument();
+        expect(within(margins).getByText("The materials shown")).toBeInTheDocument();
+
+        await userEvent.click(within(margins).getByRole("button", { name: "Clear" }));
+        await userEvent.click(within(margins).getByRole("button", { name: "Not sent" }));
+        // every lobby material went on a statement
+        expect(within(margins).getByText("No materials match these filters.")).toBeInTheDocument();
+        await userEvent.click(within(margins).getByRole("button", { name: "Sent" }));
+        expect(rows()).toHaveLength(4);
+    });
+
     it("shows each material's margin, and that the lobby's were all sent to the client", async () => {
         renderApp(path, karim, ...siteHandlers);
         const margins = (await screen.findByText("Material margins")).closest(".panel") as HTMLElement;

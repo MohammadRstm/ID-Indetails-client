@@ -22,7 +22,7 @@ import { cx } from "@/shared/utils/cx";
 import { ClientBadge } from "../clients/ClientBits";
 import { ProjectMeetingsTab } from "../meetings/Meetings";
 import { useProjectMeetings } from "../meetings/meetingsApi";
-import { personName, useDomainPeople } from "../people/peopleApi";
+import { personName, useProjectOwners } from "../people/peopleApi";
 import { ProjectRequirementsTab } from "../requirements/Requirements";
 import { useRequirements } from "../requirements/requirementsApi";
 import ExpenseModal from "../../design/projects/money/ExpenseModal";
@@ -324,11 +324,12 @@ function OwnerLine({ project }: { project: Project }) {
     const me = useCurrentUser();
     const update = useUpdateProject(project.id);
     const canEdit = permissions.has(P.PROJECT_EDIT) && !(project.status === "completed" || project.status === "archived");
-    const people = useDomainPeople(project.domain, canEdit && permissions.has(P.EMPLOYEE_VIEW), { status: "active" });
+    const people = useProjectOwners(project.domain, canEdit && permissions.has(P.EMPLOYEE_VIEW), permissions.canSeeDomain("design") && permissions.canSeeDomain("execution"));
     const owner = { id: project.owner.id, name: project.owner.name };
     const choices = [
-        { id: me.id, name: `${fullName(me)} (you)`, photoFileId: me.photoFileId },
-        ...(people.data ?? []).filter((p) => p.id !== me.id).map((p) => ({ id: p.id, name: personName(p), photoFileId: p.photoFileId })),
+        // admins and super admins own projects, employees don't
+        ...(permissions.isAdmin ? [{ id: me.id, name: `${fullName(me)} (you)`, photoFileId: me.photoFileId }] : []),
+        ...people.filter((p) => p.id !== me.id).map((p) => ({ id: p.id, name: personName(p), photoFileId: p.photoFileId })),
     ];
 
     function changeOwner(id: number, name: string) {

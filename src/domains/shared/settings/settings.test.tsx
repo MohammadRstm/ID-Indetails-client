@@ -80,6 +80,23 @@ describe("Settings", () => {
         expect(await screen.findByText("Company details updated")).toBeInTheDocument();
     });
 
+    it("sets the working week: Monday to Friday, or the days ticked, and where the week starts", async () => {
+        const post = recorder("post", "/api/company/working-time", settings.workingTime);
+        const put = recorder("put", "/api/company/settings", settings.company);
+        renderApp("/design/settings", rana, post.handler, put.handler, ...settingsHandlers);
+        await userEvent.click(await screen.findByLabelText("Working week"));
+        await userEvent.click(screen.getByRole("option", { name: "Custom days" }));
+        const days = screen.getByRole("group", { name: "Working days" });
+        expect(within(days).getByLabelText("Friday")).toBeChecked();
+        expect(within(days).getByLabelText("Sunday")).not.toBeChecked();
+        // a Sunday-to-Thursday week
+        await userEvent.click(within(days).getByLabelText("Sunday"));
+        await userEvent.click(within(days).getByLabelText("Friday"));
+        await userEvent.click(screen.getByRole("button", { name: "Save working days" }));
+        await waitFor(() => expect(post.bodies).toEqual([expect.objectContaining({ workDays: [0, 1, 2, 3, 4] })]));
+        await waitFor(() => expect(put.bodies).toEqual([expect.objectContaining({ weekStart: 0 })]));
+    });
+
     it("saves a domain rule, keeping every other rule", async () => {
         const put = recorder("put", "/api/domain-settings/design", settings.domainRules);
         renderApp(page("projects"), nadia, put.handler, ...settingsHandlers);

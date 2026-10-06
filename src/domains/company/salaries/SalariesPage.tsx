@@ -11,7 +11,7 @@ import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
-import { SearchInput, Segmented } from "@/shared/components/Forms/Filters";
+import { ChipGroup, SearchInput, Segmented } from "@/shared/components/Forms/Filters";
 import Avatar from "@/shared/components/Identity/Avatar";
 import { money } from "@/shared/format/money";
 import { addMonths, companyToday, fmtDate, fmtDateY, fmtH, fmtMonthY } from "@/shared/format/time";
@@ -22,7 +22,7 @@ import type { Schemas } from "@/api/types";
 import { Banner } from "@/shared/components/Data/Bits";
 import SalaryDrawer from "./SalaryDrawer";
 import SalaryYear from "./SalaryYear";
-import { useSalaries, type SalaryRow } from "./salariesApi";
+import { useSalaries, type SalaryRole, type SalaryRow } from "./salariesApi";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
 import HelpHint from "@/domains/shared/help/HelpHint";
@@ -59,6 +59,17 @@ function someone(people: Schemas["PersonWithoutPayResponse"][]) {
     return more ? `${named.join(", ")} and ${more} more` : named.length > 1 ? `${named.slice(0, -1).join(", ")} and ${named[named.length - 1]}` : named[0];
 }
 
+const EXPLAIN_KEY = "hourline.salaries.explain";
+
+/** Whether this browser was left with the pay explanation under "Employees" open (it is, until someone hides it). */
+function readExplain() {
+    try {
+        return localStorage.getItem(EXPLAIN_KEY) !== "hidden";
+    } catch {
+        return true;
+    }
+}
+
 /**
  * What each person is owed for a month (the prototype's P.CompanySalaries): hours from their work entries,
  * pay from their pay records, the hours rule's shortfalls and excuses. Separate from project labour cost.
@@ -73,18 +84,20 @@ export default function SalariesPage() {
     const month = monthOf(params.get("month"), thisMonth);
     const year = yearOf(params.get("year"), thisYear);
     const [domain, setDomain] = useState<Domain | "all">("all");
+    const [role, setRole] = useState<SalaryRole | "all">("all");
     const [q, setQ] = useState("");
+    const [explain, setExplain] = useState(readExplain);
     const [page, setPage] = useState(1);
     const [open, setOpen] = useState<SalaryRow | null>(null);
     const [exporting, setExporting] = useState(false);
     const anchor = useRef<HTMLDivElement>(null);
     const search = useDebounce({ value: q.trim(), debounceTimeMs: 250 });
     const domains = (["design", "execution"] as Domain[]).filter((d) => permissions.canSeeDomain(d));
-    const filters = { month, domain: domain === "all" ? null : domain, search };
+    const filters = { month, domain: domain === "all" ? null : domain, role: role === "all" ? null : role, search };
     const salaries = useSalaries({ ...filters, page, pageSize: PAGE });
-    const filtered = domain !== "all" || !!search;
+    const filtered = domain !== "all" || role !== "all" || !!search;
     // "4 of 13": everyone's count, only asked for while a filter narrows the list
-    const everyone = useSalaries({ month, domain: null, search: "", page: 1, pageSize: 1 }, filtered);
+    const everyone = useSalaries({ month, domain: null, role: null, search: "", page: 1, pageSize: 1 }, filtered);
     const r = salaries.data;
     const isThisMonth = month === thisMonth;
     const rows = r?.rows.items ?? [];
@@ -99,12 +112,24 @@ export default function SalariesPage() {
     const goMonth = (m: string) => { setPage(1); setParams(m === thisMonth ? {} : { month: m }, { replace: true }); };
     const goYear = (y: number) => setParams(y === thisYear ? { view: "year" } : { view: "year", year: String(y) }, { replace: true });
     const filter = (next: () => void) => { next(); setPage(1); };
+    function toggleExplain() {
+        const next = !explain;
+        setExplain(next);
+        try {
+            localStorage.setItem(EXPLAIN_KEY, next ? "shown" : "hidden");
+        } catch {
+            // private window: this visit only
+        }
+    }
     const filterBar = (
         <div className="filters">
             {domains.length > 1 && (
                 <Segmented aria-label="Business" value={domain} onChange={(v) => filter(() => setDomain(v))}
                     options={[{ value: "all" as const, label: "All" }, ...domains.map((d) => ({ value: d, label: AREAS[d].label }))]} />
             )}
+            <ChipGroup aria-label="Role" value={role} onChange={(v) => filter(() => setRole(v))} options={[
+                { value: "all", label: "Everyone" }, { value: "super_admin", label: "Super admins" }, { value: "admin", label: "Admins" }, { value: "employee", label: "Employees" },
+            ]} />
             <SearchInput value={q} onChange={(v) => filter(() => setQ(v))} placeholder="Search by name or email" width={240} />
             {r && !byYear && <span className="muted" style={{ fontSize: 12 }}>{total} of {filtered ? (everyone.data?.rows.totalCount ?? total) : total}</span>}
         </div>
@@ -113,7 +138,7 @@ export default function SalariesPage() {
     async function exportCsv() {
         setExporting(true);
         try {
-            const { blob, fileName } = await fetchBlob("/company/salaries/export", { month, domain: filters.domain, search: search || null });
+            const { blob, fileName } = await fetchBlob("/company/salaries/export", { month, domain: filters.domain, role: filters.role, search: search || null });
             const name = fileName ?? `salaries-${month}.csv`;
             saveBlob(blob, name);
             toast({ text: `Exported ${total} employee${total === 1 ? "" : "s"}`, sub: `${name} · every page, as filtered`, icon: "download" });
@@ -164,7 +189,7 @@ export default function SalariesPage() {
                     </div>
                     <div className="panel-body">
                         {filterBar}
-                        <SalaryYear year={year} domain={filters.domain} search={search} onMonth={goMonth} />
+                        <SalaryYear year={year} domain={filters.domain} role={filters.role} search={search} onMonth={goMonth} />
                     </div>
                 </div>
             ) : loadFailed(salaries) ? <div className="panel"><div className="panel-body"><LoadError error={salaries.error} retry={() => salaries.refetch()} what="the salaries" /></div></div> : (
@@ -193,12 +218,17 @@ export default function SalariesPage() {
                         <div className="panel-head">
                             <div className="grow">
                                 <div className="panel-title">Employees</div>
-                                <div className="panel-sub">
+                                {explain && <div className="panel-sub">
                                     Everyone owes their scheduled hours each month. Overtime first makes up any hours short (paid as normal), the rest is paid as overtime;
                                     a salary loses the hours still short at the end of the month. Hourly: hours × rate. Monthly: the salary, whatever the month's length;
                                     an hour of it is the salary ÷ the month's paid hours, and overtime is paid from the salary ÷ {HOURS_PER_MONTH.toFixed(1)} h (a standard month).
                                     Admins and super admins are paid a fixed salary.
-                                </div>
+                                </div>}
+                            </div>
+                            <div className="panel-tools">
+                                <button className="btn btn-sm btn-quiet" aria-expanded={explain} onClick={() => toggleExplain()}>
+                                    <Icon name={explain ? "chevronUp" : "help"} />{explain ? "Hide explanation" : "How pay is worked out"}
+                                </button>
                             </div>
                         </div>
                         <div className="panel-body">
@@ -269,7 +299,7 @@ export default function SalariesPage() {
                                         </table>
                                     </div>
                                     {total === 0 && (filtered
-                                        ? <Empty art="search" title="No employees match" text="Try another business or search." />
+                                        ? <Empty art="search" title="No employees match" text="Try another business, role or search." />
                                         : <Empty art="search" title={`Nobody was paid in ${fmtMonthY(month)}`} text="People appear here once their pay is set." />)}
                                     <Pager page={Math.min(page, pages)} pageSize={PAGE} total={total} onPage={setPage} anchor={anchor} />
                                 </>

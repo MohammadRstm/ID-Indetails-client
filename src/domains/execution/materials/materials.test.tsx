@@ -35,15 +35,15 @@ async function typeInto(cell: HTMLElement, text: string) {
 }
 
 describe("the materials on a site", () => {
-    it("are listed with their cost, what the client is charged and who added them", async () => {
+    it("are listed with their cost and who added them; what the client is charged is in Material margins", async () => {
         renderApp(openPath, karim, ...siteHandlers);
         const p = await panel();
         expect(await within(p).findByText("4 items · 4 types")).toBeInTheDocument();
-        expect(within(p).getByText("Charged to the client")).toBeInTheDocument();
         expect(within(p).getByLabelText("Type 1")).toHaveValue("Plasterboard");
-        expect(within(p).getByLabelText("Client price 1")).toHaveValue("1188");
-        expect(within(p).getAllByText("+20%")).toHaveLength(4);
         expect(within(p).getAllByText("Nour Aziz")).toHaveLength(4);
+        expect(within(p).queryByLabelText("Client price 1")).not.toBeInTheDocument();
+        expect(within(p).queryByText("Charged to the client")).not.toBeInTheDocument();
+        expect(within(p).queryByText("Material profit")).not.toBeInTheDocument();
     });
 
     it("keep client prices and material profit from people who don't see money", async () => {
@@ -107,24 +107,16 @@ describe("the materials on a site", () => {
     });
 
     it("don't save a cell that was only passed through", async () => {
-        const priced: unknown[] = [];
-        let current = plasterboard;
+        let saves = 0;
         renderApp(openPath, karim,
-            http.get("/api/projects/:id/materials", () => listWith([current, ...site.openMaterials.items.slice(1)])),
-            http.put("/api/projects/:id/materials/:materialId", () => {
-                current = { ...plasterboard, unitCost: 10, cost: 900, clientPrice: 1080 };
-                return HttpResponse.json(current);
-            }),
-            http.put("/api/projects/:id/materials/:materialId/client-price", async ({ request }) => { priced.push(await request.json()); return HttpResponse.json(current); }),
+            http.put("/api/projects/:id/materials/:materialId", () => { saves++; return HttpResponse.json({ ...plasterboard, unitCost: 10, cost: 900 }); }),
             ...siteHandlers);
         const p = await panel();
         await typeInto(await within(p).findByLabelText("Total 1"), "900");
-        // Enter moved on to the client price, which follows the save
-        const price = within(p).getByLabelText("Client price 1");
-        expect(price).toHaveFocus();
-        await waitFor(() => expect(price).toHaveValue("1080"));
+        // Enter moved on to the supplier, which is left as it was
+        expect(within(p).getByLabelText("Supplier 1")).toHaveFocus();
         await userEvent.keyboard("{Enter}");
-        expect(priced).toEqual([]);
+        await waitFor(() => expect(saves).toBe(1));
     });
 
     it("won't save a material without a type", async () => {
@@ -139,30 +131,10 @@ describe("the materials on a site", () => {
         expect(saved).toEqual([]);
     });
 
-    it("sets a price of its own, and puts it back on the markup", async () => {
-        const priced: unknown[] = [];
-        const own = { ...plasterboard, clientPrice: 1300, priceSource: "manual" as const, markup: 0.3131 };
-        renderApp(openPath, karim,
-            http.get("/api/projects/:id/materials", () => listWith([own, ...site.openMaterials.items.slice(1)])),
-            http.put("/api/projects/:id/materials/:materialId/client-price", async ({ request }) => { priced.push(await request.json()); return HttpResponse.json(own); }),
-            ...siteHandlers);
-        const p = await panel();
-        await typeInto(await within(p).findByLabelText("Client price 2"), "1100");
-        await userEvent.click(within(p).getByRole("button", { name: "Put Plasterboard back on the default material profit" }));
-        await waitFor(() => expect(priced).toEqual([{ clientPrice: 1100 }, { clientPrice: null }]));
-    });
-
-    it("can't be priced without project:pricing_manage", async () => {
-        renderApp(openPath, withPermissions(karim, { revoke: [P.PROJECT_PRICING_MANAGE] }), ...siteHandlers);
-        const p = await panel();
-        expect(await within(p).findByLabelText("Client price 1")).toBeDisabled();
-        expect(within(p).getByLabelText("Type 1")).toBeEnabled();
-    });
-
     it("keep the type, cost and price of what is on a client statement, and can't be removed", async () => {
         renderApp(statedPath, karim, ...siteHandlers);
         const p = await panel();
-        for (const cell of ["Type 1", "Qty 1", "Unit 1", "Unit cost 1", "Total 1", "Client price 1"]) {
+        for (const cell of ["Type 1", "Qty 1", "Unit 1", "Unit cost 1", "Total 1"]) {
             expect(await within(p).findByLabelText(cell)).toBeDisabled();
         }
         expect(within(p).getByLabelText("Supplier 1")).toBeEnabled();
@@ -232,7 +204,7 @@ describe("the materials on a site", () => {
         const p = await panel();
         expect(await within(p).findByText("Closed to new entries")).toBeInTheDocument();
         expect(within(p).queryByRole("button", { name: "Add materials" })).not.toBeInTheDocument();
-        expect(within(p).getByLabelText("Client price 1")).toBeDisabled();
+        expect(within(p).getByLabelText("Type 1")).toBeDisabled();
     });
 });
 
@@ -242,7 +214,7 @@ describe("the Add materials sheet", () => {
         return screen.findByRole("dialog", { name: "Add materials" });
     };
 
-    it("adds the rows typed, with the total and client price worked out as they are typed", async () => {
+    it("adds the rows typed, with the total worked out as they are typed", async () => {
         const added: unknown[] = [];
         renderApp(openPath, karim,
             http.post("/api/projects/:id/materials", async ({ request }) => { added.push(await request.json()); return HttpResponse.json([plasterboard], { status: 201 }); }),
@@ -254,7 +226,7 @@ describe("the Add materials sheet", () => {
         await userEvent.keyboard("Cement{Enter}10{Enter}ba{Enter}5.5{Enter}");
         expect(within(sheet).getByLabelText("Unit 5")).toHaveValue("bag");
         expect(within(sheet).getByLabelText("Total 5")).toHaveValue("55");
-        expect(within(sheet).getByLabelText("Client price 5")).toHaveValue("66");
+        expect(within(sheet).queryByLabelText("Client price 5")).not.toBeInTheDocument();
         expect(within(sheet).getByRole("status")).toHaveTextContent("(+$55 here)");
         await userEvent.click(within(sheet).getByRole("button", { name: "Add 1 material" }));
         await waitFor(() => expect(added).toEqual([{ items: [{ name: "Cement", quantity: 10, unit: "bag", unitCost: 5.5, amount: null, supplier: null, note: null, clientPrice: null }] }]));
@@ -321,9 +293,9 @@ describe("the Add materials sheet", () => {
         expect(within(sheet).getByRole("button", { name: "Add 2 materials" })).toBeEnabled();
     });
 
-    it("sends its own client price only for people who price materials", async () => {
+    it("takes no client price: the client is priced on the statement", async () => {
         const added: { items: Record<string, unknown>[] }[] = [];
-        renderApp(openPath, withPermissions(karim, { revoke: [P.PROJECT_PRICING_MANAGE] }),
+        renderApp(openPath, karim,
             http.post("/api/projects/:id/materials", async ({ request }) => { added.push(await request.json() as never); return HttpResponse.json([], { status: 201 }); }),
             ...siteHandlers);
         const sheet = await openSheet();

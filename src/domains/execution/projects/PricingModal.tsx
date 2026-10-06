@@ -78,7 +78,7 @@ export default function PricingModal({ project, onClose }: { project: Project; o
                 <label className="label required" htmlFor="xm-markup">Default material profit</label>
                 <div className="row wrap" style={{ gap: 6, alignItems: "center" }}>
                     {MARKUPS.map((v) => (
-                        <button key={v} type="button" className={cx("chip", markup === v && pct !== "" && "on")} onClick={() => setPct(v)}>{v}%</button>
+                        <button key={v} type="button" className={cx("chip", markup === v && pct !== "" && "on")} onClick={() => setPct(v)}>{v ? `${v}%` : "As is"}</button>
                     ))}
                     <NumberField id="xm-markup" shape={MARKUP_PERCENT} style={{ width: 80 }} aria-label="Material profit percent"
                         value={pct} onChange={(text) => setPct(text === "" ? "" : +text)} />

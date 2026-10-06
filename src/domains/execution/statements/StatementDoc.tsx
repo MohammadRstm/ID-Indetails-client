@@ -61,7 +61,7 @@ export default function StatementDoc({ statement: s, flash }: { statement: State
                         ) : <DocContinued kind={kind} number={s.number} projectTitle={s.projectTitle} />}
 
                         <div className="rep-sec">
-                            {first && <h3>Materials</h3>}
+                            {first && <h3>Material type</h3>}
                             {s.mode === "total" ? (
                                 <table className="tbl doc-lines">
                                     <thead><tr><th>Description</th><th className="r" style={{ width: 150 }}>Amount</th></tr></thead>

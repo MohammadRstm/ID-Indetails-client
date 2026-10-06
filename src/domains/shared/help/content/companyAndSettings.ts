@@ -18,7 +18,7 @@ export const company: Article[] = [
             ),
             para("The name, address and website are printed at the top of invoices and statements."),
             list(
-                "**Working week**: the first day of the week, for calendars and weekly totals.",
+                "**Working week**: Monday to Friday, or **Custom days** with a box ticked for each working day. A week that works Sunday and rests Saturday starts on Sunday in calendars and weekly totals.",
                 "**Time format**: 12-hour (9:00 AM) or 24-hour (09:00), for everyone.",
             ),
             links(link("Open company settings", { settings: "general" })),

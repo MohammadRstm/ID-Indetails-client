@@ -1561,6 +1561,7 @@ export interface paths {
                     Page?: number;
                     PageSize?: number;
                     Search?: string;
+                    Role?: string;
                 };
                 header?: never;
                 path?: never;
@@ -1645,6 +1646,7 @@ export interface paths {
                     Page?: number;
                     PageSize?: number;
                     Search?: string;
+                    Role?: string;
                 };
                 header?: never;
                 path?: never;
@@ -1681,6 +1683,7 @@ export interface paths {
                 query?: {
                     Domain?: string;
                     Search?: string;
+                    Role?: string;
                     Year?: number;
                 };
                 header?: never;
@@ -7353,7 +7356,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    From?: string;
                     Period?: components["schemas"]["OverviewPeriod"];
+                    To?: string;
                 };
                 header?: never;
                 path?: never;
@@ -10108,7 +10113,7 @@ export interface components {
             workEntryId: number;
         };
         /** @enum {unknown} */
-        OverviewPeriod: "quarter" | "month" | "last30";
+        OverviewPeriod: "quarter" | "month" | "last30" | "custom";
         OverviewResponse: {
             attention: components["schemas"]["AttentionItemResponse"][];
             /** Format: int32 */

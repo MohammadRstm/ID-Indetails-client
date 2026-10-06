@@ -137,14 +137,17 @@ function HistoryView({ project, history: h }: { project: Project; history: Histo
     function goTo() {
         if (!jump) return;
         if (dayStart(jump) > now) { setJumpMsg({ bad: true, text: "That is after today - nothing can have happened yet." }); return; }
-        const w = windowFor(jump, range);
+        // The date asked for is the one shown: its own day (a week or month would start days earlier), with the
+        // project as it was at the end of it. Week, Month and Year then show the days around it.
+        setRange("day");
+        moment(Math.min(dayEnd(jump), now));
         setAnchor(jump);
-        const before = dayEnd(w.to) < dayStart(dayKey(created));
-        const n = daysIn(h, w.from, w.to, null).length;
+        const before = dayEnd(jump) < dayStart(dayKey(created));
+        const worked = daysIn(h, jump, jump, null).length > 0;
         setJumpMsg({
             bad: before,
             text: before ? `That is before this project was created (${fmtDateY(created)}).`
-                : n ? `Showing ${n} day${n === 1 ? "" : "s"} with work.` : "No work was logged then - the nearest work is linked below.",
+                : worked ? `Showing ${fmtDayDateY(jump)}.` : `No work was logged on ${fmtDayDateY(jump)} - the nearest work is linked below.`,
         });
     }
     const canNext = winTo < now, canPrev = winFrom > minT;

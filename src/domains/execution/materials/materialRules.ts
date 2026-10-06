@@ -34,8 +34,6 @@ export const COLS: Col[] = [
 ];
 /** Where Total sits: the footer's totals line up under it. */
 export const TOTAL_AT = COLS.findIndex((c) => c.k === "amount");
-/** For people who price materials for the client: Client price, right after Total. */
-export const COLS_PRICED: Col[] = [...COLS.slice(0, TOTAL_AT + 1), { k: "clientPrice", label: "Client price", type: "num", w: "10%", strong: true }, ...COLS.slice(TOTAL_AT + 1)];
 /** What a statement freezes: the type, the cost and the price. */
 export const STATED_KEYS: ColKey[] = ["name", "quantity", "unit", "unitCost", "amount", "clientPrice"];
 

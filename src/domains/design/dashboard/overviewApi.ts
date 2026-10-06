@@ -7,10 +7,11 @@ export type Overview = Schemas["OverviewResponse"];
 export type OverviewPeriod = Schemas["OverviewPeriod"];
 
 /** Design's logged work over a period against the one before, with what needs attention (report:view). */
-export function useOverview(period: OverviewPeriod, enabled = true) {
+export function useOverview(period: OverviewPeriod, enabled = true, custom?: { from: string; to: string }) {
+    const days = period === "custom" && custom ? custom : null;
     return useQuery({
-        queryKey: keys.dashboard.overview(period),
-        queryFn: async () => (await http.get<Overview>("/reports/overview", { params: { period } })).data,
+        queryKey: [...keys.dashboard.overview(period), days?.from, days?.to],
+        queryFn: async () => (await http.get<Overview>("/reports/overview", { params: { period, from: days?.from, to: days?.to } })).data,
         placeholderData: keepPreviousData,
         enabled,
     });

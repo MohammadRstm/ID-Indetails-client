@@ -27,7 +27,6 @@ import { PAYMENT_METHODS, plural } from "@/shared/format/labels";
 import { fmtDate, fmtDateY, fmtH, fmtMonthY, MONTHS, partsOf } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import RecentActivity from "../activity/RecentActivity";
 import { BillingMeter, InvoiceLine } from "../billing/BillingBits";
 import BillingModalHost from "../billing/BillingModalHost";
 import { useBillingLinks } from "../billing/billingLinks";
@@ -291,10 +290,6 @@ function ClientView({ client }: { client: Client }) {
                             )}
                         </div>
                     </div>
-
-                    {permissions.has(P.ACTIVITY_VIEW) && (
-                        <RecentActivity filters={{ domain, clientId: client.id }} sub="Work and changes across this client's projects." empty="Nothing logged yet." />
-                    )}
                 </>
             )}
 

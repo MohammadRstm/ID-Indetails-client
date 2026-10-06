@@ -97,6 +97,21 @@ describe("Salaries", () => {
         await waitFor(() => expect(asked.some((q) => q.get("search") === "karim" && q.get("domain") === "execution")).toBe(true));
     });
 
+    it("filter by role, and fold the explanation away", async () => {
+        const asked: URLSearchParams[] = [];
+        renderApp("/company/salaries", rana,
+            http.get("/api/company/salaries", ({ request }) => { asked.push(new URL(request.url).searchParams); return HttpResponse.json(sep); }),
+            ...salaryHandlers);
+        await screen.findByText("Elie Khalil");
+        await userEvent.click(screen.getByRole("button", { name: "Admins" }));
+        await waitFor(() => expect(asked.some((q) => q.get("role") === "admin" && q.get("page") === "1")).toBe(true));
+
+        expect(screen.getByText(/Everyone owes their scheduled hours each month/)).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "Hide explanation" }));
+        expect(screen.queryByText(/Everyone owes their scheduled hours each month/)).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "How pay is worked out" })).toBeInTheDocument();
+    });
+
     it("export every page as filtered", async () => {
         const asked: URLSearchParams[] = [];
         URL.createObjectURL = vi.fn(() => "blob:salaries");

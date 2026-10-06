@@ -12,7 +12,9 @@ import Logo from "@/shared/components/Identity/Logo";
 import Icon from "@/shared/icons/Icon";
 import { setTheme, useTheme } from "@/shared/theme";
 import { uploadFile } from "../../design/work/workApi";
-import { useSaveCompanySettings, useSetLogo, type CompanySettings } from "./settingsApi";
+import { companyToday, DAYS_LONG } from "@/shared/format/time";
+import { useSaveCompanySettings, useSetLogo, useSetWorkingTime, useWorkingTime, type CompanySettings, type WorkingTime } from "./settingsApi";
+import { daysText, nextChange } from "./workingTime";
 import { notSaved, saved } from "./settingsToasts";
 import { loadFailed } from "@/api/queryState";
 
@@ -147,17 +149,87 @@ function Company({ settings: s }: { settings: CompanySettings }) {
                             )}
                         </div>
                     } />
-                    <SwitchRow title="Working week" description="Where every week starts - weekly totals, “this week” figures and week views." control={
-                        <Select className="select sm" style={{ width: 170 }} aria-label="Working week" disabled={!canEdit || save.isPending} value={String(s.weekStart)}
-                            onChange={(v) => saveRule({ weekStart: +v })}
-                            options={[{ value: "1", label: "Monday – Sunday" }, { value: "0", label: "Sunday – Saturday" }]} />
-                    } />
+                    <WorkingWeek onWeekStart={(weekStart) => weekStart !== s.weekStart && saveRule({ weekStart })} />
                     <SwitchRow title="Time format" description="Changes every timestamp in the product." control={
                         <Segmented value={s.use24HourTime ? "24" : "12"} aria-label="Time format" disabled={!canEdit || save.isPending} onChange={(v) => saveRule({ use24HourTime: v === "24" })}
                             options={[{ value: "12", label: "4:00 PM" }, { value: "24", label: "16:00" }]} />
                     } />
                 </div>
             </div>
+        </div>
+    );
+}
+
+const MON_FRI = [1, 2, 3, 4, 5];
+/** The days listed for picking: Monday first, Sunday last. */
+const PICK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const same = (a: number[], b: number[]) => [...a].sort().join() === [...b].sort().join();
+/** A week that works Sunday and rests Saturday starts on Sunday; any other starts on Monday. */
+const weekStartOf = (days: number[]) => (days.includes(0) && !days.includes(6) ? 0 : 1);
+
+/**
+ * The company's working days: Monday to Friday, or the days ticked. They are the default working hours' days (also in
+ * Settings → Time tracking), so a change is a new version from today, and the week starts where the days do.
+ */
+function WorkingWeek({ onWeekStart }: { onWeekStart: (weekStart: number) => void }) {
+    const query = useWorkingTime();
+    return (
+        <SwitchRow title="Working week" description="The days everyone works, unless they have their own schedule. A change applies from today; past months keep their days."
+            control={query.data ? <WeekDays wt={query.data} onWeekStart={onWeekStart} />
+                : loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the working week" /> : <SkeletonLines lines={1} />} />
+    );
+}
+
+function WeekDays({ wt, onWeekStart }: { wt: WorkingTime; onWeekStart: (weekStart: number) => void }) {
+    const permissions = usePermissions();
+    const canEdit = permissions.has(P.WORKING_TIME_MANAGE);
+    const setWt = useSetWorkingTime();
+    const change = nextChange(wt, companyToday());
+    const current = change.latest.workDays;
+    const [mode, setMode] = useState<"monfri" | "custom">(same(current, MON_FRI) ? "monfri" : "custom");
+    const [days, setDays] = useState(current);
+    const changed = !same(days, current);
+
+    function save(next: number[]) {
+        setWt.mutate(change.body({ workDays: [...next].sort() }), {
+            onSuccess: () => { onWeekStart(weekStartOf(next)); saved("Working week saved", `${daysText(next, weekStartOf(next))} · ${change.when}`)(); },
+            onError: notSaved,
+        });
+    }
+    function pick(next: "monfri" | "custom") {
+        setMode(next);
+        if (next === "monfri") {
+            setDays(MON_FRI);
+            if (!same(current, MON_FRI)) save(MON_FRI);
+        }
+    }
+
+    if (!canEdit) return <b>{daysText(current, weekStartOf(current))}</b>;
+    return (
+        <div className="wk-week">
+            <Select className="select sm" style={{ width: 170 }} aria-label="Working week" disabled={setWt.isPending} value={mode} onChange={pick}
+                options={[{ value: "monfri", label: "Monday to Friday" }, { value: "custom", label: "Custom days" }]} />
+            {mode === "custom" && (
+                <>
+                    <div className="wk-days" role="group" aria-label="Working days">
+                        {PICK_ORDER.map((d) => (
+                            <label key={d} className="wk-day">
+                                <input type="checkbox" checked={days.includes(d)} disabled={setWt.isPending}
+                                    onChange={(e) => setDays(e.target.checked ? [...days, d] : days.filter((x) => x !== d))} />
+                                {DAYS_LONG[d]}
+                            </label>
+                        ))}
+                    </div>
+                    <div className="hint">Ticked days are working days; the others are days off.</div>
+                    {changed && (
+                        <div className="row" style={{ gap: 8, marginTop: 8 }}>
+                            <button className="btn btn-sm btn-primary" disabled={!days.length || setWt.isPending} onClick={() => save(days)}>Save working days</button>
+                            <button className="btn btn-sm btn-quiet" onClick={() => setDays(current)}>Cancel</button>
+                            {!days.length && <span className="err">Tick at least one working day.</span>}
+                        </div>
+                    )}
+                </>
+            )}
         </div>
     );
 }
