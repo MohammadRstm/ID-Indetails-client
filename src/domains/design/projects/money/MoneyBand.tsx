@@ -53,7 +53,7 @@ export default function MoneyBand({ project, money: m, contributors, expenseCoun
                         )}
                         {!done && !internal && m.projected && (
                             <span className="muted" style={{ fontSize: "11.5px" }}>
-                                projected <b className={cx("mono", m.projected.profit >= 0 ? "up" : "down")}>{money.short(m.projected.profit)}</b>
+                                projected <b className={cx("mono", m.projected.profit >= 0 ? "up" : "down")}><Money short value={m.projected.profit} /></b>
                                 <span> at completion, at today's burn rate ({project.progressPct}% done)</span>
                             </span>
                         )}

@@ -165,9 +165,9 @@ function Figures({ tabs }: { tabs: ReactNode }) {
                 </div>
                 <div className="panel-body">
                     <div className="kpis">
-                        <Kpi label="Revenue" value={money.short(d.revenue)} />
-                        <Kpi label="Cost" value={money.short(d.cost)} />
-                        <Kpi label="Profit" value={money.short(d.profit)} sub={d.margin != null ? `${money.pct(d.margin)} margin` : "-"} />
+                        <Kpi label="Revenue" value={<Money short value={d.revenue} />} />
+                        <Kpi label="Cost" value={<Money short value={d.cost} />} />
+                        <Kpi label="Profit" value={<Money short value={d.profit} />} sub={d.margin != null ? `${money.pct(d.margin)} margin` : "-"} />
                     </div>
                     {d.unconvertedCosts.length > 0 && <div className="mt-s"><MixedCurrency amounts={merged(d.unconvertedCosts)} /></div>}
                     <div className="kpis" style={{ marginTop: 10 }}>
@@ -176,9 +176,9 @@ function Figures({ tabs }: { tabs: ReactNode }) {
                         <Kpi label="Clients" value={fmtNumber(d.clientsServed)} sub={`served · ${d.allClients} in total`} />
                     </div>
                     <div className="kpis" style={{ marginTop: 10 }}>
-                        <Kpi label="Invoiced" value={money.short(d.invoiced)} />
-                        <Kpi label="Collected" value={money.short(d.collected)} />
-                        <Kpi label="Outstanding" value={money.short(d.outstanding)} sub="today" />
+                        <Kpi label="Invoiced" value={<Money short value={d.invoiced} />} />
+                        <Kpi label="Collected" value={<Money short value={d.collected} />} />
+                        <Kpi label="Outstanding" value={<Money short value={d.outstanding} />} sub="today" />
                     </div>
                     {d.unconvertedInvoices.length > 0 && <div className="mt-s"><MixedCurrency amounts={d.unconvertedInvoices} /></div>}
                 </div>

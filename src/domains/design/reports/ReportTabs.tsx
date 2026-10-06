@@ -8,7 +8,7 @@ import Columns from "@/shared/components/Charts/Columns";
 import Figure from "@/shared/components/Charts/Figure";
 import { ProjectTile } from "@/shared/components/Data/Bits";
 import { Kpi } from "@/shared/components/Data/Kpi";
-import { MixedCurrency } from "@/shared/components/Data/Money";
+import { MixedCurrency, Money } from "@/shared/components/Data/Money";
 import { StatusBadge } from "@/shared/components/Data/Pills";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -215,10 +215,10 @@ export function MoneyTab({ report, people }: TabProps) {
     return (
         <div>
             <div className="kpis">
-                <Kpi label="Labour cost" value={money.short(m.labour.usd)} sub={<span>{fmtH(report.totalMinutes)} in range</span>} />
-                <Kpi label="Project expenses" value={money.short(m.expensesUsd)} />
-                <Kpi label="Total cost" value={money.short(m.totalCostUsd)} />
-                <Kpi label="Client profit (all time)" value={money.short(m.clientProfit)} />
+                <Kpi label="Labour cost" value={<Money short value={m.labour.usd} />} sub={<span>{fmtH(report.totalMinutes)} in range</span>} />
+                <Kpi label="Project expenses" value={<Money short value={m.expensesUsd} />} />
+                <Kpi label="Total cost" value={<Money short value={m.totalCostUsd} />} />
+                <Kpi label="Client profit (all time)" value={<Money short value={m.clientProfit} />} />
             </div>
             <div className="grid g-8-4 mt">
                 <Figure title="Revenue against cost" sub="Revenue received from clients, month by month.">

@@ -1,6 +1,6 @@
 import Waterfall, { type WaterfallStep } from "@/shared/components/Charts/Waterfall";
 import { Kpi } from "@/shared/components/Data/Kpi";
-import { CostRow } from "@/shared/components/Data/Money";
+import { CostRow, Money } from "@/shared/components/Data/Money";
 import { plural } from "@/shared/format/labels";
 import { money } from "@/shared/format/money";
 import Icon from "@/shared/icons/Icon";
@@ -82,7 +82,7 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onStatement, 
                     <Kpi label="Received from client" value={money.exact(x.received)}
                         sub={<span>{plural(x.payments, "payment")}{initial ? ` · ${money.short(initial.amountUsd)} up front` : ""}</span>} />
                     <Kpi label="Spent so far" value={money.exact(x.spent)}
-                        sub={<span>{money.short(x.materialCost)} materials · {money.short(x.labour)} labour{x.other ? ` · ${money.short(x.other)} other` : ""}</span>} />
+                        sub={<span><Money short value={x.materialCost} /> materials · <Money short value={x.labour} /> labour{x.other ? ` · ${money.short(x.other)} other` : ""}</span>} />
                     <Kpi label={<>Profit so far<HelpHint article="site-money" label="profit so far">What the client has paid, minus what the site has cost.</HelpHint></>} value={<span className={x.cashProfit < 0 ? "down" : "up"}>{money.exact(x.cashProfit)}</span>}
                         sub={<span>received − spent</span>} />
                     <Kpi label={paidAhead ? "Paid ahead" : "Client still owes"} value={money.exact(paidAhead ? x.credit : x.owed)}

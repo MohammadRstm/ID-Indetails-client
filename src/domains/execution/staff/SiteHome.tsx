@@ -8,7 +8,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { SearchInput } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import { Avatars } from "@/shared/components/Identity/People";
-import { money } from "@/shared/format/money";
+import { Money } from "@/shared/components/Data/Money";
 import { addDays, dayKey, fmtDate, monthKey, relTime, startOfWeek } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useProjects, type ProjectSummary } from "../../shared/projects/projectsApi";
@@ -149,7 +149,7 @@ function SiteCard({ project: p, summary: s, failed, paused }: { project: Project
             <div className="pcard-mine">
                 <div className="grow">
                     <div className="u">Materials logged</div>
-                    <div className="mono" style={{ fontWeight: 650, fontSize: 14 }}>{s ? money.short(s.materialCost) : failed ? "-" : "…"}</div>
+                    <div className="mono" style={{ fontWeight: 650, fontSize: 14 }}>{s ? <Money short value={s.materialCost} /> : failed ? "-" : "…"}</div>
                     <div className="muted" style={{ fontSize: 11 }}>{s?.myLastRecordedAt ? `you last recorded here ${relTime(s.myLastRecordedAt)}` : "nothing recorded by you yet"}</div>
                 </div>
                 <div style={{ textAlign: "right" }}>

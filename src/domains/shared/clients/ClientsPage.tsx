@@ -16,6 +16,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { ChipGroup, SearchInput } from "@/shared/components/Forms/Filters";
 import useDebounce from "@/shared/hooks/useDebounce";
+import { Money } from "@/shared/components/Data/Money";
 import { money } from "@/shared/format/money";
 import { companyToday, fmtH, fmtMonthY, MONTHS, partsOf, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -95,12 +96,12 @@ export default function ClientsPage() {
             cell: (c: ClientSummary) => (c.work?.totalMinutes ? fmtH(c.work.totalMinutes) : <span className="muted">-</span>),
         }] : []),
         ...(seesMoney ? [
-            { key: "revenue", header: "Revenue", right: true, mono: true, sortKey: "revenue", cell: (c: ClientSummary) => (c.money?.revenue ? money.short(c.money.revenue) : <span className="muted">-</span>) },
-            { key: "cost", header: "Cost", right: true, mono: true, cell: (c: ClientSummary) => (c.money?.cost.total ? money.short(c.money.cost.total) : <span className="muted">-</span>) },
+            { key: "revenue", header: "Revenue", right: true, mono: true, sortKey: "revenue", cell: (c: ClientSummary) => (c.money?.revenue ? <Money short value={c.money.revenue} /> : <span className="muted">-</span>) },
+            { key: "cost", header: "Cost", right: true, mono: true, cell: (c: ClientSummary) => (c.money?.cost.total ? <Money short value={c.money.cost.total} /> : <span className="muted">-</span>) },
             {
                 key: "profit", header: "Profit", right: true, sortKey: "profit",
                 cell: (c: ClientSummary) => (c.money?.revenue
-                    ? <span className={cx("mono", c.money.profit >= 0 ? "up" : "down")}>{money.short(c.money.profit)}</span>
+                    ? <span className={cx("mono", c.money.profit >= 0 ? "up" : "down")}><Money short value={c.money.profit} /></span>
                     : <span className="muted">-</span>),
             },
             { key: "margin", header: "Margin", sortKey: "margin", cell: (c: ClientSummary) => (c.money?.revenue ? <MarginPill value={c.money.marginKnown ? c.money.margin : null} label={false} /> : <span className="muted">-</span>) },
@@ -108,7 +109,7 @@ export default function ClientsPage() {
                 key: "outstanding", header: "Outstanding", right: true, sortKey: "outstanding",
                 cell: (c: ClientSummary) => {
                     const b = c.money?.billing;
-                    return b && b.outstanding > 0 ? <span className={cx("mono", b.overdue > 0 && "down")}>{money.short(b.outstanding)}</span> : <span className="muted">-</span>;
+                    return b && b.outstanding > 0 ? <span className={cx("mono", b.overdue > 0 && "down")}><Money short value={b.outstanding} /></span> : <span className="muted">-</span>;
                 },
             },
         ] : []),
@@ -133,12 +134,12 @@ export default function ClientsPage() {
                 { key: "added", label: "Added this month", value: o?.addedThisMonth ?? 0, sub: <span>newest {o?.newest?.name ?? "-"}</span> },
                 ...(seesMoney ? [
                     {
-                        key: "revenue", value: money.short(revenue), sub: <span>contracted, all time</span>,
+                        key: "revenue", value: <Money short value={revenue} />, sub: <span>contracted, all time</span>,
                         label: <>Client revenue<HelpHint article="revenue" label="client revenue">What was agreed with clients for all their projects, all time. It isn't what they have paid.</HelpHint></>,
                     },
-                    { key: "profit", label: "Client profit", value: money.short(s?.allTimeClientProfit ?? 0), sub: <span>{money.pct(revenue ? (s?.allTimeClientProfit ?? 0) / revenue : null)} margin</span> },
+                    { key: "profit", label: "Client profit", value: <Money short value={s?.allTimeClientProfit ?? 0} />, sub: <span>{money.pct(revenue ? (s?.allTimeClientProfit ?? 0) / revenue : null)} margin</span> },
                     {
-                        key: "outstanding", value: money.short(s?.billing.outstanding ?? 0),
+                        key: "outstanding", value: <Money short value={s?.billing.outstanding ?? 0} />,
                         label: <>Outstanding<HelpHint article="billing-terms" label="outstanding">What clients still have to pay on invoices already sent.</HelpHint></>,
                         sub: <span className="link" {...clickable(() => navigate(`/${domain}/financials?tab=billing`), "link")}>cash owed, not revenue</span>,
                     },

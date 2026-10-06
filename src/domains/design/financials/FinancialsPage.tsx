@@ -13,6 +13,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
 import { Segmented } from "@/shared/components/Forms/Filters";
+import { Money } from "@/shared/components/Data/Money";
 import { money } from "@/shared/format/money";
 import { quarterLabel, quarterOf, quarterStart } from "@/shared/format/periods";
 import { companyToday, fmtNumber } from "@/shared/format/time";
@@ -73,10 +74,10 @@ function FinancialsPage({ domain }: { domain: Domain }) {
     // Design spends on its employees' hours and expenses; a site on materials, ground labour and expenses
     const costTiles = domain === "design"
         ? [
-            { key: "labour", label: "Employee labour", value: money.short(s?.cost.labour ?? 0), sub: <span>{fmtNumber(Math.round((s?.labourMinutes ?? 0) / 60))} hours logged</span> },
-            { key: "expenses", label: "Project expenses", value: money.short(s?.cost.expenses ?? 0) },
+            { key: "labour", label: "Employee labour", value: <Money short value={s?.cost.labour ?? 0} />, sub: <span>{fmtNumber(Math.round((s?.labourMinutes ?? 0) / 60))} hours logged</span> },
+            { key: "expenses", label: "Project expenses", value: <Money short value={s?.cost.expenses ?? 0} /> },
         ]
-        : costPartsOf(domain).map((part) => ({ key: part.key, label: part.label, value: money.short(s?.cost[part.key] ?? 0) }));
+        : costPartsOf(domain).map((part) => ({ key: part.key, label: part.label, value: <Money short value={s?.cost[part.key] ?? 0} /> }));
 
     async function exportCsv() {
         const slug = period.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -102,13 +103,13 @@ function FinancialsPage({ domain }: { domain: Domain }) {
                 <>
                     <KpiStrip loading={!s} items={[
                         {
-                            key: "revenue", value: money.short(s?.revenue ?? 0), sub: <span>{s?.clientProjects ?? 0} client projects · payments in the period</span>,
+                            key: "revenue", value: <Money short value={s?.revenue ?? 0} />, sub: <span>{s?.clientProjects ?? 0} client projects · payments in the period</span>,
                             label: <>Revenue received<HelpHint article="revenue" label="revenue received">The money clients paid in the period, counted on the day it arrived. A project's own revenue is what was agreed.</HelpHint></>,
                         },
                         ...costTiles,
-                        { key: "profit", label: "Net profit", value: money.short(s?.profit ?? 0), sub: <span>revenue less {costWords(domain).toLowerCase()}</span> },
+                        { key: "profit", label: "Net profit", value: <Money short value={s?.profit ?? 0} />, sub: <span>revenue less {costWords(domain).toLowerCase()}</span> },
                         {
-                            key: "margin", value: money.pct(s?.margin), sub: <span>all-time client profit {money.short(s?.allTimeClientProfit ?? 0)}</span>,
+                            key: "margin", value: money.pct(s?.margin), sub: <span>all-time client profit <Money short value={s?.allTimeClientProfit ?? 0} /></span>,
                             label: <>Margin<HelpHint article="profit-margin" label="margin">Net profit as a share of the revenue received in the period.</HelpHint></>,
                         },
                     ]} />

@@ -17,7 +17,7 @@ import Select from "@/shared/components/Forms/Select";
 import { Avatars } from "@/shared/components/Identity/People";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
 import useDebounce from "@/shared/hooks/useDebounce";
-import { money } from "@/shared/format/money";
+import { Money } from "@/shared/components/Data/Money";
 import { companyToday, fmtH, fmtNumber, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
@@ -147,14 +147,14 @@ function ProjectTable({ section }: { section: boolean }) {
         { key: "progress", header: "Progress", width: 110, cell: (p) => <Bar value={p.progressPct} tone={p.status === "completed" ? "ok" : p.status === "hold" ? "warn" : ""} /> },
         ...(seesWork ? [{ key: "hours", header: "Hours", right: true, mono: true, cell: (p: ProjectSummary) => fmtH(p.work?.totalMinutes ?? 0) }] : []),
         ...(seesMoney ? [
-            { key: "revenue", header: "Revenue", right: true, mono: true, cell: (p: ProjectSummary) => (p.billingType === "internal" ? <span className="muted">-</span> : money.short(p.money?.revenue ?? 0)) },
-            { key: "cost", header: "Cost", right: true, mono: true, cell: (p: ProjectSummary) => money.short(p.money?.cost ?? 0) },
+            { key: "revenue", header: "Revenue", right: true, mono: true, cell: (p: ProjectSummary) => (p.billingType === "internal" ? <span className="muted">-</span> : <Money short value={p.money?.revenue ?? 0} />) },
+            { key: "cost", header: "Cost", right: true, mono: true, cell: (p: ProjectSummary) => <Money short value={p.money?.cost ?? 0} /> },
             {
                 key: "profit", header: "Profit", right: true,
                 cell: (p: ProjectSummary) => {
                     const internal = p.billingType === "internal";
                     const profit = p.money?.profit ?? 0;
-                    return <span className={cx("mono", internal ? "muted" : profit >= 0 ? "up" : "down")}>{money.short(internal ? -(p.money?.cost ?? 0) : profit)}</span>;
+                    return <span className={cx("mono", internal ? "muted" : profit >= 0 ? "up" : "down")}><Money short value={internal ? -(p.money?.cost ?? 0) : profit} /></span>;
                 },
             },
             { key: "margin", header: "Margin", cell: (p: ProjectSummary) => <MarginPill value={p.money?.marginKnown ? p.money.margin : null} internal={p.billingType === "internal"} label={false} /> },
@@ -230,15 +230,15 @@ function ProjectTable({ section }: { section: boolean }) {
                 <div style={{ marginBottom: 12 }}>
                     <KpiStrip loading={!t} items={[
                         {
-                            key: "revenue", value: money.short(t?.revenue ?? 0), sub: <span>{t?.clientProjects ?? 0} client projects</span>,
+                            key: "revenue", value: <Money short value={t?.revenue ?? 0} />, sub: <span>{t?.clientProjects ?? 0} client projects</span>,
                             label: <>Revenue<HelpHint article="revenue" label="revenue">What was agreed with the clients of these projects, whether paid yet or not.</HelpHint></>,
                         },
                         {
-                            key: "cost", value: money.short(t?.cost ?? 0), sub: <span>labour and project expenses</span>,
+                            key: "cost", value: <Money short value={t?.cost ?? 0} />, sub: <span>labour and project expenses</span>,
                             label: <>Cost<HelpHint article="project-cost" label="cost">The hours logged at each person's rate, a share of paid breaks, and the projects' expenses.</HelpHint></>,
                         },
-                        { key: "profit", label: "Profit", value: money.short(t?.profit ?? 0), sub: <span>client work only</span> },
-                        { key: "internal", label: "Internal cost", value: money.short(t?.internalCost ?? 0), sub: <span>{t?.internalProjects ?? 0} internal projects</span> },
+                        { key: "profit", label: "Profit", value: <Money short value={t?.profit ?? 0} />, sub: <span>client work only</span> },
+                        { key: "internal", label: "Internal cost", value: <Money short value={t?.internalCost ?? 0} />, sub: <span>{t?.internalProjects ?? 0} internal projects</span> },
                     ]} />
                 </div>
             )}

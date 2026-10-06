@@ -1,4 +1,5 @@
 import { tip } from "@/shared/components/Overlays/tip";
+import { Money } from "@/shared/components/Data/Money";
 import { money } from "@/shared/format/money";
 import { companyToday, daysBetween, fmtDate } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -52,7 +53,7 @@ export function BillingMeter({ value, invoiced, paid, outstanding, notYetInvoice
             {legend && (
                 <div className="legend mt-s">
                     {segments.map((s, i) => (
-                        <span key={i}><i className={cx(s.ghost && "hatch")} style={{ background: s.ghost ? undefined : s.color }} />{s.label} <span className="muted">{money.short(s.value)}</span></span>
+                        <span key={i}><i className={cx(s.ghost && "hatch")} style={{ background: s.ghost ? undefined : s.color }} />{s.label} <span className="muted"><Money short value={s.value} /></span></span>
                     ))}
                 </div>
             )}

@@ -4,7 +4,7 @@ import { usePermissions } from "@/app/permissions/usePermissions";
 import { Bar } from "@/shared/components/Data/Bits";
 import { KpiStrip, type KpiProps } from "@/shared/components/Data/Kpi";
 import { Avatars } from "@/shared/components/Identity/People";
-import { money } from "@/shared/format/money";
+import { Money } from "@/shared/components/Data/Money";
 import BillingBand from "../../shared/billing/BillingBand";
 import { useBillingLinks } from "../../shared/billing/billingLinks";
 import type { Project } from "../../shared/projects/projectsApi";
@@ -73,14 +73,14 @@ function SiteKpis({ project }: { project: Project }) {
         });
     }
     items.push(
-        { key: "materials", label: "Materials", value: money.short(materials?.cost ?? 0), sub: <span>{materials?.count ?? 0} records</span> },
-        { key: "labour", label: "Ground labour", value: money.short(labour?.total ?? 0), sub: <span>{labour?.reportedWeeks ?? 0} weeks reported</span> },
+        { key: "materials", label: "Materials", value: <Money short value={materials?.cost ?? 0} />, sub: <span>{materials?.count ?? 0} records</span> },
+        { key: "labour", label: "Ground labour", value: <Money short value={labour?.total ?? 0} />, sub: <span>{labour?.reportedWeeks ?? 0} weeks reported</span> },
     );
     if (m && b) {
         const ahead = b.paidAhead > 0.5;
         items.push({
-            key: "owed", label: ahead ? "Paid ahead" : "Client owes", value: money.short(ahead ? b.paidAhead : b.owed),
-            sub: <span>{money.short(b.received)} received of {money.short(m.revenue)} agreed</span>,
+            key: "owed", label: ahead ? "Paid ahead" : "Client owes", value: <Money short value={ahead ? b.paidAhead : b.owed} />,
+            sub: <span><Money short value={b.received} /> received of <Money short value={m.revenue} /> agreed</span>,
         });
     }
     return <KpiStrip loading={materialList.isPending || weeks.isPending} items={items} />;

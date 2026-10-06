@@ -11,6 +11,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import { PAYMENT_METHODS, plural } from "@/shared/format/labels";
+import { Money } from "@/shared/components/Data/Money";
 import { money } from "@/shared/format/money";
 import { fmtMonthY, MONTHS } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -68,15 +69,15 @@ export default function BillingTab({ domain, tiles }: { domain: Domain; tiles: M
             </div>
 
             <KpiStrip loading={!p} items={[
-                { key: "value", label: "Project value", value: money.short(p?.value ?? 0), sub: <span>across {b?.byClient.length ?? 0} clients</span> },
-                { key: "invoiced", label: "Invoiced", value: money.short(p?.invoiced ?? 0), sub: <span>{p?.issuedCount ?? 0} issued {p?.issuedCount === 1 ? "invoice" : "invoices"}</span> },
-                { key: "collected", label: "Collected", value: money.short(p?.received ?? 0), sub: <span>{collectedPct}% of what was invoiced</span> },
+                { key: "value", label: "Project value", value: <Money short value={p?.value ?? 0} />, sub: <span>across {b?.byClient.length ?? 0} clients</span> },
+                { key: "invoiced", label: "Invoiced", value: <Money short value={p?.invoiced ?? 0} />, sub: <span>{p?.issuedCount ?? 0} issued {p?.issuedCount === 1 ? "invoice" : "invoices"}</span> },
+                { key: "collected", label: "Collected", value: <Money short value={p?.received ?? 0} />, sub: <span>{collectedPct}% of what was invoiced</span> },
                 {
-                    key: "outstanding", value: money.short(p?.outstanding ?? 0), sub: <span className={p?.overdue ? "down" : ""}>{money.short(p?.overdue ?? 0)} of it overdue</span>,
+                    key: "outstanding", value: <Money short value={p?.outstanding ?? 0} />, sub: <span className={p?.overdue ? "down" : ""}><Money short value={p?.overdue ?? 0} /> of it overdue</span>,
                     label: <>Outstanding<HelpHint article="billing-terms" label="outstanding">What clients still have to pay on invoices already sent. Money paid on account doesn't reduce it until it's applied to an invoice.</HelpHint></>,
                 },
                 {
-                    key: "uninvoiced", value: money.short(p?.notYetInvoiced ?? 0), sub: <span>{p?.drafts ? `${money.short(p.drafts)} sitting in draft` : "work still to bill"}</span>,
+                    key: "uninvoiced", value: <Money short value={p?.notYetInvoiced ?? 0} />, sub: <span>{p?.drafts ? `${money.short(p.drafts)} sitting in draft` : "work still to bill"}</span>,
                     label: <>Not yet invoiced<HelpHint article="billing-terms" label="not yet invoiced">What was agreed, less what was invoiced and what is held on account.</HelpHint></>,
                 },
                 { key: "overdue", label: "Overdue invoices", value: p?.overdueCount ?? 0, sub: <span>{p?.oldestOverdueDays ? `oldest ${p.oldestOverdueDays} days` : "nothing late"}</span> },

@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import type { PointerEvent, ReactNode } from "react";
+import { tip } from "@/shared/components/Overlays/tip";
 import { money } from "@/shared/format/money";
 import { cx } from "@/shared/utils/cx";
 import { clickable } from "@/shared/utils/clickable";
@@ -15,14 +16,25 @@ type MoneyProps = {
     className?: string;
 };
 
-/** An amount as the prototype shows it: short on screen, every digit in the tooltip (UI.Money). */
+/**
+ * An amount as the prototype shows it: short on screen ($12k), every digit ($12,151) in the app's tooltip as soon as
+ * the pointer is on it (UI.Money).
+ */
 export function Money({ value, currency = "USD", short, tone = "", size, prefix = "", className }: MoneyProps) {
     const v = value ?? 0;
     const shade = tone === "auto" ? (v > 0 ? "up" : v < 0 ? "down" : "") : tone;
     const text = short ? money.short(v, currency) : money.fmt(v, currency);
     const full = money.exact(v, currency);
+    const exact = full !== text
+        ? {
+            "data-exact": prefix + full,
+            onPointerEnter: (e: PointerEvent<HTMLSpanElement>) => tip.show(e, { big: prefix + full }),
+            onPointerMove: (e: PointerEvent<HTMLSpanElement>) => tip.move(e),
+            onPointerLeave: () => tip.hide(),
+        }
+        : {};
     return (
-        <span className={cx("money", size, shade, className)} title={full !== text ? full : undefined}>
+        <span className={cx("money", size, shade, className)} {...exact}>
             {prefix}
             {text}
         </span>
