@@ -1,5 +1,5 @@
 import { P } from "@/app/permissions/codes";
-import { and, has, hasAny, link, links, list, note, only, para, sees, step, steps, type Article } from "../helpModel";
+import { and, has, hasAny, link, links, list, not, note, only, para, sees, step, steps, type Article } from "../helpModel";
 
 export const projects: Article[] = [
     {
@@ -11,8 +11,10 @@ export const projects: Article[] = [
         ask: ["new project", "create project", "add project", "start a project", "new site", "create site", "internal project"],
         blocks: [
             steps(step("Choose **New project** in the top bar (or on the Projects page).", "New project")),
-            only(sees("design"), para("**Design:** a client project has a client and the customer payment agreed with them (its revenue). An internal project has neither: it only collects costs.")),
-            only(sees("execution"), para("**Execution:** a site is always for a client. You set its project fee and the default material profit (the markup on materials). Its revenue is worked out from those, never typed in.")),
+            only(and(sees("design"), has(P.FINANCIAL_VIEW)), para("**Design:** a client project has a client and the customer payment agreed with them (its revenue). An internal project has neither: it only collects costs.")),
+            only(and(sees("design"), not(has(P.FINANCIAL_VIEW))), para("**Design:** a client project has a client; an internal project has none. The customer payment is left to a super admin, who sets it later.")),
+            only(and(sees("execution"), has(P.PROJECT_PRICING_MANAGE)), para("**Execution:** a site is always for a client. You set its project fee and the default material profit (the markup on materials). Its revenue is worked out from those, never typed in.")),
+            only(and(sees("execution"), not(has(P.PROJECT_PRICING_MANAGE))), para("**Execution:** a site is always for a client. It starts with no fee and no material profit; a super admin sets them later.")),
             only(and(sees("execution"), has(P.PAYMENT_RECORD)), para("You can record the client's first payment (the initial payment) while creating the site.")),
             only(and(sees("execution"), has(P.LABOUR_REPORT_MANAGE)), para("You can also set the site's first labour defaults: the usual number of ground workers and their day rate.")),
             only(has(P.CLIENT_CREATE), note("A client who isn't on the list yet can be added from the same form.")),
@@ -35,7 +37,7 @@ export const projects: Article[] = [
                 "Once a project has an invoice or a payment, it can't move to another client or become internal: invoices and payments keep the client they were made for.",
                 "A finished project can't be edited until it is reopened.",
             ),
-            only(sees("design"), para("The customer payment (a Design project's agreed revenue) is changed from **More → Edit customer payment**; **Set a customer payment** turns an internal project into client work.")),
+            only(and(sees("design"), has(P.FINANCIAL_VIEW)), para("The customer payment (a Design project's agreed revenue) is changed from **More → Edit customer payment**; **Set a customer payment** turns an internal project into client work.")),
         ],
         related: ["project-status"],
     },

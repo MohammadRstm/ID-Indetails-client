@@ -6,10 +6,11 @@ import { P } from "@/app/permissions/codes";
 import { fixtures, projectHandlers } from "@/test/fixtures";
 import { overview } from "@/test/fixtures/overview";
 import { siteHandlers } from "@/test/fixtures/site";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
-const admin = personas.designAdmin;
+// A Design admin a super admin has handed the money to: admins don't hold it by default
+const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const firstRow = async () => (await screen.findByText("Haddad Holdings HQ fit-out")).closest("tr")!;
 
 describe("the projects list", () => {
@@ -30,6 +31,19 @@ describe("the projects list", () => {
         expect(screen.queryByRole("columnheader", { name: "Revenue" })).toBeNull();
         expect(screen.queryByRole("columnheader", { name: "Profit" })).toBeNull();
         expect(screen.queryByText("Internal cost")).toBeNull();
+        expect(askedForTotals).toBe(false);
+    });
+
+    it("shows a plain Design admin no money, and never asks for it", async () => {
+        let askedForTotals = false;
+        renderApp("/design/projects", personas.designAdmin,
+            http.get("/api/projects/totals", () => { askedForTotals = true; return HttpResponse.json(fixtures.projectTotals); }),
+            ...projectHandlers);
+        await firstRow();
+        expect(screen.queryByRole("columnheader", { name: "Revenue" })).toBeNull();
+        expect(screen.queryByRole("columnheader", { name: "Margin" })).toBeNull();
+        expect(screen.queryByRole("columnheader", { name: "Profit" })).toBeNull();
+        expect(within(screen.getByRole("navigation")).queryByText("Financials")).toBeNull();
         expect(askedForTotals).toBe(false);
     });
 
@@ -140,6 +154,18 @@ describe("a project", () => {
         expect(within(document.querySelector(".page-head") as HTMLElement).queryByText(/^Payment/)).toBeNull();
     });
 
+    it("shows a plain Design admin neither the payment nor the money actions", async () => {
+        renderApp("/design/projects/1", personas.designAdmin, ...projectHandlers);
+        await screen.findByRole("heading", { name: "Haddad Holdings HQ fit-out" });
+        expect(within(document.querySelector(".page-head") as HTMLElement).queryByText(/^Payment/)).toBeNull();
+        await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+        expect(screen.getByRole("button", { name: "Put on hold" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /customer payment/i })).toBeNull();
+        expect(screen.queryByRole("button", { name: "Add project expense" })).toBeNull();
+        expect(screen.queryByRole("button", { name: "Record a client payment" })).toBeNull();
+        expect(within(screen.getByRole("navigation")).queryByText("Financials")).toBeNull();
+    });
+
     it("says so when the project isn't there", async () => {
         renderApp("/design/projects/99", admin,
             http.get("/api/projects/99", () => HttpResponse.json({ type: "not_found", code: "project_not_found", message: "Not found." }, { status: 404 })),
@@ -201,6 +227,28 @@ describe("a new project and its details", () => {
         await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ title: fixtures.project.title, location: "Jounieh", ownerId: fixtures.project.owner.id })]));
     });
 
+    it("leaves the customer payment to whoever may see the money", async () => {
+        const bodies: Record<string, unknown>[] = [];
+        renderApp(`/design/projects?new=1&client=${fixtures.client.id}`, personas.designAdmin,
+            http.post("/api/projects", async ({ request }) => {
+                bodies.push((await request.json()) as Record<string, unknown>);
+                return HttpResponse.json({ ...fixtures.project, id: 77, title: "Villa interiors" }, { status: 201 });
+            }),
+            ...projectHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "New project" });
+        expect(within(dialog).queryByLabelText("Customer payment")).toBeNull();
+        expect(within(dialog).queryByText("Customer payment")).toBeNull();
+        await userEvent.type(within(dialog).getByLabelText("Project name"), "Villa interiors");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ billingType: "client", clientId: fixtures.client.id, revenue: null })]));
+    });
+
+    it("asks the customer payment of a super admin", async () => {
+        renderApp(`/design/projects?new=1&client=${fixtures.client.id}`, personas.superAdmin, ...projectHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "New project" });
+        expect(within(dialog).getByLabelText("Customer payment")).toBeInTheDocument();
+    });
+
     it("keeps editing to people with project:edit", async () => {
         renderApp("/design/projects/1", withPermissions(admin, { revoke: [P.PROJECT_EDIT] }), ...projectHandlers);
         await screen.findByRole("heading", { name: fixtures.project.title });
@@ -211,7 +259,8 @@ describe("a new project and its details", () => {
 });
 
 describe("a new Execution project", () => {
-    const karim = personas.executionAdmin;
+    // an Execution admin a super admin has handed the money to
+    const karim = withPermissions(personas.executionAdmin, { grant: MONEY_AND_HIRING });
     const newProject = () => screen.findByRole("dialog", { name: "New project" });
 
     it("takes the first payment from people who record payments", async () => {
@@ -236,6 +285,32 @@ describe("a new Execution project", () => {
         const dialog = await newProject();
         expect(within(dialog).queryByLabelText("Initial payment received")).not.toBeInTheDocument();
         expect(within(dialog).getByLabelText(/Project fee/)).toBeInTheDocument();
+    });
+
+    it("leaves the fee, the material profit and the payment to a super admin for a plain Execution admin", async () => {
+        const bodies: Record<string, unknown>[] = [];
+        renderApp(`/execution/projects?new=1&client=${fixtures.client.id}`, personas.executionAdmin,
+            http.post("/api/projects", async ({ request }) => {
+                bodies.push((await request.json()) as Record<string, unknown>);
+                return HttpResponse.json({ ...fixtures.project, id: 77, title: "Lobby works" }, { status: 201 });
+            }),
+            ...siteHandlers, ...projectHandlers);
+        const dialog = await newProject();
+        expect(within(dialog).queryByLabelText("Initial payment received")).toBeNull();
+        expect(within(dialog).queryByLabelText(/Project fee/)).toBeNull();
+        expect(within(dialog).queryByLabelText(/Material profit/i)).toBeNull();
+        expect(within(dialog).queryByText("Money")).toBeNull();
+        await userEvent.type(within(dialog).getByLabelText("Project name"), "Lobby works");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ projectFee: null, materialMarkup: null, initialPayment: null })]));
+    });
+
+    it("asks a super admin for the fee, the material profit and the payment", async () => {
+        renderApp("/execution/projects?new=1", personas.superAdmin, ...siteHandlers, ...projectHandlers);
+        const dialog = await newProject();
+        expect(within(dialog).getByLabelText("Initial payment received")).toBeInTheDocument();
+        expect(within(dialog).getByLabelText(/Project fee/)).toBeInTheDocument();
+        expect(within(dialog).getByLabelText(/Material profit/i)).toBeInTheDocument();
     });
 });
 

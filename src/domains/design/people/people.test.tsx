@@ -5,10 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { people, peopleHandlers } from "@/test/fixtures/people";
 import { workHandlers } from "@/test/fixtures/work";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
-const nadia = personas.designAdmin;
+// A Design admin a super admin has handed the money to: admins don't hold it by default
+const nadia = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const yara = people.employee;
 
 // Wednesday 30 September 2026, noon in Beirut
@@ -55,6 +56,15 @@ describe("Employees", () => {
         await table();
         expect(screen.queryByRole("button", { name: "Add employee" })).not.toBeInTheDocument();
         expect(screen.queryByRole("dialog", { name: "Add employee" })).not.toBeInTheDocument();
+    });
+
+    it("leaves hiring and pay to a super admin for a plain Design admin", async () => {
+        renderApp("/design/people?invite=1", personas.designAdmin, ...peopleHandlers);
+        const t = await table();
+        expect(screen.queryByRole("button", { name: "Add employee" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("dialog", { name: "Add employee" })).not.toBeInTheDocument();
+        expect(within(t).queryByText("Rate")).not.toBeInTheDocument();
+        expect(within(t).queryByText("Labour cost")).not.toBeInTheDocument();
     });
 
     it("shows the plain list of people, without hours, to an admin who can't see everyone's work", async () => {

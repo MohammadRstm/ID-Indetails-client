@@ -5,10 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { money } from "@/shared/format/money";
 import { site, siteHandlers } from "@/test/fixtures/site";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
-const karim = personas.executionAdmin;
+// An Execution admin a super admin has handed the money to: admins don't hold it by default
+const karim = withPermissions(personas.executionAdmin, { grant: MONEY_AND_HIRING });
 const project = site.project;
 const m = project.money!;
 const path = `/execution/projects/${project.id}`;

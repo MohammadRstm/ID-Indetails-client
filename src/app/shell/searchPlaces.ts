@@ -243,7 +243,8 @@ export const PLACES: Place[] = [
         words: ["finance settings", "invoicing", "invoice settings", "set up invoicing", "bank details", "bank account", "iban", "swift",
             "payment details", "invoice numbering", "payment terms", "due days", "exchange rate", "exchange rates", "lbp rate",
             "dollar rate", "lira", "lebanese pound", "currency rate"],
-        targets: (ctx) => settings(ctx, "finance"),
+        targets: (ctx) => when(ctx.p.hasAny(P.BILLING_SETTINGS_MANAGE, P.EXCHANGE_RATE_MANAGE, P.COMPANY_SETTINGS_MANAGE, P.WORKING_TIME_MANAGE),
+            () => settings(ctx, "finance")),
     },
     {
         key: "project-settings", icon: "projects", label: "Project settings",
@@ -260,7 +261,7 @@ export const PLACES: Place[] = [
         key: "access", icon: "shield", label: "Admins and access",
         words: ["admins", "access", "permissions", "permission", "roles", "role", "admin rights", "rights", "privileges", "who can see",
             "grant access", "revoke access", "make admin", "custom permissions"],
-        targets: (ctx) => settings(ctx, "admins"),
+        targets: (ctx) => when(ctx.p.hasAny(P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN, P.PERMISSION_MANAGE), () => settings(ctx, "admins")),
     },
     {
         key: "data", icon: "database", label: "Data and export",

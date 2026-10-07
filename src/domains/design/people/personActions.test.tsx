@@ -115,7 +115,8 @@ describe("Someone's account", () => {
 
     it("gets a fresh invitation while they haven't signed up", async () => {
         const sent: string[] = [];
-        renderApp("/design/people/9", personas.designAdmin, as({ status: "invited" }),
+        // inviting is a super admin's, or an admin's they hand it to
+        renderApp("/design/people/9", withPermissions(personas.designAdmin, { grant: [P.EMPLOYEE_INVITE] }), as({ status: "invited" }),
             http.post("/api/invitations/:id/resend", ({ params }) => { sent.push(String(params.id)); return HttpResponse.json({}); }),
             ...peopleHandlers);
         await menu();

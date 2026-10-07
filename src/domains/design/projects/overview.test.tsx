@@ -5,10 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { fmtH } from "@/shared/format/time";
 import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
-const admin = personas.designAdmin;
+// A Design admin a super admin has handed the money to: admins don't hold it by default
+const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const path = `/design/projects/${projectWork.project.id}`;
 const sarah = projectWork.contributor.person;
 
@@ -38,6 +39,16 @@ describe("a Design project's overview", () => {
         await within(panel).findByText(projectWork.work.contributors[0].name);
         expect(within(panel).queryByRole("columnheader", { name: "Labour cost" })).toBeNull();
         expect(screen.queryByText("Payment status")).toBeNull();
+    });
+
+    it("shows a plain Design admin the work without any of the money", async () => {
+        renderApp(path, personas.designAdmin, ...projectWorkHandlers);
+        const panel = await contributorsPanel();
+        await within(panel).findByText(projectWork.work.contributors[0].name);
+        expect(within(panel).queryByRole("columnheader", { name: "Labour cost" })).toBeNull();
+        expect(screen.queryByText("Payment status")).toBeNull();
+        expect(screen.queryByText("Financial breakdown")).toBeNull();
+        expect(within(document.querySelector(".page-head") as HTMLElement).queryByText(/^Payment/)).toBeNull();
     });
 
     it("shows only the progress without anyone's work, and never asks for everyone's", async () => {

@@ -5,10 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { money } from "@/shared/format/money";
 import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
-const admin = personas.designAdmin;
+// A Design admin a super admin has handed the money to: admins don't hold it by default
+const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const project = projectWork.project;
 const m = project.money!;
 const path = `/design/projects/${project.id}`;

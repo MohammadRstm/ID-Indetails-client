@@ -5,10 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { billing, billingHandlers } from "@/test/fixtures/billing";
 import { financialsHandlers } from "@/test/fixtures/financials";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
-const admin = personas.designAdmin;
+// A Design admin a super admin has handed the money to: admins don't hold it by default
+const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const path = "/design/financials?tab=billing";
 const paid = billing.domainPayments.items[0];
 const onAccount = { ...paid, id: 31, invoiceId: null, invoiceNumber: null, amountUsd: 1500, amount: 1500 };

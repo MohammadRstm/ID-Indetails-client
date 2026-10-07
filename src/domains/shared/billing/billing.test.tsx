@@ -7,10 +7,11 @@ import { money } from "@/shared/format/money";
 import { billing, billingHandlers } from "@/test/fixtures/billing";
 import { financialsHandlers } from "@/test/fixtures/financials";
 import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
-const admin = personas.designAdmin;
+// A Design admin a super admin has handed the money to: admins don't hold it by default
+const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const project = projectWork.project;
 const path = `/design/projects/${project.id}`;
 const inv = billing.issued;
