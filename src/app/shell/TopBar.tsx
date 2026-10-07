@@ -9,6 +9,7 @@ import Avatar from "@/shared/components/Identity/Avatar";
 import Popover from "@/shared/components/Overlays/Popover";
 import MessagesDropdown from "@/domains/shared/messages/MessagesDropdown";
 import NotificationBell from "@/domains/shared/notifications/NotificationBell";
+import ProtonButton from "@/domains/shared/proton/ProtonButton";
 import TimerControl from "@/domains/design/work/TimerControl";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
@@ -54,6 +55,8 @@ export default function TopBar({ area, onMenu, onSearch, sideShown = true }: Top
                         <Icon name="plus" /><span className="top-label">New project</span>
                     </button>
                 )}
+
+                {permissions.has(P.PROTON_USE) && <ProtonButton />}
 
                 <button className="icon-btn top-help" onClick={() => navigate(`${base}/help`)} aria-label="Help" title="Help">
                     <Icon name="help" />

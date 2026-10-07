@@ -209,3 +209,29 @@ table { line-height: normal; font-weight: normal; }
    text to type ("· optional"). Both are drawn here, so the label's text stays the field's name. */
 .label.required::after { content: " *"; color: var(--loss); font-weight: 700; }
 .label.optional::after { content: " · optional"; color: var(--ink-3); font-weight: 400; }
+
+/* Proton, the company assistant: a chat in the side drawer, and the card on which a proposed change is confirmed. */
+.proton-head .muted { font-size: 12px; margin-top: 2px; }
+.proton-thread { display: flex; flex-direction: column; gap: 6px; }
+.proton-thread .empty { display: flex; gap: 10px; align-items: flex-start; }
+.proton-turn { display: flex; flex-direction: column; }
+.proton-turn .msg-bubble { max-width: 88%; white-space: pre-wrap; }
+.proton-turn.error .msg-bubble { background: var(--now-soft); color: var(--now); }
+.proton-refs { margin-top: 6px; flex-wrap: wrap; }
+.proton-foot { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.proton-composer { display: flex; gap: 8px; align-items: flex-end; }
+.proton-composer textarea { flex: 1; resize: none; }
+.proton-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; min-height: 24px; }
+.proton-action { margin: 4px 0 6px; max-width: 100%; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--r2); background: var(--surface); padding: 10px 12px; }
+.proton-action.closed { border-left-color: var(--line); }
+.proton-action-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.proton-action-kicker { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); }
+.proton-action-title { font-weight: 650; margin: 6px 0 8px; }
+.proton-action-changes { margin: 0; display: grid; gap: 4px; }
+.proton-action-changes > div { display: grid; grid-template-columns: 110px 1fr; gap: 8px; }
+.proton-action-changes dt { color: var(--ink-3); }
+.proton-action-changes dd { margin: 0; overflow-wrap: anywhere; }
+.proton-action-note { font-size: 12px; margin-top: 8px; }
+.proton-action-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+.proton-action-outcome { margin-top: 10px; font-size: 12.5px; }
+.proton-action-outcome.neg { color: var(--now); }
