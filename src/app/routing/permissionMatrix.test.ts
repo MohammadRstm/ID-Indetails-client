@@ -62,10 +62,10 @@ describe("the permission matrix", () => {
             Object.fromEntries(companyRoutes.map((r) => [r.path, r.access(permissionsOf(personas[name])) ? "open" : "denied"]));
         // a domain admin manages settings in their business: the company's Settings need the company area too
         const onlyInbox = {
-            overview: "denied", overhead: "denied", salaries: "denied", "project-pay": "denied", schedules: "denied", settings: "denied",
+            overview: "denied", overhead: "denied", salaries: "denied", "project-pay": "denied", schedules: "denied", proton: "denied", settings: "denied",
             profile: "open", notifications: "open", messages: "open", help: "open",
         };
-        expect(company("superAdmin")).toEqual({ ...onlyInbox, overview: "open", overhead: "open", salaries: "open", "project-pay": "open", schedules: "open", settings: "open" });
+        expect(company("superAdmin")).toEqual({ ...onlyInbox, overview: "open", overhead: "open", salaries: "open", "project-pay": "open", schedules: "open", proton: "open", settings: "open" });
         for (const name of ["designAdmin", "executionAdmin", "designEmployee", "executionEmployee"] as PersonaName[]) {
             expect(company(name), name).toEqual(onlyInbox);
         }
