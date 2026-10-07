@@ -4,10 +4,11 @@ import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { financials, financialsHandlers } from "@/test/fixtures/financials";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
-const nadia = personas.designAdmin;
+// A Design admin a super admin has handed the money to: admins don't hold it by default
+const nadia = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 
 // Wednesday 30 September 2026, noon in Beirut
 beforeEach(() => {

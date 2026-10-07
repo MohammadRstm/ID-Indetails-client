@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { CurrentUser } from "@/api/types";
 import { P } from "@/app/permissions/codes";
 import { permissionsOf } from "@/app/permissions/permissions";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { findPlaces, STRONG, words, type PlaceContext } from "./searchPlaces";
 import type { ShellArea } from "./useArea";
 
@@ -10,6 +10,8 @@ const company: ShellArea = { kind: "company", section: null };
 const design: ShellArea = { kind: "domain", domain: "design", section: null };
 const execution: ShellArea = { kind: "domain", domain: "execution", section: null };
 const noop = () => {};
+// A Design admin a super admin has handed the money and hiring to: admins don't hold them by default
+const moneyAdmin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 
 function ctxOf(user: CurrentUser, area: ShellArea): PlaceContext {
     return { p: permissionsOf(user), area, userId: user.id, dark: false, run: { logWork: noop, toggleTheme: noop, signOut: noop } };
@@ -54,7 +56,8 @@ describe("finding a page by what people call it", () => {
         expect(top(personas.superAdmin, company, "staff")?.path).toBe("/company/overview?tab=people");
         expect(top(personas.designAdmin, design, "staff")?.path).toBe("/design/people");
         expect(top(personas.superAdmin, company, "hire")?.path).toBe("/company/overview?tab=people&invite=1");
-        expect(top(personas.designAdmin, design, "invite")?.path).toBe("/design/people?invite=1");
+        expect(top(moneyAdmin, design, "invite")?.path).toBe("/design/people?invite=1");
+        expect(findPlaces(ctxOf(personas.designAdmin, design), "invite").map((f) => "path" in f.target && f.target.path)).not.toContain("/design/people?invite=1");
     });
 
     it("offers a business page in each business from the company area, and only the current one inside a business", () => {
@@ -67,15 +70,33 @@ describe("finding a page by what people call it", () => {
 
     it.each([
         ["customers", "Open clients", "/design/clients"], ["add customer", "Add client", "/design/clients?new=1"],
-        ["invoices", "Billing and invoices", "/design/financials?tab=billing"], ["money owed", "Billing and invoices", "/design/financials?tab=billing"],
-        ["late payments", "Overdue invoices", "/design/financials?tab=billing&overdue=1"], ["spending", "Costs and expenses", "/design/financials?tab=costs"],
-        ["most profitable", "Profit by project", "/design/financials?tab=projects"], ["top clients", "Revenue by client", "/design/financials?tab=clients"],
         ["timesheets", "Open reports", "/design/reports"], ["audit log", "Open activity", "/design/activity"], ["calendar", "Open meetings", "/design/meetings"],
         ["chat", "Open messages", "/design/messages"], ["alerts", "Open notifications", "/design/notifications"],
         ["create project", "New project", "/design/projects?new=1"], ["dashboard", "Open overview", "/design/overview"],
         ["auto archive", "Project settings", "/design/settings?section=projects"], ["weekly summary", "Notification settings", "/design/settings?section=notifications"],
     ])("leads a Design admin from %j to %s", (query, label, path) => {
         expect(top(personas.designAdmin, design, query)).toEqual({ label, path, strong: true });
+    });
+
+    it.each([
+        ["invoices", "Billing and invoices", "/design/financials?tab=billing"], ["money owed", "Billing and invoices", "/design/financials?tab=billing"],
+        ["late payments", "Overdue invoices", "/design/financials?tab=billing&overdue=1"], ["spending", "Costs and expenses", "/design/financials?tab=costs"],
+        ["most profitable", "Profit by project", "/design/financials?tab=projects"], ["top clients", "Revenue by client", "/design/financials?tab=clients"],
+        ["bank details", "Finance settings", "/design/settings?section=finance"],
+    ])("leads a Design admin holding the money from %j to %s", (query, label, path) => {
+        expect(top(moneyAdmin, design, query)).toEqual({ label, path, strong: true });
+    });
+
+    it("leads a plain Design admin to none of the money", () => {
+        const money = ["Billing and invoices", "Overdue invoices", "Costs and expenses", "Profit by project", "Revenue by client", "Open financials", "Finance settings"];
+        for (const query of ["invoices", "money owed", "late payments", "spending", "most profitable", "top clients", "financials", "bank details", "invoicing"]) {
+            expect(labels(personas.designAdmin, design, query).filter((l) => money.includes(l)), query).toEqual([]);
+        }
+    });
+
+    it("leads to Admins and access only someone its section shows to", () => {
+        expect(top(moneyAdmin, design, "make admin")).toEqual({ label: "Admins and access", path: "/design/settings?section=admins", strong: true });
+        expect(labels(personas.designAdmin, design, "make admin")).not.toContain("Admins and access");
     });
 
     it("lets an employee find their own pay and work, never the company's", () => {
@@ -92,13 +113,13 @@ describe("finding a page by what people call it", () => {
     it("never offers a page its permission doesn't allow", () => {
         const noSalaries = withPermissions(personas.superAdmin, { revoke: [P.SALARY_VIEW] });
         expect(labels(noSalaries, company, "payroll")).not.toContain("Open salaries");
-        const noInvoices = withPermissions(personas.designAdmin, { revoke: [P.FINANCIAL_VIEW] });
+        const noInvoices = withPermissions(moneyAdmin, { revoke: [P.FINANCIAL_VIEW] });
         expect(labels(noInvoices, design, "invoices")).not.toContain("Billing and invoices");
         expect(labels(personas.executionAdmin, execution, "reports")).not.toContain("Open reports");
     });
 
     it("forgives a typo and finishes a word being typed", () => {
-        expect(top(personas.designAdmin, design, "invoces")?.label).toBe("Billing and invoices");
+        expect(top(moneyAdmin, design, "invoces")?.label).toBe("Billing and invoices");
         expect(top(personas.superAdmin, company, "sallaries")?.label).toBe("Open salaries");
         expect(top(personas.superAdmin, company, "payr")?.label).toBe("Open salaries");
         expect(top(personas.designAdmin, design, "cust")?.label).toBe("Open clients");

@@ -32,8 +32,9 @@ const PATHS = [
 // one letter per path, in PATHS order: o open, h home, d denied
 const MATRIX: Record<PersonaName, Record<Domain, string>> = {
     superAdmin:        { design: "oooooooohhooohoooo", execution: "ooooodoohhoddhoooo" },
-    designAdmin:       { design: "oooooooohhooohoooo", execution: "hhhhhhhhhhhhhhhhhh" },
-    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhh", execution: "ooooodoohhoddhoooo" },
+    // admins: no Financials until a super admin hands them the money
+    designAdmin:       { design: "ooooooodhhooohoooo", execution: "hhhhhhhhhhhhhhhhhh" },
+    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhh", execution: "ooooododhhoddhoooo" },
     designEmployee:    { design: "doodddddoooddodooo", execution: "hhhhhhhhhhhhhhhhhh" },
     executionEmployee: { design: "hhhhhhhhhhhhhhhhhh", execution: "doodddddododdodooo" },
 };

@@ -7,7 +7,7 @@ import { permissionsOf } from "@/app/permissions/permissions";
 import { companyRoutes, domainRoutes } from "@/app/routing/routeTable";
 import type { ShellArea } from "@/app/shell/useArea";
 import { settings } from "@/test/fixtures/settings";
-import { personas, withPermissions, type PersonaName } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions, type PersonaName } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import { ARTICLES, ARTICLE_BY_ID } from "./content";
 import { NO_FACTS } from "./helpFacts";
@@ -64,17 +64,20 @@ describe("Help's content", () => {
             expect(sa, id).toContain(id);
             for (const other of [da, xa, de, xe]) expect(other, id).not.toContain(id);
         }
-        // money is for admins, never employees
+        // money is for super admins, and for an admin one of them hands it to; never for employees
+        const dm = readable(ctxOf("designAdmin", withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING })));
+        const xm = readable(ctxOf("executionAdmin", withPermissions(personas.executionAdmin, { grant: MONEY_AND_HIRING })));
         for (const id of ["revenue", "expected-revenue", "billing-terms", "project-cost", "profit-margin", "create-invoice", "record-payment"]) {
-            for (const admin of [sa, da, xa]) expect(admin, id).toContain(id);
-            for (const employee of [de, xe]) expect(employee, id).not.toContain(id);
+            for (const reader of [sa, dm, xm]) expect(reader, id).toContain(id);
+            for (const other of [da, xa, de, xe]) expect(other, id).not.toContain(id);
         }
         // each business's own work
         expect(de).toEqual(expect.arrayContaining(["log-work", "timer", "my-pay", "hours-balance", "pay", "deductions", "behind"]));
         expect(xe).toEqual(expect.arrayContaining(["record-materials", "labour-week", "my-assignments"]));
         expect(xe).not.toContain("log-work");
         expect(de).not.toContain("record-materials");
-        expect(xa).toEqual(expect.arrayContaining(["set-pricing", "client-statement", "execution-pricing", "site-money"]));
+        expect(xm).toEqual(expect.arrayContaining(["set-pricing", "client-statement", "execution-pricing", "site-money"]));
+        for (const id of ["set-pricing", "client-statement", "execution-pricing", "site-money"]) expect(xa, id).not.toContain(id);
         expect(da).not.toContain("site-money");
         // the hours balance is Design's employees', and only employees log hours: admins are paid a fixed salary
         expect(da).not.toContain("hours-balance");
@@ -84,8 +87,8 @@ describe("Help's content", () => {
     });
 
     it("follows a person's own permissions, not only their role", () => {
-        const noMoney = withPermissions(personas.designAdmin, { revoke: [P.FINANCIAL_VIEW] });
-        expect(readable(ctxOf("designAdmin", noMoney))).not.toContain("billing-terms");
+        const money = withPermissions(personas.designAdmin, { grant: [P.FINANCIAL_VIEW] });
+        expect(readable(ctxOf("designAdmin", money))).toContain("billing-terms");
         const paysPeople = withPermissions(personas.designEmployee, { grant: [P.SALARY_VIEW] });
         expect(readable(ctxOf("designEmployee", paysPeople))).toContain("project-pay-vs-salaries");
     });
@@ -94,8 +97,10 @@ describe("Help's content", () => {
         expect(top(ctxOf("superAdmin"), "how can I change the address of the company")[0]).toBe("company-details");
         expect(top(ctxOf("superAdmin"), "company adress")[0]).toBe("company-details");
         expect(top(ctxOf("designAdmin"), "company address")).not.toContain("company-details");
-        expect(top(ctxOf("designAdmin"), "what is outstanding")[0]).toBe("billing-terms");
-        expect(top(ctxOf("designAdmin"), "revenue vs expected revenue")[0]).toBe("expected-revenue");
+        const money = ctxOf("designAdmin", withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING }));
+        expect(top(money, "what is outstanding")[0]).toBe("billing-terms");
+        expect(top(money, "revenue vs expected revenue")[0]).toBe("expected-revenue");
+        expect(top(ctxOf("designAdmin"), "outstanding")).not.toContain("billing-terms");
         expect(top(ctxOf("designEmployee"), "outstanding")).not.toContain("billing-terms");
         expect(top(ctxOf("designEmployee"), "how is my salary calculated")).toContain("pay");
     });

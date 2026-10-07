@@ -5,10 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { billing } from "@/test/fixtures/billing";
 import { settings, settingsHandlers } from "@/test/fixtures/settings";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
 const nadia = personas.designAdmin;
+// a Design admin a super admin has handed the money and hiring to: admins don't hold them by default
+const moneyNadia = withPermissions(nadia, { grant: MONEY_AND_HIRING });
 const rana = personas.superAdmin;
 const page = (section: string) => `/design/settings?section=${section}`;
 
@@ -48,9 +50,16 @@ describe("Settings", () => {
         renderApp("/design/settings", nadia, ...settingsHandlers);
         const nav = await screen.findByRole("navigation", { name: "Settings" });
         expect(within(nav).getAllByRole("button").map((b) => b.textContent))
-            .toEqual(["Appearance", "Time tracking", "Finance", "Projects", "Notifications", "Teams", "Admins & access", "Data & export"]);
+            .toEqual(["Appearance", "Time tracking", "Projects", "Notifications", "Teams", "Data & export"]);
         expect(await screen.findByText("Applies to this browser only. The sun / moon button in the top bar does the same.")).toBeInTheDocument();
         expect(screen.queryByLabelText("Company name")).not.toBeInTheDocument();
+    });
+
+    it("give an admin handed the money and hiring the invoicing settings and who manages the business too", async () => {
+        renderApp("/design/settings", moneyNadia, ...settingsHandlers);
+        const nav = await screen.findByRole("navigation", { name: "Settings" });
+        expect(within(nav).getAllByRole("button").map((b) => b.textContent))
+            .toEqual(["Appearance", "Time tracking", "Finance", "Projects", "Notifications", "Teams", "Admins & access", "Data & export"]);
     });
 
     it("give someone with only team:manage the theme and the teams", async () => {
@@ -186,7 +195,7 @@ describe("the working time", () => {
 describe("invoicing settings", () => {
     it("save the payment terms and the bank details, with the rest as they were", async () => {
         const put = recorder("put", "/api/billing-settings/design", billing.settings);
-        renderApp(page("finance"), nadia, put.handler, ...settingsHandlers);
+        renderApp(page("finance"), moneyNadia, put.handler, ...settingsHandlers);
         await userEvent.click(await screen.findByLabelText("Default payment terms"));
         await userEvent.click(screen.getByRole("option", { name: "Net 60 - due in 60 days" }));
         await waitFor(() => expect(put.bodies).toHaveLength(1));
@@ -225,7 +234,7 @@ describe("invoicing settings", () => {
     });
 
     it("leave the LBP rate fixed for an admin", async () => {
-        renderApp(page("finance"), nadia, ...settingsHandlers);
+        renderApp(page("finance"), moneyNadia, ...settingsHandlers);
         const row = (await screen.findByText("Payments in another currency")).closest(".switch-row") as HTMLElement;
         expect(await within(row).findByText(/LBP · /)).toBeInTheDocument();
         expect(within(row).queryByRole("button", { name: "Change" })).not.toBeInTheDocument();
@@ -234,7 +243,7 @@ describe("invoicing settings", () => {
     it("turn overdue reminders on and set their schedule, keeping the rest", async () => {
         const on = { ...billing.settings, remindersEnabled: true };
         const put = recorder("put", "/api/billing-settings/design", on);
-        renderApp(page("finance"), nadia, put.handler, ...settingsHandlers);
+        renderApp(page("finance"), moneyNadia, put.handler, ...settingsHandlers);
         expect(await screen.findByText(/Off: nobody is reminded automatically/)).toBeInTheDocument();
         await userEvent.click(screen.getByRole("switch", { name: "Remind clients of overdue invoices" }));
         await waitFor(() => expect(put.bodies).toHaveLength(1));
@@ -243,7 +252,7 @@ describe("invoicing settings", () => {
 
     it("show the reminder schedule once they are on", async () => {
         const put = recorder("put", "/api/billing-settings/design", billing.settings);
-        renderApp(page("finance"), nadia, put.handler,
+        renderApp(page("finance"), moneyNadia, put.handler,
             http.get("/api/billing-settings/:domain", () => HttpResponse.json({ ...billing.settings, remindersEnabled: true })), ...settingsHandlers);
         expect(await screen.findByText("The first the day after the due date, then every 7 days, 3 reminders at most.")).toBeInTheDocument();
         await userEvent.click(screen.getByLabelText("At most"));
@@ -256,7 +265,7 @@ describe("invoicing settings", () => {
 
     it("are set up the first time, saying what is missing as it is typed", async () => {
         const put = recorder("put", "/api/billing-settings/design", billing.settings);
-        renderApp(page("finance"), nadia, put.handler, notSetUp, ...settingsHandlers);
+        renderApp(page("finance"), moneyNadia, put.handler, notSetUp, ...settingsHandlers);
         expect(await screen.findByText("Invoicing isn't set up for Design yet.")).toBeInTheDocument();
         expect(screen.getByText("This year's first invoice is ID-2026-001. The other business needs a prefix of its own.")).toBeInTheDocument();
 
@@ -282,7 +291,7 @@ describe("invoicing settings", () => {
     });
 
     it("aren't offered to someone who can only see them", async () => {
-        renderApp(page("finance"), withPermissions(nadia, { revoke: [P.BILLING_SETTINGS_MANAGE] }), notSetUp, ...settingsHandlers);
+        renderApp(page("finance"), withPermissions(moneyNadia, { revoke: [P.BILLING_SETTINGS_MANAGE] }), notSetUp, ...settingsHandlers);
         const nav = await screen.findByRole("navigation", { name: "Settings" });
         expect(within(nav).queryByRole("button", { name: "Finance" })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Set up invoicing" })).not.toBeInTheDocument();
@@ -327,7 +336,7 @@ describe("teams", () => {
 
 describe("admins and access", () => {
     it("lists who manages the business, and invites an admin", async () => {
-        renderApp(page("admins"), nadia, ...settingsHandlers);
+        renderApp(page("admins"), moneyNadia, ...settingsHandlers);
         expect(await screen.findByText("Who can manage this business.")).toBeInTheDocument();
         expect(await screen.findByText("Karim Jaber")).toBeInTheDocument();
         // an admin doesn't manage permissions
@@ -335,6 +344,14 @@ describe("admins and access", () => {
         await userEvent.click(screen.getByRole("button", { name: "Invite admin" }));
         const dialog = await screen.findByRole("dialog");
         expect(within(dialog).getByRole("tab", { name: "Admin" })).toHaveAttribute("aria-selected", "true");
+    });
+
+    it("aren't offered to an admin who may not invite anyone", async () => {
+        renderApp(page("admins"), nadia, ...settingsHandlers);
+        const nav = await screen.findByRole("navigation", { name: "Settings" });
+        expect(within(nav).queryByRole("button", { name: "Admins & access" })).not.toBeInTheDocument();
+        expect(screen.queryByText("Who can manage this business.")).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Invite admin" })).not.toBeInTheDocument();
     });
 
     it("change someone's permissions, with a reason", async () => {

@@ -5,10 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { money } from "@/shared/format/money";
 import { overview, overviewHandlers } from "@/test/fixtures/overview";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
-const nadia = personas.designAdmin;
+// A Design admin a super admin has handed the money to: admins don't hold it by default
+const nadia = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 
 // Wednesday 30 September 2026, 9 AM in Beirut
 beforeEach(() => {
@@ -78,6 +79,19 @@ describe("Overview", () => {
         await screen.findByText(`${overview.overview.entries} entries · ${overview.overview.peopleCount} people · ${overview.overview.projectCount} projects`);
         expect(cardOrder()).toEqual(["figures", "hours", "followups", "time", "status"]);
         expect(screen.queryByText("Money owed to us")).not.toBeInTheDocument();
+        expect(asked).toEqual([]);
+    });
+
+    it("shows a plain Design admin no money: no money cards or requests, and no Financials", async () => {
+        const asked: string[] = [];
+        renderApp("/design/overview", personas.designAdmin,
+            http.get("/api/finance/*", ({ request }) => { asked.push(new URL(request.url).pathname); return HttpResponse.json({}); }),
+            ...overviewHandlers);
+        await screen.findByText(`${overview.overview.entries} entries · ${overview.overview.peopleCount} people · ${overview.overview.projectCount} projects`);
+        expect(cardOrder()).toEqual(["figures", "hours", "followups", "time", "status"]);
+        expect(screen.queryByText(/^Revenue · /, { selector: ".kpi-label" })).not.toBeInTheDocument();
+        expect(screen.queryByText("Expected revenue", { selector: ".kpi-label" })).not.toBeInTheDocument();
+        expect(within(screen.getByRole("navigation")).queryByText("Financials")).not.toBeInTheDocument();
         expect(asked).toEqual([]);
     });
 

@@ -2,7 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { permissionsOf } from "@/app/permissions/permissions";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import { homePath } from "./home";
 import { canOpen, companyNav, domainNav, domainRoutes, pageFor } from "./routeTable";
@@ -19,10 +19,10 @@ describe("the route table", () => {
 
     it("builds each persona's sidebar from what they may open", () => {
         expect(navLabels(personas.designAdmin, "design"))
-            .toEqual(["Overview", "Projects", "Clients", "Employees", "Financials", "Meetings", "Activity", "Reports", "Settings"]);
+            .toEqual(["Overview", "Projects", "Clients", "Employees", "Meetings", "Activity", "Reports", "Settings"]);
         // Execution runs on site, not on a clock: no Employees list, Activity or Reports.
         expect(navLabels(personas.executionAdmin, "execution"))
-            .toEqual(["Dashboard", "Projects", "Clients", "Financials", "Meetings", "Settings"]);
+            .toEqual(["Dashboard", "Projects", "Clients", "Meetings", "Settings"]);
         expect(navLabels(personas.designEmployee, "design")).toEqual(["Projects", "My work", "My pay", "Meetings", "Profile"]);
         expect(navLabels(personas.executionEmployee, "execution")).toEqual(["Projects", "My work", "Meetings", "Profile"]);
         expect(navLabels(personas.superAdmin, "execution"))
@@ -33,6 +33,9 @@ describe("the route table", () => {
     });
 
     it("follows personal grants and revokes, not the role", () => {
+        // the money is the super admins' until one of them hands it to an admin
+        expect(navLabels(withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING }), "design")).toContain("Financials");
+        expect(navLabels(withPermissions(personas.executionAdmin, { grant: [P.FINANCIAL_VIEW] }), "execution")).toContain("Financials");
         const noMoney = withPermissions(personas.designAdmin, { revoke: [P.FINANCIAL_VIEW, P.REPORT_VIEW] });
         expect(navLabels(noMoney, "design")).not.toContain("Financials");
         expect(navLabels(noMoney, "design")).not.toContain("Overview");
@@ -81,12 +84,12 @@ describe("the route table", () => {
         const admin = permissionsOf(personas.designAdmin);
         const employee = permissionsOf(personas.designEmployee);
         expect(canOpen(admin, "design", "clients/4")).toBe(true);
-        expect(canOpen(admin, "design", "financials?tab=billing")).toBe(true);
+        expect(canOpen(admin, "design", "financials?tab=billing")).toBe(false);
+        expect(canOpen(permissionsOf(withPermissions(personas.designAdmin, { grant: [P.FINANCIAL_VIEW] })), "design", "financials?tab=billing")).toBe(true);
         expect(canOpen(employee, "design", "clients/4")).toBe(false);
         expect(canOpen(employee, "design", "projects/1")).toBe(true);
         // Another domain's pages, even with the right permissions.
         expect(canOpen(admin, "execution", "projects/1")).toBe(false);
-        expect(canOpen(permissionsOf(withPermissions(personas.designAdmin, { revoke: [P.FINANCIAL_VIEW] })), "design", "financials")).toBe(false);
         expect(canOpen(admin, "design", "no-such-page")).toBe(false);
     });
 
@@ -120,7 +123,8 @@ describe("the guards", () => {
     });
 
     it("says so when a permission is missing", async () => {
-        renderApp("/design/financials", withPermissions(personas.designAdmin, { revoke: [P.FINANCIAL_VIEW] }));
+        // a plain admin holds no financial:view
+        renderApp("/design/financials", personas.designAdmin);
         expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
     });
 

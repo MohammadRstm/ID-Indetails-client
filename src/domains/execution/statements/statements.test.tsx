@@ -5,10 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Schemas } from "@/api/types";
 import { P } from "@/app/permissions/codes";
 import { site, siteHandlers } from "@/test/fixtures/site";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
-const karim = personas.executionAdmin;
+// An Execution admin a super admin has handed the money to: admins don't hold it by default
+const karim = withPermissions(personas.executionAdmin, { grant: MONEY_AND_HIRING });
 // the lobby has one statement, ST-2026-001, of all four of its materials
 const lobby = `/execution/projects/${site.project.id}`;
 // the loft's four materials are on no statement yet

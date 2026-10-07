@@ -5,10 +5,11 @@ import { describe, expect, it } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { fixtures, projectHandlers } from "@/test/fixtures";
 import { activity } from "@/test/fixtures/activity";
-import { personas, withPermissions } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
-const admin = personas.designAdmin;
+// A Design admin a super admin has handed the money to: admins don't hold it by default
+const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const noMoney = withPermissions(admin, { revoke: [P.FINANCIAL_VIEW] });
 const client = fixtures.client;
 /** What the API sends someone without financial:view. */

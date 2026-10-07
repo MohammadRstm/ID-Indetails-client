@@ -63,6 +63,9 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const execMoney = execution && billing === "client";
     // the API refuses the whole project if the payment comes from someone who can't record payments
     const takesPayment = execMoney && permissions.has(P.PAYMENT_RECORD);
+    // the money is set by whoever may see it; anyone else creates the project and leaves it to them
+    const setsPayment = !execution && billing === "client" && permissions.has(P.FINANCIAL_VIEW);
+    const setsPricing = execMoney && permissions.has(P.PROJECT_PRICING_MANAGE);
     const errors = useFormErrors();
     const titleError = title.trim() === "" && "Give the project a name.";
     const clientError = billing === "client" && clientId == null && "Choose who the project is for, or make it internal.";
@@ -95,9 +98,9 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                 clientId: billing === "client" ? clientId : null,
                 ownerId: +ownerId,
                 targetDate: target || null,
-                revenue: !execution && billing === "client" && revenue ? revenue : null,
-                projectFee: execMoney ? fee || 0 : null,
-                materialMarkup: execMoney ? (+markupPct || 0) / 100 : null,
+                revenue: setsPayment && revenue ? revenue : null,
+                projectFee: setsPricing ? fee || 0 : null,
+                materialMarkup: setsPricing ? (+markupPct || 0) / 100 : null,
                 initialPayment: takesPayment && initialPay > 0
                     ? { amount: initialPay, currency: "USD", method: payMethod as "bank", receivedOn: payDate, note: "Initial payment", reference: null }
                     : null,
@@ -157,15 +160,15 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                                 <button type="button" className={cx("seg-btn", billing === "internal" && "on")} onClick={() => setBilling("internal")}>Internal</button>
                             </div>
                         </div>
-                        <div className="field">
+                        {(setsPayment || billing !== "client") && <div className="field">
                             <label className="label optional" htmlFor="np-pay">Customer payment</label>
-                            {billing === "client"
+                            {setsPayment
                                 ? <AmountField id="np-pay" value={revenue} currencies={false} onChange={setRevenue} />
                                 : <div className="hint" style={{ paddingTop: 9 }}>Internal project - labour and expenses are tracked as company cost.</div>}
-                        </div>
+                        </div>}
                     </div>
                 )}
-                {!execution && billing === "client" && (
+                {setsPayment && (
                     <div className="hint" style={{ marginTop: 5 }}>The payment is optional now - you can add or change it until the project is completed.</div>
                 )}
 
@@ -191,7 +194,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                         value={location} onChange={(e) => setLocation(e.target.value)} />
                 </div>
 
-                {execMoney && (
+                {(takesPayment || setsPricing) && (
                     <div className="np-money mt">
                         <div className="u" style={{ marginBottom: 8 }}>Money</div>
                         {takesPayment && <div className="grid g-2">
@@ -211,7 +214,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                                 </div>
                             </div>
                         </div>}
-                        <div className={takesPayment ? "grid g-2 mt-s" : "grid g-2"}>
+                        {setsPricing && <div className={takesPayment ? "grid g-2 mt-s" : "grid g-2"}>
                             <div className="field">
                                 <label className="label optional" htmlFor="np-fee">Project fee</label>
                                 <AmountField id="np-fee" value={fee} currencies={false} onChange={setFee} />
@@ -227,11 +230,11 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                                     <span className="muted">%</span>
                                 </div>
                             </div>
-                        </div>
+                        </div>}
                         <div className="hint" style={{ marginTop: 6 }}>
                             {!takesPayment ? "" : initialPay > 0
                                 ? `Recorded as a client payment. With nothing spent yet, the project starts ${money.exact(initialPay)} in profit. `
-                                : "Leave the payment at $0 if nothing has been received yet - it can be recorded later. "}Fee and material profit can be changed at any time.
+                                : "Leave the payment at $0 if nothing has been received yet - it can be recorded later. "}{setsPricing && "Fee and material profit can be changed at any time."}
                         </div>
                     </div>
                 )}
