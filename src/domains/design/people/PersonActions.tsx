@@ -135,9 +135,15 @@ function RoleModal({ account, onClose }: { account: Account; onClose: () => void
     const needsDomain = account.role === "super_admin" && role !== "super_admin";
     const [domain, setDomain] = useState<Domain>("design");
     const label = ROLES.find((r) => r.value === role)?.label ?? role;
+    // their job title in the new role: the current one, to keep or change
+    const current = useEmployee(account.id).data;
+    const [position, setPosition] = useState<string | null>(null);
+    if (position == null && current) setPosition(current.position ?? "");
+    const newPosition = position != null && position.trim() !== (current?.position ?? "") ? position.trim() : null;
 
     function go() {
-        change.mutate({ role, domainCode: needsDomain ? domain : null }, {
+        // the position goes only when it changed; without it, the title stays as it is
+        change.mutate({ role, domainCode: needsDomain ? domain : null, ...(newPosition != null ? { position: newPosition } : {}) }, {
             onSuccess: () => { toast({ text: `${account.name} is now ${role === "admin" ? "an admin" : role === "employee" ? "an employee" : "a super admin"}`, sub: "Any permissions set just for them were cleared.", icon: "shield" }); onClose(); },
         });
     }
@@ -156,6 +162,12 @@ function RoleModal({ account, onClose }: { account: Account; onClose: () => void
                         options={(["design", "execution"] as Domain[]).map((d) => ({ value: d, label: AREAS[d].label }))} />
                 </div>
             )}
+            <div className="field mt">
+                <label className="label optional" htmlFor="role-position">Position</label>
+                <input id="role-position" className="input" maxLength={120} placeholder={current ? "No position" : "Loading…"} disabled={!current}
+                    value={position ?? ""} onChange={(e) => setPosition(e.target.value)} />
+                <div className="hint">Their job title in the new role. Leave it as it is if it stays the same.</div>
+            </div>
             <p className="hint mt">
                 {role === "super_admin" ? "A super admin sees both businesses and the company area, and belongs to neither. " : ""}
                 They get the new role's permissions; anything set just for them is cleared, and they're told.
