@@ -82,6 +82,8 @@ export const people: Article[] = [
             steps(step("Open their profile, then the menu → **Change role…**.", "Profile")),
             list(
                 "A new role replaces their permissions with the role's, and drops any permission given or taken away by hand.",
+                "**Position** starts as their current job title: change it to the new one, or leave it as it is.",
+                "A promotion or demotion doesn't change pay: set the new salary in **Edit profile**, from the date it applies. An admin is paid a monthly salary, so someone paid by the hour gets one before becoming an admin.",
                 "You can only give a role whose permissions you hold yourself.",
                 "If the new role would give back a permission that was taken from them by hand, that needs the right to manage permissions.",
                 "Nobody changes their own role, and the last active super admin always stays one.",
