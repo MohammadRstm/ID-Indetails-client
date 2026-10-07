@@ -5,6 +5,7 @@ import { Drawer } from "@/shared/components/Overlays/Modal";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import ActionCard from "./ActionCard";
+import SourcesNote from "./SourcesNote";
 import { useAskProton, useEndConversation, useProtonUsage, type ProtonRef } from "./protonApi";
 import { emptyChat, type ProtonChat } from "./protonChat";
 
@@ -37,7 +38,7 @@ export default function ProtonPanel({ chat, onChange, onClose }: ProtonPanelProp
             onSuccess: (reply) => onChange((c) => ({
                 ...c,
                 conversationId: reply.conversationId,
-                turns: [...c.turns, { from: "proton", text: reply.reply, refs: reply.refs, action: reply.pendingAction }],
+                turns: [...c.turns, { from: "proton", text: reply.reply, refs: reply.refs, sources: reply.sources, action: reply.pendingAction }],
             })),
             onError: (error) => onChange((c) => ({ ...c, turns: [...c.turns, { from: "error", text: errorMessage(error) }] })),
         });
@@ -105,6 +106,7 @@ export default function ProtonPanel({ chat, onChange, onClose }: ProtonPanelProp
                                     })}
                                 </div>
                             )}
+                            {turn.from === "proton" && <SourcesNote sources={turn.sources} />}
                         </div>
                         {turn.from === "proton" && turn.action && chat.conversationId && (
                             <ActionCard

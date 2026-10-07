@@ -50,3 +50,27 @@ export function useEndConversation() {
         mutationFn: async (conversationId: string) => { await http.delete(`/proton/conversations/${conversationId}`); },
     });
 }
+
+export type ProtonSource = Schemas["ProtonSourceResponse"];
+export type ProtonBudget = Schemas["ProtonBudgetResponse"];
+
+/** This month's estimated cost against the budget, and where it went: super admins only (proton_budget:manage). */
+export function useProtonBudget() {
+    return useQuery({
+        queryKey: [...protonKey, "budget"],
+        queryFn: async () => (await http.get<ProtonBudget>("/proton/budget")).data,
+    });
+}
+
+/** Adds to this month's budget; the API answers with the budget as it now stands. */
+export function useTopUpBudget() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (body: { amountUsd: number; note: string | null }) =>
+            (await http.post<ProtonBudget>("/proton/budget/top-ups", body)).data,
+        onSuccess: (budget) => {
+            queryClient.setQueryData([...protonKey, "budget"], budget);
+            void queryClient.invalidateQueries({ queryKey: [...protonKey, "usage"] });
+        },
+    });
+}
