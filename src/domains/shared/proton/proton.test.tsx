@@ -47,6 +47,8 @@ function protonHandlers(answers: ReturnType<typeof reply>[]) {
 
 async function openAndAsk(question: string) {
     const user = userEvent.setup();
+    // the Help page focuses its own search box once it has loaded; wait for it, or it takes the keyboard mid-question
+    await screen.findByRole("textbox", { name: "Search Help" });
     await user.click(await screen.findByRole("button", { name: "Ask Proton" }));
     const panel = await screen.findByRole("dialog", { name: "Proton" });
     await user.type(within(panel).getByRole("textbox", { name: "Ask Proton" }), question);
