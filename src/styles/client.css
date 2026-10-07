@@ -123,6 +123,12 @@ table { line-height: normal; font-weight: normal; }
 .wk-day { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; cursor: pointer; }
 @media (max-width: 640px) { .wk-week, .wk-days { align-items: flex-start; justify-content: flex-start; } }
 
+/* A project report's CSV, previewed before it is downloaded (the PDF's page gives way to the file's rows). */
+.csv-preview { background: var(--surface); }
+.csv-title { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 13px; }
+.csv-title .ic { width: 16px; height: 16px; color: var(--ink-3); }
+.csv-preview .tbl td { white-space: nowrap; max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
+
 /* Report a bug: the way to message support directly, under the form. */
 .bug-direct { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 16px;
     padding: 11px 13px; border: 1px solid var(--line); border-radius: var(--r2); background: var(--surface-2); }
