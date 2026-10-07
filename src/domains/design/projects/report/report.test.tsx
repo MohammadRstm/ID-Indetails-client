@@ -76,6 +76,29 @@ describe("the project report", () => {
         expect(asked[0].getAll("sections")).toEqual(["summary", "info", "timeline", "work", "financials", "billing", "client", "log"]);
     });
 
+    it("previews the CSV when it is picked, and downloads it only when asked", async () => {
+        const csv = 'Date,Employee,Hours,Description\r\n2026-09-28,Sarah Khalil,8,"Plans, sections"\r\n2026-09-29,Omar Haddad,6,Lighting\r\n';
+        let asked = 0;
+        renderApp(path, admin,
+            http.get("/api/work-entries/export", () => { asked++; return new HttpResponse(csv, { headers: { "content-type": "text/csv" } }); }),
+            ...handlers);
+        const saved = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+        const dialog = await openReport();
+        await userEvent.click(within(dialog).getByRole("tab", { name: "CSV" }));
+
+        const preview = await screen.findByRole("dialog", { name: "Work entries (CSV)" });
+        expect(await within(preview).findByText("Plans, sections")).toBeInTheDocument();
+        expect(within(preview).getByRole("columnheader", { name: "Employee" })).toBeInTheDocument();
+        expect(within(preview).getByText("2 rows.")).toBeInTheDocument();
+        expect(within(preview).queryByText("Executive summary", { selector: "h3" })).not.toBeInTheDocument();
+        expect(saved).not.toHaveBeenCalled();
+
+        await userEvent.click(within(preview).getByRole("button", { name: "Download CSV" }));
+        expect(saved).toHaveBeenCalledTimes(1);
+        // the file previewed is the file saved: nothing is fetched again
+        expect(asked).toBe(1);
+    });
+
     it("needs financial:view and work_entry:view_all", async () => {
         renderApp(path, withPermissions(admin, { revoke: [P.WORK_ENTRY_VIEW_ALL] }), ...handlers);
         await screen.findByRole("heading", { name: project.title });

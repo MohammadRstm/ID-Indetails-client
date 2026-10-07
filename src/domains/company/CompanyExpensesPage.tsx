@@ -122,7 +122,7 @@ export default function CompanyExpensesPage() {
 
                     <div className={seesCompany ? "grid g-8-4 mt" : "mt"}>
                         {seesCompany && <Figure title={`What company expenses do to each month · ${chartYear}`}
-                            sub="The company's net profit, after company expenses and the super admins' salaries, against what it would have been without them."
+                            sub="The company's net profit, after company expenses and the admins' and super admins' salaries, against what it would have been without them."
                             tools={
                                 <div className="row" style={{ gap: 4 }}>
                                     <button className="icon-btn" aria-label="Previous year" disabled={chartYear <= thisYear - YEARS_BACK} onClick={() => setChartYear((y) => y - 1)}><Icon name="chevronLeft" /></button>
@@ -131,7 +131,7 @@ export default function CompanyExpensesPage() {
                                 </div>
                             }
                             table={{
-                                cols: [{ label: "Month" }, { label: "Company expenses", right: true }, { label: "Super admins' salaries", right: true }, { label: "Profit before", right: true }, { label: "Net profit", right: true }],
+                                cols: [{ label: "Month" }, { label: "Company expenses", right: true }, { label: "Admins' and super admins' salaries", right: true }, { label: "Profit before", right: true }, { label: "Net profit", right: true }],
                                 rows: yearList.map((m) => [fmtMonthY(m.month), money.fmt(m.overhead), money.fmt(salariesOf(m)), money.fmt(m.profitBeforeOverhead), money.fmt(netOf(m))]),
                             }}>
                             {loadFailed(yearMonths) ? <LoadError error={yearMonths.error} retry={() => yearMonths.refetch()} what={`${chartYear}'s months`} />
@@ -142,7 +142,7 @@ export default function CompanyExpensesPage() {
                                         { label: "Net profit", area: true, points: yearList.map((m) => ({ y: netOf(m), label: monthLabel(m.month), tip: fmtMonthY(m.month) })) },
                                     ]} />
                                     <div className="chart-note">
-                                        The gap between the two lines is company expenses and the super admins' salaries
+                                        The gap between the two lines is company expenses and the admins' and super admins' salaries
                                         - {money.fmt(yearList.reduce((t, m) => t + m.overhead + salariesOf(m), 0))} in {chartYear}{chartYear === thisYear ? " so far" : ""},
                                         carried by the company rather than by any one project.
                                     </div>
@@ -226,6 +226,6 @@ export default function CompanyExpensesPage() {
     );
 }
 
-// An API from before super admins' salaries were in each month sends neither field: the net profit is then the profit after overhead.
-const salariesOf = (m: CompanyMonth) => m.superAdminSalaries ?? 0;
+// An API from before these salaries were in each month sends neither field: the net profit is then the profit after overhead.
+const salariesOf = (m: CompanyMonth) => m.adminSalaries ?? 0;
 const netOf = (m: CompanyMonth) => m.netProfit ?? m.profitAfterOverhead;

@@ -8663,7 +8663,7 @@ export interface components {
             /** Format: double */
             revenue: number;
             /** Format: double */
-            superAdminSalaries: number;
+            adminSalaries: number;
         };
         CompanyOverviewResponse: {
             /** Format: int32 */
@@ -8690,12 +8690,12 @@ export interface components {
             /** Format: double */
             revenue: number;
             /** Format: double */
-            superAdminSalaries: number;
+            adminSalaries: number;
             /** Format: date */
             to: string;
             unconvertedInvoices: components["schemas"]["UnconvertedInvoicesResponse"][];
             unconvertedOverhead: components["schemas"]["CurrencyTotalResponse"][];
-            unconvertedSuperAdminSalaries: components["schemas"]["CurrencyTotalResponse"][];
+            unconvertedAdminSalaries: components["schemas"]["CurrencyTotalResponse"][];
         };
         CompanySettingsResponse: {
             address: null | string;

@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { downloadFile } from "@/api/download";
+import { downloadFile, fetchBlob, saveBlob } from "@/api/download";
+import { parseCsv } from "@/shared/format/csv";
 import { errorMessage } from "@/api/errors";
 import { http } from "@/api/http";
 import { keys } from "@/api/keys";
@@ -48,6 +49,9 @@ const EVENTS: Record<string, string> = {
 };
 
 const pct = (part: number, whole: number) => (whole > 0 ? `${Math.round((part * 100) / whole)}%` : "-");
+/** How many of the CSV's rows the preview shows; the file has them all. */
+const CSV_PREVIEW_ROWS = 100;
+
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
@@ -75,6 +79,8 @@ export default function ReportModal({ project, onClose }: { project: Project; on
     const [rangeKey, setRangeKey] = useState<RangeKey>("all");
     const [on, setOn] = useState<Record<Section, boolean>>({ summary: true, info: true, timeline: true, work: true, expenses: true, financials: true, billing: true, client: true, log: false });
     const [working, setWorking] = useState(false);
+    // the PDF report, or the work entries as a spreadsheet: a format is previewed, and only downloaded when asked
+    const [format, setFormat] = useState<"pdf" | "csv">("pdf");
     const ranges = rangeOptions(project, today);
     const picked = ranges[rangeKey];
     const range = { label: picked.label, from: picked.from ?? project.startDate, to: picked.to ?? today };
@@ -120,24 +126,40 @@ export default function ReportModal({ project, onClose }: { project: Project; on
             setWorking(false);
         }
     }
-    async function csv() {
-        try {
-            await downloadFile("/work-entries/export", `project-${slug(project.title)}-${range.from}-to-${range.to}.csv`, { projectId: project.id, from: range.from, to: range.to });
-        } catch (e) {
-            toast({ text: "The entries weren't exported", sub: errorMessage(e), icon: "alert" });
-        }
+    // the very file the download saves, fetched once for the preview
+    const csvName = `project-${slug(project.title)}-${range.from}-to-${range.to}.csv`;
+    const csvFile = useQuery({
+        queryKey: [...keys.projects.detail(project.id), "report-csv", range.from, range.to],
+        queryFn: async () => {
+            const file = await fetchBlob("/work-entries/export", { projectId: project.id, from: range.from, to: range.to });
+            return { ...file, rows: parseCsv(await file.blob.text()) };
+        },
+        enabled: format === "csv",
+    });
+    function csv() {
+        if (!csvFile.data) return;
+        const name = csvFile.data.fileName ?? csvName;
+        saveBlob(csvFile.data.blob, name);
+        toast({ text: `Exported ${name}`, sub: `${Math.max(0, csvFile.data.rows.length - 1)} work entries`, icon: "download" });
     }
 
     return (
-        <Modal size="xl" flush onClose={onClose} title={client ? "Client summary" : "Project report"} sub={`${project.title} · ${range.label}`}
-            foot={
+        <Modal size="xl" flush onClose={onClose} title={format === "csv" ? "Work entries (CSV)" : client ? "Client summary" : "Project report"} sub={`${project.title} · ${range.label}`}
+            foot={format === "csv" ? (
+                <>
+                    <div className="grow"><span className="muted">Every work entry in the range, one per row, for a spreadsheet</span></div>
+                    <button className="btn" onClick={onClose}>Close</button>
+                    <button className="btn btn-primary" disabled={!csvFile.data} onClick={csv}><Icon name="download" />Download CSV</button>
+                </>
+            ) : (
                 <>
                     <div className="grow"><span className="muted">{client ? "Safe to share - no costs, rates, profit or margin" : "Internal - contains cost and profit information"}</span></div>
                     <button className="btn" onClick={onClose}>Close</button>
                     <button className="btn btn-primary" disabled={working} onClick={pdf}><Icon name="download" />{working ? "Generating…" : "Download PDF"}</button>
                 </>
-            }>
+            )}>
             <div className="rep-split" style={{ display: "flex", minHeight: 460, maxHeight: "68vh" }}>
+                {format === "csv" ? <CsvPreview file={csvFile} name={csvName} retry={() => void csvFile.refetch()} /> : (
                 <div className="rep-shell">
                     <div className="rep-page">
                         <div className="rep-head">
@@ -397,7 +419,9 @@ export default function ReportModal({ project, onClose }: { project: Project; on
                     </div>
                 </div>
 
+                )}
                 <div className="rep-opts">
+                    {format === "pdf" && <>
                     <div className="u">Report type</div>
                     <Segmented stretch className="mt-s" value={kind} onChange={setKind} aria-label="Report type"
                         options={[{ value: "internal", label: "Internal" }, { value: "client", label: "Client" }]} />
@@ -409,6 +433,8 @@ export default function ReportModal({ project, onClose }: { project: Project; on
                             options={(Object.keys(ranges) as RangeKey[]).map((k) => ({ value: k, label: ranges[k].label }))} />
                     </div>
 
+                    </>}
+                    {format === "pdf" && <>
                     <div className="u mt">Sections</div>
                     {SECTIONS.filter((s) => !(s.key === "billing" && internalProject)).map((s) => {
                         const blocked = client && !s.client;
@@ -424,14 +450,48 @@ export default function ReportModal({ project, onClose }: { project: Project; on
                         );
                     })}
 
+                    </>}
                     <div className="u mt">Format</div>
-                    <div className="seg mt-s" style={{ width: "100%" }}>
-                        <button className="seg-btn on" style={{ flex: 1 }}>PDF</button>
-                        <button className="seg-btn" style={{ flex: 1 }} title="Download the report's work entries as a spreadsheet" onClick={csv}>CSV</button>
-                    </div>
+                    <Segmented stretch className="mt-s" value={format} onChange={setFormat} aria-label="Format"
+                        options={[{ value: "pdf", label: "PDF" }, { value: "csv", label: "CSV" }]} />
+                    {format === "csv" && <p className="hint">The work entries in the date range, as a spreadsheet. Report type and sections are for the PDF.</p>}
                     <p className="hint mt">This is the internal record of the work. The client-facing request for money is the invoice - a separate document with no hours, rates or costs on it.</p>
                 </div>
             </div>
         </Modal>
+    );
+}
+
+/** The CSV as it will be saved: its columns and first rows, with how many there are. */
+function CsvPreview({ file, name, retry }: {
+    file: { data?: { rows: string[][] }; error: unknown; isError: boolean };
+    name: string;
+    retry: () => void;
+}) {
+    const [head = [], ...body] = file.data?.rows ?? [];
+    return (
+        <div className="rep-shell csv-preview">
+            <div className="csv-title"><Icon name="file" /><b>CSV</b><span className="muted mono">{name}</span></div>
+            {file.isError ? (
+                <div className="load-err">
+                    <span className="err">{errorMessage(file.error)}</span> <button className="link" onClick={retry}>Try again</button>
+                </div>
+            ) : !file.data ? <p className="muted">Preparing the preview…</p>
+                : body.length === 0 ? <p className="muted">No work was logged in this range: the file would hold only its column names.</p> : (
+                <>
+                    <div className="tbl-wrap">
+                        <table className="tbl">
+                            <thead><tr>{head.map((h, i) => <th key={i}>{h}</th>)}</tr></thead>
+                            <tbody>
+                                {body.slice(0, CSV_PREVIEW_ROWS).map((r, i) => <tr key={i}>{head.map((_, j) => <td key={j}>{r[j] ?? ""}</td>)}</tr>)}
+                            </tbody>
+                        </table>
+                    </div>
+                    <p className="hint mt-s">
+                        {body.length > CSV_PREVIEW_ROWS ? `The first ${CSV_PREVIEW_ROWS} of ${body.length} rows - the file has them all.` : `${body.length} row${body.length === 1 ? "" : "s"}.`}
+                    </p>
+                </>
+            )}
+        </div>
     );
 }
