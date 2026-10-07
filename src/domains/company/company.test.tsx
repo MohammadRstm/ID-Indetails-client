@@ -25,7 +25,7 @@ describe("the Company overview", () => {
         expect(within(keeps).getByText("Execution profit")).toBeInTheDocument();
         expect(within(keeps).getByText("Company net profit").closest(".co-line")).toHaveTextContent(money.fmt(o.netProfit));
         // super admins log no hours, so their pay comes off here, under the company's expenses
-        expect(within(keeps).getByText("Super admins' salaries").closest(".co-line")).toHaveTextContent(money.fmt(2500));
+        expect(within(keeps).getByText("Admins' and super admins' salaries").closest(".co-line")).toHaveTextContent(money.fmt(2500));
         const across = screen.getByText("Across both").closest(".panel") as HTMLElement;
         expect(within(across).getByText("Clients served").closest(".cost-row")).toHaveTextContent(String(o.clientsServed));
         expect(screen.getAllByRole("button", { name: "Manage" })).toHaveLength(2);

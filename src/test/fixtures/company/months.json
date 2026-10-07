@@ -9,7 +9,7 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "superAdminSalaries": 0,
+    "adminSalaries": 0,
     "netProfit": 0
   },
   {
@@ -22,7 +22,7 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "superAdminSalaries": 0,
+    "adminSalaries": 0,
     "netProfit": 0
   },
   {
@@ -35,7 +35,7 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "superAdminSalaries": 0,
+    "adminSalaries": 0,
     "netProfit": 0
   },
   {
@@ -48,7 +48,7 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "superAdminSalaries": 0,
+    "adminSalaries": 0,
     "netProfit": 0
   },
   {
@@ -61,7 +61,7 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "superAdminSalaries": 0,
+    "adminSalaries": 0,
     "netProfit": 0
   },
   {
@@ -74,7 +74,7 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "superAdminSalaries": 0,
+    "adminSalaries": 0,
     "netProfit": 0
   },
   {
@@ -87,7 +87,7 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "superAdminSalaries": 0,
+    "adminSalaries": 0,
     "netProfit": 0
   },
   {
@@ -100,7 +100,7 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "superAdminSalaries": 0,
+    "adminSalaries": 0,
     "netProfit": 0
   },
   {
@@ -113,7 +113,7 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "superAdminSalaries": 0,
+    "adminSalaries": 0,
     "netProfit": 0
   },
   {
@@ -126,7 +126,7 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "superAdminSalaries": 0,
+    "adminSalaries": 0,
     "netProfit": 0
   },
   {
@@ -139,7 +139,7 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "superAdminSalaries": 0,
+    "adminSalaries": 0,
     "netProfit": 0
   },
   {
@@ -152,7 +152,7 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "superAdminSalaries": 0,
+    "adminSalaries": 0,
     "netProfit": 0
   },
   {
@@ -165,7 +165,7 @@
     "overhead": 0,
     "profitBeforeOverhead": 12124.15,
     "profitAfterOverhead": 12124.15,
-    "superAdminSalaries": 0,
+    "adminSalaries": 0,
     "netProfit": 12124.15
   }
 ]
