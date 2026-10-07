@@ -8723,6 +8723,7 @@ export interface components {
         };
         ChangeRoleRequest: {
             domainCode?: null | string;
+            position?: null | string;
             role?: string;
         };
         ChatPersonResponse: {

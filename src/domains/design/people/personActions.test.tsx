@@ -53,6 +53,21 @@ describe("Someone's account", () => {
         await waitFor(() => expect(sent).toEqual([{ role: "admin", domainCode: null }]));
     });
 
+    it("can be given another role with a new position, which starts as the current one", async () => {
+        const { sent, handler } = recording("put", "/api/employees/:id/role");
+        renderApp("/design/people/9", rana, handler, as({ position: "Junior designer" }), ...peopleHandlers);
+        await menu();
+        await userEvent.click(screen.getByRole("button", { name: "Change role…" }));
+        const dialog = await screen.findByRole("dialog", { name: "Change role" });
+        const position = within(dialog).getByLabelText("Position");
+        await waitFor(() => expect(position).toHaveValue("Junior designer"));
+        await userEvent.click(within(dialog).getByRole("tab", { name: "Admin" }));
+        await userEvent.clear(position);
+        await userEvent.type(position, "Studio lead");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Make admin" }));
+        await waitFor(() => expect(sent).toEqual([{ role: "admin", domainCode: null, position: "Studio lead" }]));
+    });
+
     it("can be moved to the other business, into one of its teams", async () => {
         const { sent, handler } = recording("put", "/api/employees/:id/domain");
         renderApp("/design/people/9", rana, handler, teams, ...peopleHandlers);
