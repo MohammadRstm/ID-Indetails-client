@@ -13,11 +13,13 @@ export interface paths {
                 query?: {
                     ClientId?: number;
                     Domain?: string;
+                    From?: string;
                     Group?: components["schemas"]["ActivityGroup"];
                     Internal?: boolean;
                     Page?: number;
                     PageSize?: number;
                     ProjectId?: number;
+                    To?: string;
                     UserId?: number;
                 };
                 header?: never;
@@ -11114,6 +11116,9 @@ export interface components {
         ProtonBudgetResponse: {
             /** Format: double */
             budgetUsd: number;
+            byDay: components["schemas"]["ProtonDayUsageResponse"][];
+            byDomain: components["schemas"]["ProtonDomainUsageResponse"][];
+            byTool: components["schemas"]["ProtonToolUsageResponse"][];
             byUser: components["schemas"]["ProtonUserUsageResponse"][];
             model: string;
             /** Format: date */
@@ -11126,6 +11131,7 @@ export interface components {
             remainingUsd: number;
             /** Format: double */
             spentUsd: number;
+            topConversations: components["schemas"]["ProtonConversationUsageResponse"][];
             topUps: components["schemas"]["ProtonTopUpResponse"][];
             /** Format: double */
             topUpsUsd: number;
@@ -11136,6 +11142,34 @@ export interface components {
             after: string;
             before: null | string;
             label: string;
+        };
+        ProtonConversationUsageResponse: {
+            /** Format: uuid */
+            conversationId: string;
+            /** Format: double */
+            costUsd: number;
+            name: string;
+            /** Format: int32 */
+            questions: number;
+            /** Format: int32 */
+            toolCalls: number;
+            /** Format: int64 */
+            userId: number;
+        };
+        ProtonDayUsageResponse: {
+            /** Format: double */
+            costUsd: number;
+            /** Format: date */
+            day: string;
+            /** Format: int32 */
+            questions: number;
+        };
+        ProtonDomainUsageResponse: {
+            /** Format: double */
+            costUsd: number;
+            domain: null | string;
+            /** Format: int32 */
+            questions: number;
         };
         ProtonPendingAction: {
             /** Format: date-time */
@@ -11167,7 +11201,27 @@ export interface components {
             pendingAction: null | components["schemas"]["ProtonPendingAction"];
             refs: components["schemas"]["ProtonRef"][];
             reply: string;
+            sources: components["schemas"]["ProtonSourceResponse"][];
             usage: components["schemas"]["ProtonUsageResponse"];
+        };
+        ProtonSourceResponse: {
+            comparedWith: null | string;
+            label: string;
+            omitted: string[];
+            partial: boolean;
+            period: null | string;
+            scope: null | string;
+        };
+        ProtonToolUsageResponse: {
+            /** Format: int32 */
+            averageMs: number;
+            /** Format: int32 */
+            calls: number;
+            /** Format: double */
+            questionCostUsd: number;
+            /** Format: int32 */
+            questions: number;
+            tool: string;
         };
         ProtonTopUpResponse: {
             /** Format: date-time */

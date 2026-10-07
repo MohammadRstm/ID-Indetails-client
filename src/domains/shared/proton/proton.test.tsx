@@ -21,6 +21,7 @@ const reply = (text: string, pendingAction: typeof action | null = null) => ({
     refs: [{ type: "project", id: 42, name: "Villa Mounir", domain: "design" }],
     limited: false,
     usage: { ...usage, questionsUsed: 4, questionsRemaining: 296 },
+    sources: [] as { label: string; period: string | null; comparedWith: string | null; partial: boolean; scope: string | null; omitted: string[] }[],
     pendingAction,
 });
 
@@ -114,6 +115,24 @@ describe("Proton", () => {
 
         await user.click(within(card).getByRole("button", { name: "Confirm" }));
         expect(await within(card).findByText("The project is already on hold.")).toBeInTheDocument();
+    });
+
+    it("show what an analytical answer is based on, and what it left out", async () => {
+        const analysed = {
+            ...reply("Hours rose 34%."),
+            sources: [{
+                label: "Hours compared", period: "1–7 Oct 2026", comparedWith: "1–7 Sep 2026", partial: true,
+                scope: "all Design work", omitted: ["money: needs the financial:view permission"],
+            }],
+        };
+        const { handlers } = protonHandlers([analysed]);
+        renderApp("/design/help", personas.designAdmin, ...handlers);
+
+        const { user, panel } = await openAndAsk("How did hours change?");
+
+        const summary = await within(panel).findByText("Based on: Hours compared · 1–7 Oct 2026 (so far) vs 1–7 Sep 2026");
+        await user.click(summary);
+        expect(within(panel).getByText("Not included: money: needs the financial:view permission")).toBeInTheDocument();
     });
 
     it("isn't offered to employees", async () => {
