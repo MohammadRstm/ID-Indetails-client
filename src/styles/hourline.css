@@ -1040,6 +1040,7 @@ tr.voided .mono, .cost-row.voided .mono { text-decoration: line-through; }
 .msg-mention { background: var(--accent-soft); color: var(--accent-ink); border-radius: 4px; padding: 0 3px; font-weight: 600; }
 .msg-att { display: block; max-width: 280px; max-height: 220px; border-radius: var(--r1); margin-top: 6px; }
 .msg-time { font-size: 9.5px; color: var(--ink-3); margin-top: 3px; text-align: right; }
+.msg-via { font-style: italic; }
 
 /* task-comment card: an admin's comment on a task, forwarded to a department group */
 .msg-bubble.task-card { max-width: min(420px, 100%); width: 420px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); }

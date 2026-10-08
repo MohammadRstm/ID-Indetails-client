@@ -32,6 +32,14 @@ describe("Messages", () => {
         await waitFor(() => expect(read).toEqual(["teams/13"]));
     });
 
+    it("say which messages Proton sent for their sender", async () => {
+        renderApp("/design/messages?with=2", rana, ...messageHandlers);
+        const sent = await screen.findByText("Yes, after lunch.").then((t) => t.closest(".msg-bubble") as HTMLElement);
+        expect(within(sent).getByText(/with Proton/)).toBeInTheDocument();
+        const typed = screen.getByText("Can we talk about the Q4 plan?").closest(".msg-bubble") as HTMLElement;
+        expect(within(typed).queryByText(/with Proton/)).not.toBeInTheDocument();
+    });
+
     it("keep the chat they opened on, whatever arrives elsewhere", async () => {
         renderApp("/design/messages", rana, ...messageHandlers);
         await screen.findByText("Morning! The Villa Mounir samples arrived.");
