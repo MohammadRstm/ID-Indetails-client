@@ -42,6 +42,7 @@ export const SURFACES: Record<ProtonSurface, (a: Ask) => SurfaceTarget | null> =
     new_meeting: (a) => inArea(a, "meetings?new=1", a.p.hasAny(P.MEETING_CREATE, P.MEETING_MANAGE)),
     add_company_expense: (a) => inCompany(a, "overhead?add=1", a.p.has(P.OVERHEAD_MANAGE)),
     message_person: (a) => (a.id != null ? inArea(a, `messages?with=${a.id}`) : null),
+    message_team: (a) => (a.id != null ? inArea(a, `messages?group=${a.id}`) : null),
     log_work: (a) => (a.domain === "design" && a.p.canSeeDomain("design") && a.p.has(P.WORK_ENTRY_CREATE) ? { kind: "log_work" } : null),
     report_bug: () => ({ kind: "opener", id: "report_bug" }),
     settings_section: (a) => (SETTINGS.includes(a.section as never) ? inArea(a, `settings?section=${a.section}`) : null),

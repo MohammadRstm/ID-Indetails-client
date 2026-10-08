@@ -225,6 +225,7 @@ table { line-height: normal; font-weight: normal; }
 .proton-suggestions { margin-top: 2px; }
 .proton-briefing { margin: 6px 0 0; padding-left: 16px; display: flex; flex-direction: column; gap: 3px; white-space: normal; }
 .proton-briefing-more { margin-top: 6px; font-size: 12px; white-space: normal; }
+.proton-filled { margin-bottom: 12px; padding: 8px 10px; border-radius: var(--r2); background: var(--accent-soft); color: var(--accent-ink); font-size: 12.5px; }
 .proton-foot { display: flex; flex-direction: column; gap: 6px; width: 100%; }
 .proton-composer { display: flex; gap: 8px; align-items: flex-end; }
 .proton-composer textarea { flex: 1; resize: none; }

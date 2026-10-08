@@ -30,12 +30,15 @@ export function pageContextOf(pathname: string, search: string, surface: string 
     if (area !== "design" && area !== "execution" && area !== "company") return null;
     const known = (area === "company" ? COMPANY_PAGES : DOMAIN_PAGES)[page ?? ""] ?? null;
     const entityType = area !== "company" && id && /^\d+$/.test(id) ? RECORDS[page ?? ""] ?? null : null;
-    const tab = new URLSearchParams(search).get("tab");
+    const query = new URLSearchParams(search);
+    const tab = query.get("tab");
+    // an open chat, by id only: who it is with, or which team
+    const chat = known === "messages" ? ([["person", query.get("with")], ["team", query.get("group")]] as const).find(([, v]) => v && /^\d+$/.test(v)) : undefined;
     return {
         area,
         page: known,
-        entityType,
-        entityId: entityType ? Number(id) : null,
+        entityType: chat ? chat[0] : entityType,
+        entityId: chat ? Number(chat[1]) : entityType ? Number(id) : null,
         section: entityType === "project" && SECTIONS.includes(tab as Section) ? (tab as Section) : null,
         surface: surface != null && Object.hasOwn(SURFACES, surface) ? (surface as keyof typeof SURFACES) : null,
     };

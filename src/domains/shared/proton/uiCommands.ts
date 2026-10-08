@@ -10,6 +10,7 @@ import { openLogWork } from "@/domains/design/work/logWorkStore";
 import { setMessageSounds } from "@/domains/shared/messages/messageSounds";
 import { markAssistantOpening, runOpener } from "@/shared/components/Overlays/assistantLayer";
 import { setTheme } from "@/shared/theme";
+import { chatOf, fillForm, setDraft, type FormFill } from "./formFill";
 import { SURFACES } from "./surfaces";
 
 export type ProtonUiCommand = Schemas["ProtonUiCommand"];
@@ -22,6 +23,8 @@ export type UiStep =
     | { kind: "go"; path: string; label: string }
     | { kind: "opener"; id: string; label: string }
     | { kind: "log_work"; label: string }
+    | { kind: "fill"; fill: FormFill }
+    | { kind: "draft"; path: string; chat: string; body: string; label: string }
     | { kind: "theme"; theme: "light" | "dark" }
     | { kind: "sounds"; on: boolean }
     | { kind: "refresh" };
@@ -29,6 +32,11 @@ export type UiStep =
 const DOMAINS: readonly Domain[] = ["design", "execution"];
 const SECTIONS = { requirements: "requirements", timeline: "timeline", meetings: "meetings" } as const;
 const TABS = ["overview", "projects", "clients", "billing", "costs"] as const;
+
+/** The values object each form takes in a fill: a fill naming one form with another's values is dropped. */
+const FILLS: Record<FormFill["form"], keyof FormFill> = {
+    client: "client", meeting: "meeting", new_project: "newProject", edit_project: "editProject", report_bug: "reportBug", invite: "invite", message: "message",
+};
 
 /** Every page Proton may name, and where it lives here. The company ones are checked against the company routes. */
 const PAGES: Record<NonNullable<Schemas["ProtonPage"]>, { path: string; company?: true }> = {
@@ -115,6 +123,17 @@ export function stepOf(command: unknown, p: Permissions, current: Domain | null)
                 : target.kind === "opener" ? { kind: "opener", id: target.id, label }
                 : { kind: "log_work", label };
         }
+        case "fill_form": {
+            const fill = c.fill as FormFill | null | undefined;
+            if (!fill || !has(FILLS, fill.form) || fill[FILLS[fill.form]] == null) return null;
+            if (fill.form !== "message") return { kind: "fill", fill };
+            // a draft opens its chat, then waits in the composer for the person to send
+            const team = c.surface === "message_team";
+            if (!isId(fill.id) || (!team && c.surface !== "message_person")) return null;
+            const domain = c.domain == null ? current : visible(c.domain) ? c.domain : null;
+            const target = SURFACES[team ? "message_team" : "message_person"]({ p, domain, id: fill.id, section: null, tab: null });
+            return target?.kind === "go" ? { kind: "draft", path: target.path, chat: chatOf(team, fill.id), body: fill.message!.body, label } : null;
+        }
         case "set_preference":
             if (c.theme === "light" || c.theme === "dark") return { kind: "theme", theme: c.theme };
             if (typeof c.sounds === "boolean") return { kind: "sounds", on: c.sounds };
@@ -161,6 +180,15 @@ export function useRunProtonCommands() {
                     markAssistantOpening();
                     openLogWork();
                     done.push(`Opened ${step.label}.`);
+                    break;
+                case "fill":
+                    done.push(fillForm(step.fill));
+                    break;
+                case "draft":
+                    markAssistantOpening();
+                    setDraft(step.chat, step.body);
+                    navigate(step.path);
+                    done.push(`Wrote ${step.label}: read it, then press Send.`);
                     break;
                 case "theme":
                     setTheme(step.theme);

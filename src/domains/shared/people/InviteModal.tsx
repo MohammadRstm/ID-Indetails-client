@@ -21,6 +21,8 @@ import Icon from "@/shared/icons/Icon";
 import { isEmail } from "@/shared/utils/email";
 import { hasFixedSalary, HOURS_PER_MONTH, monthlyToHourly } from "../../design/pay/payRules";
 import { useInvite, useTeams } from "../../design/people/peopleWorkApi";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 
 type Role = "employee" | "admin" | "super_admin";
 const ACCESS: Record<Role, { label: string; sub: string }> = {
@@ -55,6 +57,16 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     const [email, setEmail] = useState("");
     const [position, setPosition] = useState("");
     const [teamId, setTeamId] = useState("");
+    // address, position and team only: never the role or the pay
+    const proton = useProtonForm("invite", null, (fill) => {
+        const v = fill.invite;
+        const done: string[] = [];
+        if (!v) return done;
+        fillEmpty(email, v.email, setEmail, "email", done);
+        fillEmpty(position, v.position, setPosition, "position", done);
+        fillEmpty(teamId, v.teamId == null ? null : String(v.teamId), setTeamId, "team", done);
+        return done;
+    });
     const [role, setRole] = useState<Role>(initialRole);
     // an hourly cost only means something where people log hours: Design is paid per hour by default
     const [basis, setBasis] = useState<"hourly" | "monthly">(design ? "hourly" : "monthly");
@@ -128,77 +140,80 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                     <button className="btn btn-primary" disabled={invite.isPending} onClick={send}>{invite.isPending ? "Sending…" : "Send invitation"}</button>
                 </>
             }>
-            <div className="row" style={{ gap: 14, alignItems: "flex-start" }}>
-                <div style={{ textAlign: "center", width: 92, flex: "none" }}>
-                    <Avatar person={{ name: email ? nameFromEmail(email) : "New Person" }} size={72} />
-                    <div className="hint mt-s">They set their name when they accept, and can upload a photo later.</div>
-                </div>
-                <div className="grow stack">
-                    <div className="field">
-                        <label className="label required" htmlFor="ae-email">Work email</label>
-                        <input id="ae-email" className="input" type="email" autoFocus placeholder="name@company.com" value={email}
-                            onChange={(e) => setEmail(e.target.value)} onBlur={errors.touch("email")} />
-                        <FieldError message={errors.show("email", emailError)} />
+            <div {...proton.guard}>
+                <FilledNote fields={proton.filled} />
+                <div className="row" style={{ gap: 14, alignItems: "flex-start" }}>
+                    <div style={{ textAlign: "center", width: 92, flex: "none" }}>
+                        <Avatar person={{ name: email ? nameFromEmail(email) : "New Person" }} size={72} />
+                        <div className="hint mt-s">They set their name when they accept, and can upload a photo later.</div>
                     </div>
-                    <div className="grid g-2">
+                    <div className="grow stack">
                         <div className="field">
-                            <label className="label" htmlFor="ae-pos">Position</label>
-                            <input id="ae-pos" className="input" placeholder={`Optional - e.g. ${design ? "Interior Architect" : "Site Engineer"}`} value={position} onChange={(e) => setPosition(e.target.value)} />
+                            <label className="label required" htmlFor="ae-email">Work email</label>
+                            <input id="ae-email" className="input" type="email" autoFocus placeholder="name@company.com" value={email}
+                                onChange={(e) => setEmail(e.target.value)} onBlur={errors.touch("email")} />
+                            <FieldError message={errors.show("email", emailError)} />
                         </div>
-                        <div className="field">
-                            <label className="label" htmlFor="ae-team">Team</label>
-                            <Select id="ae-team" value={teamId} onChange={setTeamId} options={[{ value: "", label: "No team" }, ...teams.map((t) => ({ value: String(t.id), label: t.name }))]} />
-                        </div>
-                    </div>
-                    {setsPay && (
-                        <div className="field">
-                            <div className="spread" style={{ alignItems: "center" }}>
-                                <label className="label required" htmlFor="ae-rate" style={{ margin: 0 }}>{fixedSalary ? "Monthly salary" : "Pay"}</label>
-                                {fixedSalary ? <span className="badge">Fixed salary</span>
-                                    : <Segmented value={basis} onChange={setBasis} aria-label="Pay basis" options={[{ value: "hourly", label: "Per hour" }, { value: "monthly", label: "Per month" }]} />}
+                        <div className="grid g-2">
+                            <div className="field">
+                                <label className="label" htmlFor="ae-pos">Position</label>
+                                <input id="ae-pos" className="input" placeholder={`Optional - e.g. ${design ? "Interior Architect" : "Site Engineer"}`} value={position} onChange={(e) => setPosition(e.target.value)} />
                             </div>
-                            <div className="grid g-2 mt-s">
-                                <div className="field">
-                                    <AmountField id="ae-rate" value={amount} currency={currency} onChange={setAmount} onCurrency={setCurrency} onBlur={errors.touch("pay")} />
-                                    {errors.show("pay", payError) ? <FieldError message={errors.show("pay", payError)} />
-                                        : <div className="hint">{fixedSalary ? "The same every month: admins log no hours, so no overtime. Never shown to them." : `${monthly ? "Monthly salary." : "Paid per hour worked."} Never shown to the employee.`}</div>}
+                            <div className="field">
+                                <label className="label" htmlFor="ae-team">Team</label>
+                                <Select id="ae-team" value={teamId} onChange={setTeamId} options={[{ value: "", label: "No team" }, ...teams.map((t) => ({ value: String(t.id), label: t.name }))]} />
+                            </div>
+                        </div>
+                        {setsPay && (
+                            <div className="field">
+                                <div className="spread" style={{ alignItems: "center" }}>
+                                    <label className="label required" htmlFor="ae-rate" style={{ margin: 0 }}>{fixedSalary ? "Monthly salary" : "Pay"}</label>
+                                    {fixedSalary ? <span className="badge">Fixed salary</span>
+                                        : <Segmented value={basis} onChange={setBasis} aria-label="Pay basis" options={[{ value: "hourly", label: "Per hour" }, { value: "monthly", label: "Per month" }]} />}
                                 </div>
-                                {!fixedSalary && (
+                                <div className="grid g-2 mt-s">
                                     <div className="field">
-                                        <div className="u">{monthly ? "Overtime is paid from" : "A standard month is"}</div>
-                                        <div className="mono" style={{ paddingTop: 4, fontSize: 14, fontWeight: 650 }}>
-                                            {monthly ? (amount ? `${money.fmt(monthlyToHourly(amount), currency, { cents: true })} / hour` : "-")
-                                                : (amount ? `${money.fmt(amount * HOURS_PER_MONTH, currency)} / month` : "-")}
-                                        </div>
-                                        <div className="hint">
-                                            {monthly ? "The salary ÷ a standard month: 40 paid hours a week (the 1h break included) × 52 ÷ 12 = "
-                                                : "40 paid hours a week (the 1h break included) × 52 ÷ 12 = "}{HOURS_PER_MONTH.toFixed(1)} h.
-                                        </div>
+                                        <AmountField id="ae-rate" value={amount} currency={currency} onChange={setAmount} onCurrency={setCurrency} onBlur={errors.touch("pay")} />
+                                        {errors.show("pay", payError) ? <FieldError message={errors.show("pay", payError)} />
+                                            : <div className="hint">{fixedSalary ? "The same every month: admins log no hours, so no overtime. Never shown to them." : `${monthly ? "Monthly salary." : "Paid per hour worked."} Never shown to the employee.`}</div>}
                                     </div>
-                                )}
+                                    {!fixedSalary && (
+                                        <div className="field">
+                                            <div className="u">{monthly ? "Overtime is paid from" : "A standard month is"}</div>
+                                            <div className="mono" style={{ paddingTop: 4, fontSize: 14, fontWeight: 650 }}>
+                                                {monthly ? (amount ? `${money.fmt(monthlyToHourly(amount), currency, { cents: true })} / hour` : "-")
+                                                    : (amount ? `${money.fmt(amount * HOURS_PER_MONTH, currency)} / month` : "-")}
+                                            </div>
+                                            <div className="hint">
+                                                {monthly ? "The salary ÷ a standard month: 40 paid hours a week (the 1h break included) × 52 ÷ 12 = "
+                                                    : "40 paid hours a week (the 1h break included) × 52 ÷ 12 = "}{HOURS_PER_MONTH.toFixed(1)} h.
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
+                        )}
+                        <div className="field">
+                            <label className="label required">Access</label>
+                            <Segmented value={role} onChange={setRole} aria-label="Access" options={roles.map((r) => ({ value: r, label: ACCESS[r].label }))} />
+                            <div className="hint">{ACCESS[role].sub}</div>
                         </div>
-                    )}
-                    <div className="field">
-                        <label className="label required">Access</label>
-                        <Segmented value={role} onChange={setRole} aria-label="Access" options={roles.map((r) => ({ value: r, label: ACCESS[r].label }))} />
-                        <div className="hint">{ACCESS[role].sub}</div>
+                        {role !== "super_admin" && (fixed ? (
+                            <div className="field">
+                                <label className="label">Domain</label>
+                                <div className="row" style={{ gap: 8, paddingTop: 2 }}>
+                                    <span className="badge">{DOMAIN_LABEL[domain]}</span>
+                                    <span className="hint">They join the business you are managing. Only a super admin can move someone between businesses.</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="field">
+                                <label className="label required">Business they join</label>
+                                <Segmented value={domain} onChange={choose} aria-label="Business they join"
+                                    options={(["design", "execution"] as Domain[]).map((d) => ({ value: d, label: DOMAIN_LABEL[d] }))} />
+                            </div>
+                        ))}
                     </div>
-                    {role !== "super_admin" && (fixed ? (
-                        <div className="field">
-                            <label className="label">Domain</label>
-                            <div className="row" style={{ gap: 8, paddingTop: 2 }}>
-                                <span className="badge">{DOMAIN_LABEL[domain]}</span>
-                                <span className="hint">They join the business you are managing. Only a super admin can move someone between businesses.</span>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="field">
-                            <label className="label required">Business they join</label>
-                            <Segmented value={domain} onChange={choose} aria-label="Business they join"
-                                options={(["design", "execution"] as Domain[]).map((d) => ({ value: d, label: DOMAIN_LABEL[d] }))} />
-                        </div>
-                    ))}
                 </div>
             </div>
         </Modal>

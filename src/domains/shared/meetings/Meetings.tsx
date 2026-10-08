@@ -30,6 +30,8 @@ import { useProjects } from "../projects/projectsApi";
 import { meetingTitle, useCanChangeMeeting, useCreateMeeting, useDeleteMeeting, useMeetings, useProjectMeetings, type Meeting } from "./meetingsApi";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 
 function RemoveMenu({ meeting }: { meeting: Meeting }) {
     const remove = useDeleteMeeting();
@@ -71,6 +73,21 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
     const [end, setEnd] = useState(() => Math.min(23 * 60 + 59, start + 60));
     const [topic, setTopic] = useState("");
     const [description, setDescription] = useState("");
+    const proton = useProtonForm("meeting", null, (fill) => {
+        const v = fill.meeting;
+        const done: string[] = [];
+        if (!v) return done;
+        if (v.projectId != null && !project) {
+            setProjectId(String(v.projectId));
+            done.push("project");
+        }
+        if (v.day) { setDay(v.day); done.push("day"); }
+        if (v.startMinute != null) { setStart(v.startMinute); done.push("start"); }
+        if (v.endMinute != null) { setEnd(v.endMinute); done.push("end"); }
+        fillEmpty(topic, v.topic, setTopic, "topic", done);
+        fillEmpty(description, v.description, setDescription, "description", done);
+        return done;
+    });
     const errors = useFormErrors();
     const projectError = chosen == null && "Choose the project it is about.";
     const timeError = end <= start && "It has to end after it starts.";
@@ -102,37 +119,40 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
                     <button className="btn btn-primary" disabled={create.isPending} onClick={submit}>Schedule meeting</button>
                 </>
             }>
-            {!project && (
-                <div className="field" style={{ marginBottom: 12 }}>
-                    <label className="label required" htmlFor="mtg-project">Project</label>
-                    <Select id="mtg-project" value={String(chosen ?? "")} onChange={setProjectId}
-                        options={choices.length ? choices.map((x) => ({ value: String(x.id), label: x.title })) : [{ value: "", label: open.isPending ? "Loading…" : "No open projects" }]} />
-                    <FieldError message={errors.show("project", projectError)} />
-                </div>
-            )}
-            <div className="grid g-2">
-                <div className="field">
-                    <label className="label required" htmlFor="mtg-date">Date</label>
-                    <DateInput id="mtg-date" className="input mono" value={day} required onChange={(v) => v && setDay(v)} />
-                </div>
-                <div className="field">
-                    <label className="label required">Time</label>
-                    <div className="row" style={{ gap: 6 }}>
-                        <div style={{ flex: 1 }}><TimeField value={start} label="Start" onChange={(m) => { setStart(m); if (end <= m) setEnd(m + 60); }} /></div>
-                        <span className="muted">–</span>
-                        <div style={{ flex: 1 }}><TimeField value={end} label="End" min={start} onChange={setEnd} /></div>
+            <div {...proton.guard}>
+                <FilledNote fields={proton.filled} />
+                {!project && (
+                    <div className="field" style={{ marginBottom: 12 }}>
+                        <label className="label required" htmlFor="mtg-project">Project</label>
+                        <Select id="mtg-project" value={String(chosen ?? "")} onChange={setProjectId}
+                            options={choices.length ? choices.map((x) => ({ value: String(x.id), label: x.title })) : [{ value: "", label: open.isPending ? "Loading…" : "No open projects" }]} />
+                        <FieldError message={errors.show("project", projectError)} />
                     </div>
-                    {/* the end follows the start, so this is said at once */}
-                    <FieldError message={timeError || undefined} />
+                )}
+                <div className="grid g-2">
+                    <div className="field">
+                        <label className="label required" htmlFor="mtg-date">Date</label>
+                        <DateInput id="mtg-date" className="input mono" value={day} required onChange={(v) => v && setDay(v)} />
+                    </div>
+                    <div className="field">
+                        <label className="label required">Time</label>
+                        <div className="row" style={{ gap: 6 }}>
+                            <div style={{ flex: 1 }}><TimeField value={start} label="Start" onChange={(m) => { setStart(m); if (end <= m) setEnd(m + 60); }} /></div>
+                            <span className="muted">–</span>
+                            <div style={{ flex: 1 }}><TimeField value={end} label="End" min={start} onChange={setEnd} /></div>
+                        </div>
+                        {/* the end follows the start, so this is said at once */}
+                        <FieldError message={timeError || undefined} />
+                    </div>
                 </div>
-            </div>
-            <div className="field mt">
-                <label className="label" htmlFor="mtg-topic">Topic</label>
-                <input id="mtg-topic" className="input" placeholder="Optional" value={topic} onChange={(e) => setTopic(e.target.value)} />
-            </div>
-            <div className="field mt">
-                <label className="label" htmlFor="mtg-desc">Description</label>
-                <textarea id="mtg-desc" className="textarea" placeholder="Optional" value={description} onChange={(e) => setDescription(e.target.value)} />
+                <div className="field mt">
+                    <label className="label" htmlFor="mtg-topic">Topic</label>
+                    <input id="mtg-topic" className="input" placeholder="Optional" value={topic} onChange={(e) => setTopic(e.target.value)} />
+                </div>
+                <div className="field mt">
+                    <label className="label" htmlFor="mtg-desc">Description</label>
+                    <textarea id="mtg-desc" className="textarea" placeholder="Optional" value={description} onChange={(e) => setDescription(e.target.value)} />
+                </div>
             </div>
         </Modal>
     );

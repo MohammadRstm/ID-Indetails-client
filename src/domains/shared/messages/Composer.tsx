@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { errorMessage } from "@/api/errors";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Icon from "@/shared/icons/Icon";
 import { uploadFile } from "@/domains/design/work/workApi";
+import { clearDraft, onDraft, peekDraft } from "@/domains/shared/proton/formFill";
 import type { Contact } from "./messagesApi";
 
 type Picked = { id: number; name: string; video: boolean; preview: string };
@@ -14,6 +15,8 @@ type ComposerProps = {
     sending: boolean;
     error: unknown;
     onSend: (body: { body: string; mentionIds: number[]; attachmentIds: number[] }) => Promise<unknown>;
+    /** The chat ("dm-9", "group-3"): a draft Proton wrote for it starts here. */
+    draftKey?: string;
 };
 
 const MAX_FILES = 10;
@@ -22,8 +25,23 @@ const MAX_FILES = 10;
  * Writing a message (the prototype's Composer): text, photos and videos, and in a group "@" to mention
  * someone. Files upload as soon as they are picked; Enter sends.
  */
-export default function Composer({ members, meId, sending, error, onSend }: ComposerProps) {
-    const [text, setText] = useState("");
+export default function Composer({ members, meId, sending, error, onSend, draftKey }: ComposerProps) {
+    const [text, setText] = useState(() => (draftKey ? peekDraft(draftKey) : null) ?? "");
+    // a draft Proton wrote waits for the person: Enter doesn't send it until they have changed it or press Send
+    const fromProton = useRef(text !== "");
+
+    useEffect(() => {
+        if (!draftKey) return;
+        clearDraft(draftKey);
+        return onDraft((chat) => {
+            if (chat !== draftKey) return;
+            const body = peekDraft(chat);
+            clearDraft(chat);
+            if (!body) return;
+            setText((current) => (current.trim() ? current : body));
+            fromProton.current = true;
+        });
+    }, [draftKey]);
     const [files, setFiles] = useState<Picked[]>([]);
     const [uploading, setUploading] = useState(0);
     const [uploadError, setUploadError] = useState<string | null>(null);
@@ -38,6 +56,7 @@ export default function Composer({ members, meId, sending, error, onSend }: Comp
 
     function onText(value: string, caret: number | null) {
         setText(value);
+        fromProton.current = false;
         if (!members) return;
         const m = /@([a-zA-Z]*)$/.exec(value.slice(0, caret ?? value.length));
         setMentionQuery(m ? m[1] : null);
@@ -110,7 +129,7 @@ export default function Composer({ members, meId, sending, error, onSend }: Comp
                 <button className="icon-btn" aria-label="Attach file" disabled={files.length >= MAX_FILES} onClick={() => fileRef.current?.click()}><Icon name="attach" /></button>
                 <input className="input grow" placeholder="Message…" aria-label="Message" value={text}
                     onChange={(e) => onText(e.target.value, e.target.selectionStart)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void send(); } }} />
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (!fromProton.current) void send(); } }} />
                 <button className="btn btn-primary btn-sm" disabled={!canSend} onClick={() => void send()} aria-label="Send"><Icon name="send" /></button>
             </div>
             {(problem || uploading > 0) && (
