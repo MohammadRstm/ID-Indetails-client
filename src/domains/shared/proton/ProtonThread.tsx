@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { cx } from "@/shared/utils/cx";
 import ActionCard from "./ActionCard";
-import { talkDuration } from "./blob/talkPlan";
 import ProtonWelcome from "./ProtonWelcome";
 import SourcesNote from "./SourcesNote";
 import type { ProtonRef } from "./protonApi";
@@ -14,28 +13,24 @@ type ProtonThreadProps = {
     chat: ProtonChat;
     conversation: ProtonConversation;
     linkOf: (ref: ProtonRef) => string | null;
-    /** The reply being said right now: it is revealed as it is said, unless motion should be still. */
-    saying: string | null;
-    still: boolean;
+    /** The answer as it is being written, while a question is answered. */
+    draft: string | null;
+    /** What Proton is doing for it, in the server's words. */
+    status: string | null;
     /** A question has taken a while: say so. */
     stillLooking: boolean;
 };
 
 /** The conversation itself: what was asked and answered, the buttons of the newest reply, and any proposed change. */
-export default function ProtonThread({ chat, conversation, linkOf, saying, still, stillLooking }: ProtonThreadProps) {
+export default function ProtonThread({ chat, conversation, linkOf, draft, status, stillLooking }: ProtonThreadProps) {
     const bottom = useRef<HTMLDivElement>(null);
-    const [skipped, setSkipped] = useState<number | null>(null);
     // only the newest proposal can still be confirmed, and only the newest reply's buttons pressed: the API replaced the others
     const newest = chat.turns.findLast((t) => t.from === "proton" && t.action != null);
     const latestAction = newest?.from === "proton" ? newest.action?.id : undefined;
     const lastTurn = chat.turns.length - 1;
     const pending = conversation.pending;
 
-    useEffect(() => bottom.current?.scrollIntoView?.({ block: "end" }), [chat.turns.length, pending]);
-
-    // the newest reply appears as it is said; a click shows it all at once
-    const revealing = (i: number, text: string) =>
-        !still && i === lastTurn && skipped !== i && saying === text;
+    useEffect(() => bottom.current?.scrollIntoView?.({ block: "end" }), [chat.turns.length, pending, draft]);
 
     return (
         <div className="proton-thread">
@@ -45,14 +40,7 @@ export default function ProtonThread({ chat, conversation, linkOf, saying, still
             ) : (
                 <div key={i} className={cx("proton-turn", turn.from)}>
                     <div className={cx("msg-bubble", turn.from === "you" && "mine")}>
-                        <div
-                            className={cx("msg-text", turn.from === "proton" && revealing(i, turn.text) && "proton-reveal")}
-                            style={turn.from === "proton" ? { ["--reveal-ms" as string]: `${talkDuration(turn.text)}ms` } : undefined}
-                            dir="auto"
-                            onClick={() => setSkipped(i)}
-                        >
-                            {turn.text}
-                        </div>
+                        <div className="msg-text" dir="auto">{turn.text}</div>
                         {turn.from === "proton" && turn.refs.length > 0 && (
                             <div className="chips proton-refs">
                                 {turn.refs.map((ref) => {
@@ -110,9 +98,10 @@ export default function ProtonThread({ chat, conversation, linkOf, saying, still
             ))}
             {pending && (
                 <div className="proton-turn proton">
-                    <div className="msg-bubble muted proton-typing">
+                    {draft && <div className="msg-bubble proton-draft"><div className="msg-text" dir="auto">{draft}</div></div>}
+                    <div className="muted proton-typing">
                         <span className="proton-dots" aria-hidden="true"><i /><i /><i /></span>
-                        <span>{stillLooking ? "Still looking…" : "Looking into it…"}</span>
+                        <span>{status ?? (stillLooking ? "Still looking…" : "Looking into it…")}</span>
                     </div>
                 </div>
             )}

@@ -4,7 +4,7 @@ import { restingPath, useBlobMotion } from "./useBlobMotion";
 
 type BlobFigureProps = {
     mood: ProtonMood;
-    saying: { text: string; until: number } | null;
+    voiceAt: (now: number) => number;
     /** No moving shapes: reduced motion or "Calm animations". */
     still: boolean;
 };
@@ -35,11 +35,11 @@ function Eyes({ mood }: { mood: ProtonMood }) {
  * fur that wobble and inflate while it talks, a sheen, and eyes that show its mood. Decorative: the button around it
  * carries its name and mood for screen readers.
  */
-export default function BlobFigure({ mood, saying, still }: BlobFigureProps) {
+export default function BlobFigure({ mood, voiceAt, still }: BlobFigureProps) {
     // usable inside url(#…), which React's own ids aren't
     const id = `proton${useId().replace(/[^\w-]/g, "")}`;
     const paths = useRef<(SVGPathElement | null)[]>([]);
-    useBlobMotion(paths, { mood, saying, still });
+    useBlobMotion(paths, { mood, voiceAt, still });
     const d = restingPath(mood);
 
     return (

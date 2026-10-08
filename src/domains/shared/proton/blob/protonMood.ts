@@ -6,6 +6,7 @@ export type MoodInputs = {
     available: boolean;
     /** When the question being answered was sent, if one is. */
     askedAt: number | null;
+    /** Text of the answer is arriving (and a moment after). */
     talkingUntil: number;
     errorUntil: number;
     happyUntil: number;
@@ -22,14 +23,15 @@ export const WORKING_AFTER_MS = 3_000;
 export const STILL_LOOKING_AFTER_MS = 8_000;
 
 /**
- * The one mood that wins, most important first: unable to answer, something went wrong, busy answering, saying the
- * answer, pleased with a change that went through, waiting on a card, listening to the person type, or at rest.
+ * The one mood that wins, most important first: unable to answer, something went wrong, saying the answer as it
+ * arrives, busy on it between, pleased with a change that went through, waiting on a card, listening to the person
+ * type, or at rest.
  */
 export function moodOf(inputs: MoodInputs, now: number): ProtonMood {
     if (!inputs.available) return "asleep";
     if (inputs.errorUntil > now) return "error";
-    if (inputs.askedAt != null) return now - inputs.askedAt >= WORKING_AFTER_MS ? "working" : "thinking";
     if (inputs.talkingUntil > now) return "talking";
+    if (inputs.askedAt != null) return now - inputs.askedAt >= WORKING_AFTER_MS ? "working" : "thinking";
     if (inputs.happyUntil > now) return "happy";
     if (inputs.cardOpen) return "proposing";
     if (inputs.composing) return "listening";

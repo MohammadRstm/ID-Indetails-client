@@ -42,9 +42,16 @@ export default function ProtonComposer({ conversation, input, canStartOver, onCo
                     onBlur={() => onComposing(false)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
                 />
-                <button className="btn btn-primary" type="submit" disabled={!text.trim() || conversation.pending} aria-label="Send">
-                    <Icon name="send" />
-                </button>
+                {conversation.pending ? (
+                    // stopping keeps nothing of the answer: no text, no proposed change
+                    <button className="btn" type="button" onClick={conversation.stop} aria-label="Stop">
+                        <Icon name="stop" />
+                    </button>
+                ) : (
+                    <button className="btn btn-primary" type="submit" disabled={!text.trim()} aria-label="Send">
+                        <Icon name="send" />
+                    </button>
+                )}
             </form>
             <div className="proton-meta muted">
                 {left ? (left.companyLimitReached ? "Proton has used this month's budget."
