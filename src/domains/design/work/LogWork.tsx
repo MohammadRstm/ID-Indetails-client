@@ -8,6 +8,8 @@ import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import { dayKey, fmtDayDate, fmtDur, fmtH, fmtRange, minutesOfDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 import { useAttachment } from "./attachments";
 import { AttachmentField } from "./AttachmentField";
 import { checkLog, companyNow, DAY, DEFAULT_START, defaultSlot, isoAt, movesFor, restoreOf, spanOn, workHoursOf, type Moves } from "./day";
@@ -85,6 +87,33 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
     const day = useMyDay(date);
     const schedule = useMySchedule(date);
     const plain = !ed && !options.overtime && options.startMin == null && options.endMin == null;
+    // Proton fills a new log only: the project, day and time it was asked for replace the form's own first guess
+    const proton = useProtonForm("log_work", null, (fill) => {
+        const v = fill.logWork;
+        const done: string[] = [];
+        if (!v || ed) return done;
+        if (v.projectId != null && choices.some((c) => c.id === v.projectId)) {
+            setProjectId(v.projectId);
+            done.push("project");
+        }
+        if (v.day) {
+            setDate(v.day);
+            setSwaps({});
+            setDeletes([]);
+            setSlotFor(v.startMinute == null ? v.day : null);
+            done.push("day");
+        }
+        if (v.startMinute != null) {
+            setStartMin(v.startMinute);
+            done.push("start");
+            if (v.endMinute != null) {
+                setDuration((v.endMinute - v.startMinute + DAY) % DAY || DAY);
+                done.push("end");
+            }
+        }
+        fillEmpty(desc, v.description, setDesc, "description", done);
+        return done;
+    });
 
     if (slotFor && slotFor === date && day.data && !day.isPlaceholderData && day.data.date.slice(0, 10) === date) {
         const sl = defaultSlot(day.data.entries.map((e) => spanOn(e, date)), workHoursOf(schedule.data?.day)?.s ?? DEFAULT_START, date === today, nowMin);
@@ -170,7 +199,8 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                     </button>
                 </>
             }>
-            <form onSubmit={submit}>
+            <form onSubmit={submit} {...proton.guard}>
+                <FilledNote fields={proton.filled} />
                 <div className="grid g-2">
                     <div className="field">
                         <label className="label required" htmlFor="lw-project">Project</label>

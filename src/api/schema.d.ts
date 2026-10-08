@@ -9986,6 +9986,23 @@ export interface components {
             email?: string;
             password?: string;
         };
+        LogWorkFill: {
+            /** Format: date */
+            day: null | string;
+            description: null | string;
+            /** Format: int32 */
+            endMinute: null | number;
+            /**
+             * Format: int64
+             * @description The project: an id from find, list_my_work or another tool.
+             */
+            projectId: null | number;
+            /**
+             * Format: int32
+             * @description Minutes after midnight, company time: 9:30 is 570.
+             */
+            startMinute: null | number;
+        };
         MaterialEntryRequest: {
             /** Format: double */
             amount?: null | number;
@@ -11439,7 +11456,7 @@ export interface components {
         /** @enum {unknown} */
         ProtonFinancialsTab: "overview" | "projects" | "clients" | "billing" | "costs" | null;
         /** @enum {unknown} */
-        ProtonForm: "client" | "meeting" | "new_project" | "edit_project" | "report_bug" | "invite" | "message";
+        ProtonForm: "client" | "meeting" | "new_project" | "edit_project" | "report_bug" | "invite" | "message" | "log_work";
         ProtonFormFill: {
             client: null | components["schemas"]["ClientFill"];
             editProject: null | components["schemas"]["EditProjectFill"];
@@ -11447,13 +11464,14 @@ export interface components {
             /** Format: int64 */
             id: null | number;
             invite: null | components["schemas"]["InviteFill"];
+            logWork: null | components["schemas"]["LogWorkFill"];
             meeting: null | components["schemas"]["MeetingFill"];
             message: null | components["schemas"]["MessageFill"];
             newProject: null | components["schemas"]["NewProjectFill"];
             reportBug: null | components["schemas"]["ReportBugFill"];
         };
         /** @enum {unknown} */
-        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | null;
+        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_pay" | "my_profile" | null;
         ProtonPageContext: {
             area: string;
             /** Format: int64 */

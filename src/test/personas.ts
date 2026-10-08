@@ -57,9 +57,9 @@ export const personas: Record<PersonaName, CurrentUser> = {
     designAdmin: user(2, "Nadia", "admin", "design", without(ALL, COMPANY_ONLY, SUPER_ADMIN_ONLY, EXECUTION_ONLY, OWN_WORK), "Design director"),
     executionAdmin: user(3, "Karim", "admin", "execution", without(ALL, COMPANY_ONLY, SUPER_ADMIN_ONLY, DESIGN_ONLY), "Operations manager"),
     designEmployee: user(4, "Sarah", "employee", "design",
-        [P.PROJECT_VIEW, P.REQUIREMENT_VIEW, P.REQUIREMENT_COMPLETE_OWN, P.MEETING_CREATE, P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN], "Interior designer"),
+        [P.PROJECT_VIEW, P.REQUIREMENT_VIEW, P.REQUIREMENT_COMPLETE_OWN, P.MEETING_CREATE, P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN, P.PROTON_USE], "Interior designer"),
     executionEmployee: user(5, "Tarek", "employee", "execution",
-        [P.PROJECT_VIEW, P.REQUIREMENT_VIEW, P.REQUIREMENT_COMPLETE_OWN, P.MEETING_CREATE, P.MATERIAL_CREATE, P.LABOUR_REPORT_CREATE], "Site engineer"),
+        [P.PROJECT_VIEW, P.REQUIREMENT_VIEW, P.REQUIREMENT_COMPLETE_OWN, P.MEETING_CREATE, P.MATERIAL_CREATE, P.LABOUR_REPORT_CREATE, P.PROTON_USE], "Site engineer"),
 };
 
 /** What a super admin may hand an admin back by hand: seeing money and handling it. */

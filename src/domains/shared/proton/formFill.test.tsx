@@ -7,7 +7,7 @@ import FilledNote from "./FilledNote";
 import { fillEmpty, fillForm, setDraft, useProtonForm, type FormFill } from "./formFill";
 
 const fill = (fields: Partial<FormFill>): FormFill => ({
-    form: "client", id: null, client: null, meeting: null, newProject: null, editProject: null, reportBug: null, invite: null, message: null, ...fields,
+    form: "client", id: null, client: null, meeting: null, newProject: null, editProject: null, reportBug: null, invite: null, message: null, logWork: null, ...fields,
 });
 
 function ClientForm({ recordId = null, onSubmit }: { recordId?: number | null; onSubmit: () => void }) {
