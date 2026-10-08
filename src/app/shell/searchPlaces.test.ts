@@ -14,7 +14,7 @@ const noop = () => {};
 const moneyAdmin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 
 function ctxOf(user: CurrentUser, area: ShellArea): PlaceContext {
-    return { p: permissionsOf(user), area, userId: user.id, dark: false, run: { logWork: noop, toggleTheme: noop, signOut: noop } };
+    return { p: permissionsOf(user), area, userId: user.id, dark: false, run: { logWork: noop, toggleTheme: noop, signOut: noop, openProton: noop } };
 }
 
 /** The first place a search finds, where it leads, and whether it beats the API's results. */

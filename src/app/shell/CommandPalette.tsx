@@ -9,6 +9,7 @@ import { usePermissions } from "@/app/permissions/usePermissions";
 import { canOpen } from "@/app/routing/routeTable";
 import { useCurrentUser, useSession } from "@/app/session/useSession";
 import { openLogWork } from "@/domains/design/work/logWorkStore";
+import { openProton } from "@/domains/shared/proton/protonStore";
 import { ProjectTile } from "@/shared/components/Data/Bits";
 import { PROJECT_STATUS } from "@/shared/components/Data/status";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -51,7 +52,7 @@ export default function CommandPalette({ area, onClose }: { area: ShellArea; onC
     });
 
     const domain = area.kind === "domain" ? area.domain : null;
-    const ctx: PlaceContext = { p, area, userId: me.id, dark, run: { logWork: openLogWork, toggleTheme, signOut: () => void signOut() } };
+    const ctx: PlaceContext = { p, area, userId: me.id, dark, run: { logWork: openLogWork, toggleTheme, signOut: () => void signOut(), openProton } };
     const places = findPlaces(ctx, q);
     const asked = q.trim();
     const items = [

@@ -21,7 +21,7 @@ export type PlaceContext = {
     area: ShellArea;
     userId: number;
     /** Actions a place can run instead of opening a page. */
-    run: { logWork: () => void; toggleTheme: () => void; signOut: () => void };
+    run: { logWork: () => void; toggleTheme: () => void; signOut: () => void; openProton: () => void };
     /** The theme now, to name the switch. */
     dark: boolean;
 };
@@ -273,6 +273,11 @@ export const PLACES: Place[] = [
         label: (ctx) => (ctx.dark ? "Switch to light mode" : "Switch to dark mode"),
         words: ["dark mode", "light mode", "theme", "night mode", "appearance", "colors", "colours", "dark theme", "light theme", "dark", "light"],
         targets: (ctx) => [{ act: ctx.run.toggleTheme }],
+    },
+    {
+        key: "proton", icon: "chat", label: "Ask Proton",
+        words: ["proton", "assistant", "ai", "ask", "help me", "chat with proton", "ai assistant"],
+        targets: (ctx) => when(ctx.p.has(P.PROTON_USE), () => [{ act: ctx.run.openProton }]),
     },
 
     // ---- someone's own ----
