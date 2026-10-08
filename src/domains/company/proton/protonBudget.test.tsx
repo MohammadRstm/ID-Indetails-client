@@ -28,6 +28,9 @@ describe("Proton budget", () => {
         const topUps: unknown[] = [];
         renderApp("/company/proton", personas.superAdmin,
             http.get("/api/proton/budget", () => HttpResponse.json(budget)),
+            http.get("/api/proton/actions/all", () => HttpResponse.json([
+                { id: "a1", tool: "propose_add_requirement", title: "Add a requirement to Villa Mounir", status: "failed", createdAt: "2026-10-06T09:00:00Z", decidedAt: "2026-10-06T09:01:00Z", resultType: null, resultId: null, errorMessage: "The project is closed.", who: "Rana Haddad" },
+            ])),
             http.post("/api/proton/budget/top-ups", async ({ request }) => {
                 topUps.push(await request.json());
                 return HttpResponse.json({ ...budget, topUpsUsd: 20, budgetUsd: 70, remainingUsd: 68.75 });
@@ -39,6 +42,9 @@ describe("Proton budget", () => {
         expect(within(tools).getByText("180 ms")).toBeInTheDocument();
         expect(within(screen.getByRole("table", { name: "Most expensive conversations" })).getByText("$0.420")).toBeInTheDocument();
         expect(within(screen.getByRole("table", { name: "By domain" })).getByText("Design")).toBeInTheDocument();
+        const proposals = await screen.findByRole("table", { name: "Changes Proton proposed" });
+        expect(within(proposals).getByText("Rana Haddad")).toBeInTheDocument();
+        expect(within(proposals).getByText("Failed: The project is closed.")).toBeInTheDocument();
 
         const user = userEvent.setup();
         await user.type(screen.getByLabelText("Amount (USD)"), "20");

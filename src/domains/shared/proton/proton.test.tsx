@@ -14,11 +14,15 @@ const action = {
     id: "a1",
     tool: "propose_change_project_status",
     risk: "medium",
-    preview: { title: "Put Villa Mounir on hold", changes: [{ label: "Status", before: "Active", after: "On hold" }], note: "The project's domain is notified." },
+    target: { type: "project", id: 42, name: "Villa Mounir", domain: "design" } as { type: string; id: number; name: string; domain: string | null } | null,
+    preview: {
+        title: "Put Villa Mounir on hold", changes: [{ label: "Status", before: "Active" as string | null, after: "On hold" }], note: "The project's domain is notified." as string | null,
+        opensAfter: null as string | null, confirm: "standard", phrase: null as string | null, area: "design" as string | null, irreversible: false, reach: null as string | null,
+    },
     expiresAt: "2099-01-01T00:00:00Z",
 };
 
-const reply = (text: string, pendingAction: typeof action | null = null) => ({
+const reply = (text: string, cards: typeof action | (typeof action)[] | null = null) => ({
     conversationId: "c1",
     reply: text,
     refs: [{ type: "project", id: 42, name: "Villa Mounir", domain: "design" }],
@@ -29,7 +33,8 @@ const reply = (text: string, pendingAction: typeof action | null = null) => ({
     choices: [] as { type: string; id: number; label: string; detail: string | null; domain: string | null }[],
     quickReplies: [] as { reply: string; label: string }[],
     suggestions: [] as string[],
-    pendingAction,
+    pendingActions: cards == null ? [] : Array.isArray(cards) ? cards : [cards],
+    pendingAction: cards == null ? null : Array.isArray(cards) ? cards.at(-1) ?? null : cards,
     rolledOver: false,
 });
 
@@ -39,13 +44,14 @@ const noBriefing = { items: [] as unknown[], more: 0 };
 const onHelp = { area: "design", page: "help", entityType: null, entityId: null, section: null, surface: null };
 
 /** Proton's endpoints, recording what the panel sends. */
-function protonHandlers(answers: ReturnType<typeof reply>[], confirmOpens: Record<string, unknown>[] = [], briefing = noBriefing) {
+function protonHandlers(answers: ReturnType<typeof reply>[], confirmOpens: Record<string, unknown>[] = [], briefing = noBriefing, statuses: unknown[] = []) {
     const sent = { questions: [] as unknown[], decisions: [] as { path: string; body: unknown }[] };
     return {
         sent,
         handlers: [
             http.get("/api/proton/usage", () => HttpResponse.json(usage)),
             http.get("/api/proton/briefing", () => HttpResponse.json(briefing)),
+            http.get("/api/proton/actions", () => HttpResponse.json(statuses)),
             http.post("/api/proton/messages/stream", async ({ request }) => {
                 sent.questions.push(await request.json());
                 return sseReply(answers.shift() ?? reply("Nothing more to say."));
@@ -145,6 +151,70 @@ describe("Proton", () => {
         expect(await within(card).findByText("The project is already on hold.")).toBeInTheDocument();
     });
 
+    it("keep several cards open, and close only the one a newer proposal for the same change replaced", async () => {
+        const second = { ...action, id: "a2", tool: "propose_add_requirement", preview: { ...action.preview, title: "Add a requirement to Villa Mounir" } };
+        const revised = { ...action, id: "a3", preview: { ...action.preview, title: "Put Villa Mounir on hold until May" } };
+        const { handlers } = protonHandlers([reply("Two changes to confirm.", [action, second]), reply("Changed it.", revised)]);
+        renderApp("/design/help", personas.superAdmin, ...handlers);
+        const { user, panel } = await openAndAsk("Put it on hold and add a requirement");
+
+        const hold = await within(panel).findByRole("group", { name: "Put Villa Mounir on hold" });
+        const requirement = within(panel).getByRole("group", { name: "Add a requirement to Villa Mounir" });
+        expect(within(hold).getByRole("button", { name: "Confirm" })).toBeEnabled();
+        expect(within(requirement).getByRole("button", { name: "Confirm" })).toBeEnabled();
+
+        await user.type(within(panel).getByRole("textbox", { name: "Ask Proton" }), "Make the hold until May");
+        await user.click(within(panel).getByRole("button", { name: "Send" }));
+        await within(panel).findByRole("group", { name: "Put Villa Mounir on hold until May" });
+        expect(within(hold).getByText("Replaced by a newer proposal.")).toBeInTheDocument();
+        expect(within(requirement).getByRole("button", { name: "Confirm" })).toBeEnabled();
+    });
+
+    it("ask for a review first on a strong change, and for the phrase where the card asks for one", async () => {
+        const strong = { ...action, preview: { ...action.preview, confirm: "two_step", irreversible: true } };
+        const typed = { ...action, id: "a2", tool: "propose_archive_project", preview: { ...action.preview, title: "Archive Villa Mounir", confirm: "typed", phrase: "Villa Mounir" } };
+        const { handlers, sent } = protonHandlers([reply("Two changes to confirm.", [strong, typed])]);
+        renderApp("/design/help", personas.superAdmin, ...handlers);
+        const { user, panel } = await openAndAsk("Put it on hold and archive it");
+
+        const hold = await within(panel).findByRole("group", { name: "Put Villa Mounir on hold" });
+        expect(within(hold).getByText("Check carefully")).toBeInTheDocument();
+        expect(within(hold).getByText("This can't be undone.")).toBeInTheDocument();
+        expect(within(hold).queryByRole("button", { name: "Confirm" })).not.toBeInTheDocument();
+        await user.click(within(hold).getByRole("button", { name: "Review" }));
+        // armed a moment later, so a double click can't pass both steps
+        expect(within(hold).getByRole("button", { name: "Confirm" })).toBeDisabled();
+        await waitFor(() => expect(within(hold).getByRole("button", { name: "Confirm" })).toBeEnabled());
+
+        const archive = within(panel).getByRole("group", { name: "Archive Villa Mounir" });
+        const confirm = within(archive).getByRole("button", { name: "Confirm" });
+        expect(confirm).toBeDisabled();
+        await user.type(within(archive).getByLabelText(/to confirm/), "villa mounir");
+        await user.click(confirm);
+        await within(archive).findByText("Villa Mounir is now on hold.");
+        expect(sent.decisions).toEqual([{ path: "a2/confirm", body: { conversationId: "c1", typed: "villa mounir" } }]);
+    });
+
+    it("bring back a card that is still waiting after a reload, and say what became of one that isn't", async () => {
+        const second = { ...action, id: "a2", tool: "propose_add_requirement", preview: { ...action.preview, title: "Add a requirement to Villa Mounir" } };
+        const statuses = [
+            { id: "a1", tool: action.tool, title: "Put Villa Mounir on hold", status: "pending", createdAt: "2026-10-08T09:00:00Z", decidedAt: null, resultType: null, resultId: null, errorMessage: null, who: null },
+            { id: "a2", tool: second.tool, title: "Add a requirement to Villa Mounir", status: "succeeded", createdAt: "2026-10-08T09:00:00Z", decidedAt: "2026-10-08T09:01:00Z", resultType: "requirement", resultId: 5, errorMessage: null, who: null },
+        ];
+        const { handlers } = protonHandlers([reply("Two changes to confirm.", [action, second])], [], noBriefing, statuses);
+        const first = renderApp("/design/help", personas.superAdmin, ...handlers);
+        const { panel } = await openAndAsk("Put it on hold and add a requirement");
+        await within(panel).findByRole("group", { name: "Put Villa Mounir on hold" });
+        first.unmount();
+        resetProton();
+
+        renderApp("/design/help", personas.superAdmin, ...handlers);
+        const { panel: again } = await openPanel();
+        const hold = within(again).getByRole("group", { name: "Put Villa Mounir on hold" });
+        expect(await within(hold).findByRole("button", { name: "Confirm" })).toBeEnabled();
+        expect(within(within(again).getByRole("group", { name: "Add a requirement to Villa Mounir" })).getByText("Done.")).toBeInTheDocument();
+    });
+
     it("show what an analytical answer is based on, and what it left out", async () => {
         const analysed = {
             ...reply("Hours rose 34%."),
@@ -223,9 +293,10 @@ describe("Proton", () => {
         const created = {
             ...action,
             tool: "propose_create_project",
-            preview: { title: "Create a Design project", changes: [{ label: "Title", before: null, after: "Website Redesign" }], note: null, opensAfter: "the new project" },
+            target: null,
+            preview: { ...action.preview, title: "Create a Design project", changes: [{ label: "Title", before: null, after: "Website Redesign" }], note: null, opensAfter: "the new project" },
         };
-        const { handlers } = protonHandlers([reply("Shall I create it?", created as unknown as typeof action)],
+        const { handlers } = protonHandlers([reply("Shall I create it?", created)],
             [{ type: "open_project", label: "Website Redesign", id: 77, domain: "design", section: null, page: null, clientId: null, tab: null }]);
         renderApp("/design/help", personas.superAdmin, ...handlers);
         const { user, panel } = await openAndAsk("Create Website Redesign");

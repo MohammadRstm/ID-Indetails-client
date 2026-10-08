@@ -7,8 +7,10 @@ export type ActionState =
     | { kind: "done"; message: string }
     | { kind: "cancelled" }
     | { kind: "failed"; message: string }
-    /** Brought back after a reload: its status isn't known here, so it can't be confirmed from this card. */
-    | { kind: "closed" };
+    /** Brought back after a reload: the card asks the API what became of it, and stays closed until it knows. */
+    | { kind: "closed" }
+    | { kind: "replaced" }
+    | { kind: "expired" };
 
 export type ProtonTurn =
     | { from: "you"; text: string }
@@ -17,7 +19,8 @@ export type ProtonTurn =
         text: string;
         refs: ProtonRef[];
         sources: ProtonSource[];
-        action: ProtonPendingAction | null;
+        /** The changes proposed in this reply, each waiting for its own Confirm. */
+        cards: ProtonPendingAction[];
         /** Options to pick from; only the newest reply's can still be picked, and so for the replies below. */
         choices: ProtonChoice[];
         quickReplies: ProtonQuickReplyOption[];
@@ -38,6 +41,12 @@ export type ProtonChat = {
 
 export const emptyChat: ProtonChat = { conversationId: null, turns: [], actions: {} };
 
+/** The cards of the newest reply that proposed any. */
+export function newestCards(chat: ProtonChat): ProtonPendingAction[] {
+    const turn = chat.turns.findLast((t) => t.from === "proton" && t.cards.length > 0);
+    return turn?.from === "proton" ? turn.cards : [];
+}
+
 /*
  * The visible chat survives a reload of the tab: it is kept in sessionStorage (this tab only) under the person's id,
  * and dropped when they sign out, their session ends, or someone else signs in. The server keeps the conversation
@@ -47,7 +56,7 @@ const PREFIX = "proton:chat:";
 
 const keyOf = (userId: number) => `${PREFIX}${userId}`;
 
-/** The person's chat as this tab last showed it. Cards that were still open come back closed: their status isn't known here. */
+/** The person's chat as this tab last showed it. Cards that were still open come back closed until the API says otherwise. */
 export function loadChat(userId: number): ProtonChat {
     try {
         const raw = sessionStorage.getItem(keyOf(userId));
@@ -55,12 +64,19 @@ export function loadChat(userId: number): ProtonChat {
         const stored = JSON.parse(raw) as ProtonChat & { userId?: number };
         if (stored.userId !== userId || !Array.isArray(stored.turns)) return emptyChat;
         const actions = { ...stored.actions };
-        for (const turn of stored.turns) {
-            if (turn.from === "proton" && turn.action && (actions[turn.action.id]?.kind ?? "open") === "open") {
-                actions[turn.action.id] = { kind: "closed" };
+        // a chat kept before a reply could carry several cards had one "action"
+        const turns = stored.turns.map((turn): ProtonTurn => {
+            if (turn.from !== "proton" || Array.isArray(turn.cards)) return turn;
+            const { action } = turn as unknown as { action?: ProtonPendingAction | null };
+            return { ...turn, cards: action ? [action] : [] };
+        });
+        for (const turn of turns) {
+            if (turn.from !== "proton") continue;
+            for (const card of turn.cards) {
+                if ((actions[card.id]?.kind ?? "open") === "open") actions[card.id] = { kind: "closed" };
             }
         }
-        return { conversationId: stored.conversationId, turns: stored.turns, actions };
+        return { conversationId: stored.conversationId, turns, actions };
     } catch {
         return emptyChat;
     }

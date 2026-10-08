@@ -5,6 +5,7 @@ import type { Schemas } from "@/api/types";
 export type ProtonReply = Schemas["ProtonReplyResponse"];
 export type ProtonPendingAction = Schemas["ProtonPendingAction"];
 export type ProtonOutcome = Schemas["ProtonActionOutcomeResponse"];
+export type ProtonActionSummary = Schemas["ProtonActionSummaryResponse"];
 export type ProtonRef = Schemas["ProtonRef"];
 export type ProtonChoice = Schemas["ProtonChoice"];
 export type ProtonQuickReplyOption = Schemas["ProtonQuickReplyOption"];
@@ -56,11 +57,30 @@ export function useProtonBriefing(enabled = true) {
 export function useDecideAction() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ action, conversationId, decision }: { action: ProtonPendingAction; conversationId: string; decision: "confirm" | "cancel" }) =>
-            (await http.post<ProtonOutcome>(`/proton/actions/${action.id}/${decision}`, { conversationId })).data,
+        mutationFn: async ({ action, conversationId, decision, typed }: {
+            action: ProtonPendingAction; conversationId: string; decision: "confirm" | "cancel"; typed?: string;
+        }) => (await http.post<ProtonOutcome>(`/proton/actions/${action.id}/${decision}`, { conversationId, ...(typed != null && { typed }) })).data,
         onSettled: (_outcome, _error, { decision }) => {
             if (decision === "confirm") void queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] !== protonKey[0] });
+            void queryClient.invalidateQueries({ queryKey: [...protonKey, "actions"] });
         },
+    });
+}
+
+/** The person's own proposals and what became of them: a card brought back after a reload reads its status here. */
+export function useMyProtonActions(enabled: boolean) {
+    return useQuery({
+        queryKey: [...protonKey, "actions"],
+        queryFn: async () => (await http.get<ProtonActionSummary[]>("/proton/actions")).data,
+        enabled,
+    });
+}
+
+/** Everything Proton proposed, to whom, and what was confirmed: for those who manage Proton (proton_budget:manage). */
+export function useAllProtonActions() {
+    return useQuery({
+        queryKey: [...protonKey, "actions", "all"],
+        queryFn: async () => (await http.get<ProtonActionSummary[]>("/proton/actions/all")).data,
     });
 }
 
