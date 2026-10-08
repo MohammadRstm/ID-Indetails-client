@@ -9,6 +9,7 @@ export type ProtonRef = Schemas["ProtonRef"];
 export type ProtonChoice = Schemas["ProtonChoice"];
 export type ProtonQuickReplyOption = Schemas["ProtonQuickReplyOption"];
 export type ProtonBriefing = Schemas["ProtonBriefingResponse"];
+export type ProtonUsage = Schemas["ProtonUsageResponse"];
 
 /**
  * A question, or one of the buttons of the last reply, with the page the person is on. A button sends only what it
@@ -30,7 +31,7 @@ const protonKey = ["proton"] as const;
 export function useProtonUsage(enabled = true) {
     return useQuery({
         queryKey: [...protonKey, "usage"],
-        queryFn: async () => (await http.get<Schemas["ProtonUsageResponse"]>("/proton/usage")).data,
+        queryFn: async () => (await http.get<ProtonUsage>("/proton/usage")).data,
         enabled,
     });
 }

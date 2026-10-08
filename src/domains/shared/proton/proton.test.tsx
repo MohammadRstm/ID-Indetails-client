@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, describe, expect, it } from "vitest";
 import { resetSessionState } from "@/app/session/sessionReset";
+import { resetProton } from "./protonStore";
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
@@ -62,8 +63,8 @@ async function openPanel() {
     const user = userEvent.setup();
     // the Help page focuses its own search box once it has loaded; wait for it, or it takes the keyboard mid-question
     await screen.findByRole("textbox", { name: "Search Help" });
-    await user.click(await screen.findByRole("button", { name: "Ask Proton" }));
-    return { user, panel: await screen.findByRole("complementary", { name: "Proton" }) };
+    await user.click(await screen.findByRole("button", { name: /^Proton, / }));
+    return { user, panel: await screen.findByRole("dialog", { name: "Proton" }) };
 }
 
 const ended = { type: "not_found", code: "proton_conversation_ended", message: "I no longer have our earlier chat, so we're starting fresh.", errors: null, traceId: "t" };
@@ -75,8 +76,13 @@ async function openAndAsk(question: string) {
     return { user, panel };
 }
 
-// the chat is kept in session storage: each test starts in a fresh tab
-afterEach(() => sessionStorage.clear());
+// Proton keeps its chat outside the page and in session storage, and the blob's place in local storage: each test
+// starts in a fresh tab
+afterEach(() => {
+    resetProton();
+    sessionStorage.clear();
+    localStorage.clear();
+});
 
 describe("Proton", () => {
     it("answer a question with links to what it is about, and show the allowance, never money", async () => {
@@ -170,7 +176,7 @@ describe("Proton", () => {
         expect(await within(panel).findByText("Opened Villa Mounir.")).toBeInTheDocument();
         // no backdrop: the page stays in view and the chat stays open
         expect(document.querySelector(".drawer-scrim")).toBeNull();
-        expect(screen.getByRole("complementary", { name: "Proton" })).toBeInTheDocument();
+        expect(screen.getByRole("dialog", { name: "Proton" })).toBeInTheDocument();
     });
 
     it("refuse commands it doesn't know or the person may not follow", async () => {
@@ -320,6 +326,8 @@ describe("Proton", () => {
         const { panel } = await openAndAsk("Put Villa Mounir on hold");
         await within(panel).findByRole("group", { name: "Put Villa Mounir on hold" });
         first.unmount();
+        // a reload: nothing is left in memory, only what the tab stored
+        resetProton();
 
         renderApp("/design/help", personas.superAdmin, ...handlers);
         const { panel: again } = await openPanel();
@@ -336,6 +344,6 @@ describe("Proton", () => {
     it("isn't offered to employees", async () => {
         renderApp("/design/help", personas.designEmployee);
         await screen.findByRole("button", { name: "Help" });
-        await waitFor(() => expect(screen.queryByRole("button", { name: "Ask Proton" })).not.toBeInTheDocument());
+        await waitFor(() => expect(screen.queryByRole("button", { name: /^Proton, / })).not.toBeInTheDocument());
     });
 });

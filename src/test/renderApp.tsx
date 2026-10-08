@@ -38,6 +38,10 @@ export const shellHandlers = [
     http.get("/api/clients", () => HttpResponse.json({ items: [], page: 1, pageSize: 1, totalCount: 5 })),
     http.get("/api/employees", () => HttpResponse.json({ items: [], page: 1, pageSize: 1, totalCount: 9 })),
     http.get("/api/company/overview", () => HttpResponse.json({ netProfit: 12000, domains: [] })),
+    // Proton is off unless a test switches it on, so its blob stays out of the way
+    http.get("/api/proton/usage", () => HttpResponse.json({
+        month: "2026-10-01", available: false, questionsAllowed: 300, questionsUsed: 0, questionsRemaining: 300, usedPct: 0, companyLimitReached: false,
+    })),
     ...nothingLogged,
 ];
 
