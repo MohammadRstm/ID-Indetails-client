@@ -45,7 +45,7 @@ export default function ActionCard({ action, conversationId, state, replaced, on
     return (
         <div className={cx("proton-action", !open && "closed")} role="group" aria-label={action.preview.title}>
             <div className="proton-action-head">
-                <span className="proton-action-kicker">Proton wants to make a change</span>
+                <span className="proton-action-kicker">Change for you to confirm</span>
                 <span className={cx("pill", action.risk === "low" ? "pill-low" : "pill-mid")}>{action.risk === "low" ? "Low risk" : "Medium risk"}</span>
             </div>
             <div className="proton-action-title">{action.preview.title}</div>
@@ -61,7 +61,7 @@ export default function ActionCard({ action, conversationId, state, replaced, on
                 ))}
             </dl>
             {action.preview.note && <div className="muted proton-action-note">{action.preview.note}</div>}
-            {action.preview.opensAfter && open && <div className="muted proton-action-note">After you confirm, Hourline opens {action.preview.opensAfter}.</div>}
+            {action.preview.opensAfter && open && <div className="muted proton-action-note">After you confirm, I'll open {action.preview.opensAfter}.</div>}
 
             {open ? (
                 <div className="proton-action-foot">
@@ -75,8 +75,9 @@ export default function ActionCard({ action, conversationId, state, replaced, on
                     {state.kind === "done" ? state.message
                         : state.kind === "failed" ? state.message
                         : state.kind === "cancelled" ? "Cancelled. Nothing was changed."
+                        : state.kind === "closed" ? "This card closed when the page reloaded. Ask me again if you still want it."
                         : replaced ? "Replaced by a newer proposal."
-                        : "This proposal expired. Ask Proton again."}
+                        : "This proposal expired. Ask me again if you still want it."}
                 </div>
             )}
         </div>

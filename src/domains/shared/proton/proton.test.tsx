@@ -1,7 +1,8 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { resetSessionState } from "@/app/session/sessionReset";
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
@@ -24,19 +25,25 @@ const reply = (text: string, pendingAction: typeof action | null = null) => ({
     sources: [] as { label: string; period: string | null; comparedWith: string | null; partial: boolean; scope: string | null; omitted: string[] }[],
     uiCommands: [] as Record<string, unknown>[],
     choices: [] as { type: string; id: number; label: string; detail: string | null; domain: string | null }[],
+    quickReplies: [] as { reply: string; label: string }[],
+    suggestions: [] as string[],
     pendingAction,
+    rolledOver: false,
 });
+
+const noBriefing = { items: [] as unknown[], more: 0 };
 
 // The page context the panel sends from the Help page.
 const onHelp = { area: "design", page: null, entityType: null, entityId: null, section: null };
 
 /** Proton's endpoints, recording what the panel sends. */
-function protonHandlers(answers: ReturnType<typeof reply>[], confirmOpens: Record<string, unknown>[] = []) {
+function protonHandlers(answers: ReturnType<typeof reply>[], confirmOpens: Record<string, unknown>[] = [], briefing = noBriefing) {
     const sent = { questions: [] as unknown[], decisions: [] as { path: string; body: unknown }[] };
     return {
         sent,
         handlers: [
             http.get("/api/proton/usage", () => HttpResponse.json(usage)),
+            http.get("/api/proton/briefing", () => HttpResponse.json(briefing)),
             http.post("/api/proton/messages", async ({ request }) => {
                 sent.questions.push(await request.json());
                 return HttpResponse.json(answers.shift() ?? reply("Nothing more to say."));
@@ -51,16 +58,25 @@ function protonHandlers(answers: ReturnType<typeof reply>[], confirmOpens: Recor
     };
 }
 
-async function openAndAsk(question: string) {
+async function openPanel() {
     const user = userEvent.setup();
     // the Help page focuses its own search box once it has loaded; wait for it, or it takes the keyboard mid-question
     await screen.findByRole("textbox", { name: "Search Help" });
     await user.click(await screen.findByRole("button", { name: "Ask Proton" }));
-    const panel = await screen.findByRole("complementary", { name: "Proton" });
+    return { user, panel: await screen.findByRole("complementary", { name: "Proton" }) };
+}
+
+const ended = { type: "not_found", code: "proton_conversation_ended", message: "I no longer have our earlier chat, so we're starting fresh.", errors: null, traceId: "t" };
+
+async function openAndAsk(question: string) {
+    const { user, panel } = await openPanel();
     await user.type(within(panel).getByRole("textbox", { name: "Ask Proton" }), question);
     await user.click(within(panel).getByRole("button", { name: "Send" }));
     return { user, panel };
 }
+
+// the chat is kept in session storage: each test starts in a fresh tab
+afterEach(() => sessionStorage.clear());
 
 describe("Proton", () => {
     it("answer a question with links to what it is about, and show the allowance, never money", async () => {
@@ -208,11 +224,113 @@ describe("Proton", () => {
         const { user, panel } = await openAndAsk("Create Website Redesign");
 
         const card = await within(panel).findByRole("group", { name: "Create a Design project" });
-        expect(within(card).getByText("After you confirm, Hourline opens the new project.")).toBeInTheDocument();
+        expect(within(card).getByText("After you confirm, I'll open the new project.")).toBeInTheDocument();
         await user.click(within(card).getByRole("button", { name: "Confirm" }));
 
         await waitFor(() => expect(window.location.pathname).toBe("/design/projects/77"));
         expect(await within(card).findByText("Villa Mounir is now on hold. Opened Website Redesign.")).toBeInTheDocument();
+    });
+
+    it("greet the person by name, brief them without asking the model, and offer ways to start", async () => {
+        const briefing = {
+            items: [{
+                project: { type: "project", id: 42, name: "Villa Mounir", domain: "design" }, domain: "design",
+                facts: ["target date passed 6 days ago (2 Oct 2026)", "2 open requirements are overdue"],
+            }],
+            more: 2,
+        };
+        const { handlers, sent } = protonHandlers([reply("Here's what needs attention.")], [], briefing);
+        renderApp("/design/help", personas.designAdmin, ...handlers);
+
+        const { user, panel } = await openPanel();
+
+        expect(await within(panel).findByText(/^Good (morning|afternoon|evening), Nadia\. A few things you may want to look at:$/)).toBeInTheDocument();
+        expect(within(panel).getByRole("link", { name: "Villa Mounir" })).toHaveAttribute("href", "/design/projects/42");
+        expect(within(panel).getByText(/target date passed 6 days ago/)).toBeInTheDocument();
+        expect(within(panel).getByText("There are 2 more. Ask me what needs your attention.")).toBeInTheDocument();
+        expect(sent.questions).toEqual([]);
+
+        const starts = within(panel).getByRole("group", { name: "Ways to start" });
+        await user.click(within(starts).getByRole("button", { name: "What needs my attention?" }));
+        expect(await within(panel).findByText("Here's what needs attention.")).toBeInTheDocument();
+        expect(sent.questions).toEqual([{ conversationId: null, text: "What needs my attention?", page: onHelp }]);
+    });
+
+    it("answer with a quick reply or a suggestion, sending only what the button is", async () => {
+        const asking = { ...reply("Which period?"), refs: [], quickReplies: [{ reply: "this_month", label: "This month" }, { reply: "last_month", label: "Last month" }] };
+        const suggesting = { ...reply("Last month had 120.0 h."), refs: [], suggestions: ["Compare with the month before", "Open the reports"] };
+        const { handlers, sent } = protonHandlers([asking, suggesting, { ...reply("The month before had 98.0 h."), refs: [] }]);
+        renderApp("/design/help", personas.designAdmin, ...handlers);
+
+        const { user, panel } = await openAndAsk("How many hours?");
+        const options = await within(panel).findByRole("group", { name: "Options" });
+        await user.click(within(options).getByRole("button", { name: "Last month" }));
+        const suggested = await within(panel).findByRole("group", { name: "Suggested replies" });
+        await user.click(within(suggested).getByRole("button", { name: "Compare with the month before" }));
+
+        expect(await within(panel).findByText("The month before had 98.0 h.")).toBeInTheDocument();
+        expect(sent.questions.slice(1)).toEqual([
+            { conversationId: "c1", reply: "last_month", page: onHelp },
+            { conversationId: "c1", suggestion: 0, page: onHelp },
+        ]);
+        // what was tapped shows as the person's own message, and only the newest reply offers suggestions
+        expect(within(panel).getByText("Compare with the month before", { selector: ".msg-text" })).toBeInTheDocument();
+        expect(within(panel).queryByRole("group", { name: "Suggested replies" })).not.toBeInTheDocument();
+    });
+
+    it("carry on in a new conversation when the server no longer has the old one, and say so", async () => {
+        const bodies: unknown[] = [];
+        const answers = [reply("Hello!"), null, { ...reply("Villa Mounir is active."), conversationId: "c2" }];
+        const { handlers } = protonHandlers([]);
+        renderApp("/design/help", personas.designAdmin,
+            http.post("/api/proton/messages", async ({ request }) => {
+                bodies.push(await request.json());
+                const next = answers.shift();
+                return next ? HttpResponse.json(next) : HttpResponse.json(ended, { status: 404 });
+            }),
+            ...handlers);
+
+        const { user, panel } = await openAndAsk("Hi");
+        await within(panel).findByText("Hello!");
+        await user.type(within(panel).getByRole("textbox", { name: "Ask Proton" }), "How is Villa Mounir?");
+        await user.click(within(panel).getByRole("button", { name: "Send" }));
+
+        expect(await within(panel).findByText("Villa Mounir is active.")).toBeInTheDocument();
+        expect(within(panel).getByText("I no longer have our earlier chat, so we're starting fresh.")).toBeInTheDocument();
+        expect(within(panel).getAllByText("How is Villa Mounir?")).toHaveLength(1);
+        expect(bodies).toEqual([
+            { conversationId: null, text: "Hi", page: onHelp },
+            { conversationId: "c1", text: "How is Villa Mounir?", page: onHelp },
+            { conversationId: null, text: "How is Villa Mounir?", page: onHelp },
+        ]);
+    });
+
+    it("say when a long chat carried on from a summary", async () => {
+        const { handlers } = protonHandlers([{ ...reply("Still with you."), rolledOver: true }]);
+        renderApp("/design/help", personas.designAdmin, ...handlers);
+
+        const { panel } = await openAndAsk("And the month before?");
+
+        expect(await within(panel).findByText("Our chat was getting long, so I kept a short summary of it and carried on.")).toBeInTheDocument();
+    });
+
+    it("keep the chat through a reload with open cards closed, and forget it on sign-out", async () => {
+        const { handlers } = protonHandlers([reply("I can put it on hold. Please confirm.", action)]);
+        const first = renderApp("/design/help", personas.superAdmin, ...handlers);
+        const { panel } = await openAndAsk("Put Villa Mounir on hold");
+        await within(panel).findByRole("group", { name: "Put Villa Mounir on hold" });
+        first.unmount();
+
+        renderApp("/design/help", personas.superAdmin, ...handlers);
+        const { panel: again } = await openPanel();
+
+        expect(within(again).getByText("Put Villa Mounir on hold", { selector: ".msg-text" })).toBeInTheDocument();
+        const card = within(again).getByRole("group", { name: "Put Villa Mounir on hold" });
+        expect(within(card).queryByRole("button", { name: "Confirm" })).not.toBeInTheDocument();
+        expect(within(card).getByText("This card closed when the page reloaded. Ask me again if you still want it.")).toBeInTheDocument();
+
+        resetSessionState();
+        expect(Object.keys(sessionStorage).filter((key) => key.startsWith("proton:"))).toEqual([]);
     });
 
     it("isn't offered to employees", async () => {

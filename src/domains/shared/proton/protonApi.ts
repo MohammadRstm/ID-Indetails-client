@@ -7,13 +7,20 @@ export type ProtonPendingAction = Schemas["ProtonPendingAction"];
 export type ProtonOutcome = Schemas["ProtonActionOutcomeResponse"];
 export type ProtonRef = Schemas["ProtonRef"];
 export type ProtonChoice = Schemas["ProtonChoice"];
+export type ProtonQuickReplyOption = Schemas["ProtonQuickReplyOption"];
+export type ProtonBriefing = Schemas["ProtonBriefingResponse"];
 
-/** A question, or a pick from the buttons of the last reply, with the page the person is on. */
+/**
+ * A question, or one of the buttons of the last reply, with the page the person is on. A button sends only what it
+ * is (a record, a fixed reply, a suggestion's place in the list): the API checks it was offered and writes the text.
+ */
 export type AskBody = {
     conversationId: string | null;
     text?: string;
     page?: Schemas["ProtonPageContext"] | null;
     choice?: { type: Schemas["ProtonRefType"]; id: number };
+    reply?: Schemas["ProtonQuickReply"];
+    suggestion?: number;
 };
 
 // every key starts with "proton"
@@ -24,6 +31,19 @@ export function useProtonUsage(enabled = true) {
     return useQuery({
         queryKey: [...protonKey, "usage"],
         queryFn: async () => (await http.get<Schemas["ProtonUsageResponse"]>("/proton/usage")).data,
+        enabled,
+    });
+}
+
+/**
+ * What may need the person's attention, for the greeting: no model call and no question used. Asked again at most
+ * every five minutes.
+ */
+export function useProtonBriefing(enabled = true) {
+    return useQuery({
+        queryKey: [...protonKey, "briefing"],
+        queryFn: async () => (await http.get<ProtonBriefing>("/proton/briefing")).data,
+        staleTime: 5 * 60_000,
         enabled,
     });
 }
