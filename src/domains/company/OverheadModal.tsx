@@ -58,7 +58,7 @@ export default function OverheadModal({ line, onClose }: { line: OverheadLine | 
     }
 
     return (
-        <Modal title={line ? "Edit recurring expense" : "Add recurring expense"} sub="Charged every month until it is cancelled." onClose={onClose}
+        <Modal surfaceId={line ? undefined : "add_company_expense"} title={line ? "Edit recurring expense" : "Add recurring expense"} sub="Charged every month until it is cancelled." onClose={onClose}
             foot={
                 <>
                     <div className="grow">

@@ -7633,6 +7633,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/proton/messages/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["AskProtonRequest"];
+                    "application/json": components["schemas"]["AskProtonRequest"];
+                    "text/json": components["schemas"]["AskProtonRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/event-stream": unknown;
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/proton/usage": {
         parameters: {
             query?: never;
@@ -11209,6 +11250,8 @@ export interface components {
             id?: number;
             type?: components["schemas"]["ProtonRefType"];
         };
+        /** @enum {unknown} */
+        ProtonCompanyTab: "overview" | "people" | "teams" | null;
         ProtonConversationUsageResponse: {
             /** Format: uuid */
             conversationId: string;
@@ -11240,7 +11283,7 @@ export interface components {
         /** @enum {unknown} */
         ProtonFinancialsTab: "overview" | "projects" | "clients" | "billing" | "costs" | null;
         /** @enum {unknown} */
-        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | null;
+        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | null;
         ProtonPageContext: {
             area: string;
             /** Format: int64 */
@@ -11248,6 +11291,7 @@ export interface components {
             entityType: null | components["schemas"]["ProtonRefType"];
             page: null | components["schemas"]["ProtonPage"];
             section: null | components["schemas"]["ProtonProjectSection"];
+            surface: null | components["schemas"]["ProtonSurface"];
         };
         ProtonPendingAction: {
             /** Format: date-time */
@@ -11297,6 +11341,8 @@ export interface components {
             uiCommands: components["schemas"]["ProtonUiCommand"][];
             usage: components["schemas"]["ProtonUsageResponse"];
         };
+        /** @enum {unknown} */
+        ProtonSettingsSection: "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "admins" | "data" | null;
         ProtonSourceResponse: {
             comparedWith: null | string;
             label: string;
@@ -11305,6 +11351,10 @@ export interface components {
             period: null | string;
             scope: null | string;
         };
+        /** @enum {unknown} */
+        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_statement" | "new_meeting" | "add_company_expense" | "message_person" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | null;
+        /** @enum {unknown} */
+        ProtonTheme: "light" | "dark" | null;
         ProtonToolUsageResponse: {
             /** Format: int32 */
             averageMs: number;
@@ -11329,17 +11379,22 @@ export interface components {
         ProtonUiCommand: {
             /** Format: int64 */
             clientId: null | number;
+            companyTab: null | components["schemas"]["ProtonCompanyTab"];
             domain: null | string;
             /** Format: int64 */
             id: null | number;
             label: string;
             page: null | components["schemas"]["ProtonPage"];
             section: null | components["schemas"]["ProtonProjectSection"];
+            settingsSection: null | components["schemas"]["ProtonSettingsSection"];
+            sounds: null | boolean;
+            surface: null | components["schemas"]["ProtonSurface"];
             tab: null | components["schemas"]["ProtonFinancialsTab"];
+            theme: null | components["schemas"]["ProtonTheme"];
             type: components["schemas"]["ProtonUiCommandType"];
         };
         /** @enum {unknown} */
-        ProtonUiCommandType: "open_project" | "open_client" | "open_person" | "open_page" | "refresh";
+        ProtonUiCommandType: "open_project" | "open_client" | "open_person" | "open_page" | "open_surface" | "set_preference" | "refresh";
         ProtonUsageResponse: {
             available: boolean;
             companyLimitReached: boolean;

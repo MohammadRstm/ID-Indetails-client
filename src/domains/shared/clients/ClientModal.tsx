@@ -95,7 +95,7 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
     }
 
     return (
-        <Modal
+        <Modal surfaceId={client ? "edit_client" : "new_client"}
             size="md"
             title={client ? "Edit client" : "Add client"}
             sub="A record of who the work is for - clients never sign in."

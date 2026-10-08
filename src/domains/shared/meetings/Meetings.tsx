@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useUrlFlag } from "@/shared/hooks/useUrlFlag";
 import { useNavigate } from "react-router";
 import { errorMessage } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
@@ -90,7 +91,7 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
     }
 
     return (
-        <Modal title="New meeting" sub={project ? project.title : "Pick the project it's about"} onClose={onClose}
+        <Modal surfaceId="new_meeting" title="New meeting" sub={project ? project.title : "Pick the project it's about"} onClose={onClose}
             foot={
                 <>
                     <div className="grow">
@@ -189,7 +190,8 @@ export function MeetingsPage() {
     const [projectId, setProjectId] = useState("all");
     const [mine, setMine] = useState(false);
     const [showPast, setShowPast] = useState(false);
-    const [showNew, setShowNew] = useState(false);
+    // its own link (?new=1), so Proton or a shared link can open it
+    const [showNew, setShowNew] = useUrlFlag("new");
     const all = useMeetings({ domain });
     const query = useMeetings({ domain, projectId: projectId === "all" ? undefined : +projectId, mine });
     const now = new Date().toISOString();

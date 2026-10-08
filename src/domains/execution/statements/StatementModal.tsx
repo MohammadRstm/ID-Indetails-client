@@ -122,12 +122,14 @@ type FrameProps = {
     firstName: string;
     foot: ReactNode;
     onClose: () => void;
+    /** What Proton calls the window: only the new statement is one it opens. */
+    surfaceId?: string;
     children: ReactNode;
 };
 
-function Frame({ project, title, doc, flash, firstName, foot, onClose, children }: FrameProps) {
+function Frame({ project, title, doc, flash, firstName, foot, onClose, surfaceId, children }: FrameProps) {
     return (
-        <Modal size="xl inv-editor" flush onClose={onClose} title={title} sub={`${project.title} · ${project.client?.displayName ?? "no client"}`} foot={foot}>
+        <Modal surfaceId={surfaceId} size="xl inv-editor" flush onClose={onClose} title={title} sub={`${project.title} · ${project.client?.displayName ?? "no client"}`} foot={foot}>
             <div className="inv-edit">
                 <div className="inv-edit-form">{children}</div>
                 <div className="inv-edit-preview">
@@ -280,7 +282,7 @@ function NewStatement({ project, onMade, onClose }: { project: Project; onMade: 
         : `${chosen.length} of ${fresh.length} new${prevIn.length ? ` + ${prevIn.length} earlier · ${doc?.types.length ?? 0} type rows` : ""}`;
 
     return (
-        <Frame project={project} title="Client statement" doc={doc} flash={flash} firstName={out.firstName} onClose={onClose}
+        <Frame project={project} title="Client statement" doc={doc} flash={flash} firstName={out.firstName} onClose={onClose} surfaceId="new_statement"
             foot={<Foot total={doc?.total ?? 0} summary={summary} saved={false} canGo={pool > 0 && !!doc} out={out}
                 onPdf={() => out.savePdf(made)} onSend={() => setSending(true)} onClose={onClose} />}>
             {loadFailed(all) ? <LoadError error={all.error} retry={() => all.refetch()} what="the materials" />

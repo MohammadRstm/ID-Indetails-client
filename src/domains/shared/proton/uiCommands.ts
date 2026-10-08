@@ -6,11 +6,25 @@ import type { Domain, Permissions } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { canOpen, companyRoutes } from "@/app/routing/routeTable";
 import { useArea } from "@/app/shell/useArea";
+import { openLogWork } from "@/domains/design/work/logWorkStore";
+import { setMessageSounds } from "@/domains/shared/messages/messageSounds";
+import { markAssistantOpening, runOpener } from "@/shared/components/Overlays/assistantLayer";
+import { setTheme } from "@/shared/theme";
+import { SURFACES } from "./surfaces";
 
 export type ProtonUiCommand = Schemas["ProtonUiCommand"];
 
-/** What a command turns into here: a route of this app, a refresh, or nothing at all. */
-export type UiStep = { kind: "go"; path: string; label: string } | { kind: "refresh" };
+/**
+ * What a command turns into here: a route of this app, a window a page opens itself, the log work window, a
+ * display choice, a refresh, or nothing at all.
+ */
+export type UiStep =
+    | { kind: "go"; path: string; label: string }
+    | { kind: "opener"; id: string; label: string }
+    | { kind: "log_work"; label: string }
+    | { kind: "theme"; theme: "light" | "dark" }
+    | { kind: "sounds"; on: boolean }
+    | { kind: "refresh" };
 
 const DOMAINS: readonly Domain[] = ["design", "execution"];
 const SECTIONS = { requirements: "requirements", timeline: "timeline", meetings: "meetings" } as const;
@@ -28,6 +42,18 @@ const PAGES: Record<NonNullable<Schemas["ProtonPage"]>, { path: string; company?
     reports: { path: "reports" },
     company_overview: { path: "overview", company: true },
     company_expenses: { path: "overhead", company: true },
+    settings: { path: "settings" },
+    notifications: { path: "notifications" },
+    messages: { path: "messages" },
+    help: { path: "help" },
+    schedules: { path: "schedules", company: true },
+    salaries: { path: "salaries", company: true },
+    project_pay: { path: "project-pay", company: true },
+    proton_budget: { path: "proton", company: true },
+    company_settings: { path: "settings", company: true },
+    company_profile: { path: "profile", company: true },
+    // the start page, where every signed-in person may go
+    launcher: { path: "", company: true },
 };
 
 const isId = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v > 0;
@@ -65,6 +91,7 @@ export function stepOf(command: unknown, p: Permissions, current: Domain | null)
         case "open_page": {
             if (!has(PAGES, c.page)) return null;
             const page = PAGES[c.page];
+            if (c.page === "launcher") return { kind: "go", path: "/company", label };
             if (page.company) {
                 return companyRoutes.find((r) => r.path === page.path)?.access(p) ? { kind: "go", path: `/company/${page.path}`, label } : null;
             }
@@ -74,6 +101,24 @@ export function stepOf(command: unknown, p: Permissions, current: Domain | null)
                 : "";
             return domainPath(c.domain, `${page.path}${query}`);
         }
+        case "open_surface": {
+            if (!has(SURFACES, c.surface)) return null;
+            const domain = c.domain == null ? null : visible(c.domain) ? c.domain : undefined;
+            if (domain === undefined) return null;
+            const target = SURFACES[c.surface]({
+                p, domain: domain ?? current, id: isId(c.id) ? c.id : null,
+                section: typeof c.settingsSection === "string" ? c.settingsSection : null,
+                tab: typeof c.companyTab === "string" ? c.companyTab : null,
+            });
+            if (!target) return null;
+            return target.kind === "go" ? { kind: "go", path: target.path, label }
+                : target.kind === "opener" ? { kind: "opener", id: target.id, label }
+                : { kind: "log_work", label };
+        }
+        case "set_preference":
+            if (c.theme === "light" || c.theme === "dark") return { kind: "theme", theme: c.theme };
+            if (typeof c.sounds === "boolean") return { kind: "sounds", on: c.sounds };
+            return null;
         default:
             return null;
     }
@@ -92,16 +137,46 @@ export function useRunProtonCommands() {
 
     return useCallback((commands: unknown): string | null => {
         if (!Array.isArray(commands) || commands.length === 0) return null;
-        const steps = commands.slice(0, 2).map((c) => stepOf(c, p, current));
-        const go = steps.find((s) => s?.kind === "go");
-        if (go?.kind === "go") {
-            navigate(go.path);
-            return `Opened ${go.label}.`;
+        // the API sends at most one place, then the display choices: run them in that order
+        const done: string[] = [];
+        for (const command of commands.slice(0, 3)) {
+            const step = stepOf(command, p, current);
+            if (!step) {
+                done.push("That couldn't be opened here.");
+                continue;
+            }
+
+            switch (step.kind) {
+                case "go":
+                    // a window that opens on the way doesn't take the keyboard from the person
+                    markAssistantOpening();
+                    navigate(step.path);
+                    done.push(`Opened ${step.label}.`);
+                    break;
+                case "opener":
+                    markAssistantOpening();
+                    done.push(runOpener(step.id) ? `Opened ${step.label}.` : "That couldn't be opened here.");
+                    break;
+                case "log_work":
+                    markAssistantOpening();
+                    openLogWork();
+                    done.push(`Opened ${step.label}.`);
+                    break;
+                case "theme":
+                    setTheme(step.theme);
+                    done.push(step.theme === "dark" ? "Switched to dark mode." : "Switched to light mode.");
+                    break;
+                case "sounds":
+                    setMessageSounds(step.on);
+                    done.push(step.on ? "Message sounds are on." : "Message sounds are off.");
+                    break;
+                case "refresh":
+                    void queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] !== "proton" });
+                    done.push("Refreshed this page.");
+                    break;
+            }
         }
-        if (steps.some((s) => s?.kind === "refresh")) {
-            void queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] !== "proton" });
-            return "Refreshed this page.";
-        }
-        return "That couldn't be opened here.";
+
+        return [...new Set(done)].join(" ");
     }, [navigate, queryClient, p, current]);
 }

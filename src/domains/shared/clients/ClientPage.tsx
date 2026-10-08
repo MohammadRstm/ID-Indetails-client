@@ -36,6 +36,7 @@ import { ClientMark, ContactRow } from "./ClientBits";
 import ClientModal from "./ClientModal";
 import { useArchiveClient, useClient, useDeleteClient, type Client } from "./clientsApi";
 import { loadFailed } from "@/api/queryState";
+import { useUrlFlag } from "@/shared/hooks/useUrlFlag";
 
 const COLOURS = { labour: "var(--heat-3)", expense: "var(--heat-1)" };
 
@@ -67,7 +68,7 @@ function ClientView({ client }: { client: Client }) {
     const canManage = permissions.has(P.CLIENT_MANAGE);
     const archive = useArchiveClient(client.id);
     const remove = useDeleteClient(client.id);
-    const [showEdit, setShowEdit] = useState(false);
+    const [showEdit, setShowEdit] = useUrlFlag("details");
     const [showDelete, setShowDelete] = useState(false);
     // The list gives each project its tile; money viewers get the figures from the client itself.
     const projects = useProjects({ domain, clientId: client.id, sort: "start", pageSize: 100 }, permissions.has(P.PROJECT_VIEW));

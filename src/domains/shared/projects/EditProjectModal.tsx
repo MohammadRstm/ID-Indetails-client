@@ -38,7 +38,7 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
     }
 
     return (
-        <Modal title="Edit project details" sub={project.title} onClose={onClose}
+        <Modal surfaceId="edit_project" title="Edit project details" sub={project.title} onClose={onClose}
             foot={
                 <>
                     <div className="grow">{update.error ? <FieldError message={errorMessage(update.error)} /> : null}</div>

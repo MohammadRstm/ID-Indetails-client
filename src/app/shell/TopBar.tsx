@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { P } from "@/app/permissions/codes";
 import { accessLabel } from "@/app/permissions/permissions";
@@ -6,6 +6,7 @@ import { usePermissions } from "@/app/permissions/usePermissions";
 import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
 import ThemeToggle from "@/shared/components/Buttons/ThemeToggle";
 import Avatar from "@/shared/components/Identity/Avatar";
+import { registerOpener } from "@/shared/components/Overlays/assistantLayer";
 import Popover from "@/shared/components/Overlays/Popover";
 import MessagesDropdown from "@/domains/shared/messages/MessagesDropdown";
 import NotificationBell from "@/domains/shared/notifications/NotificationBell";
@@ -26,6 +27,8 @@ export default function TopBar({ area, onMenu, onSearch, sideShown = true }: Top
     const user = useCurrentUser();
     const { signOut } = useSession();
     const [reporting, setReporting] = useState(false);
+    // Proton can open the bug report when the person asks it to
+    useEffect(() => registerOpener("report_bug", () => setReporting(true)), []);
     const badges = useUnreadBadges();
     // a message arriving anywhere chimes once, wherever the person is in the app
     useArrivalChime(badges.messages?.unread);

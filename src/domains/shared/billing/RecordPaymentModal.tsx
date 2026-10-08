@@ -84,7 +84,7 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
     }
 
     return (
-        <Modal size="md" onClose={onClose} title="Record a client payment" sub={`${project.title} · ${project.client?.displayName ?? ""}`}
+        <Modal surfaceId="record_payment" size="md" onClose={onClose} title="Record a client payment" sub={`${project.title} · ${project.client?.displayName ?? ""}`}
             foot={
                 <>
                     <div className="grow mono" style={{ fontSize: "12.5px" }}>

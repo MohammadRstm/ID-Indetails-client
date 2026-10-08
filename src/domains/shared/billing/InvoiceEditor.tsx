@@ -89,7 +89,7 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
     };
 
     return (
-        <Modal size="xl inv-editor" flush onClose={onClose}
+        <Modal surfaceId={existing ? undefined : "new_invoice"} size="xl inv-editor" flush onClose={onClose}
             title={existing ? `Edit ${existing.number ?? "draft"}` : "New invoice"}
             sub={`${project.title} · ${project.client?.displayName ?? "no client"}`}
             foot={

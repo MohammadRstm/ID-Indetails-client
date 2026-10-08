@@ -51,7 +51,7 @@ export default function ReportBugModal({ onClose }: { onClose: () => void }) {
     }
 
     return (
-        <Modal title="Report a bug" sub="Tell us what went wrong, and we'll look into it." onClose={onClose}
+        <Modal surfaceId="report_bug" title="Report a bug" sub="Tell us what went wrong, and we'll look into it." onClose={onClose}
             foot={
                 <>
                     <div className="grow muted" style={{ fontSize: 12 }}>

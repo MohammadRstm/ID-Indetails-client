@@ -2,7 +2,7 @@ import { useEffect, useEffectEvent, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import { fromAssistant, useAssistantOpen } from "./assistantLayer";
+import { fromAssistant, surfaceOpened, takeAssistantOpening, useAssistantOpen } from "./assistantLayer";
 
 // Escape closes only the topmost layer: a modal opened from another (a file from an entry, an entry from a
 // drawer) must not take the one underneath with it.
@@ -22,11 +22,13 @@ type ModalProps = {
     foot?: ReactNode;
     headTools?: ReactNode;
     scrimClass?: string;
+    /** What the assistant calls this window, so it knows when it is open (see assistantLayer). */
+    surfaceId?: string;
     children: ReactNode;
 };
 
 /** A dialog over the page (the prototype's UI.Modal). A click on the backdrop or Escape closes it. */
-export default function Modal({ title, sub, onClose, size, flush, foot, headTools, scrimClass, children }: ModalProps) {
+export default function Modal({ title, sub, onClose, size, flush, foot, headTools, scrimClass, surfaceId, children }: ModalProps) {
     const ref = useRef<HTMLDivElement>(null);
     const dialogRef = useRef<HTMLDivElement>(null);
     const close = useEffectEvent(() => onClose?.());
@@ -36,11 +38,20 @@ export default function Modal({ title, sub, onClose, size, flush, foot, headTool
     // the keyboard follows the dialog: into it when it opens (unless a field in it took focus), and back to
     // where it was when it closes
     useEffect(() => {
+        // opened by the assistant: the keyboard goes back to where the person had it, even from an autoFocus field
+        const giveBack = takeAssistantOpening();
+        if (giveBack) {
+            giveBack.focus();
+            return;
+        }
+
         const before = document.activeElement as HTMLElement | null;
         const dialog = dialogRef.current;
         if (dialog && !dialog.contains(document.activeElement)) dialog.focus();
         return () => before?.focus?.();
     }, []);
+
+    useEffect(() => (surfaceId ? surfaceOpened(surfaceId) : undefined), [surfaceId]);
 
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {

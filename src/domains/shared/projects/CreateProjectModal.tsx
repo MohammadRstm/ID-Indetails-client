@@ -123,7 +123,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     }
 
     return (
-        <Modal
+        <Modal surfaceId="new_project"
             title="New project"
             sub="A project needs a name. Everything else is optional."
             onClose={onClose}

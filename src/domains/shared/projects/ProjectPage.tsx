@@ -35,6 +35,7 @@ import PricingModal from "../../execution/projects/PricingModal";
 import StatementHost from "../../execution/statements/StatementHost";
 import { useStatementLinks } from "../../execution/statements/statementLinks";
 import CompleteProjectModal from "./CompleteProjectModal";
+import { useUrlFlag } from "@/shared/hooks/useUrlFlag";
 import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
@@ -95,7 +96,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const requirements = useRequirements(project.id, permissions.has(P.REQUIREMENT_VIEW));
     const meetings = useProjectMeetings(project.id);
     const [showDone, setShowDone] = useState(false);
-    const [editing, setEditing] = useState(false);
+    // its own link (?details=1), so Proton or a shared link can open it
+    const [editing, setEditing] = useUrlFlag("details");
     // the report opens through the link too (?report=1), as the projects list's menu does
     const showReport = params.get("report") === "1";
     const setShowReport = (show: boolean) => {

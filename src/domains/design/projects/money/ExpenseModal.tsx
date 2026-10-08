@@ -43,7 +43,7 @@ export default function ExpenseModal({ project, onClose }: { project: Project; o
     }
 
     return (
-        <Modal title="Add project expense" sub={project.title} onClose={onClose}
+        <Modal surfaceId="add_project_expense" title="Add project expense" sub={project.title} onClose={onClose}
             foot={
                 <>
                     <div className="grow">{add.error ? <span className="err"><Icon name="alert" />{errorMessage(add.error)}</span> : "Belongs to this project only - never shared with other projects."}</div>

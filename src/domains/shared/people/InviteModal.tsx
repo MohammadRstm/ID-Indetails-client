@@ -120,7 +120,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     }
 
     return (
-        <Modal title={fixed ? "Add employee" : "Add person"} sub={`They get an invitation and appear in the ${fixed ? "employee" : "people"} list straight away.`} onClose={onClose}
+        <Modal surfaceId="invite_person" title={fixed ? "Add employee" : "Add person"} sub={`They get an invitation and appear in the ${fixed ? "employee" : "people"} list straight away.`} onClose={onClose}
             foot={
                 <>
                     <div className="grow">{invite.error ? <span className="err"><Icon name="alert" />{errorMessage(invite.error)}</span> : null}</div>
