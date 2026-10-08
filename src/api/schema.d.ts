@@ -7664,6 +7664,105 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/proton/memories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProtonMemoryResponse"][];
+                        "text/json": components["schemas"]["ProtonMemoryResponse"][];
+                        "text/plain": components["schemas"]["ProtonMemoryResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SaveProtonMemoryRequest"];
+                    "application/json": components["schemas"]["SaveProtonMemoryRequest"];
+                    "text/json": components["schemas"]["SaveProtonMemoryRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProtonMemoryResponse"];
+                        "text/json": components["schemas"]["ProtonMemoryResponse"];
+                        "text/plain": components["schemas"]["ProtonMemoryResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/proton/memories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/proton/messages": {
         parameters: {
             query?: never;
@@ -11470,6 +11569,13 @@ export interface components {
             newProject: null | components["schemas"]["NewProjectFill"];
             reportBug: null | components["schemas"]["ReportBugFill"];
         };
+        ProtonMemoryResponse: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            id: number;
+            text: string;
+        };
         /** @enum {unknown} */
         ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_pay" | "my_profile" | null;
         ProtonPageContext: {
@@ -11997,6 +12103,11 @@ export interface components {
             /** Format: date-time */
             startsAt?: string;
             topic?: null | string;
+        };
+        SaveProtonMemoryRequest: {
+            /** Format: uuid */
+            conversationId?: string;
+            text?: string;
         };
         SaveRequirementRequest: {
             assigneeIds?: number[];

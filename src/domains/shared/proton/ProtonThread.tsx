@@ -1,10 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { errorMessage } from "@/api/errors";
 import { Link } from "react-router";
 import { cx } from "@/shared/utils/cx";
 import ActionCard from "./ActionCard";
 import ProtonWelcome from "./ProtonWelcome";
 import SourcesNote from "./SourcesNote";
-import type { ProtonPendingAction, ProtonRef } from "./protonApi";
+import { useRemember, type ProtonPendingAction, type ProtonRef } from "./protonApi";
 import type { ProtonChat } from "./protonChat";
 import { celebrate, changeChat } from "./protonStore";
 import type { ProtonConversation } from "./useProtonConversation";
@@ -33,6 +34,16 @@ export default function ProtonThread({ chat, conversation, linkOf, draft, status
         if (turn.from === "proton") for (const card of turn.cards) newest.set(sameChange(card), card.id);
     }
     const lastTurn = chat.turns.length - 1;
+    const remember = useRemember();
+    // what became of "Remember this" under each message, by its place in the chat
+    const [remembered, setRemembered] = useState<Record<number, string>>({});
+    const keep = (i: number, text: string) => {
+        if (!chat.conversationId) return;
+        remember.mutate({ conversationId: chat.conversationId, text }, {
+            onSuccess: () => setRemembered((r) => ({ ...r, [i]: "I'll remember that." })),
+            onError: (error) => setRemembered((r) => ({ ...r, [i]: errorMessage(error) })),
+        });
+    };
     const pending = conversation.pending;
 
     useEffect(() => bottom.current?.scrollIntoView?.({ block: "end" }), [chat.turns.length, pending, draft]);
@@ -78,6 +89,11 @@ export default function ProtonThread({ chat, conversation, linkOf, draft, status
                         {turn.from === "proton" && <SourcesNote sources={turn.sources} />}
                         {turn.from === "proton" && turn.did && <div className="muted proton-did" role="status">{turn.did}</div>}
                     </div>
+                    {turn.from === "you" && chat.conversationId && (
+                        remembered[i]
+                            ? <div className="muted proton-remembered" role="status">{remembered[i]}</div>
+                            : <button className="btn btn-quiet btn-sm proton-remember" disabled={remember.isPending} onClick={() => keep(i, turn.text)}>Remember this</button>
+                    )}
                     {turn.from === "proton" && chat.conversationId && turn.cards.map((card) => (
                         <ActionCard
                             key={card.id}

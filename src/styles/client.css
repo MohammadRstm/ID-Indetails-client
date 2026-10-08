@@ -245,6 +245,13 @@ table { line-height: normal; font-weight: normal; }
 .proton-action-phrase { display: grid; gap: 4px; margin-top: 10px; font-size: 12.5px; }
 .proton-action-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 .proton-action-outcome { margin-top: 10px; font-size: 12.5px; }
+.proton-remember { align-self: flex-end; font-size: 11px; padding: 0 6px; opacity: .7; }
+.proton-remember:hover, .proton-remember:focus-visible { opacity: 1; }
+.proton-remembered { align-self: flex-end; font-size: 11px; }
+.proton-memories { display: grid; gap: 8px; padding: 4px 2px; }
+.proton-memories-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.proton-memory-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.proton-memory-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: var(--r2); padding: 6px 8px; }
 .proton-action-outcome.neg { color: var(--now); }
 
 /* Proton's blob and its speech bubble: on every signed-in screen, above pages and dialogs (z 108: over a dialog's

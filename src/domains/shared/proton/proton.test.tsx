@@ -466,6 +466,36 @@ describe("Proton", () => {
         expect(await screen.findByRole("button", { name: "Proton, something went wrong" })).toBeInTheDocument();
     });
 
+    it("remember what the person typed when they ask, and list and forget it", async () => {
+        const { handlers } = protonHandlers([reply("D'accord.")]);
+        const saved: unknown[] = [];
+        let memories = [] as { id: number; text: string; createdAt: string }[];
+        renderApp("/design/help", personas.designAdmin,
+            http.post("/api/proton/memories", async ({ request }) => {
+                const body = await request.json() as { text: string };
+                saved.push(body);
+                memories = [{ id: 7, text: body.text, createdAt: "2026-10-09T09:00:00Z" }];
+                return HttpResponse.json(memories[0], { status: 201 });
+            }),
+            http.get("/api/proton/memories", () => HttpResponse.json(memories)),
+            http.delete("/api/proton/memories/:id", () => { memories = []; return new HttpResponse(null, { status: 204 }); }),
+            ...handlers);
+        const { user, panel } = await openAndAsk("Answer in French from now on");
+        await within(panel).findByText("D'accord.");
+
+        await user.click(within(panel).getByRole("button", { name: "Remember this" }));
+        expect(await within(panel).findByText("I'll remember that.")).toBeInTheDocument();
+        expect(saved).toEqual([{ conversationId: "c1", text: "Answer in French from now on" }]);
+
+        await user.click(within(panel).getByRole("button", { name: "Proton options" }));
+        await user.click(await screen.findByRole("menuitem", { name: "What I remember" }));
+        expect(await within(panel).findByText("Answer in French from now on")).toBeInTheDocument();
+        await user.click(within(panel).getByRole("button", { name: 'Forget "Answer in French from now on"' }));
+        expect(await within(panel).findByText(/Nothing yet/)).toBeInTheDocument();
+        await user.click(within(panel).getByRole("button", { name: "Back to the chat" }));
+        expect(within(panel).getByText("D'accord.")).toBeInTheDocument();
+    });
+
     it("isn't offered to someone without proton:use", async () => {
         const noProton = { ...personas.designEmployee, permissions: personas.designEmployee.permissions.filter((p) => p !== "proton:use") };
         renderApp("/design/help", noProton);

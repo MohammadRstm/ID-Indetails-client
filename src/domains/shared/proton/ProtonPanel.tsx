@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { useArea } from "@/app/shell/useArea";
 import Popover from "@/shared/components/Overlays/Popover";
@@ -6,6 +6,7 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import type { BlobPrefs } from "./blob/blobPosition";
 import ProtonComposer from "./ProtonComposer";
+import ProtonMemories from "./ProtonMemories";
 import ProtonThread from "./ProtonThread";
 import type { ProtonRef } from "./protonApi";
 import type { ProtonChat } from "./protonChat";
@@ -37,6 +38,7 @@ export default function ProtonPanel({
     chat, conversation, layout, draft, status, stillLooking, prefs, onPrefs, onUnfold, onComposing, onClose,
 }: ProtonPanelProps) {
     const input = useRef<HTMLTextAreaElement>(null);
+    const [memories, setMemories] = useState(false);
     const permissions = usePermissions();
     const area = useArea();
 
@@ -82,6 +84,9 @@ export default function ProtonPanel({
                             <button className="pop-item" role="menuitemcheckbox" aria-checked={prefs.calm} onClick={() => { onPrefs({ calm: !prefs.calm }); close(); }}>
                                 {prefs.calm ? "Lively animations" : "Calm animations"}
                             </button>
+                            <button className="pop-item" role="menuitem" onClick={() => { setMemories(true); close(); }}>
+                                What I remember
+                            </button>
                             <button className="pop-item" role="menuitem" onClick={() => { onPrefs({ tucked: true }); close(); onClose(); }}>
                                 Tuck Proton away
                             </button>
@@ -92,7 +97,8 @@ export default function ProtonPanel({
                     <Icon name="x" />
                 </button>
             </div>
-            {!folded && (
+            {!folded && memories && <div className="proton-panel-body"><ProtonMemories onBack={() => setMemories(false)} /></div>}
+            {!folded && !memories && (
                 <>
                     <div className="proton-panel-body">
                         <ProtonThread chat={chat} conversation={conversation} linkOf={linkOf} draft={draft} status={status} stillLooking={stillLooking} />
