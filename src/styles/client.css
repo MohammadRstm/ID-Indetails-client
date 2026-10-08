@@ -221,6 +221,8 @@ table { line-height: normal; font-weight: normal; }
 .proton-sources { margin-top: 6px; font-size: 11.5px; color: var(--ink-2); white-space: normal; }
 .proton-sources summary { cursor: pointer; }
 .proton-sources ul { margin: 4px 0 0; padding-left: 16px; display: flex; flex-direction: column; gap: 3px; }
+.proton-choices { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; white-space: normal; }
+.proton-did { margin-top: 6px; font-size: 11.5px; }
 .proton-foot { display: flex; flex-direction: column; gap: 6px; width: 100%; }
 .proton-composer { display: flex; gap: 8px; align-items: flex-end; }
 .proton-composer textarea { flex: 1; resize: none; }

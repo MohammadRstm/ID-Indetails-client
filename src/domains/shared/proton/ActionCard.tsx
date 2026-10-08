@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { errorMessage } from "@/api/errors";
 import { cx } from "@/shared/utils/cx";
 import { useDecideAction, type ProtonPendingAction } from "./protonApi";
+import { useRunProtonCommands } from "./uiCommands";
 import type { ActionState } from "./protonChat";
 
 type ActionCardProps = {
@@ -20,6 +21,7 @@ type ActionCardProps = {
  */
 export default function ActionCard({ action, conversationId, state, replaced, onDecided }: ActionCardProps) {
     const decide = useDecideAction();
+    const run = useRunProtonCommands();
     const [expired, setExpired] = useState(() => new Date(action.expiresAt).getTime() <= Date.now());
     // the card closes by itself when the proposal runs out, as the API would refuse it from then on
     useEffect(() => {
@@ -31,7 +33,12 @@ export default function ActionCard({ action, conversationId, state, replaced, on
 
     const send = (decision: "confirm" | "cancel") =>
         decide.mutate({ action, conversationId, decision }, {
-            onSuccess: (outcome) => onDecided(decision === "confirm" ? { kind: "done", message: outcome.message } : { kind: "cancelled" }),
+            onSuccess: (outcome) => {
+                if (decision !== "confirm") return onDecided({ kind: "cancelled" });
+                // the API sends where to go only after a change that succeeded and whose card said so
+                const did = run(outcome.uiCommands);
+                onDecided({ kind: "done", message: did ? `${outcome.message} ${did}` : outcome.message });
+            },
             onError: (error) => onDecided({ kind: "failed", message: errorMessage(error) }),
         });
 
@@ -54,6 +61,7 @@ export default function ActionCard({ action, conversationId, state, replaced, on
                 ))}
             </dl>
             {action.preview.note && <div className="muted proton-action-note">{action.preview.note}</div>}
+            {action.preview.opensAfter && open && <div className="muted proton-action-note">After you confirm, Hourline opens {action.preview.opensAfter}.</div>}
 
             {open ? (
                 <div className="proton-action-foot">
