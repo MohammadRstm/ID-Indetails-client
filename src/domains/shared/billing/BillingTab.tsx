@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { canOpen } from "@/app/routing/routeTable";
@@ -41,7 +41,9 @@ export default function BillingTab({ domain, tiles }: { domain: Domain; tiles: M
     const navigate = useNavigate();
     const permissions = usePermissions();
     const links = useBillingLinks();
-    const [filter, setFilter] = useState<Filter>("all");
+    // "overdue invoices" links (search, help) arrive with ?overdue=1
+    const [params] = useSearchParams();
+    const [filter, setFilter] = useState<Filter>(() => (params.get("overdue") === "1" ? "overdue" : "all"));
     const billing = useFinanceBilling(domain, 12, true);
     const invoices = useInvoices({ domain, pageSize: 100 });
     const paymentQuery = usePayments({ domain, pageSize: 14 });

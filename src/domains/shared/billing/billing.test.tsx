@@ -9,6 +9,7 @@ import { financialsHandlers } from "@/test/fixtures/financials";
 import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
 import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
+import { invoiceStateOf } from "./invoiceStatus";
 
 // A Design admin a super admin has handed the money to: admins don't hold it by default
 const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
@@ -368,6 +369,13 @@ describe("Financials → Billing", () => {
         const drafts = billing.domainInvoices.items.filter((i) => i.status === "draft").length;
         await userEvent.click(within(register).getByRole("tab", { name: `Draft ${drafts}` }));
         expect(within(register).queryByText(inv.number!)).not.toBeInTheDocument();
+    });
+
+    it("starts on the overdue invoices when a link asks for them", async () => {
+        renderApp("/design/financials?tab=billing&overdue=1", admin, ...billingHandlers, ...financialsHandlers);
+        const register = (await screen.findByText("Invoice register")).closest(".panel") as HTMLElement;
+        const overdue = billing.domainInvoices.items.filter((i) => invoiceStateOf(i) === "overdue").length;
+        expect(await within(register).findByRole("tab", { name: `Overdue ${overdue}` })).toHaveAttribute("aria-selected", "true");
     });
 
     it("opens an invoice from the register", async () => {
