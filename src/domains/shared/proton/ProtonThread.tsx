@@ -46,7 +46,8 @@ export default function ProtonThread({ chat, conversation, linkOf, draft, status
     };
     const pending = conversation.pending;
 
-    useEffect(() => bottom.current?.scrollIntoView?.({ block: "end" }), [chat.turns.length, pending, draft]);
+    // braces: newer browsers return a Promise from scrollIntoView, which React would take for a cleanup
+    useEffect(() => { bottom.current?.scrollIntoView?.({ block: "end" }); }, [chat.turns.length, pending, draft]);
 
     return (
         <div className="proton-thread">

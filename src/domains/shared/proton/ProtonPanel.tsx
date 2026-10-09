@@ -43,7 +43,7 @@ export default function ProtonPanel({
     const area = useArea();
 
     // the keyboard goes to the composer when the panel opens
-    useEffect(() => input.current?.focus(), []);
+    useEffect(() => { input.current?.focus(); }, []);
 
     // the same route rules as Proton's own commands: a link shows only where this person may go
     const linkOf = (ref: ProtonRef) => {

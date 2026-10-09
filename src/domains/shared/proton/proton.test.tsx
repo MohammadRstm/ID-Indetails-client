@@ -496,6 +496,21 @@ describe("Proton", () => {
         expect(within(panel).getByText("D'accord.")).toBeInTheDocument();
     });
 
+    it("opens in a browser whose scrollIntoView returns a Promise, as newer Chrome does", async () => {
+        // regression: the thread's scroll effect returned that Promise, and React tried to call it as a cleanup
+        const scroll = Element.prototype.scrollIntoView;
+        Element.prototype.scrollIntoView = () => Promise.resolve() as unknown as void;
+        try {
+            const { handlers } = protonHandlers([reply("All quiet.")]);
+            renderApp("/design/help", personas.designAdmin, ...handlers);
+            const { panel } = await openAndAsk("Anything new?");
+            expect(await within(panel).findByText("All quiet.")).toBeInTheDocument();
+            expect(screen.queryByText("Something went wrong on this page")).not.toBeInTheDocument();
+        } finally {
+            Element.prototype.scrollIntoView = scroll;
+        }
+    });
+
     it("isn't offered to someone without proton:use", async () => {
         const noProton = { ...personas.designEmployee, permissions: personas.designEmployee.permissions.filter((p) => p !== "proton:use") };
         renderApp("/design/help", noProton);
