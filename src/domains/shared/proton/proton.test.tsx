@@ -511,6 +511,24 @@ describe("Proton", () => {
         }
     });
 
+    it("offers to talk only when voice is switched on, and typing still works", async () => {
+        const { handlers } = protonHandlers([reply("Villa Mounir is active.")]);
+        renderApp("/design/help", personas.designAdmin,
+            http.get("/api/proton/usage", () => HttpResponse.json({ ...usage, voiceAvailable: true, voiceMaxMinutes: 10 })), ...handlers);
+
+        const { panel } = await openPanel();
+        expect(within(panel).getByRole("button", { name: "Talk to Proton" })).toBeInTheDocument();
+        expect(within(panel).getByRole("textbox", { name: "Ask Proton" })).toBeInTheDocument();
+    });
+
+    it("doesn't offer to talk when voice is off", async () => {
+        const { handlers } = protonHandlers([]);
+        renderApp("/design/help", personas.designAdmin, ...handlers);
+
+        const { panel } = await openPanel();
+        expect(within(panel).queryByRole("button", { name: "Talk to Proton" })).not.toBeInTheDocument();
+    });
+
     it("isn't offered to someone without proton:use", async () => {
         const noProton = { ...personas.designEmployee, permissions: personas.designEmployee.permissions.filter((p) => p !== "proton:use") };
         renderApp("/design/help", noProton);

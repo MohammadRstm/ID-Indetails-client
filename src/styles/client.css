@@ -312,6 +312,19 @@ table { line-height: normal; font-weight: normal; }
 .proton-panel-body { flex: 1; overflow-y: auto; padding: 14px 16px; }
 .proton-panel .proton-foot { padding: 10px 16px 12px; border-top: 1px solid var(--line); }
 
+/* the voice conversation, above the composer: status, captions, mute and end */
+.proton-voice { display: flex; flex-direction: column; gap: 4px; padding: 8px 16px; border-top: 1px solid var(--line); background: var(--surface-2); font-size: 12.5px; }
+.proton-voice-head { display: flex; align-items: center; gap: 8px; }
+.proton-voice-status { flex: 1; font-weight: 600; }
+.proton-voice-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: none; }
+.proton-voice.listening .proton-voice-dot, .proton-voice.speaking .proton-voice-dot { background: var(--accent); animation: proton-dot 1.6s ease-in-out infinite; }
+.proton-voice.thinking .proton-voice-dot { background: var(--now); animation: proton-dot 1s ease-in-out infinite; }
+.proton-voice-caption { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.proton-voice-caption b { font-weight: 600; margin-right: 4px; }
+.proton-voice-message { display: flex; align-items: flex-start; gap: 6px; color: var(--ink-2); }
+.proton-voice-message span { flex: 1; }
+@media (prefers-reduced-motion: reduce) { .proton-voice-dot { animation: none !important; } }
+
 .proton-draft { margin-bottom: 4px; }
 .proton-typing { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 2px 4px; }
 .proton-dots { display: inline-flex; gap: 3px; }

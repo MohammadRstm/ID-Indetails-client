@@ -1,6 +1,7 @@
 import { useState, type RefObject } from "react";
 import Icon from "@/shared/icons/Icon";
 import { useProtonUsage } from "./protonApi";
+import { useVoice, voiceActive } from "./protonVoice";
 import type { ProtonConversation } from "./useProtonConversation";
 
 type ProtonComposerProps = {
@@ -17,6 +18,8 @@ export default function ProtonComposer({ conversation, input, canStartOver, onCo
     const [text, setText] = useState("");
     const usage = useProtonUsage();
     const left = usage.data;
+    const voice = useVoice();
+    const canTalk = left?.voiceAvailable === true && !voiceActive(voice.status);
 
     const send = () => {
         const question = text.trim();
@@ -42,6 +45,11 @@ export default function ProtonComposer({ conversation, input, canStartOver, onCo
                     onBlur={() => onComposing(false)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
                 />
+                {canTalk && !conversation.pending && (
+                    <button className="btn" type="button" onClick={() => void conversation.talk()} aria-label="Talk to Proton" title="Talk to Proton">
+                        <Icon name="mic" />
+                    </button>
+                )}
                 {conversation.pending ? (
                     // stopping keeps nothing of the answer: no text, no proposed change
                     <button className="btn" type="button" onClick={conversation.stop} aria-label="Stop">

@@ -7884,6 +7884,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/proton/voice/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["StartProtonVoiceRequest"];
+                    "application/json": components["schemas"]["StartProtonVoiceRequest"];
+                    "text/json": components["schemas"]["StartProtonVoiceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProtonVoiceSessionResponse"];
+                        "text/json": components["schemas"]["ProtonVoiceSessionResponse"];
+                        "text/plain": components["schemas"]["ProtonVoiceSessionResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/proton/voice/sessions/{sessionId}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/overview": {
         parameters: {
             query?: never;
@@ -8816,6 +8894,7 @@ export interface components {
             /** Format: int32 */
             suggestion?: null | number;
             text?: string;
+            voice?: null | components["schemas"]["ProtonVoiceTurnRequest"];
         };
         AttachFileRequest: {
             /** Format: int64 */
@@ -11498,6 +11577,7 @@ export interface components {
             topUpsUsd: number;
             /** Format: int32 */
             usedPct: number;
+            voice: components["schemas"]["ProtonVoiceUsageResponse"];
         };
         ProtonChange: {
             after: string;
@@ -11711,6 +11791,13 @@ export interface components {
             questionsUsed: number;
             /** Format: int32 */
             usedPct: number;
+            /** @default false */
+            voiceAvailable: boolean;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            voiceMaxMinutes: number;
         };
         ProtonUserUsageResponse: {
             /** Format: double */
@@ -11722,6 +11809,29 @@ export interface components {
             tokens: number;
             /** Format: int64 */
             userId: number;
+        };
+        ProtonVoiceSessionResponse: {
+            /** Format: uuid */
+            conversationId: string;
+            /** Format: date-time */
+            endsAt: string;
+            sdp: string;
+            sessionId: string;
+        };
+        ProtonVoiceTurnRequest: {
+            delegationId?: string;
+            sessionId?: string;
+        };
+        ProtonVoiceUsageResponse: {
+            /** Format: double */
+            costUsd: number;
+            /** Format: int32 */
+            estimated: number;
+            /** Format: double */
+            minutes: number;
+            model: string;
+            /** Format: int32 */
+            sessions: number;
         };
         QuarterTotalResponse: {
             /** Format: int32 */
@@ -12321,6 +12431,11 @@ export interface components {
             /** Format: int32 */
             count: number;
             people: components["schemas"]["PersonRefResponse"][];
+        };
+        StartProtonVoiceRequest: {
+            /** Format: uuid */
+            conversationId?: null | string;
+            sdp?: string;
         };
         StatementDeliveryResponse: {
             channel: components["schemas"]["DeliveryChannel"];

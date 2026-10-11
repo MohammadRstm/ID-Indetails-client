@@ -51,6 +51,8 @@ export const icons = {
   timer: '<circle cx="12" cy="13.4" r="7.4"/><path d="M12 13.4V9.8"/><path d="M9.6 3.4h4.8"/><path d="M12 3.4V6"/>',
   mail: '<rect x="3.6" y="5.4" width="16.8" height="13.2" rx="2.2"/><path d="M4.6 7.8 12 13l7.4-5.2"/>',
   chat: '<path d="M4.4 5.6h15.2v11.2H10L5.6 20.4v-3.6H4.4z"/><path d="M8 9.4h8"/><path d="M8 12.6h5.4"/>',
+  mic: '<rect x="9" y="3.6" width="6" height="10.8" rx="3"/><path d="M5.8 11.4a6.2 6.2 0 0 0 12.4 0"/><path d="M12 17.6v2.8"/>',
+  micOff: '<rect x="9" y="3.6" width="6" height="10.8" rx="3"/><path d="M5.8 11.4a6.2 6.2 0 0 0 12.4 0"/><path d="M12 17.6v2.8"/><path d="M4.4 4.4l15.2 15.2"/>',
   volume: '<path d="M4.4 9.4h3.4L12 5.6v12.8l-4.2-3.8H4.4z"/><path d="M15.4 9.2a4 4 0 0 1 0 5.6"/><path d="M17.8 6.8a7.4 7.4 0 0 1 0 10.4"/>',
   volumeOff: '<path d="M4.4 9.4h3.4L12 5.6v12.8l-4.2-3.8H4.4z"/><path d="M15.6 9.6l4.8 4.8"/><path d="M20.4 9.6l-4.8 4.8"/>',
   attach: '<path d="M16.8 7.2 9.6 14.4a2.8 2.8 0 0 0 4 4l6.6-6.6a4.6 4.6 0 1 0-6.5-6.5l-6.9 6.9a6.4 6.4 0 0 0 9 9.1"/>',

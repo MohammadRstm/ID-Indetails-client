@@ -81,6 +81,9 @@ export const toggleProton = () => (state.open ? closeProton() : openProton());
 
 export const changeChat = (update: (chat: ProtonChat) => ProtonChat) => set({ chat: update(state.chat) });
 
+/** The chat as it is now, for work that outlives a render (a voice conversation). */
+export const currentChat = () => state.chat;
+
 export const asking = () => set({ askedAt: Date.now(), status: null, draft: null });
 
 export const heard = (status: string) => set({ status });
@@ -109,6 +112,9 @@ export const failed = () => set({ askedAt: null, status: null, draft: null, erro
 
 /** The person stopped the answer: nothing of it is kept. */
 export const stopped = () => set({ askedAt: null, status: null, draft: null, talkingUntil: 0 });
+
+/** The voice model is speaking this loudly: the blob's mouth follows it. */
+export const spoke = (level: number) => set({ talkingUntil: Date.now() + 150, voice: Math.min(1, Math.max(0.3, level)) });
 
 /** A confirmed change went through. */
 export const celebrate = () => set({ happyUntil: Date.now() + HAPPY_MS });
