@@ -47,7 +47,11 @@ calling another domain.
   - a strict `Content-Security-Policy` (same-origin only, plus `data:` and `blob:` images and media for avatars and
     uploads, and inline styles for the toast library);
   - `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` and `frame-ancestors`;
-  - `Permissions-Policy` and `Cross-Origin-Opener-Policy`.
+  - `Permissions-Policy` (no camera, location or payment; the microphone only on the app's own origin, for talking
+    to Proton) and `Cross-Origin-Opener-Policy`.
+
+  Talking to Proton needs no CSP change: the browser sends its connection offer to the API, and the voice audio
+  itself travels over WebRTC, which `connect-src` doesn't cover.
 
   The app turns zod's code generation off (`src/main.tsx`), so the CSP needs no `unsafe-eval`.
 - **WebSockets** for `/hubs`, kept open for up to an hour of quiet. Uploads are allowed up to 101 MB, matching the
