@@ -86,8 +86,8 @@ describe("a Design project, by permission", () => {
         renderApp(page, withPermissions(sarah, { grant: [P.WORK_ENTRY_VIEW_ALL] }), ...ownWork, ...projectWorkHandlers);
         // their own hours stay on the Overview; everyone's work is on Analytics
         expect(await screen.findByText("Your hours here")).toBeInTheDocument();
-        expect(tabs()).toEqual(["Overview", "Analytics", "Requirements", "Timeline", "Meetings"]);
-        await userEvent.click(screen.getByRole("tab", { name: "Analytics" }));
+        expect(tabs()).toEqual(["Overview", "Analytics", "Contributors", "Requirements", "Timeline", "Meetings"]);
+        await userEvent.click(screen.getByRole("tab", { name: "Contributors" }));
         expect(await screen.findByText("Who put the hours in. Click a person to see their entries on this project.")).toBeInTheDocument();
     });
 
@@ -101,7 +101,7 @@ describe("a Design project, by permission", () => {
         renderApp(page, nadia, ...ownWork, ...projectWorkHandlers);
         expect(await screen.findByText("Total hours")).toBeInTheDocument();
         expect(screen.queryByText("Your hours here")).toBeNull();
-        expect(tabs()).toEqual(["Analytics", "Requirements", "Timeline", "Meetings"]);
+        expect(tabs()).toEqual(["Analytics", "Contributors", "Requirements", "Timeline", "Meetings"]);
     });
 
     it("shows an admin who never logged work here only the project's", async () => {

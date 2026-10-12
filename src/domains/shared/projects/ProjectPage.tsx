@@ -40,7 +40,7 @@ import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
 
-type TabKey = "financials" | "overview" | "analytics" | "requirements" | "timeline" | "meetings";
+type TabKey = "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings";
 
 /**
  * What goes on a project's Overview tab and Timeline tab, and the domain's own bits of its head. Each domain
@@ -55,6 +55,8 @@ export type ProjectPanels = {
     financials?: (project: Project) => ReactNode;
     /** Its own tab, for those who see everyone's work. */
     analytics?: (project: Project) => ReactNode;
+    /** Its own tab, for those who see everyone's work. */
+    contributors?: (project: Project) => ReactNode;
     timeline?: (project: Project) => ReactNode;
     /** Beside the project's own buttons, such as Log work. */
     actions?: (project: Project) => ReactNode;
@@ -123,11 +125,12 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         financials: seesMoney && panels.financials != null,
         overview: panels.hasOverview?.(permissions) ?? true,
         analytics: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.analytics != null,
+        contributors: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.contributors != null,
         requirements: permissions.has(P.REQUIREMENT_VIEW),
         timeline: timelineTab,
         meetings: true,
     };
-    const tabOrder: TabKey[] = ["financials", "overview", "analytics", "requirements", "timeline", "meetings"];
+    const tabOrder: TabKey[] = ["financials", "overview", "analytics", "contributors", "requirements", "timeline", "meetings"];
     const firstTab = tabOrder.find((k) => allowed[k]) ?? "meetings";
     // A tab the person may not open falls back to their first one, even when the link asks for it.
     const tab: TabKey = requested && allowed[requested] ? requested : firstTab;
@@ -306,6 +309,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                 ...(allowed.financials ? [{ key: "financials" as TabKey, label: "Financials" }] : []),
                 ...(allowed.overview ? [{ key: "overview" as TabKey, label: "Overview" }] : []),
                 ...(allowed.analytics ? [{ key: "analytics" as TabKey, label: "Analytics" }] : []),
+                ...(allowed.contributors ? [{ key: "contributors" as TabKey, label: "Contributors" }] : []),
                 ...(permissions.has(P.REQUIREMENT_VIEW) ? [{ key: "requirements" as TabKey, label: "Requirements", count: requirements.data?.total }] : []),
                 ...(timelineTab ? [{ key: "timeline" as TabKey, label: "Timeline" }] : []),
                 { key: "meetings" as TabKey, label: "Meetings", count: meetings.data?.length },
@@ -316,7 +320,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     : tab === "meetings" ? <ProjectMeetingsTab project={project} />
                         : tab === "financials" && panels.financials ? panels.financials(project)
                             : tab === "analytics" && panels.analytics ? panels.analytics(project)
-                                : panels.overview(project)}
+                                : tab === "contributors" && panels.contributors ? panels.contributors(project)
+                                    : panels.overview(project)}
 
             {(showDone || completeFromList) && canChangeStatus && !closed && (
                 <CompleteProjectModal project={project} openRequirements={openRequirements} onClose={closeComplete} />

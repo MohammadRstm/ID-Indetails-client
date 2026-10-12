@@ -297,3 +297,26 @@ table { line-height: normal; font-weight: normal; }
   .hc-cell { min-height: 64px; }
   .hc-line-item, .hc-more { display: none; }
 }
+
+/* Figures on one line that scroll sideways (fewer than eight): arrows at the ends instead of a scroll bar */
+.kpis-scroll { position: relative; }
+.kpis-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; scroll-behavior: smooth; }
+.kpis-row::-webkit-scrollbar { display: none; }
+.kpis-row > .kpi { flex: 1 0 190px; }
+.kpis-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--line-2);
+  box-shadow: var(--shadow-1); color: var(--ink-2); cursor: pointer; }
+.kpis-arrow:hover { color: var(--ink); border-color: var(--accent); }
+.kpis-arrow .ic { width: 15px; height: 15px; }
+.kpis-arrow.l { left: 6px; }
+.kpis-arrow.r { right: 6px; }
+.kpis-scroll.fade-l::before, .kpis-scroll.fade-r::after { content: ""; position: absolute; top: 1px; bottom: 1px; width: 44px; z-index: 1; pointer-events: none; }
+.kpis-scroll.fade-l::before { left: 1px; border-radius: var(--r2) 0 0 var(--r2); background: linear-gradient(90deg, var(--surface), transparent); }
+.kpis-scroll.fade-r::after { right: 1px; border-radius: 0 var(--r2) var(--r2) 0; background: linear-gradient(270deg, var(--surface), transparent); }
+@media (max-width: 520px) {
+  .kpis-row > .kpi { flex: 1 0 158px; border-top: 0; border-left: 1px solid var(--line); }
+  .kpis-row > .kpi:first-child { border-left: 0; }
+}
+
+/* A figures card with tabs over its strip (the overview's Financial / Activity) */
+.kpi-tabs { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }

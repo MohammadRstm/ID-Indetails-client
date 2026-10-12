@@ -12,6 +12,8 @@ import { renderApp } from "@/test/renderApp";
 const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const path = `/design/projects/${projectWork.project.id}`;
 const analytics = `${path}?tab=analytics`;
+const contributorsTab = `${path}?tab=contributors`;
+const contributorsText = "Who put the hours in. Click a person to see their entries on this project.";
 
 // Wednesday 30 September 2026, noon in Beirut
 beforeEach(() => {
@@ -21,7 +23,7 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 const drawer = () => document.querySelector(".drawer") as HTMLElement;
-const contributorsPanel = async () => (await screen.findByText("Who put the hours in. Click a person to see their entries on this project.")).closest(".panel") as HTMLElement;
+const contributorsPanel = async () => (await screen.findByText(contributorsText)).closest(".panel") as HTMLElement;
 
 describe("a Design project's tabs", () => {
     it("opens on Financials for someone who sees money, with only the money on it", async () => {
@@ -29,14 +31,16 @@ describe("a Design project's tabs", () => {
         expect(await screen.findByRole("tab", { name: "Financials", selected: true })).toBeInTheDocument();
         expect(await screen.findByText("Financial breakdown")).toBeInTheDocument();
         expect(screen.queryByRole("tab", { name: "Overview" })).toBeNull();
-        expect(screen.queryByText("Contributors")).toBeNull();
+        expect(screen.queryByText(contributorsText)).toBeNull();
         expect(screen.queryByText("Work timeline")).toBeNull();
         expect(screen.getByRole("tab", { name: "Analytics" })).toBeInTheDocument();
     });
 
-    it("shows the work KPIs and who put the hours in on Analytics", async () => {
+    it("shows the work KPIs on Analytics, and who put the hours in on Contributors", async () => {
         renderApp(analytics, admin, ...projectWorkHandlers);
         expect(await screen.findByText(`avg ${"1h 55m"} per entry`)).toBeInTheDocument();
+        expect(screen.queryByText(contributorsText)).toBeNull();
+        await userEvent.click(screen.getByRole("tab", { name: "Contributors" }));
         const panel = await contributorsPanel();
         for (const c of projectWork.work.contributors) expect(await within(panel).findByText(c.name)).toBeInTheDocument();
         expect(within(panel).getByRole("columnheader", { name: "Labour cost" })).toBeInTheDocument();
@@ -47,6 +51,7 @@ describe("a Design project's tabs", () => {
         renderApp(path, withPermissions(admin, { revoke: [P.FINANCIAL_VIEW] }), ...projectWorkHandlers);
         expect(await screen.findByRole("tab", { name: "Analytics", selected: true })).toBeInTheDocument();
         expect(screen.queryByRole("tab", { name: "Financials" })).toBeNull();
+        await userEvent.click(screen.getByRole("tab", { name: "Contributors" }));
         const panel = await contributorsPanel();
         await within(panel).findByText(projectWork.work.contributors[0].name);
         expect(within(panel).queryByRole("columnheader", { name: "Labour cost" })).toBeNull();
@@ -54,7 +59,7 @@ describe("a Design project's tabs", () => {
     });
 
     it("shows a plain Design admin the work without any of the money", async () => {
-        renderApp(path, personas.designAdmin, ...projectWorkHandlers);
+        renderApp(contributorsTab, personas.designAdmin, ...projectWorkHandlers);
         expect(screen.queryByRole("tab", { name: "Financials" })).toBeNull();
         const panel = await contributorsPanel();
         await within(panel).findByText(projectWork.work.contributors[0].name);
@@ -75,7 +80,7 @@ describe("a Design project's tabs", () => {
         await screen.findByRole("heading", { name: projectWork.project.title });
         expect(await screen.findByText("Financial breakdown")).toBeInTheDocument();
         expect(screen.queryByRole("tab", { name: "Analytics" })).toBeNull();
-        expect(screen.queryByText("Contributors")).toBeNull();
+        expect(screen.queryByText(contributorsText)).toBeNull();
         expect(asked).toEqual([]);
     });
 
@@ -83,7 +88,7 @@ describe("a Design project's tabs", () => {
         renderApp(path, withPermissions(personas.designAdmin, { revoke: [P.WORK_ENTRY_VIEW_ALL] }), ...projectWorkHandlers);
         expect(await screen.findByRole("tab", { name: "Overview", selected: true })).toBeInTheDocument();
         expect(await screen.findByText("Progress")).toBeInTheDocument();
-        expect(screen.queryByText("Contributors")).toBeNull();
+        expect(screen.queryByText(contributorsText)).toBeNull();
     });
 
     it("asks for a project's whole life 366 days at a time, as the API allows", async () => {
@@ -103,7 +108,7 @@ describe("a Design project's tabs", () => {
 
     it("filters the contributors by range and work text through the API", async () => {
         const asked: URLSearchParams[] = [];
-        renderApp(analytics, admin,
+        renderApp(contributorsTab, admin,
             http.get("/api/projects/:id/work", ({ request }) => {
                 asked.push(new URL(request.url).searchParams);
                 return HttpResponse.json(projectWork.work);
@@ -118,7 +123,7 @@ describe("a Design project's tabs", () => {
 describe("a contributor and their entries", () => {
     it("opens the person's work, then an entry, where admins can comment", async () => {
         let posted: Record<string, unknown> | null = null;
-        renderApp(analytics, admin,
+        renderApp(contributorsTab, admin,
             http.post("/api/work-entries/:id/comments", async ({ request }) => {
                 posted = (await request.json()) as Record<string, unknown>;
                 return HttpResponse.json({ id: 1, author: { id: admin.id, name: "Nadia Test", role: "admin" }, body: posted.body, sentToGroup: !!posted.sendToGroup, createdAt: "2026-09-30T09:00:00Z" });
@@ -141,7 +146,7 @@ describe("a contributor and their entries", () => {
     });
 
     it("shows the comments without the box to someone without work_entry:comment", async () => {
-        renderApp(analytics, withPermissions(admin, { revoke: [P.WORK_ENTRY_COMMENT] }), ...projectWorkHandlers);
+        renderApp(contributorsTab, withPermissions(admin, { revoke: [P.WORK_ENTRY_COMMENT] }), ...projectWorkHandlers);
         const panel = await contributorsPanel();
         await userEvent.click(await within(panel).findByText("62h 40m"));
         const first = projectWork.contributor.recentEntries[0];

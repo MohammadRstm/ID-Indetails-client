@@ -79,8 +79,31 @@ export function DesignFinancials({ project }: { project: Project }) {
     );
 }
 
-/** A Design project's Analytics tab, for those who see everyone's work: the work KPIs, who put the hours in, and the charts. */
+/** A Design project's Analytics tab, for those who see everyone's work: the work KPIs and the charts. */
 export function DesignAnalytics({ project }: { project: Project }) {
+    const [drawer, setDrawer] = useState<number | null>(null);
+    const [entry, setEntry] = useState<number | null>(null);
+    const all = useProjectWork(project.id, {});
+    const allRange = rangeOptions(project, companyNow().today).all;
+
+    return (
+        <>
+            {loadFailed(all) ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="the project's work" /></div></div>
+                : <Kpis project={project} work={all.data} />}
+
+            <Analytics project={project} work={all.data} contributors={all.data?.contributors ?? []} onPerson={setDrawer} />
+
+            {drawer != null && (
+                <ContributorDrawer projectId={project.id} projectTitle={project.title} personId={drawer} range={allRange} workQ=""
+                    onOpenEntry={setEntry} onClose={() => setDrawer(null)} />
+            )}
+            {entry != null && <EntryModal entryId={entry} overDrawer={drawer != null} onClose={() => setEntry(null)} />}
+        </>
+    );
+}
+
+/** A Design project's Contributors tab: who put the hours in. */
+export function DesignContributors({ project }: { project: Project }) {
     const { today } = companyNow();
     const [drawer, setDrawer] = useState<number | null>(null);
     const [entry, setEntry] = useState<number | null>(null);
@@ -90,21 +113,12 @@ export function DesignAnalytics({ project }: { project: Project }) {
     const ranges = rangeOptions(project, today);
     const range = ranges[rangeKey];
     const text = useDebounce({ value: workQ.trim(), debounceTimeMs: 250 });
-    const all = useProjectWork(project.id, {});
     const filtered = useProjectWork(project.id, { from: range.from, to: range.to, search: text || undefined });
 
     return (
         <>
-            {loadFailed(all) ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="the project's work" /></div></div>
-                : <Kpis project={project} work={all.data} />}
-
-            <div className="mt">
-                <Contributors work={filtered.data} error={loadFailed(filtered) ? filtered.error : null} retry={() => filtered.refetch()} range={range} rangeKey={rangeKey} ranges={ranges}
-                    setRangeKey={setRangeKey} search={search} setSearch={setSearch} workQ={workQ} setWorkQ={setWorkQ} onPerson={setDrawer} />
-            </div>
-
-            <Analytics project={project} work={all.data} contributors={filtered.data?.contributors ?? []} onPerson={setDrawer} />
-
+            <Contributors work={filtered.data} error={loadFailed(filtered) ? filtered.error : null} retry={() => filtered.refetch()} range={range} rangeKey={rangeKey} ranges={ranges}
+                setRangeKey={setRangeKey} search={search} setSearch={setSearch} workQ={workQ} setWorkQ={setWorkQ} onPerson={setDrawer} />
             {drawer != null && (
                 <ContributorDrawer projectId={project.id} projectTitle={project.title} personId={drawer} range={range} workQ={workQ}
                     onOpenEntry={setEntry} onClose={() => setDrawer(null)} />

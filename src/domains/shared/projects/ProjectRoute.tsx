@@ -2,7 +2,7 @@ import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { useDomain } from "@/app/routing/domainContext";
-import { DesignAnalytics, DesignFinancials, DesignProgress } from "../../design/projects/DesignOverview";
+import { DesignAnalytics, DesignContributors, DesignFinancials, DesignProgress } from "../../design/projects/DesignOverview";
 import ProjectHistoryTab from "../../design/projects/history/ProjectHistoryTab";
 import { LogWorkAction, MyProjectWork, MyTeamLine } from "../../design/work/MyProjectWork";
 import ExecutionOverview, { SiteTeamLine } from "../../execution/projects/ExecutionOverview";
@@ -17,6 +17,7 @@ const PANELS: Record<Domain, ProjectPanels> = {
         hasOverview: (p) => p.has(P.WORK_ENTRY_VIEW_OWN) || (!p.has(P.FINANCIAL_VIEW) && !p.has(P.WORK_ENTRY_VIEW_ALL)),
         financials: (project) => <DesignFinancials project={project} />,
         analytics: (project) => <DesignAnalytics project={project} />,
+        contributors: (project) => <DesignContributors project={project} />,
         timeline: (project) => <ProjectHistoryTab project={project} />,
         actions: (project) => <LogWorkAction project={project} />,
         meta: (project) => <MyTeamLine project={project} />,
