@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import { fromAssistant, useAssistantOpen } from "./assistantLayer";
 
 // Escape closes only the topmost layer: a modal opened from another (a file from an entry, an entry from a
 // drawer) must not take the one underneath with it.
@@ -29,6 +30,8 @@ export default function Modal({ title, sub, onClose, size, flush, foot, headTool
     const ref = useRef<HTMLDivElement>(null);
     const dialogRef = useRef<HTMLDivElement>(null);
     const close = useEffectEvent(() => onClose?.());
+    // with the assistant open beside it, the dialog isn't the only thing on screen (decision 35)
+    const assistantOpen = useAssistantOpen();
 
     // the keyboard follows the dialog: into it when it opens (unless a field in it took focus), and back to
     // where it was when it closes
@@ -41,7 +44,7 @@ export default function Modal({ title, sub, onClose, size, flush, foot, headTool
 
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && topScrim() === ref.current) close();
+            if (e.key === "Escape" && topScrim() === ref.current && !fromAssistant(e)) close();
         };
         document.addEventListener("keydown", onKey);
         return () => document.removeEventListener("keydown", onKey);
@@ -56,7 +59,7 @@ export default function Modal({ title, sub, onClose, size, flush, foot, headTool
                 if (e.target === e.currentTarget) onClose?.();
             }}
         >
-            <div ref={dialogRef} tabIndex={-1} className={cx("modal", size)} role="dialog" aria-modal="true" aria-label={typeof title === "string" ? title : undefined}>
+            <div ref={dialogRef} tabIndex={-1} className={cx("modal", size)} role="dialog" aria-modal={assistantOpen ? "false" : "true"} aria-label={typeof title === "string" ? title : undefined}>
                 {(title || onClose) && (
                     <div className="modal-head">
                         <div className="grow">
@@ -85,17 +88,15 @@ type DrawerProps = {
     foot?: ReactNode;
     onClose: () => void;
     children: ReactNode;
-    /** No backdrop: the page beside it stays visible and usable (the Proton panel, which can open pages). */
-    modeless?: boolean;
 };
 
 /** A panel sliding in from the right (the prototype's UI.Drawer). */
-export function Drawer({ title, head, foot, onClose, children, modeless }: DrawerProps) {
+export function Drawer({ title, head, foot, onClose, children }: DrawerProps) {
     const close = useEffectEvent(() => onClose());
 
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && !topScrim()) close();
+            if (e.key === "Escape" && !topScrim() && !fromAssistant(e)) close();
         };
         document.addEventListener("keydown", onKey);
         return () => document.removeEventListener("keydown", onKey);
@@ -103,8 +104,8 @@ export function Drawer({ title, head, foot, onClose, children, modeless }: Drawe
 
     return (
         <div>
-            {!modeless && <div className="drawer-scrim" onClick={onClose} />}
-            <aside className="drawer" role={modeless ? "complementary" : "dialog"} aria-label={title}>
+            <div className="drawer-scrim" onClick={onClose} />
+            <aside className="drawer" role="dialog" aria-label={title}>
                 <div className="drawer-head">
                     <div className="grow">{head ?? <div className="modal-title">{title}</div>}</div>
                     <button className="icon-btn" onClick={onClose} aria-label="Close">

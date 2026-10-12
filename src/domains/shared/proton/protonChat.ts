@@ -29,7 +29,7 @@ export type ProtonTurn =
     | { from: "note"; text: string }
     | { from: "error"; text: string };
 
-/** The chat, kept by its owner (the top bar) so closing the panel doesn't lose it. */
+/** The chat, kept in protonStore so closing the panel or changing page doesn't lose it. */
 export type ProtonChat = {
     conversationId: string | null;
     turns: ProtonTurn[];

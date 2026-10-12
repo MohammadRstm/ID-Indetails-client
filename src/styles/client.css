@@ -210,10 +210,8 @@ table { line-height: normal; font-weight: normal; }
 .label.required::after { content: " *"; color: var(--loss); font-weight: 700; }
 .label.optional::after { content: " · optional"; color: var(--ink-3); font-weight: 400; }
 
-/* Proton, the company assistant: a chat in the side drawer, and the card on which a proposed change is confirmed. */
-.proton-head .muted { font-size: 12px; margin-top: 2px; }
+/* Proton, the company assistant: its chat, and the card on which a proposed change is confirmed. */
 .proton-thread { display: flex; flex-direction: column; gap: 6px; }
-.proton-thread .empty { display: flex; gap: 10px; align-items: flex-start; }
 .proton-turn { display: flex; flex-direction: column; }
 .proton-turn .msg-bubble { max-width: 88%; white-space: pre-wrap; }
 .proton-turn.error .msg-bubble { background: var(--now-soft); color: var(--now); }
@@ -245,6 +243,90 @@ table { line-height: normal; font-weight: normal; }
 .proton-action-outcome { margin-top: 10px; font-size: 12.5px; }
 .proton-action-outcome.neg { color: var(--now); }
 
+/* Proton's blob and its speech bubble: on every signed-in screen, above pages and dialogs (z 108: over a dialog's
+   scrim at 100-105, under the command palette at 110 and the toasts at 120). The teal brand family, light and dark. */
+:root {
+  --proton-body-1:#7FD9CF; --proton-body-2:#0C6B69; --proton-fur:#3FA79D; --proton-glow:rgba(54,176,166,.55);
+  --proton-eye:#04211E; --proton-sheen:rgba(255,255,255,.55);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --proton-body-1:#8EE6DB; --proton-body-2:#1F8C84; --proton-fur:#4CC3B8; --proton-glow:rgba(76,195,184,.5);
+    --proton-eye:#04211E; --proton-sheen:rgba(255,255,255,.45);
+  }
+}
+:root[data-theme="dark"] {
+  --proton-body-1:#8EE6DB; --proton-body-2:#1F8C84; --proton-fur:#4CC3B8; --proton-glow:rgba(76,195,184,.5);
+  --proton-eye:#04211E; --proton-sheen:rgba(255,255,255,.45);
+}
+.proton-blob[data-mood="asleep"] { --proton-body-1:#B9C9C6; --proton-body-2:#5E7471; --proton-fur:#8A9E9B; --proton-glow:rgba(138,158,155,.3); }
+.proton-blob[data-mood="error"] { --proton-body-1:#F2B8A8; --proton-body-2:#B4553F; --proton-fur:#D07A64; --proton-glow:rgba(208,122,100,.45); }
+.proton-blob[data-mood="happy"] { --proton-glow:rgba(120,230,170,.7); }
+
+.proton-dock { position: fixed; inset: 0; z-index: 108; pointer-events: none; }
+.proton-dock > * { pointer-events: auto; }
+.proton-dock > .sr { pointer-events: none; }
+
+.proton-blob { position: fixed; padding: 0; border: 0; background: none; border-radius: 50%; cursor: grab; touch-action: none;
+  transition: left .28s cubic-bezier(.3,1.4,.5,1), top .28s cubic-bezier(.3,1.4,.5,1), transform .2s ease; }
+.proton-blob:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.proton-blob.dragging { cursor: grabbing; transition: none; transform: scale(1.06); }
+.proton-blob.tucked { opacity: .9; }
+.proton-dock.on-right .proton-blob.tucked { transform: translateX(40px); }
+.proton-dock.on-left .proton-blob.tucked { transform: translateX(-40px); }
+.proton-blob.tucked:hover, .proton-blob.tucked:focus-visible { transform: none; }
+.proton-figure { width: 100%; height: 100%; overflow: visible; display: block; animation: proton-breathe 4.2s ease-in-out infinite; }
+.proton-glow { fill: var(--proton-glow); transform-box: fill-box; transform-origin: center; animation: proton-glow 4.2s ease-in-out infinite; }
+.proton-fur { fill: none; stroke: var(--proton-fur); stroke-width: 7; stroke-dasharray: .4 3.1; stroke-linecap: round; }
+.proton-sheen { fill: var(--proton-sheen); }
+.proton-eyes ellipse { fill: var(--proton-eye); }
+.proton-eyes.open { transform-box: fill-box; transform-origin: center; animation: proton-blink 5.5s infinite; }
+.proton-eyes.closed path { fill: none; stroke: var(--proton-eye); stroke-width: 2.6; stroke-linecap: round; }
+.proton-blob[data-mood="thinking"] .proton-glow, .proton-blob[data-mood="working"] .proton-glow { animation-duration: 1.6s; }
+.proton-blob.still, .proton-blob.still * { animation: none !important; }
+.proton-unseen { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--now);
+  color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; box-shadow: 0 0 0 2px var(--surface); }
+
+.proton-peek { position: fixed; display: flex; align-items: flex-start; gap: 4px; max-width: min(280px, calc(100vw - 120px)); padding: 6px 6px 6px 12px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-2); animation: fade .15s ease; }
+.proton-peek-text { border: 0; background: none; padding: 2px 0; text-align: left; font-size: 12.5px; color: var(--ink); cursor: pointer; }
+
+.proton-panel { position: fixed; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line);
+  box-shadow: var(--shadow-3); overflow: hidden; animation: proton-pop .16s ease; }
+.proton-panel.bubble { border-radius: 16px; }
+.proton-panel.sheet { left: 0; right: 0; bottom: 0; border-radius: 16px 16px 0 0; max-height: 100dvh; }
+.proton-panel-head { display: flex; align-items: center; gap: 6px; padding: 10px 10px 10px 16px; border-bottom: 1px solid var(--line); }
+.proton-panel-head .muted { font-size: 12px; margin-top: 1px; }
+.proton-panel.folded .proton-panel-head { border-bottom: 0; cursor: pointer; }
+.proton-panel-body { flex: 1; overflow-y: auto; padding: 14px 16px; }
+.proton-panel .proton-foot { padding: 10px 16px 12px; border-top: 1px solid var(--line); }
+
+.proton-reveal { -webkit-mask-image: linear-gradient(#000 0 0); mask-image: linear-gradient(#000 0 0); -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 0%; mask-size: 100% 0%; animation: proton-reveal var(--reveal-ms, 1.5s) linear forwards; cursor: pointer; }
+.proton-typing { display: flex; align-items: center; gap: 8px; }
+.proton-dots { display: inline-flex; gap: 3px; }
+.proton-dots i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: proton-dot 1.2s ease-in-out infinite; }
+.proton-dots i:nth-child(2) { animation-delay: .15s; }
+.proton-dots i:nth-child(3) { animation-delay: .3s; }
+
+@keyframes proton-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.035); } }
+@keyframes proton-glow { 0%, 100% { opacity: .65; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
+@keyframes proton-blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+@keyframes proton-reveal { to { -webkit-mask-size: 100% 100%; mask-size: 100% 100%; } }
+@keyframes proton-dot { 0%, 80%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
+@keyframes proton-pop { from { opacity: 0; transform: translateY(6px) scale(.98); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .proton-blob, .proton-blob *, .proton-panel, .proton-dots i { animation: none !important; transition: none !important; }
+  .proton-reveal { animation: none; -webkit-mask-image: none; mask-image: none; }
+}
+@media (forced-colors: active) {
+  .proton-blob { outline: 1px solid CanvasText; }
+  .proton-body { fill: ButtonText; }
+  .proton-fur, .proton-glow, .proton-sheen { display: none; }
+  .proton-eyes ellipse { fill: ButtonFace; }
+  .proton-eyes.closed path { stroke: ButtonFace; }
+}
 /* Project history as a calendar (a Design project's Timeline tab) */
 .hc-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: -2px 0 10px; font-size: 12.5px; }
 .hc-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
