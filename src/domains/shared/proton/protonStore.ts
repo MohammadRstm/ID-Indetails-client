@@ -113,16 +113,24 @@ export const failed = () => set({ askedAt: null, status: null, draft: null, erro
 /** The person stopped the answer: nothing of it is kept. */
 export const stopped = () => set({ askedAt: null, status: null, draft: null, talkingUntil: 0 });
 
-/** The voice model is speaking this loudly: the blob's mouth follows it. */
-export const spoke = (level: number) => set({ talkingUntil: Date.now() + 150, voice: Math.min(1, Math.max(0.3, level)) });
+/*
+ * How loudly the voice model speaks, read by the blob's animation each frame. Kept out of the store's state: it
+ * changes every frame while the voice speaks, and nothing on screen but the blob's mouth depends on it.
+ */
+let speech = { until: 0, level: 0 };
+
+/** The voice model is speaking this loudly: the blob's mouth follows it, without re-rendering anything. */
+export const spoke = (level: number) => {
+    speech = { until: Date.now() + 150, level: Math.min(1, Math.max(0.3, level)) };
+};
 
 /** A confirmed change went through. */
 export const celebrate = () => set({ happyUntil: Date.now() + HAPPY_MS });
 
 export const dismissPeek = () => set({ peek: null });
 
-/** How loudly the blob talks at `now`, read by its animation each frame. */
-export const voiceAt = (now: number) => (now < state.talkingUntil ? state.voice : 0);
+/** How loudly the blob talks at `now`, read by its animation each frame: the voice speaking, or text arriving. */
+export const voiceAt = (now: number) => (now < speech.until ? speech.level : now < state.talkingUntil ? state.voice : 0);
 
 /** The chat goes with the person. */
 export function resetProton() {

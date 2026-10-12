@@ -82,7 +82,8 @@ function ProtonDock() {
     const mood = moodOf({
         available: usage.available,
         askedAt: proton.askedAt,
-        talkingUntil: proton.talkingUntil,
+        // the voice's loudness isn't in the store (it changes every frame); its speaking state is
+        talkingUntil: voice.status === "speaking" ? Number.MAX_SAFE_INTEGER : proton.talkingUntil,
         errorUntil: proton.errorUntil,
         happyUntil: proton.happyUntil,
         cardOpen,
