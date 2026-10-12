@@ -12,10 +12,12 @@ type LineChartProps = {
     format?: (v: number) => string;
     /** Label every nth point along the bottom. */
     tickEvery?: number;
+    /** What the chart shows, for screen readers; its series' names when not given. */
+    title?: string;
 };
 
 /** Lines over time, with an optional filled area; the axis reaches below 0 for losses (the prototype's V.LineChart). */
-export default function LineChart({ series, height = 190, format = fmtCount, tickEvery }: LineChartProps) {
+export default function LineChart({ series, height = 190, format = fmtCount, tickEvery, title }: LineChartProps) {
     const ref = useRef<HTMLDivElement>(null);
     const w = useWidth(ref, 640);
     const [hover, setHover] = useState(-1);
@@ -36,7 +38,8 @@ export default function LineChart({ series, height = 190, format = fmtCount, tic
 
     return (
         <div className="chart-wrap" ref={ref}>
-            <svg className="chart" width={w} height={height}>
+            <svg className="chart" width={w} height={height} role="img"
+                aria-label={title ?? `Line chart: ${series.map((s) => s.label).join(", ") || "no data"}`}>
                 {min < 0 && (
                     <defs>
                         <clipPath id={`${clip}-up`}><rect x="0" y="0" width={w} height={Y(0)} /></clipPath>

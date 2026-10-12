@@ -44,7 +44,8 @@ export default function Waterfall({ steps, height = 210, format = (v: number) =>
 
     return (
         <div className="chart-wrap" ref={ref}>
-            <svg className="chart wf" width={w} height={height} role="img" aria-label="profit waterfall">
+            <svg className="chart wf" width={w} height={height} role="img"
+                aria-label={`Profit waterfall: ${steps.map((s) => `${s.label} ${format(s.kind === "cost" ? -s.value : s.value)}`).join(", ")}`}>
                 <line className="axl" x1={mL} y1={Y(0)} x2={mL + iw} y2={Y(0)} />
                 {bars.map((b, i) => {
                     const x = mL + slot * i + (slot - bw) / 2;

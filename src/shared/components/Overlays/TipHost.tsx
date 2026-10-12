@@ -22,5 +22,6 @@ export default function TipHost() {
             window.removeEventListener("blur", hide);
         };
     }, []);
-    return <div id="tip" className="tip" hidden />;
+    // a polite live region: what a keyboard focus shows on a chart is read out too
+    return <div id="tip" className="tip" role="status" aria-live="polite" aria-atomic="true" hidden />;
 }
