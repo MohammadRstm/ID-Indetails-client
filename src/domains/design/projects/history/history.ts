@@ -1,5 +1,6 @@
 import type { Schemas } from "@/api/types";
 import { addDays, addMonths, companyTimeToUtc, dayKey, daysBetween, minutesOfDay, monthKey, partsOf, startOfWeek } from "@/shared/format/time";
+import { quarterEnd, quarterOf, quarterStart } from "@/shared/format/periods";
 
 /*
  * A project's history (the prototype's 59-timeline-data.js): "what was the state of this project at
@@ -354,17 +355,9 @@ function buildAnnotations(h: History): Annotation[] {
     return anns.sort((a, b) => a.at - b.at || a.kind.localeCompare(b.kind));
 }
 
-/* ============================== segments ==============================
-   A segment is a stretch of one day when exactly the same people were working. Every start and end is a
-   boundary; at an identical instant ends apply before starts, so back-to-back entries give one clean change. */
+/* ============================== filters ============================== */
 
 export type Filter = { person: number | null; q: string };
-export type ActiveWork = { entry: Entry; userId: number; description: string; entryStart: number; entryEnd: number };
-export type Segment = {
-    start: number; end: number; minutes: number; n: number; kind: "work" | "idle"; minor: boolean;
-    active: ActiveWork[]; startedHere: number[]; endedHere: number[]; endedAfter?: number[];
-};
-
 export function matches(e: Entry, f: Filter | null): boolean {
     if (!f) return true;
     if (f.person != null && e.userId !== f.person) return false;
@@ -372,45 +365,14 @@ export function matches(e: Entry, f: Filter | null): boolean {
     return true;
 }
 
-export function segmentsFor(day: Day, filter: Filter | null): Segment[] {
-    const items = day.items.filter((it) => matches(it.entry, filter));
-    const b: { t: number; rank: number; it: DayItem }[] = [];
-    for (const it of items) b.push({ t: it.s, rank: 1, it }, { t: it.e, rank: 0, it });
-    b.sort((x, y) => x.t - y.t || x.rank - y.rank || x.it.entry.userId - y.it.entry.userId || x.it.entry.id - y.it.entry.id);
-    const live: DayItem[] = [];
-    const segs: Segment[] = [];
-    let prevT: number | null = null, started: number[] = [], ended: number[] = [];
-    for (let i = 0; i < b.length;) {
-        const t = b[i].t;
-        if (prevT !== null && t > prevT) {
-            const n = live.length;
-            segs.push({
-                start: prevT, end: t, minutes: mins(prevT, t), n, kind: n ? "work" : "idle", minor: !n && mins(prevT, t) < MINOR_IDLE_MIN,
-                active: live.map((it) => ({ entry: it.entry, userId: it.entry.userId, description: it.entry.description, entryStart: it.entry.start, entryEnd: it.entry.end })),
-                startedHere: started.slice(), endedHere: ended.slice(),
-            });
-        }
-        started = [];
-        ended = [];
-        while (i < b.length && b[i].t === t) {
-            const x = b[i];
-            if (x.rank === 0) { live.splice(live.indexOf(x.it), 1); ended.push(x.it.entry.userId); }
-            else { live.push(x.it); started.push(x.it.entry.userId); }
-            i++;
-        }
-        prevT = t;
-    }
-    if (segs.length) segs[segs.length - 1].endedAfter = ended;
-    return segs;
-}
-
 /* ============================== windows ============================== */
 
-export type Range = "day" | "week" | "month" | "year";
+export type Range = "day" | "week" | "month" | "quarter" | "year";
 
 export function windowFor(anchor: string, range: Range): { from: string; to: string } {
     if (range === "day") return { from: anchor, to: anchor };
     if (range === "month") { const m = `${monthKey(anchor)}-01`; return { from: m, to: addDays(`${addMonths(monthKey(anchor), 1)}-01`, -1) }; }
+    if (range === "quarter") { const q = quarterOf(anchor); return { from: quarterStart(q.year, q.quarter), to: quarterEnd(q.year, q.quarter) }; }
     if (range === "year") { const y = partsOf(anchor).year; return { from: `${y}-01-01`, to: `${y}-12-31` }; }
     const w = startOfWeek(anchor);
     return { from: w, to: addDays(w, 6) };
@@ -419,6 +381,7 @@ export function windowFor(anchor: string, range: Range): { from: string; to: str
 export function shiftWindow(anchor: string, range: Range, dir: number): string {
     if (range === "day") return addDays(anchor, dir);
     if (range === "month") return `${addMonths(monthKey(anchor), dir)}-01`;
+    if (range === "quarter") { const q = quarterOf(anchor); return `${addMonths(monthKey(quarterStart(q.year, q.quarter)), 3 * dir)}-01`; }
     if (range === "year") return `${partsOf(anchor).year + dir}-01-01`;
     return addDays(anchor, 7 * dir);
 }
@@ -436,73 +399,24 @@ export function nearestDays(h: History, key: string): { prev: Day | null; next: 
     return { prev, next: null };
 }
 
-/* ============================== snapshot ============================== */
-
-export type Snapshot = {
-    at: number;
-    state: "future" | "not-created" | "empty" | "active" | "before-first-work" | "after-last-work" | "between" | "idle-day";
-    projectStatus: StatusAt;
-    progress: ProgressAt;
-    effort: number;
-    activeWork: { entry: Entry; userId: number; role: string | null; description: string; elapsedMin: number; totalMin: number; pct: number; justStarted: boolean; justEnded: boolean }[];
-    earlierToday: { entry: Entry }[];
-    laterToday: { entry: Entry }[];
-    prev: Entry | null;
-    next: Entry | null;
-    gap: Gap | null;
-    nearbyEvents: ProjectEvent[];
-};
-
-export function snapshot(h: History, T: number): Snapshot {
-    const status = statusAt(h, T);
-    const day = h.dayIndex.get(dayKey(T));
-    const items = day ? day.items : [];
-    const activeWork = items.filter((it) => it.s <= T && T <= it.e).map((it) => {
-        const e = it.entry;
-        return {
-            entry: e, userId: e.userId, role: h.people.get(e.userId)?.role ?? null, description: e.description,
-            elapsedMin: mins(e.start, T), totalMin: e.minutes, pct: e.minutes ? clamp(mins(e.start, T) / e.minutes, 0, 1) : 1,
-            justStarted: e.start === T, justEnded: e.end === T,
-        };
-    });
-    const earlierToday = items.filter((it) => it.e < T).sort((a, b) => b.e - a.e).map((it) => ({ entry: it.entry }));
-    const laterToday = items.filter((it) => it.s > T).sort((a, b) => a.s - b.s).map((it) => ({ entry: it.entry }));
-    let prev: Entry | null = null, next: Entry | null = null;
-    for (const e of h.entries) {
-        if (e.end < T && (!prev || e.end > prev.end)) prev = e;
-        if (e.start > T && (!next || e.start < next.start)) next = e;
-    }
-    const gap = h.gaps.find((g) => g.from <= T && T <= g.to) ?? null;
-    const lo = T - NEARBY_DAYS * 86_400_000, hi = T + NEARBY_DAYS * 86_400_000;
-    const nearbyEvents = h.events.filter((e) => e.at >= lo && e.at <= hi);
-
-    let state: Snapshot["state"];
-    if (T > h.now) state = "future";
-    else if (status.status === "not-created") state = "not-created";
-    else if (!h.entries.length) state = "empty";
-    else if (activeWork.length) state = "active";
-    else if (h.bounds.first != null && T < h.bounds.first) state = "before-first-work";
-    else if (h.bounds.last != null && T > h.bounds.last) state = "after-last-work";
-    else if (items.length) state = "between";
-    else state = "idle-day";
-
-    return { at: T, state, projectStatus: status, progress: progressAt(h, T), effort: effortAt(h, T), activeWork, earlierToday, laterToday, prev, next, gap, nearbyEvents };
-}
-
-/** Where the tab opens: now, or just after the last work of a finished project. */
-export function initialMoment(h: History): number {
-    const st = statusAt(h, h.now).status;
-    if ((st === "completed" || st === "archived") && h.bounds.last != null) {
-        const lastStatus = h.statusTrack.length ? h.statusTrack[h.statusTrack.length - 1].from : h.bounds.last;
-        return Math.min(floorMin(h.now), roundMin(Math.max(h.bounds.last, lastStatus) + MIN));
-    }
-    return floorMin(h.now);
-}
-
-/** The earliest moment worth looking at: when the project was created, started or first worked on. */
 export function earliestOf(h: History, startDate: string): number {
     return Math.min(h.statusTrack[0]?.from ?? Infinity, h.bounds.first ?? Infinity, dayStart(startDate));
 }
 
-/** The middle of an entry: where "previous work" and "next work" jump to. */
-export const middleOf = (e: Entry) => roundMin((e.start + e.end) / 2);
+/* ============================== colours ============================== */
+
+const TEAM_COLORS: Record<string, string> = { Engineering: "#3B82F6", Design: "#A855F7", Platform: "#F97316", Data: "#10B981", Marketing: "#EC4899", Operations: "#EAB308" };
+const PALETTE = ["#3B82F6", "#A855F7", "#F97316", "#10B981", "#EC4899", "#EAB308", "#14B8A6", "#6366F1", "#84CC16", "#F43F5E"];
+
+/**
+ * One colour per team, the same on every day of the project: the prototype's named ones where they
+ * apply, then the palette in the order of the teams' names, so two teams never share one.
+ */
+export function teamColors(h: History): (team: string) => string {
+    const teams = [...new Set([...h.people.values()].map((p) => p.role || "Other"))].sort();
+    const free = PALETTE.filter((c) => !teams.some((t) => TEAM_COLORS[t] === c));
+    const map = new Map<string, string>();
+    let i = 0;
+    for (const t of teams) map.set(t, TEAM_COLORS[t] ?? free[i++ % free.length]);
+    return (team) => map.get(team) ?? PALETTE[PALETTE.length - 1];
+}
