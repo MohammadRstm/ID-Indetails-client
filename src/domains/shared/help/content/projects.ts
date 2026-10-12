@@ -131,12 +131,13 @@ export const projects: Article[] = [
         title: "Seeing who worked on a project",
         category: "projects",
         who: and(sees("design"), has(P.WORK_ENTRY_VIEW_ALL)),
-        summary: "A Design project's overview lists its contributors and their entries; the Timeline tab shows the work day by day.",
+        summary: "A Design project's Contributors tab lists who worked on it; the Timeline tab shows the work as a calendar.",
         ask: ["who worked", "contributors", "team work", "timeline", "entries", "work history", "comment on entry"],
         blocks: [
             list(
-                "**Overview**: contributors, their hours and entries, with a range and a search.",
-                "**Timeline**: the work by day, week, month or year.",
+                "**Contributors**: everyone's hours and entries, with a range and a search.",
+                "**Analytics**: the project's work figures and charts.",
+                "**Timeline**: the work as a calendar by day, week, month, quarter, year or a range of your own. Click a day to see it in detail.",
                 "Click a person for their work on the project.",
             ),
             only(has(P.WORK_ENTRY_COMMENT), para("Open an entry to comment on it; its author is told.")),
