@@ -466,8 +466,9 @@ describe("Proton", () => {
         expect(await screen.findByRole("button", { name: "Proton, something went wrong" })).toBeInTheDocument();
     });
 
-    it("isn't offered to employees", async () => {
-        renderApp("/design/help", personas.designEmployee);
+    it("isn't offered to someone without proton:use", async () => {
+        const noProton = { ...personas.designEmployee, permissions: personas.designEmployee.permissions.filter((p) => p !== "proton:use") };
+        renderApp("/design/help", noProton);
         await screen.findByRole("button", { name: "Help" });
         await waitFor(() => expect(screen.queryByRole("button", { name: /^Proton, / })).not.toBeInTheDocument());
     });

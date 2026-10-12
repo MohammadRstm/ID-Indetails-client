@@ -35,7 +35,7 @@ const TABS = ["overview", "projects", "clients", "billing", "costs"] as const;
 
 /** The values object each form takes in a fill: a fill naming one form with another's values is dropped. */
 const FILLS: Record<FormFill["form"], keyof FormFill> = {
-    client: "client", meeting: "meeting", new_project: "newProject", edit_project: "editProject", report_bug: "reportBug", invite: "invite", message: "message",
+    client: "client", meeting: "meeting", new_project: "newProject", edit_project: "editProject", report_bug: "reportBug", invite: "invite", message: "message", log_work: "logWork",
 };
 
 /** Every page Proton may name, and where it lives here. The company ones are checked against the company routes. */
@@ -62,6 +62,10 @@ const PAGES: Record<NonNullable<Schemas["ProtonPage"]>, { path: string; company?
     company_profile: { path: "profile", company: true },
     // the start page, where every signed-in person may go
     launcher: { path: "", company: true },
+    // the person's own pages, in their domain
+    my_work: { path: "my-work" },
+    my_pay: { path: "pay" },
+    my_profile: { path: "profile" },
 };
 
 const isId = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v > 0;
