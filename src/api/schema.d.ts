@@ -7438,6 +7438,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/proton/briefing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProtonBriefingResponse"];
+                        "text/json": components["schemas"]["ProtonBriefingResponse"];
+                        "text/plain": components["schemas"]["ProtonBriefingResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/proton/budget": {
         parameters: {
             query?: never;
@@ -8561,6 +8598,9 @@ export interface components {
             /** Format: uuid */
             conversationId?: null | string;
             page?: null | components["schemas"]["ProtonPageContext"];
+            reply?: null | components["schemas"]["ProtonQuickReply"];
+            /** Format: int32 */
+            suggestion?: null | number;
             text?: string;
         };
         AttachFileRequest: {
@@ -11116,6 +11156,16 @@ export interface components {
         ProtonActionRisk: "low" | "medium";
         /** @enum {unknown} */
         ProtonActionStatus: "pending" | "executing" | "succeeded" | "failed" | "cancelled" | "superseded" | "expired";
+        ProtonBriefingItem: {
+            domain: null | string;
+            facts: string[];
+            project: null | components["schemas"]["ProtonRef"];
+        };
+        ProtonBriefingResponse: {
+            items: components["schemas"]["ProtonBriefingItem"][];
+            /** Format: int32 */
+            more: number;
+        };
         ProtonBudgetResponse: {
             /** Format: double */
             budgetUsd: number;
@@ -11216,6 +11266,12 @@ export interface components {
         };
         /** @enum {unknown} */
         ProtonProjectSection: "overview" | "requirements" | "timeline" | "meetings" | null;
+        /** @enum {unknown} */
+        ProtonQuickReply: "yes" | "no" | "design" | "execution" | "today" | "this_week" | "last_week" | "this_month" | "last_month" | "this_quarter" | "last_quarter" | "this_year" | "last_year";
+        ProtonQuickReplyOption: {
+            label: string;
+            reply: components["schemas"]["ProtonQuickReply"];
+        };
         ProtonRef: {
             domain: null | string;
             /** Format: int64 */
@@ -11231,9 +11287,13 @@ export interface components {
             conversationId: string;
             limited: boolean;
             pendingAction: null | components["schemas"]["ProtonPendingAction"];
+            quickReplies: components["schemas"]["ProtonQuickReplyOption"][];
             refs: components["schemas"]["ProtonRef"][];
             reply: string;
+            /** @default false */
+            rolledOver: boolean;
             sources: components["schemas"]["ProtonSourceResponse"][];
+            suggestions: string[];
             uiCommands: components["schemas"]["ProtonUiCommand"][];
             usage: components["schemas"]["ProtonUsageResponse"];
         };
