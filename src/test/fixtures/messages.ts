@@ -24,7 +24,7 @@ export const people = {
 const chatPerson = (c: Contact) => ({ id: c.id, name: c.name, photoFileId: null });
 
 export function message(id: number, from: Contact, body: string | null, createdAt: string, patch: Partial<Message> = {}): Message {
-    return { id, sender: chatPerson(from), body, kind: "text", mentions: [], attachments: [], taskComment: null, createdAt, ...patch };
+    return { id, sender: chatPerson(from), body, kind: "text", mentions: [], attachments: [], taskComment: null, createdAt, viaProton: false, ...patch };
 }
 
 const rana = { id: 1, name: "Rana Khoury", role: "super_admin", domain: null, position: "Managing director", team: null, photoFileId: null } as Contact;
@@ -44,7 +44,7 @@ export const interiors = [
 
 export const withNadia = [
     message(201, people.nadia, "Can we talk about the Q4 plan?", "2026-09-30T07:00:00Z"),
-    message(202, rana, "Yes, after lunch.", "2026-09-30T07:05:00Z"),
+    message(202, rana, "Yes, after lunch.", "2026-09-30T07:05:00Z", { viaProton: true }),
 ];
 
 export const messages = {

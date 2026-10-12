@@ -81,7 +81,11 @@ function Body({ m, mine, showName, names }: { m: Message; mine: boolean; showNam
                 </div>
             )}
             {m.attachments.map((a) => <Media key={a.id} file={a} />)}
-            <div className="msg-time mono">{fmtTime(m.createdAt)}</div>
+            <div className="msg-time mono">
+                {/* sent by Proton for the sender, after they confirmed it: recipients should know */}
+                {m.viaProton && <span className="msg-via" title="Written with Proton and sent after the sender confirmed it">with Proton · </span>}
+                {fmtTime(m.createdAt)}
+            </div>
         </div>
     );
 }

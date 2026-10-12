@@ -10133,6 +10133,8 @@ export interface components {
             mentions: components["schemas"]["ChatPersonResponse"][];
             sender: components["schemas"]["ChatPersonResponse"];
             taskComment: null | components["schemas"]["TaskCommentResponse"];
+            /** @default false */
+            viaProton: boolean;
         };
         MessagesBadgeResponse: {
             mention: boolean;
