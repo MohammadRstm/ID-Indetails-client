@@ -1,4 +1,5 @@
 import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
@@ -83,12 +84,11 @@ describe("a Design project, by permission", () => {
 
     it("adds who put the hours in and the timeline for an employee given work_entry:view_all", async () => {
         renderApp(page, withPermissions(sarah, { grant: [P.WORK_ENTRY_VIEW_ALL] }), ...ownWork, ...projectWorkHandlers);
-        expect(await screen.findByText("Who put the hours in. Click a person to see their entries on this project.")).toBeInTheDocument();
-        expect(tabs()).toEqual(["Overview", "Requirements", "Timeline", "Meetings"]);
-        // their own hours still come first; the project's own figures carry the rest
+        // their own hours stay on the Overview; everyone's work is on Analytics
         expect(await screen.findByText("Your hours here")).toBeInTheDocument();
-        expect(screen.queryByText("Project progress")).toBeNull();
-        expect(screen.queryByText("Team activity")).toBeNull();
+        expect(tabs()).toEqual(["Overview", "Analytics", "Requirements", "Timeline", "Meetings"]);
+        await userEvent.click(screen.getByRole("tab", { name: "Analytics" }));
+        expect(await screen.findByText("Who put the hours in. Click a person to see their entries on this project.")).toBeInTheDocument();
     });
 
     it("lets an employee given project:change_status mark it done, and Log work steps aside", async () => {
@@ -101,7 +101,7 @@ describe("a Design project, by permission", () => {
         renderApp(page, nadia, ...ownWork, ...projectWorkHandlers);
         expect(await screen.findByText("Total hours")).toBeInTheDocument();
         expect(screen.queryByText("Your hours here")).toBeNull();
-        expect(tabs()).toEqual(["Overview", "Requirements", "Timeline", "Meetings"]);
+        expect(tabs()).toEqual(["Analytics", "Requirements", "Timeline", "Meetings"]);
     });
 
     it("shows an admin who never logged work here only the project's", async () => {

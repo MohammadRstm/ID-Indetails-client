@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,7 +11,7 @@ import { renderApp } from "@/test/renderApp";
 // A Design admin a super admin has handed the money to: admins don't hold it by default
 const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const path = `/design/projects/${projectWork.project.id}`;
-const sarah = projectWork.contributor.person;
+const analytics = `${path}?tab=analytics`;
 
 // Wednesday 30 September 2026, noon in Beirut
 beforeEach(() => {
@@ -23,9 +23,19 @@ afterEach(() => vi.useRealTimers());
 const drawer = () => document.querySelector(".drawer") as HTMLElement;
 const contributorsPanel = async () => (await screen.findByText("Who put the hours in. Click a person to see their entries on this project.")).closest(".panel") as HTMLElement;
 
-describe("a Design project's overview", () => {
-    it("shows the work KPIs and who put the hours in", async () => {
+describe("a Design project's tabs", () => {
+    it("opens on Financials for someone who sees money, with only the money on it", async () => {
         renderApp(path, admin, ...projectWorkHandlers);
+        expect(await screen.findByRole("tab", { name: "Financials", selected: true })).toBeInTheDocument();
+        expect(await screen.findByText("Financial breakdown")).toBeInTheDocument();
+        expect(screen.queryByRole("tab", { name: "Overview" })).toBeNull();
+        expect(screen.queryByText("Contributors")).toBeNull();
+        expect(screen.queryByText("Work timeline")).toBeNull();
+        expect(screen.getByRole("tab", { name: "Analytics" })).toBeInTheDocument();
+    });
+
+    it("shows the work KPIs and who put the hours in on Analytics", async () => {
+        renderApp(analytics, admin, ...projectWorkHandlers);
         expect(await screen.findByText(`avg ${"1h 55m"} per entry`)).toBeInTheDocument();
         const panel = await contributorsPanel();
         for (const c of projectWork.work.contributors) expect(await within(panel).findByText(c.name)).toBeInTheDocument();
@@ -35,6 +45,8 @@ describe("a Design project's overview", () => {
 
     it("keeps labour cost and payment to people with financial:view", async () => {
         renderApp(path, withPermissions(admin, { revoke: [P.FINANCIAL_VIEW] }), ...projectWorkHandlers);
+        expect(await screen.findByRole("tab", { name: "Analytics", selected: true })).toBeInTheDocument();
+        expect(screen.queryByRole("tab", { name: "Financials" })).toBeNull();
         const panel = await contributorsPanel();
         await within(panel).findByText(projectWork.work.contributors[0].name);
         expect(within(panel).queryByRole("columnheader", { name: "Labour cost" })).toBeNull();
@@ -43,6 +55,7 @@ describe("a Design project's overview", () => {
 
     it("shows a plain Design admin the work without any of the money", async () => {
         renderApp(path, personas.designAdmin, ...projectWorkHandlers);
+        expect(screen.queryByRole("tab", { name: "Financials" })).toBeNull();
         const panel = await contributorsPanel();
         await within(panel).findByText(projectWork.work.contributors[0].name);
         expect(within(panel).queryByRole("columnheader", { name: "Labour cost" })).toBeNull();
@@ -51,7 +64,7 @@ describe("a Design project's overview", () => {
         expect(within(document.querySelector(".page-head") as HTMLElement).queryByText(/^Payment/)).toBeNull();
     });
 
-    it("shows only the progress without anyone's work, and never asks for everyone's", async () => {
+    it("shows only the money without anyone's work, and never asks for everyone's", async () => {
         const asked: string[] = [];
         const refuse = (what: string) => () => { asked.push(what); return HttpResponse.json({ code: "forbidden" }, { status: 403 }); };
         renderApp(path, withPermissions(admin, { revoke: [P.WORK_ENTRY_VIEW_ALL, P.WORK_ENTRY_VIEW_OWN] }),
@@ -60,12 +73,17 @@ describe("a Design project's overview", () => {
             http.get("/api/work-entries", refuse("entries")),
             ...projectWorkHandlers);
         await screen.findByRole("heading", { name: projectWork.project.title });
+        expect(await screen.findByText("Financial breakdown")).toBeInTheDocument();
+        expect(screen.queryByRole("tab", { name: "Analytics" })).toBeNull();
+        expect(screen.queryByText("Contributors")).toBeNull();
+        expect(asked).toEqual([]);
+    });
+
+    it("gives someone who sees neither money nor everyone's work an Overview with the progress", async () => {
+        renderApp(path, withPermissions(personas.designAdmin, { revoke: [P.WORK_ENTRY_VIEW_ALL] }), ...projectWorkHandlers);
+        expect(await screen.findByRole("tab", { name: "Overview", selected: true })).toBeInTheDocument();
         expect(await screen.findByText("Progress")).toBeInTheDocument();
         expect(screen.queryByText("Contributors")).toBeNull();
-        expect(screen.queryByText("Work timeline")).toBeNull();
-        // the money that doesn't need everyone's work still shows
-        expect(await screen.findByText("Financial breakdown")).toBeInTheDocument();
-        expect(asked).toEqual([]);
     });
 
     it("asks for a project's whole life 366 days at a time, as the API allows", async () => {
@@ -85,7 +103,7 @@ describe("a Design project's overview", () => {
 
     it("filters the contributors by range and work text through the API", async () => {
         const asked: URLSearchParams[] = [];
-        renderApp(path, admin,
+        renderApp(analytics, admin,
             http.get("/api/projects/:id/work", ({ request }) => {
                 asked.push(new URL(request.url).searchParams);
                 return HttpResponse.json(projectWork.work);
@@ -100,7 +118,7 @@ describe("a Design project's overview", () => {
 describe("a contributor and their entries", () => {
     it("opens the person's work, then an entry, where admins can comment", async () => {
         let posted: Record<string, unknown> | null = null;
-        renderApp(path, admin,
+        renderApp(analytics, admin,
             http.post("/api/work-entries/:id/comments", async ({ request }) => {
                 posted = (await request.json()) as Record<string, unknown>;
                 return HttpResponse.json({ id: 1, author: { id: admin.id, name: "Nadia Test", role: "admin" }, body: posted.body, sentToGroup: !!posted.sendToGroup, createdAt: "2026-09-30T09:00:00Z" });
@@ -123,7 +141,7 @@ describe("a contributor and their entries", () => {
     });
 
     it("shows the comments without the box to someone without work_entry:comment", async () => {
-        renderApp(path, withPermissions(admin, { revoke: [P.WORK_ENTRY_COMMENT] }), ...projectWorkHandlers);
+        renderApp(analytics, withPermissions(admin, { revoke: [P.WORK_ENTRY_COMMENT] }), ...projectWorkHandlers);
         const panel = await contributorsPanel();
         await userEvent.click(await within(panel).findByText("62h 40m"));
         const first = projectWork.contributor.recentEntries[0];
@@ -134,40 +152,12 @@ describe("a contributor and their entries", () => {
     });
 });
 
-describe("the work timeline and analytics", () => {
-    it("lists who worked, and shows a week's entries", async () => {
-        renderApp(path, admin, ...projectWorkHandlers);
-        const timeline = (await screen.findByText("Work timeline")).closest(".panel") as HTMLElement;
-        expect(await within(timeline).findByText(sarah.name)).toBeInTheDocument();
-        await userEvent.click(within(timeline).getByRole("tab", { name: "Week" }));
-        expect((await within(timeline).findAllByText(projectWork.timelineEntries[0].description)).length).toBeGreaterThan(0);
-        expect(timeline.querySelectorAll(".tl-chip")).toHaveLength(projectWork.timelineEntries.length);
-    });
-
-    it("hides a task's hover popup once it is clicked, even with the mouse still over it", async () => {
-        renderApp(path, admin, ...projectWorkHandlers);
-        const timeline = (await screen.findByText("Work timeline")).closest(".panel") as HTMLElement;
-        await within(timeline).findByText(sarah.name);
-        const day = await waitFor(() => {
-            const seg = timeline.querySelector<HTMLElement>(".tl-seg:not(.h0)");
-            expect(seg).not.toBeNull();
-            return seg!;
-        });
-        const popup = document.getElementById("tip")!;
-        fireEvent.mouseMove(day, { clientX: 200, clientY: 200 });
-        expect(popup).toBeVisible();
-        expect(popup).toHaveTextContent(sarah.name);
-
-        // clicking zooms in and redraws the timeline under the mouse: no mouseleave ever comes
-        await userEvent.click(day);
-        expect(popup).not.toBeVisible();
-    });
-
-    it("opens the four charts on request", async () => {
-        renderApp(path, admin, ...projectWorkHandlers);
-        await userEvent.click(await screen.findByRole("button", { name: "Show analytics" }));
+describe("the Analytics tab", () => {
+    it("shows the four charts without asking", async () => {
+        renderApp(analytics, admin, ...projectWorkHandlers);
         for (const title of ["Hours per week", "Contribution share", "When work happens", "Cumulative hours vs plan"]) {
             expect(await screen.findByText(title)).toBeInTheDocument();
         }
+        expect(screen.queryByRole("button", { name: "Show analytics" })).toBeNull();
     });
 });

@@ -2,7 +2,7 @@ import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { useDomain } from "@/app/routing/domainContext";
-import DesignOverview from "../../design/projects/DesignOverview";
+import { DesignAnalytics, DesignFinancials, DesignProgress } from "../../design/projects/DesignOverview";
 import ProjectHistoryTab from "../../design/projects/history/ProjectHistoryTab";
 import { LogWorkAction, MyProjectWork, MyTeamLine } from "../../design/work/MyProjectWork";
 import ExecutionOverview, { SiteTeamLine } from "../../execution/projects/ExecutionOverview";
@@ -13,6 +13,10 @@ import type { Project } from "./projectsApi";
 const PANELS: Record<Domain, ProjectPanels> = {
     design: {
         overview: (project) => <DesignProjectOverview project={project} />,
+        // the Overview is someone's own work; those who see money or everyone's work have their own tabs instead
+        hasOverview: (p) => p.has(P.WORK_ENTRY_VIEW_OWN) || (!p.has(P.FINANCIAL_VIEW) && !p.has(P.WORK_ENTRY_VIEW_ALL)),
+        financials: (project) => <DesignFinancials project={project} />,
+        analytics: (project) => <DesignAnalytics project={project} />,
         timeline: (project) => <ProjectHistoryTab project={project} />,
         actions: (project) => <LogWorkAction project={project} />,
         meta: (project) => <MyTeamLine project={project} />,
@@ -25,13 +29,7 @@ export default function ProjectRoute() {
     return <ProjectPage panels={PANELS[useDomain()]} />;
 }
 
-/** A Design project's overview: the person's own work on it first, then what their other permissions show. */
+/** A Design project's Overview: the person's own work on it, or its progress for someone who sees nobody's work. */
 function DesignProjectOverview({ project }: { project: Project }) {
-    const own = usePermissions().has(P.WORK_ENTRY_VIEW_OWN);
-    return (
-        <>
-            {own && <MyProjectWork project={project} />}
-            <DesignOverview project={project} bareProgress={!own} />
-        </>
-    );
+    return usePermissions().has(P.WORK_ENTRY_VIEW_OWN) ? <MyProjectWork project={project} /> : <DesignProgress project={project} />;
 }
