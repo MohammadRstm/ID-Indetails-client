@@ -10,7 +10,7 @@ import Columns from "@/shared/components/Charts/Columns";
 import Figure from "@/shared/components/Charts/Figure";
 import Waterfall from "@/shared/components/Charts/Waterfall";
 import { ProjectTile } from "@/shared/components/Data/Bits";
-import { KpiStrip } from "@/shared/components/Data/Kpi";
+import { KpiTabs } from "@/shared/components/Data/Kpi";
 import { CostRow, Money } from "@/shared/components/Data/Money";
 import Panel from "@/shared/components/Data/Panel";
 import { MarginPill, StatusBadge } from "@/shared/components/Data/Pills";
@@ -153,18 +153,24 @@ function ClientView({ client }: { client: Client }) {
                 </div>
             )}
 
-            <KpiStrip items={[
-                { key: "projects", label: "Projects", value: client.projectCount, sub: m ? <span>{m.activeProjects} active · {m.completedProjects} completed</span> : undefined },
-                ...(w ? [{ key: "hours", label: "Hours worked", value: w.totalMinutes ? fmtH(w.totalMinutes) : "-", sub: <span>{plural(w.contributorCount, "person", "people")} · {w.entryCount.toLocaleString("en-US")} entries</span> }] : []),
-                ...(m ? [
-                    { key: "revenue", label: "Revenue", value: <Money short value={m.revenue} />, sub: <span><Money short value={m.billing.received} /> received so far</span> },
-                    { key: "cost", label: "Cost", value: <Money short value={m.cost.total} />, sub: <span>labour <Money short value={m.cost.labour} /> · expenses <Money short value={m.cost.expenses} /></span> },
-                    { key: "profit", label: "Profit", value: <Money short value={m.profit} />, sub: <span>payment less labour and expenses</span> },
-                    {
-                        key: "margin", label: "Margin", value: m.revenue && m.marginKnown ? money.pct(m.margin) : "-",
-                        sub: <span>{m.completedRevenue ? `${money.pct(m.completedMargin)} on completed work` : "no completed projects yet"}</span>,
-                    },
-                ] : []),
+            <KpiTabs tabs={[
+                ...(m ? [{
+                    key: "financial", label: "Financial", items: [
+                        { key: "revenue", label: "Revenue", value: <Money short value={m.revenue} />, sub: <span><Money short value={m.billing.received} /> received so far</span> },
+                        { key: "cost", label: "Cost", value: <Money short value={m.cost.total} />, sub: <span>labour <Money short value={m.cost.labour} /> · expenses <Money short value={m.cost.expenses} /></span> },
+                        { key: "profit", label: "Profit", value: <Money short value={m.profit} />, sub: <span>payment less labour and expenses</span> },
+                        {
+                            key: "margin", label: "Margin", value: m.revenue && m.marginKnown ? money.pct(m.margin) : "-",
+                            sub: <span>{m.completedRevenue ? `${money.pct(m.completedMargin)} on completed work` : "no completed projects yet"}</span>,
+                        },
+                    ],
+                }] : []),
+                {
+                    key: "activity", label: "Activity", items: [
+                        { key: "projects", label: "Projects", value: client.projectCount, sub: m ? <span>{m.activeProjects} active · {m.completedProjects} completed</span> : undefined },
+                        ...(w ? [{ key: "hours", label: "Hours worked", value: w.totalMinutes ? fmtH(w.totalMinutes) : "-", sub: <span>{plural(w.contributorCount, "person", "people")} · {w.entryCount.toLocaleString("en-US")} entries</span> }] : []),
+                    ],
+                },
             ]} />
 
             {client.projectCount === 0 ? (

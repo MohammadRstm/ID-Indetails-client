@@ -139,7 +139,7 @@ describe("a project's money", () => {
             http.get("/api/projects/:id/cost-timeline", () => { asked.push("cost"); return HttpResponse.json(projectWork.costTimeline); }),
             http.get(`/api/projects/${project.id}`, () => HttpResponse.json({ ...project, money: null })),
             ...projectWorkHandlers);
-        await screen.findByText("Who put the hours in. Click a person to see their entries on this project.");
+        await screen.findByText("Total hours");
         expect(screen.queryByText("Where the cost sits")).not.toBeInTheDocument();
         expect(screen.queryByText("Financial breakdown")).not.toBeInTheDocument();
         expect(asked).toEqual([]);

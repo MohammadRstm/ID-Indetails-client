@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { companyTimeToUtc } from "@/shared/format/time";
-import { buildHistory, dayStart, effortAt, initialMoment, progressAt, segmentsFor, shiftWindow, snapshot, statusAt, windowFor, type Entry, type ProjectEvent } from "./history";
+import { buildHistory, dayStart, effortAt, progressAt, shiftWindow, statusAt, windowFor, type Entry, type ProjectEvent } from "./history";
 
 const at = (day: string, h: number, m = 0) => +companyTimeToUtc(day, h * 60 + m);
 let seq = 1;
@@ -60,12 +60,8 @@ describe("a project's history", () => {
         expect(done.gaps.map((g) => g.kind)).toEqual(["silent"]);
     });
 
-    it("cuts a day where people start and stop, ends before starts at the same instant", () => {
+    it("counts how many people worked at once on a day", () => {
         const h = buildHistory(project, [entry(1, "2026-09-02", 9, 11), entry(2, "2026-09-02", 10, 12), entry(1, "2026-09-02", 11, 13)], [], [], NOW);
-        const segs = segmentsFor(h.days[0], null);
-        expect(segs.map((s) => s.n)).toEqual([1, 2, 2, 1]);
-        // at 11:00 person 1's first entry ends and their next begins: one change, no zero-length slice
-        expect(segs[2]).toMatchObject({ startedHere: [1], endedHere: [1] });
         expect(h.days[0].peakConcurrency).toBe(2);
     });
 
@@ -78,18 +74,10 @@ describe("a project's history", () => {
         expect(h.annotations.find((a) => a.kind === "peak_day")?.dayKey).toBe("2026-09-01");
     });
 
-    it("describes the project at a moment", () => {
-        const h = buildHistory(project, [entry(1, "2026-09-02", 9, 11), entry(2, "2026-09-03", 9, 11)], [], [event("project_created", at("2026-09-01", 8))], NOW);
-        expect(snapshot(h, at("2026-09-02", 10)).state).toBe("active");
-        expect(snapshot(h, at("2026-09-02", 12)).state).toBe("between");
-        expect(snapshot(h, at("2026-09-01", 12)).state).toBe("before-first-work");
-        expect(snapshot(h, at("2026-09-05", 12)).state).toBe("after-last-work");
-        expect(snapshot(h, NOW + 3_600_000).state).toBe("future");
-        expect(initialMoment(h)).toBeLessThanOrEqual(NOW);
-    });
-
-    it("moves its window by day, week, month and year", () => {
+    it("moves its window by day, week, month, quarter and year", () => {
         expect(windowFor("2026-09-30", "month")).toEqual({ from: "2026-09-01", to: "2026-09-30" });
+        expect(windowFor("2026-08-12", "quarter")).toEqual({ from: "2026-07-01", to: "2026-09-30" });
+        expect(shiftWindow("2026-08-12", "quarter", 1)).toBe("2026-10-01");
         expect(windowFor("2026-09-30", "year")).toEqual({ from: "2026-01-01", to: "2026-12-31" });
         expect(windowFor("2026-09-30", "week").from).toBe("2026-09-28");
         expect(shiftWindow("2026-09-30", "month", 1)).toBe("2026-10-01");
