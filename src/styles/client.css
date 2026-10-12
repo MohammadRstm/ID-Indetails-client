@@ -312,6 +312,51 @@ table { line-height: normal; font-weight: normal; }
 .proton-panel-body { flex: 1; overflow-y: auto; padding: 14px 16px; }
 .proton-panel .proton-foot { padding: 10px 16px 12px; border-top: 1px solid var(--line); }
 
+/* Charts, tables and headline figures under an answer: small cards in the panel, full figures on the page */
+.proton-blocks { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; max-width: 100%; }
+.proton-block { padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r2); background: var(--surface); cursor: pointer; min-width: 0; }
+.proton-block:hover { border-color: var(--line-2); }
+.proton-block-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.proton-block-title { font-weight: 600; font-size: 13px; }
+.proton-block-sub { font-size: 11.5px; }
+.proton-block .kpis { gap: 8px; }
+.proton-block-more { font-size: 11.5px; margin-top: 4px; }
+.proton-block-notes { margin: 6px 0 0; padding-left: 16px; font-size: 11.5px; display: flex; flex-direction: column; gap: 2px; white-space: normal; }
+.proton-page-body .proton-blocks { gap: 12px; }
+.proton-chart-figure { margin: 0; }
+
+/* Proton's own page: the saved chats beside the chat, which reads in a centred column */
+.proton-page { display: grid; grid-template-columns: 280px 1fr; height: calc(100vh - 54px); min-height: 0; }
+.proton-page-list { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); background: var(--surface); }
+.proton-page-list-head { display: flex; flex-direction: column; gap: 8px; padding: 14px; border-bottom: 1px solid var(--line); }
+.proton-page-chats { flex: 1; overflow-y: auto; padding: 6px; }
+.proton-page-chat-item { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 8px 10px; border: 0; border-radius: var(--r2);
+  background: none; text-align: left; color: var(--ink); cursor: pointer; font: inherit; }
+.proton-page-chat-item .muted { font-size: 11.5px; }
+.proton-page-chat-item:hover { background: var(--surface-2); }
+.proton-page-chat-item.on { background: var(--accent-soft); color: var(--accent-ink); }
+.proton-page-empty { padding: 10px; font-size: 12.5px; }
+.proton-page-chat { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.proton-page-head { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.proton-page-head .muted { font-size: 12px; }
+.proton-page-list-toggle { display: none; }
+.proton-page-body { flex: 1; overflow-y: auto; padding: 18px 18px 8px; }
+.proton-page-column { max-width: 960px; margin: 0 auto; width: 100%; }
+.proton-page-body .proton-turn .msg-bubble { max-width: min(88%, 860px); }
+.proton-page-foot { border-top: 1px solid var(--line); background: var(--surface); padding: 10px 18px 12px; }
+.proton-page-foot .proton-voice { border-top: 0; padding: 0 0 8px; background: none; }
+.proton-locked { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 13px; }
+@media (max-width: 760px) {
+  .proton-page { grid-template-columns: 1fr; height: calc(100dvh - 54px); }
+  .proton-page-list { position: fixed; z-index: 60; top: 54px; bottom: 0; left: 0; width: min(320px, 86vw); transform: translateX(-102%);
+    transition: transform .18s ease; box-shadow: var(--shadow-3); }
+  .proton-page-list.open { transform: none; }
+  .proton-page-list-toggle { display: inline-flex; }
+  .proton-page-body { padding: 12px 12px 6px; }
+  .proton-page-foot { padding: 8px 12px calc(10px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) { .proton-page-list { transition: none; } }
+
 /* the voice conversation, above the composer: status, captions, mute and end */
 .proton-voice { display: flex; flex-direction: column; gap: 4px; padding: 8px 16px; border-top: 1px solid var(--line); background: var(--surface-2); font-size: 12.5px; }
 .proton-voice-head { display: flex; align-items: center; gap: 8px; }
@@ -348,6 +393,7 @@ table { line-height: normal; font-weight: normal; }
   .proton-eyes ellipse { fill: ButtonFace; }
   .proton-eyes.closed path { stroke: ButtonFace; }
 }
+
 /* Project history as a calendar (a Design project's Timeline tab) */
 .hc-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: -2px 0 10px; font-size: 12.5px; }
 .hc-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }

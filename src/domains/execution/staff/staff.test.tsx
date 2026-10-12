@@ -53,7 +53,10 @@ describe("an Execution employee's projects", () => {
         const titles = [...document.querySelectorAll(".pcard-title")].map((t) => t.textContent);
         expect(titles).toEqual(["Mar Mikhael loft renovation", "Achrafieh Towers lobby", "Dbayeh marina villa"]);
         const loft = screen.getByText("Mar Mikhael loft renovation").closest(".pcard") as HTMLElement;
-        expect(within(loft).getByText("$6.7k")).toBeInTheDocument();
+        // Regression: the site's cost total is company money; without financial:view the API sends none and the
+        // card shows a dash, never an amount
+        expect(within(loft).getByTitle("Amounts need the financial permission")).toHaveTextContent("—");
+        expect(within(loft).queryByText(/\$/)).not.toBeInTheDocument();
         expect(within(loft).getByText(/you last recorded here/)).toBeInTheDocument();
         expect(within(loft).getByText(/site works, materials and ground labour/)).toBeInTheDocument();
         // the held site sits under Paused

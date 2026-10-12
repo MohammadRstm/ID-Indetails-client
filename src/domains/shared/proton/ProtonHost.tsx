@@ -14,8 +14,8 @@ import ProtonPanel, { type PanelLayout } from "./ProtonPanel";
 import { useProtonUsage, type ProtonUsage } from "./protonApi";
 import { newestCards } from "./protonChat";
 import { closeProton, dismissPeek, openProton, startFor, useProton, voiceAt, type ProtonState } from "./protonStore";
+import { useProtonShared } from "./protonContext";
 import { useVoice, voiceActive } from "./protonVoice";
-import { useProtonConversation } from "./useProtonConversation";
 
 const BLOB = 64;
 const PHONE = 640;
@@ -39,7 +39,7 @@ function ProtonDock() {
     const user = useCurrentUser();
     const proton = useProton();
     const usage = useProtonUsage().data;
-    const conversation = useProtonConversation();
+    const conversation = useProtonShared()!.conversation;
     const voice = useVoice();
     const reduced = useReducedMotion();
     const viewport = useViewport();
@@ -75,14 +75,16 @@ function ProtonDock() {
         return () => clearTimeout(id);
     }, [proton.peek]);
 
-    if (!usage || !switchedOn(usage) || proton.userId !== user.id) return null;
+    // on the Proton page the chat is the page: the blob and panel step aside
+    if (!usage || !switchedOn(usage) || proton.userId !== user.id || proton.onPage) return null;
 
     const cardOpen = newestCards(proton.chat)
         .some((card) => (proton.chat.actions[card.id]?.kind ?? "open") === "open" && Date.parse(card.expiresAt) > now);
     const mood = moodOf({
         available: usage.available,
         askedAt: proton.askedAt,
-        talkingUntil: proton.talkingUntil,
+        // the voice's loudness isn't in the store (it changes every frame); its speaking state is
+        talkingUntil: voice.status === "speaking" ? Number.MAX_SAFE_INTEGER : proton.talkingUntil,
         errorUntil: proton.errorUntil,
         happyUntil: proton.happyUntil,
         cardOpen,

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { usePermissions } from "@/app/permissions/usePermissions";
+import { useNavigate } from "react-router";
 import { useArea } from "@/app/shell/useArea";
 import Popover from "@/shared/components/Overlays/Popover";
 import Icon from "@/shared/icons/Icon";
@@ -9,9 +9,8 @@ import ProtonComposer from "./ProtonComposer";
 import ProtonMemories from "./ProtonMemories";
 import ProtonThread from "./ProtonThread";
 import ProtonVoiceBar from "./ProtonVoiceBar";
-import type { ProtonRef } from "./protonApi";
 import type { ProtonChat } from "./protonChat";
-import { stepOf } from "./uiCommands";
+import { assistantPath, useProtonShared } from "./protonContext";
 import type { ProtonConversation } from "./useProtonConversation";
 
 /** Beside the blob on a wide screen; a sheet from the bottom on a phone, which can fold down to a peek. */
@@ -40,17 +39,17 @@ export default function ProtonPanel({
 }: ProtonPanelProps) {
     const input = useRef<HTMLTextAreaElement>(null);
     const [memories, setMemories] = useState(false);
-    const permissions = usePermissions();
     const area = useArea();
+    const navigate = useNavigate();
+    const linkOf = useProtonShared()!.linkOf;
 
     // the keyboard goes to the composer when the panel opens
     useEffect(() => { input.current?.focus(); }, []);
 
-    // the same route rules as Proton's own commands: a link shows only where this person may go
-    const linkOf = (ref: ProtonRef) => {
-        const step = stepOf({ type: `open_${ref.type}`, id: ref.id, domain: ref.domain, label: ref.name }, permissions,
-            area.kind === "domain" ? area.domain : null);
-        return step?.kind === "go" ? step.path : null;
+    // the Proton page, on the chat in hand, in the area the person is in
+    const goToChat = () => {
+        onClose();
+        navigate(assistantPath(area.kind === "domain" ? area.domain : "company", chat.conversationId));
     };
 
     const folded = layout.kind === "sheet" && layout.folded;
@@ -85,6 +84,9 @@ export default function ProtonPanel({
                             <button className="pop-item" role="menuitemcheckbox" aria-checked={prefs.calm} onClick={() => { onPrefs({ calm: !prefs.calm }); close(); }}>
                                 {prefs.calm ? "Lively animations" : "Calm animations"}
                             </button>
+                            <button className="pop-item" role="menuitem" onClick={() => { close(); goToChat(); }}>
+                                Go to chat
+                            </button>
                             <button className="pop-item" role="menuitem" onClick={() => { setMemories(true); close(); }}>
                                 What I remember
                             </button>
@@ -101,7 +103,7 @@ export default function ProtonPanel({
             {!folded && memories && <div className="proton-panel-body"><ProtonMemories onBack={() => setMemories(false)} /></div>}
             {!folded && !memories && (
                 <>
-                    <div className="proton-panel-body">
+                    <div className="proton-panel-body proton-scroll">
                         <ProtonThread chat={chat} conversation={conversation} linkOf={linkOf} draft={draft} status={status} stillLooking={stillLooking} />
                     </div>
                     <ProtonVoiceBar />

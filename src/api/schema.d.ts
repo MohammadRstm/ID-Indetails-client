@@ -7629,6 +7629,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/proton/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Page?: number;
+                    PageSize?: number;
+                    Search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfProtonConversationSummaryResponse"];
+                        "text/json": components["schemas"]["PagedResponseOfProtonConversationSummaryResponse"];
+                        "text/plain": components["schemas"]["PagedResponseOfProtonConversationSummaryResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/proton/conversations/{conversationId}": {
         parameters: {
             query?: never;
@@ -7636,7 +7677,30 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    conversationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProtonConversationResponse"];
+                        "text/json": components["schemas"]["ProtonConversationResponse"];
+                        "text/plain": components["schemas"]["ProtonConversationResponse"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete: {
@@ -7661,7 +7725,36 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        patch?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    conversationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["RenameProtonConversationRequest"];
+                    "application/json": components["schemas"]["RenameProtonConversationRequest"];
+                    "text/json": components["schemas"]["RenameProtonConversationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProtonConversationSummaryResponse"];
+                        "text/json": components["schemas"]["ProtonConversationSummaryResponse"];
+                        "text/plain": components["schemas"]["ProtonConversationSummaryResponse"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/proton/memories": {
@@ -10926,6 +11019,15 @@ export interface components {
             /** Format: int32 */
             totalCount: number;
         };
+        PagedResponseOfProtonConversationSummaryResponse: {
+            items: components["schemas"]["ProtonConversationSummaryResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
         PagedResponseOfSalaryRowResponse: {
             items: components["schemas"]["SalaryRowResponse"][];
             /** Format: int32 */
@@ -11543,6 +11645,25 @@ export interface components {
             tool: string;
             who: null | string;
         };
+        ProtonBlock: {
+            chart: null | components["schemas"]["ProtonChartBlock"];
+            id: string;
+            kpis: null | components["schemas"]["ProtonKpiBlock"];
+            notes: string[];
+            period: null | string;
+            source: components["schemas"]["ProtonBlockSource"];
+            table: null | components["schemas"]["ProtonTableBlock"];
+            title: string;
+            type: components["schemas"]["ProtonBlockType"];
+        };
+        ProtonBlockSource: {
+            /** Format: date-time */
+            asOf: string;
+            dataset: string;
+            tool: string;
+        };
+        /** @enum {unknown} */
+        ProtonBlockType: "chart" | "table" | "kpis";
         ProtonBriefingItem: {
             domain: null | string;
             facts: string[];
@@ -11579,10 +11700,24 @@ export interface components {
             usedPct: number;
             voice: components["schemas"]["ProtonVoiceUsageResponse"];
         };
+        ProtonCell: {
+            /** Format: date */
+            date: null | string;
+            /** Format: double */
+            number: null | number;
+            text: null | string;
+        };
         ProtonChange: {
             after: string;
             before: null | string;
             label: string;
+        };
+        ProtonChartBlock: {
+            axis: components["schemas"]["ProtonColumnKind"];
+            axisLabel: string;
+            kind: components["schemas"]["ProtonPresentForm"];
+            points: components["schemas"]["ProtonPoint"][];
+            series: components["schemas"]["ProtonSeries"][];
         };
         ProtonChoice: {
             detail: null | string;
@@ -11597,6 +11732,14 @@ export interface components {
             id?: number;
             type?: components["schemas"]["ProtonRefType"];
         };
+        ProtonColumn: {
+            key: string;
+            kind: components["schemas"]["ProtonColumnKind"];
+            label: string;
+            unit: null | components["schemas"]["ProtonUnit"];
+        };
+        /** @enum {unknown} */
+        ProtonColumnKind: "text" | "status" | "date" | "week" | "month" | "number";
         /** @enum {unknown} */
         ProtonCompanyTab: "overview" | "people" | "teams" | null;
         /**
@@ -11604,6 +11747,29 @@ export interface components {
          * @enum {unknown}
          */
         ProtonConfirm: "standard" | "two_step" | "typed";
+        ProtonConversationResponse: {
+            canContinue: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            hidden: null | string;
+            /** Format: uuid */
+            id: string;
+            messages: components["schemas"]["ProtonStoredMessageResponse"][];
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ProtonConversationSummaryResponse: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            messageCount: number;
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         ProtonConversationUsageResponse: {
             /** Format: uuid */
             conversationId: string;
@@ -11616,6 +11782,12 @@ export interface components {
             toolCalls: number;
             /** Format: int64 */
             userId: number;
+        };
+        ProtonDataRow: {
+            cells: components["schemas"]["ProtonCell"][];
+            /** @default false */
+            partial: boolean;
+            ref: null | components["schemas"]["ProtonRef"];
         };
         ProtonDayUsageResponse: {
             /** Format: double */
@@ -11649,6 +11821,20 @@ export interface components {
             newProject: null | components["schemas"]["NewProjectFill"];
             reportBug: null | components["schemas"]["ReportBugFill"];
         };
+        ProtonKpi: {
+            /** Format: double */
+            change: null | number;
+            key: string;
+            label: string;
+            /** Format: double */
+            previous: null | number;
+            unit: components["schemas"]["ProtonUnit"];
+            /** Format: double */
+            value: null | number;
+        };
+        ProtonKpiBlock: {
+            items: components["schemas"]["ProtonKpi"][];
+        };
         ProtonMemoryResponse: {
             /** Format: date-time */
             createdAt: string;
@@ -11656,6 +11842,10 @@ export interface components {
             id: number;
             text: string;
         };
+        /** @enum {unknown} */
+        ProtonMessageOrigin: "typed" | "choice" | "suggestion" | "spoken" | null;
+        /** @enum {unknown} */
+        ProtonMessageRole: "user" | "proton";
         /** @enum {unknown} */
         ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_pay" | "my_profile" | null;
         ProtonPageContext: {
@@ -11677,6 +11867,15 @@ export interface components {
             target: null | components["schemas"]["ProtonRef"];
             tool: string;
         };
+        ProtonPoint: {
+            label: string;
+            /** @default false */
+            partial: boolean;
+            ref: null | components["schemas"]["ProtonRef"];
+            values: (null | number)[];
+        };
+        /** @enum {unknown} */
+        ProtonPresentForm: "bar" | "columns" | "line" | "composition" | "kpis" | "table";
         ProtonPreview: {
             area: null | string;
             changes: components["schemas"]["ProtonChange"][];
@@ -11690,7 +11889,7 @@ export interface components {
             title: string;
         };
         /** @enum {unknown} */
-        ProtonProjectSection: "overview" | "requirements" | "timeline" | "meetings" | null;
+        ProtonProjectSection: "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | null;
         /** @enum {unknown} */
         ProtonQuickReply: "yes" | "no" | "design" | "execution" | "today" | "this_week" | "last_week" | "this_month" | "last_month" | "this_quarter" | "last_quarter" | "this_year" | "last_year";
         ProtonQuickReplyOption: {
@@ -11707,6 +11906,7 @@ export interface components {
         /** @enum {unknown} */
         ProtonRefType: "project" | "client" | "person" | "team";
         ProtonReplyResponse: {
+            blocks: components["schemas"]["ProtonBlock"][];
             choices: components["schemas"]["ProtonChoice"][];
             /** Format: uuid */
             conversationId: string;
@@ -11723,6 +11923,11 @@ export interface components {
             uiCommands: components["schemas"]["ProtonUiCommand"][];
             usage: components["schemas"]["ProtonUsageResponse"];
         };
+        ProtonSeries: {
+            key: string;
+            label: string;
+            unit: components["schemas"]["ProtonUnit"];
+        };
         /** @enum {unknown} */
         ProtonSettingsSection: "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "admins" | "data" | null;
         ProtonSourceResponse: {
@@ -11733,8 +11938,32 @@ export interface components {
             period: null | string;
             scope: null | string;
         };
+        ProtonStoredCardResponse: {
+            card: components["schemas"]["ProtonPendingAction"];
+            message: null | string;
+            status: components["schemas"]["ProtonActionStatus"];
+        };
+        ProtonStoredMessageResponse: {
+            blocks: components["schemas"]["ProtonBlock"][];
+            cards: components["schemas"]["ProtonStoredCardResponse"][];
+            /** Format: date-time */
+            createdAt: string;
+            origin: null | components["schemas"]["ProtonMessageOrigin"];
+            refs: components["schemas"]["ProtonRef"][];
+            role: components["schemas"]["ProtonMessageRole"];
+            /** Format: int32 */
+            seq: number;
+            sources: components["schemas"]["ProtonSourceResponse"][];
+            text: string;
+        };
         /** @enum {unknown} */
         ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_statement" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | null;
+        ProtonTableBlock: {
+            columns: components["schemas"]["ProtonColumn"][];
+            rows: components["schemas"]["ProtonDataRow"][];
+            /** Format: int32 */
+            totalRows: number;
+        };
         /** @enum {unknown} */
         ProtonTheme: "light" | "dark" | null;
         ProtonToolUsageResponse: {
@@ -11778,6 +12007,8 @@ export interface components {
         };
         /** @enum {unknown} */
         ProtonUiCommandType: "open_project" | "open_client" | "open_person" | "open_page" | "open_surface" | "fill_form" | "set_preference" | "refresh";
+        /** @enum {unknown} */
+        ProtonUnit: "hours" | "usd" | "count" | "percent" | "days";
         ProtonUsageResponse: {
             available: boolean;
             companyLimitReached: boolean;
@@ -11861,6 +12092,9 @@ export interface components {
             /** Format: date */
             receivedOn?: null | string;
             reference?: null | string;
+        };
+        RenameProtonConversationRequest: {
+            title?: string;
         };
         RenameTeamRequest: {
             name?: string;
@@ -12415,9 +12649,9 @@ export interface components {
         };
         SiteSummaryResponse: {
             /** Format: double */
-            groundLabour: number;
+            groundLabour: null | number;
             /** Format: double */
-            materialCost: number;
+            materialCost: null | number;
             /** Format: int32 */
             materialCount: number;
             /** Format: date-time */

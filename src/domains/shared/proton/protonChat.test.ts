@@ -12,7 +12,7 @@ const chat: ProtonChat = {
     conversationId: "c1",
     turns: [
         { from: "you", text: "Put Alpha on hold" },
-        { from: "proton", text: "Confirm it on the card.", refs: [], sources: [], cards: [action], choices: [], quickReplies: [], suggestions: [], did: null },
+        { from: "proton", text: "Confirm it on the card.", refs: [], sources: [], cards: [action], choices: [], quickReplies: [], suggestions: [], did: null, blocks: [] },
     ],
     actions: {},
 };

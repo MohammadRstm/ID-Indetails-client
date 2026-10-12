@@ -86,8 +86,8 @@ export function StatusBar({ segments, unit = "Projects" }: { segments: Segment[]
     );
 }
 
-/** One stacked bar of what something is made of: labour, expenses (the prototype's V.CompositionBar). */
-export function CompositionBar({ parts, height = 14 }: { parts: Segment[]; height?: number }) {
+/** One stacked bar of what something is made of: labour, expenses (the prototype's V.CompositionBar). Amounts are money unless a format is given. */
+export function CompositionBar({ parts, height = 14, format }: { parts: Segment[]; height?: number; format?: (v: number) => string }) {
     const shown = parts.filter((p) => p.value > 0);
     const total = shown.reduce((t, p) => t + p.value, 0) || 1;
     return (
@@ -95,7 +95,7 @@ export function CompositionBar({ parts, height = 14 }: { parts: Segment[]; heigh
             <div style={{ display: "flex", gap: 2, height }}>
                 {shown.map((s, i) => (
                     <div key={i} style={{ width: `${(s.value / total) * 100}%`, background: s.color, borderRadius: 3 }}
-                        onMouseMove={(e) => tip.show(e, [{ big: s.label }, { k: "Amount", v: money.fmt(s.value) }, { k: "Share", v: `${Math.round((s.value / total) * 100)}%` }])}
+                        onMouseMove={(e) => tip.show(e, [{ big: s.label }, { k: "Amount", v: format ? format(s.value) : money.fmt(s.value) }, { k: "Share", v: `${Math.round((s.value / total) * 100)}%` }])}
                         onMouseLeave={tip.hide} />
                 ))}
             </div>
@@ -103,7 +103,7 @@ export function CompositionBar({ parts, height = 14 }: { parts: Segment[]; heigh
                 {shown.map((s, i) => (
                     <span key={i}>
                         <i style={{ background: s.color }} />{s.label} <b className="num">{Math.round((s.value / total) * 100)}%</b>{" "}
-                        <span className="muted"><Money short value={s.value} /></span>
+                        <span className="muted">{format ? format(s.value) : <Money short value={s.value} />}</span>
                     </span>
                 ))}
             </div>

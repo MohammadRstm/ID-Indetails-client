@@ -39,9 +39,13 @@ export function CalendarHeat({ value, end, weeks = 27, scale, cell = 11, onClick
     );
     // Every other day is labelled (Mon, Wed, Fri with a Monday week), following the company's week start.
     const labels = Array.from({ length: 7 }, (_, i) => (i % 2 === 0 && i < 6 ? DAYS[(formatSettings().weekStart + i) % 7] : ""));
+    const days = cols.flat().filter((d) => d.minutes > 0);
+    const busiest = days.reduce<(typeof days)[number] | null>((top, d) => (!top || d.minutes > top.minutes ? d : top), null);
+    const summary = `Work per day over ${weeks} weeks: ${days.length} days with work`
+        + (busiest ? `, the most on ${fmtDayDate(busiest.day)} (${fmtDur(busiest.minutes)})` : "");
 
     return (
-        <div>
+        <div role="figure" aria-label={summary}>
             {/* on a narrow screen the grid scrolls sideways: it opens on the latest weeks */}
             <div className="hm-wrap" ref={showLatest}>
                 <div style={{ minWidth: cols.length * (cell + gap) + 30 }}>
@@ -90,9 +94,17 @@ export function HourHeat({ grid, from = 6, to = 22 }: HourHeatProps) {
     grid.forEach((row) => row.forEach((v, h) => { if (h >= from && h <= to) max = Math.max(max, v); }));
     const label = (h: number) => (formatSettings().use24HourTime ? String(h).padStart(2, "0") : `${h % 12 === 0 ? 12 : h % 12}${h < 12 ? "a" : "p"}`);
     const dayNames = [...DAYS.slice(1), DAYS[0]];
+    let top: { day: number; hour: number; minutes: number } | null = null;
+    grid.forEach((row, day) => hours.forEach((hour) => {
+        const minutes = row[hour] ?? 0;
+        if (minutes > 0 && (!top || minutes > top.minutes)) top = { day, hour, minutes };
+    }));
+    const busiest = top as { day: number; hour: number } | null;
+    const summary = "When work happens, by weekday and hour"
+        + (busiest ? `: the most on ${DAYS_LONG[(busiest.day + 1) % 7]} at ${label(busiest.hour)}` : ": no work recorded");
 
     return (
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6 }} role="figure" aria-label={summary}>
             <div style={{ width: 28, flex: "none" }}>
                 {dayNames.map((d, i) => <div key={i} style={{ height: 16, marginBottom: 3, fontSize: 10, color: "var(--ink-3)", lineHeight: "16px" }}>{d}</div>)}
             </div>

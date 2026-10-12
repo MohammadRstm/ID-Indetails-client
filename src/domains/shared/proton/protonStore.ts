@@ -33,6 +33,8 @@ export type ProtonState = {
     peek: string | null;
     /** How many replies opened a page: on a phone the sheet folds down after one, to show the page. */
     navigations: number;
+    /** The Proton page is showing the chat: the panel and blob step aside, and replies are seen there. */
+    onPage: boolean;
 };
 
 const ERROR_MS = 3_000;
@@ -43,7 +45,7 @@ const PEEK_LENGTH = 90;
 
 const initial: ProtonState = {
     userId: null, chat: emptyChat, open: false, askedAt: null, status: null, draft: null, talkingUntil: 0, voice: 0, announce: null,
-    errorUntil: 0, happyUntil: 0, unseen: 0, peek: null, navigations: 0,
+    errorUntil: 0, happyUntil: 0, unseen: 0, peek: null, navigations: 0, onPage: false,
 };
 
 let state = initial;
@@ -81,6 +83,9 @@ export const toggleProton = () => (state.open ? closeProton() : openProton());
 
 export const changeChat = (update: (chat: ProtonChat) => ProtonChat) => set({ chat: update(state.chat) });
 
+/** The Proton page shows the chat (or stops): while it does, the panel is closed and nothing waits unseen. */
+export const showingPage = (onPage: boolean) => set(onPage ? { onPage, open: false, unseen: 0, peek: null } : { onPage });
+
 /** The chat as it is now, for work that outlives a render (a voice conversation). */
 export const currentChat = () => state.chat;
 
@@ -94,8 +99,9 @@ export function wrote(trip: number, text: string) {
     set({ draft, talkingUntil: Date.now() + TALK_TAIL_MS, voice: Math.min(1, Math.max(0.3, text.length / 24)) });
 }
 
-/** The reply is in: if nobody is looking, it waits as unseen. */
+/** The reply is in: if nobody is looking (neither the panel nor the Proton page), it waits as unseen. */
 export function answered(text: string, navigated: boolean) {
+    const seen = state.open || state.onPage;
     set({
         askedAt: null,
         status: null,
@@ -103,8 +109,8 @@ export function answered(text: string, navigated: boolean) {
         announce: text,
         talkingUntil: Date.now() + TALK_TAIL_MS,
         navigations: state.navigations + (navigated ? 1 : 0),
-        unseen: state.open ? 0 : state.unseen + 1,
-        peek: state.open ? null : text.length > PEEK_LENGTH ? `${text.slice(0, PEEK_LENGTH).trimEnd()}…` : text,
+        unseen: seen ? 0 : state.unseen + 1,
+        peek: seen ? null : text.length > PEEK_LENGTH ? `${text.slice(0, PEEK_LENGTH).trimEnd()}…` : text,
     });
 }
 
@@ -113,16 +119,24 @@ export const failed = () => set({ askedAt: null, status: null, draft: null, erro
 /** The person stopped the answer: nothing of it is kept. */
 export const stopped = () => set({ askedAt: null, status: null, draft: null, talkingUntil: 0 });
 
-/** The voice model is speaking this loudly: the blob's mouth follows it. */
-export const spoke = (level: number) => set({ talkingUntil: Date.now() + 150, voice: Math.min(1, Math.max(0.3, level)) });
+/*
+ * How loudly the voice model speaks, read by the blob's animation each frame. Kept out of the store's state: it
+ * changes every frame while the voice speaks, and nothing on screen but the blob's mouth depends on it.
+ */
+let speech = { until: 0, level: 0 };
+
+/** The voice model is speaking this loudly: the blob's mouth follows it, without re-rendering anything. */
+export const spoke = (level: number) => {
+    speech = { until: Date.now() + 150, level: Math.min(1, Math.max(0.3, level)) };
+};
 
 /** A confirmed change went through. */
 export const celebrate = () => set({ happyUntil: Date.now() + HAPPY_MS });
 
 export const dismissPeek = () => set({ peek: null });
 
-/** How loudly the blob talks at `now`, read by its animation each frame. */
-export const voiceAt = (now: number) => (now < state.talkingUntil ? state.voice : 0);
+/** How loudly the blob talks at `now`, read by its animation each frame: the voice speaking, or text arriving. */
+export const voiceAt = (now: number) => (now < speech.until ? speech.level : now < state.talkingUntil ? state.voice : 0);
 
 /** The chat goes with the person. */
 export function resetProton() {

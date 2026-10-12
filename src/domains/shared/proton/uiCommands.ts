@@ -30,7 +30,11 @@ export type UiStep =
     | { kind: "refresh" };
 
 const DOMAINS: readonly Domain[] = ["design", "execution"];
-const SECTIONS = { requirements: "requirements", timeline: "timeline", meetings: "meetings" } as const;
+/** A project page's tabs Proton may name; the page itself falls back to the person's first tab for one they don't have. */
+const SECTIONS = {
+    financials: "financials", overview: "overview", analytics: "analytics", contributors: "contributors",
+    requirements: "requirements", timeline: "timeline", meetings: "meetings",
+} as const;
 const TABS = ["overview", "projects", "clients", "billing", "costs"] as const;
 
 /** The values object each form takes in a fill: a fill naming one form with another's values is dropped. */

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { errorMessage } from "@/api/errors";
 import { Link } from "react-router";
 import { cx } from "@/shared/utils/cx";
@@ -10,6 +10,9 @@ import type { ProtonChat } from "./protonChat";
 import { celebrate, changeChat } from "./protonStore";
 import type { ProtonConversation } from "./useProtonConversation";
 
+// the charts load with the first answer that has one
+const ProtonBlocks = lazy(() => import("./ProtonBlocks"));
+
 type ProtonThreadProps = {
     chat: ProtonChat;
     conversation: ProtonConversation;
@@ -20,13 +23,15 @@ type ProtonThreadProps = {
     status: string | null;
     /** A question has taken a while: say so. */
     stillLooking: boolean;
+    /** The thread fills a page: charts and tables are shown in full rather than small. */
+    wide?: boolean;
 };
 
 /** Cards for the same change (the same kind, on the same record): the API keeps only the newest of them. */
 const sameChange = (card: ProtonPendingAction) => `${card.tool}:${card.target?.type ?? ""}:${card.target?.id ?? ""}`;
 
 /** The conversation itself: what was asked and answered, the buttons of the newest reply, and any proposed changes. */
-export default function ProtonThread({ chat, conversation, linkOf, draft, status, stillLooking }: ProtonThreadProps) {
+export default function ProtonThread({ chat, conversation, linkOf, draft, status, stillLooking, wide }: ProtonThreadProps) {
     const bottom = useRef<HTMLDivElement>(null);
     // a later proposal for the same change replaces a card; other cards stay open. Only the newest reply's buttons can be pressed.
     const newest = new Map<string, string>();
@@ -46,8 +51,21 @@ export default function ProtonThread({ chat, conversation, linkOf, draft, status
     };
     const pending = conversation.pending;
 
+    // the thread follows new text only while the reader is at the bottom, so reading further up isn't interrupted;
+    // their own new question always brings them down
+    const atBottom = useRef(true);
+    useEffect(() => {
+        const scroller = bottom.current?.closest(".proton-scroll");
+        if (!scroller) return;
+        const onScroll = () => { atBottom.current = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 80; };
+        scroller.addEventListener("scroll", onScroll);
+        return () => scroller.removeEventListener("scroll", onScroll);
+    }, []);
+    const askedLast = chat.turns.at(-1)?.from === "you";
     // braces: newer browsers return a Promise from scrollIntoView, which React would take for a cleanup
-    useEffect(() => { bottom.current?.scrollIntoView?.({ block: "end" }); }, [chat.turns.length, pending, draft]);
+    useEffect(() => {
+        if (atBottom.current || askedLast) bottom.current?.scrollIntoView?.({ block: "end" });
+    }, [chat.turns.length, pending, draft, askedLast]);
 
     return (
         <div className="proton-thread">
@@ -90,6 +108,11 @@ export default function ProtonThread({ chat, conversation, linkOf, draft, status
                         {turn.from === "proton" && <SourcesNote sources={turn.sources} />}
                         {turn.from === "proton" && turn.did && <div className="muted proton-did" role="status">{turn.did}</div>}
                     </div>
+                    {turn.from === "proton" && turn.blocks.length > 0 && (
+                        <Suspense fallback={<div className="muted proton-block-more">Drawing the figures…</div>}>
+                            <ProtonBlocks blocks={turn.blocks} linkOf={linkOf} wide={wide} />
+                        </Suspense>
+                    )}
                     {turn.from === "you" && chat.conversationId && (
                         remembered[i]
                             ? <div className="muted proton-remembered" role="status">{remembered[i]}</div>

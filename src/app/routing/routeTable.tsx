@@ -15,6 +15,7 @@ import {
     HelpPage,
     MeetingsPage,
     MessagesPage,
+    ProtonPage,
     MyPayPage,
     MyProfilePage,
     MyWorkRoute,
@@ -184,6 +185,12 @@ export const domainRoutes: DomainRoute[] = [
         employee: { element: <MessagesPage />, access: signedIn },
     },
     {
+        // Proton's own page: the person's saved chats, reached from the panel's "Go to chat"
+        path: "assistant/:chatId?",
+        admin: { element: <ProtonPage />, access: ({ p }) => p.has(P.PROTON_USE) },
+        employee: { element: <ProtonPage />, access: ({ p }) => p.has(P.PROTON_USE) },
+    },
+    {
         // reached from the top bar's "?", the account menu and search; each person reads what fits what they may do
         path: "help",
         admin: { element: <HelpPage />, access: signedIn },
@@ -204,6 +211,7 @@ export const companyRoutes: CompanyRoute[] = [
     { path: "profile", element: <CompanyProfilePage />, access: () => true },
     { path: "notifications", element: <NotificationsPage />, access: () => true },
     { path: "messages", element: <MessagesPage />, access: () => true },
+    { path: "assistant/:chatId?", element: <ProtonPage />, access: (p) => p.has(P.PROTON_USE) },
     { path: "help", element: <HelpPage />, access: () => true },
 ];
 

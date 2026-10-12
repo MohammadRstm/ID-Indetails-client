@@ -134,10 +134,46 @@ export function endVoiceSession(sessionId: string, token: string | null) {
     }).catch(() => undefined);
 }
 
-/** Ends a conversation on the server; the next question starts a new one. */
-export function useEndConversation() {
+export type ProtonChatSummary = Schemas["ProtonConversationSummaryResponse"];
+export type ProtonSavedChat = Schemas["ProtonConversationResponse"];
+type ProtonChatPage = Schemas["PagedResponseOfProtonConversationSummaryResponse"];
+
+const chatsKey = [...protonKey, "chats"] as const;
+
+/** The person's saved chats, most recently used first, optionally by title. */
+export function useProtonChats(search: string, enabled = true) {
+    return useQuery({
+        queryKey: [...chatsKey, "list", search],
+        queryFn: async () => (await http.get<ProtonChatPage>("/proton/conversations", { params: { search: search || undefined, pageSize: 50 } })).data,
+        enabled,
+    });
+}
+
+/** One saved chat, as the person saw it. */
+export async function fetchProtonChat(id: string) {
+    return (await http.get<ProtonSavedChat>(`/proton/conversations/${id}`)).data;
+}
+
+/** Something about the person's chats changed: the list is read again. */
+export function useRefreshChats() {
+    const queryClient = useQueryClient();
+    return () => void queryClient.invalidateQueries({ queryKey: chatsKey });
+}
+
+export function useRenameChat() {
+    const refresh = useRefreshChats();
     return useMutation({
-        mutationFn: async (conversationId: string) => { await http.delete(`/proton/conversations/${conversationId}`); },
+        mutationFn: async ({ id, title }: { id: string; title: string }) => (await http.patch<ProtonChatSummary>(`/proton/conversations/${id}`, { title })).data,
+        onSuccess: refresh,
+    });
+}
+
+/** Deletes one of the person's chats, saved and held, with its words. */
+export function useDeleteChat() {
+    const refresh = useRefreshChats();
+    return useMutation({
+        mutationFn: async (id: string) => { await http.delete(`/proton/conversations/${id}`); },
+        onSuccess: refresh,
     });
 }
 
