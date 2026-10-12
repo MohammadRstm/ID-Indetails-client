@@ -21,7 +21,6 @@ import { Avatars, PersonAvatar, PersonLine } from "@/shared/components/Identity/
 import useDebounce from "@/shared/hooks/useDebounce";
 import { money } from "@/shared/format/money";
 import { addDays, dayKey, daysBetween, fmtDate, fmtDateY, fmtDur, fmtDurShort, fmtH, fmtNumber, relDay, startOfWeek } from "@/shared/format/time";
-import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useDomainPeople } from "../../shared/people/peopleApi";
 import type { Project } from "../../shared/projects/projectsApi";
@@ -34,23 +33,78 @@ import BillingBand from "../../shared/billing/BillingBand";
 import FinancialBreakdown, { CostFigures } from "./money/FinancialBreakdown";
 import MoneyBand from "./money/MoneyBand";
 import { useProjectExpenses } from "./money/moneyApi";
-import WorkTimeline from "./WorkTimeline";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
 
 const ACTIVITY = ["No activity", "Quiet", "Steady", "Busy"];
 const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
-/**
- * A Design project's Overview tab (the prototype's AdminProject), by permission: the work KPIs, who put the
- * hours in, the work timeline and the analytics for those who see everyone's work, and its money for those who
- * see money. `bareProgress`: someone who sees neither gets the project's progress on its own (not when their own
- * work above already shows it).
- */
-export default function DesignOverview({ project, bareProgress = true }: { project: Project; bareProgress?: boolean }) {
+/** Someone who sees neither the money nor everyone's work: the project's progress on its own. */
+export function DesignProgress({ project }: { project: Project }) {
+    return <Kpis project={project} work={undefined} />;
+}
+
+/** A Design project's Financials tab: its profit, where the cost sits, the client's payments and invoices, and the breakdown. */
+export function DesignFinancials({ project }: { project: Project }) {
     const permissions = usePermissions();
-    const { today } = companyNow();
     const seesWork = permissions.has(P.WORK_ENTRY_VIEW_ALL);
+    const [drawer, setDrawer] = useState<number | null>(null);
+    const [entry, setEntry] = useState<number | null>(null);
+    const all = useProjectWork(project.id, {}, seesWork);
+    const m = permissions.has(P.FINANCIAL_VIEW) ? project.money : null;
+    const expenses = useProjectExpenses(project.id, !!m);
+    const [params, setParams] = useSearchParams();
+    const open = (key: string, value: string) => () => { params.set(key, value); setParams(params); };
+    const closed = project.status === "completed" || project.status === "archived";
+    if (!m) return null;
+    const onAddExpense = permissions.has(P.EXPENSE_MANAGE) ? open("money", "expense") : undefined;
+    const allRange = rangeOptions(project, companyNow().today).all;
+
+    return (
+        <>
+            <MoneyBand project={project} money={m} contributors={all.data?.contributorCount} expenseCount={expenses.data?.items.length}
+                onEditPayment={permissions.has(P.PROJECT_EDIT) ? open("money", "payment") : undefined} onAddExpense={onAddExpense}
+                onCloseProject={permissions.has(P.PROJECT_CHANGE_STATUS) && !closed ? open("complete", "1") : undefined} />
+            {project.billingType === "client" && <BillingBand project={project} />}
+            <FinancialBreakdown project={project} money={m} contributors={seesWork ? all.data?.contributors : undefined} entryCount={all.data?.entryCount}
+                expenses={expenses.data?.items} expensesFailed={expenses.isError && !expenses.data ? { error: expenses.error, retry: () => void expenses.refetch() } : null}
+                onPerson={seesWork ? setDrawer : undefined} onAddExpense={onAddExpense}
+                canRemoveExpenses={permissions.has(P.EXPENSE_MANAGE)} />
+            {drawer != null && (
+                <ContributorDrawer projectId={project.id} projectTitle={project.title} personId={drawer} range={allRange} workQ=""
+                    onOpenEntry={setEntry} onClose={() => setDrawer(null)} />
+            )}
+            {entry != null && <EntryModal entryId={entry} overDrawer={drawer != null} onClose={() => setEntry(null)} />}
+        </>
+    );
+}
+
+/** A Design project's Analytics tab, for those who see everyone's work: the work KPIs and the charts. */
+export function DesignAnalytics({ project }: { project: Project }) {
+    const [drawer, setDrawer] = useState<number | null>(null);
+    const [entry, setEntry] = useState<number | null>(null);
+    const all = useProjectWork(project.id, {});
+    const allRange = rangeOptions(project, companyNow().today).all;
+
+    return (
+        <>
+            {loadFailed(all) ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="the project's work" /></div></div>
+                : <Kpis project={project} work={all.data} />}
+
+            <Analytics project={project} work={all.data} contributors={all.data?.contributors ?? []} onPerson={setDrawer} />
+
+            {drawer != null && (
+                <ContributorDrawer projectId={project.id} projectTitle={project.title} personId={drawer} range={allRange} workQ=""
+                    onOpenEntry={setEntry} onClose={() => setDrawer(null)} />
+            )}
+            {entry != null && <EntryModal entryId={entry} overDrawer={drawer != null} onClose={() => setEntry(null)} />}
+        </>
+    );
+}
+
+/** A Design project's Contributors tab: who put the hours in. */
+export function DesignContributors({ project }: { project: Project }) {
+    const { today } = companyNow();
     const [drawer, setDrawer] = useState<number | null>(null);
     const [entry, setEntry] = useState<number | null>(null);
     const [search, setSearch] = useState("");
@@ -59,54 +113,12 @@ export default function DesignOverview({ project, bareProgress = true }: { proje
     const ranges = rangeOptions(project, today);
     const range = ranges[rangeKey];
     const text = useDebounce({ value: workQ.trim(), debounceTimeMs: 250 });
-    // everyone's work, the timeline and the cost curve built on it need work_entry:view_all
-    const all = useProjectWork(project.id, {}, seesWork);
-    const filtered = useProjectWork(project.id, { from: range.from, to: range.to, search: text || undefined }, seesWork);
+    const filtered = useProjectWork(project.id, { from: range.from, to: range.to, search: text || undefined });
 
-    const m = permissions.has(P.FINANCIAL_VIEW) ? project.money : null;
-    const expenses = useProjectExpenses(project.id, !!m);
-    const [params, setParams] = useSearchParams();
-    const open = (key: string, value: string) => () => { params.set(key, value); setParams(params); };
-    const closed = project.status === "completed" || project.status === "archived";
-    const moneyActions = {
-        onEditPayment: permissions.has(P.PROJECT_EDIT) ? open("money", "payment") : undefined,
-        onAddExpense: permissions.has(P.EXPENSE_MANAGE) ? open("money", "expense") : undefined,
-    };
-    const band = m && (
-        <div className="mt">
-            <MoneyBand project={project} money={m} contributors={all.data?.contributorCount} expenseCount={expenses.data?.items.length} {...moneyActions}
-                onCloseProject={permissions.has(P.PROJECT_CHANGE_STATUS) && !closed ? open("complete", "1") : undefined} />
-            {project.billingType === "client" && <BillingBand project={project} />}
-        </div>
-    );
-    const breakdown = m && (
-        <FinancialBreakdown project={project} money={m} contributors={seesWork ? all.data?.contributors : undefined} entryCount={all.data?.entryCount}
-            expenses={expenses.data?.items} expensesFailed={expenses.isError && !expenses.data ? { error: expenses.error, retry: () => void expenses.refetch() } : null}
-            onPerson={seesWork ? setDrawer : undefined} onAddExpense={moneyActions.onAddExpense}
-            canRemoveExpenses={permissions.has(P.EXPENSE_MANAGE)} />
-    );
-
-    if (!seesWork) return <>{bareProgress && <Kpis project={project} work={undefined} />}{band}{breakdown}</>;
     return (
         <>
-            {loadFailed(all) ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="the project's work" /></div></div>
-                : <Kpis project={project} work={all.data} />}
-
-            {band}
-
-            <div className="mt">
-                <Contributors work={filtered.data} error={loadFailed(filtered) ? filtered.error : null} retry={() => filtered.refetch()} range={range} rangeKey={rangeKey} ranges={ranges}
-                    setRangeKey={setRangeKey} search={search} setSearch={setSearch} workQ={workQ} setWorkQ={setWorkQ} onPerson={setDrawer} />
-            </div>
-
-            {breakdown}
-
-            <div className="mt">
-                <WorkTimeline project={project} onPerson={setDrawer} onEntry={setEntry} />
-            </div>
-
-            <Analytics project={project} work={all.data} contributors={filtered.data?.contributors ?? []} onPerson={setDrawer} />
-
+            <Contributors work={filtered.data} error={loadFailed(filtered) ? filtered.error : null} retry={() => filtered.refetch()} range={range} rangeKey={rangeKey} ranges={ranges}
+                setRangeKey={setRangeKey} search={search} setSearch={setSearch} workQ={workQ} setWorkQ={setWorkQ} onPerson={setDrawer} />
             {drawer != null && (
                 <ContributorDrawer projectId={project.id} projectTitle={project.title} personId={drawer} range={range} workQ={workQ}
                     onOpenEntry={setEntry} onClose={() => setDrawer(null)} />
@@ -280,11 +292,10 @@ function Contributors({ work, error, retry, range, rangeKey, ranges, setRangeKey
     );
 }
 
-/** The analytics that close the page, collapsed until asked for. */
+/** The charts: hours per week, contribution share, when work happens, hours vs plan, and cost over time for those who see money. */
 function Analytics({ project, work: w, contributors, onPerson }: { project: Project; work: ProjectWork | undefined; contributors: Contributor[]; onPerson: (id: number) => void }) {
     const permissions = usePermissions();
     const m = permissions.has(P.FINANCIAL_VIEW) ? project.money : null;
-    const [open, setOpen] = useState(false);
     const total = contributors.reduce((s, c) => s + c.minutes, 0);
     const top3 = contributors.slice().sort((a, b) => b.minutes - a.minutes).slice(0, 3).reduce((s, c) => s + c.minutes, 0);
     const weekly = w?.weekly ?? [];
@@ -294,43 +305,31 @@ function Analytics({ project, work: w, contributors, onPerson }: { project: Proj
 
     return (
         <>
-            <div className="analytics-head">
-                <h2 className="page-title" style={{ fontSize: 16 }}>Analytics</h2>
-                {!open && <span className="muted" style={{ fontSize: 12 }}>{m ? 6 : 4} charts: hours per week, contribution share, when work happens, hours vs plan{m ? ", cost over time" : ""}</span>}
-                <span className="grow" />
-                <button className="link analytics-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
-                    <Icon name={open ? "chevronUp" : "chevronDown"} />{open ? "Hide analytics" : "Show analytics"}
-                </button>
+            <div className="grid g-2 mt">
+                <Figure title="Hours per week" sub="Where the effort actually landed across the project's life."
+                    table={{ cols: [{ label: "Week of" }, { label: "Hours", right: true }, { label: "Entries", right: true }], rows: weekly.map((x) => [fmtDateY(x.weekStart), (x.minutes / 60).toFixed(1), x.entries]) }}>
+                    <Columns height={180} labelEvery={labelEvery} format={(v) => `${Math.round(v)}h`}
+                        data={weekly.map((x) => ({ label: fmtDate(x.weekStart), tip: `Week of ${fmtDateY(x.weekStart)}`, value: x.minutes / 60, note: `${x.entries} entries` }))} />
+                </Figure>
+                <Figure title="Contribution share" sub="How the work is distributed across the team."
+                    table={{ cols: [{ label: "Employee" }, { label: "Hours", right: true }, { label: "Share", right: true }], rows: contributors.map((c) => [c.name, fmtDur(c.minutes), `${total ? Math.round((c.minutes / total) * 100) : 0}%`]) }}>
+                    <RankBars showPct onClick={(it) => onPerson(Number(it.id))}
+                        items={contributors.slice(0, 9).map((c) => ({
+                            id: c.userId, label: c.name, value: c.minutes,
+                            node: <><PersonAvatar person={{ id: c.userId, name: c.name }} size={20} link={false} /><span className="trunc">{c.name}</span></>,
+                        }))} />
+                    <div className="chart-note">Top 3 contributors account for {total ? Math.round((top3 / total) * 100) : 0}% of logged hours.</div>
+                </Figure>
             </div>
-            {open && (
-                <>
-                    <div className="grid g-2">
-                        <Figure title="Hours per week" sub="Where the effort actually landed across the project's life."
-                            table={{ cols: [{ label: "Week of" }, { label: "Hours", right: true }, { label: "Entries", right: true }], rows: weekly.map((x) => [fmtDateY(x.weekStart), (x.minutes / 60).toFixed(1), x.entries]) }}>
-                            <Columns height={180} labelEvery={labelEvery} format={(v) => `${Math.round(v)}h`}
-                                data={weekly.map((x) => ({ label: fmtDate(x.weekStart), tip: `Week of ${fmtDateY(x.weekStart)}`, value: x.minutes / 60, note: `${x.entries} entries` }))} />
-                        </Figure>
-                        <Figure title="Contribution share" sub="How the work is distributed across the team."
-                            table={{ cols: [{ label: "Employee" }, { label: "Hours", right: true }, { label: "Share", right: true }], rows: contributors.map((c) => [c.name, fmtDur(c.minutes), `${total ? Math.round((c.minutes / total) * 100) : 0}%`]) }}>
-                            <RankBars showPct onClick={(it) => onPerson(Number(it.id))}
-                                items={contributors.slice(0, 9).map((c) => ({
-                                    id: c.userId, label: c.name, value: c.minutes,
-                                    node: <><PersonAvatar person={{ id: c.userId, name: c.name }} size={20} link={false} /><span className="trunc">{c.name}</span></>,
-                                }))} />
-                            <div className="chart-note">Top 3 contributors account for {total ? Math.round((top3 / total) * 100) : 0}% of logged hours.</div>
-                        </Figure>
-                    </div>
-                    <div className="grid g-2 mt">
-                        <Figure title="When work happens" sub="Logged time by weekday and hour - useful for spotting crunch.">
-                            <HourHeat grid={grid} />
-                        </Figure>
-                        <Figure title="Cumulative hours vs plan" sub={project.targetDate ? "Actual hours against a straight-line plan to the target date." : "Hours accumulated since the project started."}>
-                            <BurnUp project={project} />
-                        </Figure>
-                    </div>
-                    {m && <CostFigures project={project} money={m} />}
-                </>
-            )}
+            <div className="grid g-2 mt">
+                <Figure title="When work happens" sub="Logged time by weekday and hour - useful for spotting crunch.">
+                    <HourHeat grid={grid} />
+                </Figure>
+                <Figure title="Cumulative hours vs plan" sub={project.targetDate ? "Actual hours against a straight-line plan to the target date." : "Hours accumulated since the project started."}>
+                    <BurnUp project={project} />
+                </Figure>
+            </div>
+            {m && <CostFigures project={project} money={m} />}
         </>
     );
 }
