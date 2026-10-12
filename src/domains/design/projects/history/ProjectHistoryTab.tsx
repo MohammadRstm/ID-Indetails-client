@@ -7,7 +7,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonKpis, SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import DateInput from "@/shared/components/Forms/DateInput";
 import Select from "@/shared/components/Forms/Select";
-import { SearchInput, Segmented } from "@/shared/components/Forms/Filters";
+import { Segmented } from "@/shared/components/Forms/Filters";
 import { Avatars } from "@/shared/components/Identity/People";
 import { quarterLabel, quarterOf } from "@/shared/format/periods";
 import { addDays, dayKey, daysBetween, fmtDate, fmtDateY, fmtDayDateY, fmtH, fmtMonthY, fmtNumber, partsOf } from "@/shared/format/time";
@@ -64,7 +64,6 @@ function HistoryView({ project, history: h }: { project: Project; history: Histo
     const [range, setRange] = useState<Range | "custom">("week");
     const [custom, setCustom] = useState({ from: addDays(today, -13), to: today });
     const [person, setPerson] = useState("");
-    const [q, setQ] = useState("");
     const [jump, setJump] = useState("");
     const [jumpMsg, setJumpMsg] = useState<{ bad: boolean; text: string } | null>(null);
     const [dayOpen, setDayOpen] = useState<string | null>(null);
@@ -72,7 +71,7 @@ function HistoryView({ project, history: h }: { project: Project; history: Histo
 
     const created = earliestOf(h, project.startDate);
     const minKey = addDays(dayKey(created), -7);
-    const filter = { person: person ? +person : null, q: q.trim() };
+    const filter = { person: person ? +person : null, q: "" };
     const customOk = !!custom.from && !!custom.to && custom.from <= custom.to;
     const win = range === "custom" ? (customOk ? custom : { from: today, to: today }) : windowFor(anchor, range);
     const winFrom = dayStart(win.from), winTo = dayEnd(win.to);
@@ -198,9 +197,8 @@ function HistoryView({ project, history: h }: { project: Project; history: Histo
                             <button className="icon-btn" aria-label="Next" disabled={!canNext} onClick={() => shift(1)}><Icon name="chevronRight" /></button>
                         </div>
                         {range !== "custom" && <button className="btn btn-sm" disabled={win.from <= today && win.to >= today} onClick={() => setAnchor(today)}>Today</button>}
-                        <Select className="select sm" style={{ width: 170 }} aria-label="Person" value={person} onChange={setPerson}
+                        <Select className="select sm" style={{ width: 190 }} aria-label="Person" value={person} onChange={setPerson} searchable searchPlaceholder="Find person"
                             options={[{ value: "", label: "Everyone" }, ...peopleOpts.map((p) => ({ value: String(p.id), label: p.name }))]} />
-                        <SearchInput width={190} value={q} onChange={setQ} placeholder="Search tasks" />
                     </div>
 
                     {jumpMsg && <div className={jumpMsg.bad ? "hint err" : "hint"} style={{ margin: "-4px 0 10px" }}>{jumpMsg.text}</div>}
@@ -209,12 +207,12 @@ function HistoryView({ project, history: h }: { project: Project; history: Histo
                         <div className="hc-empty">
                             <span className="muted">
                                 {h.entries.length
-                                    ? `No work logged in this ${range === "custom" ? "range" : range}${filter.person != null || filter.q ? " matching these filters" : ""}.`
+                                    ? `No work logged in this ${range === "custom" ? "range" : range}${filter.person != null ? " by this person" : ""}.`
                                     : "No work has been logged on this project yet."}
                             </span>
                             {nearFrom.prev && <button className="btn btn-sm" onClick={() => showDay(nearFrom.prev!.key)}><Icon name="chevronLeft" />{fmtDate(nearFrom.prev.key)}</button>}
                             {nearTo.next && <button className="btn btn-sm" onClick={() => showDay(nearTo.next!.key)}>{fmtDate(nearTo.next.key)}<Icon name="chevronRight" /></button>}
-                            {(person || q) && <button className="btn btn-sm" onClick={() => { setPerson(""); setQ(""); }}>Clear filters</button>}
+                            {person && <button className="btn btn-sm" onClick={() => setPerson("")}>Everyone</button>}
                         </div>
                     )}
                     <HistoryCalendar history={h} from={win.from} to={win.to} filter={filter} anns={anns} onOpenDay={setDayOpen} onEntry={setEntry} />

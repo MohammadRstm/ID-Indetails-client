@@ -60,6 +60,18 @@ describe("a project's Timeline tab", () => {
         for (const month of ["July 2026", "August 2026", "September 2026"]) expect(screen.getByText(month)).toBeInTheDocument();
     });
 
+    it("finds a person by name in the person picker, with no task search", async () => {
+        renderApp(path, personas.designAdmin, ...projectWorkHandlers);
+        await screen.findByText("Project history");
+        expect(screen.queryByPlaceholderText("Search tasks")).toBeNull();
+        await userEvent.click(screen.getByLabelText("Person"));
+        const box = await screen.findByPlaceholderText("Find person");
+        const name = projectWork.contributor.person.name;
+        await userEvent.type(box, name.slice(0, 3));
+        expect(await screen.findByRole("option", { name })).toBeInTheDocument();
+        expect(screen.queryByRole("option", { name: "Everyone" })).toBeNull();
+    });
+
     it("goes to the very day asked for, not the start of its week", async () => {
         renderApp(path, personas.designAdmin, ...projectWorkHandlers);
         const field = await screen.findByLabelText("Go to a date");
