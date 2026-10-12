@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { resetProton, spoke, useProton, voiceAt } from "./protonStore";
+import { answered, resetProton, showingPage, spoke, useProton, voiceAt } from "./protonStore";
 
 afterEach(() => resetProton());
 
@@ -22,5 +22,21 @@ describe("Proton's store", () => {
         expect(renders).toBe(before);
         expect(voiceAt(Date.now())).toBe(0.5);
         expect(voiceAt(Date.now() + 1_000)).toBe(0);
+    });
+
+    it("counts a reply read on the Proton page as seen", () => {
+        const { result } = renderHook(() => useProton());
+        act(() => {
+            showingPage(true);
+            answered("All quiet.", false);
+        });
+        expect(result.current.unseen).toBe(0);
+        expect(result.current.peek).toBeNull();
+
+        act(() => {
+            showingPage(false);
+            answered("Something new.", false);
+        });
+        expect(result.current.unseen).toBe(1);
     });
 });

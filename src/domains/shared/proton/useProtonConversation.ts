@@ -1,8 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useLayoutEffect, useRef } from "react";
 import { toApiError } from "@/api/errors";
-import { useEndConversation, type AskBody, type ProtonChoice, type ProtonQuickReplyOption } from "./protonApi";
-import { emptyChat, type ProtonTurn } from "./protonChat";
+import { fetchProtonChat, useRefreshChats, type AskBody, type ProtonChoice, type ProtonQuickReplyOption } from "./protonApi";
+import { chatOf, emptyChat, type ProtonTurn } from "./protonChat";
+import { parseBlocks } from "./protonFigures";
 import { answered, asking, changeChat, currentChat, failed, heard, stopped, useProton, wrote } from "./protonStore";
 import { streamQuestion } from "./protonStream";
 import { startVoice, tellVoiceAnswer, type VoiceAnswer } from "./protonVoice";
@@ -23,7 +24,7 @@ export type ProtonConversation = ReturnType<typeof useProtonConversation>;
  */
 export function useProtonConversation() {
     const queryClient = useQueryClient();
-    const end = useEndConversation();
+    const refreshChats = useRefreshChats();
     const page = useProtonPageContext();
     const run = useRunProtonCommands();
     const { chat, askedAt } = useProton();
@@ -51,11 +52,13 @@ export function useProtonConversation() {
                     ...(reply.rolledOver ? [{ from: "note", text: ROLLED_OVER } as const] : []),
                     {
                         from: "proton", text: reply.reply, refs: reply.refs, sources: reply.sources, cards: reply.pendingActions,
-                        choices: reply.choices, quickReplies: reply.quickReplies, suggestions: reply.suggestions, did,
+                        choices: reply.choices, quickReplies: reply.quickReplies, suggestions: reply.suggestions, did, blocks: parseBlocks(reply.blocks),
                     },
                 ],
             }));
             answered(reply.reply, did?.startsWith("Opened ") === true);
+            // the answer was saved with the chat: the list of chats shows it
+            refreshChats();
             return { kind: "answer", reply };
         } catch (error) {
             if (controller.signal.aborted) {
@@ -86,7 +89,7 @@ export function useProtonConversation() {
 
     const pending = askedAt != null;
     const submit = (shown: string, body: Ask) => {
-        if (pending) return;
+        if (pending || chat.locked) return;
         add({ from: "you", text: shown });
         const answer = send(chat.conversationId, body);
         settled.current = answer;
@@ -123,10 +126,17 @@ export function useProtonConversation() {
             ask: say,
             onConversation: (conversationId) => changeChat((c) => (c.conversationId === conversationId ? c : { ...c, conversationId })),
         }),
+        // a new chat; the one before stays among the saved chats
         startOver: () => {
             running.current?.abort();
-            if (chat.conversationId) end.mutate(chat.conversationId);
             changeChat(() => emptyChat);
+        },
+        /** Shows a saved chat, to read and carry on. Rejects with the API's error when it can't be read. */
+        open: async (id: string) => {
+            if (currentChat().conversationId === id) return;
+            const saved = await fetchProtonChat(id);
+            running.current?.abort();
+            changeChat(() => chatOf(saved));
         },
     };
 }

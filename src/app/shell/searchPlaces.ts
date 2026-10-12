@@ -279,6 +279,11 @@ export const PLACES: Place[] = [
         words: ["proton", "assistant", "ai", "ask", "help me", "chat with proton", "ai assistant"],
         targets: (ctx) => when(ctx.p.has(P.PROTON_USE), () => [{ act: ctx.run.openProton }]),
     },
+    {
+        key: "proton-chats", icon: "chat", label: "Proton chats",
+        words: ["proton chats", "chat history", "past chats", "saved chats", "my chats with proton", "assistant history"],
+        targets: (ctx) => when(ctx.p.has(P.PROTON_USE), () => (ctx.area.kind === "company" ? company(ctx, "assistant") : inBusinesses(ctx, "assistant"))),
+    },
 
     // ---- someone's own ----
     {

@@ -1,5 +1,6 @@
 import { onSessionReset } from "@/app/session/sessionReset";
-import type { ProtonChoice, ProtonPendingAction, ProtonQuickReplyOption, ProtonRef, ProtonSource } from "./protonApi";
+import type { ProtonChoice, ProtonPendingAction, ProtonQuickReplyOption, ProtonRef, ProtonSavedChat, ProtonSource } from "./protonApi";
+import { parseBlocks, type ProtonBlock } from "./protonFigures";
 
 /** Where a proposed change stands in the chat. Only "open" can still be confirmed. */
 export type ActionState =
@@ -27,6 +28,8 @@ export type ProtonTurn =
         suggestions: string[];
         /** What the app did for this reply ("Opened Villa Mounir."), if anything. */
         did: string | null;
+        /** Charts, tables and headline figures shown under the answer. */
+        blocks: ProtonBlock[];
     }
     /** A quiet line from the app about the chat itself (a fresh start, a summary). */
     | { from: "note"; text: string }
@@ -37,9 +40,37 @@ export type ProtonChat = {
     conversationId: string | null;
     turns: ProtonTurn[];
     actions: Record<string, ActionState>;
+    /** A saved chat that can't be carried on (its owner's access changed since), and why: it is read, not continued. */
+    locked?: string | null;
 };
 
-export const emptyChat: ProtonChat = { conversationId: null, turns: [], actions: {} };
+export const emptyChat: ProtonChat = { conversationId: null, turns: [], actions: {}, locked: null };
+
+const CARD_STATES: Record<string, ActionState> = {
+    succeeded: { kind: "done", message: "Done." },
+    cancelled: { kind: "cancelled" },
+    superseded: { kind: "replaced" },
+    expired: { kind: "expired" },
+};
+
+/** A saved chat as the panel shows one: its messages as turns, and what became of each card. */
+export function chatOf(saved: ProtonSavedChat): ProtonChat {
+    const actions: Record<string, ActionState> = {};
+    const turns = saved.messages.map((m): ProtonTurn => {
+        if (m.role === "user") return { from: "you", text: m.text };
+        for (const { card, status, message } of m.cards) {
+            actions[card.id] = status === "pending" ? (saved.canContinue ? { kind: "open" } : { kind: "closed" })
+                : status === "failed" ? { kind: "failed", message: message ?? "It couldn't be done." }
+                : CARD_STATES[status] ?? { kind: "closed" };
+        }
+        return {
+            from: "proton", text: m.text, refs: m.refs, sources: m.sources, cards: m.cards.map((c) => c.card),
+            choices: [], quickReplies: [], suggestions: [], did: null, blocks: parseBlocks(m.blocks),
+        };
+    });
+    const locked = saved.hidden ?? (saved.canContinue ? null : "Your access changed since this chat, so it can't be carried on. Start a new chat to ask more.");
+    return { conversationId: saved.id, turns, actions, locked };
+}
 
 /** The cards of the newest reply that proposed any. */
 export function newestCards(chat: ProtonChat): ProtonPendingAction[] {
@@ -64,11 +95,12 @@ export function loadChat(userId: number): ProtonChat {
         const stored = JSON.parse(raw) as ProtonChat & { userId?: number };
         if (stored.userId !== userId || !Array.isArray(stored.turns)) return emptyChat;
         const actions = { ...stored.actions };
-        // a chat kept before a reply could carry several cards had one "action"
+        // a chat kept before a reply could carry several cards had one "action"; blocks are checked again, as on arrival
         const turns = stored.turns.map((turn): ProtonTurn => {
-            if (turn.from !== "proton" || Array.isArray(turn.cards)) return turn;
+            if (turn.from !== "proton") return turn;
             const { action } = turn as unknown as { action?: ProtonPendingAction | null };
-            return { ...turn, cards: action ? [action] : [] };
+            const cards = Array.isArray(turn.cards) ? turn.cards : action ? [action] : [];
+            return { ...turn, cards, blocks: parseBlocks((turn as { blocks?: unknown }).blocks) };
         });
         for (const turn of turns) {
             if (turn.from !== "proton") continue;
@@ -76,7 +108,7 @@ export function loadChat(userId: number): ProtonChat {
                 if ((actions[card.id]?.kind ?? "open") === "open") actions[card.id] = { kind: "closed" };
             }
         }
-        return { conversationId: stored.conversationId, turns, actions };
+        return { conversationId: stored.conversationId, turns, actions, locked: stored.locked ?? null };
     } catch {
         return emptyChat;
     }

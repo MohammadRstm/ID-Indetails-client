@@ -3,6 +3,7 @@ import { errorMessage } from "@/api/errors";
 import { tokenStore } from "@/api/tokenStore";
 import { onSessionReset } from "@/app/session/sessionReset";
 import { endVoiceSession, startVoiceSession, type ProtonReply } from "./protonApi";
+import { parseBlocks } from "./protonFigures";
 import { spoke } from "./protonStore";
 
 /*
@@ -101,17 +102,23 @@ export function chunksOf(text: string, size = CHUNK_CHARS): string[] {
     return chunks.filter(Boolean);
 }
 
-/** What the voice model is told once Proton has answered: the answer to say, and any card it put on the screen. */
+/** What the voice model is told once Proton has answered: the answer to say, and any card, chart or table it put on the screen. */
 export function voiceUpdatesOf(answer: VoiceAnswer): { say: string[]; know: string[] } {
     if (answer.kind === "replaced") return { say: [], know: [] };
     if (answer.kind === "failed") return { say: [`I couldn't get that: ${answer.message}`], know: [] };
     const { reply } = answer;
     const cards = reply.pendingActions.map((card) => `"${card.preview.title}"`);
+    const shown = parseBlocks(reply.blocks).map((block) => `"${block.title}"`);
     return {
         say: chunksOf(reply.reply),
-        know: cards.length === 0 ? [] : [
-            `A card is on the person's screen: ${cards.join(", ")}. Nothing has been changed. They press Confirm on it to go ahead; `
-            + "saying yes does not confirm it.",
+        know: [
+            ...(cards.length === 0 ? [] : [
+                `A card is on the person's screen: ${cards.join(", ")}. Nothing has been changed. They press Confirm on it to go ahead; `
+                + "saying yes does not confirm it.",
+            ]),
+            ...(shown.length === 0 ? [] : [
+                `On the person's screen now: ${shown.join(", ")}. Say it's on screen; don't read out every figure in it.`,
+            ]),
         ],
     };
 }
