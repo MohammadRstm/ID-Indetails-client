@@ -22,6 +22,10 @@ type SelectProps<V extends string> = {
     style?: CSSProperties;
     disabled?: boolean;
     "aria-label"?: string;
+    /** A filter box at the top of the list however short it is; by default only long lists get one. */
+    searchable?: boolean;
+    /** The filter box's placeholder. */
+    searchPlaceholder?: string;
 };
 
 // Longer lists get a filter box at the top.
@@ -31,7 +35,7 @@ const SEARCH_FROM = 9;
  * The prototype's dropdown (UI.Select): the browser's own list can't be styled, so it is drawn here, in a panel
  * over the page, with a filter box for long lists, type-ahead and the keyboard.
  */
-export default function Select<V extends string>({ value, options, onChange, id, className, style, disabled, ...rest }: SelectProps<V>) {
+export default function Select<V extends string>({ value, options, onChange, id, className, style, disabled, searchable: alwaysSearch, searchPlaceholder, ...rest }: SelectProps<V>) {
     const currentIndex = options.findIndex((o) => o.value === value);
     // a value that isn't one of the options shows as a choice still to make, not as the first option: the form
     // would send the value, not what was shown
@@ -43,7 +47,7 @@ export default function Select<V extends string>({ value, options, onChange, id,
     const menuRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
     const typed = useRef({ text: "", at: 0 });
-    const searchable = options.length >= SEARCH_FROM;
+    const searchable = alwaysSearch ?? options.length >= SEARCH_FROM;
     const q = query.trim().toLowerCase();
     const list = q ? options.filter((o) => o.label.toLowerCase().includes(q)) : options;
 
@@ -135,7 +139,7 @@ export default function Select<V extends string>({ value, options, onChange, id,
                     {searchable && (
                         <div className="sel-search">
                             <Icon name="search" />
-                            <input autoFocus value={query} placeholder="Type to filter…" aria-label="Filter options"
+                            <input autoFocus value={query} placeholder={searchPlaceholder ?? "Type to filter…"} aria-label="Filter options"
                                 onChange={(e) => { setQuery(e.target.value); setActive(0); }} onKeyDown={onKey} />
                         </div>
                     )}
