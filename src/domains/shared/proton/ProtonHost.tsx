@@ -14,6 +14,7 @@ import ProtonPanel, { type PanelLayout } from "./ProtonPanel";
 import { useProtonUsage, type ProtonUsage } from "./protonApi";
 import { newestCards } from "./protonChat";
 import { closeProton, dismissPeek, openProton, startFor, useProton, voiceAt, type ProtonState } from "./protonStore";
+import { useVoice, voiceActive } from "./protonVoice";
 import { useProtonConversation } from "./useProtonConversation";
 
 const BLOB = 64;
@@ -39,6 +40,7 @@ function ProtonDock() {
     const proton = useProton();
     const usage = useProtonUsage().data;
     const conversation = useProtonConversation();
+    const voice = useVoice();
     const reduced = useReducedMotion();
     const viewport = useViewport();
     const [prefs, setPrefs] = useState(loadPrefs);
@@ -84,7 +86,8 @@ function ProtonDock() {
         errorUntil: proton.errorUntil,
         happyUntil: proton.happyUntil,
         cardOpen,
-        composing,
+        // in a voice conversation the blob listens, and talks while the voice speaks
+        composing: composing || voiceActive(voice.status),
     }, now);
     const still = reduced || prefs.calm;
     const at = drag.dragAt ?? { x: place.x, y: clearY ?? place.y };

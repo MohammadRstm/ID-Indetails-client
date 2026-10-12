@@ -1,10 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { toApiError } from "@/api/errors";
 import { useEndConversation, type AskBody, type ProtonChoice, type ProtonQuickReplyOption } from "./protonApi";
 import { emptyChat, type ProtonTurn } from "./protonChat";
-import { answered, asking, changeChat, failed, heard, stopped, useProton, wrote } from "./protonStore";
+import { answered, asking, changeChat, currentChat, failed, heard, stopped, useProton, wrote } from "./protonStore";
 import { streamQuestion } from "./protonStream";
+import { startVoice, tellVoiceAnswer, type VoiceAnswer } from "./protonVoice";
 import { useRunProtonCommands } from "./uiCommands";
 import { useProtonPageContext } from "./useProtonPageContext";
 
@@ -27,17 +28,21 @@ export function useProtonConversation() {
     const run = useRunProtonCommands();
     const { chat, askedAt } = useProton();
     const running = useRef<AbortController | null>(null);
+    const settled = useRef<Promise<unknown>>(Promise.resolve());
+    // a voice conversation asks long after the render that started it: it reads the page and the runner as they are now
+    const latest = useRef({ page, run });
+    useLayoutEffect(() => { latest.current = { page, run }; });
 
     const add = (...turns: ProtonTurn[]) => changeChat((c) => ({ ...c, turns: [...c.turns, ...turns] }));
 
-    const send = async (conversationId: string | null, body: Ask, retried = false) => {
+    const send = async (conversationId: string | null, body: Ask, retried = false): Promise<VoiceAnswer> => {
         asking();
         const controller = new AbortController();
         running.current = controller;
         try {
-            const reply = await streamQuestion({ conversationId, page, ...body }, { onStatus: heard, onDelta: wrote }, controller.signal);
+            const reply = await streamQuestion({ conversationId, page: latest.current.page, ...body }, { onStatus: heard, onDelta: wrote }, controller.signal);
             queryClient.setQueryData(["proton", "usage"], reply.usage);
-            const did = run(reply.uiCommands);
+            const did = latest.current.run(reply.uiCommands);
             changeChat((c) => ({
                 ...c,
                 conversationId: reply.conversationId,
@@ -51,26 +56,29 @@ export function useProtonConversation() {
                 ],
             }));
             answered(reply.reply, did?.startsWith("Opened ") === true);
+            return { kind: "answer", reply };
         } catch (error) {
             if (controller.signal.aborted) {
                 stopped();
                 add({ from: "note", text: STOPPED });
-                return;
+                return { kind: "replaced" };
             }
 
             const failure = toApiError(error);
-            if (failure.code !== "proton_conversation_ended" || conversationId == null) {
+            // a spoken question belongs to its voice session's conversation: it isn't asked again in a new one
+            if (failure.code !== "proton_conversation_ended" || conversationId == null || body.voice) {
                 failed();
                 add({ from: "error", text: failure.message });
-                return;
+                return { kind: "failed", message: failure.message, code: failure.code };
             }
 
             // The server no longer has the chat: carry on in a new one. A typed question is simply asked again
             // there; a button belonged to the old chat, so the person asks again in their own words.
             changeChat((c) => ({ ...c, conversationId: null }));
             add({ from: "note", text: body.text && !retried ? failure.message : `${failure.message} Could you ask that again?` });
-            if (body.text && !retried) await send(null, { text: body.text }, true);
-            else failed();
+            if (body.text && !retried) return await send(null, { text: body.text }, true);
+            failed();
+            return { kind: "failed", message: failure.message, code: failure.code };
         } finally {
             if (running.current === controller) running.current = null;
         }
@@ -80,7 +88,26 @@ export function useProtonConversation() {
     const submit = (shown: string, body: Ask) => {
         if (pending) return;
         add({ from: "you", text: shown });
-        void send(chat.conversationId, body);
+        const answer = send(chat.conversationId, body);
+        settled.current = answer;
+        // in a voice conversation, an answer to a button or a typed question is said aloud as well
+        void answer.then((a) => tellVoiceAnswer(`The person ${body.text != null ? "typed" : "picked"} on screen: "${shown}". Proton answered on screen.`, a));
+    };
+
+    /**
+     * A question the person said: it goes to the chat like a typed one. Said while an answer is still coming, it
+     * replaces that answer (the person corrected or moved on), the same as pressing Stop.
+     */
+    const say = async (text: string, voice: { sessionId: string; delegationId: string }): Promise<VoiceAnswer> => {
+        if (running.current) {
+            running.current.abort();
+            await settled.current;
+        }
+
+        add({ from: "you", text });
+        const answer = send(currentChat().conversationId, { text, voice });
+        settled.current = answer;
+        return answer;
     };
 
     return {
@@ -91,6 +118,11 @@ export function useProtonConversation() {
         reply: (option: ProtonQuickReplyOption) => submit(option.label, { reply: option.reply }),
         suggest: (suggestion: string, index: number) => submit(suggestion, { suggestion: index }),
         stop: () => running.current?.abort(),
+        talk: () => startVoice({
+            conversationId: currentChat().conversationId,
+            ask: say,
+            onConversation: (conversationId) => changeChat((c) => (c.conversationId === conversationId ? c : { ...c, conversationId })),
+        }),
         startOver: () => {
             running.current?.abort();
             if (chat.conversationId) end.mutate(chat.conversationId);

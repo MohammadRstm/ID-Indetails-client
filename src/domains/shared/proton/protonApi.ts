@@ -12,6 +12,7 @@ export type ProtonChoice = Schemas["ProtonChoice"];
 export type ProtonQuickReplyOption = Schemas["ProtonQuickReplyOption"];
 export type ProtonBriefing = Schemas["ProtonBriefingResponse"];
 export type ProtonUsage = Schemas["ProtonUsageResponse"];
+export type ProtonVoiceSession = Schemas["ProtonVoiceSessionResponse"];
 
 /**
  * A question, or one of the buttons of the last reply, with the page the person is on. A button sends only what it
@@ -24,6 +25,8 @@ export type AskBody = {
     choice?: { type: Schemas["ProtonRefType"]; id: number };
     reply?: Schemas["ProtonQuickReply"];
     suggestion?: number;
+    /** A question said in a voice session: the session, and the voice model's id for this request (asked once). */
+    voice?: { sessionId: string; delegationId: string };
 };
 
 // every key starts with "proton"
@@ -108,6 +111,27 @@ export function useForgetMemory() {
         mutationFn: async (id: number) => { await http.delete(`/proton/memories/${id}`); },
         onSuccess: () => void queryClient.invalidateQueries({ queryKey: [...protonKey, "memories"] }),
     });
+}
+
+/**
+ * Starts a voice session: the API asks the provider for one with the browser's WebRTC offer and returns its answer.
+ * The provider key never comes to the browser.
+ */
+export async function startVoiceSession(body: { conversationId: string | null; sdp: string }) {
+    return (await http.post<ProtonVoiceSession>("/proton/voice/sessions", body)).data;
+}
+
+/**
+ * Tells the API the person ended their voice session, so the server closes it with the provider even if the browser
+ * couldn't. With keepalive it still goes out while the page is being left.
+ */
+export function endVoiceSession(sessionId: string, token: string | null) {
+    return fetch(`/api/proton/voice/sessions/${encodeURIComponent(sessionId)}/end`, {
+        method: "POST",
+        keepalive: true,
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: "{}",
+    }).catch(() => undefined);
 }
 
 /** Ends a conversation on the server; the next question starts a new one. */

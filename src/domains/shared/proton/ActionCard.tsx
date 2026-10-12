@@ -4,6 +4,7 @@ import { cx } from "@/shared/utils/cx";
 import { useDecideAction, useMyProtonActions, type ProtonActionSummary, type ProtonPendingAction } from "./protonApi";
 import { useRunProtonCommands } from "./uiCommands";
 import type { ActionState } from "./protonChat";
+import { tellVoice } from "./protonVoice";
 
 type ActionCardProps = {
     action: ProtonPendingAction;
@@ -71,12 +72,21 @@ export default function ActionCard({ action, conversationId, state, replaced, on
     const send = (decision: "confirm" | "cancel") =>
         decide.mutate({ action, conversationId, decision, typed: decision === "confirm" && preview.confirm === "typed" ? typed : undefined }, {
             onSuccess: (outcome) => {
-                if (decision !== "confirm") return onDecided({ kind: "cancelled" });
+                // in a voice conversation, the voice says what became of it, and only once the API has said so
+                if (decision !== "confirm") {
+                    tellVoice(`The person cancelled the card "${preview.title}". Nothing was changed.`);
+                    return onDecided({ kind: "cancelled" });
+                }
+
                 // the API sends where to go only after a change that succeeded and whose card said so
                 const did = run(outcome.uiCommands);
+                tellVoice(`The person confirmed the card "${preview.title}" and it is done: ${outcome.message}`);
                 onDecided({ kind: "done", message: did ? `${outcome.message} ${did}` : outcome.message });
             },
-            onError: (error) => onDecided({ kind: "failed", message: errorMessage(error) }),
+            onError: (error) => {
+                tellVoice(`The change on the card "${preview.title}" was not made: ${errorMessage(error)}`);
+                onDecided({ kind: "failed", message: errorMessage(error) });
+            },
         });
 
     return (

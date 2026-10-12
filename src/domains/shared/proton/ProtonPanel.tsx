@@ -8,6 +8,7 @@ import type { BlobPrefs } from "./blob/blobPosition";
 import ProtonComposer from "./ProtonComposer";
 import ProtonMemories from "./ProtonMemories";
 import ProtonThread from "./ProtonThread";
+import ProtonVoiceBar from "./ProtonVoiceBar";
 import type { ProtonRef } from "./protonApi";
 import type { ProtonChat } from "./protonChat";
 import { stepOf } from "./uiCommands";
@@ -103,6 +104,7 @@ export default function ProtonPanel({
                     <div className="proton-panel-body">
                         <ProtonThread chat={chat} conversation={conversation} linkOf={linkOf} draft={draft} status={status} stillLooking={stillLooking} />
                     </div>
+                    <ProtonVoiceBar />
                     <ProtonComposer conversation={conversation} input={input} canStartOver={chat.turns.length > 0} onComposing={onComposing} />
                 </>
             )}
