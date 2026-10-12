@@ -12415,9 +12415,9 @@ export interface components {
         };
         SiteSummaryResponse: {
             /** Format: double */
-            groundLabour: number;
+            groundLabour: null | number;
             /** Format: double */
-            materialCost: number;
+            materialCost: null | number;
             /** Format: int32 */
             materialCount: number;
             /** Format: date-time */

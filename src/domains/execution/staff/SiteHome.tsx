@@ -149,7 +149,11 @@ function SiteCard({ project: p, summary: s, failed, paused }: { project: Project
             <div className="pcard-mine">
                 <div className="grow">
                     <div className="u">Materials logged</div>
-                    <div className="mono" style={{ fontWeight: 650, fontSize: 14 }}>{s ? <Money short value={s.materialCost} /> : failed ? "-" : "…"}</div>
+                    <div className="mono" style={{ fontWeight: 650, fontSize: 14 }}>
+                        {/* the site's cost total is company money: shown only to people who may see money */}
+                        {s ? (s.materialCost == null ? <span title="Amounts need the financial permission">—</span> : <Money short value={s.materialCost} />)
+                            : failed ? "-" : "…"}
+                    </div>
                     <div className="muted" style={{ fontSize: 11 }}>{s?.myLastRecordedAt ? `you last recorded here ${relTime(s.myLastRecordedAt)}` : "nothing recorded by you yet"}</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
