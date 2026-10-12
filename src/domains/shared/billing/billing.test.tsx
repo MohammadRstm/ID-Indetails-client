@@ -317,7 +317,7 @@ describe("a project's billing", () => {
             http.get("/api/invoices", () => { asked.push("invoices"); return HttpResponse.json(billing.projectInvoices); }),
             http.get(`/api/projects/${project.id}`, () => HttpResponse.json({ ...project, money: null })),
             ...handlers);
-        await screen.findByText("Who put the hours in. Click a person to see their entries on this project.");
+        await screen.findByText("Total hours");
         expect(screen.queryByText("Client payments")).not.toBeInTheDocument();
         expect(asked).toEqual([]);
     });

@@ -5,7 +5,7 @@ import { dayKey, fmtDayDateY, fmtDur, fmtHourLabel, fmtTime } from "@/shared/for
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { meetingTitle } from "../../../shared/meetings/meetingsApi";
-import { dayStart, type Day, type DayItem, type History, type Meeting } from "./history";
+import { dayStart, teamColors, type Day, type DayItem, type History, type Meeting } from "./history";
 import { firstName, list } from "./words";
 
 /*
@@ -19,22 +19,6 @@ const HOUR_PX = 190;
 const LABEL_W = 168;
 const CARD_MIN = 204;
 const ROW_H = 96, ROW_GAP = 8;
-
-const TEAM_COLORS: Record<string, string> = { Engineering: "#3B82F6", Design: "#A855F7", Platform: "#F97316", Data: "#10B981", Marketing: "#EC4899", Operations: "#EAB308" };
-const PALETTE = ["#3B82F6", "#A855F7", "#F97316", "#10B981", "#EC4899", "#EAB308", "#14B8A6", "#6366F1", "#84CC16", "#F43F5E"];
-
-/**
- * One colour per team, the same on every day of the project: the prototype's named ones where they
- * apply, then the palette in the order of the teams' names, so two teams never share one.
- */
-function teamColors(h: History): (team: string) => string {
-    const teams = [...new Set([...h.people.values()].map((p) => p.role || "Other"))].sort();
-    const free = PALETTE.filter((c) => !teams.some((t) => TEAM_COLORS[t] === c));
-    const map = new Map<string, string>();
-    let i = 0;
-    for (const t of teams) map.set(t, TEAM_COLORS[t] ?? free[i++ % free.length]);
-    return (team) => map.get(team) ?? PALETTE[PALETTE.length - 1];
-}
 
 type Item = DayItem & { team: string; name: string };
 type Card<T> = { it: T; x: number; trueW: number; w: number; row: number };
