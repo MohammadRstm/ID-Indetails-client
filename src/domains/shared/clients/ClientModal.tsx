@@ -14,6 +14,8 @@ import { cx } from "@/shared/utils/cx";
 import { isEmail } from "@/shared/utils/email";
 import { checkClient, useSaveClient, type Client } from "./clientsApi";
 import HelpTip from "@/shared/components/Feedback/HelpTip";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 
 type ContactDraft = { kind: "email" | "phone"; value: string; label: string; isWhatsapp: boolean };
 
@@ -38,6 +40,25 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
         client?.contacts.map((c) => ({ kind: c.kind, value: c.value, label: c.label ?? "", isWhatsapp: c.isWhatsapp }))
             ?? [{ kind: "email", value: "", label: "Main", isWhatsapp: false }],
     );
+    // Proton can fill the empty fields; the person checks them and saves
+    const proton = useProtonForm("client", client?.id ?? null, (fill) => {
+        const v = fill.client;
+        const done: string[] = [];
+        if (!v) return done;
+        fillEmpty(name, v.name, setName, "name", done);
+        fillEmpty(organisation, v.organisation, setOrganisation, "organisation", done);
+        fillEmpty(note, v.note, setNote, "note", done);
+        const next = [...contacts];
+        for (const [kind, value] of [["email", v.email], ["phone", v.phone]] as const) {
+            if (!value || next.some((c) => c.kind === kind && c.value.trim())) continue;
+            const empty = next.findIndex((c) => c.kind === kind && !c.value.trim());
+            if (empty >= 0) next[empty] = { ...next[empty], value };
+            else next.push({ kind, value, label: "Main", isWhatsapp: false });
+            done.push(kind);
+        }
+        if (next.some((c, i) => c !== contacts[i]) || next.length !== contacts.length) setContacts(next);
+        return done;
+    });
 
     const filled = contacts.filter((c) => c.value.trim());
     // The API checks the typed name and contacts against the domain's clients, before anything is saved.
@@ -116,85 +137,88 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
                 </>
             }
         >
-            <div className="grid g-2">
-                <div className="field">
-                    <label className="label required" htmlFor="cl-name">Full name</label>
-                    <input id="cl-name" className="input" autoFocus placeholder="e.g. Rania Khoury" value={name} onChange={(e) => setName(e.target.value)} onBlur={errors.touch("name")} />
-                    <FieldError message={errors.show("name", nameError)} />
+            <div {...proton.guard}>
+                <FilledNote fields={proton.filled} />
+                <div className="grid g-2">
+                    <div className="field">
+                        <label className="label required" htmlFor="cl-name">Full name</label>
+                        <input id="cl-name" className="input" autoFocus placeholder="e.g. Rania Khoury" value={name} onChange={(e) => setName(e.target.value)} onBlur={errors.touch("name")} />
+                        <FieldError message={errors.show("name", nameError)} />
+                    </div>
+                    <div className="field">
+                        <label className="label" htmlFor="cl-org">Organisation</label>
+                        <input id="cl-org" className="input" placeholder={`Optional - e.g. ${domain === "execution" ? "Cedar Developers SAL" : "Haddad Holdings"}`} value={organisation} onChange={(e) => setOrganisation(e.target.value)} />
+                    </div>
                 </div>
-                <div className="field">
-                    <label className="label" htmlFor="cl-org">Organisation</label>
-                    <input id="cl-org" className="input" placeholder={`Optional - e.g. ${domain === "execution" ? "Cedar Developers SAL" : "Haddad Holdings"}`} value={organisation} onChange={(e) => setOrganisation(e.target.value)} />
-                </div>
-            </div>
 
-            {check.data?.nameTaken && (
-                <div className="banner hold mt-s">
-                    <Icon name="info" />
-                    <div>A client called <b>{name.trim()}</b> already exists. Carry on if this is a different person.</div>
-                </div>
-            )}
+                {check.data?.nameTaken && (
+                    <div className="banner hold mt-s">
+                        <Icon name="info" />
+                        <div>A client called <b>{name.trim()}</b> already exists. Carry on if this is a different person.</div>
+                    </div>
+                )}
 
-            <div className="field mt">
-                <label className="label required">
-                    Label
-                    <HelpTip label="a client's label">
-                        <b>What kind of client this is</b>: a key account, a retainer, an agency, a lead or anything you type. It shows
-                        in the client list and on their page, and searching the list finds it, so you can pick out, say, every lead.
-                        It grants no access and changes no figures.
-                    </HelpTip>
-                </label>
-                <div className="chips">
-                    {CLIENT_LABELS.map((l) => (
-                        <button key={l} type="button" className={cx("chip", label === l && "on")} onClick={() => setLabel(l)}>{l}</button>
-                    ))}
+                <div className="field mt">
+                    <label className="label required">
+                        Label
+                        <HelpTip label="a client's label">
+                            <b>What kind of client this is</b>: a key account, a retainer, an agency, a lead or anything you type. It shows
+                            in the client list and on their page, and searching the list finds it, so you can pick out, say, every lead.
+                            It grants no access and changes no figures.
+                        </HelpTip>
+                    </label>
+                    <div className="chips">
+                        {CLIENT_LABELS.map((l) => (
+                            <button key={l} type="button" className={cx("chip", label === l && "on")} onClick={() => setLabel(l)}>{l}</button>
+                        ))}
+                    </div>
+                    <input className="input mt-s" placeholder="or type your own label" aria-label="Your own label" value={label} onChange={(e) => setLabel(e.target.value)} onBlur={errors.touch("label")} />
+                    {errors.show("label", labelError) ? <FieldError message={errors.show("label", labelError)} />
+                        : <div className="hint">A descriptive tag only - it grants no access and changes no figures.</div>}
                 </div>
-                <input className="input mt-s" placeholder="or type your own label" aria-label="Your own label" value={label} onChange={(e) => setLabel(e.target.value)} onBlur={errors.touch("label")} />
-                {errors.show("label", labelError) ? <FieldError message={errors.show("label", labelError)} />
-                    : <div className="hint">A descriptive tag only - it grants no access and changes no figures.</div>}
-            </div>
 
-            <div className="field mt">
-                <label className="label required">Contact details</label>
-                <div className="stack" style={{ gap: 8 }}>
-                    {contacts.map((c, i) => (
-                        <div key={i}>
-                            <div className="contact-edit">
-                                <Select className="select sm" style={{ width: 94 }} aria-label="Kind" value={c.kind}
-                                    options={[{ value: "email", label: "Email" }, { value: "phone", label: "Phone" }]}
-                                    onChange={(kind) => setContact(i, { kind, isWhatsapp: kind === "phone" ? c.isWhatsapp : false })} />
-                                {c.kind === "email" ? (
-                                    <input className="input grow" placeholder="name@company.com" aria-label="Email address" value={c.value}
-                                        onChange={(e) => setContact(i, { value: e.target.value })} onBlur={errors.touch(`contact-${i}`)} />
-                                ) : (
-                                    <PhoneField placeholder="3 555 142" aria-label="Phone number" value={c.value}
-                                        onChange={(value) => setContact(i, { value })} onBlur={errors.touch(`contact-${i}`)} />
-                                )}
-                                <input className="input" style={{ width: 108 }} placeholder="e.g. Office" aria-label="Contact label" value={c.label} onChange={(e) => setContact(i, { label: e.target.value })} />
-                                {c.kind === "phone" && (
-                                    <button type="button" className={cx("chip", c.isWhatsapp && "on")} title="Reachable on WhatsApp"
-                                        onClick={() => setContact(i, { isWhatsapp: !c.isWhatsapp })}>WhatsApp</button>
-                                )}
-                                <button type="button" className="icon-btn" aria-label="Remove contact" disabled={contacts.length === 1}
-                                    onClick={() => setContacts(contacts.filter((_, j) => j !== i))}>
-                                    <Icon name="x" />
-                                </button>
+                <div className="field mt">
+                    <label className="label required">Contact details</label>
+                    <div className="stack" style={{ gap: 8 }}>
+                        {contacts.map((c, i) => (
+                            <div key={i}>
+                                <div className="contact-edit">
+                                    <Select className="select sm" style={{ width: 94 }} aria-label="Kind" value={c.kind}
+                                        options={[{ value: "email", label: "Email" }, { value: "phone", label: "Phone" }]}
+                                        onChange={(kind) => setContact(i, { kind, isWhatsapp: kind === "phone" ? c.isWhatsapp : false })} />
+                                    {c.kind === "email" ? (
+                                        <input className="input grow" placeholder="name@company.com" aria-label="Email address" value={c.value}
+                                            onChange={(e) => setContact(i, { value: e.target.value })} onBlur={errors.touch(`contact-${i}`)} />
+                                    ) : (
+                                        <PhoneField placeholder="3 555 142" aria-label="Phone number" value={c.value}
+                                            onChange={(value) => setContact(i, { value })} onBlur={errors.touch(`contact-${i}`)} />
+                                    )}
+                                    <input className="input" style={{ width: 108 }} placeholder="e.g. Office" aria-label="Contact label" value={c.label} onChange={(e) => setContact(i, { label: e.target.value })} />
+                                    {c.kind === "phone" && (
+                                        <button type="button" className={cx("chip", c.isWhatsapp && "on")} title="Reachable on WhatsApp"
+                                            onClick={() => setContact(i, { isWhatsapp: !c.isWhatsapp })}>WhatsApp</button>
+                                    )}
+                                    <button type="button" className="icon-btn" aria-label="Remove contact" disabled={contacts.length === 1}
+                                        onClick={() => setContacts(contacts.filter((_, j) => j !== i))}>
+                                        <Icon name="x" />
+                                    </button>
+                                </div>
+                                <FieldError message={errors.show(`contact-${i}`, emailError(c))} />
                             </div>
-                            <FieldError message={errors.show(`contact-${i}`, emailError(c))} />
-                        </div>
-                    ))}
+                        ))}
+                    </div>
+                    <FieldError message={errors.show("contacts", contactsError)} />
+                    <button type="button" className="btn btn-sm btn-quiet mt-s"
+                        onClick={() => setContacts([...contacts, { kind: "phone", value: "", label: "", isWhatsapp: true }])}>
+                        <Icon name="plus" />Add another contact
+                    </button>
+                    <div className="hint">Used to identify and reach the client. They never receive anything from this system.</div>
                 </div>
-                <FieldError message={errors.show("contacts", contactsError)} />
-                <button type="button" className="btn btn-sm btn-quiet mt-s"
-                    onClick={() => setContacts([...contacts, { kind: "phone", value: "", label: "", isWhatsapp: true }])}>
-                    <Icon name="plus" />Add another contact
-                </button>
-                <div className="hint">Used to identify and reach the client. They never receive anything from this system.</div>
-            </div>
 
-            <div className="field mt">
-                <label className="label" htmlFor="cl-note">Note</label>
-                <input id="cl-note" className="input" placeholder="Optional - one line of context" value={note} onChange={(e) => setNote(e.target.value)} />
+                <div className="field mt">
+                    <label className="label" htmlFor="cl-note">Note</label>
+                    <input id="cl-note" className="input" placeholder="Optional - one line of context" value={note} onChange={(e) => setNote(e.target.value)} />
+                </div>
             </div>
         </Modal>
     );

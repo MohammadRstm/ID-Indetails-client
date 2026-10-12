@@ -8,6 +8,8 @@ import { FieldError } from "@/shared/components/Forms/Field";
 import Modal from "@/shared/components/Overlays/Modal";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 
 const MAX_TITLE = 120;
 /** Who supports the product, for people who'd rather message than fill in the form. */
@@ -25,6 +27,15 @@ export default function ReportBugModal({ onClose }: { onClose: () => void }) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [steps, setSteps] = useState("");
+    const proton = useProtonForm("report_bug", null, (fill) => {
+        const v = fill.reportBug;
+        const done: string[] = [];
+        if (!v) return done;
+        fillEmpty(title, v.title, setTitle, "title", done);
+        fillEmpty(description, v.description, setDescription, "description", done);
+        fillEmpty(steps, v.steps, setSteps, "steps", done);
+        return done;
+    });
     const errors = useFormErrors();
     const send = useMutation({
         mutationFn: async () => {
@@ -62,37 +73,40 @@ export default function ReportBugModal({ onClose }: { onClose: () => void }) {
                     <button className="btn btn-primary" disabled={send.isPending} onClick={submit}>{send.isPending ? "Sending…" : "Send report"}</button>
                 </>
             }>
-            <div className="field">
-                <label className="label required" htmlFor="bug-title">What went wrong</label>
-                <input id="bug-title" className="input" autoFocus maxLength={MAX_TITLE} placeholder="e.g. The timer stopped when I changed page"
-                    value={title} onChange={(e) => setTitle(e.target.value.replace(/[\r\n]/g, " "))} onBlur={errors.touch("title")} />
-                <FieldError message={errors.show("title", titleError)} />
-            </div>
-            <div className="field">
-                <label className="label required" htmlFor="bug-description">What happened</label>
-                <textarea id="bug-description" className="textarea" rows={4} maxLength={MAX_TEXT} placeholder="What you saw, and what you expected instead"
-                    value={description} onChange={(e) => setDescription(e.target.value)} onBlur={errors.touch("description")} />
-                <FieldError message={errors.show("description", descriptionError)} />
-            </div>
-            <div className="field">
-                <label className="label optional" htmlFor="bug-steps">Steps to make it happen again</label>
-                <textarea id="bug-steps" className="textarea" rows={3} maxLength={MAX_TEXT} placeholder="1. Open… 2. Click…"
-                    value={steps} onChange={(e) => setSteps(e.target.value)} onBlur={errors.touch("steps")} />
-                <FieldError message={errors.show("steps", stepsError)} />
-                <div className="hint">Please leave out passwords and other private details.</div>
-            </div>
-            <div className="bug-direct">
-                <div>
-                    <div className="strong">Prefer to message us directly?</div>
-                    <div className="hint">Anything you've typed above goes with it.</div>
+            <div {...proton.guard}>
+                <FilledNote fields={proton.filled} />
+                <div className="field">
+                    <label className="label required" htmlFor="bug-title">What went wrong</label>
+                    <input id="bug-title" className="input" autoFocus maxLength={MAX_TITLE} placeholder="e.g. The timer stopped when I changed page"
+                        value={title} onChange={(e) => setTitle(e.target.value.replace(/[\r\n]/g, " "))} onBlur={errors.touch("title")} />
+                    <FieldError message={errors.show("title", titleError)} />
                 </div>
-                <div className="row wrap" style={{ gap: 8 }}>
-                    <a className="btn btn-sm" href={whatsapp} target="_blank" rel="noreferrer" title={`WhatsApp ${SUPPORT_WHATSAPP_SHOWN}`}>
-                        <Icon name="chat" />WhatsApp
-                    </a>
-                    <a className="btn btn-sm" href={email} title={`Email ${SUPPORT_EMAIL}`}>
-                        <Icon name="mail" />Email
-                    </a>
+                <div className="field">
+                    <label className="label required" htmlFor="bug-description">What happened</label>
+                    <textarea id="bug-description" className="textarea" rows={4} maxLength={MAX_TEXT} placeholder="What you saw, and what you expected instead"
+                        value={description} onChange={(e) => setDescription(e.target.value)} onBlur={errors.touch("description")} />
+                    <FieldError message={errors.show("description", descriptionError)} />
+                </div>
+                <div className="field">
+                    <label className="label optional" htmlFor="bug-steps">Steps to make it happen again</label>
+                    <textarea id="bug-steps" className="textarea" rows={3} maxLength={MAX_TEXT} placeholder="1. Open… 2. Click…"
+                        value={steps} onChange={(e) => setSteps(e.target.value)} onBlur={errors.touch("steps")} />
+                    <FieldError message={errors.show("steps", stepsError)} />
+                    <div className="hint">Please leave out passwords and other private details.</div>
+                </div>
+                <div className="bug-direct">
+                    <div>
+                        <div className="strong">Prefer to message us directly?</div>
+                        <div className="hint">Anything you've typed above goes with it.</div>
+                    </div>
+                    <div className="row wrap" style={{ gap: 8 }}>
+                        <a className="btn btn-sm" href={whatsapp} target="_blank" rel="noreferrer" title={`WhatsApp ${SUPPORT_WHATSAPP_SHOWN}`}>
+                            <Icon name="chat" />WhatsApp
+                        </a>
+                        <a className="btn btn-sm" href={email} title={`Email ${SUPPORT_EMAIL}`}>
+                            <Icon name="mail" />Email
+                        </a>
+                    </div>
                 </div>
             </div>
         </Modal>

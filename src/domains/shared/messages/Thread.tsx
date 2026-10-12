@@ -210,7 +210,7 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                         </>
                     )}
             </div>
-            <Composer key={key} members={chat.kind === "group" ? members.data ?? [] : null} meId={meId} sending={send.isPending} error={send.error}
+            <Composer key={key} draftKey={key} members={chat.kind === "group" ? members.data ?? [] : null} meId={meId} sending={send.isPending} error={send.error}
                 onSend={async (body) => {
                     const sent = await send.mutateAsync(body);
                     playSent();

@@ -8883,6 +8883,13 @@ export interface components {
             kind: components["schemas"]["ContactKind"];
             name: string;
         };
+        ClientFill: {
+            email: null | string;
+            name: null | string;
+            note: null | string;
+            organisation: null | string;
+            phone: null | string;
+        };
         /** @enum {unknown} */
         ClientFilter: "active" | "owing" | "empty" | null;
         ClientGrowthMonthResponse: {
@@ -9343,6 +9350,13 @@ export interface components {
             updatedAt: null | string;
             weeklySummary: boolean;
         };
+        EditProjectFill: {
+            description: null | string;
+            location: null | string;
+            /** Format: date */
+            targetDate: null | string;
+            title: null | string;
+        };
         /** @enum {unknown} */
         EditWindow: "none" | "one_day" | "seven_days" | "unlimited";
         EmailDocumentRequest: {
@@ -9674,6 +9688,16 @@ export interface components {
         InvitationTokenRequest: {
             token?: string;
         };
+        InviteFill: {
+            /** @description Only an address the user typed in this conversation. */
+            email: null | string;
+            position: null | string;
+            /**
+             * Format: int64
+             * @description A team id from find_recipient or another tool.
+             */
+            teamId: null | number;
+        };
         InvoiceClientResponse: {
             displayName: string;
             /** Format: int64 */
@@ -9967,6 +9991,24 @@ export interface components {
             key: string;
             label: string;
         };
+        MeetingFill: {
+            /** Format: date */
+            day: null | string;
+            description: null | string;
+            /** Format: int32 */
+            endMinute: null | number;
+            /**
+             * Format: int64
+             * @description The project it is about: an id from find or another tool.
+             */
+            projectId: null | number;
+            /**
+             * Format: int32
+             * @description Minutes after midnight, company time: 9:30 is 570.
+             */
+            startMinute: null | number;
+            topic: null | string;
+        };
         MeetingPersonResponse: {
             /** Format: int64 */
             id: number;
@@ -9996,6 +10038,10 @@ export interface components {
             topic: null | string;
             /** Format: date-time */
             updatedAt: null | string;
+        };
+        MessageFill: {
+            /** @description The message, in the user's voice, from what the user said: they read it and press Send themselves. */
+            body: string;
         };
         MessagePageResponse: {
             hasMore: boolean;
@@ -10346,6 +10392,18 @@ export interface components {
             unit?: null | string;
             /** Format: double */
             unitCost?: null | number;
+        };
+        NewProjectFill: {
+            /**
+             * Format: int64
+             * @description An id from find or another tool.
+             */
+            clientId: null | number;
+            description: null | string;
+            location: null | string;
+            /** Format: date */
+            targetDate: null | string;
+            title: null | string;
         };
         NotificationProjectResponse: {
             domain: string;
@@ -11283,6 +11341,20 @@ export interface components {
         /** @enum {unknown} */
         ProtonFinancialsTab: "overview" | "projects" | "clients" | "billing" | "costs" | null;
         /** @enum {unknown} */
+        ProtonForm: "client" | "meeting" | "new_project" | "edit_project" | "report_bug" | "invite" | "message";
+        ProtonFormFill: {
+            client: null | components["schemas"]["ClientFill"];
+            editProject: null | components["schemas"]["EditProjectFill"];
+            form: components["schemas"]["ProtonForm"];
+            /** Format: int64 */
+            id: null | number;
+            invite: null | components["schemas"]["InviteFill"];
+            meeting: null | components["schemas"]["MeetingFill"];
+            message: null | components["schemas"]["MessageFill"];
+            newProject: null | components["schemas"]["NewProjectFill"];
+            reportBug: null | components["schemas"]["ReportBugFill"];
+        };
+        /** @enum {unknown} */
         ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | null;
         ProtonPageContext: {
             area: string;
@@ -11324,7 +11396,7 @@ export interface components {
             type: components["schemas"]["ProtonRefType"];
         };
         /** @enum {unknown} */
-        ProtonRefType: "project" | "client" | "person";
+        ProtonRefType: "project" | "client" | "person" | "team";
         ProtonReplyResponse: {
             choices: components["schemas"]["ProtonChoice"][];
             /** Format: uuid */
@@ -11352,7 +11424,7 @@ export interface components {
             scope: null | string;
         };
         /** @enum {unknown} */
-        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_statement" | "new_meeting" | "add_company_expense" | "message_person" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | null;
+        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_statement" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | null;
         /** @enum {unknown} */
         ProtonTheme: "light" | "dark" | null;
         ProtonToolUsageResponse: {
@@ -11381,6 +11453,7 @@ export interface components {
             clientId: null | number;
             companyTab: null | components["schemas"]["ProtonCompanyTab"];
             domain: null | string;
+            fill: null | components["schemas"]["ProtonFormFill"];
             /** Format: int64 */
             id: null | number;
             label: string;
@@ -11394,7 +11467,7 @@ export interface components {
             type: components["schemas"]["ProtonUiCommandType"];
         };
         /** @enum {unknown} */
-        ProtonUiCommandType: "open_project" | "open_client" | "open_person" | "open_page" | "open_surface" | "set_preference" | "refresh";
+        ProtonUiCommandType: "open_project" | "open_client" | "open_person" | "open_page" | "open_surface" | "fill_form" | "set_preference" | "refresh";
         ProtonUsageResponse: {
             available: boolean;
             companyLimitReached: boolean;
@@ -11451,6 +11524,11 @@ export interface components {
         };
         RenameTeamRequest: {
             name?: string;
+        };
+        ReportBugFill: {
+            description: null | string;
+            steps: null | string;
+            title: null | string;
         };
         ReportBugRequest: {
             description?: string;
