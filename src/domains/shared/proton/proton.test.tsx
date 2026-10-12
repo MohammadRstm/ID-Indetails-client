@@ -22,11 +22,16 @@ const reply = (text: string, pendingAction: typeof action | null = null) => ({
     limited: false,
     usage: { ...usage, questionsUsed: 4, questionsRemaining: 296 },
     sources: [] as { label: string; period: string | null; comparedWith: string | null; partial: boolean; scope: string | null; omitted: string[] }[],
+    uiCommands: [] as Record<string, unknown>[],
+    choices: [] as { type: string; id: number; label: string; detail: string | null; domain: string | null }[],
     pendingAction,
 });
 
+// The page context the panel sends from the Help page.
+const onHelp = { area: "design", page: null, entityType: null, entityId: null, section: null };
+
 /** Proton's endpoints, recording what the panel sends. */
-function protonHandlers(answers: ReturnType<typeof reply>[]) {
+function protonHandlers(answers: ReturnType<typeof reply>[], confirmOpens: Record<string, unknown>[] = []) {
     const sent = { questions: [] as unknown[], decisions: [] as { path: string; body: unknown }[] };
     return {
         sent,
@@ -39,8 +44,8 @@ function protonHandlers(answers: ReturnType<typeof reply>[]) {
             http.post("/api/proton/actions/:id/:decision", async ({ request, params }) => {
                 sent.decisions.push({ path: `${params.id}/${params.decision}`, body: await request.json() });
                 return params.decision === "confirm"
-                    ? HttpResponse.json({ actionId: "a1", status: "succeeded", message: "Villa Mounir is now on hold.", refs: [] })
-                    : HttpResponse.json({ actionId: "a1", status: "cancelled", message: "Cancelled. Nothing was changed.", refs: [] });
+                    ? HttpResponse.json({ actionId: "a1", status: "succeeded", message: "Villa Mounir is now on hold.", refs: [], uiCommands: confirmOpens })
+                    : HttpResponse.json({ actionId: "a1", status: "cancelled", message: "Cancelled. Nothing was changed.", refs: [], uiCommands: [] });
             }),
         ],
     };
@@ -51,7 +56,7 @@ async function openAndAsk(question: string) {
     // the Help page focuses its own search box once it has loaded; wait for it, or it takes the keyboard mid-question
     await screen.findByRole("textbox", { name: "Search Help" });
     await user.click(await screen.findByRole("button", { name: "Ask Proton" }));
-    const panel = await screen.findByRole("dialog", { name: "Proton" });
+    const panel = await screen.findByRole("complementary", { name: "Proton" });
     await user.type(within(panel).getByRole("textbox", { name: "Ask Proton" }), question);
     await user.click(within(panel).getByRole("button", { name: "Send" }));
     return { user, panel };
@@ -67,7 +72,7 @@ describe("Proton", () => {
         expect(await within(panel).findByText("Villa Mounir is active and 60% done.")).toBeInTheDocument();
         expect(within(panel).getByRole("link", { name: "Villa Mounir" })).toHaveAttribute("href", "/design/projects/42");
         expect(within(panel).getByText("296 of 300 questions left this month")).toBeInTheDocument();
-        expect(sent.questions).toEqual([{ conversationId: null, text: "How is Villa Mounir doing?" }]);
+        expect(sent.questions).toEqual([{ conversationId: null, text: "How is Villa Mounir doing?", page: onHelp }]);
     });
 
     it("carry out a proposed change only on Confirm, sending nothing but its id and conversation", async () => {
@@ -84,7 +89,7 @@ describe("Proton", () => {
         await user.click(within(panel).getByRole("button", { name: "Send" }));
         await within(panel).findByText("Okay.");
         expect(sent.decisions).toEqual([]);
-        expect(sent.questions[1]).toEqual({ conversationId: "c1", text: "yes" });
+        expect(sent.questions[1]).toEqual({ conversationId: "c1", text: "yes", page: onHelp });
 
         await user.click(within(card).getByRole("button", { name: "Confirm" }));
         expect(await within(card).findByText("Villa Mounir is now on hold.")).toBeInTheDocument();
@@ -133,6 +138,81 @@ describe("Proton", () => {
         const summary = await within(panel).findByText("Based on: Hours compared · 1–7 Oct 2026 (so far) vs 1–7 Sep 2026");
         await user.click(summary);
         expect(within(panel).getByText("Not included: money: needs the financial:view permission")).toBeInTheDocument();
+    });
+
+    it("open what Proton asks for beside the chat, and say so", async () => {
+        const opening = {
+            ...reply("Opening Villa Mounir's requirements."),
+            uiCommands: [{ type: "open_project", label: "Villa Mounir", id: 42, domain: "design", section: "requirements", page: null, clientId: null, tab: null }],
+        };
+        const { handlers } = protonHandlers([opening]);
+        renderApp("/design/help", personas.designAdmin, ...handlers);
+
+        const { panel } = await openAndAsk("Take me to Villa Mounir's requirements");
+
+        await waitFor(() => expect(`${window.location.pathname}${window.location.search}`).toBe("/design/projects/42?tab=requirements"));
+        expect(await within(panel).findByText("Opened Villa Mounir.")).toBeInTheDocument();
+        // no backdrop: the page stays in view and the chat stays open
+        expect(document.querySelector(".drawer-scrim")).toBeNull();
+        expect(screen.getByRole("complementary", { name: "Proton" })).toBeInTheDocument();
+    });
+
+    it("refuse commands it doesn't know or the person may not follow", async () => {
+        const bad = {
+            ...reply("Opening it."),
+            uiCommands: [
+                { type: "navigate_to_url", label: "x", id: null, domain: null, section: null, page: null, clientId: null, tab: null, url: "javascript:alert(1)" },
+                { type: "open_project", label: "Site", id: 7, domain: "execution", section: null, page: null, clientId: null, tab: null },
+            ],
+        };
+        const { handlers } = protonHandlers([bad]);
+        renderApp("/design/help", personas.designAdmin, ...handlers);
+
+        const { panel } = await openAndAsk("Open the site");
+
+        expect(await within(panel).findByText("That couldn't be opened here.")).toBeInTheDocument();
+        expect(window.location.pathname).toBe("/design/help");
+    });
+
+    it("offer matches as buttons, and send only the pick", async () => {
+        const which = {
+            ...reply("I found two. Which one do you mean?"),
+            refs: [],
+            choices: [
+                { type: "project", id: 42, label: "Alpha House", detail: "Project · Design", domain: "design" },
+                { type: "project", id: 43, label: "Alpha Tower", detail: "Project · Design", domain: "design" },
+            ],
+        };
+        const { handlers, sent } = protonHandlers([which, reply("Opening Alpha Tower.")]);
+        renderApp("/design/help", personas.designAdmin, ...handlers);
+
+        const { user, panel } = await openAndAsk("Open Alpha");
+        const options = await within(panel).findByRole("group", { name: "Options" });
+        await user.click(within(options).getByRole("button", { name: /Alpha Tower/ }));
+
+        expect(await within(panel).findByText("Opening Alpha Tower.")).toBeInTheDocument();
+        expect(sent.questions[1]).toEqual({ conversationId: "c1", choice: { type: "project", id: 43 }, page: onHelp });
+        // the options of an older reply can't be picked again
+        expect(within(options).getByRole("button", { name: /Alpha House/ })).toBeDisabled();
+    });
+
+    it("open the result of a confirmed change when the card said so", async () => {
+        const created = {
+            ...action,
+            tool: "propose_create_project",
+            preview: { title: "Create a Design project", changes: [{ label: "Title", before: null, after: "Website Redesign" }], note: null, opensAfter: "the new project" },
+        };
+        const { handlers } = protonHandlers([reply("Shall I create it?", created as unknown as typeof action)],
+            [{ type: "open_project", label: "Website Redesign", id: 77, domain: "design", section: null, page: null, clientId: null, tab: null }]);
+        renderApp("/design/help", personas.superAdmin, ...handlers);
+        const { user, panel } = await openAndAsk("Create Website Redesign");
+
+        const card = await within(panel).findByRole("group", { name: "Create a Design project" });
+        expect(within(card).getByText("After you confirm, Hourline opens the new project.")).toBeInTheDocument();
+        await user.click(within(card).getByRole("button", { name: "Confirm" }));
+
+        await waitFor(() => expect(window.location.pathname).toBe("/design/projects/77"));
+        expect(await within(card).findByText("Villa Mounir is now on hold. Opened Website Redesign.")).toBeInTheDocument();
     });
 
     it("isn't offered to employees", async () => {

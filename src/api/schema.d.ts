@@ -8557,8 +8557,10 @@ export interface components {
             invoiceId?: number;
         };
         AskProtonRequest: {
+            choice?: null | components["schemas"]["ProtonChoiceRequest"];
             /** Format: uuid */
             conversationId?: null | string;
+            page?: null | components["schemas"]["ProtonPageContext"];
             text?: string;
         };
         AttachFileRequest: {
@@ -11108,6 +11110,7 @@ export interface components {
             message: string;
             refs: components["schemas"]["ProtonRef"][];
             status: components["schemas"]["ProtonActionStatus"];
+            uiCommands: components["schemas"]["ProtonUiCommand"][];
         };
         /** @enum {unknown} */
         ProtonActionRisk: "low" | "medium";
@@ -11143,6 +11146,19 @@ export interface components {
             before: null | string;
             label: string;
         };
+        ProtonChoice: {
+            detail: null | string;
+            domain: null | string;
+            /** Format: int64 */
+            id: number;
+            label: string;
+            type: components["schemas"]["ProtonRefType"];
+        };
+        ProtonChoiceRequest: {
+            /** Format: int64 */
+            id?: number;
+            type?: components["schemas"]["ProtonRefType"];
+        };
         ProtonConversationUsageResponse: {
             /** Format: uuid */
             conversationId: string;
@@ -11171,6 +11187,18 @@ export interface components {
             /** Format: int32 */
             questions: number;
         };
+        /** @enum {unknown} */
+        ProtonFinancialsTab: "overview" | "projects" | "clients" | "billing" | "costs" | null;
+        /** @enum {unknown} */
+        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | null;
+        ProtonPageContext: {
+            area: string;
+            /** Format: int64 */
+            entityId: null | number;
+            entityType: null | components["schemas"]["ProtonRefType"];
+            page: null | components["schemas"]["ProtonPage"];
+            section: null | components["schemas"]["ProtonProjectSection"];
+        };
         ProtonPendingAction: {
             /** Format: date-time */
             expiresAt: string;
@@ -11183,8 +11211,11 @@ export interface components {
         ProtonPreview: {
             changes: components["schemas"]["ProtonChange"][];
             note: null | string;
+            opensAfter: null | string;
             title: string;
         };
+        /** @enum {unknown} */
+        ProtonProjectSection: "overview" | "requirements" | "timeline" | "meetings" | null;
         ProtonRef: {
             domain: null | string;
             /** Format: int64 */
@@ -11195,6 +11226,7 @@ export interface components {
         /** @enum {unknown} */
         ProtonRefType: "project" | "client" | "person";
         ProtonReplyResponse: {
+            choices: components["schemas"]["ProtonChoice"][];
             /** Format: uuid */
             conversationId: string;
             limited: boolean;
@@ -11202,6 +11234,7 @@ export interface components {
             refs: components["schemas"]["ProtonRef"][];
             reply: string;
             sources: components["schemas"]["ProtonSourceResponse"][];
+            uiCommands: components["schemas"]["ProtonUiCommand"][];
             usage: components["schemas"]["ProtonUsageResponse"];
         };
         ProtonSourceResponse: {
@@ -11233,6 +11266,20 @@ export interface components {
             id: number;
             note: null | string;
         };
+        ProtonUiCommand: {
+            /** Format: int64 */
+            clientId: null | number;
+            domain: null | string;
+            /** Format: int64 */
+            id: null | number;
+            label: string;
+            page: null | components["schemas"]["ProtonPage"];
+            section: null | components["schemas"]["ProtonProjectSection"];
+            tab: null | components["schemas"]["ProtonFinancialsTab"];
+            type: components["schemas"]["ProtonUiCommandType"];
+        };
+        /** @enum {unknown} */
+        ProtonUiCommandType: "open_project" | "open_client" | "open_person" | "open_page" | "refresh";
         ProtonUsageResponse: {
             available: boolean;
             companyLimitReached: boolean;

@@ -85,10 +85,12 @@ type DrawerProps = {
     foot?: ReactNode;
     onClose: () => void;
     children: ReactNode;
+    /** No backdrop: the page beside it stays visible and usable (the Proton panel, which can open pages). */
+    modeless?: boolean;
 };
 
 /** A panel sliding in from the right (the prototype's UI.Drawer). */
-export function Drawer({ title, head, foot, onClose, children }: DrawerProps) {
+export function Drawer({ title, head, foot, onClose, children, modeless }: DrawerProps) {
     const close = useEffectEvent(() => onClose());
 
     useEffect(() => {
@@ -101,8 +103,8 @@ export function Drawer({ title, head, foot, onClose, children }: DrawerProps) {
 
     return (
         <div>
-            <div className="drawer-scrim" onClick={onClose} />
-            <aside className="drawer" role="dialog" aria-label={title}>
+            {!modeless && <div className="drawer-scrim" onClick={onClose} />}
+            <aside className="drawer" role={modeless ? "complementary" : "dialog"} aria-label={title}>
                 <div className="drawer-head">
                     <div className="grow">{head ?? <div className="modal-title">{title}</div>}</div>
                     <button className="icon-btn" onClick={onClose} aria-label="Close">

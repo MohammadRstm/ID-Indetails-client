@@ -6,6 +6,15 @@ export type ProtonReply = Schemas["ProtonReplyResponse"];
 export type ProtonPendingAction = Schemas["ProtonPendingAction"];
 export type ProtonOutcome = Schemas["ProtonActionOutcomeResponse"];
 export type ProtonRef = Schemas["ProtonRef"];
+export type ProtonChoice = Schemas["ProtonChoice"];
+
+/** A question, or a pick from the buttons of the last reply, with the page the person is on. */
+export type AskBody = {
+    conversationId: string | null;
+    text?: string;
+    page?: Schemas["ProtonPageContext"] | null;
+    choice?: { type: Schemas["ProtonRefType"]; id: number };
+};
 
 // every key starts with "proton"
 const protonKey = ["proton"] as const;
@@ -23,7 +32,7 @@ export function useProtonUsage(enabled = true) {
 export function useAskProton() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async (body: { conversationId: string | null; text: string }) =>
+        mutationFn: async (body: AskBody) =>
             (await http.post<ProtonReply>("/proton/messages", body)).data,
         onSuccess: (reply) => queryClient.setQueryData([...protonKey, "usage"], reply.usage),
     });
