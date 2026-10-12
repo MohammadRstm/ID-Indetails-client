@@ -40,6 +40,7 @@ describe("Execution's dashboard", () => {
 
     it("counts its projects by status from the dashboard", async () => {
         renderApp("/execution/overview", karim, ...executionMoneyHandlers);
+        await userEvent.click(await screen.findByRole("tab", { name: "Activity" }));
         await waitFor(() => {
             const active = screen.getByText("Active projects").closest(".kpi") as HTMLElement;
             expect(within(active).getByText(String(executionMoney.dashboard.activeProjects))).toBeInTheDocument();
