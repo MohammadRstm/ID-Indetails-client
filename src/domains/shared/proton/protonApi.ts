@@ -6,6 +6,7 @@ export type ProtonReply = Schemas["ProtonReplyResponse"];
 export type ProtonPendingAction = Schemas["ProtonPendingAction"];
 export type ProtonOutcome = Schemas["ProtonActionOutcomeResponse"];
 export type ProtonActionSummary = Schemas["ProtonActionSummaryResponse"];
+export type ProtonMemory = Schemas["ProtonMemoryResponse"];
 export type ProtonRef = Schemas["ProtonRef"];
 export type ProtonChoice = Schemas["ProtonChoice"];
 export type ProtonQuickReplyOption = Schemas["ProtonQuickReplyOption"];
@@ -81,6 +82,31 @@ export function useAllProtonActions() {
     return useQuery({
         queryKey: [...protonKey, "actions", "all"],
         queryFn: async () => (await http.get<ProtonActionSummary[]>("/proton/actions/all")).data,
+    });
+}
+
+/** What Proton remembers for the person between chats. */
+export function useProtonMemories() {
+    return useQuery({
+        queryKey: [...protonKey, "memories"],
+        queryFn: async () => (await http.get<ProtonMemory[]>("/proton/memories")).data,
+    });
+}
+
+/** Saves words the person typed in this chat; the API checks they are theirs and only a preference. */
+export function useRemember() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (body: { conversationId: string; text: string }) => (await http.post<ProtonMemory>("/proton/memories", body)).data,
+        onSuccess: () => void queryClient.invalidateQueries({ queryKey: [...protonKey, "memories"] }),
+    });
+}
+
+export function useForgetMemory() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: number) => { await http.delete(`/proton/memories/${id}`); },
+        onSuccess: () => void queryClient.invalidateQueries({ queryKey: [...protonKey, "memories"] }),
     });
 }
 
