@@ -7348,6 +7348,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/proton/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProtonActionSummaryResponse"][];
+                        "text/json": components["schemas"]["ProtonActionSummaryResponse"][];
+                        "text/plain": components["schemas"]["ProtonActionSummaryResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/proton/actions/{actionId}/cancel": {
         parameters: {
             query?: never;
@@ -7432,6 +7469,43 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/proton/actions/all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProtonActionSummaryResponse"][];
+                        "text/json": components["schemas"]["ProtonActionSummaryResponse"][];
+                        "text/plain": components["schemas"]["ProtonActionSummaryResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -9298,6 +9372,7 @@ export interface components {
         DecideProtonActionRequest: {
             /** Format: uuid */
             conversationId?: string;
+            typed?: null | string;
         };
         /** @enum {unknown} */
         DeliveryChannel: "email" | "whatsapp" | "download";
@@ -11255,6 +11330,22 @@ export interface components {
         ProtonActionRisk: "low" | "medium";
         /** @enum {unknown} */
         ProtonActionStatus: "pending" | "executing" | "succeeded" | "failed" | "cancelled" | "superseded" | "expired";
+        ProtonActionSummaryResponse: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            decidedAt: null | string;
+            errorMessage: null | string;
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            resultId: null | number;
+            resultType: null | string;
+            status: components["schemas"]["ProtonActionStatus"];
+            title: string;
+            tool: string;
+            who: null | string;
+        };
         ProtonBriefingItem: {
             domain: null | string;
             facts: string[];
@@ -11310,6 +11401,11 @@ export interface components {
         };
         /** @enum {unknown} */
         ProtonCompanyTab: "overview" | "people" | "teams" | null;
+        /**
+         * @default standard
+         * @enum {unknown}
+         */
+        ProtonConfirm: "standard" | "two_step" | "typed";
         ProtonConversationUsageResponse: {
             /** Format: uuid */
             conversationId: string;
@@ -11372,12 +11468,19 @@ export interface components {
             id: string;
             preview: components["schemas"]["ProtonPreview"];
             risk: components["schemas"]["ProtonActionRisk"];
+            target: null | components["schemas"]["ProtonRef"];
             tool: string;
         };
         ProtonPreview: {
+            area: null | string;
             changes: components["schemas"]["ProtonChange"][];
+            confirm: components["schemas"]["ProtonConfirm"];
+            /** @default false */
+            irreversible: boolean;
             note: null | string;
             opensAfter: null | string;
+            phrase: null | string;
+            reach: null | string;
             title: string;
         };
         /** @enum {unknown} */
@@ -11403,6 +11506,7 @@ export interface components {
             conversationId: string;
             limited: boolean;
             pendingAction: null | components["schemas"]["ProtonPendingAction"];
+            pendingActions: components["schemas"]["ProtonPendingAction"][];
             quickReplies: components["schemas"]["ProtonQuickReplyOption"][];
             refs: components["schemas"]["ProtonRef"][];
             reply: string;

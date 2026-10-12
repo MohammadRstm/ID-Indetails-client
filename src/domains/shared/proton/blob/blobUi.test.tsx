@@ -11,7 +11,7 @@ const usage = { month: "2026-10-01", available: true, questionsAllowed: 300, que
 
 const reply = (text: string) => ({
     conversationId: "c1", reply: text, refs: [], limited: false, usage, sources: [], uiCommands: [], choices: [], quickReplies: [],
-    suggestions: [], pendingAction: null, rolledOver: false,
+    suggestions: [], pendingActions: [], pendingAction: null, rolledOver: false,
 });
 
 /** Proton switched on, with answers held back until the test lets them through. */

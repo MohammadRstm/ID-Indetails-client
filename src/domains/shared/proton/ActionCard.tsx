@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { errorMessage } from "@/api/errors";
 import { cx } from "@/shared/utils/cx";
-import { useDecideAction, type ProtonPendingAction } from "./protonApi";
+import { useDecideAction, useMyProtonActions, type ProtonActionSummary, type ProtonPendingAction } from "./protonApi";
 import { useRunProtonCommands } from "./uiCommands";
 import type { ActionState } from "./protonChat";
 
@@ -9,19 +9,43 @@ type ActionCardProps = {
     action: ProtonPendingAction;
     conversationId: string;
     state: ActionState;
-    /** A newer proposal replaced this one: the API would refuse it, so the card says so instead. */
+    /** A newer proposal for the same change replaced this one: the API would refuse it, so the card says so instead. */
     replaced: boolean;
     onDecided: (state: ActionState) => void;
 };
 
+/** A two-step card's Confirm waits this long after Review, so a double click can't pass both steps. */
+const ARM_MS = 600;
+
+const AREAS: Record<string, string> = { design: "Design", execution: "Execution", company: "Company" };
+
+/** What the API says became of a card brought back after a reload. */
+function stateOf(summary: ProtonActionSummary): ActionState {
+    switch (summary.status) {
+        case "pending": return { kind: "open" };
+        case "succeeded": return { kind: "done", message: "Done." };
+        case "failed": return { kind: "failed", message: summary.errorMessage ?? "It couldn't be done." };
+        case "cancelled": return { kind: "cancelled" };
+        case "superseded": return { kind: "replaced" };
+        case "expired": return { kind: "expired" };
+        default: return { kind: "closed" };
+    }
+}
+
 /**
  * A change Proton proposed, exactly as the API stored it. Nothing happens until the person presses Confirm; the
- * button sends only the proposal's id, and the API checks and runs the stored change itself. Typing "yes" in the
- * chat never confirms anything.
+ * button sends only the proposal's id (and, where the card asks for it, the phrase the person typed), and the API
+ * checks and runs the stored change itself. Typing "yes" in the chat never confirms anything.
  */
 export default function ActionCard({ action, conversationId, state, replaced, onDecided }: ActionCardProps) {
     const decide = useDecideAction();
     const run = useRunProtonCommands();
+    const phraseId = useId();
+    const { preview } = action;
+    const restored = useMyProtonActions(state.kind === "closed");
+    const known = state.kind === "closed" ? restored.data?.find((a) => a.id === action.id) : undefined;
+    const current = known ? stateOf(known) : state;
+
     const [expired, setExpired] = useState(() => new Date(action.expiresAt).getTime() <= Date.now());
     // the card closes by itself when the proposal runs out, as the API would refuse it from then on
     useEffect(() => {
@@ -29,10 +53,23 @@ export default function ActionCard({ action, conversationId, state, replaced, on
         const id = setTimeout(() => setExpired(true), Math.min(new Date(action.expiresAt).getTime() - Date.now(), 2 ** 31 - 1));
         return () => clearTimeout(id);
     }, [action.expiresAt, expired]);
-    const open = state.kind === "open" && !replaced && !expired;
+
+    const [reviewing, setReviewing] = useState(false);
+    const [armed, setArmed] = useState(false);
+    useEffect(() => {
+        if (!reviewing) return;
+        const id = setTimeout(() => setArmed(true), ARM_MS);
+        return () => clearTimeout(id);
+    }, [reviewing]);
+    const [typed, setTyped] = useState("");
+
+    const open = current.kind === "open" && !replaced && !expired;
+    const strong = preview.confirm !== "standard";
+    const phraseMatches = preview.phrase != null && typed.trim().toLowerCase() === preview.phrase.trim().toLowerCase();
+    const canConfirm = !decide.isPending && (preview.confirm === "typed" ? phraseMatches : preview.confirm !== "two_step" || armed);
 
     const send = (decision: "confirm" | "cancel") =>
-        decide.mutate({ action, conversationId, decision }, {
+        decide.mutate({ action, conversationId, decision, typed: decision === "confirm" && preview.confirm === "typed" ? typed : undefined }, {
             onSuccess: (outcome) => {
                 if (decision !== "confirm") return onDecided({ kind: "cancelled" });
                 // the API sends where to go only after a change that succeeded and whose card said so
@@ -43,14 +80,18 @@ export default function ActionCard({ action, conversationId, state, replaced, on
         });
 
     return (
-        <div className={cx("proton-action", !open && "closed")} role="group" aria-label={action.preview.title}>
+        <div className={cx("proton-action", !open && "closed", strong && "strong")} role="group" aria-label={preview.title}>
             <div className="proton-action-head">
-                <span className="proton-action-kicker">Change for you to confirm</span>
-                <span className={cx("pill", action.risk === "low" ? "pill-low" : "pill-mid")}>{action.risk === "low" ? "Low risk" : "Medium risk"}</span>
+                <span className="proton-action-kicker">
+                    Change for you to confirm{preview.area && AREAS[preview.area] ? ` · ${AREAS[preview.area]}` : ""}
+                </span>
+                <span className={cx("pill", strong ? "pill-neg" : action.risk === "low" ? "pill-low" : "pill-mid")}>
+                    {strong ? "Check carefully" : action.risk === "low" ? "Low risk" : "Medium risk"}
+                </span>
             </div>
-            <div className="proton-action-title">{action.preview.title}</div>
+            <div className="proton-action-title">{preview.title}</div>
             <dl className="proton-action-changes">
-                {action.preview.changes.map((change) => (
+                {preview.changes.map((change) => (
                     <div key={change.label}>
                         <dt>{change.label}</dt>
                         <dd>
@@ -60,23 +101,37 @@ export default function ActionCard({ action, conversationId, state, replaced, on
                     </div>
                 ))}
             </dl>
-            {action.preview.note && <div className="muted proton-action-note">{action.preview.note}</div>}
-            {action.preview.opensAfter && open && <div className="muted proton-action-note">After you confirm, I'll open {action.preview.opensAfter}.</div>}
+            {preview.reach && <div className="proton-action-note">{preview.reach}</div>}
+            {preview.irreversible && <div className="proton-action-note neg">This can't be undone.</div>}
+            {preview.note && <div className="muted proton-action-note">{preview.note}</div>}
+            {preview.opensAfter && open && <div className="muted proton-action-note">After you confirm, I'll open {preview.opensAfter}.</div>}
+
+            {open && preview.confirm === "typed" && preview.phrase && (
+                <div className="proton-action-phrase">
+                    <label htmlFor={phraseId}>Type <b>{preview.phrase}</b> to confirm</label>
+                    <input id={phraseId} className="input" value={typed} autoComplete="off" spellCheck={false}
+                        onChange={(e) => setTyped(e.target.value)} />
+                </div>
+            )}
 
             {open ? (
                 <div className="proton-action-foot">
                     <button className="btn btn-sm" disabled={decide.isPending} onClick={() => send("cancel")}>Cancel</button>
-                    <button className="btn btn-sm btn-primary" disabled={decide.isPending} onClick={() => send("confirm")}>
-                        {decide.isPending ? "Working…" : "Confirm"}
-                    </button>
+                    {preview.confirm === "two_step" && !reviewing ? (
+                        <button className="btn btn-sm" onClick={() => setReviewing(true)}>Review</button>
+                    ) : (
+                        <button className="btn btn-sm btn-primary" disabled={!canConfirm} onClick={() => send("confirm")}>
+                            {decide.isPending ? "Working…" : "Confirm"}
+                        </button>
+                    )}
                 </div>
             ) : (
-                <div className={cx("proton-action-outcome", state.kind === "failed" && "neg")} role="status">
-                    {state.kind === "done" ? state.message
-                        : state.kind === "failed" ? state.message
-                        : state.kind === "cancelled" ? "Cancelled. Nothing was changed."
-                        : state.kind === "closed" ? "This card closed when the page reloaded. Ask me again if you still want it."
-                        : replaced ? "Replaced by a newer proposal."
+                <div className={cx("proton-action-outcome", current.kind === "failed" && "neg")} role="status">
+                    {current.kind === "done" ? current.message
+                        : current.kind === "failed" ? current.message
+                        : current.kind === "cancelled" ? "Cancelled. Nothing was changed."
+                        : current.kind === "closed" ? "This card closed when the page reloaded. Ask me again if you still want it."
+                        : replaced || current.kind === "replaced" ? "Replaced by a newer proposal."
                         : "This proposal expired. Ask me again if you still want it."}
                 </div>
             )}

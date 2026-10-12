@@ -45,7 +45,7 @@ export function useProtonConversation() {
                     ...c.turns,
                     ...(reply.rolledOver ? [{ from: "note", text: ROLLED_OVER } as const] : []),
                     {
-                        from: "proton", text: reply.reply, refs: reply.refs, sources: reply.sources, action: reply.pendingAction,
+                        from: "proton", text: reply.reply, refs: reply.refs, sources: reply.sources, cards: reply.pendingActions,
                         choices: reply.choices, quickReplies: reply.quickReplies, suggestions: reply.suggestions, did,
                     },
                 ],

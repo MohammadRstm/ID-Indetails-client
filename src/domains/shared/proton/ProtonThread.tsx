@@ -4,7 +4,7 @@ import { cx } from "@/shared/utils/cx";
 import ActionCard from "./ActionCard";
 import ProtonWelcome from "./ProtonWelcome";
 import SourcesNote from "./SourcesNote";
-import type { ProtonRef } from "./protonApi";
+import type { ProtonPendingAction, ProtonRef } from "./protonApi";
 import type { ProtonChat } from "./protonChat";
 import { celebrate, changeChat } from "./protonStore";
 import type { ProtonConversation } from "./useProtonConversation";
@@ -21,12 +21,17 @@ type ProtonThreadProps = {
     stillLooking: boolean;
 };
 
-/** The conversation itself: what was asked and answered, the buttons of the newest reply, and any proposed change. */
+/** Cards for the same change (the same kind, on the same record): the API keeps only the newest of them. */
+const sameChange = (card: ProtonPendingAction) => `${card.tool}:${card.target?.type ?? ""}:${card.target?.id ?? ""}`;
+
+/** The conversation itself: what was asked and answered, the buttons of the newest reply, and any proposed changes. */
 export default function ProtonThread({ chat, conversation, linkOf, draft, status, stillLooking }: ProtonThreadProps) {
     const bottom = useRef<HTMLDivElement>(null);
-    // only the newest proposal can still be confirmed, and only the newest reply's buttons pressed: the API replaced the others
-    const newest = chat.turns.findLast((t) => t.from === "proton" && t.action != null);
-    const latestAction = newest?.from === "proton" ? newest.action?.id : undefined;
+    // a later proposal for the same change replaces a card; other cards stay open. Only the newest reply's buttons can be pressed.
+    const newest = new Map<string, string>();
+    for (const turn of chat.turns) {
+        if (turn.from === "proton") for (const card of turn.cards) newest.set(sameChange(card), card.id);
+    }
     const lastTurn = chat.turns.length - 1;
     const pending = conversation.pending;
 
@@ -73,18 +78,19 @@ export default function ProtonThread({ chat, conversation, linkOf, draft, status
                         {turn.from === "proton" && <SourcesNote sources={turn.sources} />}
                         {turn.from === "proton" && turn.did && <div className="muted proton-did" role="status">{turn.did}</div>}
                     </div>
-                    {turn.from === "proton" && turn.action && chat.conversationId && (
+                    {turn.from === "proton" && chat.conversationId && turn.cards.map((card) => (
                         <ActionCard
-                            action={turn.action}
-                            conversationId={chat.conversationId}
-                            state={chat.actions[turn.action.id] ?? { kind: "open" }}
-                            replaced={turn.action.id !== latestAction}
+                            key={card.id}
+                            action={card}
+                            conversationId={chat.conversationId!}
+                            state={chat.actions[card.id] ?? { kind: "open" }}
+                            replaced={newest.get(sameChange(card)) !== card.id}
                             onDecided={(state) => {
-                                changeChat((c) => ({ ...c, actions: { ...c.actions, [turn.action!.id]: state } }));
+                                changeChat((c) => ({ ...c, actions: { ...c.actions, [card.id]: state } }));
                                 if (state.kind === "done") celebrate();
                             }}
                         />
-                    )}
+                    ))}
                     {turn.from === "proton" && i === lastTurn && turn.suggestions.length > 0 && (
                         <div className="proton-choices proton-suggestions" role="group" aria-label="Suggested replies">
                             {turn.suggestions.map((suggestion, index) => (

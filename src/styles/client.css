@@ -231,6 +231,7 @@ table { line-height: normal; font-weight: normal; }
 .proton-composer textarea { flex: 1; resize: none; }
 .proton-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; min-height: 24px; }
 .proton-action { margin: 4px 0 6px; max-width: 100%; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--r2); background: var(--surface); padding: 10px 12px; }
+.proton-action.strong { border-left-color: var(--now); }
 .proton-action.closed { border-left-color: var(--line); }
 .proton-action-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .proton-action-kicker { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); }
@@ -240,6 +241,8 @@ table { line-height: normal; font-weight: normal; }
 .proton-action-changes dt { color: var(--ink-3); }
 .proton-action-changes dd { margin: 0; overflow-wrap: anywhere; }
 .proton-action-note { font-size: 12px; margin-top: 8px; }
+.proton-action-note.neg { color: var(--now); }
+.proton-action-phrase { display: grid; gap: 4px; margin-top: 10px; font-size: 12.5px; }
 .proton-action-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 .proton-action-outcome { margin-top: 10px; font-size: 12.5px; }
 .proton-action-outcome.neg { color: var(--now); }

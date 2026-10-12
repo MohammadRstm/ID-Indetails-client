@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { errorMessage } from "@/api/errors";
 import { loadFailed } from "@/api/queryState";
-import { useProtonBudget, useTopUpBudget, type ProtonBudget } from "@/domains/shared/proton/protonApi";
+import { useAllProtonActions, useProtonBudget, useTopUpBudget, type ProtonBudget } from "@/domains/shared/proton/protonApi";
 import { KpiStrip } from "@/shared/components/Data/Kpi";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
@@ -76,7 +76,25 @@ function Breakdown({ budget: b }: { budget: ProtonBudget }) {
             <Table title="Top-ups this month" className="mt" empty={b.topUps.length === 0}
                 head={["Added", "By", "Note", "Amount"]}
                 rows={b.topUps.map((t) => [fmtDateY(t.addedAt), t.addedBy, t.note ?? "", money.exact(t.amountUsd, "USD", { cents: true })])} />
+            <Proposals />
         </>
+    );
+}
+
+const STATUS: Record<string, string> = {
+    pending: "Waiting", executing: "Running", succeeded: "Done", failed: "Failed", cancelled: "Cancelled", superseded: "Replaced", expired: "Expired",
+};
+
+/** What Proton proposed to whom, and what became of it: the last 50 changes, everyone's. */
+function Proposals() {
+    const actions = useAllProtonActions();
+    if (loadFailed(actions)) return <div className="panel mt"><div className="panel-body"><LoadError error={actions.error} retry={() => actions.refetch()} what="Proton's changes" /></div></div>;
+    if (!actions.data) return <div className="panel mt"><div className="panel-body"><SkeletonLines lines={3} /></div></div>;
+    return (
+        <Table title="Changes Proton proposed" className="mt" sub="The last 50, everyone's. Nothing runs until the person confirms it." empty={actions.data.length === 0}
+            emptyText="Proton hasn't proposed any changes yet."
+            head={["Proposed", "Person", "Change", "Outcome"]}
+            rows={actions.data.map((a) => [fmtDateY(a.createdAt), a.who ?? "", a.title, a.status === "failed" && a.errorMessage ? `Failed: ${a.errorMessage}` : STATUS[a.status] ?? a.status])} />
     );
 }
 
@@ -118,9 +136,10 @@ function TopUp({ budget }: { budget: ProtonBudget }) {
     );
 }
 
-function Table({ title, sub, head, rows, empty, className }: {
+function Table({ title, sub, head, rows, empty, emptyText = "Nothing this month yet.", className }: {
     title: string;
     sub?: string;
+    emptyText?: string;
     head: string[];
     rows: ReactNode[][];
     empty: boolean;
@@ -129,7 +148,7 @@ function Table({ title, sub, head, rows, empty, className }: {
     return (
         <div className={`panel${className ? ` ${className}` : ""}`}>
             <div className="panel-head"><div><div className="panel-title">{title}</div>{sub && <div className="panel-sub">{sub}</div>}</div></div>
-            {empty ? <p className="muted" style={{ padding: 14 }}>Nothing this month yet.</p> : (
+            {empty ? <p className="muted" style={{ padding: 14 }}>{emptyText}</p> : (
                 <div className="tbl-wrap">
                     <table className="tbl tbl-min-sm" aria-label={title}>
                         <thead><tr>{head.map((h, i) => <th key={h} className={i > 0 ? "r" : undefined}>{h}</th>)}</tr></thead>

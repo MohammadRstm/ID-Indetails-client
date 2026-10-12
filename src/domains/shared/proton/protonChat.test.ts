@@ -4,14 +4,15 @@ import { clearChats, emptyChat, loadChat, saveChat, type ProtonChat } from "./pr
 
 const action = {
     id: "a1", tool: "propose_change_project_status", risk: "medium" as const, expiresAt: "2099-01-01T00:00:00Z",
-    preview: { title: "Put Alpha on hold", changes: [], note: null, opensAfter: null },
+    target: null,
+    preview: { title: "Put Alpha on hold", changes: [], note: null, opensAfter: null, confirm: "standard" as const, phrase: null, area: null, irreversible: false, reach: null },
 };
 
 const chat: ProtonChat = {
     conversationId: "c1",
     turns: [
         { from: "you", text: "Put Alpha on hold" },
-        { from: "proton", text: "Confirm it on the card.", refs: [], sources: [], action, choices: [], quickReplies: [], suggestions: [], did: null },
+        { from: "proton", text: "Confirm it on the card.", refs: [], sources: [], cards: [action], choices: [], quickReplies: [], suggestions: [], did: null },
     ],
     actions: {},
 };

@@ -12,6 +12,7 @@ import { moodName, moodOf, STILL_LOOKING_AFTER_MS, WORKING_AFTER_MS } from "./bl
 import { useBlobDrag } from "./blob/useBlobDrag";
 import ProtonPanel, { type PanelLayout } from "./ProtonPanel";
 import { useProtonUsage, type ProtonUsage } from "./protonApi";
+import { newestCards } from "./protonChat";
 import { closeProton, dismissPeek, openProton, startFor, useProton, voiceAt, type ProtonState } from "./protonStore";
 import { useProtonConversation } from "./useProtonConversation";
 
@@ -74,9 +75,8 @@ function ProtonDock() {
 
     if (!usage || !switchedOn(usage) || proton.userId !== user.id) return null;
 
-    const newest = proton.chat.turns.findLast((t) => t.from === "proton" && t.action != null);
-    const card = newest?.from === "proton" ? newest.action : null;
-    const cardOpen = card != null && (proton.chat.actions[card.id]?.kind ?? "open") === "open" && Date.parse(card.expiresAt) > now;
+    const cardOpen = newestCards(proton.chat)
+        .some((card) => (proton.chat.actions[card.id]?.kind ?? "open") === "open" && Date.parse(card.expiresAt) > now);
     const mood = moodOf({
         available: usage.available,
         askedAt: proton.askedAt,
@@ -201,8 +201,7 @@ function useViewport(): Viewport {
  */
 function useMoodClock(proton: ProtonState): number {
     const [now, setNow] = useState(() => Date.now());
-    const newest = proton.chat.turns.findLast((t) => t.from === "proton" && t.action != null);
-    const cardExpires = newest?.from === "proton" && newest.action ? Date.parse(newest.action.expiresAt) : 0;
+    const cardExpires = Math.max(0, ...newestCards(proton.chat).map((card) => Date.parse(card.expiresAt)));
 
     useEffect(() => {
         const current = Date.now();
