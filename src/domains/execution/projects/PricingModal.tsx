@@ -57,7 +57,7 @@ export default function PricingModal({ project, onClose }: { project: Project; o
     }
 
     return (
-        <Modal title="Fee & material profit" sub={project.title} onClose={onClose}
+        <Modal surfaceId="site_pricing" title="Fee & material profit" sub={project.title} onClose={onClose}
             foot={
                 <>
                     <div className="grow muted" style={{ fontSize: 12 }}>

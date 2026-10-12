@@ -144,7 +144,7 @@ export default function ReportModal({ project, onClose }: { project: Project; on
     }
 
     return (
-        <Modal size="xl" flush onClose={onClose} title={format === "csv" ? "Work entries (CSV)" : client ? "Client summary" : "Project report"} sub={`${project.title} · ${range.label}`}
+        <Modal surfaceId="project_report" size="xl" flush onClose={onClose} title={format === "csv" ? "Work entries (CSV)" : client ? "Client summary" : "Project report"} sub={`${project.title} · ${range.label}`}
             foot={format === "csv" ? (
                 <>
                     <div className="grow"><span className="muted">Every work entry in the range, one per row, for a spreadsheet</span></div>

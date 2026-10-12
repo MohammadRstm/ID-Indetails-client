@@ -51,7 +51,7 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
     }
 
     return (
-        <Modal title="Customer payment" sub={project.title} onClose={onClose}
+        <Modal surfaceId="project_payment_terms" title="Customer payment" sub={project.title} onClose={onClose}
             foot={
                 <>
                     <div className="grow">{save.error ? <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span> : "The amount can be changed until the project is completed."}</div>

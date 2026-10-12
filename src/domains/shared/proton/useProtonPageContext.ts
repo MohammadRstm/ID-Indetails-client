@@ -1,5 +1,7 @@
 import { useLocation } from "react-router";
 import type { Schemas } from "@/api/types";
+import { useOpenSurface } from "@/shared/components/Overlays/assistantLayer";
+import { SURFACES } from "./surfaces";
 
 export type ProtonPageContext = Schemas["ProtonPageContext"];
 
@@ -9,13 +11,21 @@ type Section = NonNullable<Schemas["ProtonProjectSection"]>;
 const DOMAIN_PAGES: Record<string, Page> = {
     overview: "dashboard", projects: "projects", clients: "clients", people: "people",
     financials: "financials", meetings: "meetings", activity: "activity", reports: "reports",
+    settings: "settings", notifications: "notifications", messages: "messages", help: "help",
 };
-const COMPANY_PAGES: Record<string, Page> = { overview: "company_overview", overhead: "company_expenses" };
+const COMPANY_PAGES: Record<string, Page> = {
+    "": "launcher", overview: "company_overview", overhead: "company_expenses", schedules: "schedules", salaries: "salaries",
+    "project-pay": "project_pay", proton: "proton_budget", settings: "company_settings", profile: "company_profile",
+    notifications: "notifications", messages: "messages", help: "help",
+};
 const RECORDS: Record<string, Schemas["ProtonRefType"]> = { projects: "project", clients: "client", people: "person" };
 const SECTIONS: readonly Section[] = ["requirements", "timeline", "meetings"];
 
-/** Where a path is, by meaning: area, page, and the record and tab it shows. Nothing else of the page is sent. */
-export function pageContextOf(pathname: string, search: string): ProtonPageContext | null {
+/**
+ * Where a path is, by meaning: area, page, the record and tab it shows, and the known window open on it. Nothing else
+ * of the page is sent: no field, no value.
+ */
+export function pageContextOf(pathname: string, search: string, surface: string | null = null): ProtonPageContext | null {
     const [area, page, id] = pathname.split("/").filter(Boolean);
     if (area !== "design" && area !== "execution" && area !== "company") return null;
     const known = (area === "company" ? COMPANY_PAGES : DOMAIN_PAGES)[page ?? ""] ?? null;
@@ -27,11 +37,12 @@ export function pageContextOf(pathname: string, search: string): ProtonPageConte
         entityType,
         entityId: entityType ? Number(id) : null,
         section: entityType === "project" && SECTIONS.includes(tab as Section) ? (tab as Section) : null,
+        surface: surface != null && Object.hasOwn(SURFACES, surface) ? (surface as keyof typeof SURFACES) : null,
     };
 }
 
 /** The page the person is on now, sent with each question so "it" and "this project" make sense to Proton. */
 export function useProtonPageContext(): ProtonPageContext | null {
     const { pathname, search } = useLocation();
-    return pageContextOf(pathname, search);
+    return pageContextOf(pathname, search, useOpenSurface());
 }

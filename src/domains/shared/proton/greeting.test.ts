@@ -15,11 +15,11 @@ describe("Proton's greeting", () => {
 
     it("starts with questions for the page, only ones whose answer the person may see", () => {
         const admin = permissionsOf(personas.designAdmin);
-        const project = { area: "design", page: "projects", entityType: "project", entityId: 4, section: null } as const;
+        const project = { area: "design", page: "projects", entityType: "project", entityId: 4, section: null, surface: null } as const;
         expect(startersFor(project, admin)).toEqual(["How is this project doing?", "What's still open on it?", "Who has worked on it this month?"]);
 
         // money questions only for those who see money
-        const financials = { area: "design", page: "financials", entityType: null, entityId: null, section: null } as const;
+        const financials = { area: "design", page: "financials", entityType: null, entityId: null, section: null, surface: null } as const;
         expect(startersFor(financials, admin).join(" ")).not.toMatch(/invoice|compare with last month/i);
         expect(startersFor(financials, permissionsOf(personas.superAdmin))).toContain("Which invoices are overdue?");
 
