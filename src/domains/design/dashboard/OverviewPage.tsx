@@ -8,7 +8,7 @@ import { useCurrentUser } from "@/app/session/useSession";
 import { useCompanySettings } from "@/app/shell/shellQueries";
 import Board, { BoardButton } from "@/shared/components/Board/Board";
 import { Delta } from "@/shared/components/Charts/Bars";
-import { KpiStrip } from "@/shared/components/Data/Kpi";
+import { KpiTabs, type KpiTab } from "@/shared/components/Data/Kpi";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { Segmented } from "@/shared/components/Forms/Filters";
@@ -94,55 +94,59 @@ function OverviewPage({ domain }: { domain: Domain }) {
     const items = o ? followups(o.attention, seesMoney ? moneyAttention.data : [], today, (id) => projects.get(id)?.targetDate) : [];
     const weekStart = DAYS_LONG[company?.weekStart ?? 1];
 
-    const figures = (
-        <KpiStrip loading={(design && !o) || !d} items={[
-            { key: "active", label: "Active projects", value: count("active"), sub: <span>{count("hold")} on hold · {count("completed")} completed</span> },
-            {
-                key: "clients", label: "Clients", value: d?.clients ?? 0,
-                sub: clientOverview.data ? <span className="link" {...clickable(() => navigate(`/${domain}/clients`), "link")}>{clientOverview.data.withActiveWork} with active work</span> : undefined,
-            },
-            ...(!design ? [] : [{
-                key: "hours", label: `Hours logged · ${range.label}`, value: fmtNumber(Math.round((o?.minutes ?? 0) / 60)), unit: "h",
-                sub: o?.overtimeMinutes ? <span className="ot-text">{fmtH(o.overtimeMinutes)} overtime</span> : undefined,
-                delta: o && <Delta value={o.minutes} prev={o.previousMinutes} label={`vs ${range.prevLabel}`} />,
-            },
-            { key: "entries", label: "Work entries", value: fmtNumber(o?.entries ?? 0), delta: o && <Delta value={o.entries} prev={o.previousEntries} label={`vs ${range.prevLabel}`} /> },
-            { key: "logging", label: "Logging this week", value: `${o?.peopleLoggingThisWeek ?? 0} of ${o?.people ?? 0}`, sub: <span>{fmtH(o?.thisWeekMinutes ?? 0)} logged since {weekStart}</span> }]),
-            ...(seesWork ? [{
-                key: "online", label: "Online now", value: online.length,
-                sub: <div className="av-stack">{online.slice(0, 6).map((r) => <PersonAvatar key={r.id} person={{ id: r.id, name: r.name, photoFileId: r.photoFileId }} size={18} />)}</div>,
-            }] : []),
+    const activityFigures: KpiTab["items"] = [
+        { key: "active", label: "Active projects", value: count("active"), sub: <span>{count("hold")} on hold · {count("completed")} completed</span> },
+        {
+            key: "clients", label: "Clients", value: d?.clients ?? 0,
+            sub: clientOverview.data ? <span className="link" {...clickable(() => navigate(`/${domain}/clients`), "link")}>{clientOverview.data.withActiveWork} with active work</span> : undefined,
+        },
+        ...(!design ? [] : [{
+            key: "hours", label: `Hours logged · ${range.label}`, value: fmtNumber(Math.round((o?.minutes ?? 0) / 60)), unit: "h",
+            sub: o?.overtimeMinutes ? <span className="ot-text">{fmtH(o.overtimeMinutes)} overtime</span> : undefined,
+            delta: o && <Delta value={o.minutes} prev={o.previousMinutes} label={`vs ${range.prevLabel}`} />,
+        },
+        { key: "entries", label: "Work entries", value: fmtNumber(o?.entries ?? 0), delta: o && <Delta value={o.entries} prev={o.previousEntries} label={`vs ${range.prevLabel}`} /> },
+        { key: "logging", label: "Logging this week", value: `${o?.peopleLoggingThisWeek ?? 0} of ${o?.people ?? 0}`, sub: <span>{fmtH(o?.thisWeekMinutes ?? 0)} logged since {weekStart}</span> }]),
+        ...(seesWork ? [{
+            key: "online", label: "Online now", value: online.length,
+            sub: <div className="av-stack">{online.slice(0, 6).map((r) => <PersonAvatar key={r.id} person={{ id: r.id, name: r.name, photoFileId: r.photoFileId }} size={18} />)}</div>,
+        }] : []),
+    ];
+
+    const moneyFigures: KpiTab["items"] = [
+        {
+            key: "revenue", value: <Money short value={s?.revenue ?? 0} />, sub: <span>received from clients</span>,
+            label: <>Revenue · {range.label}<HelpHint article="revenue" label="revenue">The money clients paid in this period, counted on the day it arrived.</HelpHint></>,
+        },
+        {
+            key: "expected", value: <Money short value={s?.expectedRevenue ?? 0} />,
+            label: <>Expected revenue<HelpHint article="expected-revenue" label="expected revenue">What was agreed with clients in this period. Revenue is what they actually paid.</HelpHint></>,
+            sub: <span>{domain === "execution" ? "fees agreed and materials sent, in this period" : "payments agreed on projects, in this period"}</span>,
+        },
+        {
+            key: "cost", label: "Total cost", value: <Money short value={s?.cost.total ?? 0} />,
+            // "labour $12k · project expenses $1.6k"; a site's "materials $6k · ground labour $3k · project expenses $0"
+            sub: <span>{costPartsOf(domain).map((p) => `${p.key === "labour" ? "labour" : p.label.toLowerCase()} ${money.short(s?.cost[p.key] ?? 0)}`).join(" · ")}</span>,
+        },
+        { key: "profit", label: "Net profit", value: <Money short value={s?.profit ?? 0} />, sub: <span>revenue less {costWords(domain).toLowerCase()}</span> },
+        {
+            key: "margin", value: money.pct(s?.margin), sub: <span>in this period</span>,
+            label: <>Margin<HelpHint article="profit-margin" label="margin">Net profit as a share of the revenue received in this period.</HelpHint></>,
+        },
+        {
+            key: "outstanding", value: <Money short value={s?.billing.outstanding ?? 0} />,
+            label: <>Outstanding<HelpHint article="billing-terms" label="outstanding">What clients still have to pay on invoices already sent, as of today.</HelpHint></>,
+            sub: <span className={s?.billing.overdue ? "down" : ""}>of <Money short value={s?.billing.invoiced ?? 0} /> invoiced{s?.billing.overdue ? ` · ${money.short(s.billing.overdue)} overdue` : ""}</span>,
+        },
+    ];
+
+    // one card for the figures: the money first for those who see it, the activity a tab away
+    const keyFigures = (
+        <KpiTabs tabs={[
+            ...(seesMoney ? [{ key: "financial", label: "Financial", items: moneyFigures, loading: !s, instead: loadFailed(summary) ? <Failed query={summary} what="the money" /> : undefined }] : []),
+            { key: "activity", label: "Activity", items: activityFigures, loading: (design && !o) || !d },
         ]} />
     );
-
-    const moneyFigures = orFailed(summary, "the money", (
-        <KpiStrip loading={!s} items={[
-            {
-                key: "revenue", value: <Money short value={s?.revenue ?? 0} />, sub: <span>received from clients</span>,
-                label: <>Revenue · {range.label}<HelpHint article="revenue" label="revenue">The money clients paid in this period, counted on the day it arrived.</HelpHint></>,
-            },
-            {
-                key: "expected", value: <Money short value={s?.expectedRevenue ?? 0} />,
-                label: <>Expected revenue<HelpHint article="expected-revenue" label="expected revenue">What was agreed with clients in this period. Revenue is what they actually paid.</HelpHint></>,
-                sub: <span>{domain === "execution" ? "fees agreed and materials sent, in this period" : "payments agreed on projects, in this period"}</span>,
-            },
-            {
-                key: "cost", label: "Total cost", value: <Money short value={s?.cost.total ?? 0} />,
-                // "labour $12k · project expenses $1.6k"; a site's "materials $6k · ground labour $3k · project expenses $0"
-                sub: <span>{costPartsOf(domain).map((p) => `${p.key === "labour" ? "labour" : p.label.toLowerCase()} ${money.short(s?.cost[p.key] ?? 0)}`).join(" · ")}</span>,
-            },
-            { key: "profit", label: "Net profit", value: <Money short value={s?.profit ?? 0} />, sub: <span>revenue less {costWords(domain).toLowerCase()}</span> },
-            {
-                key: "margin", value: money.pct(s?.margin), sub: <span>in this period</span>,
-                label: <>Margin<HelpHint article="profit-margin" label="margin">Net profit as a share of the revenue received in this period.</HelpHint></>,
-            },
-            {
-                key: "outstanding", value: <Money short value={s?.billing.outstanding ?? 0} />,
-                label: <>Outstanding<HelpHint article="billing-terms" label="outstanding">What clients still have to pay on invoices already sent, as of today.</HelpHint></>,
-                sub: <span className={s?.billing.overdue ? "down" : ""}>of <Money short value={s?.billing.invoiced ?? 0} /> invoiced{s?.billing.overdue ? ` · ${money.short(s.billing.overdue)} overdue` : ""}</span>,
-            },
-        ]} />
-    ));
 
     return (
         <div className="page">
@@ -181,8 +185,7 @@ function OverviewPage({ domain }: { domain: Domain }) {
             {loadFailed(dashboard) && <div style={{ marginBottom: 14 }}><Failed query={dashboard} what="the dashboard" /></div>}
 
             <Board id={`overview-${domain}`} editing={editing} onDone={() => setEditing(false)} cards={[
-                { key: "figures", label: "Key figures", span: 12, node: figures },
-                seesMoney && { key: "money", label: "Money figures", span: 12, node: moneyFigures },
+                { key: "figures", label: "Key figures", span: 12, node: keyFigures },
                 design && { key: "hours", label: "Hours logged per week", span: 7, node: <HoursCard overview={o} label={range.label} prevLabel={range.prevLabel} /> },
                 design && { key: "followups", label: "Needs attention & deadlines", span: 5, node: <FollowupsCard items={items} deadlines={deadlines.data} loading={!o}
                     deadlinesFailed={loadFailed(deadlines) ? { error: deadlines.error, retry: () => void deadlines.refetch() } : null} /> },
