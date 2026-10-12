@@ -1,12 +1,12 @@
 import { useSyncExternalStore } from "react";
 import { onSessionReset } from "@/app/session/sessionReset";
 import { setAssistantOpen } from "@/shared/components/Overlays/assistantLayer";
-import { talkDuration } from "./blob/talkPlan";
 import { emptyChat, loadChat, saveChat, type ProtonChat } from "./protonChat";
 
 /*
- * Proton lives outside any one page: this holds the chat, whether the panel is open, and what the blob is doing, and
- * <ProtonHost /> shows it. A reply that arrives after the panel was closed lands here, and the blob says so.
+ * Proton lives outside any one page: this holds the chat, whether the panel is open, the answer being written, and
+ * what the blob is doing, and <ProtonHost /> shows it. A reply that arrives after the panel was closed lands here,
+ * and the blob says so.
  */
 
 export type ProtonState = {
@@ -15,8 +15,16 @@ export type ProtonState = {
     open: boolean;
     /** When the question being answered was sent. */
     askedAt: number | null;
-    /** The reply being said, for the blob's talking. */
-    saying: { text: string; until: number } | null;
+    /** What Proton is doing for it, in the server's words ("Comparing the hours…"). */
+    status: string | null;
+    /** The answer as it is being written, by the model call writing it: a later call's text replaces an earlier one's. */
+    draft: { trip: number; text: string } | null;
+    /** The blob talks while text is arriving, and a moment after. */
+    talkingUntil: number;
+    /** How loudly: more text in one go, a bigger breath. */
+    voice: number;
+    /** The newest reply, read out to screen readers once it is in. */
+    announce: string | null;
     errorUntil: number;
     happyUntil: number;
     /** Replies that arrived while the panel was closed. */
@@ -29,10 +37,13 @@ export type ProtonState = {
 
 const ERROR_MS = 3_000;
 const HAPPY_MS = 2_500;
+/** A pause in the text longer than this, and the blob stops talking. */
+const TALK_TAIL_MS = 450;
 const PEEK_LENGTH = 90;
 
 const initial: ProtonState = {
-    userId: null, chat: emptyChat, open: false, askedAt: null, saying: null, errorUntil: 0, happyUntil: 0, unseen: 0, peek: null, navigations: 0,
+    userId: null, chat: emptyChat, open: false, askedAt: null, status: null, draft: null, talkingUntil: 0, voice: 0, announce: null,
+    errorUntil: 0, happyUntil: 0, unseen: 0, peek: null, navigations: 0,
 };
 
 let state = initial;
@@ -70,26 +81,42 @@ export const toggleProton = () => (state.open ? closeProton() : openProton());
 
 export const changeChat = (update: (chat: ProtonChat) => ProtonChat) => set({ chat: update(state.chat) });
 
-export const asking = () => set({ askedAt: Date.now() });
+export const asking = () => set({ askedAt: Date.now(), status: null, draft: null });
 
-/** A reply arrived: the blob says it, and if nobody is looking, it waits as unseen. */
+export const heard = (status: string) => set({ status });
+
+/** A piece of the answer arrived: the blob talks, a little louder for a bigger piece. */
+export function wrote(trip: number, text: string) {
+    const draft = state.draft?.trip === trip ? { trip, text: state.draft.text + text } : { trip, text };
+    set({ draft, talkingUntil: Date.now() + TALK_TAIL_MS, voice: Math.min(1, Math.max(0.3, text.length / 24)) });
+}
+
+/** The reply is in: if nobody is looking, it waits as unseen. */
 export function answered(text: string, navigated: boolean) {
-    const now = Date.now();
     set({
         askedAt: null,
+        status: null,
+        draft: null,
+        announce: text,
+        talkingUntil: Date.now() + TALK_TAIL_MS,
         navigations: state.navigations + (navigated ? 1 : 0),
-        saying: { text, until: now + talkDuration(text) },
         unseen: state.open ? 0 : state.unseen + 1,
         peek: state.open ? null : text.length > PEEK_LENGTH ? `${text.slice(0, PEEK_LENGTH).trimEnd()}…` : text,
     });
 }
 
-export const failed = () => set({ askedAt: null, errorUntil: Date.now() + ERROR_MS });
+export const failed = () => set({ askedAt: null, status: null, draft: null, errorUntil: Date.now() + ERROR_MS });
+
+/** The person stopped the answer: nothing of it is kept. */
+export const stopped = () => set({ askedAt: null, status: null, draft: null, talkingUntil: 0 });
 
 /** A confirmed change went through. */
 export const celebrate = () => set({ happyUntil: Date.now() + HAPPY_MS });
 
 export const dismissPeek = () => set({ peek: null });
+
+/** How loudly the blob talks at `now`, read by its animation each frame. */
+export const voiceAt = (now: number) => (now < state.talkingUntil ? state.voice : 0);
 
 /** The chat goes with the person. */
 export function resetProton() {

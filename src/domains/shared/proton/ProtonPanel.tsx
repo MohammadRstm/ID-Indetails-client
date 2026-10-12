@@ -19,8 +19,8 @@ type ProtonPanelProps = {
     chat: ProtonChat;
     conversation: ProtonConversation;
     layout: PanelLayout;
-    saying: string | null;
-    still: boolean;
+    draft: string | null;
+    status: string | null;
     stillLooking: boolean;
     prefs: BlobPrefs;
     onPrefs: (change: Partial<BlobPrefs>) => void;
@@ -34,7 +34,7 @@ type ProtonPanelProps = {
  * sees it change and can keep talking. It sits above dialogs too, without taking them away (decision 35).
  */
 export default function ProtonPanel({
-    chat, conversation, layout, saying, still, stillLooking, prefs, onPrefs, onUnfold, onComposing, onClose,
+    chat, conversation, layout, draft, status, stillLooking, prefs, onPrefs, onUnfold, onComposing, onClose,
 }: ProtonPanelProps) {
     const input = useRef<HTMLTextAreaElement>(null);
     const permissions = usePermissions();
@@ -95,7 +95,7 @@ export default function ProtonPanel({
             {!folded && (
                 <>
                     <div className="proton-panel-body">
-                        <ProtonThread chat={chat} conversation={conversation} linkOf={linkOf} saying={saying} still={still} stillLooking={stillLooking} />
+                        <ProtonThread chat={chat} conversation={conversation} linkOf={linkOf} draft={draft} status={status} stillLooking={stillLooking} />
                     </div>
                     <ProtonComposer conversation={conversation} input={input} canStartOver={chat.turns.length > 0} onComposing={onComposing} />
                 </>

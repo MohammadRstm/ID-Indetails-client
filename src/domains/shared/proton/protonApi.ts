@@ -49,16 +49,6 @@ export function useProtonBriefing(enabled = true) {
     });
 }
 
-/** One question. The answer may carry a proposed change, which only the person's Confirm carries out. */
-export function useAskProton() {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async (body: AskBody) =>
-            (await http.post<ProtonReply>("/proton/messages", body)).data,
-        onSuccess: (reply) => queryClient.setQueryData([...protonKey, "usage"], reply.usage),
-    });
-}
-
 /**
  * Confirms or cancels a proposed change: only its id and conversation go to the API, which runs the stored change
  * (or refuses it) itself. A confirmed change can touch anything Proton shows, so every cached screen is refreshed.

@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import { resetProton } from "../protonStore";
+import { sseReply } from "../protonTesting";
 
 const usage = { month: "2026-10-01", available: true, questionsAllowed: 300, questionsUsed: 3, questionsRemaining: 297, usedPct: 1, companyLimitReached: false };
 
@@ -22,9 +23,9 @@ function proton(available = usage) {
         handlers: [
             http.get("/api/proton/usage", () => HttpResponse.json(available)),
             http.get("/api/proton/briefing", () => HttpResponse.json({ items: [], more: 0 })),
-            http.post("/api/proton/messages", async () => {
+            http.post("/api/proton/messages/stream", async () => {
                 await gate;
-                return HttpResponse.json(reply("Villa Mounir is active."));
+                return sseReply(reply("Villa Mounir is active."));
             }),
         ],
     };
@@ -64,7 +65,6 @@ describe("Proton's blob", () => {
         release();
         // the start of the reply peeks out beside the closed blob, and opens the chat
         expect(await screen.findByRole("button", { name: "Villa Mounir is active." })).toHaveClass("proton-peek-text");
-        expect(await blob()).toHaveAccessibleName("Proton, answering");
         expect((await blob()).querySelector(".proton-unseen")).toHaveTextContent("1");
 
         await user.click(await blob());

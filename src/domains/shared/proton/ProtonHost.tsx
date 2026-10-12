@@ -12,7 +12,7 @@ import { moodName, moodOf, STILL_LOOKING_AFTER_MS, WORKING_AFTER_MS } from "./bl
 import { useBlobDrag } from "./blob/useBlobDrag";
 import ProtonPanel, { type PanelLayout } from "./ProtonPanel";
 import { useProtonUsage, type ProtonUsage } from "./protonApi";
-import { closeProton, dismissPeek, openProton, startFor, useProton, type ProtonState } from "./protonStore";
+import { closeProton, dismissPeek, openProton, startFor, useProton, voiceAt, type ProtonState } from "./protonStore";
 import { useProtonConversation } from "./useProtonConversation";
 
 const BLOB = 64;
@@ -80,7 +80,7 @@ function ProtonDock() {
     const mood = moodOf({
         available: usage.available,
         askedAt: proton.askedAt,
-        talkingUntil: proton.saying?.until ?? 0,
+        talkingUntil: proton.talkingUntil,
         errorUntil: proton.errorUntil,
         happyUntil: proton.happyUntil,
         cardOpen,
@@ -119,8 +119,8 @@ function ProtonDock() {
                     chat={proton.chat}
                     conversation={conversation}
                     layout={layout}
-                    saying={mood === "talking" ? proton.saying?.text ?? null : null}
-                    still={still}
+                    draft={proton.draft?.text ?? null}
+                    status={proton.status}
                     stillLooking={proton.askedAt != null && now - proton.askedAt >= STILL_LOOKING_AFTER_MS}
                     prefs={prefs}
                     onPrefs={change}
@@ -146,11 +146,11 @@ function ProtonDock() {
                 {...drag.handlers}
                 onKeyDown={onBlobKey}
             >
-                <BlobFigure mood={mood} saying={proton.saying} still={still} />
+                <BlobFigure mood={mood} voiceAt={voiceAt} still={still} />
                 {proton.unseen > 0 && <span className="proton-unseen" aria-hidden="true">{proton.unseen}</span>}
             </button>
             {/* read out once a reply is in, never while it is still being written */}
-            <div className="sr" aria-live="polite">{proton.saying?.text ?? ""}</div>
+            <div className="sr" aria-live="polite">{proton.announce ?? ""}</div>
         </div>,
         document.body,
     );
@@ -209,12 +209,12 @@ function useMoodClock(proton: ProtonState): number {
         const asked = proton.askedAt;
         const next = [
             asked != null ? asked + WORKING_AFTER_MS : 0, asked != null ? asked + STILL_LOOKING_AFTER_MS : 0,
-            proton.saying?.until ?? 0, proton.errorUntil, proton.happyUntil, cardExpires,
+            proton.talkingUntil, proton.errorUntil, proton.happyUntil, cardExpires,
         ].filter((t) => t > current).sort((a, b) => a - b)[0];
         if (next == null) return;
         const id = setTimeout(() => setNow(Date.now()), Math.min(next - current + 20, 2 ** 31 - 1));
         return () => clearTimeout(id);
-    }, [proton.askedAt, proton.saying, proton.errorUntil, proton.happyUntil, cardExpires, now]);
+    }, [proton.askedAt, proton.talkingUntil, proton.errorUntil, proton.happyUntil, cardExpires, now]);
 
     return Math.max(now, proton.askedAt ?? 0);
 }

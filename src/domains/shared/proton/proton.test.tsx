@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 import { afterEach, describe, expect, it } from "vitest";
 import { resetSessionState } from "@/app/session/sessionReset";
 import { resetProton } from "./protonStore";
+import { liveReply, sseError, sseReply } from "./protonTesting";
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
@@ -45,9 +46,9 @@ function protonHandlers(answers: ReturnType<typeof reply>[], confirmOpens: Recor
         handlers: [
             http.get("/api/proton/usage", () => HttpResponse.json(usage)),
             http.get("/api/proton/briefing", () => HttpResponse.json(briefing)),
-            http.post("/api/proton/messages", async ({ request }) => {
+            http.post("/api/proton/messages/stream", async ({ request }) => {
                 sent.questions.push(await request.json());
-                return HttpResponse.json(answers.shift() ?? reply("Nothing more to say."));
+                return sseReply(answers.shift() ?? reply("Nothing more to say."));
             }),
             http.post("/api/proton/actions/:id/:decision", async ({ request, params }) => {
                 sent.decisions.push({ path: `${params.id}/${params.decision}`, body: await request.json() });
@@ -289,10 +290,10 @@ describe("Proton", () => {
         const answers = [reply("Hello!"), null, { ...reply("Villa Mounir is active."), conversationId: "c2" }];
         const { handlers } = protonHandlers([]);
         renderApp("/design/help", personas.designAdmin,
-            http.post("/api/proton/messages", async ({ request }) => {
+            http.post("/api/proton/messages/stream", async ({ request }) => {
                 bodies.push(await request.json());
                 const next = answers.shift();
-                return next ? HttpResponse.json(next) : HttpResponse.json(ended, { status: 404 });
+                return next ? sseReply(next) : HttpResponse.json(ended, { status: 404 });
             }),
             ...handlers);
 
@@ -339,6 +340,59 @@ describe("Proton", () => {
 
         resetSessionState();
         expect(Object.keys(sessionStorage).filter((key) => key.startsWith("proton:"))).toEqual([]);
+    });
+
+    it("write the answer as it arrives, say what it is doing, and replace what an earlier step wrote", async () => {
+        const live = liveReply();
+        const { handlers } = protonHandlers([]);
+        renderApp("/design/help", personas.designAdmin, http.post("/api/proton/messages/stream", () => live.response()), ...handlers);
+
+        const { panel } = await openAndAsk("How did hours change?");
+        live.send("status", { text: "Comparing the hours…" });
+        expect(await within(panel).findByText("Comparing the hours…")).toBeInTheDocument();
+
+        live.send("delta", { trip: 1, text: "Let me check." });
+        expect(await within(panel).findByText("Let me check.")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /^Proton, / })).toHaveAccessibleName("Proton, answering");
+
+        // the next step's text replaces the first's
+        live.send("delta", { trip: 2, text: "Hours rose " });
+        live.send("delta", { trip: 2, text: "34%." });
+        expect(await within(panel).findByText("Hours rose 34%.")).toBeInTheDocument();
+        expect(within(panel).queryByText("Let me check.")).not.toBeInTheDocument();
+
+        live.finish({ ...reply("Hours rose 34% on last week."), refs: [] });
+        expect(await within(panel).findByText("Hours rose 34% on last week.")).toBeInTheDocument();
+        expect(within(panel).queryByText("Hours rose 34%.")).not.toBeInTheDocument();
+        expect(within(panel).queryByText("Comparing the hours…")).not.toBeInTheDocument();
+    });
+
+    it("stop an answer half-way, keeping nothing of it", async () => {
+        const live = liveReply();
+        const { handlers } = protonHandlers([]);
+        renderApp("/design/help", personas.designAdmin, http.post("/api/proton/messages/stream", () => live.response()), ...handlers);
+
+        const { user, panel } = await openAndAsk("Summarise the month");
+        live.send("delta", { trip: 1, text: "This month, " });
+        await within(panel).findByText("This month,");
+        await user.click(within(panel).getByRole("button", { name: "Stop" }));
+
+        expect(await within(panel).findByText("Stopped. Nothing from that answer was kept.")).toBeInTheDocument();
+        expect(within(panel).queryByText("This month,")).not.toBeInTheDocument();
+        expect(within(panel).getByRole("button", { name: "Send" })).toBeInTheDocument();
+        expect(panel.querySelector(".proton-turn.error")).toBeNull();
+    });
+
+    it("say why an answer that had started couldn't finish", async () => {
+        const { handlers } = protonHandlers([]);
+        renderApp("/design/help", personas.designAdmin,
+            http.post("/api/proton/messages/stream", () => sseError({ type: "unavailable", code: "proton_unavailable", message: "Sorry, I couldn't answer that just now. Please try again." })),
+            ...handlers);
+
+        const { panel } = await openAndAsk("Summarise the month");
+
+        expect(await within(panel).findByText("Sorry, I couldn't answer that just now. Please try again.")).toBeInTheDocument();
+        expect(await screen.findByRole("button", { name: "Proton, something went wrong" })).toBeInTheDocument();
     });
 
     it("isn't offered to employees", async () => {
