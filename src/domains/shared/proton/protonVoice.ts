@@ -135,6 +135,8 @@ class VoiceCall {
     private reconnects = 0;
     private nextEvent = 0;
     private closed: (() => void) | null = null;
+    /** What each command sent was, so a refusal can say which one it was. */
+    private readonly sentTypes = new Map<string, string>();
 
     private readonly start: VoiceStart;
 
@@ -221,7 +223,12 @@ class VoiceCall {
 
     /** Something the voice model should say that came from the app, not from a hand-off: a card's outcome. */
     tell(text: string): void {
-        this.send({ type: "session.commentary.append", delegation_id: null, content: text });
+        for (const content of chunksOf(text)) this.send({ type: "session.commentary.append", delegation_id: null, content });
+    }
+
+    /** Context the voice model keeps for later without saying it now. */
+    note(text: string): void {
+        for (const content of chunksOf(text)) this.send({ type: "session.thinking.append", delegation_id: null, content });
     }
 
     private onEvent(raw: string): void {
@@ -258,10 +265,17 @@ class VoiceCall {
                 this.closed?.();
                 this.finish(closedMessage(String(event.reason ?? "")));
                 break;
-            case "error":
-                // a refused command (an append after the session closed, say) doesn't end the conversation
+            case "error": {
+                // a refused command (an append after the session closed, say) doesn't end the conversation, but it
+                // is shown in the console, with the provider's codes and which command it was (never its content)
+                const error = (event.error ?? {}) as Record<string, unknown>;
+                const command = typeof error.client_event_id === "string" ? this.sentTypes.get(error.client_event_id) : undefined;
+                console.warn("[Proton voice] the voice model refused a command", {
+                    command, type: error.type, code: error.code, param: error.param, message: error.message,
+                });
                 if (!this.started) this.fail("Voice couldn't start. You can try again, or type your question.");
                 break;
+            }
         }
     }
 
@@ -374,7 +388,9 @@ class VoiceCall {
 
     private send(event: Record<string, unknown>): void {
         if (this.events?.readyState !== "open") return;
-        this.events.send(JSON.stringify({ event_id: `hourline_${++this.nextEvent}`, ...event }));
+        const id = `hourline_${++this.nextEvent}`;
+        this.sentTypes.set(id, String(event.type));
+        this.events.send(JSON.stringify({ event_id: id, ...event }));
     }
 }
 
@@ -394,6 +410,18 @@ export const muteVoice = (muted: boolean) => current?.mute(muted);
 
 /** Tells the voice model what happened on a card, so it never says a change was made before it was. */
 export const tellVoice = (text: string) => current?.tell(text);
+
+/**
+ * In a voice conversation, an answer to something typed or tapped on screen is said too: what the person did, then
+ * Proton's answer, and any card it put up.
+ */
+export function tellVoiceAnswer(what: string, answer: VoiceAnswer) {
+    if (!current) return;
+    current.note(what);
+    const updates = voiceUpdatesOf(answer);
+    updates.know.forEach((text) => current?.note(text));
+    updates.say.forEach((text) => current?.tell(text));
+}
 
 export const dismissVoiceMessage = () => set({ message: null, status: state.status === "error" ? "idle" : state.status });
 

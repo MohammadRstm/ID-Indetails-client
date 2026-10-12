@@ -5,7 +5,7 @@ import { useEndConversation, type AskBody, type ProtonChoice, type ProtonQuickRe
 import { emptyChat, type ProtonTurn } from "./protonChat";
 import { answered, asking, changeChat, currentChat, failed, heard, stopped, useProton, wrote } from "./protonStore";
 import { streamQuestion } from "./protonStream";
-import { startVoice, type VoiceAnswer } from "./protonVoice";
+import { startVoice, tellVoiceAnswer, type VoiceAnswer } from "./protonVoice";
 import { useRunProtonCommands } from "./uiCommands";
 import { useProtonPageContext } from "./useProtonPageContext";
 
@@ -88,7 +88,10 @@ export function useProtonConversation() {
     const submit = (shown: string, body: Ask) => {
         if (pending) return;
         add({ from: "you", text: shown });
-        settled.current = send(chat.conversationId, body);
+        const answer = send(chat.conversationId, body);
+        settled.current = answer;
+        // in a voice conversation, an answer to a button or a typed question is said aloud as well
+        void answer.then((a) => tellVoiceAnswer(`The person ${body.text != null ? "typed" : "picked"} on screen: "${shown}". Proton answered on screen.`, a));
     };
 
     /**

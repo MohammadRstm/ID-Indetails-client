@@ -3,7 +3,7 @@ import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { server } from "@/test/server";
 import type { ProtonReply } from "./protonApi";
-import { chunksOf, endVoice, startVoice, tellVoice, useVoice, voiceUpdatesOf, type VoiceAnswer, type VoiceAsk } from "./protonVoice";
+import { chunksOf, endVoice, startVoice, tellVoice, tellVoiceAnswer, useVoice, voiceUpdatesOf, type VoiceAnswer, type VoiceAsk } from "./protonVoice";
 
 /* A browser's WebRTC, faked: the data channel is where the test plays the voice model's events. */
 
@@ -166,6 +166,32 @@ describe("talking to Proton", () => {
         expect(track.enabled).toBe(false);
         expect(sentOf("session.input_audio.mute")).toHaveLength(1);
         expect(voice.result.current.muted).toBe(true);
+    });
+
+    it("says the answer to a button pressed on screen, after telling the voice model what was picked", async () => {
+        sessionHandlers();
+        await talk();
+        act(() => channel().emit({ type: "session.started", session: { id: "live_1" } }));
+
+        tellVoiceAnswer('The person picked on screen: "Execution".', { kind: "answer", reply: reply("Site Jounieh is on track.") });
+
+        expect(sentOf("session.thinking.append")[0]).toMatchObject({ delegation_id: null, content: 'The person picked on screen: "Execution".' });
+        expect(sentOf("session.commentary.append")[0]).toMatchObject({ delegation_id: null, content: "Site Jounieh is on track." });
+    });
+
+    it("shows a refused command in the console, with which command it was", async () => {
+        sessionHandlers();
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const { voice } = await talk();
+        act(() => channel().emit({ type: "session.started", session: { id: "live_1" } }));
+        tellVoice("Done.");
+        const [sent] = sentOf("session.commentary.append");
+
+        act(() => channel().emit({ type: "error", error: { type: "invalid_request_error", code: "unknown_delegation", param: "delegation_id", client_event_id: sent.event_id } }));
+
+        expect(warn).toHaveBeenCalledWith("[Proton voice] the voice model refused a command",
+            expect.objectContaining({ command: "session.commentary.append", code: "unknown_delegation" }));
+        expect(voice.result.current.status).toBe("listening");
     });
 
     it("ends cleanly: it asks the voice model to close, releases the microphone and tells the server", async () => {
