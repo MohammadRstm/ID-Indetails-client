@@ -20,7 +20,7 @@ const COMPANY_PAGES: Record<string, Page> = {
     notifications: "notifications", messages: "messages", help: "help",
 };
 const RECORDS: Record<string, Schemas["ProtonRefType"]> = { projects: "project", clients: "client", people: "person" };
-const SECTIONS: readonly Section[] = ["requirements", "timeline", "meetings"];
+const SECTIONS: readonly Section[] = ["financials", "overview", "analytics", "contributors", "requirements", "timeline", "meetings"];
 
 /**
  * Where a path is, by meaning: area, page, the record and tab it shows, and the known window open on it. Nothing else
