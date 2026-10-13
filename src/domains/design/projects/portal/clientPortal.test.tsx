@@ -13,7 +13,8 @@ const page = `/design/projects/${projectWork.project.id}`;
 // the Client access part of the tab; the tab itself opens on the first section
 const access = `${page}?tab=portal&part=access`;
 const tabs = () => within(screen.getAllByRole("tablist")[0]).getAllByRole("tab").map((t) => t.textContent?.replace(/\d+$/, "").trim());
-const rowOf = (email: string) => screen.getByText(email).closest("li") as HTMLElement;
+// the row, not the toast that may repeat the address
+const rowOf = (email: string) => screen.getAllByText(email).map((e) => e.closest(".pa-row")).find(Boolean) as HTMLElement;
 
 const none: PortalClient = {
     email: "", label: null, isContact: true, status: "not_invited", accountId: null, name: null, invitationId: null, invitedAt: null,
@@ -93,8 +94,8 @@ describe("a Design project's Client portal tab", () => {
     });
 
     it("isn't there on an internal project", async () => {
-        renderApp(page, nadia, ...projectWorkHandlers,
-            http.get("/api/projects/:id", () => HttpResponse.json({ ...projectWork.project, billingType: "internal", client: null })));
+        // ahead of the fixture's own project, so it answers first
+        renderApp(page, nadia, http.get("/api/projects/:id", () => HttpResponse.json({ ...projectWork.project, billingType: "internal", client: null })), ...projectWorkHandlers);
         await screen.findAllByRole("tab");
         expect(tabs()).not.toContain("Client portal");
     });

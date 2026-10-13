@@ -173,8 +173,8 @@ describe("the Client portal tab's parts, by permission", () => {
     });
 
     it("isn't there on an internal project, whatever the person holds", async () => {
-        renderApp(page, withPermissions(nadia, { revoke: [P.CLIENT_ACCESS_MANAGE] }), ...projectWorkHandlers,
-            http.get("/api/projects/:id", () => HttpResponse.json({ ...projectWork.project, billingType: "internal", client: null })));
+        // ahead of the fixture's own project, so it answers first
+        renderApp(page, withPermissions(nadia, { revoke: [P.CLIENT_ACCESS_MANAGE] }), http.get("/api/projects/:id", () => HttpResponse.json({ ...projectWork.project, billingType: "internal", client: null })), ...projectWorkHandlers);
         await screen.findAllByRole("tab");
         expect(tabs()).not.toContain("Client portal");
     });

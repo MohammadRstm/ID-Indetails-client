@@ -17,7 +17,9 @@ function follow(url: string, options: { download?: string; newTab?: boolean }) {
     a.remove();
 }
 
-const failed = (text: string) => (error: unknown) => toast({ text, sub: errorMessage(error), icon: "alert" });
+const failed = (text: string) => (error: unknown) => {
+    toast({ text, sub: errorMessage(error), icon: "alert" });
+};
 
 /** Saves the file: its link is a download, not a page. */
 export function downloadItem(projectId: number, item: PortalContentItem): Promise<void> {
