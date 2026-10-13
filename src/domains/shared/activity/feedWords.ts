@@ -24,6 +24,13 @@ const person = (p: Payload, names: NameOf, key: string, fallback: string) => {
     return (id != null && names(id)) || fallback;
 };
 const email = (p: Payload) => str(p.email) ?? "a client";
+/** What a publish changed, from the counts its event carries: " (2 new, 1 updated, 1 removed)", or nothing without them. */
+const published = (p: Payload) => {
+    const said = ([[num(p.added), "new"], [num(p.updated), "updated"], [num(p.removed), "removed"]] as const)
+        .filter(([n]) => n != null && n > 0)
+        .map(([n, word]) => `${n} ${word}`);
+    return said.length > 0 ? ` (${said.join(", ")})` : "";
+};
 const subject = (e: FeedEvent, names: NameOf) => (e.subjectId != null && names(e.subjectId)) || "an employee";
 const entryLength = (p: Payload) => (num(p.minutes) != null ? `a ${fmtDur(num(p.minutes)!)} entry` : "an entry");
 const from = (v: unknown) => (str(v) ? ` from ${fmtDate(str(v)!)}` : "");
@@ -75,6 +82,7 @@ const WORDS: Record<string, Words> = {
     portal_invitation_accepted: { icon: "checkCircle", text: (e, p) => `${email(p)} accepted the invitation and can now follow ${project(e)} in the client portal` },
     portal_access_granted: { icon: "userPlus", text: (e, p) => `gave ${email(p)} access to ${project(e)} in the client portal` },
     portal_access_revoked: { icon: "x", text: (e, p) => `ended ${email(p)}'s client portal access to ${project(e)}` },
+    portal_published: { icon: "send", text: (e, p) => `published the client portal of ${project(e)}${published(p)}` },
     progress_set: {
         icon: "trendUp",
         text: (e) => (e.amount == null ? `updated ${project(e)}'s progress`

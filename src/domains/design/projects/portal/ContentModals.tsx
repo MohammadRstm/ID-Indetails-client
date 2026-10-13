@@ -51,11 +51,13 @@ export function RenameModal({ projectId, item, onClose }: { projectId: number; i
 /** Asks before a file is removed for good. */
 export function DeleteModal({ projectId, item, onClose }: { projectId: number; item: PortalContentItem; onClose: () => void }) {
     const remove = useDeleteItem(projectId);
+    // a published file stays in what clients see until the next publish
+    const published = item.state === "unchanged" || item.state === "changed";
 
     async function submit() {
         try {
             await remove.mutateAsync(item.id);
-            toast({ text: "File deleted", sub: item.title, icon: "trash" });
+            toast(published ? { text: "File removed", sub: `${item.title} stays visible to clients until you publish`, icon: "trash" } : { text: "File deleted", sub: item.title, icon: "trash" });
             onClose();
         } catch {
             // the answer is shown in the window
@@ -71,7 +73,11 @@ export function DeleteModal({ projectId, item, onClose }: { projectId: number; i
                     <button type="button" className="btn btn-danger" disabled={remove.isPending} onClick={() => void submit()}>Delete</button>
                 </>
             }>
-            <p>The file is removed from the client portal drafts. This can't be undone.</p>
+            {published ? (
+                <p>Clients keep seeing this file until you next publish; then it's removed from what they see. Until then you can undo this.</p>
+            ) : (
+                <p>The file is removed from the client portal drafts. This can't be undone.</p>
+            )}
         </Modal>
     );
 }

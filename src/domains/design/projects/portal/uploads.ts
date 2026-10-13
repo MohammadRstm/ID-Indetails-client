@@ -10,18 +10,24 @@ import { applyItem, contentBase, contentKey, refreshIfOutdated, type PortalConte
  */
 
 export const UPLOAD_LIMITS = { files: 2, parts: 3, linkBatch: 100 };
-/** Waits in milliseconds, so a test can shorten them: between a part's tries, and how long a finished row stays. */
-export const UPLOAD_MS = { retry: [1000, 3000, 9000], done: 2500 };
+/**
+ * Waits in milliseconds, so a test can shorten them: between a part's tries, how long a finished row stays, and how
+ * long after a project's last file its drafts are loaded again.
+ */
+export const UPLOAD_MS = { retry: [1000, 3000, 9000], done: 2500, refresh: 800 };
 /** Part links last about an hour; one older than this is asked for again before it is used. */
 const LINK_LIFE_MS = 40 * 60_000;
 const PART_TIMEOUT_MS = 30 * 60_000;
 /** Answers after which sending the file again can't help. */
 const FINAL = ["portal_file_content_mismatch", "portal_file_type_not_allowed", "portal_content_read_only", "portal_project_not_eligible"];
 
+/** A section of the drafts, or the hero image (which belongs to no section). */
+export type UploadTarget = PortalSection | "hero";
+
 export type UploadRow = {
     id: string;
     projectId: number;
-    section: PortalSection;
+    section: UploadTarget;
     name: string;
     size: number;
     /** Sending a new file for an existing card. */
@@ -34,13 +40,14 @@ export type UploadRow = {
 };
 
 type Started = { uploadId: number; partSize: number; partCount: number };
-type Completed = { item: PortalContentItem; usage: PortalUsage };
+/** A hero image has no item: the drafts say which image is the hero. */
+type Completed = { item: PortalContentItem | null; usage: PortalUsage };
 
 type Job = {
     id: string;
     queryClient: QueryClient;
     projectId: number;
-    section: PortalSection;
+    section: UploadTarget;
     replaceItemId: number | null;
     file: File;
     clientToken: string;
@@ -62,6 +69,9 @@ const jobs = new Map<string, Job>();
 const listeners = new Set<() => void>();
 let running = 0;
 let watching = false;
+/** Projects whose drafts are to be loaded again once their uploads are over. */
+const refreshing = new Map<number, ReturnType<typeof setTimeout>>();
+const BUSY: UploadRow["status"][] = ["waiting", "sending", "finishing"];
 
 export function subscribeUploads(listener: () => void) {
     listeners.add(listener);
@@ -69,6 +79,10 @@ export function subscribeUploads(listener: () => void) {
 }
 
 export const uploadRows = () => rows;
+
+/** Whether a project has files on their way, or its drafts are about to be loaded again (what they show isn't final). */
+export const projectBusy = (projectId: number) =>
+    refreshing.has(projectId) || rows.some((row) => row.projectId === projectId && BUSY.includes(row.status));
 
 function emit() {
     listeners.forEach((listener) => listener());
@@ -90,7 +104,7 @@ function watchLeaving() {
     if (watching) return;
     watching = true;
     window.addEventListener("beforeunload", (event) => {
-        if (rows.some((row) => row.status === "waiting" || row.status === "sending" || row.status === "finishing")) event.preventDefault();
+        if (rows.some((row) => BUSY.includes(row.status))) event.preventDefault();
     });
 }
 
@@ -99,7 +113,7 @@ function watchLeaving() {
 type NewUploads = {
     queryClient: QueryClient;
     projectId: number;
-    section: PortalSection;
+    section: UploadTarget;
     files: File[];
     /** The extensions the API accepts; any other file is refused here, before anything is sent. */
     accepted: string[];
@@ -114,7 +128,7 @@ export function addUploads({ queryClient, projectId, section, files, accepted, r
             id: crypto.randomUUID(), projectId, section, name: file.name, size: file.size, replacing: replaceItemId != null,
             status: "waiting", sent: 0, error: null, canRetry: false,
         };
-        const refused = refusal(file, accepted);
+        const refused = refusal(file, accepted, section);
         if (refused) {
             rows = [...rows, { ...row, status: "failed", error: refused }];
             continue;
@@ -129,12 +143,13 @@ export function addUploads({ queryClient, projectId, section, files, accepted, r
     pump();
 }
 
-function refusal(file: File, accepted: string[]): string | null {
+function refusal(file: File, accepted: string[], target: UploadTarget): string | null {
     if (file.size === 0) return "This file is empty.";
     const dot = file.name.lastIndexOf(".");
     const extension = dot < 0 ? "" : file.name.slice(dot + 1).toLowerCase();
     if (accepted.includes(extension)) return null;
-    return `${extension ? `.${extension} files` : "Files without an extension"} can't be added to the client portal.`;
+    const what = extension ? `.${extension} files` : "Files without an extension";
+    return target === "hero" ? `${what} can't be the hero image. Use a JPG, PNG or WebP picture.` : `${what} can't be added to the client portal.`;
 }
 
 /** Tries a failed file again: what the storage already has is not sent twice. */
@@ -175,6 +190,8 @@ export function resetUploads() {
         job.stop.abort();
     }
     jobs.clear();
+    refreshing.forEach((timer) => clearTimeout(timer));
+    refreshing.clear();
     rows = [];
     emit();
 }
@@ -218,8 +235,25 @@ async function run(job: Job) {
         if (!job.cancelled) fail(job, error);
     } finally {
         running--;
+        refreshWhenIdle(job);
         pump();
     }
+}
+
+/**
+ * The counts and states of the drafts move with every file. They are loaded again once, when the project's last
+ * file is over, not after each one.
+ */
+function refreshWhenIdle({ queryClient, projectId }: Job) {
+    clearTimeout(refreshing.get(projectId));
+    refreshing.set(projectId, setTimeout(() => {
+        refreshing.delete(projectId);
+        emit();
+        // another file started meanwhile: the end of that one asks again
+        if (rows.some((row) => row.projectId === projectId && BUSY.includes(row.status))) return;
+        void queryClient.invalidateQueries({ queryKey: contentKey(projectId) });
+    }, UPLOAD_MS.refresh));
+    emit();
 }
 
 function restart(job: Job) {
@@ -234,10 +268,11 @@ function restart(job: Job) {
 }
 
 async function start(job: Job) {
-    const { data } = await call(job, () =>
-        http.post<Started>(`${contentBase(job.projectId)}/uploads`, {
-            clientToken: job.clientToken, section: job.section, fileName: job.file.name, size: job.file.size, replaceItemId: job.replaceItemId,
-        }));
+    const { clientToken, section, replaceItemId, file } = job;
+    const body = section === "hero"
+        ? { clientToken, hero: true, fileName: file.name, size: file.size }
+        : { clientToken, section, fileName: file.name, size: file.size, replaceItemId };
+    const { data } = await call(job, () => http.post<Started>(`${contentBase(job.projectId)}/uploads`, body));
     job.upload = data;
 }
 
@@ -393,7 +428,8 @@ async function finish(job: Job) {
 
 function succeed(job: Job, { item, usage }: Completed) {
     if (job.cancelled) return;
-    applyItem(job.queryClient, job.projectId, item, usage);
+    if (item) applyItem(job.queryClient, job.projectId, item, usage);
+    else void job.queryClient.invalidateQueries({ queryKey: contentKey(job.projectId) });
     jobs.delete(job.id);
     update(job.id, { status: "done", sent: job.file.size, error: null });
     setTimeout(() => forget(job.id), UPLOAD_MS.done);
