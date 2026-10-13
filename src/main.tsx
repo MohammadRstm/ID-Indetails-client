@@ -4,6 +4,7 @@ import { z } from "zod";
 import "@/styles/hourline.css";
 import "@/styles/fonts.css";
 import "@/styles/client.css";
+import "@/styles/portal.css";
 import { applyTheme } from "@/shared/theme";
 import App from "./App";
 

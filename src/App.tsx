@@ -24,6 +24,7 @@ import {
     PortalForgotPasswordPage,
     PortalHomePage,
     PortalInvitePage,
+    PortalProjectPage,
     PortalResetPasswordPage,
     PortalRoot,
     PortalSignInPage,
@@ -83,6 +84,7 @@ export function AppRoutes() {
                     <Route path="reset-password" element={<PortalResetPasswordPage />} />
                     <Route element={<RequirePortalSession />}>
                         <Route index element={<PortalHomePage />} />
+                        <Route path="projects/:projectId" element={<PortalProjectPage />} />
                     </Route>
                     <Route path="*" element={<NotFound />} />
                 </Route>

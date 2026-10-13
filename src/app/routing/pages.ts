@@ -81,4 +81,5 @@ export const PortalInvitePage = page(() => import("@/portal/pages/PortalInvitePa
 export const PortalForgotPasswordPage = page(() => import("@/portal/pages/PortalForgotPasswordPage"));
 export const PortalResetPasswordPage = page(() => import("@/portal/pages/PortalResetPasswordPage"));
 export const PortalHomePage = page(() => import("@/portal/pages/PortalHomePage"));
+export const PortalProjectPage = page(() => import("@/portal/pages/PortalProjectPage"));
 export const RequirePortalSession = page(() => import("@/portal/RequirePortalSession"));
