@@ -30,7 +30,8 @@ export default function CardGrid({ projectId, section, items, canEdit, canReplac
     const byId = new Map(kept.map((item) => [item.id, item]));
     const sortable = canEdit && kept.length >= 2;
 
-    const sort = useCardSort({
+    // taken apart, so the grid's ref stays apart from what is drawn
+    const { grid, order, held, said, handle, move } = useCardSort({
         ids: kept.map((item) => item.id),
         enabled: sortable,
         titleOf: (id) => byId.get(id)?.title ?? "",
@@ -49,7 +50,7 @@ export default function CardGrid({ projectId, section, items, canEdit, canReplac
     const card = (item: PortalContentItem, index?: number) => (
         <ContentCard key={item.id} projectId={projectId} item={item} canEdit={canEdit} canReplace={canReplace} onPreviewFailed={onPreviewFailed} onReplace={onReplace}
             sort={sortable && index != null ? {
-                index, count: kept.length, held: sort.held?.id === item.id ? sort.held.by : null, grip: sort.handle(item.id), move: (to) => sort.move(item.id, to),
+                index, count: kept.length, held: held?.id === item.id ? held.by : null, grip: handle(item.id), move: (to) => move(item.id, to),
             } : undefined} />
     );
 
@@ -66,14 +67,14 @@ export default function CardGrid({ projectId, section, items, canEdit, canReplac
                     </span>
                 </div>
             )}
-            <div className="pc-grid" ref={sort.grid}>
-                {sort.order.map((id, index) => {
+            <div className="pc-grid" ref={grid}>
+                {order.map((id, index) => {
                     const item = byId.get(id);
                     return item ? card(item, index) : null;
                 })}
                 {removed.map((item) => card(item))}
             </div>
-            <div className="sr" aria-live="polite" aria-atomic="true">{sort.said}</div>
+            <div className="sr" aria-live="polite" aria-atomic="true">{said}</div>
         </>
     );
 }
