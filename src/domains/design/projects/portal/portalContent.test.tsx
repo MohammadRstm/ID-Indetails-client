@@ -6,8 +6,14 @@ import { P } from "@/app/permissions/codes";
 import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
-import type { PortalContent, PortalContentFile, PortalContentItem, PortalUsage } from "./contentApi";
+import type { PortalContentItem, PortalUsage } from "./contentApi";
+import { apiError, base, cards, contentOf, fileOf, itemOf, inMenu, liveContent, MB, menuOf, page, part, projectId, served, usageOf } from "./portalTestKit";
 import { resetUploads, UPLOAD_MS } from "./uploads";
+
+// the preview of what clients would get is another component's, with its own tests
+vi.mock("./PresentationPreview", () => ({
+    default: ({ onClose }: { onClose: () => void }) => <div role="dialog" aria-label="Preview"><button onClick={onClose}>Close preview</button></div>,
+}));
 
 /*
  * A Design client project's Client portal tab: the parts to choose from, and a section's files with their uploads.
@@ -15,41 +21,12 @@ import { resetUploads, UPLOAD_MS } from "./uploads";
  */
 
 const nadia = personas.designAdmin;
-const projectId = projectWork.project.id;
-const page = `/design/projects/${projectId}`;
-const part = (name: string) => `${page}?tab=portal&part=${name}`;
-const base = "/api/projects/:id/portal/content";
-const MB = 1024 * 1024;
-
-const person = { id: 2, name: "Nadia Karam" };
-const fileOf = (id: number, name: string, over: Partial<PortalContentFile> = {}): PortalContentFile => ({
-    id, name, contentType: "image/jpeg", preview: "image", originalBytes: 2 * MB, storedBytes: 2 * MB,
-    uploadedAt: "2026-09-29T10:00:00Z", uploadedBy: person, ...over,
-});
-const itemOf = (id: number, title: string, file: PortalContentFile, over: Partial<PortalContentItem> = {}): PortalContentItem => {
-    const shown = file.preview === "image" || file.preview === "video";
-    return {
-        id, section: "presentation", title, sortOrder: id, isDraft: true, file,
-        previewUrl: shown ? `/api/content-store/previews/${file.id}` : null,
-        previewUrlExpiresAt: shown ? "2026-09-30T10:00:00Z" : null,
-        createdAt: "2026-09-29T10:00:00Z", updatedAt: "2026-09-29T10:00:00Z", updatedBy: person, ...over,
-    };
-};
-const usageOf = (files: number, mb: number): PortalUsage => ({ files, originalBytes: mb * MB, storedBytes: mb * MB });
-const contentOf = (items: PortalContentItem[], over: Partial<PortalContent> = {}): PortalContent => ({
-    projectId, storageReady: true, canEdit: true, readOnlyReason: null, usage: usageOf(items.length, items.length * 2),
-    acceptedExtensions: ["jpg", "jpeg", "png", "pdf", "mp4"], items, ...over,
-});
-const served = (content: PortalContent) => http.get(base, () => HttpResponse.json(content));
-const apiError = (status: number, code: string, message: string) => HttpResponse.json({ type: "error", code, message }, { status });
 
 const living = itemOf(5, "Living room v3", fileOf(11, "Living room v3.jpg"));
 const hero = itemOf(6, "Hero shot", fileOf(12, "IMG_0042.jpg", { originalBytes: 1.5 * MB, storedBytes: 1.5 * MB }), { sortOrder: 1 });
 
 const tabs = () => within(screen.getAllByRole("tablist")[0]).getAllByRole("tab").map((t) => t.textContent?.replace(/\d+$/, "").trim());
 const parts = () => within(screen.getAllByRole("tablist")[1]).getAllByRole("tab").map((t) => t.textContent);
-const cards = () => screen.getAllByRole("article").map((a) => a.getAttribute("aria-label"));
-const menuOf = async (title: string) => userEvent.click(await screen.findByRole("button", { name: `Actions for ${title}` }));
 const section = () => document.querySelector(".pc-drop") as HTMLElement;
 const small = (name = "plan.jpg") => new File(["abcdef"], name, { type: "image/jpeg" });
 
@@ -112,19 +89,22 @@ function uploadApi(uploaded: PortalContentItem, usage: PortalUsage) {
 const planItem = itemOf(21, "plan", fileOf(31, "plan.jpg", { originalBytes: 6, storedBytes: 6 }));
 
 // Wednesday 30 September 2026, noon in Beirut
-const waits = { retry: [...UPLOAD_MS.retry], done: UPLOAD_MS.done };
+const waits = { retry: [...UPLOAD_MS.retry], done: UPLOAD_MS.done, refresh: UPLOAD_MS.refresh };
 beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-09-30T09:00:00Z"));
     // no waiting between a part's tries, and a finished file leaves the list at once
     UPLOAD_MS.retry = [0, 0, 0];
     UPLOAD_MS.done = 0;
+    // the drafts aren't loaded again after the last file, unless a test wants that
+    UPLOAD_MS.refresh = 60_000;
 });
 afterEach(() => {
     vi.useRealTimers();
     resetUploads();
     UPLOAD_MS.retry = waits.retry;
     UPLOAD_MS.done = waits.done;
+    UPLOAD_MS.refresh = waits.refresh;
 });
 
 describe("the Client portal tab's parts, by permission", () => {
@@ -194,7 +174,7 @@ describe("a section's files", () => {
         expect(within(card).getByText("IMG_0042.jpg")).toBeInTheDocument();
         expect(within(card).getByText("JPG · 1.5 MB")).toBeInTheDocument();
         expect(within(card).getByText("Uploaded by Nadia Karam · Yesterday")).toBeInTheDocument();
-        expect(within(card).getByText("Draft")).toBeInTheDocument();
+        expect(within(card).getByText("New")).toBeInTheDocument();
         const image = card.querySelector("img")!;
         expect(image).toHaveAttribute("src", "/api/content-store/previews/12");
         expect(image).toHaveAttribute("loading", "lazy");
@@ -261,9 +241,11 @@ describe("the files a person may not change", () => {
         expect(screen.queryByLabelText("Files to upload")).toBeNull();
 
         await menuOf("Living room v3");
-        expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: "Download" })).toBeInTheDocument();
-        for (const name of ["Rename", "Move to 3D", "Move to Drawings", "Replace file", "Delete"]) expect(screen.queryByRole("button", { name })).toBeNull();
+        expect(inMenu().getByRole("button", { name: "Preview" })).toBeInTheDocument();
+        expect(inMenu().getByRole("button", { name: "Download" })).toBeInTheDocument();
+        for (const name of ["Rename", "Move to 3D", "Move to Drawings", "Replace file", "Use as hero image", "Move earlier", "Move to start", "Delete"]) {
+            expect(screen.queryByRole("button", { name })).toBeNull();
+        }
     });
 
     it("says file storage isn't set up, and offers no upload", async () => {
@@ -440,6 +422,95 @@ describe("uploading", () => {
         expect(closed.defaultPrevented).toBe(false);
     });
 
+    it("loads the drafts again once when all the project's files are up, not after each file", async () => {
+        UPLOAD_MS.refresh = 0;
+        const api = uploadApi(planItem, usageOf(1, 2));
+        const live = liveContent(contentOf([]));
+        api.complete = () => {
+            live.box.content = contentOf([planItem]);
+            return HttpResponse.json({ item: planItem, usage: usageOf(1, 2) });
+        };
+        renderApp(part("presentation"), nadia, live.handler, ...api.handlers, ...projectWorkHandlers);
+        await userEvent.upload(await screen.findByLabelText("Files to upload"), [small("a.jpg"), small("b.jpg")]);
+
+        await waitFor(() => expect(api.log.completes).toBe(2));
+        await waitFor(() => expect(live.box.gets).toBe(2));
+        expect(await screen.findByRole("article", { name: "plan" })).toBeInTheDocument();
+        // nothing more is asked once the one load is done
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        expect(live.box.gets).toBe(2);
+    });
+
+    it("keeps Publish changes off, saying why, while files are on their way", async () => {
+        UPLOAD_MS.refresh = 0;
+        const api = uploadApi(planItem, usageOf(2, 4));
+        let release!: () => void;
+        const gate = new Promise<void>((resolve) => { release = resolve; });
+        api.put = async (name) => {
+            if (name === "p1") await gate;
+            return new HttpResponse(null, { status: 200 });
+        };
+        const live = liveContent(contentOf([living]));
+        api.complete = () => {
+            live.box.content = contentOf([living, planItem]);
+            return HttpResponse.json({ item: planItem, usage: usageOf(2, 4) });
+        };
+        renderApp(part("presentation"), nadia, live.handler, ...api.handlers, ...projectWorkHandlers);
+        const publish = await screen.findByRole("button", { name: "Publish changes" });
+        expect(publish).toBeEnabled();
+
+        await userEvent.upload(screen.getByLabelText("Files to upload"), small());
+        await waitFor(() => expect(publish).toBeDisabled());
+        expect(screen.getByText("Publishing waits until the uploads have finished.")).toBeInTheDocument();
+
+        release();
+        await waitFor(() => expect(publish).toBeEnabled());
+        expect(screen.queryByText("Publishing waits until the uploads have finished.")).toBeNull();
+    });
+
+    it("sends a hero image as an upload that belongs to no section, and shows it once the drafts say so", async () => {
+        const api = uploadApi(planItem, usageOf(1, 2));
+        let release!: () => void;
+        const gate = new Promise<void>((resolve) => { release = resolve; });
+        api.put = async (name) => {
+            if (name === "p1") await gate;
+            return new HttpResponse(null, { status: 200 });
+        };
+        const live = liveContent(contentOf([living]));
+        // the API answers a hero upload without an item; the drafts then name the hero
+        api.complete = () => {
+            live.box.content = contentOf([living], {
+                hero: { fileId: 40, name: "banner.jpg", url: "/api/content-store/previews/40", urlExpiresAt: "2026-09-30T10:00:00Z" },
+                changes: { heroChanged: true },
+            });
+            return HttpResponse.json({ item: null, usage: usageOf(2, 4) });
+        };
+        renderApp(part("presentation"), nadia, live.handler, ...api.handlers, ...projectWorkHandlers);
+        expect(await screen.findByText("No hero image yet")).toBeInTheDocument();
+
+        await userEvent.upload(screen.getByLabelText("Hero image to upload"), small("banner.jpg"));
+        const row = (await screen.findByText("banner.jpg")).closest("li") as HTMLElement;
+        expect(within(row).getByText(/^Hero image · /)).toBeInTheDocument();
+        release();
+
+        expect(await screen.findByAltText("Hero image")).toHaveAttribute("src", "/api/content-store/previews/40");
+        expect(screen.getByText("Changed since last publish")).toBeInTheDocument();
+        expect(api.log.started[0]).toMatchObject({ hero: true, fileName: "banner.jpg", size: 6 });
+        expect(api.log.started[0]).not.toHaveProperty("section");
+        expect(api.log.started[0]).not.toHaveProperty("replaceItemId");
+    });
+
+    it("refuses a hero image of a type that can't be one, before anything is sent", async () => {
+        const api = uploadApi(planItem, usageOf(1, 2));
+        renderApp(part("presentation"), nadia, served(contentOf([])), ...api.handlers, ...projectWorkHandlers);
+        const user = userEvent.setup({ applyAccept: false });
+        await user.upload(await screen.findByLabelText("Hero image to upload"), new File(["GIF89a"], "banner.gif", { type: "image/gif" }));
+
+        const row = (await screen.findByText("banner.gif")).closest("li") as HTMLElement;
+        expect(within(row).getByText(".gif files can't be the hero image. Use a JPG, PNG or WebP picture.")).toBeInTheDocument();
+        expect(api.log.started).toEqual([]);
+    });
+
     it("sends a new file for an existing card, which keeps its place", async () => {
         const newer = { ...living, file: fileOf(32, "Living room v4.jpg", { originalBytes: 6, storedBytes: 6 }), previewUrl: "/api/content-store/previews/32" };
         const api = uploadApi(newer, usageOf(2, 2));
@@ -458,11 +529,14 @@ describe("uploading", () => {
 describe("a card's menu", () => {
     it("renames a file, telling what is wrong as it is typed", async () => {
         const renamed: unknown[] = [];
-        renderApp(part("presentation"), nadia, served(contentOf([living])), ...projectWorkHandlers,
+        const live = liveContent(contentOf([living]));
+        renderApp(part("presentation"), nadia, live.handler, ...projectWorkHandlers,
             http.put(`${base}/items/:itemId`, async ({ request }) => {
                 const body = (await request.json()) as { title: string };
                 renamed.push(body);
-                return HttpResponse.json({ ...living, title: body.title });
+                const item = { ...living, title: body.title };
+                live.box.content = contentOf([item]);
+                return HttpResponse.json(item);
             }));
         await menuOf("Living room v3");
         await userEvent.click(screen.getByRole("button", { name: "Rename" }));
@@ -485,15 +559,21 @@ describe("a card's menu", () => {
         expect(await screen.findByRole("article", { name: "Hero view" })).toBeInTheDocument();
         expect(renamed).toEqual([{ title: "Hero view" }]);
         expect(screen.queryByRole("dialog")).toBeNull();
+        // what a rename changes for clients (new, changed) comes from the API: the drafts are loaded again
+        await waitFor(() => expect(live.box.gets).toBe(2));
+        expect(screen.getByRole("article", { name: "Hero view" })).toBeInTheDocument();
     });
 
     it("moves a file to another section", async () => {
         const moved: unknown[] = [];
-        renderApp(part("presentation"), nadia, served(contentOf([living, hero])), ...projectWorkHandlers,
+        const live = liveContent(contentOf([living, hero]));
+        renderApp(part("presentation"), nadia, live.handler, ...projectWorkHandlers,
             http.put(`${base}/items/:itemId`, async ({ request }) => {
                 const body = await request.json();
                 moved.push(body);
-                return HttpResponse.json({ ...living, section: "model", sortOrder: 9 });
+                const item = { ...living, section: "model" as const, sortOrder: 9 };
+                live.box.content = contentOf([item, hero]);
+                return HttpResponse.json(item);
             }));
         await menuOf("Living room v3");
         expect(screen.queryByRole("button", { name: "Move to Presentation" })).toBeNull();
@@ -507,9 +587,11 @@ describe("a card's menu", () => {
 
     it("asks before deleting, then removes the card and updates the storage line", async () => {
         const deleted: string[] = [];
-        renderApp(part("presentation"), nadia, served(contentOf([living, hero], { usage: usageOf(2, 3.5) })), ...projectWorkHandlers,
+        const live = liveContent(contentOf([living, hero], { usage: usageOf(2, 3.5) }));
+        renderApp(part("presentation"), nadia, live.handler, ...projectWorkHandlers,
             http.delete(`${base}/items/:itemId`, ({ params }) => {
                 deleted.push(String(params.itemId));
+                live.box.content = contentOf([hero], { usage: usageOf(1, 1.5) });
                 return HttpResponse.json({ usage: usageOf(1, 1.5) });
             }));
 
@@ -534,7 +616,7 @@ describe("a card's menu", () => {
     it("shows a picture in a window of its own that Escape closes", async () => {
         renderApp(part("presentation"), nadia, served(contentOf([living])), ...projectWorkHandlers);
         await menuOf("Living room v3");
-        await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+        await userEvent.click(inMenu().getByRole("button", { name: "Preview" }));
         const dialog = screen.getByRole("dialog", { name: "Living room v3" });
         expect(within(dialog).getByRole("img")).toHaveAttribute("src", "/api/content-store/previews/11");
         await userEvent.keyboard("{Escape}");
@@ -561,7 +643,7 @@ describe("a card's menu", () => {
         expect(followed[0]).toMatchObject({ href: "/api/content-store/objects/13?inline=false", download: "plan-ground.pdf" });
 
         await menuOf("Ground floor plan");
-        await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+        await userEvent.click(inMenu().getByRole("button", { name: "Preview" }));
         await waitFor(() => expect(followed).toHaveLength(2));
         expect(followed[1]).toMatchObject({ href: "/api/content-store/objects/13?inline=true", target: "_blank", rel: "noopener" });
         expect(asked).toEqual(["false", "true"]);

@@ -9,8 +9,9 @@ import { plural } from "@/shared/format/labels";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../../shared/projects/projectsApi";
+import CardGrid from "./CardGrid";
 import { byOrder, forgetPreview, SECTION_LABEL, usePortalContent, type PortalContentItem, type PortalSection } from "./contentApi";
-import ContentCard from "./ContentCard";
+import PresentationIntro from "./PresentationIntro";
 import UploadQueue from "./UploadQueue";
 import { useUploads } from "./useUploads";
 
@@ -37,7 +38,8 @@ const carriesFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).i
 /**
  * One section of a project's client portal drafts (client_portal:manage): what is stored, the files on their way
  * up, and a card for each file. Files come from the Upload files button or are dropped on the section; every
- * file stays a draft, which the client can't see.
+ * change stays a draft, which the client can't see until it is published. The Presentation section starts with the
+ * hero image and the introduction.
  */
 export default function PortalSectionView({ project, section }: { project: Project; section: PortalSection }) {
     const content = usePortalContent(project.id);
@@ -115,44 +117,44 @@ export default function PortalSectionView({ project, section }: { project: Proje
     }
 
     return (
-        <div className={cx("pc-drop", dropping && "on")} onDragEnter={dragEnter} onDragOver={dragOver} onDragLeave={dragLeave} onDrop={drop}>
-            {dropping && <div className="pc-drop-cue" aria-hidden="true">Drop to upload to {label}</div>}
-            <Panel title={label} sub={`${COPY[section].sub} Everything here is a draft the client can't see.`}
-                tools={canUpload && (
-                    <>
-                        <button type="button" className="btn btn-primary btn-sm" onClick={() => chooser.current?.click()}><Icon name="upload" />Upload files</button>
-                        <input ref={chooser} type="file" multiple hidden accept={accept} aria-label="Files to upload" onChange={chosen} />
-                        <input ref={replacer} type="file" hidden accept={accept} aria-label="New file for the card" onChange={replacementChosen} />
-                    </>
-                )}>
-                <div className="pc-strip">
-                    <span>{`${plural(usage.files, "file")} · ${fmtBytes(usage.originalBytes)} original · ${fmtBytes(usage.storedBytes)} stored`}</span>
-                    <span className="hint">Stored size is what the file storage reports; no compression is applied.</span>
-                </div>
-                {!storageReady && (
-                    <div className="banner hold pc-note">
-                        <Icon name="info" />
-                        <div className="grow">File storage for the client portal isn't set up yet. Ask your administrator.</div>
+        <>
+            {section === "presentation" && <PresentationIntro projectId={project.id} content={content.data} onImageFailed={previewFailed} />}
+            <div className={cx("pc-drop", dropping && "on")} onDragEnter={dragEnter} onDragOver={dragOver} onDragLeave={dragLeave} onDrop={drop}>
+                {dropping && <div className="pc-drop-cue" aria-hidden="true">Drop to upload to {label}</div>}
+                <Panel title={label} sub={`${COPY[section].sub} Clients only see what you publish.`}
+                    tools={canUpload && (
+                        <>
+                            <button type="button" className="btn btn-primary btn-sm" onClick={() => chooser.current?.click()}><Icon name="upload" />Upload files</button>
+                            <input ref={chooser} type="file" multiple hidden accept={accept} aria-label="Files to upload" onChange={chosen} />
+                            <input ref={replacer} type="file" hidden accept={accept} aria-label="New file for the card" onChange={replacementChosen} />
+                        </>
+                    )}>
+                    <div className="pc-strip">
+                        <span>{`${plural(usage.files, "file")} · ${fmtBytes(usage.originalBytes)} original · ${fmtBytes(usage.storedBytes)} stored`}</span>
+                        <span className="hint">Stored size is what the file storage reports; no compression is applied.</span>
                     </div>
-                )}
-                {!canEdit && (
-                    <div className="banner pc-note">
-                        <Icon name="lock" />
-                        <div className="grow">{readOnlyReason ?? "The files of this project can't be changed."}</div>
-                    </div>
-                )}
-                <UploadQueue rows={uploads.rows} onCancel={uploads.cancel} onRetry={uploads.retry} onDismiss={uploads.dismiss} />
-                {items.length === 0 ? (
-                    <Empty art="projects" title={COPY[section].emptyTitle} text={canUpload ? `${COPY[section].empty} Drag files here or use Upload files.` : undefined} />
-                ) : (
-                    <div className="pc-grid">
-                        {items.map((item) => (
-                            <ContentCard key={item.id} projectId={project.id} item={item} canEdit={canEdit} canReplace={canUpload} onPreviewFailed={previewFailed} onReplace={askForReplacement} />
-                        ))}
-                    </div>
-                )}
-            </Panel>
-        </div>
+                    {!storageReady && (
+                        <div className="banner hold pc-note">
+                            <Icon name="info" />
+                            <div className="grow">File storage for the client portal isn't set up yet. Ask your administrator.</div>
+                        </div>
+                    )}
+                    {!canEdit && (
+                        <div className="banner pc-note">
+                            <Icon name="lock" />
+                            <div className="grow">{readOnlyReason ?? "The files of this project can't be changed."}</div>
+                        </div>
+                    )}
+                    <UploadQueue rows={uploads.rows} onCancel={uploads.cancel} onRetry={uploads.retry} onDismiss={uploads.dismiss} />
+                    {items.length === 0 ? (
+                        <Empty art="projects" title={COPY[section].emptyTitle} text={canUpload ? `${COPY[section].empty} Drag files here or use Upload files.` : undefined} />
+                    ) : (
+                        <CardGrid projectId={project.id} section={section} items={items} canEdit={canEdit} canReplace={canUpload}
+                            onPreviewFailed={previewFailed} onReplace={askForReplacement} />
+                    )}
+                </Panel>
+            </div>
+        </>
     );
 }
 

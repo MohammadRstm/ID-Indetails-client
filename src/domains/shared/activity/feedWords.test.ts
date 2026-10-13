@@ -72,6 +72,15 @@ describe("what the activity feed says", () => {
         expect(line("overhead_removed")).toBe("removed Figma from the company expenses");
     });
 
+    it("words a client portal publish with what it changed, when the event says", () => {
+        const published = (payload: Record<string, unknown> | null) => feedWords(event("portal_published", { payload }), names);
+        expect(published({ added: 2, updated: 1, removed: 1 })).toEqual({ icon: "send", text: "published the client portal of Beit Misk show apartment (2 new, 1 updated, 1 removed)" });
+        // what didn't change isn't listed
+        expect(published({ added: 0, updated: 3, removed: 0 }).text).toBe("published the client portal of Beit Misk show apartment (3 updated)");
+        expect(published({ added: 0, updated: 0, removed: 0 }).text).toBe("published the client portal of Beit Misk show apartment");
+        expect(published(null).text).toBe("published the client portal of Beit Misk show apartment");
+    });
+
     it("says something for a kind it doesn't know", () => {
         expect(feedWords(event("something_new"), names)).toEqual({ icon: "info", text: "something new" });
     });

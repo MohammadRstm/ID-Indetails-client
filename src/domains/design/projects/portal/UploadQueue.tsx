@@ -23,6 +23,11 @@ function statusOf(row: UploadRow): string {
     }
 }
 
+function where(row: UploadRow): string {
+    if (row.section === "hero") return "Hero image";
+    return row.replacing ? `Replacing a file in ${SECTION_LABEL[row.section]}` : SECTION_LABEL[row.section];
+}
+
 /** The files being sent, one row each, with their progress and what can be done with them. */
 export default function UploadQueue({ rows, onCancel, onRetry, onDismiss }: Props) {
     if (rows.length === 0) return null;
@@ -33,7 +38,7 @@ export default function UploadQueue({ rows, onCancel, onRetry, onDismiss }: Prop
                     <div className="pc-up-main">
                         <div className="pc-up-name trunc" title={row.name}>{row.name}</div>
                         <div className="pc-up-meta muted">
-                            {row.replacing ? `Replacing a file in ${SECTION_LABEL[row.section]}` : SECTION_LABEL[row.section]} · {fmtBytes(row.size)} · {statusOf(row)}
+                            {where(row)} · {fmtBytes(row.size)} · {statusOf(row)}
                         </div>
                         {row.status !== "failed" && (
                             <div className={cx("bar thin", row.status === "done" && "ok")} role="progressbar" aria-label={`Progress of ${row.name}`}

@@ -526,7 +526,7 @@ table { line-height: normal; font-weight: normal; }
 .pc-up-actions { display: flex; gap: 6px; flex: none; }
 
 .pc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
-.pc-card { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--line); border-radius: var(--r2); background: var(--surface); overflow: hidden; }
+.pc-card { position: relative; display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--line); border-radius: var(--r2); background: var(--surface); overflow: hidden; }
 .pc-thumb { position: relative; display: block; width: 100%; aspect-ratio: 4 / 3; padding: 0; border: 0; border-bottom: 1px solid var(--line); background: var(--surface-3); overflow: hidden; }
 button.pc-thumb { cursor: pointer; }
 .pc-thumb img, .pc-thumb video { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -540,7 +540,7 @@ button.pc-thumb { cursor: pointer; }
 .pc-head .pop-host { flex: none; }
 .pc-head .icon-btn { width: 26px; height: 26px; margin: -3px -4px 0 0; }
 .pc-line { font-size: 11.5px; line-height: 1.4; }
-.pc-body > .badge { align-self: flex-start; margin-top: 5px; }
+.pc-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
 @media (max-width: 640px) {
   .pc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .pc-body { padding: 9px 9px 10px; }
@@ -550,4 +550,62 @@ button.pc-thumb { cursor: pointer; }
 }
 @media (max-width: 420px) {
   .pc-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Publishing: where the client portal stands (a slim panel above the parts), and what the person can do about it */
+.pc-status { margin-bottom: 14px; }
+.pc-status-body { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 10px 15px; }
+.pc-status-main { flex: 1 1 280px; min-width: 0; }
+.pc-status-line { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 6px; font-size: 13px; }
+.pc-status-line .ic { color: var(--accent); }
+.pc-status-main .hint { margin-top: 3px; }
+.pc-status-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.pc-changes { display: grid; gap: 4px; margin: 0 0 12px; padding-left: 20px; }
+
+/* The hero image and the introduction, at the top of the Presentation part */
+.pc-top { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 14px; margin-bottom: 14px; }
+.pc-hero { aspect-ratio: 16 / 6; overflow: hidden; border: 1px solid var(--line); border-radius: var(--r1); background: var(--surface-3); }
+.pc-hero-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pc-hero-empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px; text-align: center; font-size: 12px; color: var(--ink-3); }
+.pc-hero-empty .ic { width: 24px; height: 24px; }
+.pc-changed { display: flex; align-items: center; gap: 5px; margin-top: 10px; font-size: 11.5px; font-weight: 600; color: var(--warn); }
+.pc-changed .ic { width: 13px; height: 13px; }
+.pc-summary-text { margin: 0; white-space: pre-wrap; font-size: 13px; line-height: 1.5; }
+.pc-intro-foot { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.pc-count { font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.pc-count.over { color: var(--now); font-weight: 650; }
+.pc-picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.pc-pick { display: flex; flex-direction: column; gap: 6px; padding: 6px 6px 8px; border: 1px solid var(--line); border-radius: var(--r2); background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 550; text-align: left; cursor: pointer; }
+.pc-pick:hover { border-color: var(--line-2); background: var(--surface-2); }
+.pc-pick.on { border-color: var(--accent); background: var(--accent-soft); }
+.pc-pick:disabled { opacity: .6; cursor: default; }
+.pc-pick-img { display: grid; place-items: center; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--r1); background: var(--surface-3); color: var(--ink-3); }
+.pc-pick-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pc-pick-now { font-size: 10.5px; font-weight: 650; color: var(--accent-ink); }
+@media (max-width: 820px) {
+  .pc-top { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* A card's state, and a removed card: faded, with the way back */
+.badge-removed { background: var(--now-soft); color: var(--now); }
+.pc-card.removed .pc-thumb, .pc-card.removed .pc-head, .pc-card.removed .pc-line { opacity: .5; }
+.pc-removed { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 6px; font-size: 11.5px; line-height: 1.4; color: var(--ink-2); }
+.pc-removed .btn { margin-left: auto; }
+
+/* Rearranging a section: the handle, the card lifted by the keys, the dashed place it will land in, and the copy that
+   follows a pointer. The handle never lets the page scroll under a finger. */
+.pc-order { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; margin-bottom: 10px; font-size: 12px; }
+.pc-order-status { display: inline-flex; align-items: center; gap: 4px; min-height: 16px; font-weight: 600; color: var(--ink-2); }
+.pc-order-status .ic { width: 13px; height: 13px; color: var(--ok); }
+.pc-grip { position: absolute; top: 8px; left: 8px; z-index: 2; width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%;
+  background: rgba(4,7,8,.62); color: #fff; cursor: grab; touch-action: none; user-select: none; }
+.pc-grip:hover { background: rgba(4,7,8,.8); }
+.pc-grip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pc-grip .ic { width: 16px; height: 16px; }
+.pc-card.lifted { z-index: 3; scale: 1.025; border-color: var(--accent); box-shadow: var(--shadow-3); }
+.pc-card.placeholder { outline: 2px dashed var(--accent); outline-offset: -2px; background: color-mix(in srgb, var(--accent-soft) 60%, transparent); }
+.pc-card.placeholder > * { visibility: hidden; }
+.pc-ghost { position: fixed; z-index: 400; margin: 0; pointer-events: none; opacity: .95; box-shadow: var(--shadow-3); scale: 1.03; transform: rotate(-.8deg); }
+@media (prefers-reduced-motion: reduce) {
+  .pc-card.lifted, .pc-ghost { scale: 1; }
 }
