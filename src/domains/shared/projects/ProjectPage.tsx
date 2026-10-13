@@ -41,7 +41,7 @@ import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
 
-type TabKey = "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings";
+type TabKey = "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "portal";
 
 /**
  * What goes on a project's Overview tab and Timeline tab, and the domain's own bits of its head. Each domain
@@ -58,6 +58,8 @@ export type ProjectPanels = {
     analytics?: (project: Project) => ReactNode;
     /** Its own tab, for those who see everyone's work. */
     contributors?: (project: Project) => ReactNode;
+    /** Design only: who of the client's contacts can follow the project in the client portal (client_access:manage). */
+    portal?: (project: Project) => ReactNode;
     timeline?: (project: Project) => ReactNode;
     /** Beside the project's own buttons, such as Log work. */
     actions?: (project: Project) => ReactNode;
@@ -128,11 +130,13 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         overview: panels.hasOverview?.(permissions) ?? true,
         analytics: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.analytics != null,
         contributors: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.contributors != null,
+        // only a client project's contacts can be invited
+        portal: !site && project.billingType === "client" && project.client != null && permissions.has(P.CLIENT_ACCESS_MANAGE) && panels.portal != null,
         requirements: permissions.has(P.REQUIREMENT_VIEW),
         timeline: timelineTab,
         meetings: true,
     };
-    const tabOrder: TabKey[] = ["financials", "overview", "analytics", "contributors", "requirements", "timeline", "meetings"];
+    const tabOrder: TabKey[] = ["financials", "overview", "analytics", "contributors", "requirements", "timeline", "meetings", "portal"];
     const firstTab = tabOrder.find((k) => allowed[k]) ?? "meetings";
     // A tab the person may not open falls back to their first one, even when the link asks for it.
     const tab: TabKey = requested && allowed[requested] ? requested : firstTab;
@@ -315,11 +319,13 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                 ...(permissions.has(P.REQUIREMENT_VIEW) ? [{ key: "requirements" as TabKey, label: "Requirements", count: requirements.data?.total }] : []),
                 ...(timelineTab ? [{ key: "timeline" as TabKey, label: "Timeline" }] : []),
                 { key: "meetings" as TabKey, label: "Meetings", count: meetings.data?.length },
+                ...(allowed.portal ? [{ key: "portal" as TabKey, label: "Client portal" }] : []),
             ]} />
 
             {tab === "requirements" ? <ProjectRequirementsTab project={project} />
                 : tab === "timeline" && panels.timeline ? panels.timeline(project)
                     : tab === "meetings" ? <ProjectMeetingsTab project={project} />
+                    : tab === "portal" && panels.portal ? panels.portal(project)
                         : tab === "financials" && panels.financials ? panels.financials(project)
                             : tab === "analytics" && panels.analytics ? panels.analytics(project)
                                 : tab === "contributors" && panels.contributors ? panels.contributors(project)

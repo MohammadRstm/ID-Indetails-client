@@ -16,7 +16,21 @@ import {
     RequirePasswordChanged,
     RequireSession,
 } from "@/app/routing/guards";
-import { AcceptInvitationPage, ChangePasswordPage, ForgotPasswordPage, KitGallery, ResetPasswordPage, SignInPage } from "@/app/routing/pages";
+import {
+    AcceptInvitationPage,
+    ChangePasswordPage,
+    ForgotPasswordPage,
+    KitGallery,
+    PortalForgotPasswordPage,
+    PortalHomePage,
+    PortalInvitePage,
+    PortalResetPasswordPage,
+    PortalRoot,
+    PortalSignInPage,
+    RequirePortalSession,
+    ResetPasswordPage,
+    SignInPage,
+} from "@/app/routing/pages";
 import { companyRoutes, domainRoutes } from "@/app/routing/routeTable";
 import { SessionProvider } from "@/app/session/SessionProvider";
 import LiveRoute from "@/app/live/LiveRoute";
@@ -60,6 +74,18 @@ export function AppRoutes() {
                 <Route path="/forgot-password" element={<PublicOnly><ForgotPasswordPage /></PublicOnly>} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/accept-invitation" element={<PublicOnly><AcceptInvitationPage /></PublicOnly>} />
+
+                {/* The client portal: its own session and pages, outside the staff guards and shell. */}
+                <Route path="/portal" element={<PortalRoot />}>
+                    <Route path="login" element={<PortalSignInPage />} />
+                    <Route path="invite" element={<PortalInvitePage />} />
+                    <Route path="forgot-password" element={<PortalForgotPasswordPage />} />
+                    <Route path="reset-password" element={<PortalResetPasswordPage />} />
+                    <Route element={<RequirePortalSession />}>
+                        <Route index element={<PortalHomePage />} />
+                    </Route>
+                    <Route path="*" element={<NotFound />} />
+                </Route>
 
                 <Route element={<RequireSession />}>
                     <Route path="/change-password" element={<ChangePasswordPage />} />

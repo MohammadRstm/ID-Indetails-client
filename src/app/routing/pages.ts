@@ -73,3 +73,12 @@ export const ForgotPasswordPage = page(() => import("@/auth/ForgotPasswordPage")
 export const ResetPasswordPage = page(() => import("@/auth/ResetPasswordPage"));
 export const AcceptInvitationPage = page(() => import("@/auth/AcceptInvitationPage"));
 export const ChangePasswordPage = page(() => import("@/auth/ChangePasswordPage"));
+
+// the client portal: its own pages and session, apart from the staff app
+export const PortalRoot = page(() => import("@/portal/PortalRoot"));
+export const PortalSignInPage = page(() => import("@/portal/pages/PortalSignInPage"));
+export const PortalInvitePage = page(() => import("@/portal/pages/PortalInvitePage"));
+export const PortalForgotPasswordPage = page(() => import("@/portal/pages/PortalForgotPasswordPage"));
+export const PortalResetPasswordPage = page(() => import("@/portal/pages/PortalResetPasswordPage"));
+export const PortalHomePage = page(() => import("@/portal/pages/PortalHomePage"));
+export const RequirePortalSession = page(() => import("@/portal/RequirePortalSession"));

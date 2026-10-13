@@ -146,6 +146,28 @@ export const projects: Article[] = [
         related: ["work-activity"],
     },
     {
+        id: "client-portal",
+        title: "Inviting a client to follow a project online",
+        category: "projects",
+        who: and(sees("design"), has(P.CLIENT_ACCESS_MANAGE)),
+        summary: "A Design client project's Client portal tab invites the client's contacts by email. Each one chooses their own password and can then sign in to the client portal.",
+        ask: ["client portal", "invite client", "client access", "share project with client", "client login", "end client access", "resend invitation"],
+        blocks: [
+            steps(
+                step("Open the project and choose the **Client portal** tab.", "Projects", "the project", "Client portal"),
+                step("Next to one of the client's email addresses, choose **Invite**."),
+            ),
+            list(
+                "The client gets an email with a one-time link that works for **24 hours**. Opening it, they enter their name and choose their own password.",
+                "**Resend** sends a new link; the earlier one stops working. **Cancel invitation** stops the link at once.",
+                "Someone who already has a client portal account is given access straight away, and told by email.",
+                "**End access** takes the project out of their client portal at once. You can give them access again later.",
+            ),
+            note("Only the client's own email contacts can be invited, on a client project that isn't archived. Changing the project's client ends everyone's access to it."),
+        ],
+        related: ["edit-project"],
+    },
+    {
         id: "set-pricing",
         title: "Setting a site's fee and material profit",
         category: "projects",

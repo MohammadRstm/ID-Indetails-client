@@ -475,3 +475,33 @@ table { line-height: normal; font-weight: normal; }
 
 /* A figures card with tabs over its strip (the overview's Financial / Activity) */
 .kpi-tabs { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+
+/* A Design project's Client portal tab: each of the client's contacts, where they stand, and what can be done */
+.pa-list { list-style: none; margin: 0; padding: 0; }
+.pa-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.pa-row:first-child { border-top: 0; }
+.pa-who { flex: 1; min-width: 0; }
+.pa-email { display: flex; gap: 6px; align-items: baseline; }
+.pa-meta { font-size: 12px; margin-top: 2px; }
+.pa-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+@media (max-width: 640px) {
+  .pa-row { flex-wrap: wrap; }
+  .pa-who { flex-basis: 100%; }
+  .pa-email { flex-wrap: wrap; }
+  .pa-actions { flex: 1; }
+}
+
+/* The client portal: its own top bar and a centred column, no staff sidebar */
+.portal { min-height: 100vh; min-height: 100dvh; background: var(--ground); }
+.portal-top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.portal-main { max-width: 1040px; margin: 0 auto; padding: 28px 24px 48px; }
+.portal-projects { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.portal-project-title { margin: 0; font-size: 16px; font-weight: 650; line-height: 1.35; }
+.portal-who { max-width: 220px; }
+@media (max-width: 640px) {
+  .portal-top { padding: 10px 16px; }
+  .portal-main { padding: 20px 16px 40px; }
+  .portal-projects { grid-template-columns: 1fr; }
+  .portal-who { display: none; }
+}

@@ -101,7 +101,7 @@ describe("a Design project, by permission", () => {
         renderApp(page, nadia, ...ownWork, ...projectWorkHandlers);
         expect(await screen.findByText("Total hours")).toBeInTheDocument();
         expect(screen.queryByText("Your hours here")).toBeNull();
-        expect(tabs()).toEqual(["Analytics", "Contributors", "Requirements", "Timeline", "Meetings"]);
+        expect(tabs()).toEqual(["Analytics", "Contributors", "Requirements", "Timeline", "Meetings", "Client portal"]);
     });
 
     it("shows an admin who never logged work here only the project's", async () => {
