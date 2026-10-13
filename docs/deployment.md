@@ -20,11 +20,12 @@ are part of the same app and need nothing more from nginx.
 
 - **Image:** built from `Dockerfile`. `node:24-alpine` installs from the lockfile and builds; the runtime is
   `nginx-unprivileged` (uid 101, port 8080) with only the built files and `deploy/nginx/`.
-- **One setting**, read when the container starts:
+- **Settings**, read when the container starts:
 
   | Variable | Example | Meaning |
   |---|---|---|
   | `API_UPSTREAM` | `http://api:8080` | Where `/api` and `/hubs` go. Without it the container refuses to start. Its host name must resolve when the container starts, so start the API first. |
+  | `CONTENT_STORE_ORIGIN` | `https://<account>.r2.cloudflarestorage.com` | The origin of the file storage behind the client portal's files. The browser sends the files there directly and loads previews from it, so it is added to the policy's `connect-src`, `img-src` and `media-src`. Empty (the default) adds nothing. The storage bucket's own CORS rules must allow `PUT` from the app's origin. |
 
   Nothing about an environment is built into the bundle, so the same image runs everywhere. **Never pass secrets as
   `VITE_*` variables.** Vite builds them into the JavaScript that every visitor downloads, and CI fails a build that
@@ -32,7 +33,9 @@ are part of the same app and need nothing more from nginx.
 - **Health:** `GET /healthz` answers `ok` (nginx only; the API has its own). The image has a `HEALTHCHECK`.
 - **Shutdown:** `SIGQUIT` lets nginx finish requests in flight.
 - **Run it hardened:** read-only root filesystem, with writable tmpfs at `/tmp` and `/etc/nginx/conf.d` owned by
-  uid 101, all capabilities dropped and `no-new-privileges`. CI runs it exactly that way.
+  uid 101, all capabilities dropped and `no-new-privileges`. CI runs it exactly that way. The site and its security
+  headers are templates the image fills in when it starts, both into `/etc/nginx/conf.d` (the headers into its
+  `snippets/` folder), so nothing else needs to be writable.
 
 ## What nginx does (`deploy/nginx/`)
 
@@ -46,7 +49,7 @@ are part of the same app and need nothing more from nginx.
 - **gzip** for the app's text files.
 - **Security headers** on every app response:
   - a strict `Content-Security-Policy` (same-origin only, plus `data:` and `blob:` images and media for avatars and
-    uploads, and inline styles for the toast library);
+    uploads, inline styles for the toast library, and `CONTENT_STORE_ORIGIN` for the client portal's files);
   - `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` and `frame-ancestors`;
   - `Permissions-Policy` (no camera, location or payment; the microphone only on the app's own origin, for talking
     to Proton) and `Cross-Origin-Opener-Policy`.

@@ -58,7 +58,7 @@ export type ProjectPanels = {
     analytics?: (project: Project) => ReactNode;
     /** Its own tab, for those who see everyone's work. */
     contributors?: (project: Project) => ReactNode;
-    /** Design only: who of the client's contacts can follow the project in the client portal (client_access:manage). */
+    /** Design only: the client portal's content (client_portal:manage) and who of the client's contacts can follow it (client_access:manage). */
     portal?: (project: Project) => ReactNode;
     timeline?: (project: Project) => ReactNode;
     /** Beside the project's own buttons, such as Log work. */
@@ -130,8 +130,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         overview: panels.hasOverview?.(permissions) ?? true,
         analytics: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.analytics != null,
         contributors: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.contributors != null,
-        // only a client project's contacts can be invited
-        portal: !site && project.billingType === "client" && project.client != null && permissions.has(P.CLIENT_ACCESS_MANAGE) && panels.portal != null,
+        // only a client project's contacts can be invited, and its drafts are the client's
+        portal: !site && project.billingType === "client" && project.client != null
+            && (permissions.has(P.CLIENT_ACCESS_MANAGE) || permissions.has(P.CLIENT_PORTAL_MANAGE)) && panels.portal != null,
         requirements: permissions.has(P.REQUIREMENT_VIEW),
         timeline: timelineTab,
         meetings: true,
@@ -168,6 +169,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     function switchTab(k: TabKey) {
         if (k === firstTab) params.delete("tab");
         else params.set("tab", k);
+        // the Client portal tab's own part belongs to that tab
+        if (k !== tab) params.delete("part");
         setParams(params);
     }
     function run(action: StatusAction, text: string) {

@@ -28,6 +28,7 @@ export const P = {
     CLIENT_CREATE: "client:create",
     CLIENT_MANAGE: "client:manage",
     CLIENT_ACCESS_MANAGE: "client_access:manage",
+    CLIENT_PORTAL_MANAGE: "client_portal:manage",
     FINANCIAL_VIEW: "financial:view",
     INVOICE_CREATE: "invoice:create",
     INVOICE_SEND: "invoice:send",

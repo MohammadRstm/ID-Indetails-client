@@ -22,6 +22,8 @@ export const icons = {
   clock: '<circle cx="12" cy="12" r="8.4"/><path d="M12 7.2V12l3.4 2.2"/>',
   calendar: '<rect x="3.6" y="5.2" width="16.8" height="15.2" rx="2.4"/><path d="M3.6 9.8h16.8"/><path d="M8 3.4v3.6"/><path d="M16 3.4v3.6"/>',
   download: '<path d="M12 4v11.4"/><path d="M7.6 11.4 12 15.8l4.4-4.4"/><path d="M4.8 19.6h14.4"/>',
+  // not in the prototype: download turned over, for choosing files to send
+  upload: '<path d="M12 15.8V4.4"/><path d="M7.6 8.6 12 4.2l4.4 4.4"/><path d="M4.8 19.6h14.4"/>',
   file: '<path d="M13.6 3.4H6.8A1.4 1.4 0 0 0 5.4 4.8v14.4a1.4 1.4 0 0 0 1.4 1.4h10.4a1.4 1.4 0 0 0 1.4-1.4V8.2z"/><path d="M13.4 3.6v4.6h4.8"/><path d="M8.6 13h6.8"/><path d="M8.6 16.6h4.4"/>',
   dots: '<circle class="f" cx="6" cy="12" r="1.5"/><circle class="f" cx="12" cy="12" r="1.5"/><circle class="f" cx="18" cy="12" r="1.5"/>',
   filter: '<path d="M4.2 5.8h15.6l-6 7.2v5.4l-3.6-1.9v-3.5z"/>',

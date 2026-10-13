@@ -1,0 +1,22 @@
+# Included in every location that serves the app. nginx drops a server's add_header lines in any location that
+# has its own, so they live here instead.
+#
+# This is a template: the nginx image fills it in at start-up (see default.conf.template) and writes it to
+# /etc/nginx/conf.d/snippets/, a folder that nginx's own "conf.d/*.conf" include doesn't reach, so it applies only
+# where default.conf includes it.
+#
+# CSP: everything comes from this origin. style-src allows inline styles because the toast library adds a
+# <style> element at run time; img-src and media-src allow data: (avatars are drawn in the browser) and blob:
+# (uploaded files are shown from memory); connect-src 'self' covers /api and the same-origin WebSocket.
+# Checked against the bundle: the only string evaluation was zod's probe, which main.tsx turns off (jitless).
+#
+# The client portal's files are sent from the browser straight to the file storage (Cloudflare R2) and previewed from
+# it, so the storage's origin, given as the environment variable CONTENT_STORE_ORIGIN (e.g.
+# https://ACCOUNT.r2.cloudflarestorage.com), is added to connect-src (sending), img-src and media-src (previews).
+# The variable is empty by default, which adds nothing.
+add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: ${CONTENT_STORE_ORIGIN}; media-src 'self' blob: ${CONTENT_STORE_ORIGIN}; font-src 'self'; connect-src 'self' ${CONTENT_STORE_ORIGIN}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header X-Frame-Options "DENY" always;
+add_header Permissions-Policy "camera=(), microphone=(self), geolocation=(), payment=()" always;
+add_header Cross-Origin-Opener-Policy "same-origin" always;
