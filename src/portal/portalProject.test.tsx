@@ -249,17 +249,23 @@ describe("a client's project page", () => {
 
     it("loads the page again for a link that runs out later, too", async () => {
         vi.useFakeTimers({ toFake: ["Date"] });
-        let loads = 0;
-        renderApp("/portal/projects/2", null, signedIn, http.get("/api/portal/projects/:id", () => { loads++; return HttpResponse.json(published); }));
-        await heading();
-        const pictures = () => document.querySelectorAll(".pp-grid img");
-        fireEvent.error(pictures()[0]);
-        await waitFor(() => expect(loads).toBe(2));
+        try {
+            let loads = 0;
+            renderApp("/portal/projects/2", null, signedIn, http.get("/api/portal/projects/:id", () => { loads++; return HttpResponse.json(published); }));
+            await heading();
+            // a picture that failed shows its tile, so whichever picture is still there
+            const aPicture = () => document.querySelector(".pp-grid img") ?? document.querySelector(".pp-hero img");
+            fireEvent.error(aPicture()!);
+            await waitFor(() => expect(loads).toBe(2));
 
-        // an hour on, the links of that answer run out as well
-        vi.setSystemTime(Date.now() + 61 * 60_000);
-        fireEvent.error(pictures()[1]);
-        await waitFor(() => expect(loads).toBe(3));
+            // an hour on, the links of that answer run out as well
+            vi.setSystemTime(Date.now() + 61 * 60_000);
+            await waitFor(() => expect(aPicture()).not.toBeNull());
+            fireEvent.error(aPicture()!);
+            await waitFor(() => expect(loads).toBe(3));
+        } finally {
+            vi.useRealTimers();
+        }
     });
 });
 

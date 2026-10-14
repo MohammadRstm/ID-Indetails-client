@@ -140,7 +140,8 @@ function ProjectBody({ projectId }: { projectId: number }) {
 /** How many are new, on a button. */
 function Unread({ count }: { count: number }) {
     if (count <= 0) return null;
-    return <> <span className="dp-badge">{count}<span className="sr"> unread</span></span></>;
+    // the count read out with its words ("Messages 3 unread"): the space before the badge alone isn't always kept
+    return <> <span className="dp-badge" aria-hidden="true">{count}</span><span className="sr"> {count} unread</span></>;
 }
 
 /** The way back to the client's projects and, on the right, the buttons that open the project's messages and comments; then the page. */

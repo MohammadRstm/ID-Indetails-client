@@ -112,7 +112,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     // portal permission, yet writes with the client): the server answers 404 to everyone else. Asked only where nothing else opens the tab.
     const clientProject = project.domain !== "execution" && project.billingType === "client" && project.client != null && panels.portal != null;
     const portalByPermission = permissions.has(P.CLIENT_ACCESS_MANAGE) || permissions.has(P.CLIENT_PORTAL_MANAGE);
-    const participation = useDiscussionSummary(staffDiscussion, project.id, { enabled: clientProject && !portalByPermission, retry: false });
+    const asksParticipation = clientProject && !portalByPermission;
+    const participation = useDiscussionSummary(staffDiscussion, project.id, { enabled: asksParticipation, retry: false });
     const [showDone, setShowDone] = useState(false);
     // its own link (?details=1), so Proton or a shared link can open it
     const [editing, setEditing] = useUrlFlag("details");
@@ -148,7 +149,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     // A tab the person may not open falls back to their first one, even when the link asks for it.
     const tab: TabKey = requested && allowed[requested] ? requested : firstTab;
     // a link to the Client portal tab waits for the answer that says whether this person takes part, rather than showing another tab first
-    const waitingForPortal = requested === "portal" && participation.isLoading;
+    // (only while this page is the one asking: the tab's own parts share the query, and a 404 they ask again for must not hide the tab)
+    const waitingForPortal = requested === "portal" && asksParticipation && participation.isLoading;
     const end = project.completedAt ? dayKey(project.completedAt) : companyToday();
     const days = daysBetween(project.startDate, end) + 1;
     const m = seesMoney ? project.money : null;
