@@ -609,3 +609,20 @@ button.pc-thumb { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .pc-card.lifted, .pc-ghost { scale: 1; }
 }
+
+/* The Client portal tab's Discussion part: the chat beside the comments on files, one above the other on narrower screens
+   (the chat, the comments and the composer themselves are styled in portal.css, which the client's page shares) */
+.dp-split { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 14px; align-items: start; }
+.dp-pane { display: flex; flex-direction: column; height: min(680px, calc(100dvh - 220px)); min-height: 420px; }
+.dp-pane > .skel-lines, .dp-pane > .load-err { margin: 16px; }
+@media (max-width: 900px) {
+  .dp-split { grid-template-columns: minmax(0, 1fr); }
+  .dp-pane { height: min(600px, 80dvh); }
+}
+
+/* A card's comments: how many, with a dot when some are new; it opens them in the Discussion */
+.pc-comments { display: inline-flex; align-items: center; gap: 5px; height: 21px; padding: 0 8px; border-radius: 99px; background: var(--surface-3); color: var(--ink-2);
+  font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pc-comments:hover, .pc-comments.new { background: var(--accent-soft); color: var(--accent-ink); }
+.pc-comments .ic { width: 12px; height: 12px; }
+.pc-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--now); }

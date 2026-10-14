@@ -7,11 +7,12 @@ import { usePermissions } from "@/app/permissions/usePermissions";
 import { useDomain } from "@/app/routing/domainContext";
 import { useCurrentUser, fullName } from "@/app/session/useSession";
 import { MissingRecord } from "@/app/pages/NotFound";
+import { useDiscussionSummary } from "@/portal/discussion/discussionApi";
 import { ProjectTile } from "@/shared/components/Data/Bits";
 import { StatusBadge } from "@/shared/components/Data/Pills";
 import Tabs from "@/shared/components/Data/Tabs";
 import LoadError from "@/shared/components/Feedback/LoadError";
-import Skeleton, { SkeletonKpis } from "@/shared/components/Feedback/Skeleton";
+import Skeleton, { SkeletonKpis, SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
 import { PersonAvatar, PersonName } from "@/shared/components/Identity/People";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
@@ -30,6 +31,7 @@ import ExpenseModal from "../../design/projects/money/ExpenseModal";
 import BillingModalHost from "../billing/BillingModalHost";
 import { useBillingLinks } from "../billing/billingLinks";
 import PaymentModal from "../../design/projects/money/PaymentModal";
+import { staffDiscussion } from "../../design/projects/portal/staffDiscussion";
 import ReportModal from "../../design/projects/report/ReportModal";
 import { useMaterials } from "../../execution/materials/materialsApi";
 import PricingModal from "../../execution/projects/PricingModal";
@@ -106,6 +108,11 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const change = useChangeProjectStatus(project.id);
     const requirements = useRequirements(project.id, permissions.has(P.REQUIREMENT_VIEW));
     const meetings = useProjectMeetings(project.id);
+    // The Client portal tab is also for whoever takes part in the project's discussion (a staff member who logged hours has no
+    // portal permission, yet writes with the client): the server answers 404 to everyone else. Asked only where nothing else opens the tab.
+    const clientProject = project.domain !== "execution" && project.billingType === "client" && project.client != null && panels.portal != null;
+    const portalByPermission = permissions.has(P.CLIENT_ACCESS_MANAGE) || permissions.has(P.CLIENT_PORTAL_MANAGE);
+    const participation = useDiscussionSummary(staffDiscussion, project.id, { enabled: clientProject && !portalByPermission, retry: false });
     const [showDone, setShowDone] = useState(false);
     // its own link (?details=1), so Proton or a shared link can open it
     const [editing, setEditing] = useUrlFlag("details");
@@ -130,9 +137,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         overview: panels.hasOverview?.(permissions) ?? true,
         analytics: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.analytics != null,
         contributors: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.contributors != null,
-        // only a client project's contacts can be invited, and its drafts are the client's
-        portal: !site && project.billingType === "client" && project.client != null
-            && (permissions.has(P.CLIENT_ACCESS_MANAGE) || permissions.has(P.CLIENT_PORTAL_MANAGE)) && panels.portal != null,
+        // only a client project's contacts can be invited, and its drafts are the client's; whoever takes part in its discussion sees the tab too
+        portal: clientProject && (portalByPermission || participation.isSuccess),
         requirements: permissions.has(P.REQUIREMENT_VIEW),
         timeline: timelineTab,
         meetings: true,
@@ -141,6 +147,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const firstTab = tabOrder.find((k) => allowed[k]) ?? "meetings";
     // A tab the person may not open falls back to their first one, even when the link asks for it.
     const tab: TabKey = requested && allowed[requested] ? requested : firstTab;
+    // a link to the Client portal tab waits for the answer that says whether this person takes part, rather than showing another tab first
+    const waitingForPortal = requested === "portal" && participation.isLoading;
     const end = project.completedAt ? dayKey(project.completedAt) : companyToday();
     const days = daysBetween(project.startDate, end) + 1;
     const m = seesMoney ? project.money : null;
@@ -325,7 +333,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                 ...(allowed.portal ? [{ key: "portal" as TabKey, label: "Client portal" }] : []),
             ]} />
 
-            {tab === "requirements" ? <ProjectRequirementsTab project={project} />
+            {waitingForPortal ? <SkeletonLines lines={6} />
+                : tab === "requirements" ? <ProjectRequirementsTab project={project} />
                 : tab === "timeline" && panels.timeline ? panels.timeline(project)
                     : tab === "meetings" ? <ProjectMeetingsTab project={project} />
                     : tab === "portal" && panels.portal ? panels.portal(project)

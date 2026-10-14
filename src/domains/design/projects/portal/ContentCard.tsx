@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
+import { Link } from "react-router";
 import { errorMessage } from "@/api/errors";
+import { useDiscussionSummary } from "@/portal/discussion/discussionApi";
 import { Badge } from "@/shared/components/Data/Pills";
 import { toast } from "@/shared/components/Feedback/toast";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
@@ -11,6 +13,7 @@ import { PORTAL_SECTIONS, SECTION_LABEL, useRestoreItem, useSetHero, useUpdateIt
 import { downloadItem, openItemInTab } from "./contentLinks";
 import ContentLightbox from "./ContentLightbox";
 import { DeleteModal, RenameModal } from "./ContentModals";
+import { staffDiscussion } from "./staffDiscussion";
 import type { GripProps, Held, MoveTo } from "./useCardSort";
 
 const extensionOf = (name: string) => (name.lastIndexOf(".") < 0 ? "" : name.slice(name.lastIndexOf(".") + 1));
@@ -55,6 +58,9 @@ export default function ContentCard({ projectId, item, canEdit, canReplace, sort
     const move = useUpdateItem(projectId);
     const setHero = useSetHero(projectId);
     const restore = useRestoreItem(projectId);
+    // the comments clients and the team wrote on this file (for those who take part in the discussion; the query is shared)
+    const discussion = useDiscussionSummary(staffDiscussion, projectId, { retry: false });
+    const thread = item.state === "new" ? undefined : discussion.data?.threads.find((t) => t.itemId === item.id);
     const [shown, setShown] = useState<"preview" | "rename" | "delete" | null>(null);
     // a link that fails is replaced once; if the new one fails too, the card shows the empty tile
     const [brokenFile, setBrokenFile] = useState<number | null>(null);
@@ -167,6 +173,12 @@ export default function ContentCard({ projectId, item, canEdit, canReplace, sort
                 <div className="pc-badges">
                     <Badge className={STATE[item.state].className}>{STATE[item.state].label}</Badge>
                     {item.isHero && <Badge icon="flag" className="badge-new">Hero</Badge>}
+                    {thread && (
+                        <Link className={cx("pc-comments", thread.unread > 0 && "new")} to={{ search: `?tab=portal&part=discussion&item=${item.id}` }}
+                            aria-label={`Comments on ${item.title}: ${thread.count}${thread.unread > 0 ? ", some new" : ""}`}>
+                            <Icon name="chat" />{thread.count}{thread.unread > 0 && <span className="pc-dot" aria-hidden="true" />}
+                        </Link>
+                    )}
                 </div>
                 {removed && (
                     <div className="pc-removed">

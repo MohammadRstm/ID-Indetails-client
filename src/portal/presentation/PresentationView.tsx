@@ -6,7 +6,10 @@ import PresentationHero from "./PresentationHero";
 import PresentationLightbox from "./PresentationLightbox";
 import PresentationSection from "./PresentationSection";
 import { forgetLink } from "./presentationLinks";
-import { isMedia, SECTION_LABEL, SECTIONS, sectionAnchor, type GetLink, type MediaItem, type PortalPresentation, type PortalSection } from "./presentationTypes";
+import {
+    isMedia, SECTION_LABEL, SECTIONS, sectionAnchor,
+    type GetLink, type MediaItem, type PortalPresentation, type PortalSection, type PresentationComments, type PresentationItem,
+} from "./presentationTypes";
 import { usePhone } from "./usePhone";
 
 type Props = {
@@ -16,6 +19,8 @@ type Props = {
     banner?: ReactNode;
     /** An image or a video didn't load, most likely because its link ran out: load the presentation again. Called once. */
     onLinkExpired?: () => void;
+    /** The client's page gives the discussion's part here. Without it (the staff's preview) there is no comment UI at all. */
+    comments?: PresentationComments;
 };
 
 /**
@@ -23,7 +28,7 @@ type Props = {
  * preview of the draft show it, so the preview is what the client gets. Wide screens show the sections one under the
  * other with a menu that follows the scroll; phones show one at a time.
  */
-export default function PresentationView({ presentation, getLink, banner, onLinkExpired }: Props) {
+export default function PresentationView({ presentation, getLink, banner, onLinkExpired, comments }: Props) {
     const phone = usePhone();
     const reducedMotion = useReducedMotion();
     const root = useRef<HTMLDivElement>(null);
@@ -37,6 +42,16 @@ export default function PresentationView({ presentation, getLink, banner, onLink
 
     const itemsOf = (section: PortalSection) => presentation.sections.find((s) => s.section === section)?.items ?? [];
     const current = picked ?? SECTIONS.find((s) => itemsOf(s).length > 0) ?? SECTIONS[0];
+
+    // The page's ?item= names a file whose comments are open. A picture or a video then opens in the lightbox with its
+    // comments beside it (also when the link changes while the page is open, as a notification's does).
+    const linked = comments?.openItemId ?? null;
+    const [linkedSeen, setLinkedSeen] = useState<number | null>(null);
+    if (linked !== linkedSeen) {
+        setLinkedSeen(linked);
+        const section = linked == null ? undefined : SECTIONS.find((s) => itemsOf(s).some((i) => i.id === linked && isMedia(i)));
+        if (section && viewing?.itemId !== linked) setViewing({ section, itemId: linked });
+    }
 
     // the menu marks the section on screen (where the browser can tell)
     useEffect(() => {
@@ -75,6 +90,18 @@ export default function PresentationView({ presentation, getLink, banner, onLink
     const media = viewing ? itemsOf(viewing.section).filter(isMedia) : [];
     const viewIndex = viewing ? media.findIndex((item) => item.id === viewing.itemId) : -1;
     const view = (section: PortalSection, item: MediaItem) => setViewing({ section, itemId: item.id });
+    // a card's comments: a picture or a video opens in the lightbox with its panel, any other file in the page's drawer
+    const viewComments = (section: PortalSection, item: PresentationItem) => {
+        if (isMedia(item)) setViewing({ section, itemId: item.id });
+        comments?.onOpen(item.id);
+    };
+    const closeLightbox = () => {
+        setViewing(null);
+        // its comments close with it
+        if (comments?.openItemId != null) comments.onOpen(null);
+    };
+    const shown = viewIndex >= 0 ? media[viewIndex] : undefined;
+    const threadOf = (itemId: number) => comments?.threads.find((t) => t.itemId === itemId);
 
     return (
         <div className="pp-view" ref={root}>
@@ -99,17 +126,28 @@ export default function PresentationView({ presentation, getLink, banner, onLink
 
             {(phone ? [current] : SECTIONS).map((section) => (
                 <PresentationSection key={section} section={section} items={itemsOf(section)} getLink={getLink} quietHeading={phone}
-                    onView={view} onBroken={broken} />
+                    onView={view} onBroken={broken} comments={comments && { threads: comments.threads, onOpen: viewComments }} />
             ))}
 
-            {viewing && viewIndex >= 0 && (
+            {viewing && shown && (
                 <PresentationLightbox
                     items={media}
                     index={viewIndex}
                     getLink={getLink}
-                    onIndex={(i) => setViewing({ section: viewing.section, itemId: media[i].id })}
-                    onClose={() => setViewing(null)}
+                    onIndex={(i) => {
+                        setViewing({ section: viewing.section, itemId: media[i].id });
+                        // an open panel follows to the next file
+                        if (comments?.openItemId != null) comments.onOpen(media[i].id);
+                    }}
+                    onClose={closeLightbox}
                     onBroken={broken}
+                    comments={comments && {
+                        open: comments.openItemId === shown.id,
+                        count: threadOf(shown.id)?.count ?? 0,
+                        unread: (threadOf(shown.id)?.unread ?? 0) > 0,
+                        onToggle: () => comments.onOpen(comments.openItemId === shown.id ? null : shown.id),
+                        render: () => comments.renderThread(shown),
+                    }}
                 />
             )}
         </div>
