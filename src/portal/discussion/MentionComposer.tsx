@@ -109,6 +109,8 @@ export default function MentionComposer({ label, placeholder, max, people, close
                 setCaret(0);
                 setPicked([]);
                 setAttempted(false);
+                // Send was disabled while it went, which drops the focus out of the drawer: back to the box, for the next one
+                area.current?.focus();
             }
         } catch (error) {
             // what was written stays, with the reason and Retry under it

@@ -68,6 +68,9 @@ export function usePortalLive() {
             else invalidate(DISCUSSION_KEY);
         });
         connection.on("notifications", refreshBell);
+        // the client's access ended somewhere: everything the portal shows is asked for again (this cache is the portal's
+        // own), so a project that's gone says so, and a client left with none is signed out
+        connection.on("access", () => void queryClient.invalidateQueries());
         connection.onreconnecting(startPolling);
         // anything may have changed while the connection was down
         connection.onreconnected(() => {

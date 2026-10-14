@@ -132,6 +132,10 @@ describe("the project chat on the client's page", () => {
         expect(await within(dialog).findByText("Hello team")).toBeInTheDocument();
         expect(box.called("POST", "/messages").map((c) => c.body)).toEqual([{ body: "Hello team", mentions: [], clientToken: expect.stringMatching(token) }]);
         expect(messageBox(dialog)).toHaveValue("");
+        // the keyboard is back in the box (Send was disabled while it went), so Escape still closes the drawer
+        await waitFor(() => expect(messageBox(dialog)).toHaveFocus());
+        await userEvent.keyboard("{Escape}");
+        expect(screen.queryByRole("dialog", { name: "Messages" })).toBeNull();
     });
 
     it("sends with Enter and starts a new line with Shift+Enter", async () => {
