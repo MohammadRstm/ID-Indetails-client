@@ -74,8 +74,8 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
                 <div className="banner hold mt" role="note">
                     <Icon name="alert" />
                     <div className="grow">
-                        Changing the client ends the current client's access to this project's client portal. The project's portal chat and comments
-                        stay with it, so the new client's contacts will see them once invited.
+                        {project.client?.displayName}'s contacts lose access to this project's client portal. Its chat and comments stay with the
+                        project: if it gets a client again, that client's contacts will see them once invited.
                     </div>
                 </div>
             )}

@@ -59,8 +59,8 @@ describe("a project's money", () => {
     });
 
     it("warns that changing the client ends the current client's access to the client portal", async () => {
-        const warning = "Changing the client ends the current client's access to this project's client portal. The project's portal chat and "
-            + "comments stay with it, so the new client's contacts will see them once invited.";
+        const warning = `${project.client?.displayName}'s contacts lose access to this project's client portal. Its chat and comments stay `
+            + "with the project: if it gets a client again, that client's contacts will see them once invited.";
         renderApp(path, admin, ...projectWorkHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Edit payment" }));
         const dialog = await screen.findByRole("dialog", { name: "Customer payment" });

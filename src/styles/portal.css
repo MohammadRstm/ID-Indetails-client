@@ -228,7 +228,7 @@ button.pp-thumb:hover img, button.pp-thumb:hover video { transform: scale(1.03);
 .dp-input.bad { border-color: var(--now); box-shadow: 0 0 0 3px var(--now-soft); }
 .dp-composer-foot { display: flex; align-items: center; gap: 8px; }
 .dp-count { color: var(--ink-3); font-size: 11.5px; font-variant-numeric: tabular-nums; }
-.dp-count.over { color: var(--now); font-weight: 650; }
+.dp-count.over { color: var(--now-badge); font-weight: 650; }
 .dp-pop { position: absolute; left: 0; right: 0; bottom: 100%; z-index: 10; max-height: 220px; margin-bottom: 6px; padding: 5px; overflow-y: auto;
   border: 1px solid var(--line); border-radius: var(--r2); background: var(--surface); box-shadow: var(--shadow-2); }
 .dp-opt { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 9px; border: 0; border-radius: 5px; background: none; color: var(--ink);
