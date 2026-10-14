@@ -3,7 +3,7 @@ import { errorMessage } from "@/api/errors";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import { mentionAt, mentionCandidates, namesPerson } from "./discussionText";
+import { mentionAt, mentionCandidates, namesPerson } from "./textParts";
 import type { DiscussionPerson, Draft } from "./discussionTypes";
 
 type Props = {

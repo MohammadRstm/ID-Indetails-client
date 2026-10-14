@@ -6,7 +6,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useAddComment, useCommentThread, useDeleteComment, useEditComment, useMarkRead, type Discussion } from "./discussionApi";
-import { namesOf } from "./discussionText";
+import { namesOf } from "./textParts";
 import { MAX_COMMENT, type CommentThread, type DiscussionSummary, type PortalComment } from "./discussionTypes";
 import { AuthorLine } from "./DiscussionBits";
 import DiscussionText from "./DiscussionText";
@@ -59,9 +59,9 @@ export default function CommentThreadPanel({ discussion, projectId, itemId, summ
 
     useEffect(() => {
         if (unread === 0 || newestId === 0 || !visible) return;
-        const timer = setTimeout(() => markRead({ lastCommentId: newestId }), READ_AFTER_MS);
+        const timer = setTimeout(() => markRead({ itemId, lastCommentId: newestId }), READ_AFTER_MS);
         return () => clearTimeout(timer);
-    }, [unread, newestId, visible, markRead]);
+    }, [unread, itemId, newestId, visible, markRead]);
 
     const title = thread?.title ?? known?.title ?? fallback?.title ?? "";
     const fileName = thread?.fileName ?? known?.fileName ?? fallback?.fileName ?? "";

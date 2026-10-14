@@ -179,11 +179,14 @@ export function useDeleteComment(d: Discussion, projectId: number) {
     });
 }
 
-/** Moves the read markers forward to what has been seen. The answer is the new summary. */
+/**
+ * Moves the read markers forward to what has been seen: the chat's, and one file's comments (each file has its own, so
+ * reading one leaves the others new). The answer is the new summary.
+ */
 export function useMarkRead(d: Discussion, projectId: number) {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async (seen: { lastMessageId?: number; lastCommentId?: number }) =>
+        mutationFn: async (seen: { lastMessageId: number } | { itemId: number; lastCommentId: number }) =>
             (await d.http.post<DiscussionSummary>(`${d.base(projectId)}/read`, seen)).data,
         onSuccess: (summary) => {
             queryClient.setQueryData(summaryKey(d.side, projectId), summary);

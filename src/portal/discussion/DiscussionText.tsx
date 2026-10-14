@@ -1,5 +1,5 @@
 import { cx } from "@/shared/utils/cx";
-import { textParts } from "./discussionText";
+import { textParts } from "./textParts";
 
 type Props = {
     text: string;

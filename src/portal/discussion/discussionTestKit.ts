@@ -156,11 +156,13 @@ export function mockDiscussion(base: string, init: Partial<Pick<MockDiscussion, 
         }),
         http.post(`${base}/read`, async ({ request }) => {
             const body = await note(request);
-            // the markers move forward: what was seen is no longer new
+            // the markers move forward: what was seen is no longer new, and a file's comments are read on their own
+            const threads = box.summary.threads.map((t) => (body.lastCommentId != null && t.itemId === body.itemId ? { ...t, unread: 0 } : t));
             box.summary = {
                 ...box.summary,
                 unreadMessages: body.lastMessageId != null ? 0 : box.summary.unreadMessages,
-                unreadComments: body.lastCommentId != null ? 0 : box.summary.unreadComments,
+                unreadComments: body.lastCommentId != null ? threads.reduce((sum, t) => sum + t.unread, 0) : box.summary.unreadComments,
+                threads,
             };
             return HttpResponse.json(box.summary);
         }),

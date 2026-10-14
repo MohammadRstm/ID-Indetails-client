@@ -50,7 +50,7 @@ export default function PresentationView({ presentation, getLink, banner, onLink
     if (linked !== linkedSeen) {
         setLinkedSeen(linked);
         const section = linked == null ? undefined : SECTIONS.find((s) => itemsOf(s).some((i) => i.id === linked && isMedia(i)));
-        if (section && viewing?.itemId !== linked) setViewing({ section, itemId: linked });
+        if (section && linked != null && viewing?.itemId !== linked) setViewing({ section, itemId: linked });
     }
 
     // the menu marks the section on screen (where the browser can tell)

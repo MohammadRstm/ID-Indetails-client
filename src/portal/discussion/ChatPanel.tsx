@@ -5,7 +5,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useChatMessages, useEditMessage, useMarkRead, useSendMessage, type Discussion } from "./discussionApi";
-import { namesOf } from "./discussionText";
+import { namesOf } from "./textParts";
 import { MAX_MESSAGE, type DiscussionSummary, type PortalChatMessage } from "./discussionTypes";
 import { AuthorLine } from "./DiscussionBits";
 import DiscussionText from "./DiscussionText";

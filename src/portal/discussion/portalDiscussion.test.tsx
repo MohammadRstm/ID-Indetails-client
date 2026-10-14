@@ -20,7 +20,7 @@ const MB = 1024 * 1024;
 const auth: PortalAuthResponse = {
     accessToken: "portal-token",
     accessTokenExpiresAt: "2030-01-01T00:00:00Z",
-    account: { id: 7, email: "rania@client.test", firstName: "Rania", lastName: "Aoun", projects: [{ id: 2, title: "Villa Mounir interiors", status: "active" }] },
+    account: { id: 7, email: "rania@client.test", firstName: "Rania", lastName: "Aoun", projects: [{ id: 2, title: "Villa Mounir interiors", status: "active", unread: 0 }] },
 };
 const signedIn = http.post("/api/portal/auth/refresh", () => HttpResponse.json(auth));
 
@@ -547,8 +547,8 @@ describe("comments on files", () => {
         await within(panel).findByText("Yes, oak please");
 
         await waitFor(() => expect(box.called("POST", "/read")).toHaveLength(1));
-        // up to the newest comment of this file
-        expect(box.called("POST", "/read")[0].body).toEqual({ lastCommentId: 2 });
+        // up to the newest comment of this file, and of this file only
+        expect(box.called("POST", "/read")[0].body).toEqual({ itemId: 11, lastCommentId: 2 });
     });
 
     it("shows an archived project's comments with the reason and no composer", async () => {
