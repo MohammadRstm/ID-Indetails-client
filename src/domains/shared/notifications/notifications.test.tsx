@@ -51,6 +51,23 @@ group("A notification's words", () => {
         expect(describe(note("pay_changed", { effectiveFrom: "2026-10-01" }, { actor: nadia }), designer).text).toBe("Your pay changes from Oct 1");
         expect(describe(note("something_new", {}), designer).text).toBe("Something new");
     });
+
+    it("tell staff what a client wrote in a project's portal, and open its discussion", () => {
+        const discussion = "/design/projects/5?tab=portal&part=discussion";
+        const payload = { projectTitle: project.title, authorName: "Rania Aoun" };
+
+        expect(describe(note("portal_client_message", payload, { project }), designer))
+            .toMatchObject({ text: "Rania Aoun sent a message in Studio Nour brand space's client portal", icon: "chat", route: discussion });
+        expect(describe(note("portal_client_message", payload, { project, count: 4 }), designer))
+            .toMatchObject({ text: "4 new client messages in Studio Nour brand space", route: discussion });
+
+        expect(describe(note("portal_client_comment", { ...payload, itemTitle: "Mood board" }, { project, subjectType: "comment", subjectId: 21 }), designer))
+            .toMatchObject({ text: "Rania Aoun commented on Mood board in Studio Nour brand space", icon: "chat", route: `${discussion}&item=21` });
+
+        expect(describe(note("portal_mention", payload, { project, subjectType: "comment", subjectId: 21 }), designer))
+            .toMatchObject({ text: "Rania Aoun mentioned you in Studio Nour brand space's client portal", icon: "chat", route: `${discussion}&item=21` });
+        expect(describe(note("portal_mention", payload, { project, subjectType: "message", subjectId: 77 }), designer).route).toBe(discussion);
+    });
 });
 
 group("The bell", () => {

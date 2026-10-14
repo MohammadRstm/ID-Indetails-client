@@ -1,0 +1,21 @@
+/* The client portal's bell: a count on the button and a list under it (the whole width of a phone), and the unread
+   badge on a project's card. Built only from the prototype's tokens, so both themes follow. Phones are 640px and narrower. */
+
+.pn-count { position: absolute; top: 1px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px; background: var(--accent);
+  color: var(--on-accent); font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px var(--surface); pointer-events: none; }
+
+.pop.pn-pop { width: 380px; max-width: calc(100vw - 16px); }
+.pn-pop .notif-list { max-height: min(60vh, 480px); }
+.pn-pop .notif { align-items: center; }
+.pn-more { padding: 6px 0 2px; text-align: center; }
+
+/* The unread count sits beside the project's status */
+.pn-badges { gap: 6px; flex: none; flex-wrap: wrap; justify-content: flex-end; }
+
+@media (max-width: 640px) {
+  /* the list hangs from the whole top bar, not from the bell */
+  .pn-host { position: static; }
+  .pop.pn-pop { left: 8px; right: 8px; width: auto; max-width: none; }
+  .pn-pop .notif-list { max-height: 70vh; }
+}

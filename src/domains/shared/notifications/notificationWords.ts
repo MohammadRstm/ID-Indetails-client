@@ -45,6 +45,8 @@ export function describe(note: Notification, reader: Reader): NotificationView {
     const d = (note.project?.domain as Reader["domain"]) ?? reader.domain;
     const project = note.project && d ? `/${d}/projects/${note.project.id}` : undefined;
     const requirements = project && `${project}?tab=requirements`;
+    // the client portal is a Design project's tab
+    const discussion = note.project ? `/design/projects/${note.project.id}?tab=portal&part=discussion` : undefined;
     const logsWork = reader.logsWork && d === "design";
     // pages about the reader themself: an employee's own profile or pay; admins have none of their own
     const mine = !reader.isAdmin && reader.domain ? `/${reader.domain}/profile` : undefined;
@@ -166,6 +168,22 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             return { text: `${s(p.number) || "A statement"} was sent to the client`, sub: `${title}${note.actor ? ` · by ${who}` : ""}`, icon: "file", route: project && note.subjectId ? `${project}?statement=${note.subjectId}` : project };
         case "client_added":
             return { text: `${s(p.organisation) || s(p.name) || "A client"} added as a client`, sub: by, icon: "briefcase", clientId: note.subjectId ?? undefined };
+
+        case "portal_client_message":
+            return {
+                text: note.count > 1 ? `${note.count} new client messages in ${title}` : `${s(p.authorName) || who} sent a message in ${title}'s client portal`,
+                icon: "chat", route: discussion,
+            };
+        case "portal_client_comment":
+            return {
+                text: `${s(p.authorName) || who} commented on ${s(p.itemTitle) || "a file"} in ${title}`,
+                icon: "chat", route: discussion && note.subjectId ? `${discussion}&item=${note.subjectId}` : discussion,
+            };
+        case "portal_mention":
+            return {
+                text: `${s(p.authorName) || who} mentioned you in ${title}'s client portal`,
+                icon: "chat", route: discussion && note.subjectType === "comment" && note.subjectId ? `${discussion}&item=${note.subjectId}` : discussion,
+            };
 
         case "invitation_accepted": {
             const domain = p.domain as Reader["domain"];
