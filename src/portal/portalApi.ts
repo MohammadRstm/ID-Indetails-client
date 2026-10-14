@@ -26,6 +26,7 @@ const bare = axios.create({ baseURL: "/api/portal", headers: { Accept: "applicat
 
 let accessToken: string | null = null;
 let onExpired: () => void = () => {};
+let onRefreshed: (auth: PortalAuthResponse) => void = () => {};
 
 export function setPortalAccessToken(token: string | null) {
     accessToken = token;
@@ -41,6 +42,11 @@ export function onPortalSessionExpired(handler: () => void) {
     onExpired = handler;
 }
 
+/** Called with every session a refresh brings, which may be another account's: one signed in from another tab. */
+export function onPortalSessionRefreshed(handler: (auth: PortalAuthResponse) => void) {
+    onRefreshed = handler;
+}
+
 /** The session is over (a refresh found none): the client is signed out, as a 401 on a request would do. */
 export function portalSessionExpired() {
     onExpired();
@@ -54,6 +60,7 @@ export function refreshPortalSession(): Promise<PortalAuthResponse | null> {
         try {
             const { data } = await bare.post<PortalAuthResponse>("/auth/refresh");
             accessToken = data.accessToken;
+            onRefreshed(data);
             return data;
         } catch (error) {
             const apiError = toApiError(error);

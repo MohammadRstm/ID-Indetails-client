@@ -18,7 +18,7 @@ type Props = {
     projectId: number;
     itemId: number;
     summary: DiscussionSummary;
-    /** What the page knows of the file, for a file nobody has commented on yet (the API may have no thread to answer with). */
+    /** What the page knows of the file, for when the API has no thread to answer with (a file no longer shared, with no comments). */
     fallback?: { title: string; fileName: string };
     /** The title is already on screen (the lightbox's own bar): only the file name is shown. */
     hideTitle?: boolean;
@@ -44,9 +44,10 @@ export default function CommentThreadPanel({ discussion, projectId, itemId, summ
     const [deleting, setDeleting] = useState<number | null>(null);
 
     const known = summary.threads.find((t) => t.itemId === itemId);
-    // a file with no comments yet may have no thread to ask for: the page's own knowledge of the file stands in
+    // A shared file nobody has commented on has an empty thread; the API answers 404 only for a file that is no longer
+    // shared and has no comments. The page's own knowledge of the file stands in for it, and it can only be read.
     const thread: CommentThread | undefined = query.data
-        ?? (fallback && isStatus(query.error, 404) ? { itemId, title: fallback.title, fileName: fallback.fileName, available: true, comments: [] } : undefined);
+        ?? (fallback && isStatus(query.error, 404) ? { itemId, title: fallback.title, fileName: fallback.fileName, available: false, comments: [] } : undefined);
     const comments = thread?.comments ?? [];
     const newestId = comments.reduce((newest, c) => Math.max(newest, c.id), 0);
     const unread = known?.unread ?? 0;
@@ -135,12 +136,17 @@ type RowProps = {
 };
 
 /** One comment: who, when, which version of the file it is about, its text, and Edit and Delete on your own. */
-function CommentRow({ comment, summary, editing, deleting, deleteFailed, deleteBusy, onEdit, onCancelEdit, onSave, onAskDelete, onKeep, onDelete }: RowProps) {
+function CommentRow({ comment, summary, editing: editOpen, deleting: deleteOpen, deleteFailed, deleteBusy, onEdit, onCancelEdit, onSave, onAskDelete, onKeep, onDelete }: RowProps) {
+    // a project closed meanwhile (an edit refused, the summary asked again) takes Edit and Delete away, open or not
+    const canEdit = comment.canEdit && summary.canWrite;
+    const canDelete = comment.canDelete && summary.canWrite;
+    const editing = editOpen && canEdit;
+    const deleting = deleteOpen && canDelete;
     const busy = editing || deleting;
-    const actions = !comment.deleted && !busy && (comment.canEdit || comment.canDelete) && (
+    const actions = !comment.deleted && !busy && (canEdit || canDelete) && (
         <>
-            {comment.canEdit && <button type="button" className="dp-act" onClick={onEdit}>Edit</button>}
-            {comment.canDelete && <button type="button" className="dp-act" onClick={onAskDelete}>Delete</button>}
+            {canEdit && <button type="button" className="dp-act" onClick={onEdit}>Edit</button>}
+            {canDelete && <button type="button" className="dp-act" onClick={onAskDelete}>Delete</button>}
         </>
     );
 

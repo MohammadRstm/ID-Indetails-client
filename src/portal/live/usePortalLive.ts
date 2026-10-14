@@ -2,6 +2,7 @@ import { HubConnectionBuilder, HubConnectionState, LogLevel } from "@microsoft/s
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { secondsLeft } from "@/api/tokenExpiry";
+import { refreshDiscussion } from "../discussion/discussionApi";
 import { portalBellKey, portalMeKey } from "../notifications/notificationsApi";
 import { getPortalAccessToken, portalSessionExpired, refreshPortalSession } from "../portalApi";
 import { usePortalSession } from "../portalSession";
@@ -61,7 +62,11 @@ export function usePortalLive() {
             poll = undefined;
         };
 
-        connection.on("portal", (change?: { projectId?: number }) => invalidate(change?.projectId ? [...DISCUSSION_KEY, change.projectId] : DISCUSSION_KEY));
+        // one project's discussion: its summary, its chat and the thread on screen; without a project, all of them
+        connection.on("portal", (change?: { projectId?: number }) => {
+            if (change?.projectId) refreshDiscussion(queryClient, "client", change.projectId);
+            else invalidate(DISCUSSION_KEY);
+        });
         connection.on("notifications", refreshBell);
         connection.onreconnecting(startPolling);
         // anything may have changed while the connection was down

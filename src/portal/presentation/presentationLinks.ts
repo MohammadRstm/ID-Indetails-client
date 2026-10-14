@@ -9,7 +9,8 @@ import type { GetLink, PortalPresentation, PresentationItem } from "./presentati
  * for the same stored file.
  */
 
-const KEEP_MS = 10 * 60_000;
+/** A link is kept while more than this is left of it, so every link of an answer lasts at least this long. */
+export const KEEP_MS = 10 * 60_000;
 const links = new Map<string, { url: string; expiresAt: number }>();
 
 const keyOf = (url: string) => url.split(/[?#]/)[0];

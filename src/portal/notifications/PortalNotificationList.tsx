@@ -56,7 +56,8 @@ function Item({ note, onOpen }: { note: PortalNotification; onOpen: (note: Porta
                 <div className="notif-txt">{view.text}</div>
                 <div className="notif-meta"><span>{relTime(note.createdAt)}</span></div>
             </div>
-            {!note.read && <span className="dot dot-on" style={{ marginTop: 6 }} aria-label="Unread" />}
+            {/* the dot for the eye, the word for a screen reader (a label on a plain span isn't read out) */}
+            {!note.read && <><span className="dot dot-on" style={{ marginTop: 6 }} aria-hidden="true" /><span className="sr">Unread</span></>}
         </div>
     );
 }

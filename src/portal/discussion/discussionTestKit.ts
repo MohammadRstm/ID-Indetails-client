@@ -44,6 +44,9 @@ export const threadOf = (itemId: number, title: string, comments: PortalComment[
 
 export type Call = { method: string; path: string; search: string; body: unknown };
 
+/** A file clients can see now, as the presentation lists it (a presentation item will do). */
+export type SharedFile = { id: number; title: string; name: string };
+
 /** What the writing endpoints are sent. */
 type Sent = { body: string; mentions: string[]; clientToken: string; itemId: number; lastMessageId?: number; lastCommentId?: number };
 
@@ -65,8 +68,14 @@ const failure = (status: number, code: string, message: string) => HttpResponse.
 /**
  * The discussion endpoints under `base` (CLIENT_BASE or STAFF_BASE), answering from `box`: a test sets what is there and
  * reads what was sent. A send with the same clientToken as an earlier one gets the same message back, as the API does.
+ * `published` are the files clients can see: one nobody has commented on has an empty thread, and a file that is neither
+ * published nor commented on is not found, as with the API.
  */
-export function mockDiscussion(base: string, init: Partial<Pick<MockDiscussion, "summary" | "messages" | "threads">> & { viewer: string }) {
+export function mockDiscussion(
+    base: string,
+    init: Partial<Pick<MockDiscussion, "summary" | "messages" | "threads">> & { viewer: string; published?: SharedFile[] },
+) {
+    const published = init.published ?? [];
     const box: MockDiscussion = {
         summary: init.summary ?? summaryOf(init.viewer),
         messages: init.messages ?? [],
@@ -130,8 +139,11 @@ export function mockDiscussion(base: string, init: Partial<Pick<MockDiscussion, 
         }),
         http.get(`${base}/comments/:itemId`, async ({ request, params }) => {
             await note(request);
-            const thread = box.threads[Number(params.itemId)];
-            return thread ? HttpResponse.json(thread) : failure(404, "not_found", "Not found.");
+            const itemId = Number(params.itemId);
+            const thread = box.threads[itemId];
+            if (thread) return HttpResponse.json(thread);
+            const file = published.find((f) => f.id === itemId);
+            return file ? HttpResponse.json(threadOf(itemId, file.title, [], { fileName: file.name })) : failure(404, "not_found", "Not found.");
         }),
         http.post(`${base}/comments`, async ({ request }) => {
             const body = await note(request);

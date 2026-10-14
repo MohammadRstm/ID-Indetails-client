@@ -5,7 +5,7 @@ import { cx } from "@/shared/utils/cx";
 import PresentationHero from "./PresentationHero";
 import PresentationLightbox from "./PresentationLightbox";
 import PresentationSection from "./PresentationSection";
-import { forgetLink } from "./presentationLinks";
+import { forgetLink, KEEP_MS } from "./presentationLinks";
 import {
     isMedia, SECTION_LABEL, SECTIONS, sectionAnchor,
     type GetLink, type MediaItem, type PortalPresentation, type PortalSection, type PresentationComments, type PresentationItem,
@@ -17,7 +17,10 @@ type Props = {
     getLink: GetLink;
     /** Shown above everything else. */
     banner?: ReactNode;
-    /** An image or a video didn't load, most likely because its link ran out: load the presentation again. Called once. */
+    /**
+     * An image or a video didn't load, most likely because its link ran out: load the presentation again. Called again
+     * for a later one, but not within 10 minutes: no link of the new answer runs out that soon.
+     */
     onLinkExpired?: () => void;
     /** The client's page gives the discussion's part here. Without it (the staff's preview) there is no comment UI at all. */
     comments?: PresentationComments;
@@ -32,7 +35,8 @@ export default function PresentationView({ presentation, getLink, banner, onLink
     const phone = usePhone();
     const reducedMotion = useReducedMotion();
     const root = useRef<HTMLDivElement>(null);
-    const reported = useRef(false);
+    // when the page last asked for the presentation again because a link didn't load
+    const reloadedAt = useRef<number | null>(null);
     // the phone's choice, until then the first section that has something
     const [picked, setPicked] = useState<PortalSection | null>(null);
     // the section the menu shows as the one being read
@@ -75,8 +79,11 @@ export default function PresentationView({ presentation, getLink, banner, onLink
 
     function broken(url: string) {
         forgetLink(url);
-        if (reported.current) return;
-        reported.current = true;
+        // Every link of an answer has more than KEEP_MS left, so one that fails sooner after a reload hasn't run out: it is
+        // broken, and loading the page again would only go round in circles. A later one may have run out, and is recovered.
+        const now = Date.now();
+        if (reloadedAt.current != null && now - reloadedAt.current < KEEP_MS) return;
+        reloadedAt.current = now;
         onLinkExpired?.();
     }
 

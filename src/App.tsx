@@ -86,7 +86,7 @@ export function AppRoutes() {
                         <Route index element={<PortalHomePage />} />
                         <Route path="projects/:projectId" element={<PortalProjectPage />} />
                     </Route>
-                    <Route path="*" element={<NotFound />} />
+                    <Route path="*" element={<NotFound home="/portal" />} />
                 </Route>
 
                 <Route element={<RequireSession />}>
