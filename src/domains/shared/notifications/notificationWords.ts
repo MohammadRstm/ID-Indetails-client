@@ -176,7 +176,9 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             };
         case "portal_client_comment":
             return {
-                text: `${s(p.authorName) || who} commented on ${s(p.itemTitle) || "a file"} in ${title}`,
+                text: note.count > 1
+                    ? `${note.count} new client comments on ${s(p.itemTitle) || "a file"} in ${title}`
+                    : `${s(p.authorName) || who} commented on ${s(p.itemTitle) || "a file"} in ${title}`,
                 icon: "chat", route: discussion && note.subjectId ? `${discussion}&item=${note.subjectId}` : discussion,
             };
         case "portal_mention":

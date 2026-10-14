@@ -61,8 +61,10 @@ group("A notification's words", () => {
         expect(describe(note("portal_client_message", payload, { project, count: 4 }), designer))
             .toMatchObject({ text: "4 new client messages in Studio Nour brand space", route: discussion });
 
-        expect(describe(note("portal_client_comment", { ...payload, itemTitle: "Mood board" }, { project, subjectType: "comment", subjectId: 21 }), designer))
+        expect(describe(note("portal_client_comment", { ...payload, itemTitle: "Mood board" }, { project, subjectType: "item", subjectId: 21 }), designer))
             .toMatchObject({ text: "Rania Aoun commented on Mood board in Studio Nour brand space", icon: "chat", route: `${discussion}&item=21` });
+        expect(describe(note("portal_client_comment", { ...payload, itemTitle: "Mood board" }, { project, subjectType: "item", subjectId: 21, count: 3 }), designer).text)
+            .toBe("3 new client comments on Mood board in Studio Nour brand space");
 
         expect(describe(note("portal_mention", payload, { project, subjectType: "comment", subjectId: 21 }), designer))
             .toMatchObject({ text: "Rania Aoun mentioned you in Studio Nour brand space's client portal", icon: "chat", route: `${discussion}&item=21` });
