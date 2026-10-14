@@ -86,12 +86,14 @@ function ClientView({ client }: { client: Client }) {
         .filter((i) => i.isOverdue && (i.balance ?? 0) > 0.5 && i.dueOn)
         .sort((a, b) => a.dueOn!.localeCompare(b.dueOn!))[0];
     const newProject = () => navigate(`/${domain}/projects?new=1&client=${client.id}`);
+    // archiving a Design client ends its contacts' client portal access and pending invitations, for good
+    const portalNote = domain === "design" ? "Their contacts lose access to the client portal; restoring the client doesn't bring it back." : null;
 
     function toggleArchive() {
         archive.mutate(!client.isArchived, {
             onSuccess: () => toast({
                 text: `${client.displayName} ${client.isArchived ? "restored" : "archived"}`,
-                sub: client.isArchived ? undefined : "Hidden from pickers - projects and history are unchanged.",
+                sub: client.isArchived ? undefined : `Hidden from pickers - projects and history are unchanged.${portalNote ? ` ${portalNote}` : ""}`,
                 icon: "archive",
             }),
             onError: (e) => toast({ text: "That didn't save", sub: errorMessage(e), icon: "alert" }),
@@ -327,7 +329,7 @@ function ClientView({ client }: { client: Client }) {
                         <div>
                             <p className="sec">{client.displayName} has <b>{plural(client.projectCount, "project")}</b>
                                 {m ? <> carrying {money.fmt(m.revenue)} of revenue</> : null}. Deleting the client would leave that history without an owner, so it is blocked.</p>
-                            <p className="sec mt-s"><b>Archive instead:</b> the client disappears from pickers and the default list, while every project, figure and report stays exactly as it is. You can restore it at any time.</p>
+                            <p className="sec mt-s"><b>Archive instead:</b> the client disappears from pickers and the default list, while every project, figure and report stays exactly as it is. You can restore it at any time.{portalNote && ` ${portalNote}`}</p>
                         </div>
                     )}
                 </Modal>
