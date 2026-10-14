@@ -1,9 +1,22 @@
-import { useEffect, useEffectEvent, useRef } from "react";
+import { useEffect, useEffectEvent, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Icon from "@/shared/icons/Icon";
+import { cx } from "@/shared/utils/cx";
 import { downloadItem } from "./presentationLinks";
 import type { GetLink, MediaItem } from "./presentationTypes";
 import { useLayer } from "./useLayer";
+
+/** The comments beside the current file (the client's page only). */
+export type LightboxComments = {
+    /** Whether the panel is showing. */
+    open: boolean;
+    count: number;
+    /** Some comments are new. */
+    unread: boolean;
+    onToggle: () => void;
+    /** The file's comments. */
+    render: () => ReactNode;
+};
 
 type Props = {
     /** The images and videos of the section that was clicked, in order. */
@@ -14,6 +27,8 @@ type Props = {
     onClose: () => void;
     /** A file that didn't load; its link may have expired. */
     onBroken: (url: string) => void;
+    /** Given on the client's page only: a Comments button and a side panel (a bottom sheet on phones). Without it there is no comment UI. */
+    comments?: LightboxComments;
 };
 
 // a swipe is mostly sideways and at least this far (pixels)
@@ -21,9 +36,9 @@ const SWIPE_PX = 50;
 
 /**
  * A bigger look at the images and videos of one section. The arrows, the Left and Right keys and a swipe move through
- * them; Escape closes it.
+ * them; Escape closes it. On the client's page a Comments button opens that file's comments beside it.
  */
-export default function PresentationLightbox({ items, index, getLink, onIndex, onClose, onBroken }: Props) {
+export default function PresentationLightbox({ items, index, getLink, onIndex, onClose, onBroken, comments }: Props) {
     const swipe = useRef<{ x: number; y: number } | null>(null);
     const ref = useLayer<HTMLDivElement>();
 
@@ -33,6 +48,8 @@ export default function PresentationLightbox({ items, index, getLink, onIndex, o
     // the keys work wherever the keyboard is, and Escape closes this layer only, not the one under it
     const onKey = useEffectEvent((e: KeyboardEvent) => {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
+        // typing in the comments box: the arrows move its caret, and its own Escape closes its list first (then this one's, below)
+        if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable='true']")) return;
         const by = e.key === "ArrowLeft" ? -1 : e.key === "ArrowRight" ? 1 : 0;
         if (e.key !== "Escape" && by === 0) return;
         e.preventDefault();
@@ -50,10 +67,24 @@ export default function PresentationLightbox({ items, index, getLink, onIndex, o
     const url = item.previewUrl;
 
     return createPortal(
-        <div ref={ref} className="pp-lightbox" role="dialog" aria-modal="true" aria-label={item.title} tabIndex={-1}>
+        <div ref={ref} className={cx("pp-lightbox", comments?.open && "with-panel")} role="dialog" aria-modal="true" aria-label={item.title} tabIndex={-1}
+            // Escape typed in the comments box reaches here when the box had nothing of its own to close
+            onKeyDown={(e) => {
+                if (e.key !== "Escape") return;
+                e.stopPropagation();
+                onClose();
+            }}>
             <div className="pp-lb-bar">
                 <span className="pp-lb-count">{index + 1} of {items.length}</span>
                 <div className="pp-lb-title trunc" aria-live="polite" title={item.title}>{item.title}</div>
+                {comments && (
+                    <button type="button" className={cx("btn btn-sm pp-lb-comments", comments.unread && "new")} aria-pressed={comments.open}
+                        aria-label={`Comments${comments.count > 0 ? `, ${comments.count}` : ""}${comments.unread ? ", some new" : ""}`} onClick={comments.onToggle}>
+                        <Icon name="chat" />
+                        <span>{comments.count > 0 ? `Comments (${comments.count})` : "Comments"}</span>
+                        {comments.unread && <span className="pp-dot" aria-hidden="true" />}
+                    </button>
+                )}
                 <button type="button" className="btn btn-sm" onClick={() => void downloadItem(getLink, item)}><Icon name="download" />Download</button>
                 <button type="button" className="icon-btn pp-lb-close" aria-label="Close" onClick={onClose}><Icon name="x" /></button>
             </div>
@@ -78,6 +109,15 @@ export default function PresentationLightbox({ items, index, getLink, onIndex, o
                     : <img key={item.id} src={url} alt={item.title} decoding="async" onError={() => onBroken(url)} />}
                 <button type="button" className="pp-lb-nav pp-lb-next" aria-label="Next" disabled={index === items.length - 1} onClick={() => go(1)}><Icon name="chevronRight" /></button>
             </div>
+            {comments?.open && (
+                <aside className="pp-lb-panel" aria-label="Comments">
+                    <div className="pp-lb-panel-bar">
+                        <h2 className="pp-lb-panel-title">Comments</h2>
+                        <button type="button" className="icon-btn" aria-label="Hide comments" onClick={comments.onToggle}><Icon name="x" /></button>
+                    </div>
+                    <div className="pp-lb-panel-body">{comments.render()}</div>
+                </aside>
+            )}
         </div>,
         document.body,
     );
