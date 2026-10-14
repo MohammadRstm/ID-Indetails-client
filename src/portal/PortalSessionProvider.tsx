@@ -1,10 +1,19 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "@/shared/components/Feedback/toast";
-import { onPortalSessionExpired, portalSignIn, portalSignOut, refreshPortalSession, setPortalAccessToken, type PortalAccount, type PortalAuthResponse } from "./portalApi";
+import {
+    onPortalSessionExpired, onPortalSessionRefreshed, portalSignIn, portalSignOut, refreshPortalSession, setPortalAccessToken,
+    type PortalAccount, type PortalAuthResponse,
+} from "./portalApi";
 import { PortalSessionContext, type PortalSessionStatus, type PortalSessionValue } from "./portalSession";
 
 const CHANNEL = "hourline-portal-session";
+
+/** Tries at restoring the session on load before saying the server can't be reached. */
+const RESTORE_ATTEMPTS = 3;
+
+/** What the portal keeps of a client: the bell, the projects and the discussions. */
+const CLIENT_KEYS = [["portal"], ["portal-discussion", "client"]];
 
 /**
  * The client portal's session, apart from the staff one: it restores itself from the portal's refresh cookie, and a
@@ -15,20 +24,27 @@ export default function PortalSessionProvider({ children }: { children: ReactNod
     const [account, setAccount] = useState<PortalAccount | null>(null);
     const [notice, setNotice] = useState<string | null>(null);
     const channel = useRef<BroadcastChannel | null>(null);
+    // whose session this is, to tell when another account's takes its place
+    const accountId = useRef<number | null>(null);
     const queryClient = useQueryClient();
 
     const start = useCallback((auth: PortalAuthResponse) => {
         setPortalAccessToken(auth.accessToken);
+        // another account in this browser: nothing of the last one's may stay on screen, and the pages load the new one's
+        if (accountId.current !== null && accountId.current !== auth.account.id) {
+            CLIENT_KEYS.forEach((queryKey) => void queryClient.resetQueries({ queryKey }));
+        }
+        accountId.current = auth.account.id;
         setAccount(auth.account);
         setNotice(null);
         setStatus("signedIn");
-    }, []);
+    }, [queryClient]);
 
     const end = useCallback((message: string | null) => {
         setPortalAccessToken(null);
+        accountId.current = null;
         // what this client saw (the bell, the discussions) isn't for whoever signs in next
-        queryClient.removeQueries({ queryKey: ["portal"] });
-        queryClient.removeQueries({ queryKey: ["portal-discussion", "client"] });
+        CLIENT_KEYS.forEach((queryKey) => queryClient.removeQueries({ queryKey }));
         setAccount(null);
         setNotice(message);
         setStatus("signedOut");
@@ -36,16 +52,27 @@ export default function PortalSessionProvider({ children }: { children: ReactNod
 
     useEffect(() => {
         onPortalSessionExpired(() => end("Your session ended. Please sign in again."));
+        // a refresh brought another account's session (signed in from another tab): it takes over here too
+        onPortalSessionRefreshed((auth) => {
+            if (accountId.current !== null && accountId.current !== auth.account.id) start(auth);
+        });
+
         let cancelled = false;
-        refreshPortalSession()
+        let retry: ReturnType<typeof setTimeout> | undefined;
+        // a rate limit or a server restarting says nothing about the cookie: try again a few times before sending the
+        // client to sign in (a 401 is an answer: there is no session, and asking again won't change it)
+        const restore = (attempt: number) => refreshPortalSession()
             .then((auth) => {
                 if (cancelled) return;
                 if (auth) start(auth);
                 else setStatus("signedOut");
             })
             .catch(() => {
-                if (!cancelled) end("The server can't be reached right now. Try again in a moment.");
+                if (cancelled) return;
+                if (attempt < RESTORE_ATTEMPTS) retry = setTimeout(() => void restore(attempt + 1), attempt * 2000);
+                else end("The server can't be reached right now. Try again in a moment.");
             });
+        void restore(1);
 
         if (typeof BroadcastChannel !== "undefined") {
             channel.current = new BroadcastChannel(CHANNEL);
@@ -55,6 +82,7 @@ export default function PortalSessionProvider({ children }: { children: ReactNod
         }
         return () => {
             cancelled = true;
+            clearTimeout(retry);
             channel.current?.close();
         };
     }, [start, end]);

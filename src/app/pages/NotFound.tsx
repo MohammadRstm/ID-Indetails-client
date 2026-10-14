@@ -1,15 +1,18 @@
 import { Link } from "react-router";
 import Empty from "@/shared/components/Feedback/Empty";
 
-/** An address that leads nowhere, or a record the person can't see (the API answers 404 for both). */
-export default function NotFound({ what = "page" }: { what?: string }) {
+/**
+ * An address that leads nowhere, or a record the person can't see (the API answers 404 for both). `home` is the start
+ * page it leads back to: the client portal's own under /portal, never the staff app's.
+ */
+export default function NotFound({ what = "page", home = "/" }: { what?: string; home?: string }) {
     return (
         <div className="page page-state">
             <Empty
                 art="search"
                 title={`This ${what} couldn't be found`}
                 text="It may have been removed, or the link may be wrong."
-                action={<Link className="btn btn-sm" to="/">Go to your start page</Link>}
+                action={<Link className="btn btn-sm" to={home}>Go to your start page</Link>}
             />
         </div>
     );

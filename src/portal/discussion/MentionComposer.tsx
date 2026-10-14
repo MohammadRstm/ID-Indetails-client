@@ -52,6 +52,7 @@ export default function MentionComposer({ label, placeholder, max, people, close
     const tooLong = trimmed.length > max;
     const mention = mentionAt(text, caret);
     const candidates = listOpen && mention ? mentionCandidates(people, mention.query) : [];
+    const offered = candidates.length > 0;
     const chosen = Math.min(active, candidates.length - 1);
     const over = trimmed.length - max;
     const problem = tooLong ? `Too long by ${over} character${over === 1 ? "" : "s"}. Shorten it to send.` : attempted && empty ? "Write something to send." : undefined;
@@ -118,7 +119,7 @@ export default function MentionComposer({ label, placeholder, max, people, close
     }
 
     function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
-        if (candidates.length > 0) {
+        if (offered) {
             if (e.key === "ArrowDown" || e.key === "ArrowUp") {
                 e.preventDefault();
                 setActive((chosen + (e.key === "ArrowDown" ? 1 : candidates.length - 1)) % candidates.length);
@@ -147,20 +148,22 @@ export default function MentionComposer({ label, placeholder, max, people, close
 
     return (
         <div className="dp-composer">
-            {candidates.length > 0 && (
+            {offered && (
                 <div className="dp-pop" id={listId} role="listbox" aria-label="Mention someone">
+                    {/* chosen with the arrow keys from the box, which keeps the focus: the options aren't tab stops */}
                     {candidates.map((p, i) => (
-                        <button key={p.key} id={`${listId}-${i}`} type="button" role="option" aria-selected={i === chosen} className={cx("dp-opt", i === chosen && "on")}
-                            onMouseDown={(e) => { e.preventDefault(); pick(p); }}>
+                        <button key={p.key} id={`${listId}-${i}`} type="button" role="option" tabIndex={-1} aria-selected={i === chosen}
+                            className={cx("dp-opt", i === chosen && "on")} onMouseDown={(e) => { e.preventDefault(); pick(p); }}>
                             <span>{p.name}</span>
                             <span className="dp-opt-kind" aria-hidden="true">{p.kind === "client" ? "Client" : "Team"}</span>
                         </button>
                     ))}
                 </div>
             )}
+            {/* a combobox: "@" offers a list of people, and the option the arrow keys are on is the box's active descendant */}
             <textarea ref={area} className={cx("textarea dp-input", problem && "bad")} rows={2} value={text} placeholder={placeholder} aria-label={label}
-                aria-invalid={problem ? true : undefined} aria-controls={candidates.length > 0 ? listId : undefined}
-                aria-activedescendant={candidates.length > 0 ? `${listId}-${chosen}` : undefined}
+                role="combobox" aria-autocomplete="list" aria-expanded={offered} aria-controls={offered ? listId : undefined}
+                aria-activedescendant={offered ? `${listId}-${chosen}` : undefined} aria-invalid={problem ? true : undefined}
                 readOnly={busy} onChange={change} onSelect={(e) => setCaret(e.currentTarget.selectionStart)} onKeyDown={onKeyDown} />
             <FieldError message={problem} />
             {failure != null && (

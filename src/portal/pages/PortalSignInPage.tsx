@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, Navigate, useNavigate } from "react-router";
+import { Link, Navigate, useLocation, useNavigate, type Location } from "react-router";
 import { z } from "zod";
 import { toApiError } from "@/api/errors";
 import AuthLayout from "@/auth/AuthLayout";
@@ -11,14 +11,26 @@ import { usePortalSession } from "../portalSession";
 
 const schema = z.object({ email, password: z.string().min(1, "Enter your password.") });
 
+/**
+ * Where a client goes once signed in: back to the portal page they were sent here from (a session that ended, a link
+ * opened while signed out), or their projects. Only the portal's own pages, never another part of the app or another site.
+ */
+function backTo(state: unknown): string {
+    const from = (state as { from?: Partial<Location> } | null)?.from;
+    const path = from?.pathname ?? "";
+    if (!/^\/portal(\/|$)/.test(path) || path === "/portal/login") return "/portal";
+    return path + (from?.search ?? "") + (from?.hash ?? "");
+}
+
 /** A client signs in to follow their projects. */
 export default function PortalSignInPage() {
     const { status, signIn, notice } = usePortalSession();
     const navigate = useNavigate();
+    const location = useLocation();
     const form = useForm({ email: "", password: "" }, schema);
     const [busy, setBusy] = useState(false);
 
-    if (status === "signedIn") return <Navigate to="/portal" replace />;
+    if (status === "signedIn") return <Navigate to={backTo(location.state)} replace />;
 
     async function submit(e: FormEvent) {
         e.preventDefault();
@@ -26,7 +38,7 @@ export default function PortalSignInPage() {
         setBusy(true);
         try {
             await signIn(form.values.email.trim(), form.values.password);
-            navigate("/portal", { replace: true });
+            navigate(backTo(location.state), { replace: true });
         } catch (error) {
             const apiError = toApiError(error);
             if (apiError.code === "invalid_credentials") {
@@ -46,13 +58,13 @@ export default function PortalSignInPage() {
                 </div>
             )}
             <form className="stack" onSubmit={submit} noValidate>
-                <Field id="ps-email" label="Email" required error={form.errors.email}>
+                <Field id="ps-email" label="Email" required error={form.error("email")}>
                     <input id="ps-email" className="input" type="email" autoComplete="username" autoFocus
-                        value={form.values.email} onChange={(e) => form.set("email", e.target.value)} />
+                        value={form.values.email} onChange={(e) => form.set("email", e.target.value)} onBlur={form.touch("email")} />
                 </Field>
-                <Field id="ps-pass" label="Password" required error={form.errors.password}>
+                <Field id="ps-pass" label="Password" required error={form.error("password")}>
                     <input id="ps-pass" className="input" type="password" autoComplete="current-password"
-                        value={form.values.password} onChange={(e) => form.set("password", e.target.value)} />
+                        value={form.values.password} onChange={(e) => form.set("password", e.target.value)} onBlur={form.touch("password")} />
                 </Field>
                 <FieldError message={form.errors.form} />
                 <button className="btn btn-primary btn-lg btn-block" type="submit" disabled={busy}>

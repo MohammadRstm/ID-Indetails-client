@@ -2,7 +2,9 @@ import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { sessionExpired } from "@/api/http";
 import { live } from "@/test/liveHub";
+import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import { server } from "@/test/server";
 import type { PortalAuthResponse } from "../portalApi";
@@ -242,5 +244,23 @@ describe("The portal's home page", () => {
         act(() => live.emit("notifications"));
         expect(await within(pavilion).findByText("2 unread")).toBeInTheDocument();
         await waitFor(() => expect(within(villa).queryByText(/unread/)).toBeNull());
+    });
+
+    it("keeps following the counts when a staff member signs out in the same browser", async () => {
+        let unread = [5, 1];
+        renderApp("/portal", personas.designAdmin, signedIn,
+            http.get("/api/portal/me", () => HttpResponse.json({
+                ...auth.account, projects: auth.account.projects.map((p, i) => ({ ...p, unread: unread[i] })),
+            })));
+        const villa = (await screen.findByRole("heading", { name: "Villa Mounir interiors" })).closest("a") as HTMLElement;
+        expect(await within(villa).findByText("5 unread")).toBeInTheDocument();
+
+        // the staff session ends (signed out in another tab): the staff app forgets what it had loaded, and the portal
+        // keeps its own
+        act(() => sessionExpired());
+        unread = [2, 0];
+        await waitFor(() => expect(live.connected).toBeGreaterThan(0));
+        act(() => live.emit("notifications"));
+        expect(await within(villa).findByText("2 unread")).toBeInTheDocument();
     });
 });

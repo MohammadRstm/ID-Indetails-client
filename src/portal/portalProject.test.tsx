@@ -53,6 +53,7 @@ const titlesIn = (section: string) =>
 
 // the same links every time, as far as these tests go
 beforeEach(resetLinks);
+afterEach(() => vi.useRealTimers());
 
 describe("a client's project page", () => {
     it("shows the hero, the title, the introduction and the three sections with their items in order", async () => {
@@ -244,6 +245,21 @@ describe("a client's project page", () => {
         fireEvent.error(hero!);
         await new Promise((resolve) => setTimeout(resolve, 100));
         expect(loads).toBe(2);
+    });
+
+    it("loads the page again for a link that runs out later, too", async () => {
+        vi.useFakeTimers({ toFake: ["Date"] });
+        let loads = 0;
+        renderApp("/portal/projects/2", null, signedIn, http.get("/api/portal/projects/:id", () => { loads++; return HttpResponse.json(published); }));
+        await heading();
+        const pictures = () => document.querySelectorAll(".pp-grid img");
+        fireEvent.error(pictures()[0]);
+        await waitFor(() => expect(loads).toBe(2));
+
+        // an hour on, the links of that answer run out as well
+        vi.setSystemTime(Date.now() + 61 * 60_000);
+        fireEvent.error(pictures()[1]);
+        await waitFor(() => expect(loads).toBe(3));
     });
 });
 
