@@ -186,6 +186,16 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 text: `${s(p.authorName) || who} mentioned you in ${title}'s client portal`,
                 icon: "chat", route: discussion && note.subjectType === "comment" && note.subjectId ? `${discussion}&item=${note.subjectId}` : discussion,
             };
+        case "project_file_comment": {
+            // the Project files tab finds the section of the file whose comments it opens
+            const files = note.project ? `/design/projects/${note.project.id}?tab=files` : undefined;
+            return {
+                text: note.count > 1
+                    ? `${note.count} new comments on ${s(p.fileTitle) || "a file"} in ${title}`
+                    : `${s(p.authorName) || who} commented on ${s(p.fileTitle) || "a file"} in ${title}`,
+                icon: "chat", route: files && note.subjectId ? `${files}&comments=${note.subjectId}` : files,
+            };
+        }
 
         case "invitation_accepted": {
             const domain = p.domain as Reader["domain"];
