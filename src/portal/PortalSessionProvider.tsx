@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "@/shared/components/Feedback/toast";
 import { onPortalSessionExpired, portalSignIn, portalSignOut, refreshPortalSession, setPortalAccessToken, type PortalAccount, type PortalAuthResponse } from "./portalApi";
@@ -14,6 +15,7 @@ export default function PortalSessionProvider({ children }: { children: ReactNod
     const [account, setAccount] = useState<PortalAccount | null>(null);
     const [notice, setNotice] = useState<string | null>(null);
     const channel = useRef<BroadcastChannel | null>(null);
+    const queryClient = useQueryClient();
 
     const start = useCallback((auth: PortalAuthResponse) => {
         setPortalAccessToken(auth.accessToken);
@@ -24,10 +26,13 @@ export default function PortalSessionProvider({ children }: { children: ReactNod
 
     const end = useCallback((message: string | null) => {
         setPortalAccessToken(null);
+        // what this client saw (the bell, the discussions) isn't for whoever signs in next
+        queryClient.removeQueries({ queryKey: ["portal"] });
+        queryClient.removeQueries({ queryKey: ["portal-discussion", "client"] });
         setAccount(null);
         setNotice(message);
         setStatus("signedOut");
-    }, []);
+    }, [queryClient]);
 
     useEffect(() => {
         onPortalSessionExpired(() => end("Your session ended. Please sign in again."));

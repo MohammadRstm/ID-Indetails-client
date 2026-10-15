@@ -14,7 +14,7 @@ import type { PortalAuthResponse } from "./portalApi";
 const auth: PortalAuthResponse = {
     accessToken: "portal-token",
     accessTokenExpiresAt: "2030-01-01T00:00:00Z",
-    account: { id: 7, email: "rania@client.test", firstName: "Rania", lastName: "Aoun", projects: [{ id: 2, title: "Villa Mounir interiors", status: "active" }] },
+    account: { id: 7, email: "rania@client.test", firstName: "Rania", lastName: "Aoun", projects: [{ id: 2, title: "Villa Mounir interiors", status: "active", unread: 0 }] },
 };
 const preview = { email: "rania@client.test", projectTitle: "Villa Mounir interiors", expiresAt: "2026-10-14T09:00:00Z" };
 const noPortalSession = http.post("/api/portal/auth/refresh", () =>

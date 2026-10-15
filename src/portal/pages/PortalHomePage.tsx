@@ -3,6 +3,7 @@ import { StatusBadge } from "@/shared/components/Data/Pills";
 import Empty from "@/shared/components/Feedback/Empty";
 import { useBranding } from "@/shared/components/Identity/useBranding";
 import Icon from "@/shared/icons/Icon";
+import { usePortalMe } from "../notifications/notificationsApi";
 import PortalTopBar from "../PortalTopBar";
 import { accountName, usePortalSession } from "../portalSession";
 
@@ -10,8 +11,11 @@ import { accountName, usePortalSession } from "../portalSession";
 export default function PortalHomePage() {
     const { account } = usePortalSession();
     const branding = useBranding();
+    const me = usePortalMe();
     if (!account) return null;
     const name = accountName(account);
+    // the API's latest answer, with its unread counts; what the sign-in said until it comes
+    const projects = me.data?.projects ?? account.projects;
 
     return (
         <div className="portal">
@@ -21,19 +25,24 @@ export default function PortalHomePage() {
                 <h1 className="page-title">Welcome, {account.firstName || name}</h1>
                 <p className="page-sub">Your projects with {branding.data?.name || "us"}.</p>
 
-                {account.projects.length === 0 ? (
+                {projects.length === 0 ? (
                     <div className="panel mt">
                         <Empty art="projects" title="No project is shared with you right now"
                             text="When your project team invites you to a project, it appears here." />
                     </div>
                 ) : (
                     <div className="portal-projects mt">
-                        {account.projects.map((project) => (
+                        {projects.map((project) => (
                             <Link key={project.id} to={`/portal/projects/${project.id}`} className="panel portal-project">
                                 <div className="panel-body">
                                     <div className="spread" style={{ gap: 10, alignItems: "flex-start" }}>
                                         <h2 className="portal-project-title">{project.title}</h2>
-                                        <StatusBadge status={project.status} />
+                                        <div className="row pn-badges">
+                                            {project.unread > 0 && (
+                                                <span className="badge badge-new" title="Messages and comments you haven't read">{project.unread} unread</span>
+                                            )}
+                                            <StatusBadge status={project.status} />
+                                        </div>
                                     </div>
                                     <span className="portal-project-open">View project<Icon name="arrowRight" /></span>
                                 </div>

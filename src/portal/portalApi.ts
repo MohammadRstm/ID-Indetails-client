@@ -7,7 +7,13 @@ import { toApiError } from "@/api/errors";
  * the same browser, and neither token is ever sent to the other side.
  */
 
-export type PortalProject = { id: number; title: string; status: "active" | "hold" | "completed" | "archived" };
+export type PortalProject = {
+    id: number;
+    title: string;
+    status: "active" | "hold" | "completed" | "archived";
+    /** Chat messages and comments by others that the client hasn't read yet. */
+    unread: number;
+};
 
 export type PortalAccount = { id: number; email: string; firstName: string; lastName: string; projects: PortalProject[] };
 
@@ -25,9 +31,19 @@ export function setPortalAccessToken(token: string | null) {
     accessToken = token;
 }
 
+/** The current access token, for the live connection. Null when nobody is signed in. */
+export function getPortalAccessToken(): string | null {
+    return accessToken;
+}
+
 /** Called when the portal session is gone (expired, revoked, signed out elsewhere). */
 export function onPortalSessionExpired(handler: () => void) {
     onExpired = handler;
+}
+
+/** The session is over (a refresh found none): the client is signed out, as a 401 on a request would do. */
+export function portalSessionExpired() {
+    onExpired();
 }
 
 let refreshing: Promise<PortalAuthResponse | null> | null = null;

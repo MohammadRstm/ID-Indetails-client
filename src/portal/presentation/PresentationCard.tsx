@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { fmtBytes } from "@/shared/format/bytes";
 import Icon from "@/shared/icons/Icon";
+import { cx } from "@/shared/utils/cx";
 import { downloadItem, openItem } from "./presentationLinks";
-import { isMedia, type GetLink, type MediaItem, type PresentationItem } from "./presentationTypes";
+import { isMedia, type CardComments, type GetLink, type MediaItem, type PresentationItem } from "./presentationTypes";
 
 const extensionOf = (name: string) => (name.lastIndexOf(".") < 0 ? "" : name.slice(name.lastIndexOf(".") + 1).toUpperCase().slice(0, 5));
 
@@ -13,14 +14,30 @@ type Props = {
     onView: (item: MediaItem) => void;
     /** A file that didn't load; its link may have expired. */
     onBroken: (url: string) => void;
+    /** Given on the client's page only: the comments on this file. Without it the card has no comment UI. */
+    comments?: CardComments;
 };
 
 /** One item of a section: an image or a video to look at, a PDF to open or save, or any other file to save. */
-export default function PresentationCard({ item, getLink, onView, onBroken }: Props) {
+export default function PresentationCard({ item, getLink, onView, onBroken, comments }: Props) {
     return (
         <article className="pp-card" aria-label={item.title}>
-            {isMedia(item) ? <MediaCard item={item} onView={onView} onBroken={onBroken} /> : <FileCard item={item} getLink={getLink} />}
+            {isMedia(item)
+                ? <MediaCard item={item} onView={onView} onBroken={onBroken} comments={comments} />
+                : <FileCard item={item} getLink={getLink} comments={comments} />}
         </article>
+    );
+}
+
+/** How many comments the file has, and a dot when some are new. It opens them. */
+function CommentsChip({ item, comments }: { item: PresentationItem; comments: CardComments }) {
+    const label = `Comments on ${item.title}${comments.count > 0 ? `: ${comments.count}` : ""}${comments.unread ? ", some new" : ""}`;
+    return (
+        <button type="button" className={cx("btn btn-sm pp-comments", comments.unread && "new")} aria-label={label} onClick={comments.onOpen}>
+            <Icon name="chat" />
+            <span>{comments.count > 0 ? comments.count : "Comment"}</span>
+            {comments.unread && <span className="pp-dot" aria-hidden="true" />}
+        </button>
     );
 }
 
@@ -34,7 +51,7 @@ function Tile({ item }: { item: PresentationItem }) {
     );
 }
 
-function MediaCard({ item, onView, onBroken }: { item: MediaItem; onView: (item: MediaItem) => void; onBroken: (url: string) => void }) {
+function MediaCard({ item, onView, onBroken, comments }: { item: MediaItem; onView: (item: MediaItem) => void; onBroken: (url: string) => void; comments?: CardComments }) {
     // a link that fails stays a tile; the next answer brings a new link
     const [failed, setFailed] = useState<string | null>(null);
     const broken = failed === item.previewUrl;
@@ -53,12 +70,13 @@ function MediaCard({ item, onView, onBroken }: { item: MediaItem; onView: (item:
             </button>
             <div className="pp-body">
                 <div className="pp-card-title">{item.title}</div>
+                {comments && <div className="pp-actions"><CommentsChip item={item} comments={comments} /></div>}
             </div>
         </>
     );
 }
 
-function FileCard({ item, getLink }: { item: PresentationItem; getLink: GetLink }) {
+function FileCard({ item, getLink, comments }: { item: PresentationItem; getLink: GetLink; comments?: CardComments }) {
     const [busy, setBusy] = useState(false);
     const isPdf = item.preview === "pdf";
 
@@ -87,6 +105,7 @@ function FileCard({ item, getLink }: { item: PresentationItem; getLink: GetLink 
                     <button type="button" className="btn btn-sm" disabled={busy} aria-label={`Download ${item.title}`} onClick={() => void run(downloadItem)}>
                         <Icon name="download" />Download
                     </button>
+                    {comments && <CommentsChip item={item} comments={comments} />}
                 </div>
             </div>
         </>

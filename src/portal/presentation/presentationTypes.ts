@@ -1,3 +1,6 @@
+import type { ReactNode } from "react";
+import type { CommentThreadSummary } from "../discussion/discussionTypes";
+
 /*
  * What the client's project page and the staff preview of it both show: the API's presentation of a project.
  * These types are the portal's own, so the portal never imports staff code.
@@ -41,6 +44,24 @@ export type PortalPresentation = {
 
 /** A short-lived link to a file: shown in the browser (`inline`) or saved. */
 export type GetLink = (itemId: number, inline: boolean) => Promise<{ url: string }>;
+
+/**
+ * The discussion's part in the presentation: comments on files. Only the client's page gives it; without it nothing in
+ * the presentation mentions comments (the staff's preview of the draft is such a page).
+ */
+export type PresentationComments = {
+    /** Every file that has comments: a card shows its count and whether some are new. */
+    threads: CommentThreadSummary[];
+    /** The file whose comments are open (the page's ?item=), or null. */
+    openItemId: number | null;
+    /** Opens a file's comments, or closes them with null. */
+    onOpen: (itemId: number | null) => void;
+    /** A file's comments, as the lightbox's side panel shows them. */
+    renderThread: (item: PresentationItem) => ReactNode;
+};
+
+/** What a card says of the comments on its file, and how to open them. */
+export type CardComments = { count: number; unread: boolean; onOpen: () => void };
 
 /** An image or a video the page can show itself. */
 export type MediaItem = PresentationItem & { preview: "image" | "video"; previewUrl: string };
