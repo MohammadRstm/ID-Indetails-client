@@ -14,8 +14,9 @@ Browser ──HTTPS──▶ TLS proxy / load balancer (hosting) ──HTTP─�
 ```
 
 The browser must see the app and the API on **one origin**. The API calls are relative (`/api`), and the refresh
-cookie is `SameSite=Strict` with `Path=/api/auth`. That's why the client's nginx proxies the API instead of the app
-calling another domain.
+cookie is `SameSite=Strict` with `Path=/api/auth` (the client portal's own is on `/api/portal/auth`). That's why the
+client's nginx proxies the API instead of the app calling another domain. The client portal's pages (`/portal/...`)
+are part of the same app and need nothing more from nginx.
 
 - **Image:** built from `Dockerfile`. `node:24-alpine` installs from the lockfile and builds; the runtime is
   `nginx-unprivileged` (uid 101, port 8080) with only the built files and `deploy/nginx/`.

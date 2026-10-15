@@ -2,7 +2,7 @@
 
 export const PERMISSION_AREAS: Record<string, string> = {
     project: "Projects", statement: "Statements", requirement: "Requirements", meeting: "Meetings", expense: "Expenses",
-    work_entry: "Work entries", material: "Materials", labour_report: "Labour", client: "Clients", financial: "Money",
+    work_entry: "Work entries", material: "Materials", labour_report: "Labour", client: "Clients", client_access: "Client portal", financial: "Money",
     invoice: "Invoices", payment: "Payments", billing_settings: "Billing settings", exchange_rate: "Exchange rates",
     employee: "People", session: "People", permission: "Permissions", team: "Teams", activity: "Activity", report: "Reports",
     domain_settings: "Settings", company: "Company", overhead: "Company expenses", overhead_category: "Company expenses", salary: "Salaries",
