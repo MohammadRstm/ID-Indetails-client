@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { portalHttp, type PortalAccount } from "../portalApi";
+import { portalHttp, type PortalAccount, type PortalProject } from "../portalApi";
+import { steadyLink } from "../presentation/presentationLinks";
 
 export type PortalNotificationKind = "team_message" | "team_comment" | "mention";
 
@@ -61,10 +62,20 @@ export function useMarkPortalNotificationsRead() {
     });
 }
 
-/** The client and their projects as the API sees them now: the unread counts on the home page. */
+/** A project's cover keeps the link it was first shown with, so asking again doesn't load every picture again. */
+function steadyCover(project: PortalProject): PortalProject {
+    if (!project.heroUrl || !project.heroUrlExpiresAt) return project;
+    const { url, expiresAt } = steadyLink(project.heroUrl, project.heroUrlExpiresAt);
+    return { ...project, heroUrl: url, heroUrlExpiresAt: expiresAt };
+}
+
+/** The client and their projects as the API sees them now: the unread counts, covers and news on the home page. */
 export function usePortalMe() {
     return useQuery({
         queryKey: portalMeKey,
-        queryFn: async () => (await portalHttp.get<PortalAccount>("/me")).data,
+        queryFn: async () => {
+            const me = (await portalHttp.get<PortalAccount>("/me")).data;
+            return { ...me, projects: me.projects.map(steadyCover) };
+        },
     });
 }

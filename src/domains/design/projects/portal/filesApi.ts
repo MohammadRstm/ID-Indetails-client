@@ -95,11 +95,21 @@ function patchFiles(queryClient: QueryClient, projectId: number, change: (files:
     queryClient.setQueryData<ProjectFiles>(filesKey(projectId), (files) => (files ? change(files) : files));
 }
 
-/** What the client portal shows (its files, their states, the preview) may move with any change to the files. */
-function refreshClientPortal(queryClient: QueryClient, projectId: number) {
+/**
+ * What the client portal shows (its files, their states, the hero images, the preview, and so whether there is
+ * anything to publish) may move with any change to the files: it is asked for again, as the server works it out. A
+ * change undone is then nothing to publish.
+ */
+export function refreshClientPortal(queryClient: QueryClient, projectId: number) {
     void queryClient.invalidateQueries({ queryKey: contentKey(projectId) });
     void queryClient.invalidateQueries({ queryKey: previewKey(projectId) });
     void queryClient.invalidateQueries({ queryKey: ["activity"] });
+}
+
+/** After a change to the files: they are loaded again, and the client portal with them. */
+export function refreshFiles(queryClient: QueryClient, projectId: number) {
+    void queryClient.invalidateQueries({ queryKey: filesKey(projectId) });
+    refreshClientPortal(queryClient, projectId);
 }
 
 /** The API's answer to a change is all the files: it replaces the cached ones. */
@@ -108,7 +118,10 @@ function putFiles(queryClient: QueryClient, projectId: number, files: ProjectFil
     refreshClientPortal(queryClient, projectId);
 }
 
-/** A file that was added, replaced, renamed, moved or chosen goes in its place, with the usage when the answer carried it. */
+/**
+ * A file that was added, replaced, renamed, moved or chosen goes in its place, with the usage when the answer carried
+ * it; the client portal is asked for again.
+ */
 export function applyFile(queryClient: QueryClient, projectId: number, item: ProjectFile, usage?: PortalUsage) {
     const [steady] = steadyLinks([item]);
     patchFiles(queryClient, projectId, (files) => ({
@@ -135,8 +148,7 @@ function removeFile(queryClient: QueryClient, projectId: number, itemId: number,
 export function refreshIfOutdated(queryClient: QueryClient, projectId: number, error: unknown) {
     const { status, code } = toApiError(error);
     if (status !== 404 && !LOCKED_CODES.includes(code)) return;
-    void queryClient.invalidateQueries({ queryKey: filesKey(projectId) });
-    void queryClient.invalidateQueries({ queryKey: contentKey(projectId) });
+    refreshFiles(queryClient, projectId);
 }
 
 // ---- changes to a file ----
@@ -166,8 +178,7 @@ export function useDeleteFile(projectId: number) {
         }),
         onSuccess: ({ itemId, usage }) => {
             removeFile(queryClient, projectId, itemId, usage);
-            void queryClient.invalidateQueries({ queryKey: filesKey(projectId) });
-            refreshClientPortal(queryClient, projectId);
+            refreshFiles(queryClient, projectId);
         },
         onError: (error) => refreshIfOutdated(queryClient, projectId, error),
     });
@@ -189,7 +200,11 @@ export function useSetForClient(projectId: number) {
     return useMutation({
         mutationFn: async ({ itemId, forClient }: { itemId: number; forClient: boolean }) =>
             (await http.put<ProjectFile>(`${filesBase(projectId)}/items/${itemId}/for-client`, { forClient })).data,
-        onSuccess: (item) => applyFile(queryClient, projectId, item),
+        onSuccess: (item) => {
+            // (and the client portal is asked for again: shown and hidden again is no change to publish)
+            applyFile(queryClient, projectId, item);
+            void queryClient.invalidateQueries({ queryKey: filesKey(projectId) });
+        },
         onError: (error) => refreshIfOutdated(queryClient, projectId, error),
     });
 }

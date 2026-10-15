@@ -7,8 +7,8 @@ import PresentationLightbox from "./PresentationLightbox";
 import PresentationSection from "./PresentationSection";
 import { forgetLink, KEEP_MS } from "./presentationLinks";
 import {
-    isMedia, SECTION_LABEL, SECTIONS, sectionAnchor,
-    type GetLink, type MediaItem, type PortalPresentation, type PortalSection, type PresentationComments, type PresentationItem,
+    isMedia, runFor, runOf, SECTION_LABEL, SECTIONS, sectionAnchor,
+    type GetLink, type MediaItem, type MediaRun, type PortalPresentation, type PortalSection, type PresentationComments, type PresentationItem,
 } from "./presentationTypes";
 import { usePhone } from "./usePhone";
 
@@ -28,8 +28,9 @@ type Props = {
 
 /**
  * A project's presentation: the hero, the introduction and the three sections. Both the client's page and the staff's
- * preview of the draft show it, so the preview is what the client gets. Wide screens show the sections one under the
- * other with a menu that follows the scroll; phones show one at a time.
+ * preview of the draft show it, so the preview is what the client gets. The sections' bar runs the width of the page,
+ * its tabs sharing it. Wide screens show the sections one under the other, the bar following the scroll; phones show
+ * one at a time.
  */
 export default function PresentationView({ presentation, getLink, banner, onLinkExpired, comments }: Props) {
     const phone = usePhone();
@@ -42,7 +43,7 @@ export default function PresentationView({ presentation, getLink, banner, onLink
     // the section the menu shows as the one being read
     const [reading, setReading] = useState<PortalSection>("presentation");
     // the lightbox follows the item, not its place: a new answer may reorder the section
-    const [viewing, setViewing] = useState<{ section: PortalSection; itemId: number } | null>(null);
+    const [viewing, setViewing] = useState<{ section: PortalSection; run: MediaRun; itemId: number } | null>(null);
 
     const itemsOf = (section: PortalSection) => presentation.sections.find((s) => s.section === section)?.items ?? [];
     const current = picked ?? SECTIONS.find((s) => itemsOf(s).length > 0) ?? SECTIONS[0];
@@ -54,7 +55,8 @@ export default function PresentationView({ presentation, getLink, banner, onLink
     if (linked !== linkedSeen) {
         setLinkedSeen(linked);
         const section = linked == null ? undefined : SECTIONS.find((s) => itemsOf(s).some((i) => i.id === linked && isMedia(i)));
-        if (section && linked != null && viewing?.itemId !== linked) setViewing({ section, itemId: linked });
+        const item = section && itemsOf(section).find((i) => i.id === linked);
+        if (section && item && viewing?.itemId !== linked) setViewing({ section, run: runFor(section, item), itemId: item.id });
     }
 
     // the menu marks the section on screen (where the browser can tell)
@@ -94,12 +96,12 @@ export default function PresentationView({ presentation, getLink, banner, onLink
         document.getElementById(sectionAnchor(section))?.scrollIntoView?.({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
     }
 
-    const media = viewing ? itemsOf(viewing.section).filter(isMedia) : [];
+    const media = viewing ? runOf(viewing.section, itemsOf(viewing.section), viewing.run) : [];
     const viewIndex = viewing ? media.findIndex((item) => item.id === viewing.itemId) : -1;
-    const view = (section: PortalSection, item: MediaItem) => setViewing({ section, itemId: item.id });
+    const view = (section: PortalSection, item: MediaItem, run: MediaRun) => setViewing({ section, run, itemId: item.id });
     // a card's comments: a picture or a video opens in the lightbox with its panel, any other file in the page's drawer
     const viewComments = (section: PortalSection, item: PresentationItem) => {
-        if (isMedia(item)) setViewing({ section, itemId: item.id });
+        if (isMedia(item)) setViewing({ section, run: runFor(section, item), itemId: item.id });
         comments?.onOpen(item.id);
     };
     const closeLightbox = () => {
@@ -121,14 +123,16 @@ export default function PresentationView({ presentation, getLink, banner, onLink
                         options={SECTIONS.map((s) => ({ value: s, label: SECTION_LABEL[s] }))} />
                 </div>
             ) : (
-                <nav className="pp-bar pp-nav" aria-label="Sections">
-                    {SECTIONS.map((s) => (
-                        <a key={s} href={`#${sectionAnchor(s)}`} className={cx("pp-nav-link", reading === s && "on")}
-                            aria-current={reading === s ? "location" : undefined} onClick={(e) => jump(e, s)}>
-                            {SECTION_LABEL[s]}
-                        </a>
-                    ))}
-                </nav>
+                <div className="pp-bar">
+                    <nav className="pp-nav" aria-label="Sections">
+                        {SECTIONS.map((s) => (
+                            <a key={s} href={`#${sectionAnchor(s)}`} className={cx("pp-nav-link", reading === s && "on")}
+                                aria-current={reading === s ? "location" : undefined} onClick={(e) => jump(e, s)}>
+                                {SECTION_LABEL[s]}
+                            </a>
+                        ))}
+                    </nav>
+                </div>
             )}
 
             {(phone ? [current] : SECTIONS).map((section) => (
@@ -142,7 +146,7 @@ export default function PresentationView({ presentation, getLink, banner, onLink
                     index={viewIndex}
                     getLink={getLink}
                     onIndex={(i) => {
-                        setViewing({ section: viewing.section, itemId: media[i].id });
+                        setViewing({ section: viewing.section, run: viewing.run, itemId: media[i].id });
                         // an open panel follows to the next file
                         if (comments?.openItemId != null) comments.onOpen(media[i].id);
                     }}

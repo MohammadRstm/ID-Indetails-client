@@ -3,7 +3,7 @@ import { errorMessage } from "@/api/errors";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import { mentionAt, mentionCandidates, namesPerson } from "./textParts";
+import { CLIENT_NAME, clientsOf, mentionAt, mentionCandidates, mentionedKeys } from "./textParts";
 import type { DiscussionPerson, Draft } from "./discussionTypes";
 
 type Props = {
@@ -26,11 +26,17 @@ type Props = {
     focusOnOpen?: boolean;
 };
 
+/** One choice of the "@" list: a person, or the whole client side ("@Client"). */
+type Choice = { key: string; name: string; label: string; tag: string; person?: DiscussionPerson };
+
+const EVERYONE = "client:everyone";
+
 /**
  * Writing a chat message or a comment: a box with "@" to mention someone who takes part, a count against the limit and
  * Send. Enter sends and Shift+Enter starts a new line. While the picker is open the arrow keys choose, Enter or Tab
- * picks and Escape closes it. A send that fails keeps the words and offers Retry, which sends them again as the same
- * message (the hooks keep its clientToken).
+ * picks and Escape closes it. "@Client" (the list's first choice, or "@client" typed out and a space, Enter or Tab)
+ * names every client contact who takes part. A send that fails keeps the words and offers Retry, which sends them again
+ * as the same message (the hooks keep its clientToken).
  */
 export default function MentionComposer({ label, placeholder, max, people, closed, initial, submitLabel = "Send", onSubmit, onCancel, focusOnOpen }: Props) {
     const [text, setText] = useState(initial?.body ?? "");
@@ -51,9 +57,18 @@ export default function MentionComposer({ label, placeholder, max, people, close
     const empty = trimmed.length === 0;
     const tooLong = trimmed.length > max;
     const mention = mentionAt(text, caret);
-    const candidates = listOpen && mention ? mentionCandidates(people, mention.query) : [];
-    const offered = candidates.length > 0;
-    const chosen = Math.min(active, candidates.length - 1);
+    const query = mention?.query.toLowerCase() ?? "";
+    // whom "@Client" names: none (a client alone on their side) offers no such choice
+    const clients = clientsOf(people);
+    const everyone: Choice = { key: EVERYONE, name: CLIENT_NAME, label: "Client (everyone)", tag: clients.length === 1 ? "1 contact" : `${clients.length} contacts` };
+    // "@client" typed out in full
+    const typedClient = mention != null && clients.length > 0 && query === CLIENT_NAME.toLowerCase();
+    const choices: Choice[] = listOpen && mention ? [
+        ...(clients.length > 0 && CLIENT_NAME.toLowerCase().startsWith(query) ? [everyone] : []),
+        ...mentionCandidates(people, mention.query).map((p) => ({ key: p.key, name: p.name, label: p.name, tag: p.kind === "client" ? "Client" : "Team", person: p })),
+    ] : [];
+    const offered = choices.length > 0;
+    const chosen = Math.min(active, choices.length - 1);
     const over = trimmed.length - max;
     const problem = tooLong ? `Too long by ${over} character${over === 1 ? "" : "s"}. Shorten it to send.` : attempted && empty ? "Write something to send." : undefined;
 
@@ -84,11 +99,12 @@ export default function MentionComposer({ label, placeholder, max, people, close
         setFailure(null);
     }
 
-    function pick(person: DiscussionPerson) {
+    function pick(choice: Choice) {
         if (!mention) return;
-        const inserted = `@${person.name} `;
+        const inserted = `@${choice.name} `;
+        const person = choice.person;
         setText(text.slice(0, mention.start) + inserted + text.slice(caret));
-        setPicked((list) => (list.some((p) => p.key === person.key) ? list : [...list, person]));
+        if (person) setPicked((list) => (list.some((p) => p.key === person.key) ? list : [...list, person]));
         setCaret(mention.start + inserted.length);
         caretTo.current = mention.start + inserted.length;
         setListOpen(false);
@@ -103,7 +119,7 @@ export default function MentionComposer({ label, placeholder, max, people, close
         setBusy(true);
         setFailure(null);
         try {
-            await onSubmit({ body: trimmed, mentions: picked.filter((p) => namesPerson(text, p.name)).map((p) => p.key) });
+            await onSubmit({ body: trimmed, mentions: mentionedKeys(text, picked, people) });
             if (!initial) {
                 setText("");
                 setCaret(0);
@@ -121,15 +137,21 @@ export default function MentionComposer({ label, placeholder, max, people, close
     }
 
     function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+        // "@client" and a space (or Enter or Tab, with no list to pick from) becomes "@Client", for every client contact
+        if (typedClient && !e.nativeEvent.isComposing && (e.key === " " || (!offered && (e.key === "Enter" || e.key === "Tab")))) {
+            e.preventDefault();
+            pick(everyone);
+            return;
+        }
         if (offered) {
             if (e.key === "ArrowDown" || e.key === "ArrowUp") {
                 e.preventDefault();
-                setActive((chosen + (e.key === "ArrowDown" ? 1 : candidates.length - 1)) % candidates.length);
+                setActive((chosen + (e.key === "ArrowDown" ? 1 : choices.length - 1)) % choices.length);
                 return;
             }
             if (e.key === "Enter" || e.key === "Tab") {
                 e.preventDefault();
-                pick(candidates[chosen]);
+                pick(choices[chosen]);
                 return;
             }
             if (e.key === "Escape") {
@@ -153,11 +175,11 @@ export default function MentionComposer({ label, placeholder, max, people, close
             {offered && (
                 <div className="dp-pop" id={listId} role="listbox" aria-label="Mention someone">
                     {/* chosen with the arrow keys from the box, which keeps the focus: the options aren't tab stops */}
-                    {candidates.map((p, i) => (
-                        <button key={p.key} id={`${listId}-${i}`} type="button" role="option" tabIndex={-1} aria-selected={i === chosen}
-                            className={cx("dp-opt", i === chosen && "on")} onMouseDown={(e) => { e.preventDefault(); pick(p); }}>
-                            <span>{p.name}</span>
-                            <span className="dp-opt-kind" aria-hidden="true">{p.kind === "client" ? "Client" : "Team"}</span>
+                    {choices.map((choice, i) => (
+                        <button key={choice.key} id={`${listId}-${i}`} type="button" role="option" tabIndex={-1} aria-selected={i === chosen}
+                            className={cx("dp-opt", i === chosen && "on")} onMouseDown={(e) => { e.preventDefault(); pick(choice); }}>
+                            <span>{choice.label}</span>
+                            <span className="dp-opt-kind" aria-hidden="true">{choice.tag}</span>
                         </button>
                     ))}
                 </div>

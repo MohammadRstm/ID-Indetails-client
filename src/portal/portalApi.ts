@@ -13,6 +13,16 @@ export type PortalProject = {
     status: "active" | "hold" | "completed" | "archived";
     /** Chat messages and comments by others that the client hasn't read yet. */
     unread: number;
+    /** A short-lived link to the first published hero image (the project's cover), or null; may be relative in development. */
+    heroUrl: string | null;
+    heroUrlExpiresAt: string | null;
+    /** The project's start date (or the day it was made), "2026-10-15". */
+    startedOn: string;
+    lastPublishedAt: string | null;
+    /** The latest of the last publish, the newest message and the newest comment. */
+    lastActivityAt: string | null;
+    /** Something to see: published since the client last opened it (or never opened since it was), or something unread. */
+    hasNews: boolean;
 };
 
 export type PortalAccount = { id: number; email: string; firstName: string; lastName: string; projects: PortalProject[] };

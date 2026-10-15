@@ -158,6 +158,19 @@ export function useEditMessage(d: Discussion, projectId: number) {
     });
 }
 
+/** Deletes one of your own messages for everyone: it stays in the chat as "This message was deleted". */
+export function useDeleteMessage(d: Discussion, projectId: number) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (messageId: number) => (await d.http.delete<PortalChatMessage>(`${d.base(projectId)}/messages/${messageId}`)).data,
+        onSuccess: (message) => {
+            putMessage(queryClient, d, projectId, message);
+            void refreshSummary(queryClient, d, projectId);
+        },
+        onError: closedMeanwhile(queryClient, d, projectId),
+    });
+}
+
 /** Adds a comment on a file; a failed one is retried with the same clientToken, as a chat message is. */
 export function useAddComment(d: Discussion, projectId: number) {
     const queryClient = useQueryClient();

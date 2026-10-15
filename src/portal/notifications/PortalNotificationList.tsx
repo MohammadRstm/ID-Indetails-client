@@ -27,7 +27,7 @@ export default function PortalNotificationList({ unread, close }: { unread: numb
         <div>
             <div className="pop-head">
                 <div className="grow"><b>Notifications</b>{unread > 0 && <span className="muted"> · {unread} unread</span>}</div>
-                <button type="button" className="btn btn-sm btn-quiet" disabled={markRead.isPending || unread === 0}
+                <button type="button" className="btn btn-primary btn-sm" disabled={markRead.isPending || unread === 0}
                     onClick={() => markRead.mutate({ all: true })}>Mark all as read</button>
             </div>
             <div className="notif-list">

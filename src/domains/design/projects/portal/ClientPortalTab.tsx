@@ -9,7 +9,7 @@ import ClientAccessPanel from "./ClientAccessPanel";
 import { PORTAL_SECTIONS, SECTION_LABEL, type PortalSection } from "./contentApi";
 import DiscussionPart from "./DiscussionPart";
 import PortalSectionView from "./PortalSectionView";
-import PresentationPreview from "./PresentationPreview";
+import { openPreview } from "./previewApi";
 import PublishBar from "./PublishBar";
 import { staffDiscussion } from "./staffDiscussion";
 
@@ -20,8 +20,8 @@ type Part = PortalSection | "access" | "discussion";
  * with where publishing stands above them (client_portal:manage changes and publishes them, client_access:manage
  * looks), who of the client's contacts can follow the project (client_access:manage), and the Discussion with them,
  * which belongs to whoever takes part in it whatever their permissions (the server says: the summary answers 404 to
- * anyone else). The part shown is kept in the link (?part=model), and starts on the first one the person may see. So
- * is the preview of what clients would get (?preview=1), which a reload keeps open.
+ * anyone else). The part shown is kept in the link (?part=model), and starts on the first one the person may see. The
+ * preview of what clients would get opens in a new browser tab.
  */
 export default function ClientPortalTab({ project }: { project: Project }) {
     const permissions = usePermissions();
@@ -38,8 +38,6 @@ export default function ClientPortalTab({ project }: { project: Project }) {
     const requested = params.get("part");
     // a part the person may not open falls back to their first one, even when the link asks for it
     const part = parts.find((p) => p === requested) ?? parts[0];
-    // the preview is of the client's files: only for someone who sees them, whatever the link asks for
-    const previewing = seesFiles && params.get("preview") === "1";
     const unread = (discussion.data?.unreadMessages ?? 0) + (discussion.data?.unreadComments ?? 0);
 
     function choose(next: Part) {
@@ -51,19 +49,12 @@ export default function ClientPortalTab({ project }: { project: Project }) {
         setParams(link, { replace: true });
     }
 
-    function preview(open: boolean) {
-        const link = new URLSearchParams(params);
-        if (open) link.set("preview", "1");
-        else link.delete("preview");
-        setParams(link, { replace: true });
-    }
-
     // a link to the Discussion waits for the answer that says whether this person takes part
     if (requested === "discussion" && discussion.isPending) return <SkeletonLines lines={6} />;
     if (!part) return null;
     return (
         <>
-            {PORTAL_SECTIONS.some((s) => s === part) && <PublishBar projectId={project.id} onPreview={() => preview(true)} />}
+            {PORTAL_SECTIONS.some((s) => s === part) && <PublishBar projectId={project.id} onPreview={() => openPreview(project.id)} />}
             {parts.length > 1 && (
                 <div className="pc-parts">
                     <Segmented value={part} onChange={choose} aria-label="Client portal"
@@ -78,7 +69,6 @@ export default function ClientPortalTab({ project }: { project: Project }) {
             {part === "access" ? <ClientAccessPanel project={project} />
                 : part === "discussion" ? <DiscussionPart project={project} />
                     : <PortalSectionView key={part} project={project} section={part} mode="portal" />}
-            {previewing && <PresentationPreview project={project} onClose={() => preview(false)} />}
         </>
     );
 }

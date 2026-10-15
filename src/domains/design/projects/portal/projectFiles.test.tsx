@@ -11,11 +11,6 @@ import { filesBase, filesOf, filesPart, liveFiles, projectFileOf, sarahRef, serv
 import { apiError, cards, contentOf, fileOf, inMenu, itemOf, MB, menuItems, menuOf, page, publisher, served, usageOf } from "./portalTestKit";
 import { resetUploads, UPLOAD_MS } from "./uploads";
 
-// the preview of what clients would get is another component's, with its own tests
-vi.mock("./PresentationPreview", () => ({
-    default: ({ onClose }: { onClose: () => void }) => <div role="dialog" aria-label="Preview"><button onClick={onClose}>Close preview</button></div>,
-}));
-
 /*
  * A Design project's Project files tab: who gets it, a section's files with their uploads, what each person may change,
  * a card's menu, and choosing the files that go to the client. Part links in the mock API are relative
@@ -613,11 +608,15 @@ describe("a card's menu", () => {
 describe("choosing the client's files", () => {
     it("shows a file to the client and hides it again, for someone with client_portal:manage", async () => {
         const sent: unknown[] = [];
-        renderApp(filesPart("presentation"), publisher, servedFiles(filesOf([living], { canChooseForClient: true })), ...projectWorkHandlers,
+        // the files are asked for again after each change: the mock keeps the change
+        const live = liveFiles(filesOf([living], { canChooseForClient: true }));
+        renderApp(filesPart("presentation"), publisher, live.handler, ...projectWorkHandlers,
             http.put(`${filesBase}/items/:itemId/for-client`, async ({ request }) => {
                 const body = (await request.json()) as { forClient: boolean };
                 sent.push(body);
-                return HttpResponse.json({ ...living, forClient: body.forClient, clientState: body.forClient ? "new" : null });
+                const changed: ProjectFile = { ...living, forClient: body.forClient, clientState: body.forClient ? "new" : null };
+                live.box.files = filesOf([changed], { canChooseForClient: true });
+                return HttpResponse.json(changed);
             }));
 
         await menuOf("Living room v3");
@@ -631,6 +630,8 @@ describe("choosing the client's files", () => {
         await userEvent.click(inMenu().getByRole("button", { name: "Hide from client" }));
         await waitFor(() => expect(within(screen.getByRole("article", { name: "Living room v3" })).queryByText("For client")).toBeNull());
         expect(sent).toEqual([{ forClient: true }, { forClient: false }]);
+        // each change had the files loaded again, as the server has them
+        await waitFor(() => expect(live.box.gets).toBeGreaterThanOrEqual(3));
     });
 
     it("offers neither to someone without it, who still sees which files go to the client", async () => {

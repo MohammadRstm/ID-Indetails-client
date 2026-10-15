@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -6,14 +6,9 @@ import { P } from "@/app/permissions/codes";
 import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
-import { filesBase, filesOf, projectFileOf, servedFiles, uploadApi } from "./filesTestKit";
-import { base, cards, contentOf, fileOf, itemOf, liveContent, menuItems, menuOf, page, part, person, projectId, publisher, served, usageOf } from "./portalTestKit";
+import { filesBase, filesOf, liveFiles, projectFileOf, servedFiles, uploadApi } from "./filesTestKit";
+import { base, cards, contentOf, fileOf, heroOf, inMenu, itemOf, liveContent, menuItems, menuOf, page, part, person, projectId, publisher, served, usageOf } from "./portalTestKit";
 import { resetUploads, UPLOAD_MS } from "./uploads";
-
-// the preview of what clients would get is another component's, with its own tests
-vi.mock("./PresentationPreview", () => ({
-    default: ({ onClose }: { onClose: () => void }) => <div role="dialog" aria-label="Preview"><button onClick={onClose}>Close preview</button></div>,
-}));
 
 /*
  * The Client portal tab's files: the parts each person gets, the files chosen for the client as read-only cards, who
@@ -138,17 +133,17 @@ describe("the files chosen for the client", () => {
     });
 
     it("is read-only for an admin without client_portal:manage: nothing to publish, choose or write, and nothing is said to be locked", async () => {
-        const hero = { fileId: 11, name: "Living room v3.jpg", url: "/api/content-store/previews/11", urlExpiresAt: "2030-01-01T00:00:00Z" };
-        renderApp(part("presentation"), nadia, served(contentOf([living], { canManage: false, hero, summary: "Welcome home." })), ...projectWorkHandlers);
+        renderApp(part("presentation"), nadia, served(contentOf([living], { canManage: false, heroes: [heroOf(11, "Living room v3.jpg")], summary: "Welcome home." })),
+            ...projectWorkHandlers);
 
         expect(await screen.findByText("Not published yet")).toBeInTheDocument();
         expect(screen.getByText("· 1 unpublished change")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
-        for (const name of ["Publish changes", "Discard changes", "Upload hero image", "Choose from images", "Remove hero", "Save"]) {
+        for (const name of ["Publish changes", "Discard changes", "Upload hero image", "Choose from images", /^Move .* (earlier|later)$/, /^Remove /, "Save"]) {
             expect(screen.queryByRole("button", { name })).toBeNull();
         }
-        // the hero and the introduction can be read
-        expect(screen.getByAltText("Hero image")).toBeInTheDocument();
+        // the hero images and the introduction can be read
+        expect(within(screen.getByRole("list", { name: "Hero images" })).getByText("Living room v3.jpg")).toBeInTheDocument();
         expect(screen.getByText("Welcome home.")).toBeInTheDocument();
         expect(screen.queryByLabelText("Introduction for the client")).toBeNull();
         expect(screen.queryByLabelText("Hero image to upload")).toBeNull();
@@ -201,10 +196,10 @@ describe("the hero image's uploads", () => {
             return new HttpResponse(null, { status: 200 });
         };
         const live = liveContent(contentOf([living]));
-        // the API answers a hero upload without an item; the client portal then names the hero
+        // the API answers a hero upload without an item; the client portal then lists it last of the hero images
         api.complete = () => {
             live.box.content = contentOf([living], {
-                hero: { fileId: 40, name: "banner.jpg", url: "/api/content-store/previews/40", urlExpiresAt: "2026-09-30T10:00:00Z" },
+                heroes: [{ fileId: 40, name: "banner.jpg", url: "/api/content-store/previews/40", urlExpiresAt: "2026-09-30T10:00:00Z" }],
                 changes: { heroChanged: true },
             });
             return HttpResponse.json({ item: null, usage: usageOf(2, 4) });
@@ -217,7 +212,9 @@ describe("the hero image's uploads", () => {
         expect(within(row).getByText(/^Hero image · /)).toBeInTheDocument();
         release();
 
-        expect(await screen.findByAltText("Hero image")).toHaveAttribute("src", "/api/content-store/previews/40");
+        const heroes = await screen.findByRole("list", { name: "Hero images" });
+        expect(heroes.querySelector("img")).toHaveAttribute("src", "/api/content-store/previews/40");
+        expect(within(heroes).getByText("banner.jpg")).toBeInTheDocument();
         expect(screen.getByText("Changed since last publish")).toBeInTheDocument();
         expect(api.log.started[0]).toMatchObject({ hero: true, fileName: "banner.jpg", size: 6 });
         expect(api.log.started[0]).not.toHaveProperty("section");
@@ -233,5 +230,41 @@ describe("the hero image's uploads", () => {
         const row = (await screen.findByText("banner.gif")).closest("li") as HTMLElement;
         expect(within(row).getByText(".gif files can't be the hero image. Use a JPG, PNG or WebP picture.")).toBeInTheDocument();
         expect(api.log.started).toEqual([]);
+    });
+});
+
+describe("the publish bar after a change that is undone", () => {
+    it("follows the server after every change to the files: shown to the client and hidden again is nothing to publish", async () => {
+        const settled = itemOf(5, "Living room v3", fileOf(11, "Living room v3.jpg"), { state: "unchanged" });
+        const live = liveContent(contentOf([settled], { publication: published }));
+        const chosen = projectFileOf(5, "Living room v3", fileOf(11, "Living room v3.jpg"), { forClient: true, clientState: "unchanged" });
+        const kitchenFile = projectFileOf(6, "Kitchen", fileOf(12, "Kitchen.jpg"));
+        const files = liveFiles(filesOf([chosen, kitchenFile], { canChooseForClient: true }));
+        renderApp(part("presentation"), publisher, live.handler, files.handler, ...projectWorkHandlers,
+            http.put(`${filesBase}/items/:itemId/for-client`, async ({ request }) => {
+                const { forClient } = (await request.json()) as { forClient: boolean };
+                const changed = { ...kitchenFile, forClient, clientState: forClient ? ("new" as const) : null };
+                files.box.files = filesOf([chosen, changed], { canChooseForClient: true });
+                // what clients would get: the kitchen as well, then, hidden again, exactly what they have
+                live.box.content = forClient ? contentOf([settled, itemOf(6, "Kitchen", fileOf(12, "Kitchen.jpg"))], { publication: published })
+                    : contentOf([settled], { publication: published });
+                return HttpResponse.json(changed);
+            }));
+
+        expect(await screen.findByText("· Everything is published")).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("tab", { name: /^Project files/ }));
+        await menuOf("Kitchen");
+        await userEvent.click(inMenu().getByRole("button", { name: "Show to client" }));
+        expect(await screen.findByText("Shown to the client")).toBeInTheDocument();
+        await menuOf("Kitchen");
+        await userEvent.click(inMenu().getByRole("button", { name: "Hide from client" }));
+        expect(await screen.findByText("Hidden from the client")).toBeInTheDocument();
+
+        const asked = live.box.gets;
+        await userEvent.click(screen.getByRole("tab", { name: /^Client portal/ }));
+        // the client portal is asked for again, and there is nothing to publish: the change was undone
+        await waitFor(() => expect(live.box.gets).toBeGreaterThan(asked));
+        expect(await screen.findByText("· Everything is published")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Publish changes" })).toBeDisabled();
     });
 });

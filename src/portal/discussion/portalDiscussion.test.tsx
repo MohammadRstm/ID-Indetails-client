@@ -1,13 +1,14 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 import { renderApp } from "@/test/renderApp";
 import type { PortalAuthResponse } from "../portalApi";
+import { portalProjectOf } from "../portalTestKit";
 import { resetLinks } from "../presentation/presentationLinks";
 import type { PortalPresentation, PresentationItem } from "../presentation/presentationTypes";
 import {
-    CLIENT_BASE, commentOf, messageOf, mockDiscussion, nadia, sarah, summaryOf, threadOf, threadSummaryOf, youAre,
+    CLIENT_BASE, commentOf, messageOf, mockDiscussion, nadia, omar, peopleFor, sarah, summaryOf, threadOf, threadSummaryOf, youAre,
     type MockDiscussion, type SharedFile,
 } from "./discussionTestKit";
 
@@ -20,7 +21,7 @@ const MB = 1024 * 1024;
 const auth: PortalAuthResponse = {
     accessToken: "portal-token",
     accessTokenExpiresAt: "2030-01-01T00:00:00Z",
-    account: { id: 7, email: "rania@client.test", firstName: "Rania", lastName: "Aoun", projects: [{ id: 2, title: "Villa Mounir interiors", status: "active", unread: 0 }] },
+    account: { id: 7, email: "rania@client.test", firstName: "Rania", lastName: "Aoun", projects: [portalProjectOf(2, "Villa Mounir interiors")] },
 };
 const signedIn = http.post("/api/portal/auth/refresh", () => HttpResponse.json(auth));
 
@@ -34,7 +35,7 @@ const brochure: PresentationItem = {
     id: 14, title: "Brochure", name: "brochure.pdf", contentType: "application/pdf", preview: "pdf", sizeBytes: 3 * MB, previewUrl: null, previewUrlExpiresAt: null,
 };
 const published: PortalPresentation = {
-    projectId: 2, title: "Villa Mounir interiors", status: "active", summary: null, isPublished: true, publishedAt: "2026-10-01T09:00:00Z", hero: null,
+    projectId: 2, title: "Villa Mounir interiors", status: "active", summary: null, isPublished: true, publishedAt: "2026-10-01T09:00:00Z", hero: null, heroes: [],
     sections: [
         { section: "presentation", items: [living, kitchen, brochure] },
         { section: "model", items: [] },
@@ -60,6 +61,8 @@ const chat = () => screen.findByRole("dialog", { name: "Messages" });
 const texts = () => within(screen.getByRole("log", { name: "Messages" })).getAllByRole("listitem").map((li) => li.querySelector(".dp-text")?.textContent);
 const messageBox = (dialog: HTMLElement) => within(dialog).getByRole("combobox", { name: "Message" });
 const token = /^[0-9a-f-]{36}$/;
+/** Opens Presentation's card for its PDFs and documents: the brochure is in its list. */
+const openDocuments = async () => userEvent.click(await screen.findByRole("button", { name: /^PDFs and documents/ }));
 
 beforeEach(resetLinks);
 
@@ -85,17 +88,24 @@ describe("the project chat on the client's page", () => {
         expect(within(dialog).queryByRole("button", { name: "Load earlier messages" })).toBeNull();
     });
 
-    it("shows who wrote each message, from which side, when it was edited, and an empty chat's invitation to say hello", async () => {
+    it("shows each message as a bubble: others' on the left under who wrote them, your own on the right", async () => {
         const box = open("/portal/projects/2?chat=1", {
             messages: [messageOf(1, nadia, "Welcome Rania"), messageOf(2, me, "Thank you", { editedAt: "2026-10-14T09:30:00Z" })],
         });
         const dialog = await chat();
         const first = (await within(dialog).findByText("Welcome Rania")).closest("li") as HTMLElement;
+        expect(first).not.toHaveClass("mine");
+        expect(within(first).getByText("Welcome Rania").closest(".dp-bubble")).not.toBeNull();
         expect(within(first).getByText("Nadia Karam")).toBeInTheDocument();
         expect(within(first).getByText("Team")).toBeInTheDocument();
         expect(within(first).queryByText("(edited)")).toBeNull();
+
+        // your own: on the right, with only when (and whether it was edited) above it
         const second = within(dialog).getByText("Thank you").closest("li") as HTMLElement;
-        expect(within(second).getByText("Client")).toBeInTheDocument();
+        expect(second).toHaveClass("mine");
+        expect(within(second).getByText("Thank you").closest(".dp-bubble")).not.toBeNull();
+        expect(within(second).queryByText("Rania Aoun")).toBeNull();
+        expect(within(second).queryByText("Client")).toBeNull();
         expect(within(second).getByText("(edited)")).toBeInTheDocument();
         expect(box.called("GET", "/messages")).toHaveLength(1);
     });
@@ -195,16 +205,26 @@ describe("the project chat on the client's page", () => {
         expect(box.called("POST", "/messages")).toHaveLength(0);
     });
 
-    it("lets people edit their own messages with a PUT, and offers nobody else's an Edit", async () => {
+    it("opens your own message's menu with a right-click, and edits it with a PUT; nobody else's has a menu", async () => {
         const box = open("/portal/projects/2?chat=1", { messages: [messageOf(1, nadia, "Welcome Rania"), messageOf(2, me, "Draft plan please")] });
         const dialog = await chat();
 
+        // nothing hangs beside the messages
         const theirs = (await within(dialog).findByText("Welcome Rania")).closest("li") as HTMLElement;
-        expect(within(theirs).queryByRole("button", { name: "Edit" })).toBeNull();
-        expect(within(dialog).getAllByRole("button", { name: "Edit" })).toHaveLength(1);
+        expect(within(dialog).queryByRole("button", { name: "Edit" })).toBeNull();
+        // someone else's keeps the browser's own menu
+        expect(within(theirs).queryByRole("button", { name: "Message actions" })).toBeNull();
+        expect(fireEvent.contextMenu(within(theirs).getByText("Welcome Rania"))).toBe(true);
+        expect(screen.queryByRole("menu")).toBeNull();
 
         const mine = within(dialog).getByText("Draft plan please").closest("li") as HTMLElement;
-        await userEvent.click(within(mine).getByRole("button", { name: "Edit" }));
+        expect(fireEvent.contextMenu(within(mine).getByText("Draft plan please"))).toBe(false);
+        const menu = await screen.findByRole("menu", { name: "Message actions" });
+        expect(within(menu).getAllByRole("menuitem").map((i) => i.textContent)).toEqual(["Edit", "Delete message for everyone"]);
+        expect(within(menu).getByRole("menuitem", { name: "Edit" })).toHaveFocus();
+        await userEvent.click(within(menu).getByRole("menuitem", { name: "Edit" }));
+        expect(screen.queryByRole("menu")).toBeNull();
+
         const field = within(mine).getByRole("combobox", { name: "Edit message" });
         expect(field).toHaveValue("Draft plan please");
         await userEvent.clear(field);
@@ -221,12 +241,78 @@ describe("the project chat on the client's page", () => {
     it("can give up an edit with Cancel, and sends nothing", async () => {
         const box = open("/portal/projects/2?chat=1", { messages: [messageOf(1, me, "As it was")] });
         const dialog = await chat();
-        await userEvent.click(await within(dialog).findByRole("button", { name: "Edit" }));
+        fireEvent.contextMenu(await within(dialog).findByText("As it was"));
+        await userEvent.click(within(await screen.findByRole("menu")).getByRole("menuitem", { name: "Edit" }));
         await userEvent.type(within(dialog).getByRole("combobox", { name: "Edit message" }), " and more");
         await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
 
         expect(within(dialog).getByText("As it was")).toBeInTheDocument();
         expect(box.called("PUT", "/messages/1")).toHaveLength(0);
+    });
+
+    it("opens the menu from the keyboard with the … button, and Escape or a click outside closes it", async () => {
+        open("/portal/projects/2?chat=1", { messages: [messageOf(1, me, "Mine to change")] });
+        const dialog = await chat();
+        const mine = (await within(dialog).findByText("Mine to change")).closest("li") as HTMLElement;
+        const more = within(mine).getByRole("button", { name: "Message actions" });
+        expect(more).toHaveAttribute("aria-haspopup", "menu");
+
+        more.focus();
+        await userEvent.keyboard("{Enter}");
+        const menu = await screen.findByRole("menu", { name: "Message actions" });
+        expect(more).toHaveAttribute("aria-expanded", "true");
+        expect(within(menu).getByRole("menuitem", { name: "Edit" })).toHaveFocus();
+        await userEvent.keyboard("{ArrowDown}");
+        expect(within(menu).getByRole("menuitem", { name: "Delete message for everyone" })).toHaveFocus();
+
+        await userEvent.keyboard("{Escape}");
+        expect(screen.queryByRole("menu")).toBeNull();
+        // the menu only: the drawer stays, and the keyboard is back on the button
+        expect(screen.getByRole("dialog", { name: "Messages" })).toBeInTheDocument();
+        await waitFor(() => expect(more).toHaveFocus());
+
+        fireEvent.contextMenu(within(mine).getByText("Mine to change"));
+        await screen.findByRole("menu", { name: "Message actions" });
+        await userEvent.click(within(dialog).getByRole("log", { name: "Messages" }));
+        expect(screen.queryByRole("menu")).toBeNull();
+    });
+
+    it("deletes your own message for everyone after asking, and leaves it in its place as deleted", async () => {
+        const box = open("/portal/projects/2?chat=1", { messages: [messageOf(1, nadia, "Welcome Rania"), messageOf(2, me, "Oops, wrong chat")] });
+        const dialog = await chat();
+        const mine = (await within(dialog).findByText("Oops, wrong chat")).closest("li") as HTMLElement;
+        const askToDelete = async () => {
+            fireEvent.contextMenu(within(mine).getByText("Oops, wrong chat"));
+            await userEvent.click(within(await screen.findByRole("menu")).getByRole("menuitem", { name: "Delete message for everyone" }));
+            return within(mine).getByRole("group", { name: "Delete this message for everyone?" });
+        };
+
+        const question = await askToDelete();
+        expect(question).toHaveTextContent("Delete this message for everyone? This can't be undone.");
+        expect(within(question).getByRole("button", { name: "Cancel" })).toHaveFocus();
+        expect(box.called("DELETE", "/messages/2")).toHaveLength(0);
+        // changing one's mind costs nothing
+        await userEvent.click(within(question).getByRole("button", { name: "Cancel" }));
+        expect(within(mine).queryByRole("group")).toBeNull();
+        expect(within(mine).getByText("Oops, wrong chat")).toBeInTheDocument();
+
+        await userEvent.click(within(await askToDelete()).getByRole("button", { name: "Delete for everyone" }));
+        expect(await within(mine).findByText("This message was deleted")).toHaveClass("dp-deleted");
+        expect(within(dialog).queryByText("Oops, wrong chat")).toBeNull();
+        expect(box.called("DELETE", "/messages/2")).toHaveLength(1);
+        // it keeps its place in the chat, with nothing left to change
+        expect(texts()).toEqual(["Welcome Rania", undefined]);
+        expect(within(mine).queryByRole("button", { name: "Message actions" })).toBeNull();
+        expect(fireEvent.contextMenu(within(mine).getByText("This message was deleted"))).toBe(true);
+    });
+
+    it("shows a message its author deleted as deleted, to everyone else too", async () => {
+        open("/portal/projects/2?chat=1", { messages: [messageOf(1, nadia, null), messageOf(2, nadia, "Sorry, wrong chat")] });
+        const dialog = await chat();
+        const gone = (await within(dialog).findByText("This message was deleted")).closest("li") as HTMLElement;
+        expect(gone).toHaveClass("gone");
+        expect(within(gone).getByText("Nadia Karam")).toBeInTheDocument();
+        expect(texts()).toEqual([undefined, "Sorry, wrong chat"]);
     });
 
     it("shows an archived project's messages with the reason and no composer", async () => {
@@ -241,7 +327,10 @@ describe("the project chat on the client's page", () => {
         expect(within(dialog).getByText(reason)).toBeInTheDocument();
         expect(within(dialog).queryByRole("combobox")).toBeNull();
         expect(within(dialog).queryByRole("button", { name: "Send" })).toBeNull();
-        expect(within(dialog).queryByRole("button", { name: "Edit" })).toBeNull();
+        // your own can no longer be changed: no menu
+        expect(within(dialog).queryByRole("button", { name: "Message actions" })).toBeNull();
+        expect(fireEvent.contextMenu(within(dialog).getByText("Thank you all"))).toBe(true);
+        expect(screen.queryByRole("menu")).toBeNull();
     });
 
     it("marks the chat read, up to its newest message, once that is on screen", async () => {
@@ -371,6 +460,46 @@ describe("mentions", () => {
         expect(within(dialog).queryByText("@Someone")).toBeNull();
         expect(within(dialog).getByText(/and @Someone/)).toBeInTheDocument();
     });
+
+    it("names every client contact but you with @client, typed out or picked from the top of the list", async () => {
+        // Omar is the client's other contact
+        const box = open("/portal/projects/2?chat=1", { summary: summaryOf("c7", { participants: [...peopleFor("c7"), omar] }) });
+        const dialog = await chat();
+        const field = await within(dialog).findByRole("combobox", { name: "Message" });
+
+        // the list's first choice, and the one Enter picks
+        await userEvent.type(field, "@cl");
+        const first = within(await within(dialog).findByRole("listbox", { name: "Mention someone" })).getAllByRole("option")[0];
+        expect(first).toHaveAccessibleName("Client (everyone)");
+        expect(first).toHaveAttribute("aria-selected", "true");
+        await userEvent.keyboard("{Enter}");
+        expect(field).toHaveValue("@Client ");
+        expect(box.called("POST", "/messages")).toHaveLength(0);
+
+        // or typed out, whatever its case, and a space
+        await userEvent.type(field, "and @client ");
+        expect(field).toHaveValue("@Client and @Client ");
+        await userEvent.type(field, "please look");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Send" }));
+
+        await waitFor(() => expect(box.called("POST", "/messages")).toHaveLength(1));
+        expect(box.called("POST", "/messages")[0].body).toMatchObject({ body: "@Client and @Client please look", mentions: ["c9"] });
+        // "Client" stands out as a mention
+        const sent = (await within(dialog).findByText(/please look/)).closest("li") as HTMLElement;
+        expect(within(sent).getAllByText("@Client").map((e) => e.className)).toEqual(["dp-mention", "dp-mention"]);
+    });
+
+    it("offers no @Client to a client who is the only one on their side", async () => {
+        open("/portal/projects/2?chat=1");
+        const dialog = await chat();
+        const field = await within(dialog).findByRole("combobox", { name: "Message" });
+        await userEvent.type(field, "@");
+        const options = within(await within(dialog).findByRole("listbox")).getAllByRole("option");
+        expect(options.map((o) => o.textContent)).toEqual(["Nadia KaramTeam", "Sarah HaddadTeam"]);
+        // "@client" stays as it is
+        await userEvent.type(field, "client ");
+        expect(field).toHaveValue("@client ");
+    });
 });
 
 describe("text in the discussion is plain text", () => {
@@ -422,8 +551,11 @@ describe("comments on files", () => {
         // a file nobody has commented on offers the first comment
         const other = within(screen.getByRole("article", { name: "Kitchen" }));
         expect(other.getByRole("button", { name: "Comments on Kitchen" })).toHaveTextContent("Comment");
-        // and so does a PDF, next to Open and Download
-        expect(within(screen.getByRole("article", { name: "Brochure" })).getByRole("button", { name: "Comments on Brochure" })).toBeInTheDocument();
+        // and so does a PDF, in its card's list, next to Open and Download
+        await openDocuments();
+        const brochure = within(screen.getByRole("article", { name: "Brochure" }));
+        expect(await brochure.findByRole("button", { name: "Comments on Brochure" })).toBeInTheDocument();
+        expect(brochure.getByRole("button", { name: "Open Brochure" })).toBeInTheDocument();
     });
 
     it("opens a picture's comments beside it in the lightbox, and posts a comment on that file", async () => {
@@ -478,9 +610,12 @@ describe("comments on files", () => {
     it("opens the comments of a file that is not a picture in the drawer, with a way back to all comments", async () => {
         open("/portal/projects/2", init());
 
+        await openDocuments();
         await userEvent.click(await screen.findByRole("button", { name: "Comments on Brochure" }));
         const dialog = await screen.findByRole("dialog", { name: "Comments" });
         expect(window.location.search).toBe("?item=14");
+        // the card's list gave way to the drawer
+        expect(screen.queryByRole("group", { name: "PDFs and documents" })).toBeNull();
         // nobody has commented on it yet: its thread is empty
         expect(await within(dialog).findByText("Brochure")).toBeInTheDocument();
         expect(within(dialog).getByText("brochure.pdf")).toBeInTheDocument();
@@ -498,6 +633,7 @@ describe("comments on files", () => {
         // the brochure was taken out of what clients see since the page loaded: the API has no thread for it (404)
         const box = open("/portal/projects/2", { ...init(), published: [living, kitchen] });
 
+        await openDocuments();
         await userEvent.click(await screen.findByRole("button", { name: "Comments on Brochure" }));
         const dialog = await screen.findByRole("dialog", { name: "Comments" });
         expect(await within(dialog).findByText("This file is no longer shared")).toBeInTheDocument();
@@ -512,24 +648,37 @@ describe("comments on files", () => {
         const panel = await within(dialog).findByRole("complementary", { name: "Comments" });
         const theirs = (await within(panel).findByText("Do you prefer the oak?")).closest("li") as HTMLElement;
         const mine = within(panel).getByText("Yes, oak please").closest("li") as HTMLElement;
-        // nobody else's comment can be edited or deleted
-        expect(within(theirs).queryByRole("button", { name: "Delete" })).toBeNull();
-        expect(within(theirs).queryByRole("button", { name: "Edit" })).toBeNull();
+        // bubbles: your own on the right
+        expect(mine).toHaveClass("mine");
+        expect(theirs).not.toHaveClass("mine");
+        // nobody else's comment can be edited or deleted: it has no menu
+        expect(within(theirs).queryByRole("button", { name: "Comment actions" })).toBeNull();
+        expect(fireEvent.contextMenu(within(theirs).getByText("Do you prefer the oak?"))).toBe(true);
+        expect(screen.queryByRole("menu")).toBeNull();
+        const askToDelete = async () => {
+            fireEvent.contextMenu(within(mine).getByText("Yes, oak please"));
+            const menu = await screen.findByRole("menu", { name: "Comment actions" });
+            expect(within(menu).getAllByRole("menuitem").map((i) => i.textContent)).toEqual(["Edit", "Delete comment"]);
+            await userEvent.click(within(menu).getByRole("menuitem", { name: "Delete comment" }));
+        };
 
-        await userEvent.click(within(mine).getByRole("button", { name: "Delete" }));
+        await askToDelete();
         expect(within(mine).getByRole("group", { name: "Delete this comment?" })).toBeInTheDocument();
         expect(box.called("DELETE", "/comments/2")).toHaveLength(0);
+        // the menu closed the comment only, not the picture
+        expect(screen.getByRole("dialog", { name: "Living room" })).toBeInTheDocument();
 
         // changing one's mind costs nothing
         await userEvent.click(within(mine).getByRole("button", { name: "Cancel" }));
         expect(within(mine).queryByRole("group")).toBeNull();
         expect(within(mine).getByText("Yes, oak please")).toBeInTheDocument();
 
-        await userEvent.click(within(mine).getByRole("button", { name: "Delete" }));
+        await askToDelete();
         await userEvent.click(within(mine).getByRole("button", { name: "Delete comment" }));
         expect(await within(panel).findByText("Comment deleted")).toBeInTheDocument();
         expect(within(panel).queryByText("Yes, oak please")).toBeNull();
         expect(box.called("DELETE", "/comments/2")).toHaveLength(1);
+        expect(within(mine).queryByRole("button", { name: "Comment actions" })).toBeNull();
     });
 
     it("edits your own comment with a PUT", async () => {
@@ -537,7 +686,9 @@ describe("comments on files", () => {
         const panel = await within(await screen.findByRole("dialog", { name: "Living room" })).findByRole("complementary", { name: "Comments" });
         const mine = (await within(panel).findByText("Yes, oak please")).closest("li") as HTMLElement;
 
-        await userEvent.click(within(mine).getByRole("button", { name: "Edit" }));
+        // the menu from its … button, as the keyboard reaches it
+        await userEvent.click(within(mine).getByRole("button", { name: "Comment actions" }));
+        await userEvent.click(within(await screen.findByRole("menu", { name: "Comment actions" })).getByRole("menuitem", { name: "Edit" }));
         const field = within(mine).getByRole("combobox", { name: "Edit comment" });
         await userEvent.clear(field);
         await userEvent.type(field, "Yes, light oak please");

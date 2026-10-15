@@ -4,7 +4,7 @@ import { http, HttpResponse } from "msw";
 import { P } from "@/app/permissions/codes";
 import { projectWork } from "@/test/fixtures/project";
 import { personas, withPermissions } from "@/test/personas";
-import type { PortalChanges, PortalContent, PortalContentFile, PortalContentItem, PortalUsage } from "./contentApi";
+import type { PortalChanges, PortalContent, PortalContentFile, PortalContentItem, PortalHero, PortalUsage } from "./contentApi";
 
 /*
  * What the client portal's tests share: the API's shapes as small builders, and a mock of the content endpoint that a
@@ -43,10 +43,13 @@ export const usageOf = (files: number, mb: number): PortalUsage => ({ files, ori
 
 type ContentOver = Omit<Partial<PortalContent>, "changes"> & { changes?: Partial<PortalChanges> };
 
+/** A draft hero image, as the content lists it. */
+export const heroOf = (fileId: number, name: string): PortalHero => ({ fileId, name, url: `/api/content-store/previews/${fileId}`, urlExpiresAt: "2030-01-01T00:00:00Z" });
+
 /**
  * The client's files as the API answers them, to someone who holds client_portal:manage unless a test says otherwise.
  * What publishing would change, and whether it can be published or discarded, follow from the items and the other
- * fields unless a test sets them.
+ * fields unless a test sets them; `hero` is the first of the `heroes`.
  */
 export const contentOf = (items: PortalContentItem[], over: ContentOver = {}): PortalContent => {
     const canManage = over.canManage ?? true;
@@ -63,8 +66,9 @@ export const contentOf = (items: PortalContentItem[], over: ContentOver = {}): P
         revision: 7, publication: { publishedAt: null, publishedBy: null },
         hasUnpublishedChanges: unpublished, canPublish: canEdit && unpublished,
         canDiscard: canEdit && unpublished && over.publication?.publishedAt != null,
-        hero: null, summary: null,
+        heroes: [], summary: null,
         ...over, changes,
+        hero: over.heroes?.[0] ?? null,
     };
 };
 

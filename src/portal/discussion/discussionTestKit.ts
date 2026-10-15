@@ -13,6 +13,8 @@ export const STAFF_BASE = "/api/projects/:id/portal/discussion";
 export const rania: DiscussionPerson = { key: "c7", name: "Rania Aoun", kind: "client", isYou: false };
 export const nadia: DiscussionPerson = { key: "u2", name: "Nadia Karam", kind: "staff", isYou: false };
 export const sarah: DiscussionPerson = { key: "u4", name: "Sarah Haddad", kind: "staff", isYou: false };
+/** Another of the client's contacts, for a test that needs two (none of the defaults has him). */
+export const omar: DiscussionPerson = { key: "c9", name: "Omar Saad", kind: "client", isYou: false };
 
 /** The people in the project's discussion as one of them sees it: that one is "you". */
 export const peopleFor = (viewerKey: string): DiscussionPerson[] => [rania, nadia, sarah].map((p) => ({ ...p, isYou: p.key === viewerKey }));
@@ -29,8 +31,9 @@ export const threadSummaryOf = (itemId: number, title: string, over: Partial<Com
     itemId, title, fileName: `${title}.jpg`, available: true, count: 1, unread: 0, lastAt: AT, ...over,
 });
 
-export const messageOf = (id: number, author: DiscussionPerson, body: string, over: Partial<PortalChatMessage> = {}): PortalChatMessage => ({
-    id, author, body, mentions: [], createdAt: AT, editedAt: null, canEdit: author.isYou, ...over,
+/** A chat message; a null body is one deleted for everyone. */
+export const messageOf = (id: number, author: DiscussionPerson, body: string | null, over: Partial<PortalChatMessage> = {}): PortalChatMessage => ({
+    id, author, body, deleted: body == null, mentions: [], createdAt: AT, editedAt: null, canEdit: author.isYou && body != null, ...over,
 });
 
 export const commentOf = (id: number, itemId: number, author: DiscussionPerson, body: string | null, over: Partial<PortalComment> = {}): PortalComment => ({
@@ -135,6 +138,15 @@ export function mockDiscussion(
             const at = box.messages.findIndex((m) => m.id === Number(params.messageId));
             if (at < 0) return failure(404, "not_found", "Not found.");
             box.messages[at] = { ...box.messages[at], body: body.body, mentions: body.mentions, editedAt: AT };
+            return HttpResponse.json(box.messages[at]);
+        }),
+        // the author deletes it for everyone: it stays, without its words or mentions (again: the same answer)
+        http.delete(`${base}/messages/:messageId`, async ({ request, params }) => {
+            await note(request);
+            const at = box.messages.findIndex((m) => m.id === Number(params.messageId));
+            if (at < 0) return failure(404, "not_found", "Not found.");
+            if (!box.messages[at].author.isYou) return failure(403, "forbidden", "Only its author can delete a message.");
+            box.messages[at] = { ...box.messages[at], body: null, deleted: true, mentions: [], canEdit: false };
             return HttpResponse.json(box.messages[at]);
         }),
         http.get(`${base}/comments/:itemId`, async ({ request, params }) => {

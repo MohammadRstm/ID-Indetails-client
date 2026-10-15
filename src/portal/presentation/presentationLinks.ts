@@ -1,6 +1,6 @@
 import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
-import type { GetLink, PortalPresentation, PresentationItem } from "./presentationTypes";
+import type { GetLink, PortalPresentation, PresentationHero, PresentationItem } from "./presentationTypes";
 
 /*
  * Links to the files of a presentation. The images and videos come with signed links that change with every answer, and
@@ -29,20 +29,32 @@ function steadyItem(item: PresentationItem): PresentationItem {
     return { ...item, previewUrl: url, previewUrlExpiresAt: expiresAt };
 }
 
-function steadyHero(hero: NonNullable<PortalPresentation["hero"]>): NonNullable<PortalPresentation["hero"]> {
+function steadyHero(hero: PresentationHero): PresentationHero {
     const { url, expiresAt } = steady(hero.url, hero.urlExpiresAt);
     return { ...hero, url, urlExpiresAt: expiresAt };
 }
 
-/** The presentation with the links its files had before, so loading it again doesn't reload every image. */
-export function steadyPresentation(presentation: PortalPresentation): PortalPresentation {
+/** Forgets the links that have run out. */
+function sweep() {
     const now = Date.now();
     for (const [key, link] of links) if (link.expiresAt <= now) links.delete(key);
+}
+
+/** The presentation with the links its files had before, so loading it again doesn't reload every image. */
+export function steadyPresentation(presentation: PortalPresentation): PortalPresentation {
+    sweep();
     return {
         ...presentation,
         hero: presentation.hero && steadyHero(presentation.hero),
+        heroes: presentation.heroes.map(steadyHero),
         sections: presentation.sections.map((s) => ({ ...s, items: s.items.map(steadyItem) })),
     };
+}
+
+/** One signed link as it was shown before (a project's cover on the client's home page), or this one. */
+export function steadyLink(url: string, expiresAt: string): { url: string; expiresAt: string } {
+    sweep();
+    return steady(url, expiresAt);
 }
 
 /** A link that didn't load (it may have expired): the next answer brings a new one. */

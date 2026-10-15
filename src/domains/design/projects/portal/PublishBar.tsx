@@ -27,7 +27,7 @@ function changeLines(content: PortalContent): string[] {
         updated > 0 && plural(updated, "updated file"),
         removed > 0 && `${plural(removed, "file")} removed`,
         ...reordered.map((section) => `New order in ${SECTION_LABEL[section]}`),
-        heroChanged && (content.hero ? "New hero image" : "Hero image removed"),
+        heroChanged && (content.heroes.length > 0 ? "New hero images" : "Hero images removed"),
         summaryChanged && (content.summary ? "New introduction" : "Introduction removed"),
     ].filter((line): line is string => typeof line === "string");
 }
@@ -69,7 +69,7 @@ export default function PublishBar({ projectId, onPreview }: { projectId: number
                 {waiting && <div id={HINT_ID} className="hint">Publishing waits until the uploads have finished.</div>}
             </div>
             <div className="pc-status-actions">
-                <button type="button" className="btn" onClick={onPreview}><Icon name="eye" />Preview</button>
+                <button type="button" className="btn" title="Opens in a new tab" onClick={onPreview}><Icon name="eye" />Preview</button>
                 {data.canEdit && data.canDiscard && <button type="button" className="btn btn-danger" onClick={() => setAsking("discard")}>Discard changes</button>}
                 {data.canEdit && (
                     <button type="button" className="btn btn-primary" disabled={!data.canPublish || uploads.busy} aria-describedby={waiting ? HINT_ID : undefined}
@@ -141,7 +141,7 @@ function DiscardModal({ projectId, content, onClose }: ModalProps) {
                     <button type="button" className="btn btn-danger" disabled={discard.isPending} onClick={() => void submit()}>Discard changes</button>
                 </>
             }>
-            <p>Put the client's files, the hero image and the introduction back to what clients see? The files themselves stay in Project files. This can't be undone.</p>
+            <p>Put the client's files, the hero images and the introduction back to what clients see? The files themselves stay in Project files. This can't be undone.</p>
         </Modal>
     );
 }
