@@ -9,10 +9,12 @@ import { fmtBytes } from "@/shared/format/bytes";
 import { relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import { PORTAL_SECTIONS, SECTION_LABEL, useRestoreItem, useSetHero, useUpdateItem, type ItemState, type PortalContentItem, type PortalSection } from "./contentApi";
+import { baseOf, type CardItem, type CardMode } from "./cards";
+import { PORTAL_SECTIONS, SECTION_LABEL, type ItemState, type PortalSection } from "./contentApi";
 import { downloadItem, openItemInTab } from "./contentLinks";
 import ContentLightbox from "./ContentLightbox";
 import { DeleteModal, RenameModal } from "./ContentModals";
+import { useRestoreFile, useSetForClient, useUpdateFile } from "./filesApi";
 import { staffDiscussion } from "./staffDiscussion";
 import type { GripProps, Held, MoveTo } from "./useCardSort";
 
@@ -37,30 +39,44 @@ export type CardSort = {
     move: (to: MoveTo) => void;
 };
 
-type Props = {
-    projectId: number;
-    item: PortalContentItem;
-    /** False for an archived project: the card can be previewed and downloaded only. */
+/** What the tab lets its cards do; each card of Project files also says whether its own file may be changed. */
+export type CardRights = {
+    /** Project files, on a project that isn't archived. */
     canEdit: boolean;
-    /** Whether a new file can be sent for it (not without file storage). */
+    /** A new file can be sent for a card (not without file storage). */
     canReplace: boolean;
-    /** Given to a card that can be rearranged (not a removed one, nor in an archived project). */
-    sort?: CardSort;
-    /** A preview that wouldn't load (its link may have expired): the drafts are loaded again. */
-    onPreviewFailed: (fileId: number) => void;
-    /** Asks for the new file of this card. */
-    onReplace: (item: PortalContentItem) => void;
+    /** Show to client and Hide from client (Project files), or Remove from client (Client portal). */
+    canChoose: boolean;
 };
 
-/** One file of a section: its preview, who put it there and when, and what can be done with it. */
-export default function ContentCard({ projectId, item, canEdit, canReplace, sort, onPreviewFailed, onReplace }: Props) {
+type Props = CardRights & {
+    projectId: number;
+    mode: CardMode;
+    item: CardItem;
+    /** Given to a card that can be rearranged (Project files, for a manager; not a removed one, nor in an archived project). */
+    sort?: CardSort;
+    /** A preview that wouldn't load (its link may have expired): the files are loaded again. */
+    onPreviewFailed: (fileId: number) => void;
+    /** Asks for the new file of this card. */
+    onReplace: (item: CardItem) => void;
+    /** Project files: opens the card's comments. */
+    onComments?: (itemId: number) => void;
+};
+
+/**
+ * One file of a section: its preview, who put it there and when, and what can be done with it. In Project files it
+ * says whether it goes to the client and how many comments it has; in the Client portal, where it stands against
+ * what clients see.
+ */
+export default function ContentCard({ projectId, mode, item, canEdit: tabCanEdit, canReplace, canChoose, sort, onPreviewFailed, onReplace, onComments }: Props) {
     const { file } = item;
-    const move = useUpdateItem(projectId);
-    const setHero = useSetHero(projectId);
-    const restore = useRestoreItem(projectId);
-    // the comments clients and the team wrote on this file (for those who take part in the discussion; the query is shared)
-    const discussion = useDiscussionSummary(staffDiscussion, projectId, { retry: false });
-    const thread = item.state === "new" ? undefined : discussion.data?.threads.find((t) => t.itemId === item.id);
+    const base = baseOf(mode, projectId);
+    const move = useUpdateFile(projectId);
+    const restore = useRestoreFile(projectId);
+    const choose = useSetForClient(projectId);
+    // the comments clients and the team wrote on this file in the Client portal's Discussion (for those who take part in it; the query is shared)
+    const discussion = useDiscussionSummary(staffDiscussion, projectId, { enabled: mode === "portal", retry: false });
+    const thread = mode !== "portal" || item.state === "new" ? undefined : discussion.data?.threads.find((t) => t.itemId === item.id);
     const [shown, setShown] = useState<"preview" | "rename" | "delete" | null>(null);
     // a link that fails is replaced once; if the new one fails too, the card shows the empty tile
     const [brokenFile, setBrokenFile] = useState<number | null>(null);
@@ -68,7 +84,9 @@ export default function ContentCard({ projectId, item, canEdit, canReplace, sort
     const broken = brokenFile === file.id;
     const ext = extensionOf(file.name).toUpperCase();
     const canPreview = file.preview !== "none";
-    const removed = item.state === "removed";
+    const { removed, comments } = item;
+    // the tab allows changes, and this file is the person's to change
+    const canEdit = tabCanEdit && item.canEdit;
     const showsName = item.title !== file.name && item.title !== stemOf(file.name);
     const showsImage = file.preview === "image" && item.previewUrl != null && !broken;
     const showsVideo = file.preview === "video" && item.previewUrl != null && !broken;
@@ -80,7 +98,7 @@ export default function ContentCard({ projectId, item, canEdit, canReplace, sort
     }
 
     function preview() {
-        if (file.preview === "pdf") void openItemInTab(projectId, item);
+        if (file.preview === "pdf") void openItemInTab(base, item);
         else setShown("preview");
     }
 
@@ -93,19 +111,21 @@ export default function ContentCard({ projectId, item, canEdit, canReplace, sort
         }
     }
 
-    async function chooseAsHero() {
+    async function setForClient(forClient: boolean) {
         try {
-            await setHero.mutateAsync(item.id);
-            toast({ text: "Hero image set", sub: item.title, icon: "checkCircle" });
+            await choose.mutateAsync({ itemId: item.id, forClient });
+            toast(forClient
+                ? { text: "Shown to the client", sub: `${item.title} · clients see it once it's published`, icon: "checkCircle" }
+                : { text: "Hidden from the client", sub: `${item.title} · clients stop seeing it once that's published`, icon: "checkCircle" });
         } catch (error) {
-            toast({ text: "The hero image wasn't changed", sub: errorMessage(error), icon: "alert" });
+            toast({ text: "The client's files weren't changed", sub: errorMessage(error), icon: "alert" });
         }
     }
 
     async function undo() {
         try {
             await restore.mutateAsync(item.id);
-            toast({ text: "Removal undone", sub: item.title, icon: "refresh" });
+            toast({ text: "Deletion undone", sub: item.title, icon: "refresh" });
         } catch (error) {
             toast({ text: "The file wasn't restored", sub: errorMessage(error), icon: "alert" });
         }
@@ -136,7 +156,8 @@ export default function ContentCard({ projectId, item, canEdit, canReplace, sort
                         {(close) => (
                             <div>
                                 {canPreview && !removed && <button type="button" className="pop-item" onClick={() => { close(); preview(); }}><Icon name="eye" />Preview</button>}
-                                <button type="button" className="pop-item" onClick={() => { close(); void downloadItem(projectId, item); }}><Icon name="download" />Download</button>
+                                <button type="button" className="pop-item" onClick={() => { close(); void downloadItem(base, item); }}><Icon name="download" />Download</button>
+                                {onComments && <button type="button" className="pop-item" onClick={() => { close(); onComments(item.id); }}><Icon name="chat" />Comments</button>}
                                 {canEdit && !removed && (
                                     <>
                                         <div className="pop-sep" />
@@ -147,18 +168,31 @@ export default function ContentCard({ projectId, item, canEdit, canReplace, sort
                                             </button>
                                         ))}
                                         {canReplace && <button type="button" className="pop-item" onClick={() => { close(); onReplace(item); }}><Icon name="upload" />Replace file</button>}
-                                        {item.canBeHero && !item.isHero && (
-                                            <button type="button" className="pop-item" onClick={() => { close(); void chooseAsHero(); }}><Icon name="flag" />Use as hero image</button>
+                                    </>
+                                )}
+                                {sort && (
+                                    <>
+                                        <div className="pop-sep" />
+                                        {sort.index > 0 && <button type="button" className="pop-item" onClick={() => { close(); sort.move("earlier"); }}><Icon name="chevronLeft" />Move earlier</button>}
+                                        {sort.index < sort.count - 1 && <button type="button" className="pop-item" onClick={() => { close(); sort.move("later"); }}><Icon name="chevronRight" />Move later</button>}
+                                        {sort.index > 0 && <button type="button" className="pop-item" onClick={() => { close(); sort.move("start"); }}><Icon name="arrowUp" />Move to start</button>}
+                                        {sort.index < sort.count - 1 && <button type="button" className="pop-item" onClick={() => { close(); sort.move("end"); }}><Icon name="arrowDown" />Move to end</button>}
+                                    </>
+                                )}
+                                {canChoose && !removed && (
+                                    <>
+                                        <div className="pop-sep" />
+                                        {mode === "portal" ? (
+                                            <button type="button" className="pop-item" onClick={() => { close(); void setForClient(false); }}><Icon name="x" />Remove from client</button>
+                                        ) : item.forClient ? (
+                                            <button type="button" className="pop-item" onClick={() => { close(); void setForClient(false); }}><Icon name="x" />Hide from client</button>
+                                        ) : (
+                                            <button type="button" className="pop-item" onClick={() => { close(); void setForClient(true); }}><Icon name="eye" />Show to client</button>
                                         )}
-                                        {sort && (
-                                            <>
-                                                <div className="pop-sep" />
-                                                {sort.index > 0 && <button type="button" className="pop-item" onClick={() => { close(); sort.move("earlier"); }}><Icon name="chevronLeft" />Move earlier</button>}
-                                                {sort.index < sort.count - 1 && <button type="button" className="pop-item" onClick={() => { close(); sort.move("later"); }}><Icon name="chevronRight" />Move later</button>}
-                                                {sort.index > 0 && <button type="button" className="pop-item" onClick={() => { close(); sort.move("start"); }}><Icon name="arrowUp" />Move to start</button>}
-                                                {sort.index < sort.count - 1 && <button type="button" className="pop-item" onClick={() => { close(); sort.move("end"); }}><Icon name="arrowDown" />Move to end</button>}
-                                            </>
-                                        )}
+                                    </>
+                                )}
+                                {canEdit && !removed && (
+                                    <>
                                         <div className="pop-sep" />
                                         <button type="button" className="pop-item danger" onClick={() => { close(); setShown("delete"); }}><Icon name="trash" />Delete</button>
                                     </>
@@ -169,10 +203,17 @@ export default function ContentCard({ projectId, item, canEdit, canReplace, sort
                 </div>
                 {showsName && <div className="pc-line muted trunc" title={file.name}>{file.name}</div>}
                 <div className="pc-line muted">{ext || file.contentType} · {fmtBytes(file.originalBytes)}</div>
-                <div className="pc-line muted">Uploaded {file.uploadedBy ? `by ${file.uploadedBy.name} · ` : ""}{relDay(file.uploadedAt)}</div>
+                <div className="pc-line muted">Uploaded {item.uploadedBy ? `by ${item.uploadedBy.name} · ` : ""}{relDay(file.uploadedAt)}</div>
                 <div className="pc-badges">
-                    <Badge className={STATE[item.state].className}>{STATE[item.state].label}</Badge>
-                    {item.isHero && <Badge icon="flag" className="badge-new">Hero</Badge>}
+                    {item.state && <Badge className={STATE[item.state].className}>{STATE[item.state].label}</Badge>}
+                    {mode === "portal" && item.isHero && <Badge icon="flag" className="badge-new">Hero</Badge>}
+                    {mode === "files" && item.forClient && <Badge icon="eye" className="badge-active">For client</Badge>}
+                    {comments && comments.total > 0 && (
+                        <button type="button" className={cx("pc-comments", comments.open > 0 && "new")} onClick={() => onComments?.(item.id)}
+                            aria-label={`Comments on ${item.title}: ${comments.total}${comments.open > 0 ? `, ${comments.open} open` : ""}`}>
+                            <Icon name="chat" />{comments.total}{comments.open > 0 && <span className="pc-dot" aria-hidden="true" />}
+                        </button>
+                    )}
                     {thread && (
                         <Link className={cx("pc-comments", thread.unread > 0 && "new")} to={{ search: `?tab=portal&part=discussion&item=${item.id}` }}
                             aria-label={`Comments on ${item.title}: ${thread.count}${thread.unread > 0 ? ", some new" : ""}`}>
@@ -182,13 +223,13 @@ export default function ContentCard({ projectId, item, canEdit, canReplace, sort
                 </div>
                 {removed && (
                     <div className="pc-removed">
-                        <span>Removed — clients see it until you publish</span>
+                        <span>{mode === "files" ? "Deleted — clients see it until the next publish" : "Removed — clients see it until you publish"}</span>
                         {canEdit && <button type="button" className="btn btn-sm" disabled={restore.isPending} onClick={() => void undo()}><Icon name="refresh" />Undo</button>}
                     </div>
                 )}
             </div>
 
-            {shown === "preview" && <ContentLightbox projectId={projectId} item={item} onClose={() => setShown(null)} />}
+            {shown === "preview" && <ContentLightbox base={base} item={item} onClose={() => setShown(null)} />}
             {shown === "rename" && <RenameModal projectId={projectId} item={item} onClose={() => setShown(null)} />}
             {shown === "delete" && <DeleteModal projectId={projectId} item={item} onClose={() => setShown(null)} />}
         </article>

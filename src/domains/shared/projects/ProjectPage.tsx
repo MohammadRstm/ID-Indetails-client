@@ -43,7 +43,7 @@ import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
 
-type TabKey = "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "portal";
+type TabKey = "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
 
 /**
  * What goes on a project's Overview tab and Timeline tab, and the domain's own bits of its head. Each domain
@@ -60,7 +60,9 @@ export type ProjectPanels = {
     analytics?: (project: Project) => ReactNode;
     /** Its own tab, for those who see everyone's work. */
     contributors?: (project: Project) => ReactNode;
-    /** Design only: the client portal's content (client_portal:manage) and who of the client's contacts can follow it (client_access:manage). */
+    /** Design only: the project's files, for everyone who sees the project. */
+    files?: (project: Project) => ReactNode;
+    /** Design only: the client portal's files (client_portal:manage, or client_access:manage to look) and who of the client's contacts can follow it (client_access:manage). */
     portal?: (project: Project) => ReactNode;
     timeline?: (project: Project) => ReactNode;
     /** Beside the project's own buttons, such as Log work. */
@@ -138,13 +140,15 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         overview: panels.hasOverview?.(permissions) ?? true,
         analytics: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.analytics != null,
         contributors: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.contributors != null,
+        // every Design project's files, client or internal, for everyone who sees it
+        files: !site && permissions.has(P.PROJECT_VIEW) && panels.files != null,
         // only a client project's contacts can be invited, and its drafts are the client's; whoever takes part in its discussion sees the tab too
         portal: clientProject && (portalByPermission || participation.isSuccess),
         requirements: permissions.has(P.REQUIREMENT_VIEW),
         timeline: timelineTab,
         meetings: true,
     };
-    const tabOrder: TabKey[] = ["financials", "overview", "analytics", "contributors", "requirements", "timeline", "meetings", "portal"];
+    const tabOrder: TabKey[] = ["financials", "overview", "analytics", "contributors", "requirements", "timeline", "meetings", "files", "portal"];
     const firstTab = tabOrder.find((k) => allowed[k]) ?? "meetings";
     // A tab the person may not open falls back to their first one, even when the link asks for it.
     const tab: TabKey = requested && allowed[requested] ? requested : firstTab;
@@ -179,8 +183,11 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     function switchTab(k: TabKey) {
         if (k === firstTab) params.delete("tab");
         else params.set("tab", k);
-        // the Client portal tab's own part belongs to that tab
-        if (k !== tab) params.delete("part");
+        // a tab's own part, and the file whose comments are open, belong to that tab
+        if (k !== tab) {
+            params.delete("part");
+            params.delete("comments");
+        }
         setParams(params);
     }
     function run(action: StatusAction, text: string) {
@@ -332,6 +339,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                 ...(permissions.has(P.REQUIREMENT_VIEW) ? [{ key: "requirements" as TabKey, label: "Requirements", count: requirements.data?.total }] : []),
                 ...(timelineTab ? [{ key: "timeline" as TabKey, label: "Timeline" }] : []),
                 { key: "meetings" as TabKey, label: "Meetings", count: meetings.data?.length },
+                ...(allowed.files ? [{ key: "files" as TabKey, label: "Project files" }] : []),
                 ...(allowed.portal ? [{ key: "portal" as TabKey, label: "Client portal" }] : []),
             ]} />
 
@@ -339,6 +347,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                 : tab === "requirements" ? <ProjectRequirementsTab project={project} />
                 : tab === "timeline" && panels.timeline ? panels.timeline(project)
                     : tab === "meetings" ? <ProjectMeetingsTab project={project} />
+                    : tab === "files" && panels.files ? panels.files(project)
                     : tab === "portal" && panels.portal ? panels.portal(project)
                         : tab === "financials" && panels.financials ? panels.financials(project)
                             : tab === "analytics" && panels.analytics ? panels.analytics(project)

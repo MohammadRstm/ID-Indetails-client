@@ -34,6 +34,7 @@ export const NEEDS: Partial<Record<PermissionCode, PermissionCode>> = {
     [P.MEETING_MANAGE]: P.PROJECT_VIEW,
     [P.MATERIAL_MANAGE]: P.PROJECT_VIEW,
     [P.LABOUR_REPORT_MANAGE]: P.PROJECT_VIEW,
+    [P.PROJECT_FILES_MANAGE]: P.PROJECT_VIEW,
 };
 
 /** The actions that need `code`. */

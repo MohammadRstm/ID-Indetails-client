@@ -44,9 +44,9 @@ function statusOf(content: PortalContent): { published: string; changes: string 
 }
 
 /**
- * The slim panel above the client portal's parts (client_portal:manage): whether clients have been given anything and
- * what is still unpublished, with Preview, Discard changes and Publish changes. On an archived project it only
- * says where things stand, and previews.
+ * The slim panel above the client portal's parts: whether clients have been given anything and what is still
+ * unpublished, with Preview, and for client_portal:manage Discard changes and Publish changes. Without it, or on an
+ * archived project, it only says where things stand, and previews.
  */
 export default function PublishBar({ projectId, onPreview }: { projectId: number; onPreview: () => void }) {
     const content = usePortalContent(projectId);
@@ -118,14 +118,14 @@ function PublishModal({ projectId, content, onClose }: ModalProps) {
     );
 }
 
-/** Asks before the drafts are put back to what clients see. */
+/** Asks before the client's choices are put back to what clients see. */
 function DiscardModal({ projectId, content, onClose }: ModalProps) {
     const discard = useDiscard(projectId);
 
     async function submit() {
         try {
             await discard.mutateAsync(content.revision);
-            toast({ text: "Changes discarded", sub: "The drafts are what clients see again.", icon: "refresh" });
+            toast({ text: "Changes discarded", sub: "The client's files, hero and introduction are what clients see again.", icon: "refresh" });
             onClose();
         } catch (error) {
             if (toApiError(error).code === "portal_revision_stale") onClose();
@@ -141,7 +141,7 @@ function DiscardModal({ projectId, content, onClose }: ModalProps) {
                     <button type="button" className="btn btn-danger" disabled={discard.isPending} onClick={() => void submit()}>Discard changes</button>
                 </>
             }>
-            <p>Put the drafts back to what clients see? New files that were never published are deleted. This can't be undone.</p>
+            <p>Put the client's files, the hero image and the introduction back to what clients see? The files themselves stay in Project files. This can't be undone.</p>
         </Modal>
     );
 }

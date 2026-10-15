@@ -1,18 +1,20 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { toApiError } from "@/api/errors";
 import { http } from "@/api/http";
-import { applyItem, contentBase, contentKey, refreshIfOutdated, type PortalContentItem, type PortalSection, type PortalUsage } from "./contentApi";
+import { contentKey, type PortalSection, type PortalUsage } from "./contentApi";
+import { applyFile, filesBase, filesKey, refreshIfOutdated, type ProjectFile } from "./filesApi";
 
 /*
  * The upload queue. It lives outside React, so uploads carry on when the person moves between sections, tabs or
- * pages, and each project's rows are shown again when they come back. A file goes in as one upload on the API:
- * start, links for its parts, each part sent straight to the file storage, then complete.
+ * pages, and each project's rows are shown again when they come back. A file goes in as one upload on the project's
+ * files: start, links for its parts, each part sent straight to the file storage, then complete. A hero image for
+ * the client portal goes the same way.
  */
 
 export const UPLOAD_LIMITS = { files: 2, parts: 3, linkBatch: 100 };
 /**
  * Waits in milliseconds, so a test can shorten them: between a part's tries, how long a finished row stays, and how
- * long after a project's last file its drafts are loaded again.
+ * long after a project's last file its files are loaded again.
  */
 export const UPLOAD_MS = { retry: [1000, 3000, 9000], done: 2500, refresh: 800 };
 /** Part links last about an hour; one older than this is asked for again before it is used. */
@@ -21,7 +23,7 @@ const PART_TIMEOUT_MS = 30 * 60_000;
 /** Answers after which sending the file again can't help. */
 const FINAL = ["portal_file_content_mismatch", "portal_file_type_not_allowed", "portal_content_read_only", "portal_project_not_eligible"];
 
-/** A section of the drafts, or the hero image (which belongs to no section). */
+/** A section of the project's files, or the client portal's hero image (which belongs to no section). */
 export type UploadTarget = PortalSection | "hero";
 
 export type UploadRow = {
@@ -40,8 +42,8 @@ export type UploadRow = {
 };
 
 type Started = { uploadId: number; partSize: number; partCount: number };
-/** A hero image has no item: the drafts say which image is the hero. */
-type Completed = { item: PortalContentItem | null; usage: PortalUsage };
+/** A hero image has no item: the client portal says which image is the hero. */
+type Completed = { item: ProjectFile | null; usage: PortalUsage };
 
 type Job = {
     id: string;
@@ -69,7 +71,7 @@ const jobs = new Map<string, Job>();
 const listeners = new Set<() => void>();
 let running = 0;
 let watching = false;
-/** Projects whose drafts are to be loaded again once their uploads are over. */
+/** Projects whose files are to be loaded again once their uploads are over. */
 const refreshing = new Map<number, ReturnType<typeof setTimeout>>();
 const BUSY: UploadRow["status"][] = ["waiting", "sending", "finishing"];
 
@@ -80,7 +82,7 @@ export function subscribeUploads(listener: () => void) {
 
 export const uploadRows = () => rows;
 
-/** Whether a project has files on their way, or its drafts are about to be loaded again (what they show isn't final). */
+/** Whether a project has files on their way, or its files are about to be loaded again (what they show isn't final). */
 export const projectBusy = (projectId: number) =>
     refreshing.has(projectId) || rows.some((row) => row.projectId === projectId && BUSY.includes(row.status));
 
@@ -149,7 +151,7 @@ function refusal(file: File, accepted: string[], target: UploadTarget): string |
     const extension = dot < 0 ? "" : file.name.slice(dot + 1).toLowerCase();
     if (accepted.includes(extension)) return null;
     const what = extension ? `.${extension} files` : "Files without an extension";
-    return target === "hero" ? `${what} can't be the hero image. Use a JPG, PNG or WebP picture.` : `${what} can't be added to the client portal.`;
+    return target === "hero" ? `${what} can't be the hero image. Use a JPG, PNG or WebP picture.` : `${what} can't be added to the project's files.`;
 }
 
 /** Tries a failed file again: what the storage already has is not sent twice. */
@@ -169,9 +171,9 @@ export function cancelUpload(id: string) {
     job.stop.abort();
     forget(id);
     if (job.upload) {
-        // a cancel that came as the file was being completed may have come too late: the drafts are loaded again
+        // a cancel that came as the file was being completed may have come too late: the files are loaded again
         void endOnServer(job).then(() => {
-            if (finishing) void job.queryClient.invalidateQueries({ queryKey: contentKey(job.projectId) });
+            if (finishing) reload(job.queryClient, job.projectId);
         });
     }
 }
@@ -240,8 +242,14 @@ async function run(job: Job) {
     }
 }
 
+/** The project's files, and what the client portal shows of them. */
+function reload(queryClient: QueryClient, projectId: number) {
+    void queryClient.invalidateQueries({ queryKey: filesKey(projectId) });
+    void queryClient.invalidateQueries({ queryKey: contentKey(projectId) });
+}
+
 /**
- * The counts and states of the drafts move with every file. They are loaded again once, when the project's last
+ * The counts and states of the files move with every file. They are loaded again once, when the project's last
  * file is over, not after each one.
  */
 function refreshWhenIdle({ queryClient, projectId }: Job) {
@@ -251,7 +259,7 @@ function refreshWhenIdle({ queryClient, projectId }: Job) {
         emit();
         // another file started meanwhile: the end of that one asks again
         if (rows.some((row) => row.projectId === projectId && BUSY.includes(row.status))) return;
-        void queryClient.invalidateQueries({ queryKey: contentKey(projectId) });
+        reload(queryClient, projectId);
     }, UPLOAD_MS.refresh));
     emit();
 }
@@ -272,7 +280,7 @@ async function start(job: Job) {
     const body = section === "hero"
         ? { clientToken, hero: true, fileName: file.name, size: file.size }
         : { clientToken, section, fileName: file.name, size: file.size, replaceItemId };
-    const { data } = await call(job, () => http.post<Started>(`${contentBase(job.projectId)}/uploads`, body));
+    const { data } = await call(job, () => http.post<Started>(`${filesBase(job.projectId)}/uploads`, body));
     job.upload = data;
 }
 
@@ -300,7 +308,7 @@ async function linkParts(job: Job, numbers: number[]) {
     for (let i = 0; i < numbers.length; i += UPLOAD_LIMITS.linkBatch) {
         const { data } = await call(job, () =>
             http.post<{ parts: { partNumber: number; url: string }[] }>(
-                `${contentBase(job.projectId)}/uploads/${job.upload!.uploadId}/parts`,
+                `${filesBase(job.projectId)}/uploads/${job.upload!.uploadId}/parts`,
                 { partNumbers: numbers.slice(i, i + UPLOAD_LIMITS.linkBatch) },
                 { signal: job.stop.signal },
             ));
@@ -405,7 +413,7 @@ async function finish(job: Job) {
     for (let tries = 0; ; tries++) {
         try {
             const { data } = await call(job, () =>
-                http.post<Completed>(`${contentBase(job.projectId)}/uploads/${job.upload!.uploadId}/complete`, undefined, { signal: job.stop.signal }));
+                http.post<Completed>(`${filesBase(job.projectId)}/uploads/${job.upload!.uploadId}/complete`, undefined, { signal: job.stop.signal }));
             succeed(job, data);
             return;
         } catch (error) {
@@ -428,7 +436,8 @@ async function finish(job: Job) {
 
 function succeed(job: Job, { item, usage }: Completed) {
     if (job.cancelled) return;
-    if (item) applyItem(job.queryClient, job.projectId, item, usage);
+    // (the client portal follows: a new hero image, or a new file for one the client gets)
+    if (item) applyFile(job.queryClient, job.projectId, item, usage);
     else void job.queryClient.invalidateQueries({ queryKey: contentKey(job.projectId) });
     jobs.delete(job.id);
     update(job.id, { status: "done", sent: job.file.size, error: null });
@@ -449,7 +458,7 @@ async function endOnServer(job: Job) {
     if (uploadId == null) return;
     for (let n = 0; n <= UPLOAD_MS.retry.length; n++) {
         try {
-            await http.delete(`${contentBase(job.projectId)}/uploads/${uploadId}`);
+            await http.delete(`${filesBase(job.projectId)}/uploads/${uploadId}`);
             return;
         } catch (error) {
             if (toApiError(error).status !== 429 || n === UPLOAD_MS.retry.length) return;

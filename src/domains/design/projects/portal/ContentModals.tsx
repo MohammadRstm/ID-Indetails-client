@@ -5,13 +5,14 @@ import Field, { FieldError } from "@/shared/components/Forms/Field";
 import { useForm } from "@/shared/components/Forms/useForm";
 import Modal from "@/shared/components/Overlays/Modal";
 import Icon from "@/shared/icons/Icon";
-import { useDeleteItem, useUpdateItem, type PortalContentItem } from "./contentApi";
+import type { CardItem } from "./cards";
+import { useDeleteFile, useUpdateFile } from "./filesApi";
 
 const schema = z.object({ title: z.string().trim().min(1, "Give the file a title.").max(200, "Use at most 200 characters.") });
 
-/** A card's title: what the client will see it called. Its file name stays as it was uploaded. */
-export function RenameModal({ projectId, item, onClose }: { projectId: number; item: PortalContentItem; onClose: () => void }) {
-    const update = useUpdateItem(projectId);
+/** A file's title: what the team and the client see it called. Its file name stays as it was uploaded. */
+export function RenameModal({ projectId, item, onClose }: { projectId: number; item: CardItem; onClose: () => void }) {
+    const update = useUpdateFile(projectId);
     const form = useForm({ title: item.title }, schema);
     // checked as it is typed, not only when Save is pressed
     const rule = schema.safeParse(form.values);
@@ -48,16 +49,14 @@ export function RenameModal({ projectId, item, onClose }: { projectId: number; i
     );
 }
 
-/** Asks before a file is removed for good. */
-export function DeleteModal({ projectId, item, onClose }: { projectId: number; item: PortalContentItem; onClose: () => void }) {
-    const remove = useDeleteItem(projectId);
-    // a published file stays in what clients see until the next publish
-    const published = item.state === "unchanged" || item.state === "changed";
+/** Asks before a file is deleted for good. */
+export function DeleteModal({ projectId, item, onClose }: { projectId: number; item: CardItem; onClose: () => void }) {
+    const remove = useDeleteFile(projectId);
 
     async function submit() {
         try {
             await remove.mutateAsync(item.id);
-            toast(published ? { text: "File removed", sub: `${item.title} stays visible to clients until you publish`, icon: "trash" } : { text: "File deleted", sub: item.title, icon: "trash" });
+            toast(item.published ? { text: "File removed", sub: `${item.title} stays visible to clients until the next publish`, icon: "trash" } : { text: "File deleted", sub: item.title, icon: "trash" });
             onClose();
         } catch {
             // the answer is shown in the window
@@ -73,10 +72,10 @@ export function DeleteModal({ projectId, item, onClose }: { projectId: number; i
                     <button type="button" className="btn btn-danger" disabled={remove.isPending} onClick={() => void submit()}>Delete</button>
                 </>
             }>
-            {published ? (
-                <p>Clients keep seeing this file until you next publish; then it's removed from what they see. Until then you can undo this.</p>
+            {item.published ? (
+                <p>Clients keep seeing this file until the next publish; then it's removed from what they see. Until then you can undo this.</p>
             ) : (
-                <p>The file is removed from the client portal drafts. This can't be undone.</p>
+                <p>The file and its comments are deleted from the project. This can't be undone.</p>
             )}
         </Modal>
     );
