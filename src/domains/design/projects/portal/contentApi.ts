@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import { errorMessage, toApiError } from "@/api/errors";
+import { toApiError } from "@/api/errors";
 import { http } from "@/api/http";
 import { toast } from "@/shared/components/Feedback/toast";
 
-/** The three places the client's drafts are sorted into. */
+/** The three places a project's files are sorted into. */
 export type PortalSection = "presentation" | "model" | "drawing";
 /** What the browser can show of a file inline. */
 export type PortalPreview = "image" | "video" | "pdf" | "none";
@@ -31,18 +31,17 @@ export type PortalContentFile = {
 
 /**
  * Where an item stands against what clients see. New: never published. Changed: its file, title or section differs
- * from what clients see. Removed: deleted in the draft, which clients still see until the next publish.
+ * from what clients see. Removed: clients still see it until the next publish (it was deleted, or taken off the
+ * client's files).
  */
 export type ItemState = "new" | "changed" | "unchanged" | "removed";
 
-export type PortalContentItem = {
+/** What both tabs know of a project's file: its card's picture, title and facts. */
+export type FileItem = {
     id: number;
     section: PortalSection;
     title: string;
     sortOrder: number;
-    /** Everything but "unchanged". */
-    isDraft: boolean;
-    state: ItemState;
     /** This item's file is the draft hero image. */
     isHero: boolean;
     /** Only an image (jpg, png or webp) can be the hero. */
@@ -54,6 +53,15 @@ export type PortalContentItem = {
     createdAt: string;
     updatedAt: string;
     updatedBy: PersonRef | null;
+    /** Who uploaded its current file. */
+    uploadedBy: PersonRef | null;
+};
+
+/** A file chosen for the client (or still published), as the Client portal tab shows it. */
+export type PortalContentItem = FileItem & {
+    /** Everything but "unchanged". */
+    isDraft: boolean;
+    state: ItemState;
 };
 
 /** The draft hero image; its link may be relative (development). */
@@ -72,17 +80,19 @@ export type PortalChanges = {
 
 export type PortalContent = {
     projectId: number;
-    /** False when file storage isn't set up: no uploads. */
+    /** False when file storage isn't set up: no hero uploads. */
     storageReady: boolean;
-    /** False when the project is archived: files can be viewed and downloaded only. */
+    /** Holds client_portal:manage: chooses the client's files, the hero and the introduction, and publishes. */
+    canManage: boolean;
+    /** canManage, and the project isn't archived. */
     canEdit: boolean;
     readOnlyReason: string | null;
     usage: PortalUsage;
     /** Lower case, without the dot. */
     acceptedExtensions: string[];
-    /** Every section, ordered by section, then sort order, then id; removed items included. */
+    /** The client's files (chosen, or still published), ordered by section, then sort order, then id; removed ones included. */
     items: PortalContentItem[];
-    /** Goes up on every draft change: sent back with publish and discard. */
+    /** Goes up on every change that touches the client: sent back with publish and discard. */
     revision: number;
     publication: { publishedAt: string | null; publishedBy: PersonRef | null };
     changes: PortalChanges;
@@ -103,10 +113,10 @@ export const HERO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 export const SUMMARY_MAX = 2000;
 
 /**
- * The API's answers that say the project's content can no longer be changed: the page's `canEdit` is out of date,
- * so it is loaded again.
+ * The API's answers that say the project's files can no longer be changed: the page's `canEdit` is out of date, so it
+ * is loaded again.
  */
-const LOCKED_CODES = ["portal_content_read_only", "portal_project_not_eligible"];
+export const LOCKED_CODES = ["portal_content_read_only", "portal_project_not_eligible"];
 
 export const contentBase = (projectId: number) => `/projects/${projectId}/portal/content`;
 export const contentKey = (projectId: number) => ["portal-content", projectId] as const;
@@ -114,9 +124,9 @@ export const contentKey = (projectId: number) => ["portal-content", projectId] a
 export const previewKey = (projectId: number) => ["portal-preview", projectId] as const;
 
 /** Ascending sort order, then id: the order of cards in a section. */
-export const byOrder = (a: PortalContentItem, b: PortalContentItem) => a.sortOrder - b.sortOrder || a.id - b.id;
+export const byOrder = (a: FileItem, b: FileItem) => a.sortOrder - b.sortOrder || a.id - b.id;
 
-const bySectionThenOrder = (a: PortalContentItem, b: PortalContentItem) =>
+export const bySectionThenOrder = (a: FileItem, b: FileItem) =>
     PORTAL_SECTIONS.indexOf(a.section) - PORTAL_SECTIONS.indexOf(b.section) || byOrder(a, b);
 
 // ---- preview links ----
@@ -136,9 +146,9 @@ function keep(store: Map<number, Kept>, fileId: number, url: string, expiresAt: 
 
 /**
  * Every answer carries new signed links, and a new link is a new address for the browser: each image would load
- * again. A file keeps the link it was first shown with while more than 10 minutes of it remain.
+ * again. A file keeps the link it was first shown with while more than 10 minutes of it remain, in either tab.
  */
-function steadyLinks(items: PortalContentItem[]): PortalContentItem[] {
+export function steadyLinks<T extends FileItem>(items: T[]): T[] {
     return items.map((item) => {
         if (!item.previewUrl || !item.previewUrlExpiresAt) return item;
         const link = keep(previews, item.file.id, item.previewUrl, item.previewUrlExpiresAt);
@@ -160,102 +170,36 @@ export function forgetPreview(fileId: number) {
     heroes.delete(fileId);
 }
 
+/** A short-lived link to a file, from either tab's address (`base`): shown in the browser (`inline`) or saved. */
+export async function getContentLink(base: string, itemId: number, inline: boolean): Promise<ContentLink> {
+    return (await http.get<ContentLink>(`${base}/items/${itemId}/link`, { params: { inline } })).data;
+}
+
 // ---- the cached content ----
 
-/** A project's drafts, by section, with the storage figures, what is unpublished and what the person may do. */
-export function usePortalContent(projectId: number) {
+/** The client's files by section, with the hero, the introduction, what is unpublished and what the person may do. */
+export function usePortalContent(projectId: number, enabled = true) {
     return useQuery({
         queryKey: contentKey(projectId),
         queryFn: async () => steadyContent((await http.get<PortalContent>(contentBase(projectId))).data),
+        enabled,
     });
 }
 
-function patchContent(queryClient: QueryClient, projectId: number, change: (content: PortalContent) => PortalContent) {
-    queryClient.setQueryData<PortalContent>(contentKey(projectId), (content) => (content ? change(content) : content));
-}
-
-/** The previews and the activity feed show what the drafts hold: they are loaded again. */
-function refreshDependents(queryClient: QueryClient, projectId: number) {
+/** The API's answer to a change is the whole content: it replaces the cached one; the preview and the activity feed follow. */
+function putContent(queryClient: QueryClient, projectId: number, content: PortalContent) {
+    queryClient.setQueryData(contentKey(projectId), steadyContent(content));
     void queryClient.invalidateQueries({ queryKey: previewKey(projectId) });
     void queryClient.invalidateQueries({ queryKey: ["activity"] });
 }
 
-/** The counts and states (what is new, changed or removed) move with every change: the drafts are loaded again. */
-function refreshContent(queryClient: QueryClient, projectId: number) {
-    void queryClient.invalidateQueries({ queryKey: contentKey(projectId) });
-    void queryClient.invalidateQueries({ queryKey: previewKey(projectId) });
-}
-
-/** The API's answer to a change is the whole content: it replaces the cached one. */
-function putContent(queryClient: QueryClient, projectId: number, content: PortalContent) {
-    queryClient.setQueryData(contentKey(projectId), steadyContent(content));
-    refreshDependents(queryClient, projectId);
-}
-
-/** An item that was added, replaced, renamed or moved goes in its place, with the usage when the answer carried it. */
-export function applyItem(queryClient: QueryClient, projectId: number, item: PortalContentItem, usage?: PortalUsage) {
-    const [steady] = steadyLinks([item]);
-    patchContent(queryClient, projectId, (content) => ({
-        ...content,
-        usage: usage ?? content.usage,
-        items: [...content.items.filter((i) => i.id !== steady.id), steady].sort(bySectionThenOrder),
-    }));
-}
-
-/** A file that was never published is gone; a published one stays, as removed, until the next publish. */
-function removeItem(queryClient: QueryClient, projectId: number, itemId: number, usage: PortalUsage) {
-    patchContent(queryClient, projectId, (content) => ({
-        ...content,
-        usage,
-        items: content.items.flatMap((i) => (i.id !== itemId ? [i] : i.state === "new" ? [] : [{ ...i, state: "removed" as const }])),
-    }));
-}
-
 /** Whether an error says the cached content is out of date; if so it is loaded again. */
-export function refreshIfOutdated(queryClient: QueryClient, projectId: number, error: unknown) {
+function refreshIfOutdated(queryClient: QueryClient, projectId: number, error: unknown) {
     const { status, code } = toApiError(error);
     if (status === 404 || LOCKED_CODES.includes(code)) void queryClient.invalidateQueries({ queryKey: contentKey(projectId) });
 }
 
-// ---- changes to a file ----
-
-type ItemChange = { itemId: number; title?: string; section?: PortalSection };
-
-/** Renames an item or moves it to another section (it goes to the end there). */
-export function useUpdateItem(projectId: number) {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async ({ itemId, ...change }: ItemChange) =>
-            (await http.put<PortalContentItem>(`${contentBase(projectId)}/items/${itemId}`, change)).data,
-        onSuccess: (item) => {
-            applyItem(queryClient, projectId, item);
-            refreshContent(queryClient, projectId);
-        },
-        onError: (error) => refreshIfOutdated(queryClient, projectId, error),
-    });
-}
-
-export function useDeleteItem(projectId: number) {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async (itemId: number) => ({
-            itemId,
-            usage: (await http.delete<{ usage: PortalUsage }>(`${contentBase(projectId)}/items/${itemId}`)).data.usage,
-        }),
-        onSuccess: ({ itemId, usage }) => {
-            removeItem(queryClient, projectId, itemId, usage);
-            refreshContent(queryClient, projectId);
-        },
-        onError: (error) => refreshIfOutdated(queryClient, projectId, error),
-    });
-}
-
-/** A short-lived link to the file: shown in the browser (`inline`) or saved. */
-export async function getContentLink(projectId: number, itemId: number, inline: boolean): Promise<ContentLink> {
-    return (await http.get<ContentLink>(`${contentBase(projectId)}/items/${itemId}/link`, { params: { inline } })).data;
-}
-
-// ---- the hero, the introduction, undo, publishing: each answers the whole content ----
+// ---- the hero, the introduction, publishing: each answers the whole content ----
 
 function useChange<V = void>(projectId: number, request: (variables: V) => Promise<PortalContent>, onError?: (error: unknown) => unknown) {
     const queryClient = useQueryClient();
@@ -266,7 +210,7 @@ function useChange<V = void>(projectId: number, request: (variables: V) => Promi
     });
 }
 
-/** An image of the drafts becomes the hero image. */
+/** An image of the client's files becomes the hero image. */
 export function useSetHero(projectId: number) {
     return useChange(projectId, async (itemId: number) => (await http.put<PortalContent>(`${contentBase(projectId)}/hero`, { itemId })).data);
 }
@@ -280,14 +224,9 @@ export function useSetSummary(projectId: number) {
     return useChange(projectId, async (summary: string | null) => (await http.put<PortalContent>(`${contentBase(projectId)}/summary`, { summary })).data);
 }
 
-/** Takes back the removal of a published file. */
-export function useRestoreItem(projectId: number) {
-    return useChange(projectId, async (itemId: number) => (await http.post<PortalContent>(`${contentBase(projectId)}/items/${itemId}/restore`)).data);
-}
-
 /**
- * The drafts changed since the person looked (their revision is out of date), or there is nothing to put back yet:
- * the drafts are loaded again, and the person is told. Anything else is handled as for any change.
+ * What the client gets changed since the person looked (their revision is out of date), or there is nothing to put
+ * back yet: the content is loaded again, and the person is told. Anything else is handled as for any change.
  */
 async function revisionRefused(queryClient: QueryClient, projectId: number, error: unknown) {
     const { code } = toApiError(error);
@@ -296,7 +235,7 @@ async function revisionRefused(queryClient: QueryClient, projectId: number, erro
     if (code === "portal_revision_stale") toast({ text: "Someone changed the drafts since you looked. Check what's new and publish again.", icon: "alert" });
 }
 
-/** Makes the drafts what clients see. It is given the revision the person looked at. */
+/** Makes the client's files, the hero and the introduction what clients see. It is given the revision the person looked at. */
 export function usePublish(projectId: number) {
     const queryClient = useQueryClient();
     const publish = async (expectedRevision: number) =>
@@ -304,69 +243,10 @@ export function usePublish(projectId: number) {
     return useChange(projectId, publish, (error: unknown) => revisionRefused(queryClient, projectId, error));
 }
 
-/** Puts the drafts back to what clients see; files that were never published are deleted. */
+/** Puts the client's choices back to what clients see: which files they get, the hero and the introduction. */
 export function useDiscard(projectId: number) {
     const queryClient = useQueryClient();
     const discard = async (expectedRevision: number) =>
         (await http.post<PortalContent>(`${contentBase(projectId)}/discard`, { expectedRevision })).data;
     return useChange(projectId, discard, (error: unknown) => revisionRefused(queryClient, projectId, error));
-}
-
-// ---- the order of a section ----
-
-type Order = { id: number; sortOrder: number }[];
-type NewOrder = { section: PortalSection; itemIds: number[]; before: Order };
-
-const orderOf = (content: PortalContent | undefined, section: PortalSection): Order =>
-    (content?.items ?? []).filter((i) => i.section === section).map((i) => ({ id: i.id, sortOrder: i.sortOrder }));
-
-/** Gives the section's cards the order of `itemIds`; the ones it doesn't list (removed ones) stay where they were. */
-function applyOrder(queryClient: QueryClient, projectId: number, itemIds: number[]) {
-    patchContent(queryClient, projectId, (content) => ({
-        ...content,
-        items: content.items.map((i) => (itemIds.includes(i.id) ? { ...i, sortOrder: itemIds.indexOf(i.id) } : i)).sort(bySectionThenOrder),
-    }));
-}
-
-function restoreOrder(queryClient: QueryClient, projectId: number, before: Order) {
-    patchContent(queryClient, projectId, (content) => ({
-        ...content,
-        items: content.items.map((i) => ({ ...i, sortOrder: before.find((b) => b.id === i.id)?.sortOrder ?? i.sortOrder })).sort(bySectionThenOrder),
-    }));
-}
-
-/**
- * A section's new order. It shows at once; the API's answer replaces it. If the API refuses it, the old order comes
- * back, and the person is told: because someone changed the section meanwhile (it is loaded again), or why not.
- * Answers whether the order was saved.
- */
-export function useReorder(projectId: number) {
-    const queryClient = useQueryClient();
-    const save = useMutation({
-        mutationFn: async ({ section, itemIds }: NewOrder) =>
-            (await http.put<PortalContent>(`${contentBase(projectId)}/sections/${section}/order`, { itemIds })).data,
-        onSuccess: (content) => putContent(queryClient, projectId, content),
-        onError: async (error, { before }) => {
-            restoreOrder(queryClient, projectId, before);
-            if (toApiError(error).code === "portal_order_stale") {
-                await queryClient.refetchQueries({ queryKey: contentKey(projectId) });
-                toast({ text: "Someone changed this section, so your move wasn't saved.", icon: "alert" });
-                return;
-            }
-            toast({ text: "The new order wasn't saved", sub: errorMessage(error), icon: "alert" });
-            refreshIfOutdated(queryClient, projectId, error);
-        },
-    });
-
-    return async function reorder(section: PortalSection, itemIds: number[]): Promise<boolean> {
-        const before = orderOf(queryClient.getQueryData<PortalContent>(contentKey(projectId)), section);
-        applyOrder(queryClient, projectId, itemIds);
-        try {
-            await save.mutateAsync({ section, itemIds, before });
-            return true;
-        } catch {
-            // the old order is back, and the person was told
-            return false;
-        }
-    };
 }

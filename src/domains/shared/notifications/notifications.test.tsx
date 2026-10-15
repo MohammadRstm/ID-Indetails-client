@@ -70,6 +70,18 @@ group("A notification's words", () => {
             .toMatchObject({ text: "Rania Aoun mentioned you in Studio Nour brand space's client portal", icon: "chat", route: `${discussion}&item=21` });
         expect(describe(note("portal_mention", payload, { project, subjectType: "message", subjectId: 77 }), designer).route).toBe(discussion);
     });
+
+    it("tell staff someone commented on a project's file, never what they wrote, and open its comments", () => {
+        const payload = { projectTitle: project.title, fileTitle: "Mood board", authorName: "Nadia Karam" };
+        const commented = note("project_file_comment", payload, { project, subjectType: "item", subjectId: 21 });
+
+        expect(describe(commented, designer))
+            .toMatchObject({ text: "Nadia Karam commented on Mood board in Studio Nour brand space", icon: "chat", route: "/design/projects/5?tab=files&comments=21" });
+        expect(describe(commented, admin).route).toBe("/design/projects/5?tab=files&comments=21");
+        expect(describe(commented, designer).sub).toBeUndefined();
+        expect(describe(note("project_file_comment", payload, { project, subjectType: "item", subjectId: 21, count: 3 }), designer).text)
+            .toBe("3 new comments on Mood board in Studio Nour brand space");
+    });
 });
 
 group("The bell", () => {

@@ -16,28 +16,30 @@ import { staffDiscussion } from "./staffDiscussion";
 type Part = PortalSection | "access" | "discussion";
 
 /**
- * A Design client project's Client portal tab: the files being prepared for the client, one section each
- * (client_portal:manage), with where publishing stands above them, who of the client's contacts can follow the
- * project (client_access:manage), and the Discussion with them, which belongs to whoever takes part in it whatever
- * their permissions (the server says: the summary answers 404 to anyone else). The part shown is kept in the link
- * (?part=model), and starts on the first one the person may see. So is the preview of what clients would get
- * (?preview=1), which a reload keeps open.
+ * A Design client project's Client portal tab: the files chosen for the client in Project files, one section each,
+ * with where publishing stands above them (client_portal:manage changes and publishes them, client_access:manage
+ * looks), who of the client's contacts can follow the project (client_access:manage), and the Discussion with them,
+ * which belongs to whoever takes part in it whatever their permissions (the server says: the summary answers 404 to
+ * anyone else). The part shown is kept in the link (?part=model), and starts on the first one the person may see. So
+ * is the preview of what clients would get (?preview=1), which a reload keeps open.
  */
 export default function ClientPortalTab({ project }: { project: Project }) {
     const permissions = usePermissions();
     const [params, setParams] = useSearchParams();
     const discussion = useDiscussionSummary(staffDiscussion, project.id, { retry: false });
-    const manages = permissions.has(P.CLIENT_PORTAL_MANAGE);
+    const managesAccess = permissions.has(P.CLIENT_ACCESS_MANAGE);
+    // the client's files are seen by whoever chooses them or invites the client
+    const seesFiles = managesAccess || permissions.has(P.CLIENT_PORTAL_MANAGE);
     const parts: Part[] = [
-        ...(manages ? PORTAL_SECTIONS : []),
-        ...(permissions.has(P.CLIENT_ACCESS_MANAGE) ? ["access" as const] : []),
+        ...(seesFiles ? PORTAL_SECTIONS : []),
+        ...(managesAccess ? ["access" as const] : []),
         ...(discussion.isSuccess ? ["discussion" as const] : []),
     ];
     const requested = params.get("part");
     // a part the person may not open falls back to their first one, even when the link asks for it
     const part = parts.find((p) => p === requested) ?? parts[0];
-    // the preview is of the files: only for someone who manages them, whatever the link asks for
-    const previewing = manages && params.get("preview") === "1";
+    // the preview is of the client's files: only for someone who sees them, whatever the link asks for
+    const previewing = seesFiles && params.get("preview") === "1";
     const unread = (discussion.data?.unreadMessages ?? 0) + (discussion.data?.unreadComments ?? 0);
 
     function choose(next: Part) {
@@ -75,7 +77,7 @@ export default function ClientPortalTab({ project }: { project: Project }) {
             )}
             {part === "access" ? <ClientAccessPanel project={project} />
                 : part === "discussion" ? <DiscussionPart project={project} />
-                    : <PortalSectionView key={part} project={project} section={part} />}
+                    : <PortalSectionView key={part} project={project} section={part} mode="portal" />}
             {previewing && <PresentationPreview project={project} onClose={() => preview(false)} />}
         </>
     );

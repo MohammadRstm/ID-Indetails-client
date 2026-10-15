@@ -72,7 +72,7 @@ describe("a Design project, by permission", () => {
         expect(await screen.findByText(`${mine.myEntries} entries`)).toBeInTheDocument();
         expect(screen.getByText("Project progress")).toBeInTheDocument();
         expect(screen.getByText("Team activity")).toBeInTheDocument();
-        expect(tabs()).toEqual(["Overview", "Requirements", "Meetings"]);
+        expect(tabs()).toEqual(["Overview", "Requirements", "Meetings", "Project files"]);
         expect(await logWork()).toHaveClass("btn-primary");
         // the client is named, but its page isn't theirs to open
         expect(screen.getByText(projectWork.project.client!.displayName)).toBeInTheDocument();
@@ -86,7 +86,7 @@ describe("a Design project, by permission", () => {
         renderApp(page, withPermissions(sarah, { grant: [P.WORK_ENTRY_VIEW_ALL] }), ...ownWork, ...projectWorkHandlers);
         // their own hours stay on the Overview; everyone's work is on Analytics
         expect(await screen.findByText("Your hours here")).toBeInTheDocument();
-        expect(tabs()).toEqual(["Overview", "Analytics", "Contributors", "Requirements", "Timeline", "Meetings"]);
+        expect(tabs()).toEqual(["Overview", "Analytics", "Contributors", "Requirements", "Timeline", "Meetings", "Project files"]);
         await userEvent.click(screen.getByRole("tab", { name: "Contributors" }));
         expect(await screen.findByText("Who put the hours in. Click a person to see their entries on this project.")).toBeInTheDocument();
     });
@@ -101,7 +101,7 @@ describe("a Design project, by permission", () => {
         renderApp(page, nadia, ...ownWork, ...projectWorkHandlers);
         expect(await screen.findByText("Total hours")).toBeInTheDocument();
         expect(screen.queryByText("Your hours here")).toBeNull();
-        expect(tabs()).toEqual(["Analytics", "Contributors", "Requirements", "Timeline", "Meetings", "Client portal"]);
+        expect(tabs()).toEqual(["Analytics", "Contributors", "Requirements", "Timeline", "Meetings", "Project files", "Client portal"]);
     });
 
     it("shows an admin who never logged work here only the project's", async () => {
@@ -114,7 +114,7 @@ describe("a Design project, by permission", () => {
     it("has no Requirements tab without requirement:view, even by link", async () => {
         renderApp(`${page}?tab=requirements`, withPermissions(sarah, { revoke: [P.REQUIREMENT_VIEW] }), ...ownWork, ...projectWorkHandlers);
         expect(await screen.findByText("Your recent work")).toBeInTheDocument();
-        expect(tabs()).toEqual(["Overview", "Meetings"]);
+        expect(tabs()).toEqual(["Overview", "Meetings", "Project files"]);
     });
 
     it("lets an employee tick their own requirements on the tab, and no one else's", async () => {

@@ -22,7 +22,8 @@ type Props = {
 
 /**
  * The top of the Presentation part: the hero image across the top of the client's page, and the introduction under
- * it. Both are drafts like the files, and say so when they differ from what clients see.
+ * it. Both are drafts like the client's files, and say so when they differ from what clients see. Only
+ * client_portal:manage changes them (the content's canEdit); anyone else reads them.
  */
 export default function PresentationIntro({ projectId, content, onImageFailed }: Props) {
     return (
@@ -98,7 +99,7 @@ function HeroPanel({ projectId, content, onImageFailed }: Props) {
     );
 }
 
-/** The images of the drafts that can be the hero, to pick one from. */
+/** The images chosen for the client that can be the hero, to pick one from. */
 function HeroPicker({ projectId, pictures, onClose }: { projectId: number; pictures: PortalContentItem[]; onClose: () => void }) {
     const setHero = useSetHero(projectId);
 
@@ -113,7 +114,7 @@ function HeroPicker({ projectId, pictures, onClose }: { projectId: number; pictu
     }
 
     return (
-        <Modal title="Choose the hero image" sub="Any JPG, PNG or WebP image in the drafts." size="md" onClose={onClose}
+        <Modal title="Choose the hero image" sub="Any JPG, PNG or WebP image chosen for the client." size="md" onClose={onClose}
             foot={
                 <>
                     <div className="grow">{setHero.error ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(setHero.error)}</span> : null}</div>

@@ -620,9 +620,21 @@ button.pc-thumb { cursor: pointer; }
   .dp-pane { height: min(600px, 80dvh); }
 }
 
-/* A card's comments: how many, with a dot when some are new; it opens them in the Discussion */
+/* A card's comments: how many, with a dot when some are new (Client portal) or open (Project files); it opens them */
 .pc-comments { display: inline-flex; align-items: center; gap: 5px; height: 21px; padding: 0 8px; border-radius: 99px; background: var(--surface-3); color: var(--ink-2);
   font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+button.pc-comments { border: 0; cursor: pointer; }
 .pc-comments:hover, .pc-comments.new { background: var(--accent-soft); color: var(--accent-ink); }
 .pc-comments .ic { width: 12px; height: 12px; }
 .pc-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--now); }
+
+/* A file's comments, in the panel beside the Project files tab: the fixed ones folded under their toggle, and the box
+   to write one in the panel's foot (the comments and the box are the discussion's, in portal.css) */
+.pf-foot { flex: 1; min-width: 0; }
+.pf-form { display: grid; gap: 6px; }
+.pf-fixed { margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--line); }
+.pf-fixed > .btn { margin-left: -8px; }
+.pf-fixed > .dp-msgs { margin-top: 12px; }
+.dp-msg.fixed .dp-text { color: var(--ink-2); }
+.pf-fixed-by { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 11.5px; font-weight: 600; color: var(--ok); }
+.pf-fixed-by .ic { width: 13px; height: 13px; }

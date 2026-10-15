@@ -38,7 +38,7 @@ export default function PresentationPreview({ project, onClose }: { project: Pro
         body = nothingYet(presentation) ? (
             <div className="panel mt">
                 <Empty art="projects" title="Nothing to preview yet"
-                    text="Add files to Presentation, 3D or Drawings, and your draft appears here as clients will see it." />
+                    text="Choose files for the client in Project files, and your draft appears here as clients will see it." />
             </div>
         ) : (
             <PresentationView

@@ -24,7 +24,11 @@ const SUPER_ADMIN_ONLY: PermissionCode[] = [
     P.BILLING_SETTINGS_MANAGE, P.EXPENSE_MANAGE, P.PROJECT_PRICING_MANAGE, P.STATEMENT_CREATE, P.STATEMENT_SEND,
     P.EMPLOYEE_INVITE, P.EMPLOYEE_PAY_MANAGE,
 ];
-const DESIGN_ONLY: PermissionCode[] = [P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN, P.WORK_ENTRY_VIEW_ALL, P.WORK_ENTRY_COMMENT, P.CLIENT_ACCESS_MANAGE, P.CLIENT_PORTAL_MANAGE];
+const DESIGN_ONLY: PermissionCode[] = [
+    P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN, P.WORK_ENTRY_VIEW_ALL, P.WORK_ENTRY_COMMENT, P.CLIENT_ACCESS_MANAGE, P.CLIENT_PORTAL_MANAGE, P.PROJECT_FILES_MANAGE,
+];
+/** Choosing the client's files and publishing them: super admins only, unless granted. Admins manage the project's files. */
+const CLIENT_PORTAL: PermissionCode[] = [P.CLIENT_PORTAL_MANAGE];
 /** Logging one's own hours: employees only. Admins and super admins are paid a fixed salary and log no hours. */
 const OWN_WORK: PermissionCode[] = [P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN];
 
@@ -54,7 +58,7 @@ function user(id: number, first: string, role: string, domain: string | null, pe
 
 export const personas: Record<PersonaName, CurrentUser> = {
     superAdmin: user(1, "Rana", "super_admin", null, without(ALL, OWN_WORK), "Managing director"),
-    designAdmin: user(2, "Nadia", "admin", "design", without(ALL, COMPANY_ONLY, SUPER_ADMIN_ONLY, EXECUTION_ONLY, OWN_WORK), "Design director"),
+    designAdmin: user(2, "Nadia", "admin", "design", without(ALL, COMPANY_ONLY, SUPER_ADMIN_ONLY, EXECUTION_ONLY, OWN_WORK, CLIENT_PORTAL), "Design director"),
     executionAdmin: user(3, "Karim", "admin", "execution", without(ALL, COMPANY_ONLY, SUPER_ADMIN_ONLY, DESIGN_ONLY), "Operations manager"),
     designEmployee: user(4, "Sarah", "employee", "design",
         [P.PROJECT_VIEW, P.REQUIREMENT_VIEW, P.REQUIREMENT_COMPLETE_OWN, P.MEETING_CREATE, P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN, P.PROTON_USE], "Interior designer"),

@@ -29,6 +29,7 @@ export const P = {
     CLIENT_MANAGE: "client:manage",
     CLIENT_ACCESS_MANAGE: "client_access:manage",
     CLIENT_PORTAL_MANAGE: "client_portal:manage",
+    PROJECT_FILES_MANAGE: "project_files:manage",
     FINANCIAL_VIEW: "financial:view",
     INVOICE_CREATE: "invoice:create",
     INVOICE_SEND: "invoice:send",
