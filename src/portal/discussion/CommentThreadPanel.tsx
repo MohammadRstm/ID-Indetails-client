@@ -12,6 +12,7 @@ import { ConfirmDelete } from "./DiscussionBits";
 import DiscussionText from "./DiscussionText";
 import MentionComposer from "./MentionComposer";
 import { usePageVisible } from "./usePageVisible";
+import { usePassWheelToPage } from "./usePassWheelToPage";
 
 type Props = {
     discussion: Discussion;
@@ -40,6 +41,7 @@ export default function CommentThreadPanel({ discussion, projectId, itemId, summ
     const { mutate: markRead } = useMarkRead(discussion, projectId);
     const visible = usePageVisible();
     const list = useRef<HTMLDivElement>(null);
+    usePassWheelToPage(list);
     const [editing, setEditing] = useState<number | null>(null);
     const [deleting, setDeleting] = useState<number | null>(null);
 

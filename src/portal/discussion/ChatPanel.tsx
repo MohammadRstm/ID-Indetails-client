@@ -12,6 +12,7 @@ import { ConfirmDelete } from "./DiscussionBits";
 import DiscussionText from "./DiscussionText";
 import MentionComposer from "./MentionComposer";
 import { usePageVisible } from "./usePageVisible";
+import { usePassWheelToPage } from "./usePassWheelToPage";
 
 type Props = {
     discussion: Discussion;
@@ -38,6 +39,7 @@ export default function ChatPanel({ discussion, projectId, summary }: Props) {
     const { mutate: markRead } = useMarkRead(discussion, projectId);
     const visible = usePageVisible();
     const list = useRef<HTMLDivElement>(null);
+    usePassWheelToPage(list);
     // the distance from the end the list had when older messages were asked for: it is kept when they arrive above
     const anchor = useRef<number | null>(null);
     const [atEnd, setAtEnd] = useState(true);

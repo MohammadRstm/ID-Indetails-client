@@ -58,11 +58,16 @@ export default function Popover({ trigger, children, align = "right", width, hos
             if (!host || !pop) return;
             const vw = document.documentElement.clientWidth || window.innerWidth;
             const vh = window.innerHeight;
-            const w = pop.offsetWidth, h = pop.offsetHeight;
+            // the whole height of its contents, whatever height it was given last time
+            const w = pop.offsetWidth, h = pop.scrollHeight;
             const left = Math.max(EDGE, Math.min(align === "right" ? host.right - w : host.left, vw - EDGE - w));
-            const below = host.bottom + GAP;
-            const top = below + h > vh - EDGE && host.top - GAP - h > EDGE ? host.top - GAP - h : below;
-            setPlace({ top: Math.round(top), left: Math.round(left) });
+            const roomBelow = vh - EDGE - (host.bottom + GAP), roomAbove = host.top - GAP - EDGE;
+            const up = h > roomBelow && (h <= roomAbove || roomAbove > roomBelow);
+            // a menu taller than the room on either side takes the larger one and scrolls, so no item is out of reach
+            const room = up ? roomAbove : roomBelow;
+            const height = Math.min(h, room);
+            const top = up ? host.top - GAP - height : host.bottom + GAP;
+            setPlace({ top: Math.round(top), left: Math.round(left), ...(h > room ? { maxHeight: Math.round(room), overflowY: "auto" } : null) });
         }
         measure();
         window.addEventListener("resize", measure);

@@ -296,7 +296,8 @@ button.pp-thumb:hover img, button.pp-thumb:hover video { transform: scale(1.03);
 
 /* The chat and one file's comments: a scrolling list, then the composer */
 .dp-chat { position: relative; display: flex; flex: 1; flex-direction: column; min-height: 0; }
-.dp-list { flex: 1; min-height: 0; padding: 14px 16px; overflow-y: auto; overscroll-behavior: contain; }
+/* at either end of the list, the wheel goes on to the page (the staff's Discussion sits in a long page; the client's drawer locks the page anyway) */
+.dp-list { flex: 1; min-height: 0; padding: 14px 16px; overflow-y: auto; }
 .dp-list > .load-err { margin: 2px 0; }
 .dp-earlier { display: flex; justify-content: center; margin-bottom: 10px; }
 .dp-empty { margin: 0; padding: 22px 8px; color: var(--ink-3); font-size: 13px; text-align: center; }
