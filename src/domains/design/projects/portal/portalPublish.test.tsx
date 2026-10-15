@@ -74,7 +74,8 @@ describe("where the client portal stands", () => {
         renderApp(part("drawing"), nadia, served(contentOf([])), ...projectWorkHandlers);
         expect(await screen.findByText("Not published yet")).toBeInTheDocument();
         await userEvent.click(screen.getByRole("tab", { name: "3D" }));
-        expect(await screen.findByText("No 3D files yet")).toBeInTheDocument();
+        // the Client portal lists only what was chosen for the client
+        expect(await screen.findByText("No 3D files for the client yet")).toBeInTheDocument();
         expect(screen.getByText("Not published yet")).toBeInTheDocument();
     });
 });
