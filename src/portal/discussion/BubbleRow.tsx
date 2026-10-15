@@ -97,7 +97,8 @@ export default function BubbleRow({ author, createdAt, editedAt, menuLabel, acti
     function closeMenu() {
         setMenu(null);
         setTimeout(() => {
-            if (document.activeElement == null || document.activeElement === document.body) more.current?.focus({ preventScroll: true });
+            const at = document.activeElement;
+            if (at == null || at === document.body || !at.isConnected) more.current?.focus({ preventScroll: true });
         });
     }
 

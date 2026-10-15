@@ -129,7 +129,7 @@ button.pp-thumb:hover img, button.pp-thumb:hover video { transform: scale(1.03);
 /* Presentation: the pictures' grid, and beside it (under it on narrower screens) a compact card for each other kind of
    file, which lists its files */
 .pp-present { display: grid; grid-template-columns: minmax(0, 1fr) 300px; align-items: start; gap: 16px; }
-.pp-present.no-grid { grid-template-columns: minmax(0, 1fr); }
+.pp-present.no-grid, .pp-present.no-cards { grid-template-columns: minmax(0, 1fr); }
 .pp-kinds { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .pp-present.no-grid .pp-kinds { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .pp-kinds > li { min-width: 0; }

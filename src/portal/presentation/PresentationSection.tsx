@@ -60,7 +60,7 @@ export default function PresentationSection({ section, items, getLink, quietHead
             {items.length === 0 ? (
                 <div className="pp-empty"><Empty art="projects" title="Nothing here yet" /></div>
             ) : section === "presentation" ? (
-                <div className={cx("pp-present", layout.grid.length === 0 && "no-grid")}>
+                <div className={cx("pp-present", layout.grid.length === 0 && "no-grid", cards.length === 0 && "no-cards")}>
                     {layout.grid.length > 0 && (
                         <ul className="pp-grid">
                             {layout.grid.map((item) => <li key={item.id}>{card(item)}</li>)}
