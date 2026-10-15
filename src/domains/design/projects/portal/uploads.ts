@@ -1,8 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { toApiError } from "@/api/errors";
 import { http } from "@/api/http";
-import { contentKey, type PortalSection, type PortalUsage } from "./contentApi";
-import { applyFile, filesBase, filesKey, refreshIfOutdated, type ProjectFile } from "./filesApi";
+import type { PortalSection, PortalUsage } from "./contentApi";
+import { applyFile, filesBase, refreshClientPortal, refreshFiles, refreshIfOutdated, type ProjectFile } from "./filesApi";
 
 /*
  * The upload queue. It lives outside React, so uploads carry on when the person moves between sections, tabs or
@@ -242,10 +242,9 @@ async function run(job: Job) {
     }
 }
 
-/** The project's files, and what the client portal shows of them. */
+/** The project's files, and what the client portal shows of them (its content and its preview). */
 function reload(queryClient: QueryClient, projectId: number) {
-    void queryClient.invalidateQueries({ queryKey: filesKey(projectId) });
-    void queryClient.invalidateQueries({ queryKey: contentKey(projectId) });
+    refreshFiles(queryClient, projectId);
 }
 
 /**
@@ -436,9 +435,9 @@ async function finish(job: Job) {
 
 function succeed(job: Job, { item, usage }: Completed) {
     if (job.cancelled) return;
-    // (the client portal follows: a new hero image, or a new file for one the client gets)
+    // (the client portal follows, its content and its preview: a new hero image, or a new file for one the client gets)
     if (item) applyFile(job.queryClient, job.projectId, item, usage);
-    else void job.queryClient.invalidateQueries({ queryKey: contentKey(job.projectId) });
+    else refreshClientPortal(job.queryClient, job.projectId);
     jobs.delete(job.id);
     update(job.id, { status: "done", sent: job.file.size, error: null });
     setTimeout(() => forget(job.id), UPLOAD_MS.done);

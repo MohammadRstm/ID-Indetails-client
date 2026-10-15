@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -6,8 +6,8 @@ import { P } from "@/app/permissions/codes";
 import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
-import { filesBase, filesOf, projectFileOf, servedFiles, uploadApi } from "./filesTestKit";
-import { base, cards, contentOf, fileOf, heroOf, itemOf, liveContent, menuItems, menuOf, page, part, person, projectId, publisher, served, usageOf } from "./portalTestKit";
+import { filesBase, filesOf, liveFiles, projectFileOf, servedFiles, uploadApi } from "./filesTestKit";
+import { base, cards, contentOf, fileOf, heroOf, inMenu, itemOf, liveContent, menuItems, menuOf, page, part, person, projectId, publisher, served, usageOf } from "./portalTestKit";
 import { resetUploads, UPLOAD_MS } from "./uploads";
 
 /*
@@ -230,5 +230,41 @@ describe("the hero image's uploads", () => {
         const row = (await screen.findByText("banner.gif")).closest("li") as HTMLElement;
         expect(within(row).getByText(".gif files can't be the hero image. Use a JPG, PNG or WebP picture.")).toBeInTheDocument();
         expect(api.log.started).toEqual([]);
+    });
+});
+
+describe("the publish bar after a change that is undone", () => {
+    it("follows the server after every change to the files: shown to the client and hidden again is nothing to publish", async () => {
+        const settled = itemOf(5, "Living room v3", fileOf(11, "Living room v3.jpg"), { state: "unchanged" });
+        const live = liveContent(contentOf([settled], { publication: published }));
+        const chosen = projectFileOf(5, "Living room v3", fileOf(11, "Living room v3.jpg"), { forClient: true, clientState: "unchanged" });
+        const kitchenFile = projectFileOf(6, "Kitchen", fileOf(12, "Kitchen.jpg"));
+        const files = liveFiles(filesOf([chosen, kitchenFile], { canChooseForClient: true }));
+        renderApp(part("presentation"), publisher, live.handler, files.handler, ...projectWorkHandlers,
+            http.put(`${filesBase}/items/:itemId/for-client`, async ({ request }) => {
+                const { forClient } = (await request.json()) as { forClient: boolean };
+                const changed = { ...kitchenFile, forClient, clientState: forClient ? ("new" as const) : null };
+                files.box.files = filesOf([chosen, changed], { canChooseForClient: true });
+                // what clients would get: the kitchen as well, then, hidden again, exactly what they have
+                live.box.content = forClient ? contentOf([settled, itemOf(6, "Kitchen", fileOf(12, "Kitchen.jpg"))], { publication: published })
+                    : contentOf([settled], { publication: published });
+                return HttpResponse.json(changed);
+            }));
+
+        expect(await screen.findByText("· Everything is published")).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("tab", { name: /^Project files/ }));
+        await menuOf("Kitchen");
+        await userEvent.click(inMenu().getByRole("button", { name: "Show to client" }));
+        expect(await screen.findByText("Shown to the client")).toBeInTheDocument();
+        await menuOf("Kitchen");
+        await userEvent.click(inMenu().getByRole("button", { name: "Hide from client" }));
+        expect(await screen.findByText("Hidden from the client")).toBeInTheDocument();
+
+        const asked = live.box.gets;
+        await userEvent.click(screen.getByRole("tab", { name: /^Client portal/ }));
+        // the client portal is asked for again, and there is nothing to publish: the change was undone
+        await waitFor(() => expect(live.box.gets).toBeGreaterThan(asked));
+        expect(await screen.findByText("· Everything is published")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Publish changes" })).toBeDisabled();
     });
 });
