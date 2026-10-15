@@ -66,13 +66,13 @@ export default function PortalResetPasswordPage() {
     return (
         <AuthLayout title="Choose a new password">
             <form className="stack" onSubmit={submit} noValidate>
-                <Field id="pr-pass" label="New password" required error={form.errors.password} hint={PASSWORD_HINT}>
+                <Field id="pr-pass" label="New password" required error={form.error("password")} hint={PASSWORD_HINT}>
                     <input id="pr-pass" className="input" type="password" autoComplete="new-password" autoFocus
-                        value={form.values.password} onChange={(e) => form.set("password", e.target.value)} />
+                        value={form.values.password} onChange={(e) => form.set("password", e.target.value)} onBlur={form.touch("password")} />
                 </Field>
-                <Field id="pr-repeat" label="Repeat it" required error={form.errors.repeat}>
+                <Field id="pr-repeat" label="Repeat it" required error={form.error("repeat")}>
                     <input id="pr-repeat" className="input" type="password" autoComplete="new-password"
-                        value={form.values.repeat} onChange={(e) => form.set("repeat", e.target.value)} />
+                        value={form.values.repeat} onChange={(e) => form.set("repeat", e.target.value)} onBlur={form.touch("repeat")} />
                 </Field>
                 <FieldError message={form.errors.form} />
                 <button className="btn btn-primary btn-lg btn-block" type="submit" disabled={busy}>

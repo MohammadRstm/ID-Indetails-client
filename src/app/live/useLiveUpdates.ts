@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { refreshSession, sessionExpired } from "@/api/http";
 import { secondsLeft } from "@/api/tokenExpiry";
 import { tokenStore } from "@/api/tokenStore";
+import { refreshDiscussion } from "@/portal/discussion/discussionApi";
 
 /** Which chat changed: a team's, or the direct chat with a person. */
 export type LiveChat = { teamId?: number | null; userId?: number | null };
@@ -51,7 +52,11 @@ export function useLiveUpdates(userId: number) {
 
         connection.on("notifications", () => refresh("notifications"));
         connection.on("messages", () => refresh("messages"));
-        connection.on("portal", (change?: { projectId?: number }) => refresh(change?.projectId ? [...DISCUSSIONS, change.projectId] : DISCUSSIONS));
+        // one project's discussion: its summary, its chat and the thread on screen; without a project, all of them
+        connection.on("portal", (change?: { projectId?: number }) => {
+            if (change?.projectId) refreshDiscussion(queryClient, "staff", change.projectId);
+            else refresh(DISCUSSIONS);
+        });
         // anything may have changed while the connection was down
         connection.onreconnected(() => refresh("notifications", "messages", DISCUSSIONS));
         // the automatic retries gave up (the API was down for a while): keep trying, slowly

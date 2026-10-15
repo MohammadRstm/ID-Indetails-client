@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData, type QueryClient } from "@tanstack/react-query";
 import type { AxiosInstance } from "axios";
 import { useRef } from "react";
+import { toApiError } from "@/api/errors";
 import type { CommentThread, DiscussionSummary, Draft, MessagePage, PortalChatMessage, PortalComment } from "./discussionTypes";
 
 /*
@@ -28,6 +29,16 @@ export const messagesKey = (side: DiscussionSide, projectId: number) => ["portal
 export const threadKey = (side: DiscussionSide, projectId: number, itemId: number) => ["portal-discussion", side, projectId, "thread", itemId] as const;
 
 type Pages = InfiniteData<MessagePage, number | undefined>;
+
+/**
+ * What a live signal about a project's discussion asks for again: the summary, the chat and the thread on screen. (Only
+ * what is on screen is asked for at once; a chat or thread that isn't is marked out of date, for when it is opened.)
+ */
+export function refreshDiscussion(queryClient: QueryClient, side: DiscussionSide, projectId: number) {
+    void queryClient.invalidateQueries({ queryKey: summaryKey(side, projectId), exact: true });
+    void queryClient.invalidateQueries({ queryKey: messagesKey(side, projectId), exact: true });
+    void queryClient.invalidateQueries({ queryKey: [...summaryKey(side, projectId), "thread"] });
+}
 
 /** The project's discussion at a glance: who takes part, what is unread, which files have comments. A 404 means this person doesn't take part. */
 export function useDiscussionSummary(d: Discussion, projectId: number, options: { enabled?: boolean; retry?: false } = {}) {
@@ -65,6 +76,16 @@ export function useCommentThread(d: Discussion, projectId: number, itemId: numbe
 /** The summary's counts move with every write: ask for it again. The chat and the threads are set from the answers. */
 function refreshSummary(queryClient: QueryClient, d: Discussion, projectId: number) {
     return queryClient.invalidateQueries({ queryKey: summaryKey(d.side, projectId), exact: true });
+}
+
+/**
+ * A write refused because the project was archived meanwhile (422 portal_discussion_closed): the summary is asked for
+ * again, and the composer gives way to its closed note instead of offering Retry.
+ */
+function closedMeanwhile(queryClient: QueryClient, d: Discussion, projectId: number) {
+    return (error: unknown) => {
+        if (toApiError(error).code === "portal_discussion_closed") void refreshSummary(queryClient, d, projectId);
+    };
 }
 
 /** A message that was sent or edited, in the newest page or in place. A chat that isn't loaded yet is asked for instead. */
@@ -120,6 +141,7 @@ export function useSendMessage(d: Discussion, projectId: number) {
             putMessage(queryClient, d, projectId, message);
             void refreshSummary(queryClient, d, projectId);
         },
+        onError: closedMeanwhile(queryClient, d, projectId),
     });
 }
 
@@ -132,6 +154,7 @@ export function useEditMessage(d: Discussion, projectId: number) {
             putMessage(queryClient, d, projectId, message);
             void refreshSummary(queryClient, d, projectId);
         },
+        onError: closedMeanwhile(queryClient, d, projectId),
     });
 }
 
@@ -152,6 +175,7 @@ export function useAddComment(d: Discussion, projectId: number) {
             putComment(queryClient, d, projectId, comment);
             void refreshSummary(queryClient, d, projectId);
         },
+        onError: closedMeanwhile(queryClient, d, projectId),
     });
 }
 
@@ -164,6 +188,7 @@ export function useEditComment(d: Discussion, projectId: number) {
             putComment(queryClient, d, projectId, comment);
             void refreshSummary(queryClient, d, projectId);
         },
+        onError: closedMeanwhile(queryClient, d, projectId),
     });
 }
 
@@ -176,6 +201,7 @@ export function useDeleteComment(d: Discussion, projectId: number) {
             putComment(queryClient, d, projectId, comment);
             void refreshSummary(queryClient, d, projectId);
         },
+        onError: closedMeanwhile(queryClient, d, projectId),
     });
 }
 

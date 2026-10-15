@@ -141,6 +141,22 @@ describe("a client", () => {
         expect(screen.getByText("This client can't be deleted")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Archive instead" })).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Delete client" })).toBeNull();
+        // what archiving does to the client portal
+        expect(screen.getByText(/Their contacts lose access to the client portal; restoring the client doesn't bring it back\./)).toBeInTheDocument();
+    });
+
+    it("says that archiving ends the contacts' client portal access", async () => {
+        const archived: string[] = [];
+        renderApp(`/design/clients/${client.id}`, admin,
+            http.post("/api/clients/:id/archive", ({ params }) => { archived.push(String(params.id)); return HttpResponse.json({ ...client, isArchived: true }); }),
+            ...projectHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Client actions" }));
+        await userEvent.click(screen.getByRole("button", { name: "Archive client" }));
+
+        expect(await screen.findByText(
+            "Hidden from pickers - projects and history are unchanged. Their contacts lose access to the client portal; restoring the client doesn't bring it back.",
+        )).toBeInTheDocument();
+        expect(archived).toEqual([String(client.id)]);
     });
 
     it("says so when the client isn't there", async () => {

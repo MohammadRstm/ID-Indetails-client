@@ -68,7 +68,7 @@ export default function ClientPortalTab({ project }: { project: Project }) {
                         options={parts.map((p) => ({
                             value: p,
                             label: p === "discussion"
-                                ? <>Discussion{unread > 0 && <> <span className="dp-badge">{unread}<span className="sr"> unread</span></span></>}</>
+                                ? <>Discussion{unread > 0 && <> <span className="dp-badge" aria-hidden="true">{unread}</span><span className="sr"> {unread} unread</span></>}</>
                                 : p === "access" ? "Client access" : SECTION_LABEL[p],
                         }))} />
                 </div>

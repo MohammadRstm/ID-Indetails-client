@@ -80,7 +80,7 @@ describe("the Discussion part of the Client portal tab", () => {
         const log = await screen.findByRole("log", { name: "Messages" });
         await within(log).findByText("Welcome aboard");
 
-        await userEvent.type(screen.getByRole("textbox", { name: "Message" }), "Shall we meet on Monday?");
+        await userEvent.type(screen.getByRole("combobox", { name: "Message" }), "Shall we meet on Monday?");
         await userEvent.click(screen.getByRole("button", { name: "Send" }));
 
         const sent = (await within(log).findByText("Shall we meet on Monday?")).closest("li") as HTMLElement;

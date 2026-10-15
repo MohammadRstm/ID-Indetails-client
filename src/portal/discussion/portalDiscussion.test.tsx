@@ -8,7 +8,7 @@ import { resetLinks } from "../presentation/presentationLinks";
 import type { PortalPresentation, PresentationItem } from "../presentation/presentationTypes";
 import {
     CLIENT_BASE, commentOf, messageOf, mockDiscussion, nadia, sarah, summaryOf, threadOf, threadSummaryOf, youAre,
-    type MockDiscussion,
+    type MockDiscussion, type SharedFile,
 } from "./discussionTestKit";
 
 /*
@@ -46,11 +46,11 @@ const presented = http.get("/api/portal/projects/:id", () => HttpResponse.json(p
 /** Rania, the client, signed in. */
 const me = youAre("c7");
 
-type Init = Partial<Pick<MockDiscussion, "summary" | "messages" | "threads">>;
+type Init = Partial<Pick<MockDiscussion, "summary" | "messages" | "threads">> & { published?: SharedFile[] };
 
-/** Opens the client's page at `path` with the mock discussion holding `init`. */
+/** Opens the client's page at `path` with the mock discussion holding `init`; the presentation's files are the ones shared. */
 function open(path: string, init: Init = {}) {
-    const { box, handlers } = mockDiscussion(CLIENT_BASE, { viewer: "c7", ...init });
+    const { box, handlers } = mockDiscussion(CLIENT_BASE, { viewer: "c7", published: [living, kitchen, brochure], ...init });
     renderApp(path, null, signedIn, presented, ...handlers);
     return box;
 }
@@ -58,7 +58,7 @@ function open(path: string, init: Init = {}) {
 const chat = () => screen.findByRole("dialog", { name: "Messages" });
 /** The texts of the chat's messages, in the order they are shown. */
 const texts = () => within(screen.getByRole("log", { name: "Messages" })).getAllByRole("listitem").map((li) => li.querySelector(".dp-text")?.textContent);
-const messageBox = (dialog: HTMLElement) => within(dialog).getByRole("textbox", { name: "Message" });
+const messageBox = (dialog: HTMLElement) => within(dialog).getByRole("combobox", { name: "Message" });
 const token = /^[0-9a-f-]{36}$/;
 
 beforeEach(resetLinks);
@@ -132,12 +132,16 @@ describe("the project chat on the client's page", () => {
         expect(await within(dialog).findByText("Hello team")).toBeInTheDocument();
         expect(box.called("POST", "/messages").map((c) => c.body)).toEqual([{ body: "Hello team", mentions: [], clientToken: expect.stringMatching(token) }]);
         expect(messageBox(dialog)).toHaveValue("");
+        // the keyboard is back in the box (Send was disabled while it went), so Escape still closes the drawer
+        await waitFor(() => expect(messageBox(dialog)).toHaveFocus());
+        await userEvent.keyboard("{Escape}");
+        expect(screen.queryByRole("dialog", { name: "Messages" })).toBeNull();
     });
 
     it("sends with Enter and starts a new line with Shift+Enter", async () => {
         const box = open("/portal/projects/2?chat=1");
         const dialog = await chat();
-        await userEvent.type(await within(dialog).findByRole("textbox", { name: "Message" }), "Line one{Shift>}{Enter}{/Shift}Line two{Enter}");
+        await userEvent.type(await within(dialog).findByRole("combobox", { name: "Message" }), "Line one{Shift>}{Enter}{/Shift}Line two{Enter}");
 
         await waitFor(() => expect(box.called("POST", "/messages")).toHaveLength(1));
         expect(box.called("POST", "/messages")[0].body).toMatchObject({ body: "Line one\nLine two" });
@@ -172,7 +176,7 @@ describe("the project chat on the client's page", () => {
     it("counts the characters against the limit and says what is wrong as it happens", async () => {
         const box = open("/portal/projects/2?chat=1");
         const dialog = await chat();
-        const field = await within(dialog).findByRole("textbox", { name: "Message" });
+        const field = await within(dialog).findByRole("combobox", { name: "Message" });
         expect(within(dialog).getByText("0 / 4000")).toBeInTheDocument();
 
         // nothing to send: the box says so, next to itself
@@ -201,7 +205,7 @@ describe("the project chat on the client's page", () => {
 
         const mine = within(dialog).getByText("Draft plan please").closest("li") as HTMLElement;
         await userEvent.click(within(mine).getByRole("button", { name: "Edit" }));
-        const field = within(mine).getByRole("textbox", { name: "Edit message" });
+        const field = within(mine).getByRole("combobox", { name: "Edit message" });
         expect(field).toHaveValue("Draft plan please");
         await userEvent.clear(field);
         await userEvent.type(field, "Draft plan, please");
@@ -211,14 +215,14 @@ describe("the project chat on the client's page", () => {
         expect(within(mine).getByText("(edited)")).toBeInTheDocument();
         expect(box.called("PUT", "/messages/2").map((c) => c.body)).toEqual([{ body: "Draft plan, please", mentions: [] }]);
         // the editing box is gone, the composer stays
-        expect(within(dialog).queryByRole("textbox", { name: "Edit message" })).toBeNull();
+        expect(within(dialog).queryByRole("combobox", { name: "Edit message" })).toBeNull();
     });
 
     it("can give up an edit with Cancel, and sends nothing", async () => {
         const box = open("/portal/projects/2?chat=1", { messages: [messageOf(1, me, "As it was")] });
         const dialog = await chat();
         await userEvent.click(await within(dialog).findByRole("button", { name: "Edit" }));
-        await userEvent.type(within(dialog).getByRole("textbox", { name: "Edit message" }), " and more");
+        await userEvent.type(within(dialog).getByRole("combobox", { name: "Edit message" }), " and more");
         await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
 
         expect(within(dialog).getByText("As it was")).toBeInTheDocument();
@@ -235,7 +239,7 @@ describe("the project chat on the client's page", () => {
 
         expect(await within(dialog).findByText("Handover is done")).toBeInTheDocument();
         expect(within(dialog).getByText(reason)).toBeInTheDocument();
-        expect(within(dialog).queryByRole("textbox")).toBeNull();
+        expect(within(dialog).queryByRole("combobox")).toBeNull();
         expect(within(dialog).queryByRole("button", { name: "Send" })).toBeNull();
         expect(within(dialog).queryByRole("button", { name: "Edit" })).toBeNull();
     });
@@ -252,6 +256,28 @@ describe("the project chat on the client's page", () => {
         expect(box.called("POST", "/read")[0].body).toEqual({ lastMessageId: 3 });
         // the answer is the new summary: nothing is new any more
         expect(await screen.findByRole("button", { name: "Messages" })).toBeInTheDocument();
+    });
+
+    it("gives way to the closed note when a send is refused because the project was archived meanwhile", async () => {
+        const reason = "This project is archived. You can read the messages but not add to them.";
+        const { box, handlers } = mockDiscussion(CLIENT_BASE, { viewer: "c7" });
+        renderApp("/portal/projects/2?chat=1", null, signedIn, presented,
+            http.post(`${CLIENT_BASE}/messages`, () => {
+                // archived since the chat was opened: the summary says so from now on
+                box.summary = { ...box.summary, canWrite: false, closedReason: reason };
+                return HttpResponse.json({ type: "business_rule", code: "portal_discussion_closed", message: "The project is archived." }, { status: 422 });
+            }),
+            ...handlers);
+        const dialog = await chat();
+        await within(dialog).findByText("No messages yet. Say hello to your project team.");
+        await userEvent.type(messageBox(dialog), "One more thing");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Send" }));
+
+        // the summary is asked for again, and its note takes the composer's place: there is nothing to retry
+        expect(await within(dialog).findByText(reason)).toBeInTheDocument();
+        expect(within(dialog).queryByRole("combobox")).toBeNull();
+        expect(within(dialog).queryByRole("button", { name: "Retry" })).toBeNull();
+        expect(box.called("GET", "/discussion").length).toBeGreaterThan(1);
     });
 
     it("shows a failed load with a way to try again", async () => {
@@ -276,7 +302,7 @@ describe("mentions", () => {
     it("offers the people who take part when @ and letters are typed, and puts the choice in the text and the keys", async () => {
         const box = open("/portal/projects/2?chat=1");
         const dialog = await chat();
-        const field = await within(dialog).findByRole("textbox", { name: "Message" });
+        const field = await within(dialog).findByRole("combobox", { name: "Message" });
 
         await userEvent.type(field, "Hi @Na");
         const list = await within(dialog).findByRole("listbox", { name: "Mention someone" });
@@ -298,7 +324,7 @@ describe("mentions", () => {
     it("works from the keyboard: the arrows choose, Enter picks and Escape closes the list", async () => {
         const box = open("/portal/projects/2?chat=1");
         const dialog = await chat();
-        const field = await within(dialog).findByRole("textbox", { name: "Message" });
+        const field = await within(dialog).findByRole("combobox", { name: "Message" });
 
         await userEvent.type(field, "@");
         const options = await within(dialog).findAllByRole("option");
@@ -322,7 +348,7 @@ describe("mentions", () => {
     it("sends only the people whose @Name is still in the text", async () => {
         const box = open("/portal/projects/2?chat=1");
         const dialog = await chat();
-        const field = await within(dialog).findByRole("textbox", { name: "Message" });
+        const field = await within(dialog).findByRole("combobox", { name: "Message" });
 
         await userEvent.type(field, "@Sa");
         await userEvent.click(await within(dialog).findByRole("option", { name: "Sarah Haddad" }));
@@ -419,7 +445,7 @@ describe("comments on files", () => {
         expect(within(panel).getByText("On an earlier version (Living room v1.jpg)")).toBeInTheDocument();
         expect(within(within(panel).getByText("Yes, oak please").closest("li") as HTMLElement).queryByText(/earlier version/)).toBeNull();
 
-        await userEvent.type(within(panel).getByRole("textbox", { name: "Comment" }), "Oak, then. Thank you!");
+        await userEvent.type(within(panel).getByRole("combobox", { name: "Comment" }), "Oak, then. Thank you!");
         await userEvent.click(within(panel).getByRole("button", { name: "Send" }));
         expect(await within(panel).findByText("Oak, then. Thank you!")).toBeInTheDocument();
         expect(box.called("POST", "/comments").map((c) => c.body)).toEqual([
@@ -455,17 +481,29 @@ describe("comments on files", () => {
         await userEvent.click(await screen.findByRole("button", { name: "Comments on Brochure" }));
         const dialog = await screen.findByRole("dialog", { name: "Comments" });
         expect(window.location.search).toBe("?item=14");
-        // nobody has commented on it yet: the title and file name are the page's own
+        // nobody has commented on it yet: its thread is empty
         expect(await within(dialog).findByText("Brochure")).toBeInTheDocument();
         expect(within(dialog).getByText("brochure.pdf")).toBeInTheDocument();
         expect(within(dialog).getByText("No comments yet.")).toBeInTheDocument();
-        expect(within(dialog).getByRole("textbox", { name: "Comment" })).toBeInTheDocument();
+        expect(within(dialog).getByRole("combobox", { name: "Comment" })).toBeInTheDocument();
 
         await userEvent.click(within(dialog).getByRole("button", { name: "All comments" }));
         // the list is another drawer
         const list = await screen.findByRole("dialog", { name: "Comments" });
         expect(await within(list).findByRole("button", { name: /Living room/ })).toBeInTheDocument();
         expect(window.location.search).toBe("?comments=1");
+    });
+
+    it("shows a file that is no longer shared, and has no comments, as read-only", async () => {
+        // the brochure was taken out of what clients see since the page loaded: the API has no thread for it (404)
+        const box = open("/portal/projects/2", { ...init(), published: [living, kitchen] });
+
+        await userEvent.click(await screen.findByRole("button", { name: "Comments on Brochure" }));
+        const dialog = await screen.findByRole("dialog", { name: "Comments" });
+        expect(await within(dialog).findByText("This file is no longer shared")).toBeInTheDocument();
+        expect(within(dialog).getByText("Brochure")).toBeInTheDocument();
+        expect(within(dialog).queryByRole("combobox")).toBeNull();
+        expect(box.called("GET", "/comments/14")).toHaveLength(1);
     });
 
     it("asks before deleting your own comment, then shows it as deleted", async () => {
@@ -500,7 +538,7 @@ describe("comments on files", () => {
         const mine = (await within(panel).findByText("Yes, oak please")).closest("li") as HTMLElement;
 
         await userEvent.click(within(mine).getByRole("button", { name: "Edit" }));
-        const field = within(mine).getByRole("textbox", { name: "Edit comment" });
+        const field = within(mine).getByRole("combobox", { name: "Edit comment" });
         await userEvent.clear(field);
         await userEvent.type(field, "Yes, light oak please");
         await userEvent.click(within(mine).getByRole("button", { name: "Save" }));
@@ -538,7 +576,7 @@ describe("comments on files", () => {
         expect(await within(opened).findByText("Superseded by the new plan")).toBeInTheDocument();
         // read-only: the reason where the composer would be
         expect(within(opened).getByText("This file is no longer shared")).toBeInTheDocument();
-        expect(within(opened).queryByRole("textbox")).toBeNull();
+        expect(within(opened).queryByRole("combobox")).toBeNull();
     });
 
     it("marks the comments read when a file's comments are on screen", async () => {
@@ -561,6 +599,6 @@ describe("comments on files", () => {
 
         expect(await within(panel).findByText("Do you prefer the oak?")).toBeInTheDocument();
         expect(within(panel).getByText(reason)).toBeInTheDocument();
-        expect(within(panel).queryByRole("textbox")).toBeNull();
+        expect(within(panel).queryByRole("combobox")).toBeNull();
     });
 });

@@ -34,6 +34,9 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
     const history = useRevenueHistory(project.id, permissions.has(P.ACTIVITY_VIEW)).data ?? [];
     const errors = useFormErrors();
     const clientError = billing === "client" && !clientId && "Choose the client this work is for.";
+    // the client that would be saved; another one than now (or none) ends the current client's portal access
+    const chosenClientId = billing === "internal" || !clientId ? null : +clientId;
+    const changesClient = project.domain === "design" && project.client != null && chosenClientId !== project.client.id;
 
     function submit() {
         if (save.isPending) return;
@@ -67,6 +70,15 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
                         : `An internal project has no payment - its labour and expenses are tracked as company cost.${project.client ? ` It will no longer belong to ${project.client.displayName}.` : ""}`}
                 </div>
             </div>
+            {changesClient && (
+                <div className="banner hold mt" role="note">
+                    <Icon name="alert" />
+                    <div className="grow">
+                        {project.client?.displayName}'s contacts lose access to this project's client portal. Its chat and comments stay with the
+                        project: if it gets a client again, that client's contacts will see them once invited.
+                    </div>
+                </div>
+            )}
             {needsClient && (
                 <div className="field mt">
                     <label className="label required" htmlFor="pay-client">Client</label>

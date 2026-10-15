@@ -10,7 +10,8 @@ a.portal-project:hover .portal-project-open .ic { transform: translateX(2px); }
 
 /* The page: wide on large screens, a 16px gutter on phones. The top bar scrolls away; the section menu stays. */
 .pp-wrap { --pp-gutter: 24px; max-width: 1320px; margin: 0 auto; padding: 20px var(--pp-gutter) 56px; }
-.pp-page .portal-top { position: static; }
+/* in the flow, so it scrolls away, and still the box the bell's list hangs from on phones */
+.pp-page .portal-top { position: relative; }
 @media (max-width: 640px) {
   .pp-wrap { --pp-gutter: 16px; padding-bottom: 40px; }
 }
@@ -131,12 +132,19 @@ button.pp-thumb:hover img, button.pp-thumb:hover video { transform: scale(1.03);
 /* The project's discussion: the chat, the comments on files and the @mentions. The client's page and the staff's
    Discussion part both draw it. */
 
+/* The unread badges' red: a shade darker than --now in the light theme, so their small white numbers read (4.5:1) */
+:root { --now-badge: #C2402C; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --now-badge: var(--now); }
+}
+:root[data-theme="dark"] { --now-badge: var(--now); }
+
 /* The page's top line: the way back on the left, Messages and Comments on the right */
 .pp-topline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 0 0 14px; }
 .pp-topline .pp-back { margin-bottom: 0; }
 .pp-topline-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .dp-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px;
-  background: var(--now); color: var(--on-accent); font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  background: var(--now-badge); color: var(--on-accent); font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
 /* A card's comments: how many, with a dot when some are new */
 .pp-comments { position: relative; gap: 6px; }
@@ -220,13 +228,15 @@ button.pp-thumb:hover img, button.pp-thumb:hover video { transform: scale(1.03);
 .dp-input.bad { border-color: var(--now); box-shadow: 0 0 0 3px var(--now-soft); }
 .dp-composer-foot { display: flex; align-items: center; gap: 8px; }
 .dp-count { color: var(--ink-3); font-size: 11.5px; font-variant-numeric: tabular-nums; }
-.dp-count.over { color: var(--now); font-weight: 650; }
+.dp-count.over { color: var(--now-badge); font-weight: 650; }
 .dp-pop { position: absolute; left: 0; right: 0; bottom: 100%; z-index: 10; max-height: 220px; margin-bottom: 6px; padding: 5px; overflow-y: auto;
   border: 1px solid var(--line); border-radius: var(--r2); background: var(--surface); box-shadow: var(--shadow-2); }
 .dp-opt { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 9px; border: 0; border-radius: 5px; background: none; color: var(--ink);
   font-size: 12.5px; text-align: left; cursor: pointer; }
 .dp-opt:hover, .dp-opt.on { background: var(--accent-soft); color: var(--accent-ink); }
 .dp-opt-kind { margin-left: auto; color: var(--ink-3); font-size: 11px; }
+/* on the chosen option's tint, the muted grey would be too faint: it takes the option's own colour */
+.dp-opt:hover .dp-opt-kind, .dp-opt.on .dp-opt-kind { color: inherit; }
 .dp-closed { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r2); background: var(--surface-2);
   color: var(--ink-2); font-size: 12.5px; line-height: 1.45; }
 .dp-closed .ic { flex: none; width: 15px; height: 15px; margin-top: 1px; }
@@ -242,4 +252,4 @@ button.pp-thumb:hover img, button.pp-thumb:hover video { transform: scale(1.03);
 .dp-trow-meta { display: flex; flex: none; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 8px; max-width: 52%; font-size: 11.5px; }
 .dp-chip { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-2); font-weight: 600; font-variant-numeric: tabular-nums; }
 .dp-chip .ic { width: 13px; height: 13px; }
-.dp-unread { padding: 1px 7px; border-radius: 99px; background: var(--now); color: var(--on-accent); font-size: 10.5px; font-weight: 700; }
+.dp-unread { padding: 1px 7px; border-radius: 99px; background: var(--now-badge); color: var(--on-accent); font-size: 10.5px; font-weight: 700; }

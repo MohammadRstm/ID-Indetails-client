@@ -115,6 +115,16 @@ describe("the client portal's live connection", () => {
         expect(outOfDate(client)).toEqual(["unread", "list", "me"]);
     });
 
+    it("asks for everything again when the client's access ended somewhere", async () => {
+        const { client } = mount();
+        await opened();
+        seed(client);
+
+        act(() => live.emit("access"));
+        // the project's page too, which then finds the project gone
+        expect(outOfDate(client)).toEqual(expect.arrayContaining(["presentation", "me", "villaChat", "unread"]));
+    });
+
     it("asks for the discussions and the bell every minute while the connection is down, when someone is looking", async () => {
         vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
         look("visible");

@@ -58,6 +58,24 @@ describe("a project's money", () => {
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     });
 
+    it("warns that changing the client ends the current client's access to the client portal", async () => {
+        const warning = `${project.client?.displayName}'s contacts lose access to this project's client portal. Its chat and comments stay `
+            + "with the project: if it gets a client again, that client's contacts will see them once invited.";
+        renderApp(path, admin, ...projectWorkHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Edit payment" }));
+        const dialog = await screen.findByRole("dialog", { name: "Customer payment" });
+        // the same client: nothing to warn about
+        expect(within(dialog).queryByText(warning)).toBeNull();
+
+        await userEvent.click(within(dialog).getByRole("tab", { name: "Internal" }));
+        expect(within(dialog).getByRole("note")).toHaveTextContent(warning);
+        // a warning, not a stop
+        expect(within(dialog).getByRole("button", { name: "Save" })).toBeEnabled();
+
+        await userEvent.click(within(dialog).getByRole("tab", { name: "Client project" }));
+        expect(within(dialog).queryByRole("note")).toBeNull();
+    });
+
     it("turns client work into internal work, and asks which client when it goes back", async () => {
         const saved: unknown[] = [];
         const internal = { ...project, billingType: "internal", client: null, money: { ...m, revenue: 0, profit: -m.cost.total, margin: null } };

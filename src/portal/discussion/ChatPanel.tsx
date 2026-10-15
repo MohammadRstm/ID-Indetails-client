@@ -153,11 +153,14 @@ type RowProps = {
 };
 
 /** One message: who wrote it and when, its text (or the box it is edited in), and Edit on your own. */
-function MessageRow({ message, summary, editing, onEdit, onCancel, onSave }: RowProps) {
+function MessageRow({ message, summary, editing: editOpen, onEdit, onCancel, onSave }: RowProps) {
+    // a project closed meanwhile (an edit refused, the summary asked again) takes Edit away, open or not
+    const canEdit = message.canEdit && summary.canWrite;
+    const editing = editOpen && canEdit;
     return (
         <li className={cx("dp-msg", message.author.isYou && "mine")}>
             <AuthorLine author={message.author} createdAt={message.createdAt} editedAt={message.editedAt}
-                actions={message.canEdit && !editing && <button type="button" className="dp-act" onClick={onEdit}>Edit</button>} />
+                actions={canEdit && !editing && <button type="button" className="dp-act" onClick={onEdit}>Edit</button>} />
             {editing ? (
                 <MentionComposer label="Edit message" max={MAX_MESSAGE} people={summary.participants} closed={null}
                     initial={{ body: message.body, mentions: message.mentions }} submitLabel="Save" focusOnOpen

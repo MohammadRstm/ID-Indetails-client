@@ -48,9 +48,9 @@ export default function PortalForgotPasswordPage() {
     return (
         <AuthLayout title="Reset your password" sub="We'll email you a link to choose a new one.">
             <form className="stack" onSubmit={submit} noValidate>
-                <Field id="pf-email" label="Email" required error={form.errors.email}>
+                <Field id="pf-email" label="Email" required error={form.error("email")}>
                     <input id="pf-email" className="input" type="email" autoComplete="username" autoFocus
-                        value={form.values.email} onChange={(e) => form.set("email", e.target.value)} />
+                        value={form.values.email} onChange={(e) => form.set("email", e.target.value)} onBlur={form.touch("email")} />
                 </Field>
                 <FieldError message={form.errors.form} />
                 <button className="btn btn-primary btn-lg btn-block" type="submit" disabled={busy}>

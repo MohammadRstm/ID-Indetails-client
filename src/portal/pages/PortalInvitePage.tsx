@@ -12,7 +12,7 @@ import { useForm } from "@/shared/components/Forms/useForm";
 import { fmtDateY, fmtTime } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { portalAnonymous, type PortalAuthResponse, type PortalInvitationPreview } from "../portalApi";
-import { usePortalSession } from "../portalSession";
+import { accountName, usePortalSession } from "../portalSession";
 
 const schema = z
     .object({
@@ -53,17 +53,27 @@ export default function PortalInvitePage() {
         if (params.has("token")) setParams({}, { replace: true });
     }, [params, setParams]);
     const navigate = useNavigate();
-    const { adopt } = usePortalSession();
+    const { status, account, adopt, signOut } = usePortalSession();
     const form = useForm({ firstName: "", lastName: "", password: "", repeat: "" }, schema);
     const [busy, setBusy] = useState(false);
+    // set up and signed in by this page: on the way to their projects
+    const [accepted, setAccepted] = useState(false);
     const [refusedCode, setRefusedCode] = useState<string | null>(token ? null : "portal_invitation_invalid");
 
     const preview = useQuery({
         queryKey: ["portal", "invitation", token],
         queryFn: () => portalAnonymous<PortalInvitationPreview>("/invitations/validate", { token }),
-        enabled: token !== "",
+        // asked once nobody is signed in to the portal here (see below)
+        enabled: token !== "" && status === "signedOut",
         retry: false,
     });
+
+    async function signOutFirst() {
+        setBusy(true);
+        // a failure says so itself, and leaves the client signed in
+        await signOut();
+        setBusy(false);
+    }
 
     async function submit(e: FormEvent) {
         e.preventDefault();
@@ -76,6 +86,7 @@ export default function PortalInvitePage() {
                 lastName: form.values.lastName.trim(),
                 password: form.values.password,
             });
+            setAccepted(true);
             adopt(auth);
             navigate("/portal", { replace: true });
         } catch (error) {
@@ -97,6 +108,23 @@ export default function PortalInvitePage() {
                     <div className="grow">{refused.text}</div>
                 </div>
                 <Link className={refused.signIn ? "btn btn-primary btn-lg btn-block" : "btn btn-block"} to="/portal/login">Go to sign in</Link>
+            </AuthLayout>
+        );
+    }
+
+    // Someone is signed in to the portal in this browser: accepting would put the new account in their place, so they sign
+    // out first, knowingly.
+    if (status === "signedIn" && account && !accepted) {
+        return (
+            <AuthLayout title="Your invitation">
+                <div className="banner hold">
+                    <Icon name="info" />
+                    <div className="grow">You're signed in to the client portal as <b>{accountName(account)}</b>. Sign out to set up the account this invitation is for.</div>
+                </div>
+                <button type="button" className="btn btn-primary btn-lg btn-block" disabled={busy} onClick={() => void signOutFirst()}>
+                    {busy ? "Signing out…" : "Sign out and continue"}
+                </button>
+                <Link className="btn btn-block" to="/portal">Back to your projects</Link>
             </AuthLayout>
         );
     }
@@ -125,22 +153,22 @@ export default function PortalInvitePage() {
                     <input id="pi-email" className="input" type="email" value={invite.email} readOnly autoComplete="username" />
                 </Field>
                 <div className="grid g-2">
-                    <Field id="pi-first" label="First name" required error={form.errors.firstName}>
+                    <Field id="pi-first" label="First name" required error={form.error("firstName")}>
                         <input id="pi-first" className="input" autoComplete="given-name" autoFocus
-                            value={form.values.firstName} onChange={(e) => form.set("firstName", e.target.value)} />
+                            value={form.values.firstName} onChange={(e) => form.set("firstName", e.target.value)} onBlur={form.touch("firstName")} />
                     </Field>
-                    <Field id="pi-last" label="Last name" required error={form.errors.lastName}>
+                    <Field id="pi-last" label="Last name" required error={form.error("lastName")}>
                         <input id="pi-last" className="input" autoComplete="family-name"
-                            value={form.values.lastName} onChange={(e) => form.set("lastName", e.target.value)} />
+                            value={form.values.lastName} onChange={(e) => form.set("lastName", e.target.value)} onBlur={form.touch("lastName")} />
                     </Field>
                 </div>
-                <Field id="pi-pass" label="Choose a password" required error={form.errors.password} hint={PASSWORD_HINT}>
+                <Field id="pi-pass" label="Choose a password" required error={form.error("password")} hint={PASSWORD_HINT}>
                     <input id="pi-pass" className="input" type="password" autoComplete="new-password"
-                        value={form.values.password} onChange={(e) => form.set("password", e.target.value)} />
+                        value={form.values.password} onChange={(e) => form.set("password", e.target.value)} onBlur={form.touch("password")} />
                 </Field>
-                <Field id="pi-repeat" label="Repeat the password" required error={form.errors.repeat}>
+                <Field id="pi-repeat" label="Repeat the password" required error={form.error("repeat")}>
                     <input id="pi-repeat" className="input" type="password" autoComplete="new-password"
-                        value={form.values.repeat} onChange={(e) => form.set("repeat", e.target.value)} />
+                        value={form.values.repeat} onChange={(e) => form.set("repeat", e.target.value)} onBlur={form.touch("repeat")} />
                 </Field>
                 <FieldError message={form.errors.form} />
                 <button className="btn btn-primary btn-lg btn-block" type="submit" disabled={busy}>
