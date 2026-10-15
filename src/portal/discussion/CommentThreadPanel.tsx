@@ -4,11 +4,11 @@ import { loadFailed } from "@/api/queryState";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Icon from "@/shared/icons/Icon";
-import { cx } from "@/shared/utils/cx";
+import BubbleRow, { type RowAction } from "./BubbleRow";
 import { useAddComment, useCommentThread, useDeleteComment, useEditComment, useMarkRead, type Discussion } from "./discussionApi";
-import { namesOf } from "./textParts";
-import { MAX_COMMENT, type CommentThread, type DiscussionSummary, type PortalComment } from "./discussionTypes";
-import { AuthorLine } from "./DiscussionBits";
+import { mentionNames } from "./textParts";
+import { MAX_COMMENT, type CommentThread, type DiscussionSummary, type Draft, type PortalComment } from "./discussionTypes";
+import { ConfirmDelete } from "./DiscussionBits";
 import DiscussionText from "./DiscussionText";
 import MentionComposer from "./MentionComposer";
 import { usePageVisible } from "./usePageVisible";
@@ -28,9 +28,9 @@ type Props = {
 const READ_AFTER_MS = 600;
 
 /**
- * One file's comments, oldest first, with the composer below. Your own comments can be edited and deleted (deleting asks
- * first and leaves "Comment deleted"). A file that is no longer shared, or a closed project, can only be read. Having
- * the thread on screen in a visible tab marks its comments read.
+ * One file's comments, oldest first, with the composer below. Your own comments are on the right; their menu edits them,
+ * or deletes them (asking first, and leaving "Comment deleted"). A file that is no longer shared, or a closed project,
+ * can only be read. Having the thread on screen in a visible tab marks its comments read.
  */
 export default function CommentThreadPanel({ discussion, projectId, itemId, summary, fallback, hideTitle }: Props) {
     const query = useCommentThread(discussion, projectId, itemId);
@@ -129,50 +129,41 @@ type RowProps = {
     deleteBusy: boolean;
     onEdit: () => void;
     onCancelEdit: () => void;
-    onSave: (draft: { body: string; mentions: string[] }) => Promise<unknown>;
+    onSave: (draft: Draft) => Promise<unknown>;
     onAskDelete: () => void;
     onKeep: () => void;
     onDelete: () => void;
 };
 
-/** One comment: who, when, which version of the file it is about, its text, and Edit and Delete on your own. */
+/** One comment as a bubble: which version of the file it is about, its text, and on your own the menu to edit or delete it. */
 function CommentRow({ comment, summary, editing: editOpen, deleting: deleteOpen, deleteFailed, deleteBusy, onEdit, onCancelEdit, onSave, onAskDelete, onKeep, onDelete }: RowProps) {
     // a project closed meanwhile (an edit refused, the summary asked again) takes Edit and Delete away, open or not
-    const canEdit = comment.canEdit && summary.canWrite;
-    const canDelete = comment.canDelete && summary.canWrite;
+    const gone = comment.deleted || comment.body == null;
+    const canEdit = comment.canEdit && !gone && summary.canWrite;
+    const canDelete = comment.canDelete && !gone && summary.canWrite;
     const editing = editOpen && canEdit;
     const deleting = deleteOpen && canDelete;
-    const busy = editing || deleting;
-    const actions = !comment.deleted && !busy && (canEdit || canDelete) && (
-        <>
-            {canEdit && <button type="button" className="dp-act" onClick={onEdit}>Edit</button>}
-            {canDelete && <button type="button" className="dp-act" onClick={onAskDelete}>Delete</button>}
-        </>
-    );
+    const actions: RowAction[] = editing || deleting ? [] : [
+        ...(canEdit ? [{ label: "Edit", icon: "edit" as const, onSelect: onEdit }] : []),
+        ...(canDelete ? [{ label: "Delete comment", icon: "trash" as const, danger: true, onSelect: onAskDelete }] : []),
+    ];
 
     return (
-        <li className={cx("dp-msg", comment.author.isYou && "mine", comment.deleted && "gone")}>
-            <AuthorLine author={comment.author} createdAt={comment.createdAt} editedAt={comment.editedAt} actions={actions} />
-            {comment.onEarlierVersion && <div className="dp-version">On an earlier version ({comment.fileName})</div>}
-            {comment.deleted || comment.body == null ? (
-                <p className="dp-deleted">Comment deleted</p>
-            ) : editing ? (
+        <BubbleRow author={comment.author} createdAt={comment.createdAt} editedAt={comment.editedAt} menuLabel="Comment actions" actions={actions}
+            className={gone ? "gone" : undefined}
+            note={comment.onEarlierVersion && <div className="dp-version">On an earlier version ({comment.fileName})</div>}
+            editor={editing && comment.body != null ? (
                 <MentionComposer label="Edit comment" max={MAX_COMMENT} people={summary.participants} closed={null}
                     initial={{ body: comment.body, mentions: comment.mentions }} submitLabel="Save" focusOnOpen
                     onSubmit={onSave} onCancel={onCancelEdit} />
-            ) : (
-                <DiscussionText text={comment.body} names={namesOf(comment.mentions, summary.participants)} />
-            )}
-            {deleting && (
-                <div className="dp-confirm" role="group" aria-label="Delete this comment?">
-                    <span>Delete this comment? This can't be undone.</span>
-                    <span className="dp-confirm-btns">
-                        <button type="button" className="btn btn-sm btn-quiet" disabled={deleteBusy} onClick={onKeep}>Cancel</button>
-                        <button type="button" className="btn btn-sm btn-danger" disabled={deleteBusy} onClick={onDelete}>Delete comment</button>
-                    </span>
-                    {deleteFailed && <span className="err" role="alert"><Icon name="alert" />{deleteFailed}</span>}
-                </div>
-            )}
-        </li>
+            ) : undefined}
+            after={deleting && (
+                <ConfirmDelete question="Delete this comment?" action="Delete comment" busy={deleteBusy} failed={deleteFailed}
+                    onKeep={onKeep} onDelete={onDelete} />
+            )}>
+            {gone || comment.body == null
+                ? <p className="dp-deleted">Comment deleted</p>
+                : <DiscussionText text={comment.body} names={mentionNames(comment.mentions, summary.participants)} />}
+        </BubbleRow>
     );
 }

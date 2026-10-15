@@ -58,9 +58,26 @@ export function textParts(text: string, names: string[]): TextPart[] {
     return out;
 }
 
-/** The names of the people the keys stand for, among those who take part. */
-export function namesOf(keys: string[], people: DiscussionPerson[]): string[] {
-    return people.filter((p) => keys.includes(p.key)).map((p) => p.name);
+/** "@Client" names every client contact who takes part, but the writer. */
+export const CLIENT_NAME = "Client";
+
+/** Whom "@Client" names: the others who take part from the client's side. */
+export function clientsOf(people: DiscussionPerson[]): DiscussionPerson[] {
+    return people.filter((p) => p.kind === "client" && !p.isYou);
+}
+
+/** The names that stand out in what was written: the people it names, and "Client" when it names the client's side. */
+export function mentionNames(keys: string[], people: DiscussionPerson[]): string[] {
+    const named = people.filter((p) => keys.includes(p.key));
+    const names = named.map((p) => p.name);
+    return named.some((p) => p.kind === "client") ? [...names, CLIENT_NAME] : names;
+}
+
+/** The keys a draft is sent with: the people picked whose @Name is still in it, and with "@Client" every client contact. */
+export function mentionedKeys(text: string, picked: DiscussionPerson[], people: DiscussionPerson[]): string[] {
+    const keys = picked.filter((p) => namesPerson(text, p.name)).map((p) => p.key);
+    if (namesPerson(text, CLIENT_NAME)) keys.push(...clientsOf(people).map((p) => p.key));
+    return [...new Set(keys)];
 }
 
 /** The "@" being typed just before the caret, if there is one: where it starts and the letters after it. */

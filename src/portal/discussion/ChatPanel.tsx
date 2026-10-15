@@ -1,13 +1,14 @@
 import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
+import { errorMessage } from "@/api/errors";
 import { loadFailed } from "@/api/queryState";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Icon from "@/shared/icons/Icon";
-import { cx } from "@/shared/utils/cx";
-import { useChatMessages, useEditMessage, useMarkRead, useSendMessage, type Discussion } from "./discussionApi";
-import { namesOf } from "./textParts";
-import { MAX_MESSAGE, type DiscussionSummary, type PortalChatMessage } from "./discussionTypes";
-import { AuthorLine } from "./DiscussionBits";
+import BubbleRow, { type RowAction } from "./BubbleRow";
+import { useChatMessages, useDeleteMessage, useEditMessage, useMarkRead, useSendMessage, type Discussion } from "./discussionApi";
+import { mentionNames } from "./textParts";
+import { MAX_MESSAGE, type DiscussionSummary, type Draft, type PortalChatMessage } from "./discussionTypes";
+import { ConfirmDelete } from "./DiscussionBits";
 import DiscussionText from "./DiscussionText";
 import MentionComposer from "./MentionComposer";
 import { usePageVisible } from "./usePageVisible";
@@ -25,13 +26,15 @@ const READ_AFTER_MS = 600;
 
 /**
  * A project's chat, for the client and the team alike: the messages oldest first with "Load earlier messages" above,
- * and the composer below. The list follows new messages while you are at the end; if you are reading further up, a
- * "New messages" button says so instead. Having the newest message on screen in a visible tab marks the chat read.
+ * and the composer below. Your own messages are on the right; their menu edits them, or deletes them for everyone
+ * (asking first). The list follows new messages while you are at the end; if you are reading further up, a "New
+ * messages" button says so instead. Having the newest message on screen in a visible tab marks the chat read.
  */
 export default function ChatPanel({ discussion, projectId, summary }: Props) {
     const messages = useChatMessages(discussion, projectId);
     const send = useSendMessage(discussion, projectId);
     const edit = useEditMessage(discussion, projectId);
+    const remove = useDeleteMessage(discussion, projectId);
     const { mutate: markRead } = useMarkRead(discussion, projectId);
     const visible = usePageVisible();
     const list = useRef<HTMLDivElement>(null);
@@ -40,6 +43,7 @@ export default function ChatPanel({ discussion, projectId, summary }: Props) {
     const [atEnd, setAtEnd] = useState(true);
     const [seenId, setSeenId] = useState(0);
     const [editing, setEditing] = useState<number | null>(null);
+    const [deleting, setDeleting] = useState<number | null>(null);
 
     const shown = [...(messages.data?.pages ?? [])].reverse().flatMap((page) => page.messages);
     const oldestId = shown[0]?.id ?? 0;
@@ -118,12 +122,24 @@ export default function ChatPanel({ discussion, projectId, summary }: Props) {
                             <ul className="dp-msgs">
                                 {shown.map((message) => (
                                     <MessageRow key={message.id} message={message} summary={summary}
-                                        editing={editing === message.id}
-                                        onEdit={() => setEditing(message.id)}
-                                        onCancel={() => setEditing(null)}
+                                        editing={editing === message.id} deleting={deleting === message.id}
+                                        deleteFailed={deleting === message.id && remove.isError ? errorMessage(remove.error) : null}
+                                        deleteBusy={remove.isPending}
+                                        onEdit={() => { setDeleting(null); setEditing(message.id); }}
+                                        onCancelEdit={() => setEditing(null)}
                                         onSave={async (draft) => {
                                             await edit.mutateAsync({ messageId: message.id, ...draft });
                                             setEditing(null);
+                                        }}
+                                        onAskDelete={() => { remove.reset(); setEditing(null); setDeleting(message.id); }}
+                                        onKeep={() => setDeleting(null)}
+                                        onDelete={async () => {
+                                            try {
+                                                await remove.mutateAsync(message.id);
+                                                setDeleting(null);
+                                            } catch {
+                                                // the reason shows with the question
+                                            }
                                         }} />
                                 ))}
                             </ul>
@@ -147,27 +163,43 @@ type RowProps = {
     message: PortalChatMessage;
     summary: DiscussionSummary;
     editing: boolean;
+    deleting: boolean;
+    deleteFailed: string | null;
+    deleteBusy: boolean;
     onEdit: () => void;
-    onCancel: () => void;
-    onSave: (draft: { body: string; mentions: string[] }) => Promise<unknown>;
+    onCancelEdit: () => void;
+    onSave: (draft: Draft) => Promise<unknown>;
+    onAskDelete: () => void;
+    onKeep: () => void;
+    onDelete: () => void;
 };
 
-/** One message: who wrote it and when, its text (or the box it is edited in), and Edit on your own. */
-function MessageRow({ message, summary, editing: editOpen, onEdit, onCancel, onSave }: RowProps) {
-    // a project closed meanwhile (an edit refused, the summary asked again) takes Edit away, open or not
-    const canEdit = message.canEdit && summary.canWrite;
-    const editing = editOpen && canEdit;
+/** One message as a bubble: its text (or the box it is edited in), and on your own the menu to edit or delete it. */
+function MessageRow({ message, summary, editing: editOpen, deleting: deleteOpen, deleteFailed, deleteBusy, onEdit, onCancelEdit, onSave, onAskDelete, onKeep, onDelete }: RowProps) {
+    // a project closed meanwhile (an edit refused, the summary asked again) takes Edit and Delete away, open or not
+    const canChange = message.canEdit && !message.deleted && message.body != null && summary.canWrite;
+    const editing = editOpen && canChange;
+    const deleting = deleteOpen && canChange;
+    const actions: RowAction[] = canChange && !editing && !deleting ? [
+        { label: "Edit", icon: "edit", onSelect: onEdit },
+        { label: "Delete message for everyone", icon: "trash", danger: true, onSelect: onAskDelete },
+    ] : [];
+
     return (
-        <li className={cx("dp-msg", message.author.isYou && "mine")}>
-            <AuthorLine author={message.author} createdAt={message.createdAt} editedAt={message.editedAt}
-                actions={canEdit && !editing && <button type="button" className="dp-act" onClick={onEdit}>Edit</button>} />
-            {editing ? (
+        <BubbleRow author={message.author} createdAt={message.createdAt} editedAt={message.editedAt} menuLabel="Message actions" actions={actions}
+            className={message.deleted ? "gone" : undefined}
+            editor={editing && message.body != null ? (
                 <MentionComposer label="Edit message" max={MAX_MESSAGE} people={summary.participants} closed={null}
                     initial={{ body: message.body, mentions: message.mentions }} submitLabel="Save" focusOnOpen
-                    onSubmit={onSave} onCancel={onCancel} />
-            ) : (
-                <DiscussionText text={message.body} names={namesOf(message.mentions, summary.participants)} />
-            )}
-        </li>
+                    onSubmit={onSave} onCancel={onCancelEdit} />
+            ) : undefined}
+            after={deleting && (
+                <ConfirmDelete question="Delete this message for everyone?" action="Delete for everyone" busy={deleteBusy} failed={deleteFailed}
+                    onKeep={onKeep} onDelete={onDelete} />
+            )}>
+            {message.deleted || message.body == null
+                ? <p className="dp-deleted">This message was deleted</p>
+                : <DiscussionText text={message.body} names={mentionNames(message.mentions, summary.participants)} />}
+        </BubbleRow>
     );
 }

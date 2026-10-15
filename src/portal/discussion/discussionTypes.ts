@@ -40,12 +40,15 @@ export type DiscussionSummary = {
 export type PortalChatMessage = {
     id: number;
     author: DiscussionPerson;
-    body: string;
-    /** Person keys mentioned. */
+    /** Null once deleted. */
+    body: string | null;
+    /** Its author deleted it for everyone: it stays in the chat as "This message was deleted". */
+    deleted: boolean;
+    /** Person keys mentioned; none once deleted. */
     mentions: string[];
     createdAt: string;
     editedAt: string | null;
-    /** Yours, and the project isn't archived. */
+    /** Yours, not deleted, and the project isn't archived: it can be edited and deleted. */
     canEdit: boolean;
 };
 

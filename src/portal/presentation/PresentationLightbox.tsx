@@ -48,8 +48,9 @@ export default function PresentationLightbox({ items, index, getLink, onIndex, o
     // the keys work wherever the keyboard is, and Escape closes this layer only, not the one under it
     const onKey = useEffectEvent((e: KeyboardEvent) => {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
-        // typing in the comments box: the arrows move its caret, and its own Escape closes its list first (then this one's, below)
-        if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable='true']")) return;
+        // typing in the comments box: the arrows move its caret, and its own Escape closes its list first (then this one's,
+        // below); a comment's menu has the keys to itself, and its Escape closes only the menu
+        if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable='true'], [role='menu']")) return;
         const by = e.key === "ArrowLeft" ? -1 : e.key === "ArrowRight" ? 1 : 0;
         if (e.key !== "Escape" && by === 0) return;
         e.preventDefault();

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter } from "react-router";
@@ -57,12 +57,13 @@ describe("the Discussion part of the Client portal tab", () => {
         expect(within(parts).getAllByRole("tab").map((t) => t.textContent)).toEqual(["Presentation", "3D", "Drawings", "Client access", "Discussion"]);
         expect(within(parts).getByRole("tab", { name: "Discussion" })).toHaveAttribute("aria-selected", "true");
 
-        // the chat, with each message's side
+        // the chat, with each message's side: the client's on the left, your own on the right
         const log = await screen.findByRole("log", { name: "Messages" });
         const theirs = (await within(log).findByText("Hello from the client")).closest("li") as HTMLElement;
         expect(within(theirs).getByText("Client")).toBeInTheDocument();
+        expect(theirs).not.toHaveClass("mine");
         const ours = within(log).getByText("Welcome aboard").closest("li") as HTMLElement;
-        expect(within(ours).getByText("Team")).toBeInTheDocument();
+        expect(ours).toHaveClass("mine");
 
         // the files that have comments
         const row = await screen.findByRole("button", { name: /Living room v3/ });
@@ -84,8 +85,29 @@ describe("the Discussion part of the Client portal tab", () => {
         await userEvent.click(screen.getByRole("button", { name: "Send" }));
 
         const sent = (await within(log).findByText("Shall we meet on Monday?")).closest("li") as HTMLElement;
-        expect(within(sent).getByText("Team")).toBeInTheDocument();
+        expect(sent).toHaveClass("mine");
         expect(box.called("POST", "/messages").map((c) => c.path)).toEqual([`${apiBase}/messages`]);
+    });
+
+    it("names the client's contacts with @client, and deletes your own message for everyone at the staff address", async () => {
+        const { box, handlers } = discussionOf("u2");
+        renderApp(discussion, nadia, ...projectWorkHandlers, ...handlers);
+        const log = await screen.findByRole("log", { name: "Messages" });
+        const ours = (await within(log).findByText("Welcome aboard")).closest("li") as HTMLElement;
+
+        await userEvent.type(screen.getByRole("combobox", { name: "Message" }), "@client ");
+        expect(screen.getByRole("combobox", { name: "Message" })).toHaveValue("@Client ");
+        await userEvent.type(screen.getByRole("combobox", { name: "Message" }), "the plans are ready");
+        await userEvent.click(screen.getByRole("button", { name: "Send" }));
+        await waitFor(() => expect(box.called("POST", "/messages")).toHaveLength(1));
+        // the client's contact (c7), never a colleague
+        expect(box.called("POST", "/messages")[0].body).toMatchObject({ body: "@Client the plans are ready", mentions: ["c7"] });
+
+        fireEvent.contextMenu(within(ours).getByText("Welcome aboard"));
+        await userEvent.click(within(await screen.findByRole("menu", { name: "Message actions" })).getByRole("menuitem", { name: "Delete message for everyone" }));
+        await userEvent.click(within(ours).getByRole("button", { name: "Delete for everyone" }));
+        expect(await within(ours).findByText("This message was deleted")).toBeInTheDocument();
+        expect(box.called("DELETE", "/messages/2").map((c) => c.path)).toEqual([`${apiBase}/messages/2`]);
     });
 
     it("says there are no messages without inviting anyone to say hello", async () => {
