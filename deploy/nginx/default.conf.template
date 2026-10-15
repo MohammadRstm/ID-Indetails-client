@@ -1,5 +1,6 @@
 # ID InDetails client. Rendered at start-up by the nginx image, which replaces ${API_UPSTREAM} (and only the
 # variables that are set) from the environment. TLS ends in front of this container; it serves plain HTTP.
+# The security headers are a template too (security-headers.conf.template), rendered beside this file.
 
 # The scheme the visitor used, as the TLS proxy in front reports it.
 map $http_x_forwarded_proto $forwarded_proto {
@@ -84,20 +85,20 @@ server {
 
     # Content-hashed files: a new build has new names, so they never change.
     location /assets/ {
-        include /etc/nginx/snippets/security-headers.conf;
+        include /etc/nginx/conf.d/snippets/security-headers.conf;
         add_header Cache-Control "public, max-age=31536000, immutable" always;
         try_files $uri =404;
     }
 
     # The app's entry: always checked again, so a deploy shows at once.
     location = /index.html {
-        include /etc/nginx/snippets/security-headers.conf;
+        include /etc/nginx/conf.d/snippets/security-headers.conf;
         add_header Cache-Control "no-cache" always;
     }
 
     # Other files of the build (the favicon), and every app route, which the app draws itself.
     location / {
-        include /etc/nginx/snippets/security-headers.conf;
+        include /etc/nginx/conf.d/snippets/security-headers.conf;
         add_header Cache-Control "public, max-age=3600" always;
         try_files $uri /index.html;
     }

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { fmtBytes } from "./bytes";
 import { money } from "./money";
 import {
     addDays,
@@ -93,5 +94,24 @@ describe("money", () => {
 
     it("moves to the next unit instead of writing 1000k", () => {
         expect(compactNumber(999_999)).toBe("1M");
+    });
+});
+
+describe("file sizes", () => {
+    it("counts in units of 1024, with a decimal from MB up", () => {
+        expect(fmtBytes(0)).toBe("0 B");
+        expect(fmtBytes(512)).toBe("512 B");
+        expect(fmtBytes(38 * 1024)).toBe("38 KB");
+        expect(fmtBytes(1.5 * 1024 * 1024)).toBe("1.5 MB");
+        expect(fmtBytes(640 * 1024 ** 2)).toBe("640 MB");
+        expect(fmtBytes(2.25 * 1024 ** 3)).toBe("2.3 GB");
+        expect(fmtBytes(3 * 1024 ** 4)).toBe("3 TB");
+    });
+
+    it("moves to the next unit instead of writing 1,024", () => {
+        expect(fmtBytes(1024)).toBe("1 KB");
+        expect(fmtBytes(1024 * 1024 - 1)).toBe("1 MB");
+        expect(fmtBytes(1024 ** 3 - 1)).toBe("1 GB");
+        expect(fmtBytes(2048 * 1024 ** 4)).toBe("2,048 TB");
     });
 });

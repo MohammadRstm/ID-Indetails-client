@@ -505,3 +505,49 @@ table { line-height: normal; font-weight: normal; }
   .portal-projects { grid-template-columns: 1fr; }
   .portal-who { display: none; }
 }
+
+/* A Design project's client portal content: the parts to switch between, a section's storage line, the files on their
+   way up and a card for each file. Files are dropped on the section, which is outlined while they are over it. */
+.pc-parts { margin-bottom: 14px; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.pc-parts::-webkit-scrollbar { display: none; }
+.pc-drop { position: relative; border-radius: var(--r2); }
+.pc-drop.on { outline: 2px dashed var(--accent); outline-offset: 3px; }
+.pc-drop-cue { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; padding: 16px; border-radius: var(--r2); text-align: center;
+  background: color-mix(in srgb, var(--accent-soft) 88%, transparent); color: var(--accent-ink); font-weight: 650; pointer-events: none; }
+.pc-strip { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin-bottom: 12px; font-size: 12.5px; color: var(--ink-2); }
+.pc-note { margin-bottom: 12px; }
+
+.pc-queue { list-style: none; margin: 0 0 14px; padding: 0; border: 1px solid var(--line); border-radius: var(--r2); background: var(--surface-2); }
+.pc-up { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-top: 1px solid var(--line); }
+.pc-up:first-child { border-top: 0; }
+.pc-up-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.pc-up-name { font-weight: 600; font-size: 12.5px; }
+.pc-up-meta { font-size: 11.5px; }
+.pc-up-actions { display: flex; gap: 6px; flex: none; }
+
+.pc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+.pc-card { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--line); border-radius: var(--r2); background: var(--surface); overflow: hidden; }
+.pc-thumb { position: relative; display: block; width: 100%; aspect-ratio: 4 / 3; padding: 0; border: 0; border-bottom: 1px solid var(--line); background: var(--surface-3); overflow: hidden; }
+button.pc-thumb { cursor: pointer; }
+.pc-thumb img, .pc-thumb video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pc-tile { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--ink-3); font-size: 11px; font-weight: 650; letter-spacing: .08em; }
+.pc-tile .ic { width: 28px; height: 28px; }
+.pc-play { position: absolute; right: 8px; bottom: 8px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: rgba(4,7,8,.62); color: #fff; }
+.pc-play .ic { width: 14px; height: 14px; }
+.pc-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 10px 11px 11px; }
+.pc-head { display: flex; align-items: flex-start; gap: 6px; }
+.pc-title { flex: 1; min-width: 0; padding-top: 1px; font-size: 13px; font-weight: 650; line-height: 1.35; }
+.pc-head .pop-host { flex: none; }
+.pc-head .icon-btn { width: 26px; height: 26px; margin: -3px -4px 0 0; }
+.pc-line { font-size: 11.5px; line-height: 1.4; }
+.pc-body > .badge { align-self: flex-start; margin-top: 5px; }
+@media (max-width: 640px) {
+  .pc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .pc-body { padding: 9px 9px 10px; }
+  .pc-up { flex-wrap: wrap; }
+  .pc-up-main { flex-basis: 100%; }
+  .pc-up-actions { flex: 1; justify-content: flex-end; }
+}
+@media (max-width: 420px) {
+  .pc-grid { grid-template-columns: minmax(0, 1fr); }
+}

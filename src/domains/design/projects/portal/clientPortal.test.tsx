@@ -10,8 +10,11 @@ import type { PortalClient, PortalClients } from "./clientAccessApi";
 
 const nadia = personas.designAdmin;
 const page = `/design/projects/${projectWork.project.id}`;
+// the Client access part of the tab; the tab itself opens on the first section
+const access = `${page}?tab=portal&part=access`;
 const tabs = () => within(screen.getAllByRole("tablist")[0]).getAllByRole("tab").map((t) => t.textContent?.replace(/\d+$/, "").trim());
-const rowOf = (email: string) => screen.getByText(email).closest("li") as HTMLElement;
+// the row, not the toast that may repeat the address
+const rowOf = (email: string) => screen.getAllByText(email).map((e) => e.closest(".pa-row")).find(Boolean) as HTMLElement;
 
 const none: PortalClient = {
     email: "", label: null, isContact: true, status: "not_invited", accountId: null, name: null, invitationId: null, invitedAt: null,
@@ -36,7 +39,7 @@ afterEach(() => vi.useRealTimers());
 
 describe("a Design project's Client portal tab", () => {
     it("lists the client's contacts and where each one stands", async () => {
-        renderApp(`${page}?tab=portal`, nadia, listed(contacts), ...projectWorkHandlers);
+        renderApp(access, nadia, listed(contacts), ...projectWorkHandlers);
         expect(await screen.findByText("Client portal access")).toBeInTheDocument();
         expect(within(rowOf("mounir@client.test")).getByText("Not invited")).toBeInTheDocument();
         expect(within(rowOf("rania@client.test")).getByText("Has access")).toBeInTheDocument();
@@ -49,7 +52,7 @@ describe("a Design project's Client portal tab", () => {
 
     it("invites a contact and shows the answer the server gives back", async () => {
         const sent: unknown[] = [];
-        renderApp(`${page}?tab=portal`, nadia, listed(contacts), ...projectWorkHandlers,
+        renderApp(access, nadia, listed(contacts), ...projectWorkHandlers,
             http.post("/api/projects/:id/portal/invitations", async ({ request }) => {
                 sent.push(await request.json());
                 return HttpResponse.json(list([
@@ -63,7 +66,7 @@ describe("a Design project's Client portal tab", () => {
 
     it("asks before ending a client's access", async () => {
         const ended: string[] = [];
-        renderApp(`${page}?tab=portal`, nadia, listed(contacts), ...projectWorkHandlers,
+        renderApp(access, nadia, listed(contacts), ...projectWorkHandlers,
             http.post("/api/projects/:id/portal/access/:accessId/revoke", ({ params }) => {
                 ended.push(String(params.accessId));
                 return HttpResponse.json(list([{ email: "rania@client.test", status: "access_ended", accountId: 7, accessId: 3, accessEndedAt: "2026-09-30T09:00:00Z" }]));
@@ -79,20 +82,20 @@ describe("a Design project's Client portal tab", () => {
     });
 
     it("says why no one can be invited, and offers no invite", async () => {
-        renderApp(`${page}?tab=portal`, nadia, listed(list([{ email: "mounir@client.test" }], "The project is archived.")), ...projectWorkHandlers);
+        renderApp(access, nadia, listed(list([{ email: "mounir@client.test" }], "The project is archived.")), ...projectWorkHandlers);
         expect(await screen.findByText("The project is archived.")).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Invite" })).toBeNull();
     });
 
-    it("isn't there without client_access:manage, even by link", async () => {
-        renderApp(`${page}?tab=portal`, withPermissions(nadia, { revoke: [P.CLIENT_ACCESS_MANAGE] }), ...projectWorkHandlers);
+    it("isn't there without client_access:manage or client_portal:manage, even by link", async () => {
+        renderApp(`${page}?tab=portal`, withPermissions(nadia, { revoke: [P.CLIENT_ACCESS_MANAGE, P.CLIENT_PORTAL_MANAGE] }), ...projectWorkHandlers);
         expect(await screen.findByText("Total hours")).toBeInTheDocument();
         expect(tabs()).not.toContain("Client portal");
     });
 
     it("isn't there on an internal project", async () => {
-        renderApp(page, nadia, ...projectWorkHandlers,
-            http.get("/api/projects/:id", () => HttpResponse.json({ ...projectWork.project, billingType: "internal", client: null })));
+        // ahead of the fixture's own project, so it answers first
+        renderApp(page, nadia, http.get("/api/projects/:id", () => HttpResponse.json({ ...projectWork.project, billingType: "internal", client: null })), ...projectWorkHandlers);
         await screen.findAllByRole("tab");
         expect(tabs()).not.toContain("Client portal");
     });
