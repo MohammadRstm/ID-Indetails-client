@@ -109,16 +109,22 @@ button.pp-thumb:hover img, button.pp-thumb:hover video { transform: scale(1.03);
   .pp-lb-next { right: 10px; }
 }
 
-/* The staff's preview: the page over the whole app, with a banner that stays at the top */
-.pp-preview { position: fixed; inset: 0; z-index: 106; display: flex; flex-direction: column; background: var(--ground); color: var(--ink); animation: fade .12s ease; }
-.pp-preview:focus { outline: none; }
-.pp-preview-banner { display: flex; flex: none; align-items: center; gap: 12px; padding: 10px 24px; border-bottom: 2px solid var(--warn-mark); background: var(--warn-soft); color: var(--warn); font-weight: 600; }
-.pp-preview-banner p { flex: 1; min-width: 0; }
+/* The staff's preview: the client's page alone, in a browser tab of its own, under a banner that stays at the top (one
+   line high, so the section menu can stay pinned just under it). The banner's tint is laid over the page's surface, so
+   nothing shows through it in the dark theme. */
+.pp-preview { --pp-top: 48px; }
+.pp-preview-banner { position: sticky; top: 0; z-index: 6; display: flex; align-items: center; gap: 12px; height: var(--pp-top); padding: 0 24px;
+  border-bottom: 2px solid var(--warn-mark); background: linear-gradient(var(--warn-soft), var(--warn-soft)) var(--surface); color: var(--warn); }
+.pp-preview-banner p { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-preview-banner b { font-weight: 650; }
+.pp-preview-sub { color: var(--ink-2); }
 .pp-preview-banner .ic { width: 18px; height: 18px; }
-.pp-preview-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.pp-preview-banner .btn .ic { width: 15px; height: 15px; }
+.pp-preview .pp-bar { top: var(--pp-top); }
+.pp-preview .pp-section { scroll-margin-top: calc(64px + var(--pp-top)); }
 @media (max-width: 640px) {
-  .pp-preview-banner { gap: 10px; padding: 8px 16px; font-size: 12px; }
-  .pp-preview-banner .ic { display: none; }
+  .pp-preview-banner { gap: 10px; padding: 0 16px; font-size: 12px; }
+  .pp-preview-banner > .ic, .pp-preview-sub { display: none; }
 }
 
 /* On its way */

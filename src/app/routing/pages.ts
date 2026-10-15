@@ -66,6 +66,8 @@ export const PersonProfilePage = named(() => import("@/domains/design/people/Pro
 export const MyProfilePage = named(() => import("@/domains/design/people/ProfilePage"), "MyProfilePage");
 export const ReportsPage = page(() => import("@/domains/design/reports/ReportsPage"));
 export const KitGallery = import.meta.env.DEV ? page(() => import("@/app/pages/KitGallery")) : () => null;
+// the preview of what a project's client would get, in a browser tab of its own, outside the shell
+export const PortalPreviewPage = page(() => import("@/domains/design/projects/portal/PortalPreviewPage"));
 
 // signed-out pages: someone signed in never needs them
 export const SignInPage = page(() => import("@/auth/SignInPage"));

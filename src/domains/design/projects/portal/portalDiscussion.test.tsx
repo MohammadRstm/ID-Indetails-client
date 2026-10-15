@@ -225,7 +225,7 @@ describe("the staff's preview of the draft", () => {
         render(
             <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
                 <MemoryRouter>
-                    <PresentationPreview project={projectWork.project} onClose={() => {}} />
+                    <PresentationPreview projectId={projectWork.project.id} />
                 </MemoryRouter>
             </QueryClientProvider>,
         );

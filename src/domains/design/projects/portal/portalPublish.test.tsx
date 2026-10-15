@@ -5,12 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { projectWorkHandlers } from "@/test/fixtures/project";
 import { renderApp } from "@/test/renderApp";
 import type { PortalHero } from "./contentApi";
-import { apiError, base, cards, contentOf, fileOf, itemOf, liveContent, part, person, publisher, served } from "./portalTestKit";
-
-// the preview of what clients would get is another component's, with its own tests
-vi.mock("./PresentationPreview", () => ({
-    default: ({ onClose }: { onClose: () => void }) => <div role="dialog" aria-label="Preview"><button onClick={onClose}>Close preview</button></div>,
-}));
+import { apiError, base, cards, contentOf, fileOf, itemOf, liveContent, part, person, projectId, publisher, served } from "./portalTestKit";
 
 /*
  * Publishing the client portal: where it stands, Publish and Discard, the preview, the hero image and the introduction,
@@ -178,25 +173,20 @@ describe("discarding", () => {
 });
 
 describe("the preview", () => {
-    it("opens the preview of what clients would get, keeps it in the link, and removes it from the link when closed", async () => {
-        renderApp(part("presentation"), nadia, served(contentOf([living])), ...projectWorkHandlers);
+    it("opens what clients would get in a new browser tab, and leaves this one as it was", async () => {
+        const open = vi.spyOn(window, "open").mockImplementation(() => null);
+        try {
+            renderApp(part("presentation"), nadia, served(contentOf([living])), ...projectWorkHandlers);
 
-        await userEvent.click(await screen.findByRole("button", { name: "Preview" }));
-        expect(screen.getByRole("dialog", { name: "Preview" })).toBeInTheDocument();
-        expect(window.location.search).toContain("preview=1");
-        expect(window.location.search).toContain("tab=portal");
-
-        await userEvent.click(screen.getByRole("button", { name: "Close preview" }));
-        expect(screen.queryByRole("dialog", { name: "Preview" })).toBeNull();
-        expect(window.location.search).not.toContain("preview");
-        expect(window.location.search).toContain("tab=portal");
-    });
-
-    it("is still open after a reload, because the link says so", async () => {
-        renderApp(`${part("presentation")}&preview=1`, nadia, served(contentOf([living])), ...projectWorkHandlers);
-        expect(await screen.findByRole("dialog", { name: "Preview" })).toBeInTheDocument();
-        await userEvent.click(screen.getByRole("button", { name: "Close preview" }));
-        expect(window.location.search).not.toContain("preview");
+            await userEvent.click(await screen.findByRole("button", { name: "Preview" }));
+            expect(open).toHaveBeenCalledTimes(1);
+            expect(open).toHaveBeenCalledWith(`/design/projects/${projectId}/portal-preview`, "_blank");
+            // nothing opens over this page, and its link stays the same
+            expect(screen.queryByRole("dialog")).toBeNull();
+            expect(window.location.search).toBe("?tab=portal&part=presentation");
+        } finally {
+            open.mockRestore();
+        }
     });
 });
 

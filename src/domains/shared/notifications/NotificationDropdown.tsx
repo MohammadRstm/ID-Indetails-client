@@ -19,7 +19,7 @@ export default function NotificationDropdown({ unread, allPath, close }: { unrea
             <div className="pop-head">
                 <div className="grow"><b>Notifications</b>{unread > 0 && <span className="muted"> · {unread} unread</span>}</div>
                 <SoundToggle />
-                <button className="btn btn-sm btn-quiet" disabled={markRead.isPending || unread === 0} onClick={() => markRead.mutate("all")}>Mark all read</button>
+                <button className="btn btn-primary btn-sm" disabled={markRead.isPending || unread === 0} onClick={() => markRead.mutate("all")}>Mark all read</button>
             </div>
             <div className="notif-list">
                 {loadFailed(latest) ? <div style={{ padding: 10 }}><LoadError error={latest.error} retry={() => latest.refetch()} what="your notifications" /></div>
@@ -28,7 +28,7 @@ export default function NotificationDropdown({ unread, allPath, close }: { unrea
                             : list.map((n) => <NotificationItem key={n.id} note={n} onOpen={close} />)}
             </div>
             <div className="pop-foot">
-                <button className="btn btn-sm btn-block btn-quiet" onClick={() => { close(); navigate(allPath); }}>See all notifications</button>
+                <button className="btn btn-primary btn-sm btn-block" onClick={() => { close(); navigate(allPath); }}>See all notifications</button>
             </div>
         </div>
     );

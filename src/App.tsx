@@ -24,6 +24,7 @@ import {
     PortalForgotPasswordPage,
     PortalHomePage,
     PortalInvitePage,
+    PortalPreviewPage,
     PortalProjectPage,
     PortalResetPasswordPage,
     PortalRoot,
@@ -92,6 +93,8 @@ export function AppRoutes() {
                 <Route element={<RequireSession />}>
                     <Route path="/change-password" element={<ChangePasswordPage />} />
                     <Route element={<RequirePasswordChanged />}>
+                        {/* the preview of a project's client portal: a browser tab of its own, the client's page alone */}
+                        <Route path="/design/projects/:id/portal-preview" element={<PortalPreviewPage />} />
                         <Route element={<LiveRoute />}>
                             <Route index element={<HomeRedirect />} />
                             <Route path="/no-access" element={<NoAccess />} />

@@ -210,7 +210,7 @@ export const projects: Article[] = [
             para("Files are added in **Project files**. There, **Show to client** chooses one for the client portal, and **Hide from client** takes it off. The **Client portal** tab then lists only the chosen files, in the same order, each marked **New**, **Changed**, **Removed** or **Published**."),
             steps(
                 step("Open the project and choose the **Client portal** tab. The bar at the top says whether it has been published, by whom and when, and how many changes are still unpublished.", "Projects", "the project", "Client portal"),
-                step("Choose **Preview** to see the page the way clients would get it. Looking shares nothing."),
+                step("Choose **Preview** to see the page the way clients would get it, in a new browser tab. Looking shares nothing; **Close** closes the tab."),
                 step("Choose **Publish changes**. The window lists what clients will get; confirm to publish."),
             ),
             list(

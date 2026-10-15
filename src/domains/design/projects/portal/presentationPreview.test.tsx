@@ -3,16 +3,20 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse, type RequestHandler } from "msw";
 import { MemoryRouter } from "react-router";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetLinks } from "@/portal/presentation/presentationLinks";
 import type { PortalPresentation, PresentationItem } from "@/portal/presentation/presentationTypes";
 import { projectWork } from "@/test/fixtures/project";
+import { personas } from "@/test/personas";
+import { renderApp } from "@/test/renderApp";
 import { server } from "@/test/server";
 import PresentationPreview from "./PresentationPreview";
+import { previewPath } from "./previewApi";
+import { publisher } from "./portalTestKit";
 
 /*
- * The staff's preview of a project's page from its draft: the client's own page, over the app, with a banner that says
- * so. The draft comes from the staff API and its files' links from the staff link endpoint.
+ * The staff's preview of a project's page from its draft: the client's own page, in a browser tab of its own, under a
+ * banner that says so. The draft comes from the staff API and its files' links from the staff link endpoint.
  */
 
 const MB = 1024 * 1024;
@@ -37,27 +41,29 @@ const draft: PortalPresentation = {
 };
 const served = (body: PortalPresentation = draft) => http.get(`${base}/preview`, () => HttpResponse.json(body));
 
-function renderPreview(onClose = vi.fn(), ...handlers: RequestHandler[]) {
+function renderPreview(...handlers: RequestHandler[]) {
     server.use(...handlers);
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    const view = render(
+    return render(
         <QueryClientProvider client={queryClient}>
             <MemoryRouter>
-                <PresentationPreview project={project} onClose={onClose} />
+                <PresentationPreview projectId={project.id} />
             </MemoryRouter>
         </QueryClientProvider>,
     );
-    return { onClose, ...view };
 }
 
 beforeEach(resetLinks);
+afterEach(() => vi.restoreAllMocks());
 
 describe("the preview of a project's draft", () => {
-    it("shows the draft banner and the draft's items, as the client's page, and closes", async () => {
-        const { onClose } = renderPreview(vi.fn(), served());
+    it("shows the banner and the draft's items, as the client's page, and Close closes the tab", async () => {
+        const close = vi.spyOn(window, "close").mockImplementation(() => {});
+        renderPreview(served());
 
-        expect(screen.getByText("Preview of your draft. Clients won't see these changes until you publish.")).toBeInTheDocument();
-        expect(screen.getByRole("dialog", { name: `Draft preview of ${project.title}` })).toHaveFocus();
+        const banner = screen.getByRole("region", { name: "Preview" });
+        expect(within(banner).getByText("Preview — what the client would see")).toBeInTheDocument();
+        expect(within(banner).getByText("Clients won't see your draft until you publish.")).toBeInTheDocument();
 
         expect(await screen.findByRole("heading", { level: 1, name: project.title })).toBeInTheDocument();
         expect(screen.getByText("Still being written.")).toBeInTheDocument();
@@ -71,29 +77,18 @@ describe("the preview of a project's draft", () => {
         // the client's page has nothing to edit, and neither has its preview
         expect(screen.queryByRole("button", { name: /Rename|Delete|Publish|Replace|Upload|Move|Remove/ })).toBeNull();
 
-        await userEvent.click(screen.getByRole("button", { name: "Close preview" }));
-        expect(onClose).toHaveBeenCalledTimes(1);
+        await userEvent.click(within(banner).getByRole("button", { name: "Close" }));
+        expect(close).toHaveBeenCalledTimes(1);
     });
 
-    it("locks the page behind it while it is open", async () => {
-        const { unmount } = renderPreview(vi.fn(), served());
-        await screen.findByRole("heading", { level: 1 });
-        expect(document.body.style.overflow).toBe("hidden");
-        unmount();
-        expect(document.body.style.overflow).toBe("");
-    });
-
-    it("closes with Escape, unless a picture is open over it: that closes first", async () => {
-        const { onClose } = renderPreview(vi.fn(), served());
+    it("closes an open picture with Escape, and stays open itself", async () => {
+        renderPreview(served());
         await userEvent.click(await screen.findByRole("button", { name: "View Draft sketch" }));
         expect(await screen.findByRole("dialog", { name: "Draft sketch" })).toBeInTheDocument();
 
         await userEvent.keyboard("{Escape}");
         expect(screen.queryByRole("dialog", { name: "Draft sketch" })).toBeNull();
-        expect(onClose).not.toHaveBeenCalled();
-
-        await userEvent.keyboard("{Escape}");
-        expect(onClose).toHaveBeenCalledTimes(1);
+        expect(screen.getByRole("region", { name: "Preview" })).toBeInTheDocument();
     });
 
     it("asks the staff link endpoint for the draft's files", async () => {
@@ -102,7 +97,7 @@ describe("the preview of a project's draft", () => {
         vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
             followed.push({ href: this.getAttribute("href") ?? "", target: this.target, download: this.download });
         });
-        renderPreview(vi.fn(), served(), http.get(`${base}/items/:itemId/link`, ({ request }) => {
+        renderPreview(served(), http.get(`${base}/items/:itemId/link`, ({ request }) => {
             const url = new URL(request.url);
             asked.push(`${url.pathname}?inline=${url.searchParams.get("inline")}`);
             return HttpResponse.json({ url: `/api/content-store/objects/plan?inline=${url.searchParams.get("inline")}`, expiresAt: "2030-01-01T00:05:00Z" });
@@ -123,14 +118,14 @@ describe("the preview of a project's draft", () => {
 
     it("shows a skeleton while it loads, and a failure with a way to try again", async () => {
         let calls = 0;
-        renderPreview(vi.fn(), http.get(`${base}/preview`, () => ++calls === 1
+        renderPreview(http.get(`${base}/preview`, () => ++calls === 1
             ? HttpResponse.json({ type: "error", code: "internal_error", message: "The draft can't be read just now." }, { status: 500 })
             : HttpResponse.json(draft)));
 
         expect(screen.getByLabelText("Loading")).toBeInTheDocument();
         expect(await screen.findByRole("alert")).toHaveTextContent("The draft can't be read just now.");
         // the banner and its button are there even then
-        expect(screen.getByRole("button", { name: "Close preview" })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
 
         await userEvent.click(screen.getByRole("button", { name: "Try again" }));
         expect(await screen.findByRole("heading", { level: 1, name: project.title })).toBeInTheDocument();
@@ -138,8 +133,32 @@ describe("the preview of a project's draft", () => {
     });
 
     it("says so when the draft has nothing in it yet", async () => {
-        renderPreview(vi.fn(), served({ ...draft, summary: null, hero: null, sections: draft.sections.map((s) => ({ ...s, items: [] })) }));
+        renderPreview(served({ ...draft, summary: null, hero: null, sections: draft.sections.map((s) => ({ ...s, items: [] })) }));
         expect(await screen.findByText("Nothing to preview yet")).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: "Close preview" })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
+    });
+});
+
+describe("the preview's own page", () => {
+    it("shows the client's page alone, without the staff app around it", async () => {
+        renderApp(previewPath(project.id), publisher, served());
+
+        expect(await screen.findByRole("heading", { level: 1, name: project.title })).toBeInTheDocument();
+        expect(screen.getByRole("region", { name: "Preview" })).toBeInTheDocument();
+        // no sidebar, no top bar
+        expect(document.querySelector(".side")).toBeNull();
+        expect(screen.queryByRole("button", { name: "Notifications" })).toBeNull();
+    });
+
+    it("opens for an admin who invites the client, without client_portal:manage", async () => {
+        renderApp(previewPath(project.id), personas.designAdmin, served());
+        expect(await screen.findByRole("heading", { level: 1, name: project.title })).toBeInTheDocument();
+    });
+
+    it("tells someone who doesn't see the client's files that it isn't theirs, without asking for the draft", async () => {
+        let asked = false;
+        renderApp(previewPath(project.id), personas.designEmployee, http.get(`${base}/preview`, () => { asked = true; return HttpResponse.json(draft); }));
+        expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
+        expect(asked).toBe(false);
     });
 });

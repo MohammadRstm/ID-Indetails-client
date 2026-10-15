@@ -11,11 +11,6 @@ import { filesBase, filesOf, filesPart, liveFiles, projectFileOf, sarahRef, serv
 import { apiError, cards, contentOf, fileOf, inMenu, itemOf, MB, menuItems, menuOf, page, publisher, served, usageOf } from "./portalTestKit";
 import { resetUploads, UPLOAD_MS } from "./uploads";
 
-// the preview of what clients would get is another component's, with its own tests
-vi.mock("./PresentationPreview", () => ({
-    default: ({ onClose }: { onClose: () => void }) => <div role="dialog" aria-label="Preview"><button onClick={onClose}>Close preview</button></div>,
-}));
-
 /*
  * A Design project's Project files tab: who gets it, a section's files with their uploads, what each person may change,
  * a card's menu, and choosing the files that go to the client. Part links in the mock API are relative

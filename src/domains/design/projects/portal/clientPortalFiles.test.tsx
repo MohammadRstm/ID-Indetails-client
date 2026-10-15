@@ -10,11 +10,6 @@ import { filesBase, filesOf, projectFileOf, servedFiles, uploadApi } from "./fil
 import { base, cards, contentOf, fileOf, itemOf, liveContent, menuItems, menuOf, page, part, person, projectId, publisher, served, usageOf } from "./portalTestKit";
 import { resetUploads, UPLOAD_MS } from "./uploads";
 
-// the preview of what clients would get is another component's, with its own tests
-vi.mock("./PresentationPreview", () => ({
-    default: ({ onClose }: { onClose: () => void }) => <div role="dialog" aria-label="Preview"><button onClick={onClose}>Close preview</button></div>,
-}));
-
 /*
  * The Client portal tab's files: the parts each person gets, the files chosen for the client as read-only cards, who
  * may change and publish them, the hero image's uploads, and the way to Project files, where the files are chosen.

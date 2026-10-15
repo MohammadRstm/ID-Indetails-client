@@ -69,7 +69,7 @@ export default function PublishBar({ projectId, onPreview }: { projectId: number
                 {waiting && <div id={HINT_ID} className="hint">Publishing waits until the uploads have finished.</div>}
             </div>
             <div className="pc-status-actions">
-                <button type="button" className="btn" onClick={onPreview}><Icon name="eye" />Preview</button>
+                <button type="button" className="btn" title="Opens in a new tab" onClick={onPreview}><Icon name="eye" />Preview</button>
                 {data.canEdit && data.canDiscard && <button type="button" className="btn btn-danger" onClick={() => setAsking("discard")}>Discard changes</button>}
                 {data.canEdit && (
                     <button type="button" className="btn btn-primary" disabled={!data.canPublish || uploads.busy} aria-describedby={waiting ? HINT_ID : undefined}

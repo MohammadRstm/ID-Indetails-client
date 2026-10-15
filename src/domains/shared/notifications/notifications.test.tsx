@@ -94,6 +94,9 @@ group("The bell", () => {
         await userEvent.click(bell);
         expect(await screen.findByText("Karim Jaber added 1 material to Mar Mikhael loft renovation")).toBeInTheDocument();
         expect(screen.getByText(/· 30 unread/)).toBeInTheDocument();
+        // the panel's two ways on stand out, in the primary colour
+        expect(screen.getByRole("button", { name: "Mark all read" })).toHaveClass("btn", "btn-primary", "btn-sm");
+        expect(screen.getByRole("button", { name: "See all notifications" })).toHaveClass("btn", "btn-primary", "btn-sm");
         await userEvent.click(screen.getByRole("button", { name: "Mark all read" }));
         await waitFor(() => expect(posted).toEqual(["all"]));
         await waitFor(() => expect(bell.querySelector(".pip")).toBeNull());

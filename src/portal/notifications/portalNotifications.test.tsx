@@ -177,6 +177,8 @@ describe("The portal's bell", () => {
         renderApp("/portal", null, signedIn, ...served.handlers);
         await userEvent.click(await screen.findByRole("button", { name: "Notifications, 4 unread" }));
         const all = await screen.findByRole("button", { name: "Mark all as read" });
+        // it stands out, in the primary colour
+        expect(all).toHaveClass("btn", "btn-primary", "btn-sm");
         await waitFor(() => expect(all).toBeEnabled());
         await userEvent.click(all);
 
