@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 import { renderApp } from "@/test/renderApp";
 import type { PortalAuthResponse } from "../portalApi";
+import { portalProjectOf } from "../portalTestKit";
 import { resetLinks } from "../presentation/presentationLinks";
 import type { PortalPresentation, PresentationItem } from "../presentation/presentationTypes";
 import {
@@ -20,7 +21,7 @@ const MB = 1024 * 1024;
 const auth: PortalAuthResponse = {
     accessToken: "portal-token",
     accessTokenExpiresAt: "2030-01-01T00:00:00Z",
-    account: { id: 7, email: "rania@client.test", firstName: "Rania", lastName: "Aoun", projects: [{ id: 2, title: "Villa Mounir interiors", status: "active", unread: 0 }] },
+    account: { id: 7, email: "rania@client.test", firstName: "Rania", lastName: "Aoun", projects: [portalProjectOf(2, "Villa Mounir interiors")] },
 };
 const signedIn = http.post("/api/portal/auth/refresh", () => HttpResponse.json(auth));
 

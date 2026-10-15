@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import type { PortalAuthResponse } from "./portalApi";
+import { portalProjectOf } from "./portalTestKit";
 import { resetLinks } from "./presentation/presentationLinks";
 import type { PortalPresentation, PresentationHero, PresentationItem } from "./presentation/presentationTypes";
 
@@ -18,7 +19,7 @@ const MB = 1024 * 1024;
 const auth: PortalAuthResponse = {
     accessToken: "portal-token",
     accessTokenExpiresAt: "2030-01-01T00:00:00Z",
-    account: { id: 7, email: "rania@client.test", firstName: "Rania", lastName: "Aoun", projects: [{ id: 2, title: "Villa Mounir interiors", status: "active", unread: 0 }] },
+    account: { id: 7, email: "rania@client.test", firstName: "Rania", lastName: "Aoun", projects: [portalProjectOf(2, "Villa Mounir interiors")] },
 };
 const signedIn = http.post("/api/portal/auth/refresh", () => HttpResponse.json(auth));
 

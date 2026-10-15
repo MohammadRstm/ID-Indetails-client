@@ -6,6 +6,7 @@ import { live } from "@/test/liveHub";
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import type { PortalAuthResponse } from "./portalApi";
+import { portalProjectOf } from "./portalTestKit";
 
 /*
  * The client portal: a client opens their invitation, chooses their own password and lands on their projects, apart
@@ -15,7 +16,7 @@ import type { PortalAuthResponse } from "./portalApi";
 const auth: PortalAuthResponse = {
     accessToken: "portal-token",
     accessTokenExpiresAt: "2030-01-01T00:00:00Z",
-    account: { id: 7, email: "rania@client.test", firstName: "Rania", lastName: "Aoun", projects: [{ id: 2, title: "Villa Mounir interiors", status: "active", unread: 0 }] },
+    account: { id: 7, email: "rania@client.test", firstName: "Rania", lastName: "Aoun", projects: [portalProjectOf(2, "Villa Mounir interiors")] },
 };
 const preview = { email: "rania@client.test", projectTitle: "Villa Mounir interiors", expiresAt: "2026-10-14T09:00:00Z" };
 const noPortalSession = http.post("/api/portal/auth/refresh", () =>

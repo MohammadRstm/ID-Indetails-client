@@ -8,6 +8,7 @@ import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import { server } from "@/test/server";
 import type { PortalAuthResponse } from "../portalApi";
+import { portalProjectOf } from "../portalTestKit";
 import { describePortalNotification } from "./notificationWords";
 import type { PortalNotification } from "./notificationsApi";
 
@@ -22,8 +23,8 @@ const auth: PortalAuthResponse = {
     account: {
         id: 7, email: "rania@client.test", firstName: "Rania", lastName: "Aoun",
         projects: [
-            { id: 2, title: "Villa Mounir interiors", status: "active", unread: 3 },
-            { id: 3, title: "Garden pavilion", status: "hold", unread: 0 },
+            portalProjectOf(2, "Villa Mounir interiors", { unread: 3 }),
+            portalProjectOf(3, "Garden pavilion", { status: "hold" }),
         ],
     },
 };
@@ -264,5 +265,72 @@ describe("The portal's home page", () => {
         await waitFor(() => expect(live.connected).toBeGreaterThan(0));
         act(() => live.emit("notifications"));
         expect(await within(villa).findByText("2 unread")).toBeInTheDocument();
+    });
+});
+
+describe("The portal's project cards", () => {
+    const three: PortalAuthResponse = {
+        ...auth,
+        account: {
+            ...auth.account,
+            projects: [
+                portalProjectOf(2, "Villa Mounir interiors", {
+                    startedOn: "2026-03-01", lastActivityAt: "2026-10-13T08:00:00Z", lastPublishedAt: "2026-10-01T09:00:00Z", hasNews: true,
+                    heroUrl: "/api/content-store/previews/90?sig=h", heroUrlExpiresAt: "2030-01-01T00:00:00Z",
+                }),
+                portalProjectOf(3, "Garden pavilion", { status: "hold", startedOn: "2026-06-01", lastActivityAt: "2026-09-01T08:00:00Z" }),
+                portalProjectOf(4, "Roof terrace", { startedOn: "2026-08-15", lastActivityAt: "2026-10-14T07:00:00Z", lastPublishedAt: "2026-09-20T10:00:00Z" }),
+            ],
+        },
+    };
+    const signedInWithThree = http.post("/api/portal/auth/refresh", () => HttpResponse.json(three));
+    const titles = () => screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+    afterEach(() => localStorage.clear());
+
+    it("show each project's hero image, or a calm block without one, and a red dot where something is new", async () => {
+        renderApp("/portal", null, signedInWithThree);
+
+        const villa = (await screen.findByRole("heading", { name: "Villa Mounir interiors" })).closest("a") as HTMLElement;
+        expect(villa.querySelector(".portal-cover img")).toHaveAttribute("src", "/api/content-store/previews/90?sig=h");
+        expect(villa.querySelector(".portal-news")).not.toBeNull();
+        expect(within(villa).getByText("New since your last visit")).toBeInTheDocument();
+
+        const garden = screen.getByRole("heading", { name: "Garden pavilion" }).closest("a") as HTMLElement;
+        expect(garden.querySelector(".portal-cover img")).toBeNull();
+        expect(garden.querySelector(".portal-cover-blank")).not.toBeNull();
+        expect(garden.querySelector(".portal-news")).toBeNull();
+        expect(within(garden).queryByText("New since your last visit")).toBeNull();
+    });
+
+    it("put the newest project first, or the latest activity, or the last published, and remember the choice", async () => {
+        renderApp("/portal", null, signedInWithThree);
+        await screen.findByRole("heading", { name: "Villa Mounir interiors" });
+        expect(titles()).toEqual(["Roof terrace", "Garden pavilion", "Villa Mounir interiors"]);
+        const sort = screen.getByRole("button", { name: "Sort projects" });
+        expect(sort).toHaveTextContent("Newest project");
+
+        await userEvent.click(sort);
+        await userEvent.click(screen.getByRole("option", { name: "Latest activity" }));
+        expect(titles()).toEqual(["Roof terrace", "Villa Mounir interiors", "Garden pavilion"]);
+
+        await userEvent.click(sort);
+        await userEvent.click(screen.getByRole("option", { name: "Last published" }));
+        // one never published goes last
+        expect(titles()).toEqual(["Villa Mounir interiors", "Roof terrace", "Garden pavilion"]);
+        expect(localStorage.getItem("hourline.portal.projectSort")).toBe("published");
+    });
+
+    it("start from the order this browser was left with", async () => {
+        localStorage.setItem("hourline.portal.projectSort", "activity");
+        renderApp("/portal", null, signedInWithThree);
+        await screen.findByRole("heading", { name: "Villa Mounir interiors" });
+        expect(titles()).toEqual(["Roof terrace", "Villa Mounir interiors", "Garden pavilion"]);
+        expect(screen.getByRole("button", { name: "Sort projects" })).toHaveTextContent("Latest activity");
+    });
+
+    it("offer no order to choose with one project", async () => {
+        renderApp("/portal", null, http.post("/api/portal/auth/refresh", () => HttpResponse.json({ ...auth, account: { ...auth.account, projects: [three.account.projects[0]] } })));
+        await screen.findByRole("heading", { name: "Villa Mounir interiors" });
+        expect(screen.queryByRole("button", { name: "Sort projects" })).toBeNull();
     });
 });
