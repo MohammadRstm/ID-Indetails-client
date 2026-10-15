@@ -5,40 +5,37 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { projectWorkHandlers } from "@/test/fixtures/project";
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
-import { apiError, base, cards, contentOf, fileOf, itemOf, liveContent, menuOf, part, served } from "./portalTestKit";
-
-// the preview of what clients would get is another component's, with its own tests
-vi.mock("./PresentationPreview", () => ({
-    default: ({ onClose }: { onClose: () => void }) => <div role="dialog" aria-label="Preview"><button onClick={onClose}>Close preview</button></div>,
-}));
+import { filesBase, filesOf, filesPart, liveFiles, projectFileOf, servedFiles } from "./filesTestKit";
+import { apiError, cards, fileOf, menuOf } from "./portalTestKit";
 
 /*
- * Rearranging a section's cards: with the keys, from a card's menu, and with a pointer. A card's place is saved when it
- * is dropped, and comes back if the API refuses it.
+ * Rearranging a section of the project's files (project_files:manage): with the keys, from a card's menu, and with a
+ * pointer. A card's place is saved when it is dropped, and comes back if the API refuses it.
  */
 
+// the Design admin holds project_files:manage, and the API says so
 const nadia = personas.designAdmin;
 
-const at = (id: number, title: string, sortOrder: number) => itemOf(id, title, fileOf(id + 10, `${title}.jpg`), { sortOrder });
+const at = (id: number, title: string, sortOrder: number) => projectFileOf(id, title, fileOf(id + 10, `${title}.jpg`), { sortOrder });
 const living = at(5, "Living room", 0);
 const kitchen = at(6, "Kitchen", 1);
 const bedroom = at(7, "Bedroom", 2);
-const three = () => liveContent(contentOf([living, kitchen, bedroom]));
+const three = () => liveFiles(filesOf([living, kitchen, bedroom]));
 
 /**
- * The mock of PUT sections/{section}/order: it keeps what it was sent, and answers the whole content in the new order,
+ * The mock of PUT sections/{section}/order: it keeps what it was sent, and answers all the files in the new order,
  * unless a test makes it wait first or refuse.
  */
-function orderApi(live: ReturnType<typeof liveContent>, how: { wait?: Promise<void>; refuse?: () => Response } = {}) {
+function orderApi(live: ReturnType<typeof liveFiles>, how: { wait?: Promise<void>; refuse?: () => Response } = {}) {
     const sent: { section: string; itemIds: number[] }[] = [];
-    const handler = http.put(`${base}/sections/:section/order`, async ({ request, params }) => {
+    const handler = http.put(`${filesBase}/sections/:section/order`, async ({ request, params }) => {
         const { itemIds } = (await request.json()) as { itemIds: number[] };
         sent.push({ section: String(params.section), itemIds });
         await how.wait;
         if (how.refuse) return how.refuse();
-        const items = live.box.content.items;
-        live.box.content = { ...live.box.content, items: itemIds.map((id, i) => ({ ...items.find((x) => x.id === id)!, sortOrder: i })) };
-        return HttpResponse.json(live.box.content);
+        const items = live.box.files.items;
+        live.box.files = { ...live.box.files, items: itemIds.map((id, i) => ({ ...items.find((x) => x.id === id)!, sortOrder: i })) };
+        return HttpResponse.json(live.box.files);
     });
     return { sent, handler };
 }
@@ -49,7 +46,7 @@ describe("rearranging with the keys", () => {
     it("picks a card up with Space, moves it with an arrow, drops it with Space, and saves the new order", async () => {
         const live = three();
         const api = orderApi(live);
-        renderApp(part("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
+        renderApp(filesPart("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
 
         (await grip("Living room")).focus();
         await userEvent.keyboard(" ");
@@ -70,7 +67,7 @@ describe("rearranging with the keys", () => {
     it("tells where a card can't go further, and puts it back on Escape", async () => {
         const live = three();
         const api = orderApi(live);
-        renderApp(part("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
+        renderApp(filesPart("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
 
         (await grip("Living room")).focus();
         await userEvent.keyboard(" ");
@@ -88,7 +85,7 @@ describe("rearranging with the keys", () => {
     it("saves nothing when a card is put down where it was", async () => {
         const live = three();
         const api = orderApi(live);
-        renderApp(part("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
+        renderApp(filesPart("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
 
         (await grip("Kitchen")).focus();
         await userEvent.keyboard("{Enter}");
@@ -104,7 +101,7 @@ describe("rearranging from a card's menu", () => {
     it("moves a card to the start, earlier, later or to the end, offering only what is possible", async () => {
         const live = three();
         const api = orderApi(live);
-        renderApp(part("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
+        renderApp(filesPart("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
 
         await menuOf("Bedroom");
         expect(screen.queryByRole("button", { name: "Move later" })).toBeNull();
@@ -129,7 +126,7 @@ describe("rearranging from a card's menu", () => {
         const wait = new Promise<void>((resolve) => { release = resolve; });
         const live = three();
         const api = orderApi(live, { wait });
-        renderApp(part("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
+        renderApp(filesPart("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
 
         await menuOf("Living room");
         await userEvent.click(screen.getByRole("button", { name: "Move to end" }));
@@ -149,11 +146,11 @@ describe("when the order can't be saved", () => {
         const api = orderApi(live, {
             refuse: () => {
                 // a colleague added a card in the meantime
-                live.box.content = contentOf([living, kitchen, bedroom, at(8, "Dining", 3)]);
+                live.box.files = filesOf([living, kitchen, bedroom, at(8, "Dining", 3)]);
                 return apiError(409, "portal_order_stale", "The section changed.");
             },
         });
-        renderApp(part("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
+        renderApp(filesPart("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
 
         await menuOf("Living room");
         await userEvent.click(screen.getByRole("button", { name: "Move to end" }));
@@ -168,7 +165,7 @@ describe("when the order can't be saved", () => {
     it("puts the old order back and says why for any other failure", async () => {
         const live = three();
         const api = orderApi(live, { refuse: () => apiError(500, "internal_error", "Something broke on our side.") });
-        renderApp(part("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
+        renderApp(filesPart("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
 
         await menuOf("Living room");
         await userEvent.click(screen.getByRole("button", { name: "Move to end" }));
@@ -202,7 +199,7 @@ describe("rearranging with a pointer", () => {
         layOut();
         const live = three();
         const api = orderApi(live);
-        renderApp(part("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
+        renderApp(filesPart("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
 
         fireEvent.pointerDown(await grip("Living room"), { button: 0, clientX: 50, clientY: 300, pointerId: 1 });
         // a copy follows the pointer, and the card's own place waits as a dashed outline
@@ -226,7 +223,7 @@ describe("rearranging with a pointer", () => {
         layOut();
         const live = three();
         const api = orderApi(live);
-        renderApp(part("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
+        renderApp(filesPart("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
 
         fireEvent.pointerDown(await grip("Living room"), { button: 0, clientX: 50, clientY: 300, pointerId: 1 });
         fireEvent.pointerMove(window, { clientX: 160, clientY: 300, pointerId: 1 });
@@ -242,27 +239,38 @@ describe("rearranging with a pointer", () => {
 });
 
 describe("where cards can't be rearranged", () => {
+    it("has no handles for someone who doesn't manage the project's files, though they may change their own", async () => {
+        renderApp(filesPart("presentation"), personas.designEmployee, servedFiles(filesOf([living, kitchen], { canManage: false })), ...projectWorkHandlers);
+        await screen.findByRole("article", { name: "Kitchen" });
+        expect(screen.queryByRole("button", { name: /^Reorder / })).toBeNull();
+        expect(screen.queryByText(/Drag a card by its handle/)).toBeNull();
+        await menuOf("Kitchen");
+        expect(screen.getByRole("button", { name: "Rename" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Move to start" })).toBeNull();
+        expect(screen.queryByRole("button", { name: "Move later" })).toBeNull();
+    });
+
     it("has no handles for an archived project, a section with one card, or the removed cards", async () => {
-        const archived = contentOf([living, kitchen], { canEdit: false, readOnlyReason: "This project is archived, so its files can't be changed." });
-        const { unmount } = renderApp(part("presentation"), nadia, served(archived), ...projectWorkHandlers);
+        const archived = filesOf([living, kitchen], { canEdit: false, readOnlyReason: "This project is archived, so its files can't be changed." });
+        const { unmount } = renderApp(filesPart("presentation"), nadia, servedFiles(archived), ...projectWorkHandlers);
         await screen.findByRole("article", { name: "Kitchen" });
         expect(screen.queryByRole("button", { name: /^Reorder / })).toBeNull();
         expect(screen.queryByText(/Drag a card by its handle/)).toBeNull();
         unmount();
 
         // one card is nothing to rearrange; the removed one stays out of it
-        const gone = itemOf(9, "Old render", fileOf(19, "old.jpg"), { state: "removed" });
-        renderApp(part("presentation"), nadia, served(contentOf([living, gone])), ...projectWorkHandlers);
+        const gone = projectFileOf(9, "Old render", fileOf(19, "old.jpg"), { removed: true, forClient: true, clientState: "removed" });
+        renderApp(filesPart("presentation"), nadia, servedFiles(filesOf([living, gone])), ...projectWorkHandlers);
         await screen.findByRole("article", { name: "Old render" });
         expect(screen.queryByRole("button", { name: /^Reorder / })).toBeNull();
         expect(screen.queryByText(/Drag a card by its handle/)).toBeNull();
     });
 
     it("keeps a card's section when it is rearranged: only that section's cards are sent", async () => {
-        const walk = itemOf(8, "Walkthrough", fileOf(18, "walk.mp4", { contentType: "video/mp4", preview: "video" }), { section: "model", sortOrder: 0 });
-        const live = liveContent(contentOf([living, kitchen, walk]));
+        const walk = projectFileOf(8, "Walkthrough", fileOf(18, "walk.mp4", { contentType: "video/mp4", preview: "video" }), { section: "model", sortOrder: 0 });
+        const live = liveFiles(filesOf([living, kitchen, walk]));
         const api = orderApi(live);
-        renderApp(part("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
+        renderApp(filesPart("presentation"), nadia, live.handler, api.handler, ...projectWorkHandlers);
 
         await menuOf("Kitchen");
         await userEvent.click(screen.getByRole("button", { name: "Move to start" }));
