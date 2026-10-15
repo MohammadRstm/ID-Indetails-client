@@ -31,7 +31,7 @@ const omar: PortalAuthResponse = {
 };
 /** A project page with nothing published yet. */
 const nothingShared = http.get("/api/portal/projects/:id", () => HttpResponse.json({
-    projectId: 2, title: "Villa Mounir interiors", status: "active", summary: null, isPublished: false, publishedAt: null, hero: null,
+    projectId: 2, title: "Villa Mounir interiors", status: "active", summary: null, isPublished: false, publishedAt: null, hero: null, heroes: [],
     sections: ["presentation", "model", "drawing"].map((section) => ({ section, items: [] })),
 }));
 

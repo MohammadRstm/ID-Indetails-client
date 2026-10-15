@@ -19,10 +19,11 @@ export type LightboxComments = {
 };
 
 type Props = {
-    /** The images and videos of the section that was clicked, in order. */
+    /** The images and videos to move through (a section's grid, its videos, the hero images), in order. */
     items: MediaItem[];
     index: number;
-    getLink: GetLink;
+    /** How a file is downloaded. Without it (the hero images, which aren't files of the project) there is no Download. */
+    getLink?: GetLink;
     onIndex: (index: number) => void;
     onClose: () => void;
     /** A file that didn't load; its link may have expired. */
@@ -35,8 +36,9 @@ type Props = {
 const SWIPE_PX = 50;
 
 /**
- * A bigger look at the images and videos of one section. The arrows, the Left and Right keys and a swipe move through
- * them; Escape closes it. On the client's page a Comments button opens that file's comments beside it.
+ * A bigger look at a run of images and videos: a section's grid, the Presentation's videos, or the hero images. The
+ * arrows, the Left and Right keys and a swipe move through them; Escape closes it. A video starts playing, with
+ * Download above it. On the client's page a Comments button opens that file's comments beside it.
  */
 export default function PresentationLightbox({ items, index, getLink, onIndex, onClose, onBroken, comments }: Props) {
     const swipe = useRef<{ x: number; y: number } | null>(null);
@@ -86,7 +88,7 @@ export default function PresentationLightbox({ items, index, getLink, onIndex, o
                         {comments.unread && <span className="pp-dot" aria-hidden="true" />}
                     </button>
                 )}
-                <button type="button" className="btn btn-sm" onClick={() => void downloadItem(getLink, item)}><Icon name="download" />Download</button>
+                {getLink && <button type="button" className="btn btn-sm" onClick={() => void downloadItem(getLink, item)}><Icon name="download" />Download</button>}
                 <button type="button" className="icon-btn pp-lb-close" aria-label="Close" onClick={onClose}><Icon name="x" /></button>
             </div>
             <div
@@ -105,8 +107,9 @@ export default function PresentationLightbox({ items, index, getLink, onIndex, o
                 onPointerCancel={() => { swipe.current = null; }}
             >
                 <button type="button" className="pp-lb-nav pp-lb-prev" aria-label="Previous" disabled={index === 0} onClick={() => go(-1)}><Icon name="chevronLeft" /></button>
+                {/* a video opened is a video to watch: it starts playing */}
                 {item.preview === "video"
-                    ? <video key={item.id} src={url} controls playsInline preload="metadata" onError={() => onBroken(url)} />
+                    ? <video key={item.id} src={url} controls autoPlay playsInline preload="metadata" onError={() => onBroken(url)} />
                     : <img key={item.id} src={url} alt={item.title} decoding="async" onError={() => onBroken(url)} />}
                 <button type="button" className="pp-lb-nav pp-lb-next" aria-label="Next" disabled={index === items.length - 1} onClick={() => go(1)}><Icon name="chevronRight" /></button>
             </div>

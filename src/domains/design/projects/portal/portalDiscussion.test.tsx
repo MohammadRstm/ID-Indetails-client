@@ -224,7 +224,7 @@ describe("the content cards", () => {
 
 describe("the staff's preview of the draft", () => {
     const draft: PortalPresentation = {
-        projectId: projectWork.project.id, title: projectWork.project.title, status: "active", summary: null, isPublished: true, publishedAt: null, hero: null,
+        projectId: projectWork.project.id, title: projectWork.project.title, status: "active", summary: null, isPublished: true, publishedAt: null, hero: null, heroes: [],
         sections: [
             {
                 section: "presentation",

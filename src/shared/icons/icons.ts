@@ -25,6 +25,13 @@ export const icons = {
   // not in the prototype: download turned over, for choosing files to send
   upload: '<path d="M12 15.8V4.4"/><path d="M7.6 8.6 12 4.2l4.4 4.4"/><path d="M4.8 19.6h14.4"/>',
   file: '<path d="M13.6 3.4H6.8A1.4 1.4 0 0 0 5.4 4.8v14.4a1.4 1.4 0 0 0 1.4 1.4h10.4a1.4 1.4 0 0 0 1.4-1.4V8.2z"/><path d="M13.4 3.6v4.6h4.8"/><path d="M8.6 13h6.8"/><path d="M8.6 16.6h4.4"/>',
+  // not in the prototype, drawn like file for the client portal's file cards: a PDF (the page draws it red), any other
+  // type of file (a label for its extension), and a video
+  pdf: '<path d="M5.4 11.4V4.8a1.4 1.4 0 0 1 1.4-1.4h6.8l4.8 4.8v3.2"/><path d="M13.4 3.6v4.6h4.8"/><path d="M4 20.6v-6h1.7a1.7 1.7 0 0 1 0 3.4H4"/><path d="M9.6 14.6v6h1a2.2 2.2 0 0 0 2.2-2.2v-1.6a2.2 2.2 0 0 0-2.2-2.2z"/><path d="M19 14.6h-3.2v6"/><path d="M15.8 17.6h2.6"/>',
+  fileType: '<path d="M13.6 3.4H6.8A1.4 1.4 0 0 0 5.4 4.8v14.4a1.4 1.4 0 0 0 1.4 1.4h10.4a1.4 1.4 0 0 0 1.4-1.4V8.2z"/><path d="M13.4 3.6v4.6h4.8"/><rect x="7.6" y="12.4" width="8.8" height="5" rx="1.2"/>',
+  video: '<rect x="3.4" y="6.4" width="12.4" height="11.2" rx="2.2"/><path d="m15.8 10.4 4.8-2.8v8.8l-4.8-2.8"/>',
+  // two chevrons: show more of a list
+  chevronsDown: '<path d="M7 6.8 12 11.8l5-5"/><path d="M7 12.4 12 17.4l5-5"/>',
   dots: '<circle class="f" cx="6" cy="12" r="1.5"/><circle class="f" cx="12" cy="12" r="1.5"/><circle class="f" cx="18" cy="12" r="1.5"/>',
   filter: '<path d="M4.2 5.8h15.6l-6 7.2v5.4l-3.6-1.9v-3.5z"/>',
   arrowUp: '<path d="M12 19V5.6"/><path d="M6.6 11 12 5.6 17.4 11"/>',

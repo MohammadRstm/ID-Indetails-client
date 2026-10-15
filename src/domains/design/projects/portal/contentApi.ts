@@ -64,7 +64,7 @@ export type PortalContentItem = FileItem & {
     state: ItemState;
 };
 
-/** The draft hero image; its link may be relative (development). */
+/** A draft hero image; its link may be relative (development). */
 export type PortalHero = { fileId: number; name: string; url: string | null; urlExpiresAt: string | null };
 
 /** What publishing now would change for clients. */
@@ -99,7 +99,10 @@ export type PortalContent = {
     hasUnpublishedChanges: boolean;
     canPublish: boolean;
     canDiscard: boolean;
+    /** The first of the draft hero images, or null. */
     hero: PortalHero | null;
+    /** The draft hero images, in order: the first is the big one on the client's page. */
+    heroes: PortalHero[];
     /** The introduction for the client: plain text. */
     summary: string | null;
 };
@@ -110,6 +113,8 @@ export const PORTAL_SECTIONS: PortalSection[] = ["presentation", "model", "drawi
 export const SECTION_LABEL: Record<PortalSection, string> = { presentation: "Presentation", model: "3D", drawing: "Drawings" };
 /** What a hero image may be (the API refuses the others). */
 export const HERO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+/** The most hero images a project's page has. */
+export const MAX_HEROES = 12;
 export const SUMMARY_MAX = 2000;
 
 /**
@@ -156,13 +161,18 @@ export function steadyLinks<T extends FileItem>(items: T[]): T[] {
     });
 }
 
-function steadyHero(hero: PortalHero | null): PortalHero | null {
-    if (!hero?.url || !hero.urlExpiresAt) return hero;
+function steadyHero(hero: PortalHero): PortalHero {
+    if (!hero.url || !hero.urlExpiresAt) return hero;
     const link = keep(heroes, hero.fileId, hero.url, hero.urlExpiresAt);
     return link.url === hero.url ? hero : { ...hero, url: link.url, urlExpiresAt: link.expiresAt };
 }
 
-const steadyContent = (content: PortalContent): PortalContent => ({ ...content, items: steadyLinks(content.items), hero: steadyHero(content.hero) });
+const steadyContent = (content: PortalContent): PortalContent => ({
+    ...content,
+    items: steadyLinks(content.items),
+    hero: content.hero && steadyHero(content.hero),
+    heroes: content.heroes.map(steadyHero),
+});
 
 /** A link that didn't load: the next answer brings a new one. */
 export function forgetPreview(fileId: number) {
@@ -210,13 +220,33 @@ function useChange<V = void>(projectId: number, request: (variables: V) => Promi
     });
 }
 
-/** An image of the client's files becomes the hero image. */
-export function useSetHero(projectId: number) {
-    return useChange(projectId, async (itemId: number) => (await http.put<PortalContent>(`${contentBase(projectId)}/hero`, { itemId })).data);
+/**
+ * The hero images were changed meanwhile, here or by someone else (the image is one already, there are 12, the order
+ * sent wasn't the whole list): the content is loaded again. Anything else is handled as for any change.
+ */
+const HERO_OUTDATED = ["portal_hero_already_added", "portal_hero_limit", "portal_order_stale"];
+
+function useHeroChange<V>(projectId: number, request: (variables: V) => Promise<PortalContent>) {
+    const queryClient = useQueryClient();
+    return useChange(projectId, request, (error: unknown) => {
+        if (HERO_OUTDATED.includes(toApiError(error).code)) void queryClient.invalidateQueries({ queryKey: contentKey(projectId) });
+        else refreshIfOutdated(queryClient, projectId, error);
+    });
 }
 
-export function useClearHero(projectId: number) {
-    return useChange(projectId, async () => (await http.delete<PortalContent>(`${contentBase(projectId)}/hero`)).data);
+/** An image of the client's files is added at the end of the hero images. */
+export function useAddHero(projectId: number) {
+    return useHeroChange(projectId, async (itemId: number) => (await http.post<PortalContent>(`${contentBase(projectId)}/heroes`, { itemId })).data);
+}
+
+/** A hero image is taken off (the file stays in Project files). */
+export function useRemoveHero(projectId: number) {
+    return useHeroChange(projectId, async (fileId: number) => (await http.delete<PortalContent>(`${contentBase(projectId)}/heroes/${fileId}`)).data);
+}
+
+/** The hero images' new order: all of them, by their files. */
+export function useOrderHeroes(projectId: number) {
+    return useHeroChange(projectId, async (fileIds: number[]) => (await http.put<PortalContent>(`${contentBase(projectId)}/heroes/order`, { fileIds })).data);
 }
 
 /** The introduction for the client; null (or nothing but spaces) takes it away. */

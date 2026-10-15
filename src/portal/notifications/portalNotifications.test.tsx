@@ -30,7 +30,7 @@ const auth: PortalAuthResponse = {
 const omar: PortalAuthResponse = { ...auth, account: { id: 8, email: "omar@client.test", firstName: "Omar", lastName: "Saad", projects: [] } };
 const signedIn = http.post("/api/portal/auth/refresh", () => HttpResponse.json(auth));
 const project = http.get("/api/portal/projects/:id", () => HttpResponse.json({
-    projectId: 2, title: "Villa Mounir interiors", status: "active", summary: null, isPublished: false, publishedAt: null, hero: null,
+    projectId: 2, title: "Villa Mounir interiors", status: "active", summary: null, isPublished: false, publishedAt: null, hero: null, heroes: [],
     sections: ["presentation", "model", "drawing"].map((section) => ({ section, items: [] })),
 }));
 

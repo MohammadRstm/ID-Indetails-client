@@ -562,12 +562,23 @@ button.pc-thumb { cursor: pointer; }
 .pc-status-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .pc-changes { display: grid; gap: 4px; margin: 0 0 12px; padding-left: 20px; }
 
-/* The hero image and the introduction, at the top of the Presentation part */
+/* The hero images and the introduction, at the top of the Presentation part: the hero images as a list in their order,
+   each with its picture, its place, and the buttons that move it earlier or later or take it off */
 .pc-top { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 14px; margin-bottom: 14px; }
-.pc-hero { aspect-ratio: 16 / 6; overflow: hidden; border: 1px solid var(--line); border-radius: var(--r1); background: var(--surface-3); }
-.pc-hero-img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.pc-hero-empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px; text-align: center; font-size: 12px; color: var(--ink-3); }
+.pc-hero-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px; text-align: center; font-size: 12px; color: var(--ink-3); }
 .pc-hero-empty .ic { width: 24px; height: 24px; }
+.pc-heroes-empty { aspect-ratio: 16 / 6; border: 1px dashed var(--line-2); border-radius: var(--r1); background: var(--surface-2); }
+.pc-heroes { display: grid; gap: 6px; max-height: 360px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.pc-hero-row { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 6px; border: 1px solid var(--line); border-radius: var(--r1); background: var(--surface); }
+.pc-hero-thumb { display: grid; flex: none; place-items: center; width: 72px; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 4px; background: var(--surface-3); color: var(--ink-3); }
+.pc-hero-row:first-child .pc-hero-thumb { width: 96px; }
+.pc-hero-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pc-hero-name { display: flex; flex: 1; flex-direction: column; gap: 1px; min-width: 0; font-size: 12.5px; font-weight: 600; }
+.pc-hero-place { color: var(--ink-3); font-size: 11px; font-weight: 500; }
+.pc-hero-tools { display: flex; flex: none; gap: 2px; }
+.pc-hero-tools .icon-btn { width: 28px; height: 28px; }
+.pc-hero-tools .icon-btn:disabled { opacity: .35; cursor: default; }
+.pc-heroes-full { margin-top: 8px; }
 .pc-changed { display: flex; align-items: center; gap: 5px; margin-top: 10px; font-size: 11.5px; font-weight: 600; color: var(--warn); }
 .pc-changed .ic { width: 13px; height: 13px; }
 .pc-summary-text { margin: 0; white-space: pre-wrap; font-size: 13px; line-height: 1.5; }

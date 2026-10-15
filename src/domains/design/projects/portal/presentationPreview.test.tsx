@@ -29,10 +29,10 @@ const itemOf = (id: number, title: string, over: Partial<PresentationItem> = {})
 });
 const sketch = itemOf(31, "Draft sketch");
 const draftPlan = itemOf(32, "Draft plan", { name: "draft-plan.pdf", contentType: "application/pdf", preview: "pdf", previewUrl: null, previewUrlExpiresAt: null });
+const hero = { url: "/api/content-store/previews/91?sig=h", urlExpiresAt: "2030-01-01T00:00:00Z", name: "hero.jpg" };
 const draft: PortalPresentation = {
     projectId: project.id, title: project.title, status: "active", summary: "Still being written.",
-    isPublished: true, publishedAt: null,
-    hero: { url: "/api/content-store/previews/91?sig=h", urlExpiresAt: "2030-01-01T00:00:00Z", name: "hero.jpg" },
+    isPublished: true, publishedAt: null, hero, heroes: [hero],
     sections: [
         { section: "presentation", items: [sketch] },
         { section: "model", items: [] },
@@ -133,7 +133,7 @@ describe("the preview of a project's draft", () => {
     });
 
     it("says so when the draft has nothing in it yet", async () => {
-        renderPreview(served({ ...draft, summary: null, hero: null, sections: draft.sections.map((s) => ({ ...s, items: [] })) }));
+        renderPreview(served({ ...draft, summary: null, hero: null, heroes: [], sections: draft.sections.map((s) => ({ ...s, items: [] })) }));
         expect(await screen.findByText("Nothing to preview yet")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
     });

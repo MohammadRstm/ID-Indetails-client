@@ -7,7 +7,7 @@ import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import { filesBase, filesOf, projectFileOf, servedFiles, uploadApi } from "./filesTestKit";
-import { base, cards, contentOf, fileOf, itemOf, liveContent, menuItems, menuOf, page, part, person, projectId, publisher, served, usageOf } from "./portalTestKit";
+import { base, cards, contentOf, fileOf, heroOf, itemOf, liveContent, menuItems, menuOf, page, part, person, projectId, publisher, served, usageOf } from "./portalTestKit";
 import { resetUploads, UPLOAD_MS } from "./uploads";
 
 /*
@@ -133,17 +133,17 @@ describe("the files chosen for the client", () => {
     });
 
     it("is read-only for an admin without client_portal:manage: nothing to publish, choose or write, and nothing is said to be locked", async () => {
-        const hero = { fileId: 11, name: "Living room v3.jpg", url: "/api/content-store/previews/11", urlExpiresAt: "2030-01-01T00:00:00Z" };
-        renderApp(part("presentation"), nadia, served(contentOf([living], { canManage: false, hero, summary: "Welcome home." })), ...projectWorkHandlers);
+        renderApp(part("presentation"), nadia, served(contentOf([living], { canManage: false, heroes: [heroOf(11, "Living room v3.jpg")], summary: "Welcome home." })),
+            ...projectWorkHandlers);
 
         expect(await screen.findByText("Not published yet")).toBeInTheDocument();
         expect(screen.getByText("· 1 unpublished change")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
-        for (const name of ["Publish changes", "Discard changes", "Upload hero image", "Choose from images", "Remove hero", "Save"]) {
+        for (const name of ["Publish changes", "Discard changes", "Upload hero image", "Choose from images", /^Move .* (earlier|later)$/, /^Remove /, "Save"]) {
             expect(screen.queryByRole("button", { name })).toBeNull();
         }
-        // the hero and the introduction can be read
-        expect(screen.getByAltText("Hero image")).toBeInTheDocument();
+        // the hero images and the introduction can be read
+        expect(within(screen.getByRole("list", { name: "Hero images" })).getByText("Living room v3.jpg")).toBeInTheDocument();
         expect(screen.getByText("Welcome home.")).toBeInTheDocument();
         expect(screen.queryByLabelText("Introduction for the client")).toBeNull();
         expect(screen.queryByLabelText("Hero image to upload")).toBeNull();
@@ -196,10 +196,10 @@ describe("the hero image's uploads", () => {
             return new HttpResponse(null, { status: 200 });
         };
         const live = liveContent(contentOf([living]));
-        // the API answers a hero upload without an item; the client portal then names the hero
+        // the API answers a hero upload without an item; the client portal then lists it last of the hero images
         api.complete = () => {
             live.box.content = contentOf([living], {
-                hero: { fileId: 40, name: "banner.jpg", url: "/api/content-store/previews/40", urlExpiresAt: "2026-09-30T10:00:00Z" },
+                heroes: [{ fileId: 40, name: "banner.jpg", url: "/api/content-store/previews/40", urlExpiresAt: "2026-09-30T10:00:00Z" }],
                 changes: { heroChanged: true },
             });
             return HttpResponse.json({ item: null, usage: usageOf(2, 4) });
@@ -212,7 +212,9 @@ describe("the hero image's uploads", () => {
         expect(within(row).getByText(/^Hero image · /)).toBeInTheDocument();
         release();
 
-        expect(await screen.findByAltText("Hero image")).toHaveAttribute("src", "/api/content-store/previews/40");
+        const heroes = await screen.findByRole("list", { name: "Hero images" });
+        expect(heroes.querySelector("img")).toHaveAttribute("src", "/api/content-store/previews/40");
+        expect(within(heroes).getByText("banner.jpg")).toBeInTheDocument();
         expect(screen.getByText("Changed since last publish")).toBeInTheDocument();
         expect(api.log.started[0]).toMatchObject({ hero: true, fileName: "banner.jpg", size: 6 });
         expect(api.log.started[0]).not.toHaveProperty("section");

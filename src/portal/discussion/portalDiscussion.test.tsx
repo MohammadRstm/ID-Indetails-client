@@ -34,7 +34,7 @@ const brochure: PresentationItem = {
     id: 14, title: "Brochure", name: "brochure.pdf", contentType: "application/pdf", preview: "pdf", sizeBytes: 3 * MB, previewUrl: null, previewUrlExpiresAt: null,
 };
 const published: PortalPresentation = {
-    projectId: 2, title: "Villa Mounir interiors", status: "active", summary: null, isPublished: true, publishedAt: "2026-10-01T09:00:00Z", hero: null,
+    projectId: 2, title: "Villa Mounir interiors", status: "active", summary: null, isPublished: true, publishedAt: "2026-10-01T09:00:00Z", hero: null, heroes: [],
     sections: [
         { section: "presentation", items: [living, kitchen, brochure] },
         { section: "model", items: [] },
@@ -60,6 +60,8 @@ const chat = () => screen.findByRole("dialog", { name: "Messages" });
 const texts = () => within(screen.getByRole("log", { name: "Messages" })).getAllByRole("listitem").map((li) => li.querySelector(".dp-text")?.textContent);
 const messageBox = (dialog: HTMLElement) => within(dialog).getByRole("combobox", { name: "Message" });
 const token = /^[0-9a-f-]{36}$/;
+/** Opens Presentation's card for its PDFs and documents: the brochure is in its list. */
+const openDocuments = async () => userEvent.click(await screen.findByRole("button", { name: /^PDFs and documents/ }));
 
 beforeEach(resetLinks);
 
@@ -548,8 +550,11 @@ describe("comments on files", () => {
         // a file nobody has commented on offers the first comment
         const other = within(screen.getByRole("article", { name: "Kitchen" }));
         expect(other.getByRole("button", { name: "Comments on Kitchen" })).toHaveTextContent("Comment");
-        // and so does a PDF, next to Open and Download
-        expect(within(screen.getByRole("article", { name: "Brochure" })).getByRole("button", { name: "Comments on Brochure" })).toBeInTheDocument();
+        // and so does a PDF, in its card's list, next to Open and Download
+        await openDocuments();
+        const brochure = within(screen.getByRole("article", { name: "Brochure" }));
+        expect(await brochure.findByRole("button", { name: "Comments on Brochure" })).toBeInTheDocument();
+        expect(brochure.getByRole("button", { name: "Open Brochure" })).toBeInTheDocument();
     });
 
     it("opens a picture's comments beside it in the lightbox, and posts a comment on that file", async () => {
@@ -604,9 +609,12 @@ describe("comments on files", () => {
     it("opens the comments of a file that is not a picture in the drawer, with a way back to all comments", async () => {
         open("/portal/projects/2", init());
 
+        await openDocuments();
         await userEvent.click(await screen.findByRole("button", { name: "Comments on Brochure" }));
         const dialog = await screen.findByRole("dialog", { name: "Comments" });
         expect(window.location.search).toBe("?item=14");
+        // the card's list gave way to the drawer
+        expect(screen.queryByRole("group", { name: "PDFs and documents" })).toBeNull();
         // nobody has commented on it yet: its thread is empty
         expect(await within(dialog).findByText("Brochure")).toBeInTheDocument();
         expect(within(dialog).getByText("brochure.pdf")).toBeInTheDocument();
@@ -624,6 +632,7 @@ describe("comments on files", () => {
         // the brochure was taken out of what clients see since the page loaded: the API has no thread for it (404)
         const box = open("/portal/projects/2", { ...init(), published: [living, kitchen] });
 
+        await openDocuments();
         await userEvent.click(await screen.findByRole("button", { name: "Comments on Brochure" }));
         const dialog = await screen.findByRole("dialog", { name: "Comments" });
         expect(await within(dialog).findByText("This file is no longer shared")).toBeInTheDocument();

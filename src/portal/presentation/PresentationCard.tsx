@@ -18,7 +18,10 @@ type Props = {
     comments?: CardComments;
 };
 
-/** One item of a section: an image or a video to look at, a PDF to open or save, or any other file to save. */
+/**
+ * One picture or video of a section's grid, to look at. (A picture the page has no link for, which the grid can't show,
+ * still gets a card: a tile of its type, to save it.) The section's other files are small cards (FileRow).
+ */
 export default function PresentationCard({ item, getLink, onView, onBroken, comments }: Props) {
     return (
         <article className="pp-card" aria-label={item.title}>
@@ -30,7 +33,7 @@ export default function PresentationCard({ item, getLink, onView, onBroken, comm
 }
 
 /** How many comments the file has, and a dot when some are new. It opens them. */
-function CommentsChip({ item, comments }: { item: PresentationItem; comments: CardComments }) {
+export function CommentsChip({ item, comments }: { item: PresentationItem; comments: CardComments }) {
     const label = `Comments on ${item.title}${comments.count > 0 ? `: ${comments.count}` : ""}${comments.unread ? ", some new" : ""}`;
     return (
         <button type="button" className={cx("btn btn-sm pp-comments", comments.unread && "new")} aria-label={label} onClick={comments.onOpen}>

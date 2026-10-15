@@ -8,7 +8,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import Icon from "@/shared/icons/Icon";
 import { getPreviewLink, usePresentationPreview } from "./previewApi";
 
-const nothingYet = (p: PortalPresentation) => !p.hero && !p.summary && p.sections.every((s) => s.items.length === 0);
+const nothingYet = (p: PortalPresentation) => p.heroes.length === 0 && !p.summary && p.sections.every((s) => s.items.length === 0);
 
 /**
  * The project's page as the client would get it from the draft, on a page of its own: the Client portal tab's Preview
