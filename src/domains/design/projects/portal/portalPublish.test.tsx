@@ -1,0 +1,430 @@
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
+import { describe, expect, it, vi } from "vitest";
+import { projectWorkHandlers } from "@/test/fixtures/project";
+import { personas } from "@/test/personas";
+import { renderApp } from "@/test/renderApp";
+import type { PortalHero } from "./contentApi";
+import { apiError, base, cards, contentOf, fileOf, itemOf, liveContent, menuOf, part, person, served, usageOf } from "./portalTestKit";
+
+// the preview of what clients would get is another component's, with its own tests
+vi.mock("./PresentationPreview", () => ({
+    default: ({ onClose }: { onClose: () => void }) => <div role="dialog" aria-label="Preview"><button onClick={onClose}>Close preview</button></div>,
+}));
+
+/*
+ * Publishing the client portal: where it stands, Publish and Discard, the preview, the hero image and the introduction,
+ * and what a card says about its file. The mock API holds the drafts and answers as the real one is meant to.
+ */
+
+const nadia = personas.designAdmin;
+
+// 12:20 UTC is 15:20 in Beirut, shown on the company's clock
+const published = { publishedAt: "2026-10-14T12:20:00Z", publishedBy: person };
+const living = itemOf(5, "Living room v3", fileOf(11, "Living room v3.jpg"));
+const kitchen = itemOf(6, "Kitchen", fileOf(12, "Kitchen.jpg"));
+const bedroom = itemOf(7, "Bedroom", fileOf(13, "Bedroom.jpg"));
+const heroOf = (fileId: number, name: string): PortalHero => ({ fileId, name, url: `/api/content-store/previews/${fileId}`, urlExpiresAt: "2030-01-01T00:00:00Z" });
+const publishButton = () => screen.getByRole("button", { name: "Publish changes" });
+
+describe("where the client portal stands", () => {
+    it("says it has never been published, counts what is unpublished, and offers no Discard yet", async () => {
+        renderApp(part("presentation"), nadia, served(contentOf([living, kitchen])), ...projectWorkHandlers);
+
+        expect(await screen.findByText("Not published yet")).toBeInTheDocument();
+        expect(screen.getByText("· 2 unpublished changes")).toBeInTheDocument();
+        expect(publishButton()).toBeEnabled();
+        expect(screen.queryByRole("button", { name: "Discard changes" })).toBeNull();
+    });
+
+    it("says when and by whom it was published, and counts files, order, hero and introduction", async () => {
+        const items = [
+            itemOf(5, "Settled", fileOf(11, "settled.jpg"), { state: "unchanged" }),
+            itemOf(6, "Edited", fileOf(12, "edited.jpg"), { state: "changed" }),
+            itemOf(7, "Gone", fileOf(13, "gone.jpg"), { state: "removed" }),
+        ];
+        // a changed file, a removed one, the order of 3D, the hero and the introduction
+        renderApp(part("presentation"), nadia, ...projectWorkHandlers,
+            served(contentOf(items, { publication: published, changes: { reordered: ["model"], heroChanged: true, summaryChanged: true } })));
+
+        expect(await screen.findByText("Published 14 Oct 2026, 3:20 PM by Nadia Karam")).toBeInTheDocument();
+        expect(screen.getByText("· 5 unpublished changes")).toBeInTheDocument();
+        expect(publishButton()).toBeEnabled();
+        expect(screen.getByRole("button", { name: "Discard changes" })).toBeInTheDocument();
+    });
+
+    it("says everything is published when nothing is waiting, and then has nothing to publish or discard", async () => {
+        renderApp(part("presentation"), nadia, served(contentOf([{ ...living, state: "unchanged" }], { publication: published })), ...projectWorkHandlers);
+
+        expect(await screen.findByText("· Everything is published")).toBeInTheDocument();
+        expect(publishButton()).toBeDisabled();
+        expect(screen.queryByRole("button", { name: "Discard changes" })).toBeNull();
+    });
+
+    it("has nothing to publish before there is anything in the drafts", async () => {
+        renderApp(part("presentation"), nadia, served(contentOf([])), ...projectWorkHandlers);
+
+        expect(await screen.findByText("Not published yet")).toBeInTheDocument();
+        expect(screen.getByText("· Nothing to publish yet")).toBeInTheDocument();
+        expect(publishButton()).toBeDisabled();
+    });
+
+    it("is above every one of the three parts", async () => {
+        renderApp(part("drawing"), nadia, served(contentOf([])), ...projectWorkHandlers);
+        expect(await screen.findByText("Not published yet")).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("tab", { name: "3D" }));
+        expect(await screen.findByText("No 3D files yet")).toBeInTheDocument();
+        expect(screen.getByText("Not published yet")).toBeInTheDocument();
+    });
+});
+
+describe("publishing", () => {
+    it("lists what clients will get, then publishes it with the revision the person looked at", async () => {
+        const items = [living, kitchen, { ...bedroom, state: "changed" as const }, itemOf(8, "Old plan", fileOf(14, "old.jpg"), { state: "removed" })];
+        const before = contentOf(items, {
+            publication: published, hero: heroOf(12, "Kitchen.jpg"), summary: "Welcome home.",
+            changes: { reordered: ["model"], heroChanged: true, summaryChanged: true },
+        });
+        const after = contentOf(items.slice(0, 3).map((i) => ({ ...i, state: "unchanged" as const })), {
+            publication: { publishedAt: "2026-10-15T08:00:00Z", publishedBy: person }, revision: 8, hero: before.hero, summary: before.summary,
+        });
+        const live = liveContent(before);
+        const sent: unknown[] = [];
+        renderApp(part("presentation"), nadia, live.handler, ...projectWorkHandlers,
+            http.post(`${base}/publish`, async ({ request }) => {
+                sent.push(await request.json());
+                live.box.content = after;
+                return HttpResponse.json(after);
+            }));
+
+        await userEvent.click(await screen.findByRole("button", { name: "Publish changes" }));
+        const dialog = screen.getByRole("dialog", { name: "Publish to your client?" });
+        for (const line of ["2 new files", "1 updated file", "1 file removed", "New order in 3D", "New hero image", "New introduction"]) {
+            expect(within(dialog).getByText(line)).toBeInTheDocument();
+        }
+        expect(within(dialog).getByText("Clients see this version at once. Nobody is notified yet.")).toBeInTheDocument();
+        expect(sent).toEqual([]);
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Publish changes" }));
+        expect(await screen.findByText("Published. Clients now see this version.")).toBeInTheDocument();
+        expect(sent).toEqual([{ expectedRevision: 7 }]);
+        expect(screen.queryByRole("dialog", { name: "Publish to your client?" })).toBeNull();
+        expect(await screen.findByText("· Everything is published")).toBeInTheDocument();
+        expect(screen.getByText("Published 15 Oct 2026, 11:00 AM by Nadia Karam")).toBeInTheDocument();
+    });
+
+    it("loads the drafts again, and says so, when someone changed them since the person looked", async () => {
+        const live = liveContent(contentOf([living, kitchen]));
+        renderApp(part("presentation"), nadia, live.handler, ...projectWorkHandlers,
+            http.post(`${base}/publish`, () => {
+                // a colleague added a file in the meantime
+                live.box.content = contentOf([living, kitchen, bedroom], { revision: 8 });
+                return apiError(409, "portal_revision_stale", "The drafts changed.");
+            }));
+
+        await userEvent.click(await screen.findByRole("button", { name: "Publish changes" }));
+        await userEvent.click(within(screen.getByRole("dialog", { name: "Publish to your client?" })).getByRole("button", { name: "Publish changes" }));
+
+        expect(await screen.findByText("Someone changed the drafts since you looked. Check what's new and publish again.")).toBeInTheDocument();
+        expect(live.box.gets).toBe(2);
+        expect(await screen.findByText("· 3 unpublished changes")).toBeInTheDocument();
+        expect(screen.queryByRole("dialog")).toBeNull();
+    });
+
+    it("keeps the window open with the reason when publishing fails for another reason", async () => {
+        renderApp(part("presentation"), nadia, served(contentOf([living])), ...projectWorkHandlers,
+            http.post(`${base}/publish`, () => apiError(500, "internal_error", "Something broke on our side.")));
+
+        await userEvent.click(await screen.findByRole("button", { name: "Publish changes" }));
+        const dialog = screen.getByRole("dialog", { name: "Publish to your client?" });
+        await userEvent.click(within(dialog).getByRole("button", { name: "Publish changes" }));
+
+        expect(await within(dialog).findByText("Something broke on our side.")).toBeInTheDocument();
+        expect(screen.queryByText("Published. Clients now see this version.")).toBeNull();
+    });
+});
+
+describe("discarding", () => {
+    it("asks first, then puts the drafts back to what clients see, with the revision the person looked at", async () => {
+        const settled = { ...living, state: "unchanged" as const };
+        const live = liveContent(contentOf([settled, kitchen], { publication: published }));
+        const sent: unknown[] = [];
+        renderApp(part("presentation"), nadia, live.handler, ...projectWorkHandlers,
+            http.post(`${base}/discard`, async ({ request }) => {
+                sent.push(await request.json());
+                live.box.content = contentOf([settled], { publication: published, revision: 8 });
+                return HttpResponse.json(live.box.content);
+            }));
+
+        await userEvent.click(await screen.findByRole("button", { name: "Discard changes" }));
+        let dialog = screen.getByRole("dialog", { name: "Discard changes?" });
+        expect(within(dialog).getByText("Put the drafts back to what clients see? New files that were never published are deleted. This can't be undone.")).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Keep the drafts" }));
+        expect(sent).toEqual([]);
+        expect(screen.queryByRole("dialog")).toBeNull();
+
+        await userEvent.click(screen.getByRole("button", { name: "Discard changes" }));
+        dialog = screen.getByRole("dialog", { name: "Discard changes?" });
+        await userEvent.click(within(dialog).getByRole("button", { name: "Discard changes" }));
+
+        expect(await screen.findByText("Changes discarded")).toBeInTheDocument();
+        expect(sent).toEqual([{ expectedRevision: 7 }]);
+        await waitFor(() => expect(cards()).toEqual(["Living room v3"]));
+        expect(await screen.findByText("· Everything is published")).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Discard changes" })).toBeNull();
+    });
+});
+
+describe("the preview", () => {
+    it("opens the preview of what clients would get, keeps it in the link, and removes it from the link when closed", async () => {
+        renderApp(part("presentation"), nadia, served(contentOf([living])), ...projectWorkHandlers);
+
+        await userEvent.click(await screen.findByRole("button", { name: "Preview" }));
+        expect(screen.getByRole("dialog", { name: "Preview" })).toBeInTheDocument();
+        expect(window.location.search).toContain("preview=1");
+        expect(window.location.search).toContain("tab=portal");
+
+        await userEvent.click(screen.getByRole("button", { name: "Close preview" }));
+        expect(screen.queryByRole("dialog", { name: "Preview" })).toBeNull();
+        expect(window.location.search).not.toContain("preview");
+        expect(window.location.search).toContain("tab=portal");
+    });
+
+    it("is still open after a reload, because the link says so", async () => {
+        renderApp(`${part("presentation")}&preview=1`, nadia, served(contentOf([living])), ...projectWorkHandlers);
+        expect(await screen.findByRole("dialog", { name: "Preview" })).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "Close preview" }));
+        expect(window.location.search).not.toContain("preview");
+    });
+});
+
+describe("the hero image", () => {
+    it("is chosen from the images that can be one, and the part says it differs from what clients see", async () => {
+        const plan = itemOf(8, "Floor plan", fileOf(15, "plan.pdf", { contentType: "application/pdf", preview: "pdf" }));
+        const gone = itemOf(9, "Old render", fileOf(16, "old.jpg"), { state: "removed" });
+        const live = liveContent(contentOf([living, kitchen, plan, gone]));
+        const sent: unknown[] = [];
+        renderApp(part("presentation"), nadia, live.handler, ...projectWorkHandlers,
+            http.put(`${base}/hero`, async ({ request }) => {
+                sent.push(await request.json());
+                live.box.content = contentOf([living, { ...kitchen, isHero: true }, plan, gone], { hero: heroOf(12, "Kitchen.jpg"), changes: { heroChanged: true } });
+                return HttpResponse.json(live.box.content);
+            }));
+
+        expect(await screen.findByText("No hero image yet")).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "Choose from images" }));
+        const dialog = screen.getByRole("dialog", { name: "Choose the hero image" });
+        // only a JPG, PNG or WebP image that is still in the drafts
+        expect(within(dialog).getByRole("button", { name: "Living room v3" })).toBeInTheDocument();
+        expect(within(dialog).queryByRole("button", { name: "Floor plan" })).toBeNull();
+        expect(within(dialog).queryByRole("button", { name: "Old render" })).toBeNull();
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Kitchen" }));
+        expect(await screen.findByText("Hero image set")).toBeInTheDocument();
+        expect(sent).toEqual([{ itemId: 6 }]);
+        expect(screen.queryByRole("dialog", { name: "Choose the hero image" })).toBeNull();
+        expect(screen.getByAltText("Hero image")).toHaveAttribute("src", "/api/content-store/previews/12");
+        expect(screen.getByText("Changed since last publish")).toBeInTheDocument();
+        expect(within(screen.getByRole("article", { name: "Kitchen" })).getByText("Hero")).toBeInTheDocument();
+    });
+
+    it("is taken away with Remove hero", async () => {
+        const live = liveContent(contentOf([{ ...kitchen, isHero: true }], { hero: heroOf(12, "Kitchen.jpg"), publication: published }));
+        let removed = 0;
+        renderApp(part("presentation"), nadia, live.handler, ...projectWorkHandlers,
+            http.delete(`${base}/hero`, () => {
+                removed++;
+                live.box.content = contentOf([kitchen], { publication: published, changes: { heroChanged: true } });
+                return HttpResponse.json(live.box.content);
+            }));
+
+        expect(await screen.findByAltText("Hero image")).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "Remove hero" }));
+
+        expect(await screen.findByText("No hero image yet")).toBeInTheDocument();
+        expect(removed).toBe(1);
+        expect(screen.queryByRole("button", { name: "Remove hero" })).toBeNull();
+        expect(screen.getByText("Changed since last publish")).toBeInTheDocument();
+    });
+
+    it("is also set from a card's menu, which a card that already is the hero doesn't offer", async () => {
+        const live = liveContent(contentOf([living, { ...kitchen, isHero: true }], { hero: heroOf(12, "Kitchen.jpg") }));
+        const sent: unknown[] = [];
+        renderApp(part("presentation"), nadia, live.handler, ...projectWorkHandlers,
+            http.put(`${base}/hero`, async ({ request }) => {
+                sent.push(await request.json());
+                live.box.content = contentOf([{ ...living, isHero: true }, kitchen], { hero: heroOf(11, "Living room v3.jpg"), changes: { heroChanged: true } });
+                return HttpResponse.json(live.box.content);
+            }));
+
+        await menuOf("Kitchen");
+        expect(screen.queryByRole("button", { name: "Use as hero image" })).toBeNull();
+        await menuOf("Living room v3");
+        await userEvent.click(screen.getByRole("button", { name: "Use as hero image" }));
+
+        expect(await screen.findByText("Hero image set")).toBeInTheDocument();
+        expect(sent).toEqual([{ itemId: 5 }]);
+        await waitFor(() => expect(within(screen.getByRole("article", { name: "Living room v3" })).getByText("Hero")).toBeInTheDocument());
+        expect(within(screen.getByRole("article", { name: "Kitchen" })).queryByText("Hero")).toBeNull();
+    });
+});
+
+describe("the introduction", () => {
+    it("tells as it is typed when it is too long, and saves it when it isn't", async () => {
+        const live = liveContent(contentOf([living]));
+        const sent: unknown[] = [];
+        renderApp(part("presentation"), nadia, live.handler, ...projectWorkHandlers,
+            http.put(`${base}/summary`, async ({ request }) => {
+                const body = (await request.json()) as { summary: string | null };
+                sent.push(body);
+                live.box.content = contentOf([living], { summary: body.summary, changes: { summaryChanged: true } });
+                return HttpResponse.json(live.box.content);
+            }));
+
+        const box = await screen.findByLabelText("Introduction for the client");
+        expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+        expect(screen.getByText("0 / 2000")).toBeInTheDocument();
+
+        fireEvent.change(box, { target: { value: "x".repeat(2001) } });
+        expect(screen.getByText("Use at most 2000 characters.")).toBeInTheDocument();
+        expect(screen.getByText("2001 / 2000")).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "Save" }));
+        expect(sent).toEqual([]);
+
+        fireEvent.change(box, { target: { value: "Welcome to your new home." } });
+        expect(screen.queryByText("Use at most 2000 characters.")).toBeNull();
+        expect(screen.getByText("25 / 2000")).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+        expect(await screen.findByText("Introduction saved")).toBeInTheDocument();
+        expect(sent).toEqual([{ summary: "Welcome to your new home." }]);
+        // the saved text is what the box shows, with nothing left to save
+        expect(screen.getByLabelText("Introduction for the client")).toHaveValue("Welcome to your new home.");
+        await waitFor(() => expect(screen.getByRole("button", { name: "Save" })).toBeDisabled());
+        expect(await screen.findByText("Changed since last publish")).toBeInTheDocument();
+    });
+
+    it("goes back to the saved text on Cancel, and saves nothing for an emptied box", async () => {
+        const live = liveContent(contentOf([living], { summary: "Hello", publication: published }));
+        const sent: unknown[] = [];
+        renderApp(part("presentation"), nadia, live.handler, ...projectWorkHandlers,
+            http.put(`${base}/summary`, async ({ request }) => {
+                sent.push(await request.json());
+                live.box.content = contentOf([living], { summary: null, publication: published, changes: { summaryChanged: true } });
+                return HttpResponse.json(live.box.content);
+            }));
+
+        const box = await screen.findByLabelText("Introduction for the client");
+        expect(box).toHaveValue("Hello");
+        await userEvent.type(box, " there");
+        expect(box).toHaveValue("Hello there");
+        await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+        expect(box).toHaveValue("Hello");
+        expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
+
+        await userEvent.clear(box);
+        await userEvent.click(screen.getByRole("button", { name: "Save" }));
+        expect(await screen.findByText("Introduction saved")).toBeInTheDocument();
+        expect(sent).toEqual([{ summary: null }]);
+        expect(screen.getByLabelText("Introduction for the client")).toHaveValue("");
+    });
+});
+
+describe("what a card says about its file", () => {
+    it("tells whether it is new, changed, removed or published, and marks the hero", async () => {
+        const items = [
+            itemOf(1, "Fresh", fileOf(21, "fresh.jpg")),
+            itemOf(2, "Edited", fileOf(22, "edited.jpg"), { state: "changed" }),
+            itemOf(3, "Settled", fileOf(23, "settled.jpg"), { state: "unchanged", isHero: true }),
+            itemOf(4, "Gone", fileOf(24, "gone.jpg"), { state: "removed" }),
+        ];
+        renderApp(part("presentation"), nadia, served(contentOf(items, { publication: published })), ...projectWorkHandlers);
+
+        const card = async (title: string) => within(await screen.findByRole("article", { name: title }));
+        expect((await card("Fresh")).getByText("New")).toBeInTheDocument();
+        expect((await card("Edited")).getByText("Changed")).toBeInTheDocument();
+        expect((await card("Settled")).getByText("Published")).toBeInTheDocument();
+        expect((await card("Settled")).getByText("Hero")).toBeInTheDocument();
+        expect((await card("Gone")).getByText("Removed")).toBeInTheDocument();
+        expect((await card("Fresh")).queryByText("Draft")).toBeNull();
+    });
+
+    it("fades a removed file, puts it last and out of reach of the handles, and brings it back with Undo", async () => {
+        const gone = itemOf(8, "Old render", fileOf(14, "old.jpg"), { state: "removed", sortOrder: 0 });
+        const live = liveContent(contentOf([living, kitchen, gone], { publication: published }));
+        const restored: string[] = [];
+        renderApp(part("presentation"), nadia, live.handler, ...projectWorkHandlers,
+            http.post(`${base}/items/:itemId/restore`, ({ params }) => {
+                restored.push(String(params.itemId));
+                live.box.content = contentOf([living, kitchen, { ...gone, state: "unchanged" }], { publication: published });
+                return HttpResponse.json(live.box.content);
+            }));
+
+        // last, though its sort order is first
+        await screen.findByRole("article", { name: "Old render" });
+        expect(cards()).toEqual(["Living room v3", "Kitchen", "Old render"]);
+        const card = screen.getByRole("article", { name: "Old render" });
+        expect(card).toHaveClass("removed");
+        expect(within(card).getByText("Removed — clients see it until you publish")).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Reorder Old render" })).toBeNull();
+        expect(screen.getByRole("button", { name: "Reorder Kitchen" })).toBeInTheDocument();
+
+        // the menu keeps only what is still possible
+        await menuOf("Old render");
+        const menu = within(screen.getByRole("button", { name: "Download" }).parentElement as HTMLElement);
+        expect(menu.getAllByRole("button")).toHaveLength(1);
+        await userEvent.keyboard("{Escape}");
+
+        await userEvent.click(within(card).getByRole("button", { name: "Undo" }));
+        expect(await screen.findByText("Removal undone")).toBeInTheDocument();
+        expect(restored).toEqual(["8"]);
+        await waitFor(() => expect(screen.getByRole("article", { name: "Old render" })).not.toHaveClass("removed"));
+        const back = within(screen.getByRole("article", { name: "Old render" }));
+        expect(back.getByText("Published")).toBeInTheDocument();
+        expect(back.queryByRole("button", { name: "Undo" })).toBeNull();
+    });
+
+    it("says deleting a file clients see is only final once published, and then marks it removed", async () => {
+        const settled = { ...living, state: "unchanged" as const };
+        const live = liveContent(contentOf([settled], { publication: published }));
+        renderApp(part("presentation"), nadia, live.handler, ...projectWorkHandlers,
+            http.delete(`${base}/items/:itemId`, () => {
+                live.box.content = contentOf([{ ...settled, state: "removed" }], { publication: published });
+                return HttpResponse.json({ usage: usageOf(1, 2) });
+            }));
+
+        await menuOf("Living room v3");
+        await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+        const dialog = screen.getByRole("dialog", { name: "Delete Living room v3?" });
+        expect(within(dialog).getByText(/Clients keep seeing this file until you next publish; then it's removed from what they see\./)).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+        expect(await screen.findByText("File removed")).toBeInTheDocument();
+        const card = screen.getByRole("article", { name: "Living room v3" });
+        expect(within(card).getByText("Removed — clients see it until you publish")).toBeInTheDocument();
+        expect(await screen.findByText("· 1 unpublished change")).toBeInTheDocument();
+    });
+});
+
+describe("an archived project", () => {
+    it("shows where things stand and the preview, and offers nothing to change", async () => {
+        const items = [{ ...living, state: "unchanged" as const }, { ...kitchen, state: "unchanged" as const }];
+        renderApp(part("presentation"), nadia, ...projectWorkHandlers, served(contentOf(items, {
+            canEdit: false, readOnlyReason: "This project is archived, so its files can't be changed.",
+            publication: published, hero: heroOf(12, "Kitchen.jpg"), summary: "Welcome home.",
+        })));
+
+        expect(await screen.findByText("Published 14 Oct 2026, 3:20 PM by Nadia Karam")).toBeInTheDocument();
+        expect(screen.getByText("· Everything is published")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
+        for (const name of ["Publish changes", "Discard changes", "Upload hero image", "Choose from images", "Remove hero", "Save", "Cancel", "Upload files", /^Reorder /, "Undo"]) {
+            expect(screen.queryByRole("button", { name })).toBeNull();
+        }
+        // the hero and the introduction can be read
+        expect(screen.getByAltText("Hero image")).toBeInTheDocument();
+        expect(screen.getByText("Welcome home.")).toBeInTheDocument();
+        expect(screen.queryByLabelText("Introduction for the client")).toBeNull();
+        expect(screen.queryByLabelText("Hero image to upload")).toBeNull();
+    });
+});

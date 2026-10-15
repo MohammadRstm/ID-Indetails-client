@@ -16,6 +16,11 @@ export type PortalSessionValue = {
 
 export const PortalSessionContext = createContext<PortalSessionValue | null>(null);
 
+/** How the client is called on screen: their name, or their email when they have none. */
+export function accountName(account: PortalAccount): string {
+    return `${account.firstName} ${account.lastName}`.trim() || account.email;
+}
+
 /** The client portal's session. Only inside the /portal pages. */
 export function usePortalSession(): PortalSessionValue {
     const value = useContext(PortalSessionContext);
