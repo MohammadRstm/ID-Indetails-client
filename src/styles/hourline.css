@@ -1749,7 +1749,9 @@ tr.voided .mono, .cost-row.voided .mono { text-decoration: line-through; }
 @media (min-width: 981px) {
   .modal.inv-editor > .modal-body { overflow: hidden; display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .modal.inv-editor .inv-edit { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); }
-  .modal.inv-editor .inv-edit-form, .modal.inv-editor .inv-edit-preview { overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
+  /* the gutter is kept whether or not a scrollbar shows: the preview's scale follows its width, and a scrollbar
+     coming and going would change that width, the scale, the height and so the scrollbar again, shaking the modal */
+  .modal.inv-editor .inv-edit-form, .modal.inv-editor .inv-edit-preview { overflow-y: auto; overscroll-behavior: contain; min-height: 0; scrollbar-gutter: stable; }
   .modal.inv-editor .inv-edit-preview { position: static; align-self: stretch; }
 }
 /* invoices: pages, like the statements */
