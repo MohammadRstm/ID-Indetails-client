@@ -31,6 +31,7 @@ import {
     SalariesPage,
     SchedulesPage,
     SettingsPage,
+    WebsitePage,
 } from "./pages";
 
 /*
@@ -205,6 +206,8 @@ export const companyRoutes: CompanyRoute[] = [
     { path: "project-pay", nav: { label: "Project pay", icon: "briefcase" }, element: <ProjectPayPage />, access: (p) => p.has(P.SALARY_VIEW) },
     { path: "schedules", nav: { label: "Schedules", icon: "calendar" }, element: <SchedulesPage />, access: (p) => p.has(P.SCHEDULE_MANAGE) },
     // the assistant's cost and budget: super admins only, everyone else sees just their question allowance
+    // what the company's public website shows: super admins, or whoever they grant it to
+    { path: "website", nav: { label: "Website", icon: "browser", section: "workspace" }, element: <WebsitePage />, access: (p) => p.hasAny(P.WEBSITE_VIEW, P.WEBSITE_MANAGE) },
     { path: "proton", nav: { label: "Proton", icon: "compass", section: "workspace" }, element: <ProtonBudgetPage />, access: (p) => p.has(P.PROTON_BUDGET_MANAGE) },
     // the company's own settings and each business's, for whoever reaches the company area
     { path: "settings", nav: { label: "Settings", icon: "settings", section: "workspace" }, element: <CompanySettingsPage />, access: (p) => p.has(P.COMPANY_VIEW) && p.hasAny(...SETTINGS_CODES) },

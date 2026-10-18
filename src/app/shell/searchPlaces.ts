@@ -370,6 +370,12 @@ export const PLACES: Place[] = [
         targets: (ctx) => company(ctx, "schedules"),
     },
     {
+        key: "website", icon: "browser", label: "Open the company website's content",
+        words: ["website", "company website", "public website", "portfolio", "moving strip", "conveyor", "website projects", "services",
+            "offices", "locations", "social links", "contact email", "favicon"],
+        targets: (ctx) => company(ctx, "website"),
+    },
+    {
         key: "areas", icon: "grid", label: "All areas",
         words: ["all areas", "areas", "launcher", "switch business", "switch area", "choose business", "home", "start"],
         targets: (ctx) => when(hasSeveralAreas(ctx.p), () => [{ path: "/company" }]),

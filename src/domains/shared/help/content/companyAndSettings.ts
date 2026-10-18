@@ -1,6 +1,6 @@
 import { P } from "@/app/permissions/codes";
 import { or as orFact } from "../helpFacts";
-import { and, has, hasAny, link, links, list, only, para, sees, step, steps, type Article } from "../helpModel";
+import { and, has, hasAny, link, links, list, not, only, para, sees, step, steps, type Article } from "../helpModel";
 
 export const company: Article[] = [
     {
@@ -16,7 +16,7 @@ export const company: Article[] = [
                 step("Open **Settings** and choose **Company**.", "Settings", "Company"),
                 step("Change the **Company name**, **Website** or **Address**, and save. **Logo file** replaces the logo."),
             ),
-            para("The name, address and website are printed at the top of invoices and statements."),
+            para("The name, address and website are printed at the top of invoices and statements. The **Contact email** is the one the company website shows, and where its contact form sends."),
             list(
                 "**Working week**: Monday to Friday, or **Custom days** with a box ticked for each working day. A week that works Sunday and rests Saturday starts on Sunday in calendars and weekly totals.",
                 "**Time format**: 12-hour (9:00 AM) or 24-hour (09:00), for everyone.",
@@ -217,6 +217,33 @@ export const company: Article[] = [
             links(link("Open schedules", { company: "schedules" })),
         ],
         related: ["working-day", "working-hours"],
+    },
+    {
+        id: "company-website",
+        title: "Changing what the company website shows",
+        category: "company",
+        who: hasAny(P.WEBSITE_VIEW, P.WEBSITE_MANAGE),
+        summary: "The Website page holds everything the company's public website shows: its projects, services, offices, contact email, social links and favicon.",
+        ask: ["website", "company website", "public website", "portfolio", "projects on the website", "conveyor", "moving strip", "carousel", "globe",
+            "services", "offices", "locations", "social links", "instagram", "contact form", "contact email", "favicon", "publish project"],
+        blocks: [
+            steps(
+                step("Open **Website** in the company area.", "Company", "Website"),
+                step("Add a project with **New project**. **Link a system project** fills the form in, and keeps its status and year up to date."),
+                step("Add a thumbnail, a main picture, the place and a description, then switch on **Published**."),
+                step("Choose the projects in the **Moving strip**, up to 20, in order."),
+            ),
+            list(
+                "Everything saved here is public on the website straight away. A draft stays on this page.",
+                "The website shows a project as in progress or completed. A linked project's status and year follow it until you type your own; clear them to follow again.",
+                "Every published project shows on the globe and the projects page; only the moving strip is limited to 20.",
+                "**Services**, **Locations** and **Contact & social** are lists in the website's order. **Site** has the favicon.",
+                "Messages from the website's contact form are emailed to the **contact email**, which is also in Settings → Company. Replying answers the visitor.",
+            ),
+            only(has(P.WEBSITE_MANAGE), links(link("Open the Website page", { company: "website" }))),
+            only(not(has(P.WEBSITE_MANAGE)), para("You can look at the Website page; changing it needs “Edit the company website”.")),
+        ],
+        related: ["company-details"],
     },
 ];
 
