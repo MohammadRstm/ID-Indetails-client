@@ -17,6 +17,7 @@ import { useSaveCompanySettings, useSetLogo, useSetWorkingTime, useWorkingTime, 
 import { daysText, nextChange } from "./workingTime";
 import { notSaved, saved } from "./settingsToasts";
 import { loadFailed } from "@/api/queryState";
+import { useSetContactEmail } from "../../company/website/websiteApi";
 
 /** An image cropped to a 128px square PNG, as the prototype did, so every logo sits the same in its tile. */
 async function squareLogo(file: File): Promise<File> {
@@ -77,13 +78,19 @@ function Company({ settings: s }: { settings: CompanySettings }) {
     const [name, setName] = useState(s.name);
     const [website, setWebsite] = useState(s.website ?? "");
     const [address, setAddress] = useState(s.address ?? "");
+    const [contactEmail, setContactEmail] = useState(s.contactEmail ?? "");
+    const saveEmail = useSetContactEmail();
     const [uploading, setUploading] = useState(false);
-    const changed = name.trim() !== s.name || website.trim() !== (s.website ?? "") || address.trim() !== (s.address ?? "");
+    const detailsChanged = name.trim() !== s.name || website.trim() !== (s.website ?? "") || address.trim() !== (s.address ?? "");
+    const emailChanged = contactEmail.trim() !== (s.contactEmail ?? "");
+    const changed = detailsChanged || emailChanged;
+    const emailError = contactEmail.trim() && !/^[^\s@?%,;<>]+@[^\s@?%,;<>]+\.[^\s@?%,;<>]+$/.test(contactEmail.trim()) && "Enter an email like hello@company.com.";
 
     const body = { name: s.name, address: s.address, website: s.website, weekStart: s.weekStart, use24HourTime: s.use24HourTime, defaultCurrency: s.defaultCurrency };
     function saveDetails() {
-        if (!name.trim() || !changed) return;
-        save.mutate({ ...body, name: name.trim(), website: website.trim() || null, address: address.trim() || null }, { onSuccess: saved("Company details updated") });
+        if (!name.trim() || !changed || emailError) return;
+        if (detailsChanged) save.mutate({ ...body, name: name.trim(), website: website.trim() || null, address: address.trim() || null }, { onSuccess: saved("Company details updated") });
+        if (emailChanged) saveEmail.mutate(contactEmail.trim(), { onSuccess: saved("Contact email updated", "The website shows it, and its contact form sends to it") });
     }
     const saveRule = (patch: Partial<typeof body>) => save.mutate({ ...body, ...patch }, { onSuccess: saved(), onError: notSaved });
 
@@ -120,16 +127,25 @@ function Company({ settings: s }: { settings: CompanySettings }) {
                         <div className="hint">Printed under the company name on invoices and statements, with the address.</div>
                     </div>
                 </div>
-                <div className="field mt-s">
-                    <label className="label" htmlFor="s-address">Address</label>
-                    <input id="s-address" className="input" placeholder="Optional - e.g. Beirut, Lebanon" value={address} disabled={!canEdit}
-                        onChange={(e) => setAddress(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") saveDetails(); }} />
+                <div className="grid g-2 mt-s">
+                    <div className="field">
+                        <label className="label" htmlFor="s-address">Address</label>
+                        <input id="s-address" className="input" placeholder="Optional - e.g. Beirut, Lebanon" value={address} disabled={!canEdit}
+                            onChange={(e) => setAddress(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") saveDetails(); }} />
+                    </div>
+                    <div className="field">
+                        <label className="label" htmlFor="s-contact-email">Contact email</label>
+                        <input id="s-contact-email" className="input" type="email" placeholder="Optional - e.g. hello@id-indetails.com" value={contactEmail} disabled={!canEdit}
+                            onChange={(e) => setContactEmail(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") saveDetails(); }} />
+                        {canEdit && emailError ? <FieldError message={emailError} />
+                            : <div className="hint">The company website shows it, and its contact form sends to it.</div>}
+                    </div>
                 </div>
                 {canEdit && changed && (
                     <div className="row mt-s" style={{ gap: 8, justifyContent: "flex-end" }}>
-                        {save.error != null && <span className="err" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(save.error)}</span>}
-                        <button className="btn btn-sm" onClick={() => { setName(s.name); setWebsite(s.website ?? ""); setAddress(s.address ?? ""); }}>Cancel</button>
-                        <button className="btn btn-sm btn-primary" disabled={save.isPending} onClick={saveDetails}>Save</button>
+                        {(save.error ?? saveEmail.error) != null && <span className="err" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(save.error ?? saveEmail.error)}</span>}
+                        <button className="btn btn-sm" onClick={() => { setName(s.name); setWebsite(s.website ?? ""); setAddress(s.address ?? ""); setContactEmail(s.contactEmail ?? ""); }}>Cancel</button>
+                        <button className="btn btn-sm btn-primary" disabled={save.isPending || saveEmail.isPending} onClick={saveDetails}>Save</button>
                     </div>
                 )}
                 <div className="mt">

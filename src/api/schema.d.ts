@@ -865,6 +865,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/company/contact-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["CompanyContactEmailRequest"];
+                    "application/json": components["schemas"]["CompanyContactEmailRequest"];
+                    "text/json": components["schemas"]["CompanyContactEmailRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CompanySettingsResponse"];
+                        "text/json": components["schemas"]["CompanySettingsResponse"];
+                        "text/plain": components["schemas"]["CompanySettingsResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/company/logo": {
         parameters: {
             query?: never;
@@ -1877,6 +1920,76 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/content-store/objects/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/content-store/parts/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4084,6 +4197,138 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeviceResponse"][];
+                        "text/json": components["schemas"]["DeviceResponse"][];
+                        "text/plain": components["schemas"]["DeviceResponse"][];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["RegisterDeviceRequest"];
+                    "application/json": components["schemas"]["RegisterDeviceRequest"];
+                    "text/json": components["schemas"]["RegisterDeviceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeviceResponse"];
+                        "text/json": components["schemas"]["DeviceResponse"];
+                        "text/plain": components["schemas"]["DeviceResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/devices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/devices/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/hours": {
         parameters: {
             query?: never;
@@ -4116,6 +4361,70 @@ export interface paths {
             };
         };
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/notification-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NotificationSettingsResponse"];
+                        "text/json": components["schemas"]["NotificationSettingsResponse"];
+                        "text/plain": components["schemas"]["NotificationSettingsResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SaveNotificationSettingsRequest"];
+                    "application/json": components["schemas"]["SaveNotificationSettingsRequest"];
+                    "text/json": components["schemas"]["SaveNotificationSettingsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NotificationSettingsResponse"];
+                        "text/json": components["schemas"]["NotificationSettingsResponse"];
+                        "text/plain": components["schemas"]["NotificationSettingsResponse"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -5140,6 +5449,174 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mobile/auth/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ChangePasswordRequest"];
+                    "application/json": components["schemas"]["ChangePasswordRequest"];
+                    "text/json": components["schemas"]["ChangePasswordRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MobileAuthResponse"];
+                        "text/json": components["schemas"]["MobileAuthResponse"];
+                        "text/plain": components["schemas"]["MobileAuthResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mobile/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["LoginRequest"];
+                    "application/json": components["schemas"]["LoginRequest"];
+                    "text/json": components["schemas"]["LoginRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MobileAuthResponse"];
+                        "text/json": components["schemas"]["MobileAuthResponse"];
+                        "text/plain": components["schemas"]["MobileAuthResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mobile/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["MobileRefreshTokenRequest"];
+                    "application/json": components["schemas"]["MobileRefreshTokenRequest"];
+                    "text/json": components["schemas"]["MobileRefreshTokenRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mobile/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["MobileRefreshTokenRequest"];
+                    "application/json": components["schemas"]["MobileRefreshTokenRequest"];
+                    "text/json": components["schemas"]["MobileRefreshTokenRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MobileAuthResponse"];
+                        "text/json": components["schemas"]["MobileAuthResponse"];
+                        "text/plain": components["schemas"]["MobileAuthResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications": {
         parameters: {
             query?: never;
@@ -5493,6 +5970,901 @@ export interface paths {
                         "application/json": components["schemas"]["PermissionDefinitionResponse"][];
                         "text/json": components["schemas"]["PermissionDefinitionResponse"][];
                         "text/plain": components["schemas"]["PermissionDefinitionResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ForgotPasswordRequest"];
+                    "application/json": components["schemas"]["ForgotPasswordRequest"];
+                    "text/json": components["schemas"]["ForgotPasswordRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["LoginRequest"];
+                    "application/json": components["schemas"]["LoginRequest"];
+                    "text/json": components["schemas"]["LoginRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalAuthResponse"];
+                        "text/json": components["schemas"]["PortalAuthResponse"];
+                        "text/plain": components["schemas"]["PortalAuthResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalAuthResponse"];
+                        "text/json": components["schemas"]["PortalAuthResponse"];
+                        "text/plain": components["schemas"]["PortalAuthResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ResetPasswordRequest"];
+                    "application/json": components["schemas"]["ResetPasswordRequest"];
+                    "text/json": components["schemas"]["ResetPasswordRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/invitations/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["AcceptPortalInvitationRequest"];
+                    "application/json": components["schemas"]["AcceptPortalInvitationRequest"];
+                    "text/json": components["schemas"]["AcceptPortalInvitationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalAuthResponse"];
+                        "text/json": components["schemas"]["PortalAuthResponse"];
+                        "text/plain": components["schemas"]["PortalAuthResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/invitations/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalInvitationTokenRequest"];
+                    "application/json": components["schemas"]["PortalInvitationTokenRequest"];
+                    "text/json": components["schemas"]["PortalInvitationTokenRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalInvitationPreviewResponse"];
+                        "text/json": components["schemas"]["PortalInvitationPreviewResponse"];
+                        "text/plain": components["schemas"]["PortalInvitationPreviewResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalAccountResponse"];
+                        "text/json": components["schemas"]["PortalAccountResponse"];
+                        "text/plain": components["schemas"]["PortalAccountResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    before?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalNotificationPageResponse"];
+                        "text/json": components["schemas"]["PortalNotificationPageResponse"];
+                        "text/plain": components["schemas"]["PortalNotificationPageResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalNotificationsReadRequest"];
+                    "application/json": components["schemas"]["PortalNotificationsReadRequest"];
+                    "text/json": components["schemas"]["PortalNotificationsReadRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalUnreadResponse"];
+                        "text/json": components["schemas"]["PortalUnreadResponse"];
+                        "text/plain": components["schemas"]["PortalUnreadResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalUnreadResponse"];
+                        "text/json": components["schemas"]["PortalUnreadResponse"];
+                        "text/plain": components["schemas"]["PortalUnreadResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/projects/{projectId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalPresentationResponse"];
+                        "text/json": components["schemas"]["PortalPresentationResponse"];
+                        "text/plain": components["schemas"]["PortalPresentationResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/projects/{projectId}/discussion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DiscussionSummaryResponse"];
+                        "text/json": components["schemas"]["DiscussionSummaryResponse"];
+                        "text/plain": components["schemas"]["DiscussionSummaryResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/projects/{projectId}/discussion/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalCommentRequest"];
+                    "application/json": components["schemas"]["PortalCommentRequest"];
+                    "text/json": components["schemas"]["PortalCommentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalCommentResponse"];
+                        "text/json": components["schemas"]["PortalCommentResponse"];
+                        "text/plain": components["schemas"]["PortalCommentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/projects/{projectId}/discussion/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    commentId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalEditRequest"];
+                    "application/json": components["schemas"]["PortalEditRequest"];
+                    "text/json": components["schemas"]["PortalEditRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalCommentResponse"];
+                        "text/json": components["schemas"]["PortalCommentResponse"];
+                        "text/plain": components["schemas"]["PortalCommentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    commentId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalCommentResponse"];
+                        "text/json": components["schemas"]["PortalCommentResponse"];
+                        "text/plain": components["schemas"]["PortalCommentResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/projects/{projectId}/discussion/comments/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    itemId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalCommentThreadResponse"];
+                        "text/json": components["schemas"]["PortalCommentThreadResponse"];
+                        "text/plain": components["schemas"]["PortalCommentThreadResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/projects/{projectId}/discussion/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    before?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalMessagePageResponse"];
+                        "text/json": components["schemas"]["PortalMessagePageResponse"];
+                        "text/plain": components["schemas"]["PortalMessagePageResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalMessageRequest"];
+                    "application/json": components["schemas"]["PortalMessageRequest"];
+                    "text/json": components["schemas"]["PortalMessageRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalChatMessageResponse"];
+                        "text/json": components["schemas"]["PortalChatMessageResponse"];
+                        "text/plain": components["schemas"]["PortalChatMessageResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/projects/{projectId}/discussion/messages/{messageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    messageId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalEditRequest"];
+                    "application/json": components["schemas"]["PortalEditRequest"];
+                    "text/json": components["schemas"]["PortalEditRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalChatMessageResponse"];
+                        "text/json": components["schemas"]["PortalChatMessageResponse"];
+                        "text/plain": components["schemas"]["PortalChatMessageResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    messageId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalChatMessageResponse"];
+                        "text/json": components["schemas"]["PortalChatMessageResponse"];
+                        "text/plain": components["schemas"]["PortalChatMessageResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/projects/{projectId}/discussion/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalReadRequest"];
+                    "application/json": components["schemas"]["PortalReadRequest"];
+                    "text/json": components["schemas"]["PortalReadRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DiscussionSummaryResponse"];
+                        "text/json": components["schemas"]["DiscussionSummaryResponse"];
+                        "text/plain": components["schemas"]["DiscussionSummaryResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/projects/{projectId}/items/{itemId}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    inline?: boolean;
+                };
+                header?: never;
+                path: {
+                    itemId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalContentLinkResponse"];
+                        "text/json": components["schemas"]["PortalContentLinkResponse"];
+                        "text/plain": components["schemas"]["PortalContentLinkResponse"];
                     };
                 };
             };
@@ -5947,6 +7319,638 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectFilesResponse"];
+                        "text/json": components["schemas"]["ProjectFilesResponse"];
+                        "text/plain": components["schemas"]["ProjectFilesResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/files/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    commentId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ProjectFileCommentRequest"];
+                    "application/json": components["schemas"]["ProjectFileCommentRequest"];
+                    "text/json": components["schemas"]["ProjectFileCommentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectFileCommentResponse"];
+                        "text/json": components["schemas"]["ProjectFileCommentResponse"];
+                        "text/plain": components["schemas"]["ProjectFileCommentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    commentId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/files/comments/{commentId}/fixed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    commentId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ProjectFileFixedRequest"];
+                    "application/json": components["schemas"]["ProjectFileFixedRequest"];
+                    "text/json": components["schemas"]["ProjectFileFixedRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectFileCommentResponse"];
+                        "text/json": components["schemas"]["ProjectFileCommentResponse"];
+                        "text/plain": components["schemas"]["ProjectFileCommentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/files/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    itemId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["UpdatePortalItemRequest"];
+                    "application/json": components["schemas"]["UpdatePortalItemRequest"];
+                    "text/json": components["schemas"]["UpdatePortalItemRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectFileResponse"];
+                        "text/json": components["schemas"]["ProjectFileResponse"];
+                        "text/plain": components["schemas"]["ProjectFileResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    itemId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalUsageChangedResponse"];
+                        "text/json": components["schemas"]["PortalUsageChangedResponse"];
+                        "text/plain": components["schemas"]["PortalUsageChangedResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/files/items/{itemId}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    itemId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectFileCommentResponse"][];
+                        "text/json": components["schemas"]["ProjectFileCommentResponse"][];
+                        "text/plain": components["schemas"]["ProjectFileCommentResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    itemId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ProjectFileCommentRequest"];
+                    "application/json": components["schemas"]["ProjectFileCommentRequest"];
+                    "text/json": components["schemas"]["ProjectFileCommentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectFileCommentResponse"];
+                        "text/json": components["schemas"]["ProjectFileCommentResponse"];
+                        "text/plain": components["schemas"]["ProjectFileCommentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/files/items/{itemId}/for-client": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    itemId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ProjectFileForClientRequest"];
+                    "application/json": components["schemas"]["ProjectFileForClientRequest"];
+                    "text/json": components["schemas"]["ProjectFileForClientRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectFileResponse"];
+                        "text/json": components["schemas"]["ProjectFileResponse"];
+                        "text/plain": components["schemas"]["ProjectFileResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/files/items/{itemId}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    inline?: boolean;
+                };
+                header?: never;
+                path: {
+                    itemId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalContentLinkResponse"];
+                        "text/json": components["schemas"]["PortalContentLinkResponse"];
+                        "text/plain": components["schemas"]["PortalContentLinkResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/files/items/{itemId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    itemId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectFilesResponse"];
+                        "text/json": components["schemas"]["ProjectFilesResponse"];
+                        "text/plain": components["schemas"]["ProjectFilesResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/files/sections/{section}/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                    section: components["schemas"]["PortalSection"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalOrderRequest"];
+                    "application/json": components["schemas"]["PortalOrderRequest"];
+                    "text/json": components["schemas"]["PortalOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectFilesResponse"];
+                        "text/json": components["schemas"]["ProjectFilesResponse"];
+                        "text/plain": components["schemas"]["ProjectFilesResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/files/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["StartPortalUploadRequest"];
+                    "application/json": components["schemas"]["StartPortalUploadRequest"];
+                    "text/json": components["schemas"]["StartPortalUploadRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalUploadStartedResponse"];
+                        "text/json": components["schemas"]["PortalUploadStartedResponse"];
+                        "text/plain": components["schemas"]["PortalUploadStartedResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/files/uploads/{uploadId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                    uploadId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/files/uploads/{uploadId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                    uploadId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectFileUploadCompletedResponse"];
+                        "text/json": components["schemas"]["ProjectFileUploadCompletedResponse"];
+                        "text/plain": components["schemas"]["ProjectFileUploadCompletedResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/files/uploads/{uploadId}/parts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                    uploadId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalPartLinksRequest"];
+                    "application/json": components["schemas"]["PortalPartLinksRequest"];
+                    "text/json": components["schemas"]["PortalPartLinksRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalPartLinksResponse"];
+                        "text/json": components["schemas"]["PortalPartLinksResponse"];
+                        "text/plain": components["schemas"]["PortalPartLinksResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -6550,6 +8554,975 @@ export interface paths {
                         "application/json": components["schemas"]["PaymentResponse"];
                         "text/json": components["schemas"]["PaymentResponse"];
                         "text/plain": components["schemas"]["PaymentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/access/{accessId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    accessId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalClientsResponse"];
+                        "text/json": components["schemas"]["PortalClientsResponse"];
+                        "text/plain": components["schemas"]["PortalClientsResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalClientsResponse"];
+                        "text/json": components["schemas"]["PortalClientsResponse"];
+                        "text/plain": components["schemas"]["PortalClientsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalContentResponse"];
+                        "text/json": components["schemas"]["PortalContentResponse"];
+                        "text/plain": components["schemas"]["PortalContentResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/content/discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalRevisionRequest"];
+                    "application/json": components["schemas"]["PortalRevisionRequest"];
+                    "text/json": components["schemas"]["PortalRevisionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalContentResponse"];
+                        "text/json": components["schemas"]["PortalContentResponse"];
+                        "text/plain": components["schemas"]["PortalContentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/content/heroes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalHeroRequest"];
+                    "application/json": components["schemas"]["PortalHeroRequest"];
+                    "text/json": components["schemas"]["PortalHeroRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalContentResponse"];
+                        "text/json": components["schemas"]["PortalContentResponse"];
+                        "text/plain": components["schemas"]["PortalContentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/content/heroes/{fileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    fileId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalContentResponse"];
+                        "text/json": components["schemas"]["PortalContentResponse"];
+                        "text/plain": components["schemas"]["PortalContentResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/content/heroes/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalHeroOrderRequest"];
+                    "application/json": components["schemas"]["PortalHeroOrderRequest"];
+                    "text/json": components["schemas"]["PortalHeroOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalContentResponse"];
+                        "text/json": components["schemas"]["PortalContentResponse"];
+                        "text/plain": components["schemas"]["PortalContentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/content/items/{itemId}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    inline?: boolean;
+                };
+                header?: never;
+                path: {
+                    itemId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalContentLinkResponse"];
+                        "text/json": components["schemas"]["PortalContentLinkResponse"];
+                        "text/plain": components["schemas"]["PortalContentLinkResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/content/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalPresentationResponse"];
+                        "text/json": components["schemas"]["PortalPresentationResponse"];
+                        "text/plain": components["schemas"]["PortalPresentationResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/content/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalRevisionRequest"];
+                    "application/json": components["schemas"]["PortalRevisionRequest"];
+                    "text/json": components["schemas"]["PortalRevisionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalContentResponse"];
+                        "text/json": components["schemas"]["PortalContentResponse"];
+                        "text/plain": components["schemas"]["PortalContentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/content/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalSummaryRequest"];
+                    "application/json": components["schemas"]["PortalSummaryRequest"];
+                    "text/json": components["schemas"]["PortalSummaryRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalContentResponse"];
+                        "text/json": components["schemas"]["PortalContentResponse"];
+                        "text/plain": components["schemas"]["PortalContentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/discussion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DiscussionSummaryResponse"];
+                        "text/json": components["schemas"]["DiscussionSummaryResponse"];
+                        "text/plain": components["schemas"]["DiscussionSummaryResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/discussion/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalCommentRequest"];
+                    "application/json": components["schemas"]["PortalCommentRequest"];
+                    "text/json": components["schemas"]["PortalCommentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalCommentResponse"];
+                        "text/json": components["schemas"]["PortalCommentResponse"];
+                        "text/plain": components["schemas"]["PortalCommentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/discussion/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    commentId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalEditRequest"];
+                    "application/json": components["schemas"]["PortalEditRequest"];
+                    "text/json": components["schemas"]["PortalEditRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalCommentResponse"];
+                        "text/json": components["schemas"]["PortalCommentResponse"];
+                        "text/plain": components["schemas"]["PortalCommentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    commentId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalCommentResponse"];
+                        "text/json": components["schemas"]["PortalCommentResponse"];
+                        "text/plain": components["schemas"]["PortalCommentResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/discussion/comments/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    itemId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalCommentThreadResponse"];
+                        "text/json": components["schemas"]["PortalCommentThreadResponse"];
+                        "text/plain": components["schemas"]["PortalCommentThreadResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/discussion/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    before?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalMessagePageResponse"];
+                        "text/json": components["schemas"]["PortalMessagePageResponse"];
+                        "text/plain": components["schemas"]["PortalMessagePageResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalMessageRequest"];
+                    "application/json": components["schemas"]["PortalMessageRequest"];
+                    "text/json": components["schemas"]["PortalMessageRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalChatMessageResponse"];
+                        "text/json": components["schemas"]["PortalChatMessageResponse"];
+                        "text/plain": components["schemas"]["PortalChatMessageResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/discussion/messages/{messageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    messageId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalEditRequest"];
+                    "application/json": components["schemas"]["PortalEditRequest"];
+                    "text/json": components["schemas"]["PortalEditRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalChatMessageResponse"];
+                        "text/json": components["schemas"]["PortalChatMessageResponse"];
+                        "text/plain": components["schemas"]["PortalChatMessageResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    messageId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalChatMessageResponse"];
+                        "text/json": components["schemas"]["PortalChatMessageResponse"];
+                        "text/plain": components["schemas"]["PortalChatMessageResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/discussion/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PortalReadRequest"];
+                    "application/json": components["schemas"]["PortalReadRequest"];
+                    "text/json": components["schemas"]["PortalReadRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DiscussionSummaryResponse"];
+                        "text/json": components["schemas"]["DiscussionSummaryResponse"];
+                        "text/plain": components["schemas"]["DiscussionSummaryResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["InvitePortalClientRequest"];
+                    "application/json": components["schemas"]["InvitePortalClientRequest"];
+                    "text/json": components["schemas"]["InvitePortalClientRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalClientsResponse"];
+                        "text/json": components["schemas"]["PortalClientsResponse"];
+                        "text/plain": components["schemas"]["PortalClientsResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/invitations/{invitationId}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    invitationId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalClientsResponse"];
+                        "text/json": components["schemas"]["PortalClientsResponse"];
+                        "text/plain": components["schemas"]["PortalClientsResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/portal/invitations/{invitationId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    invitationId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PortalClientsResponse"];
+                        "text/json": components["schemas"]["PortalClientsResponse"];
+                        "text/plain": components["schemas"]["PortalClientsResponse"];
                     };
                 };
             };
@@ -8055,6 +11028,341 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/website/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicWebsiteContact"];
+                        "text/json": components["schemas"]["PublicWebsiteContact"];
+                        "text/plain": components["schemas"]["PublicWebsiteContact"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/website/contact-messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteContactMessageRequest"];
+                    "application/json": components["schemas"]["WebsiteContactMessageRequest"];
+                    "text/json": components["schemas"]["WebsiteContactMessageRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/website/files/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/website/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicWebsiteLocation"][];
+                        "text/json": components["schemas"]["PublicWebsiteLocation"][];
+                        "text/plain": components["schemas"]["PublicWebsiteLocation"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/website/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicWebsiteProject"][];
+                        "text/json": components["schemas"]["PublicWebsiteProject"][];
+                        "text/plain": components["schemas"]["PublicWebsiteProject"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/website/projects/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicWebsiteProject"];
+                        "text/json": components["schemas"]["PublicWebsiteProject"];
+                        "text/plain": components["schemas"]["PublicWebsiteProject"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/website/services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicWebsiteOffering"][];
+                        "text/json": components["schemas"]["PublicWebsiteOffering"][];
+                        "text/plain": components["schemas"]["PublicWebsiteOffering"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/website/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicWebsiteSettings"];
+                        "text/json": components["schemas"]["PublicWebsiteSettings"];
+                        "text/plain": components["schemas"]["PublicWebsiteSettings"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/website/social-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicWebsiteSocialLink"][];
+                        "text/json": components["schemas"]["PublicWebsiteSocialLink"][];
+                        "text/plain": components["schemas"]["PublicWebsiteSocialLink"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/overview": {
         parameters: {
             query?: never;
@@ -8539,6 +11847,962 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/website/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/conveyor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteConveyorRequest"];
+                    "application/json": components["schemas"]["WebsiteConveyorRequest"];
+                    "text/json": components["schemas"]["WebsiteConveyorRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteProjectsResponse"];
+                        "text/json": components["schemas"]["WebsiteProjectsResponse"];
+                        "text/plain": components["schemas"]["WebsiteProjectsResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/favicon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["AttachFileRequest"];
+                    "application/json": components["schemas"]["AttachFileRequest"];
+                    "text/json": components["schemas"]["AttachFileRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/link-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteLinkCandidateResponse"][];
+                        "text/json": components["schemas"]["WebsiteLinkCandidateResponse"][];
+                        "text/plain": components["schemas"]["WebsiteLinkCandidateResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteLocationRequest"];
+                    "application/json": components["schemas"]["WebsiteLocationRequest"];
+                    "text/json": components["schemas"]["WebsiteLocationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/locations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteLocationRequest"];
+                    "application/json": components["schemas"]["WebsiteLocationRequest"];
+                    "text/json": components["schemas"]["WebsiteLocationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/locations/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteOrderRequest"];
+                    "application/json": components["schemas"]["WebsiteOrderRequest"];
+                    "text/json": components["schemas"]["WebsiteOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteProjectsResponse"];
+                        "text/json": components["schemas"]["WebsiteProjectsResponse"];
+                        "text/plain": components["schemas"]["WebsiteProjectsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteProjectRequest"];
+                    "application/json": components["schemas"]["WebsiteProjectRequest"];
+                    "text/json": components["schemas"]["WebsiteProjectRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/plain": components["schemas"]["WebsiteProjectResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/projects/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/plain": components["schemas"]["WebsiteProjectResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteProjectRequest"];
+                    "application/json": components["schemas"]["WebsiteProjectRequest"];
+                    "text/json": components["schemas"]["WebsiteProjectRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/plain": components["schemas"]["WebsiteProjectResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/projects/{id}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteImageRequest"];
+                    "application/json": components["schemas"]["WebsiteImageRequest"];
+                    "text/json": components["schemas"]["WebsiteImageRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/plain": components["schemas"]["WebsiteProjectResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/projects/{id}/images/{imageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                    imageId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteImageEditRequest"];
+                    "application/json": components["schemas"]["WebsiteImageEditRequest"];
+                    "text/json": components["schemas"]["WebsiteImageEditRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/plain": components["schemas"]["WebsiteProjectResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                    imageId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/plain": components["schemas"]["WebsiteProjectResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/projects/{id}/images/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteOrderRequest"];
+                    "application/json": components["schemas"]["WebsiteOrderRequest"];
+                    "text/json": components["schemas"]["WebsiteOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/json": components["schemas"]["WebsiteProjectResponse"];
+                        "text/plain": components["schemas"]["WebsiteProjectResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteServiceRequest"];
+                    "application/json": components["schemas"]["WebsiteServiceRequest"];
+                    "text/json": components["schemas"]["WebsiteServiceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/services/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteServiceRequest"];
+                    "application/json": components["schemas"]["WebsiteServiceRequest"];
+                    "text/json": components["schemas"]["WebsiteServiceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/services/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteOrderRequest"];
+                    "application/json": components["schemas"]["WebsiteOrderRequest"];
+                    "text/json": components["schemas"]["WebsiteOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/social-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteSocialLinkRequest"];
+                    "application/json": components["schemas"]["WebsiteSocialLinkRequest"];
+                    "text/json": components["schemas"]["WebsiteSocialLinkRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/social-links/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteSocialLinkRequest"];
+                    "application/json": components["schemas"]["WebsiteSocialLinkRequest"];
+                    "text/json": components["schemas"]["WebsiteSocialLinkRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/social-links/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteOrderRequest"];
+                    "application/json": components["schemas"]["WebsiteOrderRequest"];
+                    "text/json": components["schemas"]["WebsiteOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/work-entries": {
         parameters: {
             query?: never;
@@ -8897,6 +13161,12 @@ export interface components {
             lastName?: string;
             password?: string;
             phone?: null | string;
+            token?: string;
+        };
+        AcceptPortalInvitationRequest: {
+            firstName?: string;
+            lastName?: string;
+            password?: string;
             token?: string;
         };
         /** @enum {unknown} */
@@ -9369,6 +13639,22 @@ export interface components {
             /** Format: int32 */
             totalMinutes: number;
         };
+        CommentThreadSummaryResponse: {
+            available: boolean;
+            /** Format: int32 */
+            count: number;
+            fileName: string;
+            /** Format: int64 */
+            itemId: number;
+            /** Format: date-time */
+            lastAt: string;
+            title: string;
+            /** Format: int32 */
+            unread: number;
+        };
+        CompanyContactEmailRequest: {
+            email?: null | string;
+        };
         CompanyMonthResponse: {
             /** Format: double */
             adminSalaries: number;
@@ -9427,6 +13713,7 @@ export interface components {
         };
         CompanySettingsResponse: {
             address: null | string;
+            contactEmail: null | string;
             defaultCurrency: string;
             isSetUp: boolean;
             /** Format: int64 */
@@ -9647,6 +13934,41 @@ export interface components {
         };
         /** @enum {unknown} */
         DeliveryChannel: "email" | "whatsapp" | "download";
+        /** @enum {unknown} */
+        DevicePlatform: "ios" | "android";
+        DeviceResponse: {
+            appVersion: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            current: boolean;
+            /** Format: int64 */
+            id: number;
+            platform: components["schemas"]["DevicePlatform"];
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        DiscussionPersonResponse: {
+            isYou: boolean;
+            key: string;
+            kind: string;
+            name: string;
+        };
+        DiscussionSummaryResponse: {
+            canWrite: boolean;
+            closedReason: null | string;
+            /** Format: int64 */
+            lastCommentId: null | number;
+            /** Format: int64 */
+            lastMessageId: null | number;
+            participants: components["schemas"]["DiscussionPersonResponse"][];
+            /** Format: int64 */
+            projectId: number;
+            threads: components["schemas"]["CommentThreadSummaryResponse"][];
+            /** Format: int32 */
+            unreadComments: number;
+            /** Format: int32 */
+            unreadMessages: number;
+        };
         DomainOverviewResponse: {
             /** Format: int32 */
             activeProjects: number;
@@ -10044,6 +14366,9 @@ export interface components {
              */
             teamId: null | number;
         };
+        InvitePortalClientRequest: {
+            email?: string;
+        };
         InvoiceClientResponse: {
             displayName: string;
             /** Format: int64 */
@@ -10223,6 +14548,7 @@ export interface components {
             total: number;
             /** Format: date-time */
             updatedAt: null | string;
+            version: string;
             /** Format: date */
             weekStart: string;
         };
@@ -10433,6 +14759,18 @@ export interface components {
             /** Format: double */
             amount: number;
             method: components["schemas"]["PaymentMethod"];
+        };
+        MobileAuthResponse: {
+            accessToken: string;
+            /** Format: date-time */
+            accessTokenExpiresAt: string;
+            refreshToken: string;
+            /** Format: date-time */
+            refreshTokenExpiresAt: string;
+            user: components["schemas"]["CurrentUserResponse"];
+        };
+        MobileRefreshTokenRequest: {
+            refreshToken?: string;
         };
         /** @enum {unknown} */
         MoneyAttentionKind: "overdue_invoice" | "finished_owed" | "no_payment" | "cost_high";
@@ -10749,6 +15087,8 @@ export interface components {
             amount?: null | number;
             /** Format: double */
             clientPrice?: null | number;
+            /** Format: uuid */
+            clientRef?: null | string;
             name?: string;
             note?: null | string;
             /** Format: double */
@@ -10770,6 +15110,8 @@ export interface components {
             targetDate: null | string;
             title: null | string;
         };
+        /** @enum {unknown} */
+        NotificationCategory: "work" | "requirements" | "projects" | "meetings" | "sites" | "money" | "people" | "messages";
         NotificationProjectResponse: {
             domain: string;
             icon: null | string;
@@ -10801,6 +15143,14 @@ export interface components {
             /** Format: int64 */
             subjectId: null | number;
             subjectType: null | string;
+        };
+        NotificationSettingsResponse: {
+            isDefault: boolean;
+            mutedCategories: components["schemas"]["NotificationCategory"][];
+            /** Format: int32 */
+            quietFromMinute: null | number;
+            /** Format: int32 */
+            quietToMinute: null | number;
         };
         OpenInvoiceResponse: {
             /** Format: double */
@@ -11230,8 +15580,355 @@ export interface components {
             /** Format: date */
             sendOn?: string;
         };
+        PortalAccountResponse: {
+            email: string;
+            firstName: string;
+            /** Format: int64 */
+            id: number;
+            lastName: string;
+            projects: components["schemas"]["PortalProjectResponse"][];
+        };
+        PortalAuthResponse: {
+            accessToken: string;
+            /** Format: date-time */
+            accessTokenExpiresAt: string;
+            account: components["schemas"]["PortalAccountResponse"];
+        };
+        PortalChangesResponse: {
+            /** Format: int32 */
+            added: number;
+            heroChanged: boolean;
+            /** Format: int32 */
+            removed: number;
+            reordered: components["schemas"]["PortalSection"][];
+            summaryChanged: boolean;
+            /** Format: int32 */
+            updated: number;
+        };
+        PortalChatMessageResponse: {
+            author: components["schemas"]["DiscussionPersonResponse"];
+            body: null | string;
+            canEdit: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            deleted: boolean;
+            /** Format: date-time */
+            editedAt: null | string;
+            /** Format: int64 */
+            id: number;
+            mentions: string[];
+        };
+        PortalClientResponse: {
+            /** Format: date-time */
+            accessEndedAt: null | string;
+            /** Format: date-time */
+            accessGrantedAt: null | string;
+            /** Format: int64 */
+            accessId: null | number;
+            /** Format: int64 */
+            accountId: null | number;
+            email: string;
+            /** Format: date-time */
+            invitationExpiresAt: null | string;
+            /** Format: int64 */
+            invitationId: null | number;
+            /** Format: date-time */
+            invitedAt: null | string;
+            isContact: boolean;
+            label: null | string;
+            /** Format: date-time */
+            lastSeenAt: null | string;
+            name: null | string;
+            status: components["schemas"]["PortalClientStatus"];
+        };
+        PortalClientsResponse: {
+            cannotInviteReason: null | string;
+            clients: components["schemas"]["PortalClientResponse"][];
+            /** Format: int64 */
+            projectId: number;
+        };
+        /** @enum {unknown} */
+        PortalClientStatus: "not_invited" | "invited" | "invitation_expired" | "active" | "access_ended";
+        PortalCommentRequest: {
+            body?: string;
+            clientToken?: string;
+            /** Format: int64 */
+            itemId?: number;
+            mentions?: string[];
+        };
+        PortalCommentResponse: {
+            author: components["schemas"]["DiscussionPersonResponse"];
+            body: null | string;
+            canDelete: boolean;
+            canEdit: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            deleted: boolean;
+            /** Format: date-time */
+            editedAt: null | string;
+            fileName: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            itemId: number;
+            mentions: string[];
+            onEarlierVersion: boolean;
+        };
+        PortalCommentThreadResponse: {
+            available: boolean;
+            comments: components["schemas"]["PortalCommentResponse"][];
+            fileName: string;
+            /** Format: int64 */
+            itemId: number;
+            title: string;
+        };
+        PortalContentFileResponse: {
+            contentType: string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: int64 */
+            originalBytes: number;
+            preview: components["schemas"]["PortalPreview"];
+            /** Format: int64 */
+            storedBytes: number;
+            /** Format: date-time */
+            uploadedAt: string;
+            uploadedBy: null | components["schemas"]["PersonRefResponse"];
+        };
+        PortalContentItemResponse: {
+            canBeHero: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            file: components["schemas"]["PortalContentFileResponse"];
+            /** Format: int64 */
+            id: number;
+            isDraft: boolean;
+            isHero: boolean;
+            previewUrl: null | string;
+            /** Format: date-time */
+            previewUrlExpiresAt: null | string;
+            section: components["schemas"]["PortalSection"];
+            /** Format: int32 */
+            sortOrder: number;
+            state: components["schemas"]["PortalItemState"];
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+            updatedBy: null | components["schemas"]["PersonRefResponse"];
+            uploadedBy: null | components["schemas"]["PersonRefResponse"];
+        };
+        PortalContentLinkResponse: {
+            /** Format: date-time */
+            expiresAt: string;
+            url: string;
+        };
+        PortalContentResponse: {
+            acceptedExtensions: string[];
+            canDiscard: boolean;
+            canEdit: boolean;
+            canManage: boolean;
+            canPublish: boolean;
+            changes: components["schemas"]["PortalChangesResponse"];
+            hasUnpublishedChanges: boolean;
+            hero: null | components["schemas"]["PortalHeroResponse"];
+            heroes: components["schemas"]["PortalHeroResponse"][];
+            items: components["schemas"]["PortalContentItemResponse"][];
+            /** Format: int64 */
+            projectId: number;
+            publication: components["schemas"]["PortalPublicationResponse"];
+            readOnlyReason: null | string;
+            /** Format: int32 */
+            revision: number;
+            storageReady: boolean;
+            summary: null | string;
+            usage: components["schemas"]["PortalUsageResponse"];
+        };
+        PortalEditRequest: {
+            body?: string;
+            mentions?: string[];
+        };
+        PortalHeroOrderRequest: {
+            fileIds?: number[];
+        };
+        PortalHeroRequest: {
+            /** Format: int64 */
+            itemId?: number;
+        };
+        PortalHeroResponse: {
+            /** Format: int64 */
+            fileId: number;
+            name: string;
+            url: null | string;
+            /** Format: date-time */
+            urlExpiresAt: null | string;
+        };
+        PortalInvitationPreviewResponse: {
+            email: string;
+            /** Format: date-time */
+            expiresAt: string;
+            projectTitle: string;
+        };
+        PortalInvitationTokenRequest: {
+            token?: string;
+        };
+        /** @enum {unknown} */
+        PortalItemState: "new" | "changed" | "unchanged" | "removed" | null;
+        PortalMessagePageResponse: {
+            hasMore: boolean;
+            messages: components["schemas"]["PortalChatMessageResponse"][];
+        };
+        PortalMessageRequest: {
+            body?: string;
+            clientToken?: string;
+            mentions?: string[];
+        };
+        /** @enum {unknown} */
+        PortalNotificationKind: "team_message" | "team_comment" | "mention";
+        PortalNotificationPageResponse: {
+            hasMore: boolean;
+            items: components["schemas"]["PortalNotificationResponse"][];
+        };
+        PortalNotificationResponse: {
+            actorName: string;
+            /** Format: int32 */
+            count: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            itemId: null | number;
+            itemTitle: null | string;
+            kind: components["schemas"]["PortalNotificationKind"];
+            /** Format: int64 */
+            projectId: number;
+            projectTitle: string;
+            read: boolean;
+        };
+        PortalNotificationsReadRequest: {
+            all?: boolean;
+            ids?: null | number[];
+        };
+        PortalOrderRequest: {
+            itemIds?: number[];
+        };
+        PortalPartLinkResponse: {
+            /** Format: int32 */
+            partNumber: number;
+            url: string;
+        };
+        PortalPartLinksRequest: {
+            partNumbers?: number[];
+        };
+        PortalPartLinksResponse: {
+            /** Format: date-time */
+            expiresAt: string;
+            parts: components["schemas"]["PortalPartLinkResponse"][];
+        };
+        PortalPresentationResponse: {
+            hero: null | components["schemas"]["PresentationHeroResponse"];
+            heroes: components["schemas"]["PresentationHeroResponse"][];
+            isPublished: boolean;
+            /** Format: int64 */
+            projectId: number;
+            /** Format: date-time */
+            publishedAt: null | string;
+            sections: components["schemas"]["PresentationSectionResponse"][];
+            status: components["schemas"]["ProjectStatus"];
+            summary: null | string;
+            title: string;
+        };
+        /** @enum {unknown} */
+        PortalPreview: "image" | "video" | "pdf" | "none";
+        PortalProjectResponse: {
+            hasNews: boolean;
+            heroUrl: null | string;
+            /** Format: date-time */
+            heroUrlExpiresAt: null | string;
+            /** Format: int64 */
+            id: number;
+            /** Format: date-time */
+            lastActivityAt: null | string;
+            /** Format: date-time */
+            lastPublishedAt: null | string;
+            /** Format: date */
+            startedOn: string;
+            status: components["schemas"]["ProjectStatus"];
+            title: string;
+            /** Format: int32 */
+            unread: number;
+        };
+        PortalPublicationResponse: {
+            /** Format: date-time */
+            publishedAt: null | string;
+            publishedBy: null | components["schemas"]["PersonRefResponse"];
+        };
+        PortalReadRequest: {
+            /** Format: int64 */
+            itemId?: null | number;
+            /** Format: int64 */
+            lastCommentId?: null | number;
+            /** Format: int64 */
+            lastMessageId?: null | number;
+        };
+        PortalRevisionRequest: {
+            /** Format: int32 */
+            expectedRevision?: number;
+        };
+        /** @enum {unknown} */
+        PortalSection: "presentation" | "model" | "drawing";
+        PortalSummaryRequest: {
+            summary?: null | string;
+        };
+        PortalUnreadResponse: {
+            /** Format: int32 */
+            unread: number;
+        };
+        PortalUploadStartedResponse: {
+            /** Format: int32 */
+            partCount: number;
+            /** Format: int64 */
+            partSize: number;
+            /** Format: int64 */
+            uploadId: number;
+        };
+        PortalUsageChangedResponse: {
+            usage: components["schemas"]["PortalUsageResponse"];
+        };
+        PortalUsageResponse: {
+            /** Format: int32 */
+            files: number;
+            /** Format: int64 */
+            originalBytes: number;
+            /** Format: int64 */
+            storedBytes: number;
+        };
         PresenceResponse: {
             online: number[];
+        };
+        PresentationHeroResponse: {
+            name: string;
+            url: string;
+            /** Format: date-time */
+            urlExpiresAt: string;
+        };
+        PresentationItemResponse: {
+            contentType: string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            preview: components["schemas"]["PortalPreview"];
+            previewUrl: null | string;
+            /** Format: date-time */
+            previewUrlExpiresAt: null | string;
+            /** Format: int64 */
+            sizeBytes: number;
+            title: string;
+        };
+        PresentationSectionResponse: {
+            items: components["schemas"]["PresentationItemResponse"][];
+            section: components["schemas"]["PortalSection"];
         };
         /** @enum {unknown} */
         PriceSource: "auto" | "manual" | "stated" | null;
@@ -11321,6 +16018,81 @@ export interface components {
         ProjectCostTimelineResponse: {
             currency: string;
             weeks: components["schemas"]["CostWeekResponse"][];
+        };
+        ProjectFileCommentCountsResponse: {
+            /** Format: int32 */
+            open: number;
+            /** Format: int32 */
+            total: number;
+        };
+        ProjectFileCommentRequest: {
+            body?: string;
+        };
+        ProjectFileCommentResponse: {
+            author: components["schemas"]["PersonRefResponse"];
+            body: string;
+            canDelete: boolean;
+            canEdit: boolean;
+            canFix: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            editedAt: null | string;
+            /** Format: date-time */
+            fixedAt: null | string;
+            fixedBy: null | components["schemas"]["PersonRefResponse"];
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            itemId: number;
+        };
+        ProjectFileFixedRequest: {
+            fixed?: boolean;
+        };
+        ProjectFileForClientRequest: {
+            forClient?: boolean;
+        };
+        ProjectFileResponse: {
+            canBeHero: boolean;
+            canEdit: boolean;
+            clientState: null | components["schemas"]["PortalItemState"];
+            comments: components["schemas"]["ProjectFileCommentCountsResponse"];
+            /** Format: date-time */
+            createdAt: string;
+            file: components["schemas"]["PortalContentFileResponse"];
+            forClient: boolean;
+            /** Format: int64 */
+            id: number;
+            isHero: boolean;
+            previewUrl: null | string;
+            /** Format: date-time */
+            previewUrlExpiresAt: null | string;
+            removed: boolean;
+            section: components["schemas"]["PortalSection"];
+            /** Format: int32 */
+            sortOrder: number;
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+            updatedBy: null | components["schemas"]["PersonRefResponse"];
+            uploadedBy: null | components["schemas"]["PersonRefResponse"];
+        };
+        ProjectFilesResponse: {
+            acceptedExtensions: string[];
+            canChooseForClient: boolean;
+            canEdit: boolean;
+            canManage: boolean;
+            isClientProject: boolean;
+            items: components["schemas"]["ProjectFileResponse"][];
+            /** Format: int64 */
+            projectId: number;
+            readOnlyReason: null | string;
+            storageReady: boolean;
+            usage: components["schemas"]["PortalUsageResponse"];
+        };
+        ProjectFileUploadCompletedResponse: {
+            item: null | components["schemas"]["ProjectFileResponse"];
+            usage: components["schemas"]["PortalUsageResponse"];
         };
         /** @enum {unknown} */
         ProjectionState: "done" | "losing" | "no_defaults" | "ok";
@@ -12064,6 +16836,73 @@ export interface components {
             /** Format: int32 */
             sessions: number;
         };
+        PublicImage: {
+            alt: string;
+            credit: null | components["schemas"]["PublicImageCredit"];
+            src: string;
+        };
+        PublicImageCredit: {
+            photographer: string;
+            source: string;
+            url: string;
+        };
+        PublicPlace: {
+            city: string;
+            country: string;
+            /** Format: double */
+            lat: number;
+            /** Format: double */
+            lng: number;
+        };
+        PublicWebsiteContact: {
+            email: null | string;
+        };
+        PublicWebsiteLocation: {
+            address: string;
+            city: string;
+            country: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            lat: number;
+            /** Format: double */
+            lng: number;
+            phone: string;
+        };
+        PublicWebsiteOffering: {
+            description: string;
+            /** Format: int64 */
+            id: number;
+            title: string;
+        };
+        PublicWebsiteProject: {
+            client: string;
+            /** Format: int32 */
+            conveyorOrder: null | number;
+            description: string;
+            gallery: components["schemas"]["PublicImage"][];
+            hero: components["schemas"]["PublicImage"];
+            /** Format: int64 */
+            id: number;
+            location: components["schemas"]["PublicPlace"];
+            showInConveyor: boolean;
+            slug: string;
+            status: string;
+            thumbnail: string;
+            title: string;
+            type: string;
+            /** Format: int32 */
+            year: number;
+        };
+        PublicWebsiteSettings: {
+            faviconUrl: null | string;
+        };
+        PublicWebsiteSocialLink: {
+            /** Format: int64 */
+            id: number;
+            label: string;
+            url: string;
+        };
         QuarterTotalResponse: {
             /** Format: int32 */
             minutes: number;
@@ -12092,6 +16931,11 @@ export interface components {
             /** Format: date */
             receivedOn?: null | string;
             reference?: null | string;
+        };
+        RegisterDeviceRequest: {
+            appVersion?: null | string;
+            platform?: null | components["schemas"]["DevicePlatform"];
+            pushToken?: string;
         };
         RenameProtonConversationRequest: {
             title?: string;
@@ -12448,6 +17292,13 @@ export interface components {
             startsAt?: string;
             topic?: null | string;
         };
+        SaveNotificationSettingsRequest: {
+            mutedCategories?: components["schemas"]["NotificationCategory"][];
+            /** Format: int32 */
+            quietFromMinute?: null | number;
+            /** Format: int32 */
+            quietToMinute?: null | number;
+        };
         SaveProtonMemoryRequest: {
             /** Format: uuid */
             conversationId?: string;
@@ -12666,6 +17517,16 @@ export interface components {
             count: number;
             people: components["schemas"]["PersonRefResponse"][];
         };
+        StartPortalUploadRequest: {
+            clientToken?: string;
+            fileName?: string;
+            hero?: boolean;
+            /** Format: int64 */
+            replaceItemId?: null | number;
+            section?: null | components["schemas"]["PortalSection"];
+            /** Format: int64 */
+            size?: number;
+        };
         StartProtonVoiceRequest: {
             /** Format: uuid */
             conversationId?: null | string;
@@ -12769,6 +17630,7 @@ export interface components {
         };
         SubmitLabourWeekRequest: {
             days?: components["schemas"]["LabourDayRequest"][];
+            expectedVersion?: null | string;
             note?: null | string;
         };
         TaskCommentResponse: {
@@ -12926,6 +17788,10 @@ export interface components {
             groupId?: number;
             name?: string;
         };
+        UpdatePortalItemRequest: {
+            section?: null | components["schemas"]["PortalSection"];
+            title?: null | string;
+        };
         UpdateProjectBillingRequest: {
             billingType?: components["schemas"]["BillingType"];
             /** Format: int64 */
@@ -12970,6 +17836,192 @@ export interface components {
         UserStatus: "invited" | "active" | "deactivated";
         VoidRequest: {
             reason?: string;
+        };
+        WebsiteContactMessageRequest: {
+            email?: string;
+            message?: string;
+            name?: string;
+            phone?: null | string;
+            website?: null | string;
+        };
+        WebsiteContentResponse: {
+            canManage: boolean;
+            contactEmail: null | string;
+            /** Format: int64 */
+            faviconFileId: null | number;
+            locations: components["schemas"]["WebsiteLocationResponse"][];
+            services: components["schemas"]["WebsiteServiceResponse"][];
+            socialLinks: components["schemas"]["WebsiteSocialLinkResponse"][];
+        };
+        WebsiteConveyorRequest: {
+            projectIds?: number[];
+        };
+        WebsiteImageCreditRequest: {
+            photographer?: string;
+            source?: string;
+            url?: string;
+        };
+        WebsiteImageCreditResponse: {
+            photographer: string;
+            source: string;
+            url: string;
+        };
+        WebsiteImageEditRequest: {
+            alt?: string;
+            credit?: null | components["schemas"]["WebsiteImageCreditRequest"];
+        };
+        WebsiteImageRequest: {
+            alt?: string;
+            credit?: null | components["schemas"]["WebsiteImageCreditRequest"];
+            /** Format: int64 */
+            fileId?: number;
+        };
+        WebsiteImageResponse: {
+            alt: string;
+            credit: null | components["schemas"]["WebsiteImageCreditResponse"];
+            /** Format: int64 */
+            fileId: number;
+            /** Format: int64 */
+            id: number;
+        };
+        WebsiteLinkCandidateResponse: {
+            client: null | string;
+            description: null | string;
+            domainCode: string;
+            /** Format: int64 */
+            id: number;
+            status: components["schemas"]["WebsiteProjectStatus"];
+            title: string;
+            /** Format: int64 */
+            websiteProjectId: null | number;
+            /** Format: int32 */
+            year: number;
+        };
+        WebsiteLinkedProjectResponse: {
+            domainCode: string;
+            /** Format: int64 */
+            id: number;
+            status: components["schemas"]["WebsiteProjectStatus"];
+            title: string;
+            /** Format: int32 */
+            year: number;
+        };
+        WebsiteLocationRequest: {
+            address?: string;
+            city?: string;
+            country?: string;
+            /** Format: double */
+            latitude?: number;
+            /** Format: double */
+            longitude?: number;
+            phone?: string;
+        };
+        WebsiteLocationResponse: {
+            address: string;
+            city: string;
+            country: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            latitude: number;
+            /** Format: double */
+            longitude: number;
+            phone: string;
+        };
+        WebsiteOrderRequest: {
+            ids?: number[];
+        };
+        WebsiteProjectRequest: {
+            city?: null | string;
+            client?: null | string;
+            country?: null | string;
+            description?: null | string;
+            heroAlt?: null | string;
+            heroCredit?: null | components["schemas"]["WebsiteImageCreditRequest"];
+            /** Format: int64 */
+            heroFileId?: null | number;
+            /** Format: double */
+            latitude?: null | number;
+            /** Format: double */
+            longitude?: null | number;
+            /** Format: int64 */
+            projectId?: null | number;
+            published?: boolean;
+            slug?: null | string;
+            status?: null | components["schemas"]["WebsiteProjectStatus"];
+            /** Format: int64 */
+            thumbnailFileId?: null | number;
+            title?: string;
+            type?: components["schemas"]["WebsiteProjectType"];
+            /** Format: int32 */
+            year?: null | number;
+        };
+        WebsiteProjectResponse: {
+            city: null | string;
+            client: null | string;
+            /** Format: int32 */
+            conveyorOrder: null | number;
+            country: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            description: null | string;
+            gallery: components["schemas"]["WebsiteImageResponse"][];
+            heroAlt: null | string;
+            heroCredit: null | components["schemas"]["WebsiteImageCreditResponse"];
+            /** Format: int64 */
+            heroFileId: null | number;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            latitude: null | number;
+            linkedProject: null | components["schemas"]["WebsiteLinkedProjectResponse"];
+            /** Format: double */
+            longitude: null | number;
+            missingToPublish: string[];
+            published: boolean;
+            shownStatus: null | components["schemas"]["WebsiteProjectStatus"];
+            /** Format: int32 */
+            shownYear: null | number;
+            slug: string;
+            status: null | components["schemas"]["WebsiteProjectStatus"];
+            /** Format: int64 */
+            thumbnailFileId: null | number;
+            title: string;
+            type: components["schemas"]["WebsiteProjectType"];
+            /** Format: date-time */
+            updatedAt: null | string;
+            /** Format: int32 */
+            year: null | number;
+        };
+        WebsiteProjectsResponse: {
+            canManage: boolean;
+            /** Format: int32 */
+            conveyorLimit: number;
+            projects: components["schemas"]["WebsiteProjectResponse"][];
+        };
+        /** @enum {unknown} */
+        WebsiteProjectStatus: "in_progress" | "completed" | null;
+        /** @enum {unknown} */
+        WebsiteProjectType: "villa" | "residential" | "hotel";
+        WebsiteServiceRequest: {
+            description?: string;
+            title?: string;
+        };
+        WebsiteServiceResponse: {
+            description: string;
+            /** Format: int64 */
+            id: number;
+            title: string;
+        };
+        WebsiteSocialLinkRequest: {
+            label?: string;
+            url?: string;
+        };
+        WebsiteSocialLinkResponse: {
+            /** Format: int64 */
+            id: number;
+            label: string;
+            url: string;
         };
         WeekTotalResponse: {
             /** Format: int32 */

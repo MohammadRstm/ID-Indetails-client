@@ -1,0 +1,159 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { http } from "@/api/http";
+import type { Schemas } from "@/api/types";
+import { uploadFile } from "../../design/work/workApi";
+
+export type WebsiteProject = Schemas["WebsiteProjectResponse"];
+export type WebsiteProjects = Schemas["WebsiteProjectsResponse"];
+export type WebsiteContent = Schemas["WebsiteContentResponse"];
+export type WebsiteProjectBody = Schemas["WebsiteProjectRequest"];
+export type LinkCandidate = Schemas["WebsiteLinkCandidateResponse"];
+export type WebsiteImageCredit = Schemas["WebsiteImageCreditResponse"];
+export type WebsiteProjectType = WebsiteProject["type"];
+/** What the website shows; the API never sends null for a system project's status (the schema shares the nullable enum). */
+export type WebsiteStatus = "in_progress" | "completed";
+
+/** The website's moving strip shows at most this many projects (the API says so too, as conveyorLimit). */
+export const CONVEYOR_LIMIT = 20;
+
+export const TYPE_LABEL: Record<WebsiteProjectType, string> = { villa: "Villa", residential: "Residential", hotel: "Hotel" };
+export const STATUS_LABEL: Record<WebsiteStatus, string> = { in_progress: "In progress", completed: "Completed" };
+
+const projectsKey = ["website", "projects"] as const;
+const contentKey = ["website", "content"] as const;
+
+/** Every website project, published or not, newest first (website:view or website:manage). */
+export function useWebsiteProjects() {
+    return useQuery({ queryKey: projectsKey, queryFn: async () => (await http.get<WebsiteProjects>("/website/projects")).data });
+}
+
+/** Services, locations, social links, the contact email and the favicon (website:view or website:manage). */
+export function useWebsiteContent() {
+    return useQuery({ queryKey: contentKey, queryFn: async () => (await http.get<WebsiteContent>("/website/content")).data });
+}
+
+/** System projects of both businesses to show on the website, matching what was typed (website:manage). */
+export function useLinkCandidates(search: string, enabled: boolean) {
+    return useQuery({
+        queryKey: ["website", "candidates", search],
+        queryFn: async () => (await http.get<LinkCandidate[]>("/website/link-candidates", { params: { search: search || undefined } })).data,
+        enabled,
+        staleTime: 30_000,
+    });
+}
+
+/** A project changed: the list shows it, and the strip may have moved. */
+function useProjectsChanged() {
+    const queryClient = useQueryClient();
+    return () => { void queryClient.invalidateQueries({ queryKey: ["website"] }); };
+}
+
+export function useSaveWebsiteProject() {
+    const changed = useProjectsChanged();
+    return useMutation({
+        mutationFn: async ({ id, body }: { id: number | null; body: WebsiteProjectBody }) =>
+            (id == null ? await http.post<WebsiteProject>("/website/projects", body) : await http.put<WebsiteProject>(`/website/projects/${id}`, body)).data,
+        onSuccess: changed,
+    });
+}
+
+export function useDeleteWebsiteProject() {
+    const changed = useProjectsChanged();
+    return useMutation({
+        mutationFn: async (id: number) => { await http.delete(`/website/projects/${id}`); },
+        onSuccess: changed,
+    });
+}
+
+/** The whole moving strip, in order. */
+export function useSetConveyor() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (projectIds: number[]) => (await http.put<WebsiteProjects>("/website/conveyor", { projectIds })).data,
+        onSuccess: (projects) => queryClient.setQueryData(projectsKey, projects),
+    });
+}
+
+/** A project's gallery: add a picture, describe it, order or remove them. Each answers with the project. */
+export function useGallery(projectId: number) {
+    const changed = useProjectsChanged();
+    const base = `/website/projects/${projectId}/images`;
+    const add = useMutation({
+        mutationFn: async (body: Schemas["WebsiteImageRequest"]) => (await http.post<WebsiteProject>(base, body)).data,
+        onSuccess: changed,
+    });
+    const edit = useMutation({
+        mutationFn: async ({ imageId, body }: { imageId: number; body: Schemas["WebsiteImageEditRequest"] }) =>
+            (await http.put<WebsiteProject>(`${base}/${imageId}`, body)).data,
+        onSuccess: changed,
+    });
+    const remove = useMutation({
+        mutationFn: async (imageId: number) => (await http.delete<WebsiteProject>(`${base}/${imageId}`)).data,
+        onSuccess: changed,
+    });
+    const order = useMutation({
+        mutationFn: async (ids: number[]) => (await http.put<WebsiteProject>(`${base}/order`, { ids })).data,
+        onSuccess: changed,
+    });
+    return { add, edit, remove, order };
+}
+
+export type ListKind = "services" | "locations" | "social-links";
+
+/** One of the website's ordered lists: add, change, remove or reorder a row. Each answers with all the content. */
+export function useWebsiteList<Body>(kind: ListKind) {
+    const queryClient = useQueryClient();
+    const put = (content: WebsiteContent) => queryClient.setQueryData(contentKey, content);
+    const add = useMutation({ mutationFn: async (body: Body) => (await http.post<WebsiteContent>(`/website/${kind}`, body)).data, onSuccess: put });
+    const update = useMutation({
+        mutationFn: async ({ id, body }: { id: number; body: Body }) => (await http.put<WebsiteContent>(`/website/${kind}/${id}`, body)).data,
+        onSuccess: put,
+    });
+    const remove = useMutation({ mutationFn: async (id: number) => (await http.delete<WebsiteContent>(`/website/${kind}/${id}`)).data, onSuccess: put });
+    const order = useMutation({ mutationFn: async (ids: number[]) => (await http.put<WebsiteContent>(`/website/${kind}/order`, { ids })).data, onSuccess: put });
+    return { add, update, remove, order };
+}
+
+/** The website's favicon, from an uploaded picture, or none (website:manage). */
+export function useSetFavicon() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (fileId: number | null) =>
+            (fileId == null ? await http.delete<WebsiteContent>("/website/favicon") : await http.put<WebsiteContent>("/website/favicon", { fileId })).data,
+        onSuccess: (content) => queryClient.setQueryData(contentKey, content),
+    });
+}
+
+/**
+ * The company's own email: the website shows it and its contact form sends to it. It is a company setting too, so the
+ * settings are read again (company_settings:manage or website:manage).
+ */
+export function useSetContactEmail() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (email: string) => (await http.put<Schemas["CompanySettingsResponse"]>("/company/contact-email", { email })).data,
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: contentKey });
+            void queryClient.invalidateQueries({ queryKey: ["company", "settings"] });
+        },
+    });
+}
+
+/** Moves one id up or down a list by one place; the same list when it can't move. */
+export function moved(ids: number[], id: number, by: -1 | 1): number[] {
+    const from = ids.indexOf(id), to = from + by;
+    if (from < 0 || to < 0 || to >= ids.length) return ids;
+    const next = [...ids];
+    [next[from], next[to]] = [next[to], next[from]];
+    return next;
+}
+
+/** The pictures the website takes: photos only (no SVG, which can carry scripts). */
+export const PICTURE_TYPES = "image/png,image/jpeg,image/webp";
+
+/** Uploads picked pictures one by one; answers with their file ids, or the first error. */
+export async function uploadPictures(files: File[]): Promise<number[]> {
+    const ids: number[] = [];
+    for (const file of files) ids.push((await uploadFile(file)).id);
+    return ids;
+}
