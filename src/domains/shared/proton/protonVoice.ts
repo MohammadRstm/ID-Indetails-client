@@ -4,6 +4,7 @@ import { tokenStore } from "@/api/tokenStore";
 import { onSessionReset } from "@/app/session/sessionReset";
 import { endVoiceSession, startVoiceSession, type ProtonReply } from "./protonApi";
 import { parseBlocks } from "./protonFigures";
+import { plainText } from "./protonText";
 import { spoke } from "./protonStore";
 
 /*
@@ -110,7 +111,7 @@ export function voiceUpdatesOf(answer: VoiceAnswer): { say: string[]; know: stri
     const cards = reply.pendingActions.map((card) => `"${card.preview.title}"`);
     const shown = parseBlocks(reply.blocks).map((block) => `"${block.title}"`);
     return {
-        say: chunksOf(reply.reply),
+        say: chunksOf(plainText(reply.reply)),
         know: [
             ...(cards.length === 0 ? [] : [
                 `A card is on the person's screen: ${cards.join(", ")}. Nothing has been changed. They press Confirm on it to go ahead; `

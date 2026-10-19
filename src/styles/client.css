@@ -215,6 +215,15 @@ table { line-height: normal; font-weight: normal; }
 .proton-turn { display: flex; flex-direction: column; }
 .proton-turn .msg-bubble { max-width: 88%; white-space: pre-wrap; }
 .proton-turn.error .msg-bubble { background: var(--now-soft); color: var(--now); }
+/* an answer drawn from its markdown: paragraphs, lists, bold; the bubble's pre-wrap would double its line breaks */
+.proton-md { white-space: normal; }
+.proton-md p, .proton-md ul, .proton-md ol { margin: 0 0 8px; }
+.proton-md > :last-child { margin-bottom: 0; }
+.proton-md ul, .proton-md ol { padding-inline-start: 20px; }
+.proton-md li + li { margin-top: 3px; }
+.proton-md li > ul { margin: 3px 0 0; }
+.proton-md code { font-family: var(--mono); font-size: .92em; padding: 1px 4px; border-radius: 4px; background: var(--surface-2); }
+.proton-md-h { font-size: 13.5px; }
 .proton-refs { margin-top: 6px; flex-wrap: wrap; }
 .proton-sources { margin-top: 6px; font-size: 11.5px; color: var(--ink-2); white-space: normal; }
 .proton-sources summary { cursor: pointer; }
