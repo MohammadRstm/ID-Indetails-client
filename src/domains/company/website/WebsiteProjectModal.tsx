@@ -9,7 +9,7 @@ import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { PictureSlot, Thumb } from "./WebsitePictures";
 import {
-    moved, PICTURE_TYPES, STATUS_LABEL, uploadPictures, TYPE_LABEL, useDeleteWebsiteProject, useGallery, useLinkCandidates, useSaveWebsiteProject,
+    moved, PICTURE_TYPES, STATUS_LABEL, uploadPictures, TYPE_LABEL, useDeleteWebsiteProject, useGallery, useLinkCandidates, useSaveWebsiteProject, useWebsiteProjects,
     type LinkCandidate, type WebsiteProject, type WebsiteProjectBody, type WebsiteProjectType, type WebsiteStatus,
 } from "./websiteApi";
 import { missingToPublish, placeError, slugOf, splitPosition, yearError } from "./websiteRules";
@@ -23,7 +23,9 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     const remove = useDeleteWebsiteProject();
     const errors = useFormErrors();
     const [saved, setSaved] = useState<WebsiteProject | null>(project);
-    const p = saved;
+    // the project as the list has it now: a gallery change shows here as soon as it is saved
+    const listed = useWebsiteProjects().data?.projects.find((x) => x.id === saved?.id);
+    const p = listed ?? saved;
     const [title, setTitle] = useState(p?.title ?? "");
     const [type, setType] = useState<WebsiteProjectType>(p?.type ?? "villa");
     const [status, setStatus] = useState<WebsiteStatus | "">(p?.status ?? "");

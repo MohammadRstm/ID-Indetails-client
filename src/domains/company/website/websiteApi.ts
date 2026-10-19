@@ -96,26 +96,35 @@ export function useSetConveyor() {
     });
 }
 
-/** A project's gallery: add a picture, describe it, order or remove them. Each answers with the project. */
+/**
+ * A project's gallery: add a picture, describe it, order or remove them. Each answers with the whole project, which
+ * replaces it in the list straight away, so the open form shows the change.
+ */
 export function useGallery(projectId: number) {
-    const changed = useProjectsChanged();
+    const queryClient = useQueryClient();
+    const put = (project: WebsiteProject) => {
+        queryClient.setQueryData<WebsiteProjects>(projectsKey, (list) =>
+            list && { ...list, projects: list.projects.map((p) => (p.id === project.id ? project : p)) });
+        // a project added a moment ago may not be in the list yet
+        void queryClient.invalidateQueries({ queryKey: projectsKey });
+    };
     const base = `/website/projects/${projectId}/images`;
     const add = useMutation({
         mutationFn: async (body: Schemas["WebsiteImageRequest"]) => (await http.post<WebsiteProject>(base, body)).data,
-        onSuccess: changed,
+        onSuccess: put,
     });
     const edit = useMutation({
         mutationFn: async ({ imageId, body }: { imageId: number; body: Schemas["WebsiteImageEditRequest"] }) =>
             (await http.put<WebsiteProject>(`${base}/${imageId}`, body)).data,
-        onSuccess: changed,
+        onSuccess: put,
     });
     const remove = useMutation({
         mutationFn: async (imageId: number) => (await http.delete<WebsiteProject>(`${base}/${imageId}`)).data,
-        onSuccess: changed,
+        onSuccess: put,
     });
     const order = useMutation({
         mutationFn: async (ids: number[]) => (await http.put<WebsiteProject>(`${base}/order`, { ids })).data,
-        onSuccess: changed,
+        onSuccess: put,
     });
     return { add, edit, remove, order };
 }
