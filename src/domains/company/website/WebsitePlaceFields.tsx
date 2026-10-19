@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useId, useState } from "react";
+import { useDeferredValue, useId, useState } from "react";
 import Field from "@/shared/components/Forms/Field";
 import Select from "@/shared/components/Forms/Select";
 import Icon from "@/shared/icons/Icon";
@@ -52,7 +52,12 @@ function CityPicker({ id, countryCode, value, disabled, onChange, onBlur }: {
     const [open, setOpen] = useState(false);
     const search = useDeferredValue(text === value ? "" : text.trim());
     const cities = useCities(countryCode, search, open);
-    useEffect(() => setText(value), [value]);
+    // a city chosen elsewhere (a new country clears it) shows in the box
+    const [shown, setShown] = useState(value);
+    if (shown !== value) {
+        setShown(value);
+        setText(value);
+    }
 
     function pick(name: string) {
         onChange(name);
