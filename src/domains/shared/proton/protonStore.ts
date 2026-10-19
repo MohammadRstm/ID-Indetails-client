@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import { onSessionReset } from "@/app/session/sessionReset";
 import { setAssistantOpen } from "@/shared/components/Overlays/assistantLayer";
 import { emptyChat, loadChat, saveChat, type ProtonChat } from "./protonChat";
+import { plainText } from "./protonText";
 
 /*
  * Proton lives outside any one page: this holds the chat, whether the panel is open, the answer being written, and
@@ -100,8 +101,11 @@ export function wrote(trip: number, text: string) {
 }
 
 /** The reply is in: if nobody is looking (neither the panel nor the Proton page), it waits as unseen. */
-export function answered(text: string, navigated: boolean) {
+export function answered(answer: string, navigated: boolean) {
     const seen = state.open || state.onPage;
+    // the preview and the announcement are plain text: the answer's markdown is drawn only in the chat
+    const text = plainText(answer);
+    const line = text.replace(/\s+/g, " ");
     set({
         askedAt: null,
         status: null,
@@ -110,7 +114,7 @@ export function answered(text: string, navigated: boolean) {
         talkingUntil: Date.now() + TALK_TAIL_MS,
         navigations: state.navigations + (navigated ? 1 : 0),
         unseen: seen ? 0 : state.unseen + 1,
-        peek: seen ? null : text.length > PEEK_LENGTH ? `${text.slice(0, PEEK_LENGTH).trimEnd()}…` : text,
+        peek: seen ? null : line.length > PEEK_LENGTH ? `${line.slice(0, PEEK_LENGTH).trimEnd()}…` : line,
     });
 }
 

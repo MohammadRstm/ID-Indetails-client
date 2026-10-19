@@ -69,7 +69,7 @@ describe("Proton's blob", () => {
 
         await user.click(await blob());
         const again = await screen.findByRole("dialog", { name: "Proton" });
-        expect(within(again).getByText("Villa Mounir is active.", { selector: ".msg-text" })).toBeInTheDocument();
+        expect(within(again).getByText("Villa Mounir is active.", { selector: ".msg-text p" })).toBeInTheDocument();
         expect((await blob()).querySelector(".proton-unseen")).toBeNull();
     });
 

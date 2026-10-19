@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { cx } from "@/shared/utils/cx";
 import ActionCard from "./ActionCard";
 import ProtonWelcome from "./ProtonWelcome";
+import ProtonMarkdown from "./ProtonMarkdown";
 import SourcesNote from "./SourcesNote";
 import { useRemember, type ProtonPendingAction, type ProtonRef } from "./protonApi";
 import type { ProtonChat } from "./protonChat";
@@ -75,7 +76,7 @@ export default function ProtonThread({ chat, conversation, linkOf, draft, status
             ) : (
                 <div key={i} className={cx("proton-turn", turn.from)}>
                     <div className={cx("msg-bubble", turn.from === "you" && "mine")}>
-                        <div className="msg-text" dir="auto">{turn.text}</div>
+                        {turn.from === "proton" ? <ProtonMarkdown text={turn.text} /> : <div className="msg-text" dir="auto">{turn.text}</div>}
                         {turn.from === "proton" && turn.refs.length > 0 && (
                             <div className="chips proton-refs">
                                 {turn.refs.map((ref) => {
@@ -144,7 +145,7 @@ export default function ProtonThread({ chat, conversation, linkOf, draft, status
             ))}
             {pending && (
                 <div className="proton-turn proton">
-                    {draft && <div className="msg-bubble proton-draft"><div className="msg-text" dir="auto">{draft}</div></div>}
+                    {draft && <div className="msg-bubble proton-draft"><ProtonMarkdown text={draft} /></div>}
                     <div className="muted proton-typing">
                         <span className="proton-dots" aria-hidden="true"><i /><i /><i /></span>
                         <span>{status ?? (stillLooking ? "Still looking…" : "Looking into it…")}</span>

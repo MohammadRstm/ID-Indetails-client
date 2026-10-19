@@ -39,4 +39,13 @@ describe("Proton's store", () => {
         });
         expect(result.current.unseen).toBe(1);
     });
+
+    // Regression: the preview beside the blob and the screen reader's announcement showed the answer's markdown
+    it("previews and announces an answer as plain text", () => {
+        const { result } = renderHook(() => useProton());
+        act(() => answered("**Design**\n- **Hours:** 155.5 h, down 81%.", false));
+
+        expect(result.current.peek).toBe("Design Hours: 155.5 h, down 81%.");
+        expect(result.current.announce).toBe("Design\nHours: 155.5 h, down 81%.");
+    });
 });
