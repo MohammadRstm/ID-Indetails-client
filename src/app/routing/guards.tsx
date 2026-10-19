@@ -5,7 +5,7 @@ import { useSession } from "@/app/session/useSession";
 import NotAuthorized from "@/app/pages/NotAuthorized";
 import BootScreen from "@/app/pages/BootScreen";
 import { DomainContext, useDomain } from "./domainContext";
-import { homePath } from "./home";
+import { homePath, websiteHome } from "./home";
 import { pageFor, type CompanyRoute, type DomainRoute } from "./routeTable";
 
 /** Signed in, or off to the sign-in page (coming back here afterwards). */
@@ -47,6 +47,18 @@ export function DomainGuard() {
             <Outlet />
         </DomainContext>
     );
+}
+
+/** The Website area, for whoever may enter it (website staff, super admins, anyone given a website permission). */
+export function WebsiteGuard() {
+    const permissions = usePermissions();
+    if (!permissions.hasWebsiteArea) return <HomeRedirect />;
+    return <Outlet />;
+}
+
+/** /website on its own: the area's first page. */
+export function WebsiteHome() {
+    return <Navigate to={websiteHome(usePermissions())} replace />;
 }
 
 /**

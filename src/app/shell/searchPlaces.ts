@@ -1,12 +1,12 @@
 import { P } from "@/app/permissions/codes";
 import { DOMAINS, type Domain, type Permissions } from "@/app/permissions/permissions";
 import { hasSeveralAreas } from "@/app/routing/areas";
-import { domainHome } from "@/app/routing/home";
-import { canOpen, companyRoutes } from "@/app/routing/routeTable";
+import { domainHome, websiteHome } from "@/app/routing/home";
+import { canOpen, companyRoutes, websiteRoutes } from "@/app/routing/routeTable";
 import { DOMAIN_LABEL } from "@/shared/format/labels";
 import type { IconName } from "@/shared/icons/icons";
 import { myProfilePath } from "./profilePath";
-import type { ShellArea } from "./useArea";
+import { areaBase, type ShellArea } from "./useArea";
 
 /*
  * Every page and action the search can take someone to, with the words people use for it. Search is how new
@@ -40,7 +40,7 @@ export type Place = {
     words: string[];
     targets: (ctx: PlaceContext) => Target[];
     /** Offered before anything is typed, for these people. */
-    starter?: "admin" | "employee" | "company";
+    starter?: "admin" | "employee" | "company" | "website";
 };
 
 /** A matched place, ready to list. */
@@ -54,13 +54,26 @@ export function inBusinesses(ctx: Where, path: string, only?: Domain): Target[] 
     const { p, area } = ctx;
     const domains = (area.kind === "domain" ? [area.domain] : DOMAINS.filter((d) => p.canSeeDomain(d)))
         .filter((d) => (!only || d === only) && canOpen(p, d, path));
-    return domains.map((d) => ({ path: `/${d}/${path}`, sub: area.kind === "company" && domains.length > 1 ? DOMAIN_LABEL[d] : undefined }));
+    return domains.map((d) => ({ path: `/${d}/${path}`, sub: area.kind !== "domain" && domains.length > 1 ? DOMAIN_LABEL[d] : undefined }));
 }
 
 /** A company page, when this person may open it. */
 export function company(ctx: Where, path: string): Target[] {
     const route = companyRoutes.find((r) => r.path === path.split("?")[0]);
     return route?.access(ctx.p) ? [{ path: `/company/${path}` }] : [];
+}
+
+/** A Website area page, when this person may open it. */
+export function website(ctx: Where, path: string): Target[] {
+    const route = websiteRoutes.find((r) => r.path === path.split("?")[0]);
+    return ctx.p.hasWebsiteArea && route?.access(ctx.p) ? [{ path: `/website/${path}` }] : [];
+}
+
+/** A page every area has (messages, notifications): the one of the area being looked at. */
+function inThisArea(ctx: Where, path: string): Target[] {
+    if (ctx.area.kind === "company") return company(ctx, path);
+    if (ctx.area.kind === "website") return website(ctx, path);
+    return inBusinesses(ctx, path);
 }
 
 /** A Settings section: in the company area for those who reach it, otherwise in the business. */
@@ -211,12 +224,12 @@ export const PLACES: Place[] = [
         key: "messages", icon: "chat", label: "Open messages",
         words: ["messages", "message", "chat", "chats", "inbox", "conversations", "conversation", "dm", "direct message", "talk",
             "send a message", "group chat", "write to"],
-        targets: (ctx) => (ctx.area.kind === "company" ? company(ctx, "messages") : inBusinesses(ctx, "messages")),
+        targets: (ctx) => inThisArea(ctx, "messages"),
     },
     {
         key: "notifications", icon: "bell", label: "Open notifications",
         words: ["notifications", "notification", "alerts", "alert", "updates", "bell", "what's new", "reminders", "unread"],
-        targets: (ctx) => (ctx.area.kind === "company" ? company(ctx, "notifications") : inBusinesses(ctx, "notifications")),
+        targets: (ctx) => inThisArea(ctx, "notifications"),
     },
 
     // ---- Settings and its sections ----
@@ -322,7 +335,7 @@ export const PLACES: Place[] = [
         key: "help", icon: "help", label: "Open help",
         words: ["help", "how do i", "how to", "guide", "guides", "faq", "questions", "manual", "instructions", "support",
             "explain", "explanation", "what does this mean", "how is it calculated", "glossary", "tutorial"],
-        targets: (ctx) => [{ path: ctx.area.kind === "domain" ? `/${ctx.area.domain}/help` : "/company/help" }],
+        targets: (ctx) => [{ path: `${areaBase(ctx.area)}/help` }],
     },
     {
         key: "sign-out", icon: "logout", label: "Sign out",
@@ -369,11 +382,44 @@ export const PLACES: Place[] = [
             "timetable", "part time", "part-time", "someone's hours", "work days", "days off"],
         targets: (ctx) => company(ctx, "schedules"),
     },
+
+    // ---- the website area ----
     {
-        key: "website", icon: "browser", label: "Open the company website's content",
-        words: ["website", "company website", "public website", "portfolio", "moving strip", "conveyor", "website projects", "services",
-            "offices", "locations", "social links", "contact email", "favicon"],
-        targets: (ctx) => company(ctx, "website"),
+        key: "website", icon: "browser", label: "Open the website's projects", starter: "website",
+        words: ["website", "company website", "public website", "portfolio", "moving strip", "conveyor", "website projects",
+            "go to website", "web", "site projects", "showcase"],
+        targets: (ctx) => website(ctx, "projects"),
+    },
+    {
+        key: "website-services", icon: "briefcase", label: "Open the website's services", starter: "website",
+        words: ["website services", "services", "what we offer", "offerings", "service list"],
+        targets: (ctx) => website(ctx, "services"),
+    },
+    {
+        key: "website-locations", icon: "pin", label: "Open the website's locations", starter: "website",
+        words: ["website locations", "offices", "locations", "office map", "branches", "addresses"],
+        targets: (ctx) => website(ctx, "locations"),
+    },
+    {
+        key: "website-contact", icon: "mail", label: "Open the website's contact and social links", starter: "website",
+        words: ["website contact", "contact email", "contact form", "social links", "social media links", "instagram", "facebook",
+            "linkedin", "contact and social"],
+        targets: (ctx) => website(ctx, "contact"),
+    },
+    {
+        key: "website-site", icon: "browser", label: "Open the website's favicon",
+        words: ["favicon", "website icon", "site icon", "browser tab icon"],
+        targets: (ctx) => website(ctx, "site"),
+    },
+    {
+        key: "website-staff", icon: "people", label: "Open the website's staff",
+        words: ["website staff", "website team", "website admins", "add website staff", "invite website staff"],
+        targets: (ctx) => website(ctx, "staff"),
+    },
+    {
+        key: "go-website", icon: "browser", label: "Go to Website",
+        words: ["website area", "go to website", "website", "services area"],
+        targets: (ctx) => when(ctx.p.hasWebsiteArea && ctx.area.kind !== "website", () => [{ path: websiteHome(ctx.p) }]),
     },
     {
         key: "areas", icon: "grid", label: "All areas",
@@ -452,7 +498,7 @@ export const STRONG = 75;
 /** The places this person may open that fit what they typed, best first; the starters of their area when nothing is typed. */
 export function findPlaces(ctx: PlaceContext, query: string): Found[] {
     const typed = words(query);
-    const starter = ctx.area.kind === "company" ? "company" : ctx.p.isAdmin ? "admin" : "employee";
+    const starter = ctx.area.kind === "company" ? "company" : ctx.area.kind === "website" ? "website" : ctx.p.isAdmin ? "admin" : "employee";
     const found: Found[] = [];
     PLACES.forEach((place, order) => {
         const label = typeof place.label === "function" ? place.label(ctx) : place.label;
@@ -461,8 +507,8 @@ export function findPlaces(ctx: PlaceContext, query: string): Found[] {
             : Math.max(...[label.replace(/^Open /, ""), label, ...place.words].map((t) => termScore(typed, words(t))));
         if (!score) return;
         for (const target of place.targets(ctx)) {
-            // in the company area its own pages win a tie with a business's
-            const home = ctx.area.kind === "company" && "path" in target && target.path.startsWith("/company") ? 0.5 : 0;
+            // in the company or website area its own pages win a tie with a business's
+            const home = ctx.area.kind !== "domain" && "path" in target && target.path.startsWith(areaBase(ctx.area)) ? 0.5 : 0;
             found.push({ key: `${place.key}:${"path" in target ? target.path : "act"}`, label, icon: place.icon, target, score: score + home - order / 1000 });
         }
     });

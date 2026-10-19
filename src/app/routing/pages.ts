@@ -53,7 +53,13 @@ export const ProjectPayPage = page(() => import("@/domains/company/projectPay/Pr
 export const SalariesPage = page(() => import("@/domains/company/salaries/SalariesPage"));
 export const SchedulesPage = page(() => import("@/domains/company/schedules/SchedulesPage"));
 export const ProtonBudgetPage = page(() => import("@/domains/company/proton/ProtonBudgetPage"));
-export const WebsitePage = page(() => import("@/domains/company/website/WebsitePage"));
+const website = () => import("@/domains/website/WebsitePage");
+export const WebsiteProjectsPage = named(website, "WebsiteProjectsPage");
+export const WebsiteServicesPage = named(website, "WebsiteServicesPage");
+export const WebsiteLocationsPage = named(website, "WebsiteLocationsPage");
+export const WebsiteContactPage = named(website, "WebsiteContactPage");
+export const WebsiteSitePage = named(website, "WebsiteSitePage");
+export const WebsiteStaffPage = named(website, "WebsiteStaffPage");
 export const MessagesPage = page(() => import("@/domains/shared/messages/MessagesPage"));
 export const ProtonPage = page(() => import("@/domains/shared/proton/ProtonPage"));
 export const NotificationsPage = page(() => import("@/domains/shared/notifications/NotificationsPage"));

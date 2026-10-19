@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { http } from "@/api/http";
 import type { Schemas } from "@/api/types";
-import { uploadFile } from "../../design/work/workApi";
+import { uploadFile } from "../design/work/workApi";
 
 export type WebsiteProject = Schemas["WebsiteProjectResponse"];
 export type WebsiteProjects = Schemas["WebsiteProjectsResponse"];

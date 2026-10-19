@@ -9,6 +9,6 @@ export const PAYMENT_METHODS: Record<string, string> = {
 
 export const CLIENT_LABELS = ["Client", "Key account", "Retainer", "Agency", "Lead"];
 
-export const DOMAIN_LABEL: Record<string, string> = { design: "Design", execution: "Execution" };
+export const DOMAIN_LABEL: Record<string, string> = { design: "Design", execution: "Execution", website: "Website" };
 
 export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;

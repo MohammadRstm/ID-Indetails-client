@@ -221,14 +221,14 @@ export const company: Article[] = [
     {
         id: "company-website",
         title: "Changing what the company website shows",
-        category: "company",
+        category: "website",
         who: hasAny(P.WEBSITE_VIEW, P.WEBSITE_MANAGE),
-        summary: "The Website page holds everything the company's public website shows: its projects, services, offices, contact email, social links and favicon.",
+        summary: "The Website area holds everything the company's public website shows: its projects, services, offices, contact email, social links and favicon.",
         ask: ["website", "company website", "public website", "portfolio", "projects on the website", "conveyor", "moving strip", "carousel", "globe",
             "services", "offices", "locations", "social links", "instagram", "contact form", "contact email", "favicon", "publish project"],
         blocks: [
             steps(
-                step("Open **Website** in the company area.", "Company", "Website"),
+                step("Open the **Website** card on All areas, or go straight there if the website is all you look after.", "All areas", "Website"),
                 step("Add a project with **New project**. **Link a system project** fills the form in, and keeps its status and year up to date."),
                 step("Add the **card picture** (tall, for the project's card in the moving strip and the Projects grid), the **page picture** (wide, across the top of its own page), the place and a description, then switch on **Published**."),
                 step("Choose the projects in the **Moving strip**, up to 20, in order."),
@@ -237,13 +237,35 @@ export const company: Article[] = [
                 "Everything saved here is public on the website straight away. A draft stays on this page.",
                 "The website shows a project as in progress or completed. A linked project's status and year follow it until you type your own; clear them to follow again.",
                 "Every published project shows on the globe and the projects page; only the moving strip is limited to 20.",
-                "**Services**, **Locations** and **Contact & social** are lists in the website's order. **Site** has the favicon.",
+                "**Services**, **Locations** and **Contact & social** are lists in the website's order, each with its own page in the sidebar. **Site** has the favicon.",
                 "Messages from the website's contact form are emailed to the **contact email**, which is also in Settings → Company. Replying answers the visitor.",
             ),
-            only(has(P.WEBSITE_MANAGE), links(link("Open the Website page", { company: "website" }))),
-            only(not(has(P.WEBSITE_MANAGE)), para("You can look at the Website page; changing it needs “Edit the company website”.")),
+            only(has(P.WEBSITE_MANAGE), links(link("Open the website's projects", { website: "projects" }))),
+            only(not(has(P.WEBSITE_MANAGE)), para("You can look at the Website area; changing it needs “Edit the company website”.")),
         ],
-        related: ["company-details"],
+        related: ["company-details", "website-staff"],
+    },
+    {
+        id: "website-staff",
+        title: "Who looks after the website",
+        category: "website",
+        who: (ctx) => ctx.p.hasWebsiteArea && ctx.p.hasAny(P.EMPLOYEE_VIEW, P.EMPLOYEE_INVITE, P.PERMISSION_MANAGE),
+        summary: "The website's own staff reach only the Website area. Anyone in Design or Execution can be given the website's permissions too.",
+        ask: ["website staff", "website admin", "add website staff", "invite website staff", "who can edit the website", "give website access",
+            "website permission", "social media"],
+        blocks: [
+            list(
+                "The website's staff are admins who look after the website and nothing else: they sign in straight to it, and see no projects, clients or money.",
+                "Someone in Design or Execution given “View the company website's content” or “Edit the company website” keeps their business and also gets the **Website** card on All areas.",
+                "Social media will be a service of its own, the same way.",
+            ),
+            only(has(P.EMPLOYEE_INVITE), steps(
+                step("Open **Staff** in the Website area and choose **Add staff**.", "Website", "Staff"),
+                step("Enter their work email and salary, then send the invitation. They are an admin of the website."),
+            )),
+            only(has(P.EMPLOYEE_INVITE), links(link("Open the website's staff", { website: "staff" }))),
+        ],
+        related: ["company-website"],
     },
 ];
 

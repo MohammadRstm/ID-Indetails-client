@@ -22,7 +22,7 @@ import InviteModal from "../../shared/people/InviteModal";
 import { personName, usePeople, type EmployeeSummary } from "../../shared/people/peopleApi";
 
 type Status = "all" | "active" | "invited" | "deactivated";
-type Where = "all" | "design" | "execution" | "company";
+type Where = "all" | "design" | "execution" | "website" | "company";
 
 const PAGE = 25;
 const ROLE: Record<string, string> = { super_admin: "Super admin", admin: "Admin", employee: "Employee" };
@@ -36,9 +36,9 @@ const whereParams = (where: Where) =>
  * invited and who has left. People are added by invitation, and never edited here: their account is ended and
  * started again (deactivate and reactivate), which keeps their history. Their details are on their profile.
  * Given a business, it lists only that business's people (its Employees page, for someone who can't see
- * everyone's hours).
+ * everyone's hours); given the website, its staff.
  */
-export default function CompanyPeople({ domain }: { domain?: Domain }) {
+export default function CompanyPeople({ domain }: { domain?: Domain | "website" }) {
     const permissions = usePermissions();
     const [search, setSearch] = useState("");
     const [status, setStatus] = useState<Status>("all");
@@ -70,10 +70,11 @@ export default function CompanyPeople({ domain }: { domain?: Domain }) {
                 <div className="grow" />
                 {!domain && (
                     <Select className="select sm" style={{ width: 170 }} aria-label="Business" value={where} onChange={filter(setWhere)} options={[
-                        { value: "all", label: "Both businesses" }, { value: "design", label: "Design" }, { value: "execution", label: "Execution" }, { value: "company", label: "Super admins" },
+                        { value: "all", label: "Everyone" }, { value: "design", label: "Design" }, { value: "execution", label: "Execution" },
+                        { value: "website", label: "Website" }, { value: "company", label: "Super admins" },
                     ]} />
                 )}
-                {canInvite && <button className="btn btn-primary btn-sm" onClick={() => setInviting(true)}><Icon name="userPlus" />Add person</button>}
+                {canInvite && <button className="btn btn-primary btn-sm" onClick={() => setInviting(true)}><Icon name="userPlus" />{domain === "website" ? "Add staff" : "Add person"}</button>}
             </div>
 
             <div className="panel">
@@ -87,9 +88,9 @@ export default function CompanyPeople({ domain }: { domain?: Domain }) {
                                 <div className="tbl-wrap">
                                     <table className="tbl tbl-min">
                                         <thead>
-                                            <tr><th>Person</th><th>Access</th>{!domain && <th>Business</th>}<th>Team</th><th>Status</th><th>Joined</th><th aria-label="Actions" /></tr>
+                                            <tr><th>Person</th><th>Access</th>{!domain && <th>Business</th>}{domain !== "website" && <th>Team</th>}<th>Status</th><th>Joined</th><th aria-label="Actions" /></tr>
                                         </thead>
-                                        <tbody>{list.items.map((p) => <PersonRow key={p.id} person={p} business={!domain} />)}</tbody>
+                                        <tbody>{list.items.map((p) => <PersonRow key={p.id} person={p} business={!domain} team={domain !== "website"} />)}</tbody>
                                     </table>
                                 </div>
                                 <div className="panel-body" style={{ paddingTop: 0 }}>
@@ -108,14 +109,14 @@ export default function CompanyPeople({ domain }: { domain?: Domain }) {
     );
 }
 
-function PersonRow({ person: p, business }: { person: EmployeeSummary; business: boolean }) {
+function PersonRow({ person: p, business, team }: { person: EmployeeSummary; business: boolean; team: boolean }) {
     const name = personName(p);
     return (
         <tr>
             <td><PersonLine person={{ id: p.id, name, photoFileId: p.photoFileId, online: p.online, domain: p.domain }} size={30} presence link sub={p.position || (name !== p.email && p.email)} /></td>
             <td className="nowrap">{ROLE[p.role] ?? p.role}{p.isJoker && <span className="badge" style={{ marginLeft: 6 }} title="Holds a different set of permissions from the role's">Custom</span>}</td>
             {business && <td className="muted nowrap">{p.domain ? DOMAIN_LABEL[p.domain] ?? p.domain : "Company"}</td>}
-            <td className="muted nowrap">{p.team?.name ?? "-"}</td>
+            {team && <td className="muted nowrap">{p.team?.name ?? "-"}</td>}
             <td className="nowrap">
                 {p.status === "invited" ? <StatusBadge status="invited" />
                     : p.status === "deactivated" ? <span className="badge badge-archived"><Icon name="lock" />{p.leftOn ? `Left ${fmtDateY(p.leftOn)}` : "Deactivated"}</span>

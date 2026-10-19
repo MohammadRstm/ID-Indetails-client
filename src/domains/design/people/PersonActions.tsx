@@ -61,7 +61,9 @@ export default function PersonActions({ account }: { account: Account }) {
     const manage = permissions.has(P.EMPLOYEE_MANAGE) && guarded;
     const deactivated = account.status === "deactivated";
     const invited = account.status === "invited";
-    const canMove = manage && !deactivated && account.role !== "super_admin" && permissions.canSeeDomain("design") && permissions.canSeeDomain("execution");
+    // between the two businesses only: the website's staff stay with the website
+    const canMove = manage && !deactivated && account.role !== "super_admin" && account.domain !== "website"
+        && permissions.canSeeDomain("design") && permissions.canSeeDomain("execution");
     const canResend = invited && permissions.hasAny(P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN);
     const suspended = !!account.sessionsRevokedAt;
     const sessions = permissions.has(P.SESSION_MANAGE) && guarded;
@@ -129,7 +131,8 @@ function RoleModal({ account, onClose }: { account: Account; onClose: () => void
     const permissions = usePermissions();
     const change = useChangeRole(account.id);
     const supers = permissions.has(P.EMPLOYEE_INVITE_SUPER_ADMIN);
-    const options = ROLES.filter((r) => r.value !== account.role && (r.value !== "super_admin" || supers));
+    // the website's staff are admins: they can only become super admins
+    const options = ROLES.filter((r) => r.value !== account.role && (r.value !== "super_admin" || supers) && !(account.domain === "website" && r.value === "employee"));
     const [role, setRole] = useState<string>(options[0]?.value ?? "employee");
     // a super admin belongs to no business, so stepping down means joining one
     const needsDomain = account.role === "super_admin" && role !== "super_admin";

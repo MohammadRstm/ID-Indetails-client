@@ -1,11 +1,12 @@
 import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { permissionsOf } from "@/app/permissions/permissions";
 import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import { homePath } from "./home";
-import { canOpen, companyNav, domainNav, domainRoutes, pageFor } from "./routeTable";
+import { canOpen, companyNav, domainNav, domainRoutes, pageFor, websiteNav } from "./routeTable";
 
 const navLabels = (user: typeof personas.designAdmin, domain: "design" | "execution") =>
     domainNav(permissionsOf(user), domain).map((item) => item.label);
@@ -28,8 +29,15 @@ describe("the route table", () => {
         expect(navLabels(personas.superAdmin, "execution"))
             .toEqual(["Dashboard", "Projects", "Clients", "Financials", "Meetings", "Settings"]);
         expect(companyNav(permissionsOf(personas.superAdmin)).map((i) => i.label))
-            .toEqual(["Overview", "Expenses", "Salaries", "Project pay", "Schedules", "Website", "Proton", "Settings"]);
+            .toEqual(["Overview", "Expenses", "Salaries", "Project pay", "Schedules", "Proton", "Settings"]);
         expect(companyNav(permissionsOf(personas.designAdmin))).toEqual([]);
+        // the website is an area of its own: its pages, and its staff for whoever may see people
+        const website = (u: typeof personas.superAdmin) => websiteNav(permissionsOf(u)).map((i) => i.label);
+        expect(website(personas.superAdmin)).toEqual(["Projects", "Services", "Locations", "Contact & social", "Site", "Staff"]);
+        expect(website(personas.websiteAdmin)).toEqual(["Projects", "Services", "Locations", "Contact & social", "Site"]);
+        expect(website(personas.designAdmin)).toEqual([]);
+        expect(website(withPermissions(personas.designAdmin, { grant: [P.WEBSITE_MANAGE] })))
+            .toEqual(["Projects", "Services", "Locations", "Contact & social", "Site", "Staff"]);
     });
 
     it("follows personal grants and revokes, not the role", () => {
@@ -78,6 +86,9 @@ describe("the route table", () => {
         // A grant that opens the other domain brings the launcher.
         const both = withPermissions(personas.designAdmin, { grant: [P.PROJECT_PRICING_MANAGE], visibleDomains: ["design", "execution"] });
         expect(homePath(permissionsOf(both))).toBe("/company");
+        // the website's staff go straight to it; a Design admin given the website gets the launcher
+        expect(homePath(permissionsOf(personas.websiteAdmin))).toBe("/website/projects");
+        expect(homePath(permissionsOf(withPermissions(personas.designAdmin, { grant: [P.WEBSITE_VIEW] })))).toBe("/company");
     });
 
     it("says which pages a person may open, from a path", () => {
@@ -146,6 +157,51 @@ describe("the guards", () => {
         expect(await screen.findByRole("heading", { name: "What would you like to manage?" })).toBeInTheDocument();
         expect(screen.getByText("Company overview")).toBeInTheDocument();
     });
+    it("shows super admins the services: the website, and social media coming soon", async () => {
+        renderApp("/", personas.superAdmin);
+        expect(await screen.findByRole("heading", { name: "Services" })).toBeInTheDocument();
+        await userEvent.click(screen.getByText("Website").closest("button") as HTMLElement);
+        expect(await screen.findByRole("heading", { name: "Projects" })).toBeInTheDocument();
+        expect(window.location.pathname).toBe("/website/projects");
+    });
+
+    it("marks social media as coming soon, with nothing to open", async () => {
+        renderApp("/", personas.superAdmin);
+        const soon = (await screen.findByText("Social media")).closest(".launch-tile") as HTMLElement;
+        expect(within(soon).getByText("Coming soon")).toBeInTheDocument();
+        expect(soon.tagName).not.toBe("BUTTON");
+    });
+
+    it("gives a Design admin granted the website their business and the Website card, without social media", async () => {
+        renderApp("/", withPermissions(personas.designAdmin, { grant: [P.WEBSITE_MANAGE] }));
+        expect(await screen.findByRole("heading", { name: "Services" })).toBeInTheDocument();
+        expect(screen.getByText("Design").closest("button")).toBeInTheDocument();
+        expect(screen.getByText("Website").closest("button")).toBeInTheDocument();
+        expect(screen.queryByText("Execution")).not.toBeInTheDocument();
+        expect(screen.queryByText("Social media")).not.toBeInTheDocument();
+        expect(screen.queryByText("Company overview")).not.toBeInTheDocument();
+    });
+
+    it("lands the website's staff on the website, with nothing else in reach", async () => {
+        renderApp("/", personas.websiteAdmin);
+        expect(await screen.findByRole("heading", { name: "Projects" })).toBeInTheDocument();
+        expect(window.location.pathname).toBe("/website/projects");
+        const nav = screen.getByRole("navigation");
+        expect(within(nav).getByText("Contact & social")).toBeInTheDocument();
+        expect(within(nav).queryByText("All areas")).not.toBeInTheDocument();
+        expect(within(nav).queryByText("Staff")).not.toBeInTheDocument();
+    });
+
+    it("keeps people without the website out of it", async () => {
+        renderApp("/website/projects", personas.designAdmin);
+        await waitFor(() => expect(window.location.pathname).toBe("/design/overview"));
+    });
+
+    it("opens an old /company/website link on the website's own page", async () => {
+        renderApp("/company/website?tab=services", personas.superAdmin);
+        await waitFor(() => expect(window.location.pathname).toBe("/website/services"));
+    });
+
     it("gives the launcher a way into the company pages someone was granted without the overview", async () => {
         // a design admin given salary:view alone
         renderApp("/", withPermissions(personas.designAdmin, { grant: [P.SALARY_VIEW] }));
