@@ -3,10 +3,9 @@
  * typed rather than after saving.
  */
 
-export const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const MAX_SLUG = 100;
 
-/** The address the API makes from a title when none is typed: lowercase ASCII words joined by dashes. */
+/** The page address the API makes from a project's name: lowercase ASCII words joined by dashes; empty without any. */
 export function slugOf(title: string): string {
     const slug = title.normalize("NFD").replace(/\p{Mn}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
     return slug.slice(0, MAX_SLUG).replace(/-+$/, "");
@@ -53,11 +52,8 @@ export function missingToPublish(p: Publishable): string[] {
     const missing: string[] = [];
     if (!p.status) missing.push("a status");
     if (p.year == null) missing.push("a year");
-    // coordinates are enough (the city and country are found from them), or a city and country (a point is picked there)
-    if (!p.latitude.trim() || !p.longitude.trim()) {
-        if (!p.city.trim()) missing.push("a city");
-        if (!p.country.trim()) missing.push("a country");
-    }
+    // coordinates are enough (the country is found from them), or a country, with a city or without
+    if ((!p.latitude.trim() || !p.longitude.trim()) && !p.country.trim()) missing.push("a country");
     if (!p.description.trim()) missing.push("a description");
     if (p.thumbnail == null) missing.push("a card picture");
     if (p.hero == null) missing.push("a page picture");
