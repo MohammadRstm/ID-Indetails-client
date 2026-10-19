@@ -12184,6 +12184,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/website/places/cities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    country?: string;
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteCityResponse"][];
+                        "text/json": components["schemas"]["WebsiteCityResponse"][];
+                        "text/plain": components["schemas"]["WebsiteCityResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/places/countries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteCountryResponse"][];
+                        "text/json": components["schemas"]["WebsiteCountryResponse"][];
+                        "text/plain": components["schemas"]["WebsiteCountryResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/website/projects": {
         parameters: {
             query?: never;
@@ -16841,8 +16918,10 @@ export interface components {
             src: string;
         };
         PublicPlace: {
-            city: string;
+            approximate: boolean;
+            city: null | string;
             country: string;
+            countryCode: string;
             /** Format: double */
             lat: number;
             /** Format: double */
@@ -16855,6 +16934,7 @@ export interface components {
             address: string;
             city: string;
             country: string;
+            countryCode: string;
             /** Format: int64 */
             id: number;
             /** Format: double */
@@ -17831,6 +17911,15 @@ export interface components {
         VoidRequest: {
             reason?: string;
         };
+        WebsiteCityResponse: {
+            /** Format: double */
+            latitude: number;
+            /** Format: double */
+            longitude: number;
+            name: string;
+            /** Format: int32 */
+            population: number;
+        };
         WebsiteContactMessageRequest: {
             email?: string;
             message?: string;
@@ -17849,6 +17938,10 @@ export interface components {
         };
         WebsiteConveyorRequest: {
             projectIds?: number[];
+        };
+        WebsiteCountryResponse: {
+            code: string;
+            name: string;
         };
         WebsiteImageEditRequest: {
             alt?: string;
@@ -17901,6 +17994,7 @@ export interface components {
             address: string;
             city: string;
             country: string;
+            countryCode: null | string;
             /** Format: int64 */
             id: number;
             /** Format: double */
@@ -17928,7 +18022,6 @@ export interface components {
             /** Format: int64 */
             projectId?: null | number;
             published?: boolean;
-            slug?: null | string;
             status?: null | components["schemas"]["WebsiteProjectStatus"];
             /** Format: int64 */
             thumbnailFileId?: null | number;
@@ -17943,6 +18036,7 @@ export interface components {
             /** Format: int32 */
             conveyorOrder: null | number;
             country: null | string;
+            countryCode: null | string;
             /** Format: date-time */
             createdAt: string;
             description: null | string;

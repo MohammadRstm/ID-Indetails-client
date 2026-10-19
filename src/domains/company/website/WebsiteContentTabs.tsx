@@ -10,6 +10,7 @@ import { SwitchRow } from "@/shared/components/Forms/Filters";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { Thumb } from "./WebsitePictures";
+import PlaceFields from "./WebsitePlaceFields";
 import { moved, PICTURE_TYPES, uploadPictures, useSetContactEmail, useSetFavicon, useWebsiteContent, useWebsiteList, type ListKind, type WebsiteContent } from "./websiteApi";
 import { linkError, placeError, splitPosition } from "./websiteRules";
 
@@ -192,7 +193,7 @@ const LOCATIONS: ListSpec<WebsiteContent["locations"][number], LocationBody> = {
         latitude: b.latitude.trim() ? Number(b.latitude) : null, longitude: b.longitude.trim() ? Number(b.longitude) : null,
     }),
     problems: (b) => ({
-        place: !b.latitude.trim() && !b.longitude.trim() && (!b.city.trim() || !b.country.trim()) && "Give the office's coordinates, or its city and country.",
+        place: !b.latitude.trim() && !b.longitude.trim() && (!b.city.trim() || !b.country.trim()) && "Choose the office's country and city, or type its coordinates.",
         position: placeError(b.latitude, b.longitude),
         address: required(b.address, "Enter the address."),
         phone: required(b.phone, "Enter the phone number."),
@@ -203,11 +204,9 @@ const LOCATIONS: ListSpec<WebsiteContent["locations"][number], LocationBody> = {
     }),
     fields: (b, set, show, touch) => (
         <>
-            <div className="hint" style={{ marginTop: 0 }}>Give the exact coordinates, or just the city and country: the website then puts the office at a point in that city. A city left empty is found from the coordinates.</div>
-            <div className="grid g-2">
-                <Input id="wl-city" label="City" optional value={b.city} maxLength={100} onChange={(city) => set({ ...b, city })} onBlur={touch("place")} error={show("place")} />
-                <Input id="wl-country" label="Country" optional value={b.country} maxLength={100} onChange={(country) => set({ ...b, country })} onBlur={touch("place")} />
-            </div>
+            <div className="hint" style={{ marginTop: 0 }}>Choose the country and city, or type the exact coordinates: the city is then found from them.</div>
+            <PlaceFields idPrefix="wl" country={b.country} city={b.city} cityOptional={false} cityError={show("place")}
+                onChange={(country, city) => set({ ...b, country, city })} onBlur={touch("place")} />
             <div className="grid g-2">
                 <Input id="wl-lat" label="Latitude" optional value={b.latitude} placeholder="e.g. 33.8938" onChange={(v) => set(positionInput(b, "latitude", v))} onBlur={touch("position")} error={show("position")} />
                 <Input id="wl-lng" label="Longitude" optional value={b.longitude} placeholder="e.g. 35.5018" onChange={(v) => set(positionInput(b, "longitude", v))} onBlur={touch("position")} />

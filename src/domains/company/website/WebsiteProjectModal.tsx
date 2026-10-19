@@ -12,7 +12,8 @@ import {
     moved, PICTURE_TYPES, STATUS_LABEL, uploadPictures, TYPE_LABEL, useDeleteWebsiteProject, useGallery, useLinkCandidates, useSaveWebsiteProject,
     type LinkCandidate, type WebsiteProject, type WebsiteProjectBody, type WebsiteProjectType, type WebsiteStatus,
 } from "./websiteApi";
-import { missingToPublish, placeError, SLUG_PATTERN, slugOf, splitPosition, yearError } from "./websiteRules";
+import { missingToPublish, placeError, slugOf, splitPosition, yearError } from "./websiteRules";
+import PlaceFields from "./WebsitePlaceFields";
 
 type Linked = { id: number; title: string; domainCode: string; status: WebsiteStatus; year: number };
 
@@ -24,7 +25,6 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     const [saved, setSaved] = useState<WebsiteProject | null>(project);
     const p = saved;
     const [title, setTitle] = useState(p?.title ?? "");
-    const [slug, setSlug] = useState(p?.slug ?? "");
     const [type, setType] = useState<WebsiteProjectType>(p?.type ?? "villa");
     const [status, setStatus] = useState<WebsiteStatus | "">(p?.status ?? "");
     const [year, setYear] = useState(p?.year != null ? String(p.year) : "");
@@ -46,8 +46,9 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
 
     const shownStatus = status || linked?.status || null;
     const shownYear = year.trim() ? Number(year) : linked?.year ?? null;
-    const titleError = !title.trim() ? "Give the project a title." : title.trim().length > 150 && "A title can be at most 150 characters.";
-    const slugError = slug.trim() && !SLUG_PATTERN.test(slug.trim()) && "Use lowercase letters, digits and single dashes, like villa-rizk.";
+    const titleError = !title.trim() ? "Give the project a title."
+        : title.trim().length > 150 ? "A title can be at most 150 characters."
+            : !slugOf(title) && "The name needs at least one Latin letter or digit: the project's page address is made from it.";
     const statusError = !linked && !status && "Choose a status, or link a system project to follow its status.";
     const yearProblem = yearError(year, !!linked);
     const positionError = placeError(latitude, longitude);
@@ -56,7 +57,7 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
 
     function body(): WebsiteProjectBody {
         return {
-            title: title.trim(), slug: slug.trim() || null, type, status: status || null, year: year.trim() ? Number(year) : null,
+            title: title.trim(), type, status: status || null, year: year.trim() ? Number(year) : null,
             client: client.trim() || null, city: city.trim() || null, country: country.trim() || null,
             latitude: latitude.trim() ? Number(latitude) : null, longitude: longitude.trim() ? Number(longitude) : null,
             description: description.trim() || null, projectId: linked?.id ?? null, thumbnailFileId: thumbnail, heroFileId: hero,
@@ -67,7 +68,7 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
 
     function submit() {
         if (save.isPending) return;
-        if (titleError || slugError || statusError || yearProblem || positionError || publishError) return errors.tried();
+        if (titleError || statusError || yearProblem || positionError || publishError) return errors.tried();
         save.mutate({ id: p?.id ?? null, body: body() }, {
             onSuccess: (result) => {
                 const found = !city.trim() && result.city ? `${result.city}, ${result.country} found from the coordinates` : null;
@@ -77,7 +78,7 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
                 setLatitude(result.latitude != null ? String(result.latitude) : ""); setLongitude(result.longitude != null ? String(result.longitude) : "");
                 setApproximate(result.positionApproximate);
                 // a new project stays open, so its gallery can be filled
-                if (p) onClose(); else { setSaved(result); setSlug(result.slug); }
+                if (p) onClose(); else setSaved(result);
             },
         });
     }
@@ -130,9 +131,8 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
                 <Field id="wp-title" label="Title" required={edit} error={errors.show("title", titleError)}>
                     <input id="wp-title" className="input" value={title} disabled={!edit} onChange={(e) => setTitle(e.target.value)} onBlur={errors.touch("title")} />
                 </Field>
-                <Field id="wp-slug" label="Page address" error={errors.show("slug", slugError)}
-                    hint={`/projects/${slug.trim() || slugOf(title) || "…"}${slug.trim() ? "" : " (made from the title)"}`}>
-                    <input id="wp-slug" className="input" value={slug} disabled={!edit} placeholder="Optional" onChange={(e) => setSlug(e.target.value)} onBlur={errors.touch("slug")} />
+                <Field id="wp-client" label="Client">
+                    <input id="wp-client" className="input" value={client} disabled={!edit} placeholder="Optional - shown on the project's page" onChange={(e) => setClient(e.target.value)} />
                 </Field>
             </div>
             <div className="grid g-3 mt">
@@ -149,23 +149,17 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
                         onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))} onBlur={errors.touch("year")} />
                 </Field>
             </div>
-            <div className="grid g-3 mt">
-                <Field id="wp-client" label="Client">
-                    <input id="wp-client" className="input" value={client} disabled={!edit} placeholder="Optional - shown on the project's page" onChange={(e) => setClient(e.target.value)} />
-                </Field>
-                <Field id="wp-city" label="City">
-                    <input id="wp-city" className="input" value={city} disabled={!edit} placeholder={latitude.trim() ? "Found from the coordinates" : undefined}
-                        onChange={(e) => setCity(e.target.value)} onBlur={errors.touch("place")} />
-                </Field>
-                <Field id="wp-country" label="Country">
-                    <input id="wp-country" className="input" value={country} disabled={!edit} placeholder={latitude.trim() ? "Found from the coordinates" : undefined}
-                        onChange={(e) => setCountry(e.target.value)} onBlur={errors.touch("place")} />
-                </Field>
+            <div className="hint" style={{ marginTop: 4 }}>
+                Page address: /projects/{slugOf(title) || "…"} (from the name; numbered if another project has the same name).
+            </div>
+            <div className="mt">
+                <PlaceFields idPrefix="wp" country={country} city={city} disabled={!edit} cityOptional
+                    onChange={(nextCountry, nextCity) => { setCountry(nextCountry); setCity(nextCity); }} onBlur={errors.touch("place")} />
             </div>
             <div className="grid g-2 mt">
                 <Field id="wp-lat" label="Latitude" error={errors.show("position", positionError)}
-                    hint={approximate ? `A point picked at random in ${city || "the city"}. Type the real coordinates for the exact spot.`
-                        : "The exact spot, or leave it empty: the website then picks a point in the city. Paste “33.8938, 35.5018” from a map into either box."}>
+                    hint={approximate ? `A point picked near ${city || `a town of ${country || "the country"}`}. Type the real coordinates for the exact spot.`
+                        : "The exact spot, or leave it empty: a point is then picked near the city, or near a town of the country. Paste “33.8938, 35.5018” from a map into either box."}>
                     <input id="wp-lat" className="input" inputMode="decimal" value={latitude} disabled={!edit} placeholder="e.g. 33.8938"
                         onChange={(e) => { const both = splitPosition(e.target.value); if (both) { setLatitude(both[0]); setLongitude(both[1]); } else setLatitude(e.target.value); setApproximate(false); }}
                         onBlur={errors.touch("position")} />

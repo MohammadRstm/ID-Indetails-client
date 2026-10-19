@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { http } from "@/api/http";
 import type { Schemas } from "@/api/types";
 import { uploadFile } from "../../design/work/workApi";
@@ -38,6 +38,29 @@ export function useLinkCandidates(search: string, enabled: boolean) {
         queryFn: async () => (await http.get<LinkCandidate[]>("/website/link-candidates", { params: { search: search || undefined } })).data,
         enabled,
         staleTime: 30_000,
+    });
+}
+
+export type WebsiteCountry = Schemas["WebsiteCountryResponse"];
+export type WebsiteCity = Schemas["WebsiteCityResponse"];
+
+/** The countries a place is chosen from; they never change while the page is open. */
+export function useCountries() {
+    return useQuery({
+        queryKey: ["website", "places", "countries"],
+        queryFn: async () => (await http.get<WebsiteCountry[]>("/website/places/countries")).data,
+        staleTime: Infinity,
+    });
+}
+
+/** A country's cities, biggest first, narrowed by what was typed (50 at most). */
+export function useCities(countryCode: string | undefined, search: string, enabled: boolean) {
+    return useQuery({
+        queryKey: ["website", "places", "cities", countryCode, search],
+        queryFn: async () => (await http.get<WebsiteCity[]>("/website/places/cities", { params: { country: countryCode, search: search || undefined } })).data,
+        enabled: enabled && !!countryCode,
+        staleTime: Infinity,
+        placeholderData: keepPreviousData,
     });
 }
 

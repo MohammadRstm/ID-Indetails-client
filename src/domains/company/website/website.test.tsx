@@ -13,7 +13,7 @@ const rana = personas.superAdmin;
 function project(id: number, title: string, change: Partial<WebsiteProject> = {}): WebsiteProject {
     return {
         id, slug: slugOf(title), title, type: "villa", status: "completed", year: 2022, shownStatus: "completed", shownYear: 2022,
-        client: "The Rizk family", city: "Beirut", country: "Lebanon", latitude: 33.8938, longitude: 35.5018, positionApproximate: false, description: "A villa.",
+        client: "The Rizk family", city: "Beirut", country: "Lebanon", countryCode: "LB", latitude: 33.8938, longitude: 35.5018, positionApproximate: false, description: "A villa.",
         thumbnailFileId: null, heroFileId: null, heroAlt: null, linkedProject: null, published: true, conveyorOrder: null,
         gallery: [], missingToPublish: [], createdAt: "2026-10-01T09:00:00Z", updatedAt: null,
         ...change,
@@ -27,7 +27,7 @@ const list = (canManage = true, projects = [villa, hotel, draft]): WebsiteProjec
 
 const content = (change: Partial<WebsiteContent> = {}): WebsiteContent => ({
     services: [{ id: 1, title: "Architecture", description: "Buildings from the first sketch." }, { id: 2, title: "Interiors", description: "Whole homes." }],
-    locations: [{ id: 1, city: "Beirut", country: "Lebanon", latitude: 33.8938, longitude: 35.5018, positionApproximate: true, address: "Gemmayze", phone: "+961 1 234 567" }],
+    locations: [{ id: 1, city: "Beirut", country: "Lebanon", countryCode: "LB", latitude: 33.8938, longitude: 35.5018, positionApproximate: true, address: "Gemmayze", phone: "+961 1 234 567" }],
     socialLinks: [{ id: 1, label: "Instagram", url: "https://instagram.com/indetails" }],
     contactEmail: "hello@indetails.com", faviconFileId: null, canManage: true,
     ...change,
@@ -36,6 +36,15 @@ const content = (change: Partial<WebsiteContent> = {}): WebsiteContent => ({
 const handlers = (projects = list(), c = content()) => [
     http.get("/api/website/projects", () => HttpResponse.json(projects)),
     http.get("/api/website/content", () => HttpResponse.json(c)),
+    http.get("/api/website/places/countries", () => HttpResponse.json([{ code: "FR", name: "France" }, { code: "LB", name: "Lebanon" }])),
+    http.get("/api/website/places/cities", ({ request }) => {
+        const q = new URL(request.url).searchParams;
+        const all = q.get("country") === "LB"
+            ? [{ name: "Beirut", latitude: 33.88894, longitude: 35.49442, population: 1916100 }, { name: "Jbeil", latitude: 34.12111, longitude: 35.64806, population: 40000 }]
+            : [];
+        const search = (q.get("search") ?? "").toLowerCase();
+        return HttpResponse.json(all.filter((c) => c.name.toLowerCase().includes(search)));
+    }),
 ];
 
 describe("the Website page", () => {
@@ -82,7 +91,8 @@ describe("the Website page", () => {
         expect(sent).toHaveLength(0);
 
         await userEvent.type(screen.getByLabelText(/^Title/), "Saifi Loft");
-        expect(screen.getByText("/projects/saifi-loft (made from the title)")).toBeInTheDocument();
+        expect(screen.getByText(/Page address: \/projects\/saifi-loft/)).toBeInTheDocument();
+        expect(screen.queryByLabelText("Page address")).not.toBeInTheDocument();
         await userEvent.click(screen.getByLabelText(/^Status/));
         await userEvent.click(screen.getByRole("option", { name: "Completed" }));
         await userEvent.type(screen.getByLabelText(/^Year/), "2021");
@@ -100,7 +110,7 @@ describe("the Website page", () => {
 
         await userEvent.click(screen.getByRole("button", { name: "Add project" }));
         await waitFor(() => expect(sent).toHaveLength(1));
-        expect(sent[0]).toMatchObject({ title: "Saifi Loft", slug: null, type: "villa", status: "completed", year: 2021, latitude: 33.8955, longitude: 35.5125, projectId: null, published: false });
+        expect(sent[0]).toMatchObject({ title: "Saifi Loft", type: "villa", status: "completed", year: 2021, latitude: 33.8955, longitude: 35.5125, projectId: null, published: false });
         // a new project stays open for its gallery
         expect(await screen.findByRole("button", { name: /Add pictures/ })).toBeInTheDocument();
     });
@@ -216,11 +226,16 @@ describe("places on the Website page", () => {
         await userEvent.type(screen.getByLabelText("Address"), "Old souks");
         await userEvent.type(screen.getByLabelText("Phone"), "+961 9 540 000");
         await userEvent.click(screen.getByRole("button", { name: "Save" }));
-        expect(await screen.findByText("Give the office's coordinates, or its city and country.")).toBeInTheDocument();
-        await userEvent.type(screen.getByLabelText("City"), "Byblos");
-        await userEvent.type(screen.getByLabelText("Country"), "Lebanon");
+        expect(await screen.findByText("Choose the office's country and city, or type its coordinates.")).toBeInTheDocument();
+        // the city waits for the country, and comes from its list
+        expect(screen.getByLabelText("City")).toBeDisabled();
+        await userEvent.click(screen.getByLabelText("Country"));
+        await userEvent.click(await screen.findByRole("option", { name: "Lebanon" }));
+        await userEvent.type(screen.getByLabelText("City"), "jb");
+        await userEvent.click(await screen.findByRole("option", { name: /Jbeil/ }));
+        expect(screen.getByLabelText("City")).toHaveValue("Jbeil");
         await userEvent.click(screen.getByRole("button", { name: "Save" }));
-        await waitFor(() => expect(added).toEqual([{ city: "Byblos", country: "Lebanon", latitude: null, longitude: null, address: "Old souks", phone: "+961 9 540 000" }]));
+        await waitFor(() => expect(added).toEqual([{ city: "Jbeil", country: "Lebanon", latitude: null, longitude: null, address: "Old souks", phone: "+961 9 540 000" }]));
     });
 
     it("explains a project's random point, and takes typed coordinates as exact", async () => {
@@ -229,23 +244,39 @@ describe("places on the Website page", () => {
         renderApp("/company/website", rana, ...handlers(list(true, [picked])),
             http.put("/api/website/projects/5", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(picked); }));
         await userEvent.click(await screen.findByText("Saifi Loft", { selector: "tr div" }));
-        expect(await screen.findByText("A point picked at random in Beirut. Type the real coordinates for the exact spot.")).toBeInTheDocument();
+        expect(await screen.findByText("A point picked near Beirut. Type the real coordinates for the exact spot.")).toBeInTheDocument();
         expect(screen.getByText("Card picture")).toBeInTheDocument();
         expect(screen.getByText("Page picture")).toBeInTheDocument();
         expect(screen.queryByLabelText("Photographer")).not.toBeInTheDocument();
         await userEvent.clear(screen.getByLabelText("Latitude"));
         await userEvent.click(screen.getByLabelText("Latitude"));
         await userEvent.paste("33.8970, 35.5110");
-        expect(screen.queryByText(/A point picked at random/)).not.toBeInTheDocument();
+        expect(screen.queryByText(/A point picked near/)).not.toBeInTheDocument();
         await userEvent.click(screen.getByRole("button", { name: "Save" }));
         await waitFor(() => expect(sent).toHaveLength(1));
         expect(sent[0]).toMatchObject({ latitude: 33.897, longitude: 35.511, city: "Beirut", country: "Lebanon" });
     });
 });
 
+describe("the city picker", () => {
+    it("never keeps a city typed but not picked", async () => {
+        renderApp("/company/website?tab=locations", rana, ...handlers());
+        await userEvent.click(await screen.findByRole("button", { name: /Add office/ }));
+        await userEvent.click(screen.getByLabelText("Country"));
+        await userEvent.click(await screen.findByRole("option", { name: "Lebanon" }));
+        await userEvent.type(screen.getByLabelText("City"), "Gotham");
+        expect(await screen.findByText(/No city of that name/)).toBeInTheDocument();
+        await userEvent.tab();
+        expect(screen.getByLabelText("City")).toHaveValue("");
+    });
+});
+
 describe("the website form's checks", () => {
     it("match the API's", () => {
         expect(slugOf("  Hôtel   Le Gray — Beirut! ")).toBe("hotel-le-gray-beirut");
+        expect(slugOf("فيلا")).toBe("");
+        // a country is enough to place a project
+        expect(missingToPublish({ status: "completed", year: 2022, city: "", country: "Lebanon", latitude: "", longitude: "", description: "x", thumbnail: 1, hero: 2 })).toEqual([]);
         expect(yearError("", false)).toBeTruthy();
         expect(yearError("", true)).toBe(false);
         expect(yearError("1850", true)).toBeTruthy();
