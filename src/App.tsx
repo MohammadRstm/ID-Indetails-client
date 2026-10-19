@@ -15,6 +15,8 @@ import {
     PublicOnly,
     RequirePasswordChanged,
     RequireSession,
+    WebsiteGuard,
+    WebsiteHome,
 } from "@/app/routing/guards";
 import {
     AcceptInvitationPage,
@@ -33,7 +35,7 @@ import {
     ResetPasswordPage,
     SignInPage,
 } from "@/app/routing/pages";
-import { companyRoutes, domainRoutes } from "@/app/routing/routeTable";
+import { companyRoutes, domainRoutes, websiteRoutes } from "@/app/routing/routeTable";
 import { SessionProvider } from "@/app/session/SessionProvider";
 import LiveRoute from "@/app/live/LiveRoute";
 import AppShell from "@/app/shell/AppShell";
@@ -106,6 +108,13 @@ export function AppRoutes() {
                                     {companyRoutes.map((route) => (
                                         <Route key={route.path} path={route.path} element={<CompanyPage route={route} />} />
                                     ))}
+                                </Route>
+                                <Route path="/website" element={<WebsiteGuard />}>
+                                    <Route index element={<WebsiteHome />} />
+                                    {websiteRoutes.map((route) => (
+                                        <Route key={route.path} path={route.path} element={<CompanyPage route={route} />} />
+                                    ))}
+                                    <Route path="*" element={<NotFound />} />
                                 </Route>
                                 <Route path="/:domain" element={<DomainGuard />}>
                                     <Route index element={<HomeRedirect />} />

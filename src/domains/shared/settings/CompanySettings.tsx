@@ -17,7 +17,7 @@ import { useSaveCompanySettings, useSetLogo, useSetWorkingTime, useWorkingTime, 
 import { daysText, nextChange } from "./workingTime";
 import { notSaved, saved } from "./settingsToasts";
 import { loadFailed } from "@/api/queryState";
-import { useSetContactEmail } from "../../company/website/websiteApi";
+import { useSetContactEmail } from "../../website/websiteApi";
 
 /** An image cropped to a 128px square PNG, as the prototype did, so every logo sits the same in its tile. */
 async function squareLogo(file: File): Promise<File> {

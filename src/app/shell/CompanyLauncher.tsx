@@ -5,7 +5,7 @@ import type { Schemas } from "@/api/types";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { AREAS, hasSeveralAreas } from "@/app/routing/areas";
-import { domainHome, homePath } from "@/app/routing/home";
+import { domainHome, homePath, websiteHome } from "@/app/routing/home";
 import { companyNav } from "@/app/routing/routeTable";
 import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
 import ThemeToggle from "@/shared/components/Buttons/ThemeToggle";
@@ -20,7 +20,10 @@ import { loadFailed } from "@/api/queryState";
 
 type Overview = Schemas["CompanyOverviewResponse"];
 
-/** Where someone who can reach several areas starts: pick Design, Execution or the company overview. */
+/**
+ * Where someone who can reach several areas starts: pick Design, Execution or the company overview, or one of the
+ * services (the website, and social media to come). Each card shows only to whoever may open it.
+ */
 export default function CompanyLauncher() {
     const navigate = useNavigate();
     const permissions = usePermissions();
@@ -105,6 +108,34 @@ export default function CompanyLauncher() {
                         </button>
                     )}
                 </div>
+
+                {(permissions.hasWebsiteArea || permissions.isSuperAdmin) && (
+                    <>
+                        <h2 className="launch-sec">Services</h2>
+                        <div className="launch-grid">
+                            {permissions.hasWebsiteArea && (
+                                <button className="launch-tile" onClick={() => navigate(websiteHome(permissions))}>
+                                    <span className="launch-ic"><Icon name={AREAS.website.icon} /></span>
+                                    <span className="launch-body">
+                                        <span className="launch-name">{AREAS.website.label}</span>
+                                        <span className="launch-sub">{AREAS.website.tagline}</span>
+                                    </span>
+                                    <Icon name="chevronRight" />
+                                </button>
+                            )}
+                            {permissions.isSuperAdmin && (
+                                <div className="launch-tile soon" aria-disabled="true">
+                                    <span className="launch-ic"><Icon name="megaphone" /></span>
+                                    <span className="launch-body">
+                                        <span className="launch-name">Social media</span>
+                                        <span className="launch-sub">The company's posts and pages</span>
+                                    </span>
+                                    <span className="badge">Coming soon</span>
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )}
 
                 <div className="row spread mt" style={{ marginTop: 22 }}>
                     <p className="hint" style={{ maxWidth: "52ch" }}>

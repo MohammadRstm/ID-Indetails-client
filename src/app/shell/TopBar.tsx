@@ -17,7 +17,7 @@ import { myProfilePath } from "./profilePath";
 import ReportBugModal from "./ReportBugModal";
 import { useArrivalChime } from "@/domains/shared/messages/messageSounds";
 import { useUnreadBadges } from "./shellQueries";
-import type { ShellArea } from "./useArea";
+import { areaBase, type ShellArea } from "./useArea";
 
 type TopBarProps = { area: ShellArea; onMenu: () => void; onSearch: () => void; /** Whether a wider screen shows the sidebar. */ sideShown?: boolean };
 
@@ -32,7 +32,7 @@ export default function TopBar({ area, onMenu, onSearch, sideShown = true }: Top
     const badges = useUnreadBadges();
     // a message arriving anywhere chimes once, wherever the person is in the app
     useArrivalChime(badges.messages?.unread);
-    const base = area.kind === "domain" ? `/${area.domain}` : "/company";
+    const base = areaBase(area);
     const me = { name: fullName(user), photoFileId: user.photoFileId, online: true };
     const unreadMessages = badges.messages?.unread ?? 0;
     const profilePath = myProfilePath(permissions, area, user.id);
@@ -44,7 +44,7 @@ export default function TopBar({ area, onMenu, onSearch, sideShown = true }: Top
             </button>
             <button className="top-search" onClick={onSearch}>
                 <Icon name="search" />
-                <span>{permissions.isAdmin ? "Search projects, people…" : "Search projects…"}</span>
+                <span>{area.kind === "website" ? "Search…" : permissions.isAdmin ? "Search projects, people…" : "Search projects…"}</span>
                 <span className="kbd">⌘K</span>
             </button>
 

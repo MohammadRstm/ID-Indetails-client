@@ -51,7 +51,7 @@ export default function CompanyProfilePage() {
                 <div className="panel-body">
                     <SwitchRow title="Role" description={permissions.isSuperAdmin ? "Above both businesses: every permission in each, and the company area." : "Set by a super admin."}
                         control={<span className="badge">{access}</span>} />
-                    <SwitchRow title="Businesses" description="The businesses whose projects, clients and people you see."
+                    <SwitchRow title="Areas" description="The businesses whose projects, clients and people you see, and the website if it is yours."
                         control={<span className="badge">{me.visibleDomains.map((d) => DOMAIN_LABEL[d] ?? d).join(" · ") || "None"}</span>} />
                     <SwitchRow title="Permissions" description="Everything you may do, from your role and anything set just for you."
                         control={<button className="btn btn-sm" onClick={() => setViewingPermissions(true)}><Icon name="shield" />View {plural(me.permissions.length, "permission")}</button>} />

@@ -25,6 +25,8 @@ export type LinkTo =
     | { here: string }
     /** A page of the company area ("salaries"). */
     | { company: string }
+    /** A page of the Website area ("services"). */
+    | { website: string }
     /** A Settings section, in the company area for those who reach it. */
     | { settings: string }
     /** A fixed path ("/change-password"). */
@@ -55,6 +57,7 @@ export const CATEGORIES = {
     billing: "Invoices and payments",
     people: "People and access",
     company: "The company",
+    website: "The website",
     settings: "Settings",
     pay: "Hours and pay, explained",
     money: "Money, explained",

@@ -3,7 +3,7 @@ import type { CurrentUser } from "@/api/types";
 import type { Domain } from "@/app/permissions/permissions";
 import { permissionsOf } from "@/app/permissions/permissions";
 import { personas, type PersonaName } from "@/test/personas";
-import { companyRoutes, domainRoutes, pageFor } from "./routeTable";
+import { companyRoutes, domainRoutes, pageFor, websiteRoutes } from "./routeTable";
 
 /*
  * The whole matrix: what each kind of person gets on every route of both businesses and of the company
@@ -37,6 +37,8 @@ const MATRIX: Record<PersonaName, Record<Domain, string>> = {
     executionAdmin:    { design: "hhhhhhhhhhhhhhhhhhh", execution: "ooooododhhoddhooooo" },
     designEmployee:    { design: "doodddddoooddodoooo", execution: "hhhhhhhhhhhhhhhhhhh" },
     executionEmployee: { design: "hhhhhhhhhhhhhhhhhhh", execution: "doodddddododdodoooo" },
+    // the website's staff belong to no business
+    websiteAdmin:      { design: "hhhhhhhhhhhhhhhhhhh", execution: "hhhhhhhhhhhhhhhhhhh" },
 };
 
 const LETTER: Record<string, Outcome> = { o: "open", h: "home", d: "denied" };
@@ -63,12 +65,25 @@ describe("the permission matrix", () => {
             Object.fromEntries(companyRoutes.map((r) => [r.path, r.access(permissionsOf(personas[name])) ? "open" : "denied"]));
         // a domain admin manages settings in their business: the company's Settings need the company area too
         const onlyInbox = {
-            overview: "denied", overhead: "denied", salaries: "denied", "project-pay": "denied", schedules: "denied", website: "denied", proton: "denied", settings: "denied",
+            overview: "denied", overhead: "denied", salaries: "denied", "project-pay": "denied", schedules: "denied", website: "open", proton: "denied", settings: "denied",
             profile: "open", notifications: "open", messages: "open", "assistant/:chatId?": "open", help: "open",
         };
-        expect(company("superAdmin")).toEqual({ ...onlyInbox, overview: "open", overhead: "open", salaries: "open", "project-pay": "open", schedules: "open", website: "open", proton: "open", settings: "open" });
+        expect(company("superAdmin")).toEqual({ ...onlyInbox, overview: "open", overhead: "open", salaries: "open", "project-pay": "open", schedules: "open", proton: "open", settings: "open" });
         for (const name of ["designAdmin", "executionAdmin", "designEmployee", "executionEmployee"] as PersonaName[]) {
             expect(company(name), name).toEqual(onlyInbox);
         }
+        // no Proton for the website's staff
+        expect(company("websiteAdmin")).toEqual({ ...onlyInbox, "assistant/:chatId?": "denied" });
+    });
+
+    it("opens the website area's pages by the website's permissions, and its staff to whoever may see people", () => {
+        const website = (name: PersonaName) =>
+            Object.fromEntries(websiteRoutes.map((r) => [r.path, r.access(permissionsOf(personas[name])) ? "open" : "denied"]));
+        const pages = { projects: "open", services: "open", locations: "open", contact: "open", site: "open", profile: "open", notifications: "open", messages: "open", help: "open" };
+        expect(website("superAdmin")).toEqual({ ...pages, staff: "open" });
+        expect(website("websiteAdmin")).toEqual({ ...pages, staff: "denied" });
+        // the area guard keeps out whoever can't enter the website at all
+        expect(permissionsOf(personas.designAdmin).hasWebsiteArea).toBe(false);
+        expect(permissionsOf(personas.websiteAdmin).hasWebsiteArea).toBe(true);
     });
 });

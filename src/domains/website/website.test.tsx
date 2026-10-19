@@ -48,9 +48,9 @@ const handlers = (projects = list(), c = content()) => [
 ];
 
 describe("the Website page", () => {
-    it("is the super admins', in the company area, and out of reach for an admin", async () => {
-        renderApp("/company/website", rana, ...handlers());
-        expect(await screen.findByRole("heading", { name: "Website" })).toBeInTheDocument();
+    it("is the super admins', in the Website area, and out of reach for an admin", async () => {
+        renderApp("/website/projects", rana, ...handlers());
+        expect(await screen.findByRole("heading", { name: "Projects" })).toBeInTheDocument();
         expect(await screen.findByRole("list", { name: "Moving strip" })).toHaveTextContent("Villa Rizk");
         expect(screen.getByLabelText("Projects in the strip")).toHaveTextContent("2 / 20");
         const draftRow = screen.getByText("Batroun House").closest("tr") as HTMLElement;
@@ -60,25 +60,32 @@ describe("the Website page", () => {
 
     it("isn't open to a Design admin", async () => {
         const asked: string[] = [];
-        renderApp("/company/website", personas.designAdmin, http.get("/api/website/projects", () => { asked.push("projects"); return HttpResponse.json(list()); }));
-        expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
+        renderApp("/website/projects", personas.designAdmin, http.get("/api/website/projects", () => { asked.push("projects"); return HttpResponse.json(list()); }));
+        await waitFor(() => expect(window.location.pathname).toBe("/design/overview"));
         expect(asked).toEqual([]);
+    });
+
+    it("is the whole app for the website's staff", async () => {
+        renderApp("/website/projects", personas.websiteAdmin, ...handlers());
+        expect(await screen.findByRole("list", { name: "Moving strip" })).toHaveTextContent("Villa Rizk");
+        expect(screen.getByRole("button", { name: /New project/ })).toBeInTheDocument();
+        expect(within(screen.getByRole("navigation")).queryByText("All areas")).not.toBeInTheDocument();
     });
 
     it("lets someone with website:view alone look without changing anything", async () => {
         const viewer = withPermissions(rana, { revoke: [P.WEBSITE_MANAGE] });
-        renderApp("/company/website", viewer, ...handlers(list(false), content({ canManage: false })));
+        renderApp("/website/projects", viewer, ...handlers(list(false), content({ canManage: false })));
         await screen.findByRole("list", { name: "Moving strip" });
         expect(screen.queryByRole("button", { name: /New project/ })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: /Move Villa Rizk down/ })).not.toBeInTheDocument();
-        await userEvent.click(screen.getByRole("tab", { name: "Services" }));
+        await userEvent.click(within(screen.getByRole("navigation")).getByText("Services"));
         expect(await screen.findByText("Interiors")).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: /Add service/ })).not.toBeInTheDocument();
     });
 
     it("adds a project, saying what's wrong as it is typed and what publishing still needs", async () => {
         const sent: unknown[] = [];
-        renderApp("/company/website", rana, ...handlers(),
+        renderApp("/website/projects", rana, ...handlers(),
             http.post("/api/website/projects", async ({ request }) => {
                 const body = await request.json();
                 sent.push(body);
@@ -117,7 +124,7 @@ describe("the Website page", () => {
 
     it("links a system project: the form fills in, and its status and year follow it", async () => {
         const sent: unknown[] = [];
-        renderApp("/company/website", rana, ...handlers(),
+        renderApp("/website/projects", rana, ...handlers(),
             http.get("/api/website/link-candidates", () => HttpResponse.json([
                 { id: 40, title: "Villa Achrafieh", domainCode: "design", status: "in_progress", year: 2027, client: "Mr Haddad", description: "Three floors.", websiteProjectId: null },
                 { id: 41, title: "Villa Rizk", domainCode: "design", status: "completed", year: 2022, client: null, description: null, websiteProjectId: 1 },
@@ -140,7 +147,7 @@ describe("the Website page", () => {
 
     it("keeps the moving strip in order: moved, taken out and added", async () => {
         const strips: number[][] = [];
-        renderApp("/company/website", rana, ...handlers(),
+        renderApp("/website/projects", rana, ...handlers(),
             http.put("/api/website/conveyor", async ({ request }) => {
                 const { projectIds } = await request.json() as { projectIds: number[] };
                 strips.push(projectIds);
@@ -159,7 +166,7 @@ describe("the Website page", () => {
 
     it("says the strip is full at 20", async () => {
         const many = Array.from({ length: 21 }, (_, i) => project(100 + i, `Project ${i + 1}`, { conveyorOrder: i < 20 ? i + 1 : null }));
-        renderApp("/company/website", rana, ...handlers(list(true, many)));
+        renderApp("/website/projects", rana, ...handlers(list(true, many)));
         expect(await screen.findByText("The strip is full. Take one out to add another.")).toBeInTheDocument();
         expect(screen.getByLabelText("Projects in the strip")).toHaveTextContent("20 / 20");
     });
@@ -167,7 +174,7 @@ describe("the Website page", () => {
     it("adds and orders services, with errors shown as they're typed", async () => {
         const added: unknown[] = [];
         const orders: number[][] = [];
-        renderApp("/company/website?tab=services", rana, ...handlers(),
+        renderApp("/website/services", rana, ...handlers(),
             http.post("/api/website/services", async ({ request }) => { added.push(await request.json()); return HttpResponse.json(content()); }),
             http.put("/api/website/services/order", async ({ request }) => { orders.push(((await request.json()) as { ids: number[] }).ids); return HttpResponse.json(content()); }));
         await userEvent.click(await screen.findByRole("button", { name: /Add service/ }));
@@ -186,7 +193,7 @@ describe("the Website page", () => {
 
     it("saves the contact email, checking it first", async () => {
         const sent: unknown[] = [];
-        renderApp("/company/website?tab=contact", rana, ...handlers(),
+        renderApp("/website/contact", rana, ...handlers(),
             http.put("/api/company/contact-email", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json({}); }));
         const email = await screen.findByLabelText("Contact email");
         await userEvent.clear(email);
@@ -201,7 +208,7 @@ describe("the Website page", () => {
 
     it("adds a footer link only with a full https address", async () => {
         const added: unknown[] = [];
-        renderApp("/company/website?tab=contact", rana, ...handlers(),
+        renderApp("/website/contact", rana, ...handlers(),
             http.post("/api/website/social-links", async ({ request }) => { added.push(await request.json()); return HttpResponse.json(content()); }));
         await userEvent.click(await screen.findByRole("button", { name: /Add link/ }));
         await userEvent.type(screen.getByLabelText("Name"), "LinkedIn");
@@ -218,7 +225,7 @@ describe("the Website page", () => {
 describe("places on the Website page", () => {
     it("adds an office from its city alone, and says when its point was picked in the city", async () => {
         const added: unknown[] = [];
-        renderApp("/company/website?tab=locations", rana, ...handlers(),
+        renderApp("/website/locations", rana, ...handlers(),
             http.post("/api/website/locations", async ({ request }) => { added.push(await request.json()); return HttpResponse.json(content()); }));
         // the office already there shows its point was picked in Beirut
         expect(await screen.findByText(/a point picked in Beirut/)).toBeInTheDocument();
@@ -241,7 +248,7 @@ describe("places on the Website page", () => {
     it("explains a project's random point, and takes typed coordinates as exact", async () => {
         const sent: unknown[] = [];
         const picked = project(5, "Saifi Loft", { published: false, latitude: 33.8961, longitude: 35.5102, positionApproximate: true });
-        renderApp("/company/website", rana, ...handlers(list(true, [picked])),
+        renderApp("/website/projects", rana, ...handlers(list(true, [picked])),
             http.put("/api/website/projects/5", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(picked); }));
         await userEvent.click(await screen.findByText("Saifi Loft", { selector: "tr div" }));
         expect(await screen.findByText("A point picked near Beirut. Type the real coordinates for the exact spot.")).toBeInTheDocument();
@@ -263,7 +270,7 @@ describe("a project's gallery", () => {
         const added: unknown[] = [];
         // the server remembers the picture, as the real one does
         let gallery: WebsiteProject["gallery"] = [];
-        renderApp("/company/website", rana,
+        renderApp("/website/projects", rana,
             // ahead of the usual handlers, so this list wins
             http.get("/api/website/projects", () => HttpResponse.json(list(true, [{ ...villa, gallery }, hotel, draft]))),
             ...handlers(),
@@ -285,7 +292,7 @@ describe("a project's gallery", () => {
 
 describe("the city picker", () => {
     it("never keeps a city typed but not picked", async () => {
-        renderApp("/company/website?tab=locations", rana, ...handlers());
+        renderApp("/website/locations", rana, ...handlers());
         await userEvent.click(await screen.findByRole("button", { name: /Add office/ }));
         await userEvent.click(screen.getByLabelText("Country"));
         await userEvent.click(await screen.findByRole("option", { name: "Lebanon" }));

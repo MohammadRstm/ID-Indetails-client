@@ -4,7 +4,7 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { permissionsOf } from "@/app/permissions/permissions";
-import { companyRoutes, domainRoutes } from "@/app/routing/routeTable";
+import { companyRoutes, domainRoutes, websiteRoutes } from "@/app/routing/routeTable";
 import type { ShellArea } from "@/app/shell/useArea";
 import { settings } from "@/test/fixtures/settings";
 import { MONEY_AND_HIRING, personas, withPermissions, type PersonaName } from "@/test/personas";
@@ -22,6 +22,7 @@ const HOME: Record<PersonaName, ShellArea> = {
     executionAdmin: { kind: "domain", domain: "execution", section: "help" },
     designEmployee: { kind: "domain", domain: "design", section: "help" },
     executionEmployee: { kind: "domain", domain: "execution", section: "help" },
+    websiteAdmin: { kind: "website", section: "help" },
 };
 const NAMES = Object.keys(HOME) as PersonaName[];
 
@@ -43,13 +44,13 @@ describe("Help's content", () => {
     });
 
     it("never offers a link nobody who reads the article can follow (so no link points at a page that doesn't exist)", () => {
-        const routes = new Set([...domainRoutes.map((r) => r.path), ...companyRoutes.map((r) => r.path)]);
+        const routes = new Set([...domainRoutes.map((r) => r.path), ...companyRoutes.map((r) => r.path), ...websiteRoutes.map((r) => r.path)]);
         for (const a of ARTICLES) {
             const readers = NAMES.filter((n) => a.who(ctxOf(n)));
             for (const l of a.blocks.flatMap(function all(b): HelpLink[] { return b.kind === "links" ? b.links : b.kind === "only" ? b.blocks.flatMap(all) : []; })) {
                 const followed = readers.some((n) => resolveLink(l, ctxOf(n), personas[n].id).length > 0);
                 expect(followed, `${a.id}: ${l.label}`).toBe(true);
-                const path = "business" in l.to ? l.to.business : "company" in l.to ? l.to.company : "here" in l.to ? l.to.here : null;
+                const path = "business" in l.to ? l.to.business : "company" in l.to ? l.to.company : "website" in l.to ? l.to.website : "here" in l.to ? l.to.here : null;
                 if (path) expect([...routes].some((r) => r.split("/")[0] === path.split(/[?/]/)[0]), `${a.id}: ${path}`).toBe(true);
             }
         }
@@ -84,6 +85,19 @@ describe("Help's content", () => {
         for (const admin of [sa, da, xa]) for (const id of ["log-work", "timer", "my-pay"]) expect(admin, id).not.toContain(id);
         // everyone reads the basics
         for (const list of [sa, da, xa, de, xe]) expect(list).toEqual(expect.arrayContaining(["sign-in", "change-password", "privacy", "roles", "report-bug"]));
+    });
+
+    it("gives the website's staff the website's guides and none of the businesses'", () => {
+        const wa = readable(ctxOf("websiteAdmin"));
+        expect(wa).toContain("company-website");
+        expect(wa).not.toContain("website-staff");
+        for (const id of ["log-work", "company-details", "create-invoice", "revenue", "record-materials"]) expect(wa, id).not.toContain(id);
+        expect(readable(ctxOf("superAdmin"))).toEqual(expect.arrayContaining(["company-website", "website-staff"]));
+        expect(readable(ctxOf("designAdmin"))).not.toContain("company-website");
+        expect(readable(ctxOf("designAdmin", withPermissions(personas.designAdmin, { grant: [P.WEBSITE_MANAGE] })))).toContain("company-website");
+        // its link opens the Website area
+        const link = resolveLink({ label: "x", to: { website: "projects" } }, ctxOf("websiteAdmin"), personas.websiteAdmin.id);
+        expect(link.map((l) => l.path)).toEqual(["/website/projects"]);
     });
 
     it("follows a person's own permissions, not only their role", () => {

@@ -25,11 +25,14 @@ import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 
 type Role = "employee" | "admin" | "super_admin";
+/** A business, or the website, whose staff are admins only. */
+type Joins = Domain | "website";
 const ACCESS: Record<Role, { label: string; sub: string }> = {
     employee: { label: "Employee", sub: "Their own projects and work" },
     admin: { label: "Admin", sub: "Everything inside one domain" },
     super_admin: { label: "Super admin", sub: "Both domains and the company view" },
 };
+const POSITION: Record<Joins, string> = { design: "Interior Architect", execution: "Site Engineer", website: "Web Editor" };
 
 /** "amara" from "amara@studio.com", for the avatar until they give their name. */
 const nameFromEmail = (email: string) => email.split("@")[0].replace(/[._-]+/g, " ").trim() || "New Person";
@@ -39,8 +42,8 @@ const nameFromEmail = (email: string) => email.split("@")[0].replace(/[._-]+/g, 
  * straight away. They give their own name when they accept.
  */
 export default function InviteModal({ domain: fixed, initialRole = "employee", onClose }: {
-    /** The business they join; null from the company area, where it is chosen here. */
-    domain: Domain | null;
+    /** The business they join, or the website; null from the company area, where it is chosen here. */
+    domain: Joins | null;
     initialRole?: Role;
     onClose: () => void;
 }) {
@@ -49,11 +52,13 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     const company = useCompanySettings().data;
     const invite = useInvite();
     const errors = useFormErrors();
-    const [chosen, setChosen] = useState<Domain>("design");
+    const [chosen, setChosen] = useState<Joins>("design");
     const domain = fixed ?? chosen;
-    const teams = useTeams(domain).data ?? [];
+    const website = domain === "website";
+    const teams = useTeams(domain, !website).data ?? [];
     const design = domain === "design";
-    const roles: Role[] = ["employee", "admin", ...(permissions.has(P.EMPLOYEE_INVITE_SUPER_ADMIN) ? ["super_admin" as const] : [])];
+    // the website's staff are admins only
+    const roles: Role[] = website ? ["admin"] : ["employee", "admin", ...(permissions.has(P.EMPLOYEE_INVITE_SUPER_ADMIN) ? ["super_admin" as const] : [])];
     const [email, setEmail] = useState("");
     const [position, setPosition] = useState("");
     const [teamId, setTeamId] = useState("");
@@ -67,7 +72,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
         fillEmpty(teamId, v.teamId == null ? null : String(v.teamId), setTeamId, "team", done);
         return done;
     });
-    const [role, setRole] = useState<Role>(initialRole);
+    const [role, setRole] = useState<Role>(fixed === "website" ? "admin" : initialRole);
     // an hourly cost only means something where people log hours: Design is paid per hour by default
     const [basis, setBasis] = useState<"hourly" | "monthly">(design ? "hourly" : "monthly");
     const [amount, setAmount] = useState(0);
@@ -81,11 +86,12 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     const payError = setsPay && !(amount > 0) && (fixedSalary ? "Enter their monthly salary." : `Enter their pay ${monthly ? "per month" : "per hour"}.`);
     const team = teams.find((t) => String(t.id) === teamId);
 
-    function choose(next: Domain) {
+    function choose(next: Joins) {
         // another business: its own teams, and its usual way of paying
         setChosen(next);
         setTeamId("");
         setBasis(next === "design" ? "hourly" : "monthly");
+        if (next === "website") setRole("admin");
     }
 
     function send() {
@@ -122,7 +128,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                         <div className="muted" style={{ fontSize: 11 }}>To: {sent.email}</div>
                         <div style={{ fontWeight: 650, marginTop: 6 }}>You have been invited to ID InDetails</div>
                         <p className="sec mt-s" style={{ fontSize: "12.5px" }}>
-                            You were added to {company?.name ?? "the company"}. Accept the invitation, set your name and password, and you can see the projects you work on.
+                            You were added to {company?.name ?? "the company"}. Accept the invitation, set your name and password, and you can {website ? "look after the company website" : "see the projects you work on"}.
                         </p>
                     </div>
                 </div>
@@ -132,7 +138,8 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     }
 
     return (
-        <Modal surfaceId="invite_person" title={fixed ? "Add employee" : "Add person"} sub={`They get an invitation and appear in the ${fixed ? "employee" : "people"} list straight away.`} onClose={onClose}
+        <Modal surfaceId="invite_person" title={fixed === "website" ? "Add staff" : fixed ? "Add employee" : "Add person"}
+            sub={`They get an invitation and appear in the ${fixed === "website" ? "staff" : fixed ? "employee" : "people"} list straight away.`} onClose={onClose}
             foot={
                 <>
                     <div className="grow">{invite.error ? <span className="err"><Icon name="alert" />{errorMessage(invite.error)}</span> : null}</div>
@@ -154,15 +161,17 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                                 onChange={(e) => setEmail(e.target.value)} onBlur={errors.touch("email")} />
                             <FieldError message={errors.show("email", emailError)} />
                         </div>
-                        <div className="grid g-2">
+                        <div className={website ? "" : "grid g-2"}>
                             <div className="field">
                                 <label className="label" htmlFor="ae-pos">Position</label>
-                                <input id="ae-pos" className="input" placeholder={`Optional - e.g. ${design ? "Interior Architect" : "Site Engineer"}`} value={position} onChange={(e) => setPosition(e.target.value)} />
+                                <input id="ae-pos" className="input" placeholder={`Optional - e.g. ${POSITION[domain]}`} value={position} onChange={(e) => setPosition(e.target.value)} />
                             </div>
-                            <div className="field">
-                                <label className="label" htmlFor="ae-team">Team</label>
-                                <Select id="ae-team" value={teamId} onChange={setTeamId} options={[{ value: "", label: "No team" }, ...teams.map((t) => ({ value: String(t.id), label: t.name }))]} />
-                            </div>
+                            {!website && (
+                                <div className="field">
+                                    <label className="label" htmlFor="ae-team">Team</label>
+                                    <Select id="ae-team" value={teamId} onChange={setTeamId} options={[{ value: "", label: "No team" }, ...teams.map((t) => ({ value: String(t.id), label: t.name }))]} />
+                                </div>
+                            )}
                         </div>
                         {setsPay && (
                             <div className="field">
@@ -196,21 +205,21 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                         <div className="field">
                             <label className="label required">Access</label>
                             <Segmented value={role} onChange={setRole} aria-label="Access" options={roles.map((r) => ({ value: r, label: ACCESS[r].label }))} />
-                            <div className="hint">{ACCESS[role].sub}</div>
+                            <div className="hint">{website ? "The website's staff are admins: they look after the website and nothing else." : ACCESS[role].sub}</div>
                         </div>
                         {role !== "super_admin" && (fixed ? (
                             <div className="field">
                                 <label className="label">Domain</label>
                                 <div className="row" style={{ gap: 8, paddingTop: 2 }}>
                                     <span className="badge">{DOMAIN_LABEL[domain]}</span>
-                                    <span className="hint">They join the business you are managing. Only a super admin can move someone between businesses.</span>
+                                    <span className="hint">{website ? "They reach the Website area only." : "They join the business you are managing. Only a super admin can move someone between businesses."}</span>
                                 </div>
                             </div>
                         ) : (
                             <div className="field">
-                                <label className="label required">Business they join</label>
-                                <Segmented value={domain} onChange={choose} aria-label="Business they join"
-                                    options={(["design", "execution"] as Domain[]).map((d) => ({ value: d, label: DOMAIN_LABEL[d] }))} />
+                                <label className="label required">Where they join</label>
+                                <Segmented value={domain} onChange={choose} aria-label="Where they join"
+                                    options={(["design", "execution", ...(permissions.hasWebsiteArea ? ["website" as const] : [])] as Joins[]).map((d) => ({ value: d, label: DOMAIN_LABEL[d] }))} />
                             </div>
                         ))}
                     </div>

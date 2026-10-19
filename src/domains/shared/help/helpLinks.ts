@@ -1,7 +1,8 @@
 import { DOMAINS, type Domain } from "@/app/permissions/permissions";
 import { canOpen } from "@/app/routing/routeTable";
 import { myProfilePath } from "@/app/shell/profilePath";
-import { company, settings } from "@/app/shell/searchPlaces";
+import { company, settings, website } from "@/app/shell/searchPlaces";
+import { areaBase } from "@/app/shell/useArea";
 import { DOMAIN_LABEL } from "@/shared/format/labels";
 import type { HelpContext, HelpLink } from "./helpModel";
 
@@ -16,8 +17,10 @@ export function resolveLink(link: HelpLink, ctx: HelpContext, userId: number): R
     const { to } = link;
     const targets: { path: string; sub?: string }[] =
         "business" in to ? businessPages(ctx, to.business, to.only)
-        : "here" in to ? (ctx.area.kind === "domain" ? businessPages(ctx, to.here) : company(ctx, to.here).flatMap((t) => ("path" in t ? [t] : [])))
+        : "here" in to ? (ctx.area.kind === "domain" ? businessPages(ctx, to.here)
+            : (ctx.area.kind === "website" ? website(ctx, to.here) : company(ctx, to.here)).flatMap((t) => ("path" in t ? [t] : [])))
         : "company" in to ? company(ctx, to.company).flatMap((t) => ("path" in t ? [t] : []))
+        : "website" in to ? website(ctx, to.website).flatMap((t) => ("path" in t ? [t] : []))
         : "settings" in to ? settings(ctx, to.settings).flatMap((t) => ("path" in t ? [t] : []))
         : "path" in to ? [{ path: to.path }]
         : profile(ctx, userId);
@@ -38,6 +41,6 @@ function profile(ctx: HelpContext, userId: number) {
 
 /** The Help page of the area being looked at, at an article. */
 export function helpPath(ctx: Pick<HelpContext, "area">, article?: string): string {
-    const base = ctx.area.kind === "domain" ? `/${ctx.area.domain}/help` : "/company/help";
+    const base = `${areaBase(ctx.area)}/help`;
     return article ? `${base}?article=${encodeURIComponent(article)}` : base;
 }

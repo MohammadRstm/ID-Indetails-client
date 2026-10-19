@@ -31,8 +31,14 @@ import {
     SalariesPage,
     SchedulesPage,
     SettingsPage,
-    WebsitePage,
+    WebsiteContactPage,
+    WebsiteLocationsPage,
+    WebsiteProjectsPage,
+    WebsiteServicesPage,
+    WebsiteSitePage,
+    WebsiteStaffPage,
 } from "./pages";
+import MovedWebsite from "./MovedWebsite";
 
 /*
  * Every screen, once. A route names the page an admin sees and the page an employee sees, what each needs,
@@ -205,9 +211,9 @@ export const companyRoutes: CompanyRoute[] = [
     { path: "salaries", nav: { label: "Salaries", icon: "people" }, element: <SalariesPage />, access: (p) => p.has(P.SALARY_VIEW) },
     { path: "project-pay", nav: { label: "Project pay", icon: "briefcase" }, element: <ProjectPayPage />, access: (p) => p.has(P.SALARY_VIEW) },
     { path: "schedules", nav: { label: "Schedules", icon: "calendar" }, element: <SchedulesPage />, access: (p) => p.has(P.SCHEDULE_MANAGE) },
+    // the website moved to its own area: old links still land on the right page
+    { path: "website", element: <MovedWebsite />, access: () => true },
     // the assistant's cost and budget: super admins only, everyone else sees just their question allowance
-    // what the company's public website shows: super admins, or whoever they grant it to
-    { path: "website", nav: { label: "Website", icon: "browser", section: "workspace" }, element: <WebsitePage />, access: (p) => p.hasAny(P.WEBSITE_VIEW, P.WEBSITE_MANAGE) },
     { path: "proton", nav: { label: "Proton", icon: "compass", section: "workspace" }, element: <ProtonBudgetPage />, access: (p) => p.has(P.PROTON_BUDGET_MANAGE) },
     // the company's own settings and each business's, for whoever reaches the company area
     { path: "settings", nav: { label: "Settings", icon: "settings", section: "workspace" }, element: <CompanySettingsPage />, access: (p) => p.has(P.COMPANY_VIEW) && p.hasAny(...SETTINGS_CODES) },
@@ -215,6 +221,26 @@ export const companyRoutes: CompanyRoute[] = [
     { path: "notifications", element: <NotificationsPage />, access: () => true },
     { path: "messages", element: <MessagesPage />, access: () => true },
     { path: "assistant/:chatId?", element: <ProtonPage />, access: (p) => p.has(P.PROTON_USE) },
+    { path: "help", element: <HelpPage />, access: () => true },
+];
+
+const website = (p: Permissions) => p.hasAny(P.WEBSITE_VIEW, P.WEBSITE_MANAGE);
+
+/**
+ * The Website area: what the company's public website shows, for its own staff, super admins and anyone given a
+ * website permission (the area guard checks they may enter it). Nothing here involves projects, clients or money.
+ */
+export const websiteRoutes: CompanyRoute[] = [
+    { path: "projects", nav: { label: "Projects", icon: "projects" }, element: <WebsiteProjectsPage />, access: website },
+    { path: "services", nav: { label: "Services", icon: "briefcase" }, element: <WebsiteServicesPage />, access: website },
+    { path: "locations", nav: { label: "Locations", icon: "pin" }, element: <WebsiteLocationsPage />, access: website },
+    { path: "contact", nav: { label: "Contact & social", icon: "mail" }, element: <WebsiteContactPage />, access: website },
+    { path: "site", nav: { label: "Site", icon: "browser" }, element: <WebsiteSitePage />, access: website },
+    // the website's own staff, for whoever may see people
+    { path: "staff", nav: { label: "Staff", icon: "people", section: "workspace" }, element: <WebsiteStaffPage />, access: (p) => p.has(P.EMPLOYEE_VIEW) },
+    { path: "profile", element: <CompanyProfilePage />, access: () => true },
+    { path: "notifications", element: <NotificationsPage />, access: () => true },
+    { path: "messages", element: <MessagesPage />, access: () => true },
     { path: "help", element: <HelpPage />, access: () => true },
 ];
 
@@ -248,7 +274,15 @@ export function domainNav(p: Permissions, domain: Domain): NavItem[] {
 }
 
 export function companyNav(p: Permissions): NavItem[] {
-    return companyRoutes.flatMap((route) => {
+    return areaNav(companyRoutes, p);
+}
+
+export function websiteNav(p: Permissions): NavItem[] {
+    return p.hasWebsiteArea ? areaNav(websiteRoutes, p) : [];
+}
+
+function areaNav(routes: CompanyRoute[], p: Permissions): NavItem[] {
+    return routes.flatMap((route) => {
         if (!route.nav || !route.access(p)) return [];
         return [{ key: route.path, path: route.path, label: route.nav.label as string, icon: route.nav.icon, section: route.nav.section }];
     });

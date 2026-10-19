@@ -4,7 +4,7 @@ import { P } from "@/app/permissions/codes";
 import { accessLabel } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { hasSeveralAreas } from "@/app/routing/areas";
-import { companyNav, domainNav, type NavItem } from "@/app/routing/routeTable";
+import { companyNav, domainNav, websiteNav, type NavItem } from "@/app/routing/routeTable";
 import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Logo from "@/shared/components/Identity/Logo";
@@ -16,7 +16,7 @@ import { cx } from "@/shared/utils/cx";
 import { myProfilePath } from "./profilePath";
 import ReportBugModal from "./ReportBugModal";
 import { useCompanySettings, useNavCounts } from "./shellQueries";
-import type { ShellArea } from "./useArea";
+import { areaBase, type ShellArea } from "./useArea";
 
 /**
  * A tab's name beside its icon while the sidebar shows icons only (a laptop-sized window): on hover or keyboard focus,
@@ -42,8 +42,8 @@ export default function Sidebar({ area }: { area: ShellArea }) {
     const domain = area.kind === "domain" ? area.domain : null;
     const counts = useNavCounts(domain, permissions);
 
-    const base = domain ? `/${domain}` : "/company";
-    const items = domain ? domainNav(permissions, domain) : companyNav(permissions);
+    const base = areaBase(area);
+    const items = domain ? domainNav(permissions, domain) : area.kind === "website" ? websiteNav(permissions) : companyNav(permissions);
     const main = items.filter((item) => item.section !== "workspace");
     const workspace = items.filter((item) => item.section === "workspace");
     const me = { name: fullName(user), photoFileId: user.photoFileId, online: true };

@@ -23,8 +23,9 @@ export default function HelpPage() {
     const p = usePermissions();
     const where = useArea();
     const domain = where.kind === "domain" ? where.domain : null;
+    const kind = where.kind;
     // the page's section doesn't change what Help says, so the area is kept steady across renders
-    const area: ShellArea = useMemo(() => (domain ? { kind: "domain", domain, section: "help" } : { kind: "company", section: "help" }), [domain]);
+    const area: ShellArea = useMemo(() => (domain ? { kind: "domain", domain, section: "help" } : { kind: kind === "website" ? "website" : "company", section: "help" }), [domain, kind]);
     const navigate = useNavigate();
     const [params, setParams] = useSearchParams();
     const facts = useHelpFacts(domain);

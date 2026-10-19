@@ -1,6 +1,7 @@
 import type { CurrentUser } from "@/api/types";
 import { P, type PermissionCode } from "./codes";
 
+/** The two businesses: they have projects, clients and money. */
 export type Domain = "design" | "execution";
 export type Role = "super_admin" | "admin" | "employee";
 
@@ -22,8 +23,12 @@ export type Permissions = {
     role: Role;
     /** Their own domain; null for super admins. */
     homeDomain: Domain | null;
-    /** The domains they may enter: their own, plus any a domain-limited grant opens. */
+    /** The businesses they may enter: their own, plus any a domain-limited grant opens. */
     visibleDomains: Domain[];
+    /** They may enter the Website area: website staff, super admins, or anyone given a website permission. */
+    hasWebsiteArea: boolean;
+    /** Website staff: the website is their home, and they belong to no business. */
+    isWebsiteStaff: boolean;
     has(code: PermissionCode): boolean;
     hasAny(...codes: PermissionCode[]): boolean;
     hasAll(...codes: PermissionCode[]): boolean;
@@ -49,6 +54,8 @@ export function permissionsOf(user: Pick<CurrentUser, "role" | "domain" | "visib
         hasAny: (...codes) => codes.some(has),
         hasAll: (...codes) => codes.every(has),
         canSeeDomain: (domain): domain is Domain => visible.includes(domain as Domain),
+        hasWebsiteArea: user.visibleDomains.includes("website"),
+        isWebsiteStaff: user.domain === "website",
         isAdmin: role !== "employee",
         isSuperAdmin: role === "super_admin",
         hasCompanyArea: COMPANY_CODES.some(has),
@@ -58,6 +65,7 @@ export function permissionsOf(user: Pick<CurrentUser, "role" | "domain" | "visib
 /** The label under a person's name in the sidebar: their access level, or an employee's position. */
 export function accessLabel(permissions: Permissions, position: string | null | undefined): string {
     if (permissions.isSuperAdmin) return "Super admin";
+    if (permissions.isWebsiteStaff) return "Website admin";
     if (permissions.isAdmin) return "Admin";
     return position || "Employee";
 }
