@@ -22,7 +22,7 @@ export default function WebsitePage() {
     const [params, setParams] = useSearchParams();
     const tab = TABS.find((t) => t.key === params.get("tab"))?.key ?? "projects";
     return (
-        <>
+        <div className="page">
             <PageHead title="Website" sub="What the company's public website shows. Saved changes are public straight away." />
             <Tabs items={TABS} value={tab} onChange={(key) => setParams(key === "projects" ? {} : { tab: key }, { replace: true })} />
             <div className="mt">
@@ -32,6 +32,6 @@ export default function WebsitePage() {
                 {tab === "contact" && <ContactTab />}
                 {tab === "site" && <SiteTab />}
             </div>
-        </>
+        </div>
     );
 }

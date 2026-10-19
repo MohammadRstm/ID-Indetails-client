@@ -138,12 +138,14 @@ function RowEditor<Row extends { id: number }, Body>({ spec, initial, save, pend
 }
 
 /** A labelled input of a row editor, with its live error. */
-function Input({ id, label, value, onChange, onBlur, error, placeholder, multiline, maxLength }: {
+function Input({ id, label, value, onChange, onBlur, error, placeholder, multiline, maxLength, optional }: {
     id: string; label: string; value: string; onChange: (v: string) => void; onBlur: () => void; error?: string; placeholder?: string; multiline?: boolean; maxLength?: number;
+    /** Not required on its own (an office's place is its coordinates or its city). */
+    optional?: boolean;
 }) {
     return (
         <div className="field">
-            <label className="label required" htmlFor={id}>{label}</label>
+            <label className={optional ? "label" : "label required"} htmlFor={id}>{label}</label>
             {multiline
                 ? <textarea id={id} className="input" rows={3} value={value} placeholder={placeholder} maxLength={maxLength} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} />
                 : <input id={id} className="input" value={value} placeholder={placeholder} maxLength={maxLength} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} />}
@@ -183,25 +185,32 @@ const LOCATIONS: ListSpec<WebsiteContent["locations"][number], LocationBody> = {
     kind: "locations",
     noun: "office",
     blank: { city: "", country: "", latitude: "", longitude: "", address: "", phone: "" },
+    // a point picked in the city goes back unchanged, so it stays while the city does
     fromRow: (l) => ({ city: l.city, country: l.country, latitude: String(l.latitude), longitude: String(l.longitude), address: l.address, phone: l.phone }),
-    clean: (b) => ({ city: b.city.trim(), country: b.country.trim(), address: b.address.trim(), phone: b.phone.trim(), latitude: Number(b.latitude), longitude: Number(b.longitude) }),
+    clean: (b) => ({
+        city: b.city.trim() || null, country: b.country.trim() || null, address: b.address.trim(), phone: b.phone.trim(),
+        latitude: b.latitude.trim() ? Number(b.latitude) : null, longitude: b.longitude.trim() ? Number(b.longitude) : null,
+    }),
     problems: (b) => ({
-        city: required(b.city, "Enter the city."),
-        country: required(b.country, "Enter the country."),
-        position: !b.latitude.trim() || !b.longitude.trim() ? "Enter where the office is: its latitude and longitude." : placeError(b.latitude, b.longitude),
+        place: !b.latitude.trim() && !b.longitude.trim() && (!b.city.trim() || !b.country.trim()) && "Give the office's coordinates, or its city and country.",
+        position: placeError(b.latitude, b.longitude),
         address: required(b.address, "Enter the address."),
         phone: required(b.phone, "Enter the phone number."),
     }),
-    view: (l) => ({ title: `${l.city}, ${l.country}`, text: `${l.address}\n${l.phone} · ${l.latitude}, ${l.longitude}` }),
+    view: (l) => ({
+        title: `${l.city}, ${l.country}`,
+        text: `${l.address}\n${l.phone} · ${l.positionApproximate ? `a point picked in ${l.city}` : `${l.latitude}, ${l.longitude}`}`,
+    }),
     fields: (b, set, show, touch) => (
         <>
+            <div className="hint" style={{ marginTop: 0 }}>Give the exact coordinates, or just the city and country: the website then puts the office at a point in that city. A city left empty is found from the coordinates.</div>
             <div className="grid g-2">
-                <Input id="wl-city" label="City" value={b.city} maxLength={100} onChange={(city) => set({ ...b, city })} onBlur={touch("city")} error={show("city")} />
-                <Input id="wl-country" label="Country" value={b.country} maxLength={100} onChange={(country) => set({ ...b, country })} onBlur={touch("country")} error={show("country")} />
+                <Input id="wl-city" label="City" optional value={b.city} maxLength={100} onChange={(city) => set({ ...b, city })} onBlur={touch("place")} error={show("place")} />
+                <Input id="wl-country" label="Country" optional value={b.country} maxLength={100} onChange={(country) => set({ ...b, country })} onBlur={touch("place")} />
             </div>
             <div className="grid g-2">
-                <Input id="wl-lat" label="Latitude" value={b.latitude} placeholder="e.g. 33.8938" onChange={(v) => set(positionInput(b, "latitude", v))} onBlur={touch("position")} error={show("position")} />
-                <Input id="wl-lng" label="Longitude" value={b.longitude} placeholder="e.g. 35.5018" onChange={(v) => set(positionInput(b, "longitude", v))} onBlur={touch("position")} />
+                <Input id="wl-lat" label="Latitude" optional value={b.latitude} placeholder="e.g. 33.8938" onChange={(v) => set(positionInput(b, "latitude", v))} onBlur={touch("position")} error={show("position")} />
+                <Input id="wl-lng" label="Longitude" optional value={b.longitude} placeholder="e.g. 35.5018" onChange={(v) => set(positionInput(b, "longitude", v))} onBlur={touch("position")} />
             </div>
             <Input id="wl-address" label="Address" value={b.address} maxLength={300} onChange={(address) => set({ ...b, address })} onBlur={touch("address")} error={show("address")} />
             <Input id="wl-phone" label="Phone" value={b.phone} maxLength={50} placeholder="e.g. +961 1 234 567" onChange={(phone) => set({ ...b, phone })} onBlur={touch("phone")} error={show("phone")} />
