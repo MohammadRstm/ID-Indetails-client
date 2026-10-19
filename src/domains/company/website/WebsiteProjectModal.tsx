@@ -12,7 +12,7 @@ import {
     moved, PICTURE_TYPES, STATUS_LABEL, uploadPictures, TYPE_LABEL, useDeleteWebsiteProject, useGallery, useLinkCandidates, useSaveWebsiteProject,
     type LinkCandidate, type WebsiteProject, type WebsiteProjectBody, type WebsiteProjectType, type WebsiteStatus,
 } from "./websiteApi";
-import { creditError, missingToPublish, placeError, SLUG_PATTERN, slugOf, splitPosition, yearError } from "./websiteRules";
+import { missingToPublish, placeError, SLUG_PATTERN, slugOf, splitPosition, yearError } from "./websiteRules";
 
 type Linked = { id: number; title: string; domainCode: string; status: WebsiteStatus; year: number };
 
@@ -34,11 +34,12 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     const [latitude, setLatitude] = useState(p?.latitude != null ? String(p.latitude) : "");
     const [longitude, setLongitude] = useState(p?.longitude != null ? String(p.longitude) : "");
     const [description, setDescription] = useState(p?.description ?? "");
+    // the point was picked at random in the city: shown, and kept while the city stays the same
+    const [approximate, setApproximate] = useState(p?.positionApproximate ?? false);
     const [linked, setLinked] = useState<Linked | null>(p?.linkedProject ? { ...p.linkedProject, status: p.linkedProject.status ?? "in_progress" } : null);
     const [thumbnail, setThumbnail] = useState<number | null>(p?.thumbnailFileId ?? null);
     const [hero, setHero] = useState<number | null>(p?.heroFileId ?? null);
     const [heroAlt, setHeroAlt] = useState(p?.heroAlt ?? "");
-    const [credit, setCredit] = useState({ photographer: p?.heroCredit?.photographer ?? "", source: p?.heroCredit?.source ?? "", url: p?.heroCredit?.url ?? "" });
     const [published, setPublished] = useState(p?.published ?? false);
     const [confirming, setConfirming] = useState(false);
     const edit = canManage;
@@ -50,29 +51,31 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     const statusError = !linked && !status && "Choose a status, or link a system project to follow its status.";
     const yearProblem = yearError(year, !!linked);
     const positionError = placeError(latitude, longitude);
-    const heroCreditError = creditError(credit);
     const missing = missingToPublish({ status: shownStatus, year: shownYear, city, country, latitude, longitude, description, thumbnail, hero });
     const publishError = published && missing.length > 0 && `To publish it, add ${missing.join(", ")}.`;
 
     function body(): WebsiteProjectBody {
-        const anyCredit = credit.photographer.trim() || credit.source.trim() || credit.url.trim();
         return {
             title: title.trim(), slug: slug.trim() || null, type, status: status || null, year: year.trim() ? Number(year) : null,
             client: client.trim() || null, city: city.trim() || null, country: country.trim() || null,
             latitude: latitude.trim() ? Number(latitude) : null, longitude: longitude.trim() ? Number(longitude) : null,
             description: description.trim() || null, projectId: linked?.id ?? null, thumbnailFileId: thumbnail, heroFileId: hero,
             heroAlt: heroAlt.trim() || null,
-            heroCredit: anyCredit ? { photographer: credit.photographer.trim(), source: credit.source.trim(), url: credit.url.trim() } : null,
             published,
         };
     }
 
     function submit() {
         if (save.isPending) return;
-        if (titleError || slugError || statusError || yearProblem || positionError || heroCreditError || publishError) return errors.tried();
+        if (titleError || slugError || statusError || yearProblem || positionError || publishError) return errors.tried();
         save.mutate({ id: p?.id ?? null, body: body() }, {
             onSuccess: (result) => {
-                toast({ text: p ? "Project saved" : "Project added", sub: result.published ? "It's on the website" : "Saved as a draft", icon: "checkCircle" });
+                const found = !city.trim() && result.city ? `${result.city}, ${result.country} found from the coordinates` : null;
+                toast({ text: p ? "Project saved" : "Project added", sub: found ?? (result.published ? "It's on the website" : "Saved as a draft"), icon: "checkCircle" });
+                // what the API worked out shows in the form: the city found, or the point picked in the city
+                setCity(result.city ?? ""); setCountry(result.country ?? "");
+                setLatitude(result.latitude != null ? String(result.latitude) : ""); setLongitude(result.longitude != null ? String(result.longitude) : "");
+                setApproximate(result.positionApproximate);
                 // a new project stays open, so its gallery can be filled
                 if (p) onClose(); else { setSaved(result); setSlug(result.slug); }
             },
@@ -151,21 +154,25 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
                     <input id="wp-client" className="input" value={client} disabled={!edit} placeholder="Optional - shown on the project's page" onChange={(e) => setClient(e.target.value)} />
                 </Field>
                 <Field id="wp-city" label="City">
-                    <input id="wp-city" className="input" value={city} disabled={!edit} onChange={(e) => setCity(e.target.value)} />
+                    <input id="wp-city" className="input" value={city} disabled={!edit} placeholder={latitude.trim() ? "Found from the coordinates" : undefined}
+                        onChange={(e) => setCity(e.target.value)} onBlur={errors.touch("place")} />
                 </Field>
                 <Field id="wp-country" label="Country">
-                    <input id="wp-country" className="input" value={country} disabled={!edit} onChange={(e) => setCountry(e.target.value)} />
+                    <input id="wp-country" className="input" value={country} disabled={!edit} placeholder={latitude.trim() ? "Found from the coordinates" : undefined}
+                        onChange={(e) => setCountry(e.target.value)} onBlur={errors.touch("place")} />
                 </Field>
             </div>
             <div className="grid g-2 mt">
-                <Field id="wp-lat" label="Latitude" error={errors.show("position", positionError)} hint="Where the globe puts it. Paste “33.8938, 35.5018” from a map into either box.">
+                <Field id="wp-lat" label="Latitude" error={errors.show("position", positionError)}
+                    hint={approximate ? `A point picked at random in ${city || "the city"}. Type the real coordinates for the exact spot.`
+                        : "The exact spot, or leave it empty: the website then picks a point in the city. Paste “33.8938, 35.5018” from a map into either box."}>
                     <input id="wp-lat" className="input" inputMode="decimal" value={latitude} disabled={!edit} placeholder="e.g. 33.8938"
-                        onChange={(e) => { const both = splitPosition(e.target.value); if (both) { setLatitude(both[0]); setLongitude(both[1]); } else setLatitude(e.target.value); }}
+                        onChange={(e) => { const both = splitPosition(e.target.value); if (both) { setLatitude(both[0]); setLongitude(both[1]); } else setLatitude(e.target.value); setApproximate(false); }}
                         onBlur={errors.touch("position")} />
                 </Field>
                 <Field id="wp-lng" label="Longitude">
                     <input id="wp-lng" className="input" inputMode="decimal" value={longitude} disabled={!edit} placeholder="e.g. 35.5018"
-                        onChange={(e) => { const both = splitPosition(e.target.value); if (both) { setLatitude(both[0]); setLongitude(both[1]); } else setLongitude(e.target.value); }}
+                        onChange={(e) => { const both = splitPosition(e.target.value); if (both) { setLatitude(both[0]); setLongitude(both[1]); } else setLongitude(e.target.value); setApproximate(false); }}
                         onBlur={errors.touch("position")} />
                 </Field>
             </div>
@@ -174,17 +181,14 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
             </Field>
 
             <div className="grid g-2 mt">
-                <PictureSlot label="Thumbnail" hint="Portrait, 4:5 (720 × 900 works well). Shown in the moving strip and the projects grid."
+                <PictureSlot label="Card picture" hint="Tall, 4:5 (about 720 × 900). Only on the project's card: in the website's moving strip and its Projects grid."
                     fileId={thumbnail} ratio={4 / 5} canEdit={edit} onChange={setThumbnail} />
-                <PictureSlot label="Main picture" hint="Wide, about 1920 pixels across. Shown at the top of the project's page."
+                <PictureSlot label="Page picture" hint="Wide, 16:9 (about 1920 × 1080). Only across the top of the project's own page, beside the globe."
                     fileId={hero} ratio={16 / 9} canEdit={edit} onChange={setHero} />
             </div>
-            <div className="grid g-2 mt">
-                <Field id="wp-hero-alt" label="Main picture description" hint="Read out to people who can't see it, e.g. “The villa at dusk”.">
-                    <input id="wp-hero-alt" className="input" value={heroAlt} disabled={!edit} maxLength={200} onChange={(e) => setHeroAlt(e.target.value)} />
-                </Field>
-                <CreditFields id="wp-credit" credit={credit} disabled={!edit} onChange={setCredit} error={errors.show("credit", heroCreditError)} onBlur={errors.touch("credit")} />
-            </div>
+            <Field id="wp-hero-alt" label="Page picture description" hint="Read out to people who can't see it, e.g. “The villa at dusk”.">
+                <input id="wp-hero-alt" className="input" value={heroAlt} disabled={!edit} maxLength={200} onChange={(e) => setHeroAlt(e.target.value)} />
+            </Field>
 
             <SwitchRow title="Published" style={{ marginTop: 14 }}
                 description={published ? "It's on the website: the globe, the projects page and its own page." : "A draft: only people on this page see it."}
@@ -237,26 +241,6 @@ function LinkPicker({ linked, onLink, onUnlink }: { linked: Linked | null; onLin
     );
 }
 
-type Credit = { photographer: string; source: string; url: string };
-
-/** Who took a stock photo: all three, or none. */
-function CreditFields({ id, credit, disabled, error, onChange, onBlur }: { id: string; credit: Credit; disabled: boolean; error?: string; onChange: (c: Credit) => void; onBlur?: () => void }) {
-    return (
-        <div className="field">
-            <div className="label">Photo credit</div>
-            <div className="grid g-3" style={{ gap: 6 }}>
-                <input id={`${id}-by`} className="input" aria-label="Photographer" placeholder="Photographer" value={credit.photographer} disabled={disabled} onBlur={onBlur}
-                    onChange={(e) => onChange({ ...credit, photographer: e.target.value })} />
-                <input id={`${id}-source`} className="input" aria-label="Source" placeholder="Source, e.g. Unsplash" value={credit.source} disabled={disabled} onBlur={onBlur}
-                    onChange={(e) => onChange({ ...credit, source: e.target.value })} />
-                <input id={`${id}-url`} className="input" aria-label="Credit link" placeholder="https://…" value={credit.url} disabled={disabled} onBlur={onBlur}
-                    onChange={(e) => onChange({ ...credit, url: e.target.value })} />
-            </div>
-            {error ? <FieldError message={error} /> : <div className="hint">Only for stock photos. Leave empty for the company's own.</div>}
-        </div>
-    );
-}
-
 /** The project's gallery: pictures added, described, ordered and removed straight away. */
 function Gallery({ project, canManage }: { project: WebsiteProject; canManage: boolean }) {
     const gallery = useGallery(project.id);
@@ -291,12 +275,12 @@ function Gallery({ project, canManage }: { project: WebsiteProject; canManage: b
                     </>
                 )}
             </div>
-            {project.gallery.length === 0 && <div className="muted mt-s">No gallery pictures yet. Wide pictures (3:2) look best.</div>}
+            {project.gallery.length === 0 && <div className="muted mt-s">No gallery pictures yet. They show further down the project's own page; wide pictures (3:2) look best.</div>}
             <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
                 {project.gallery.map((image, index) => (
                     <GalleryRow key={image.id} image={image} index={index} count={ids.length} canManage={canManage}
                         onMove={(by) => gallery.order.mutate(moved(ids, image.id, by))}
-                        onSave={(alt, credit) => gallery.edit.mutate({ imageId: image.id, body: { alt, credit } })}
+                        onSave={(alt) => gallery.edit.mutate({ imageId: image.id, body: { alt } })}
                         onRemove={() => gallery.remove.mutate(image.id)} busy={gallery.order.isPending || gallery.remove.isPending} />
                 ))}
             </div>
@@ -312,18 +296,15 @@ type GalleryRowProps = {
     canManage: boolean;
     busy: boolean;
     onMove: (by: -1 | 1) => void;
-    onSave: (alt: string, credit: Credit | null) => void;
+    onSave: (alt: string) => void;
     onRemove: () => void;
 };
 
 function GalleryRow({ image, index, count, canManage, busy, onMove, onSave, onRemove }: GalleryRowProps) {
     const [alt, setAlt] = useState(image.alt);
-    const [credit, setCredit] = useState<Credit>({ photographer: image.credit?.photographer ?? "", source: image.credit?.source ?? "", url: image.credit?.url ?? "" });
     const errors = useFormErrors();
     const altError = !alt.trim() && "Describe the picture.";
-    const problem = creditError(credit);
-    const anyCredit = credit.photographer.trim() || credit.source.trim() || credit.url.trim();
-    const changed = alt.trim() !== image.alt || (anyCredit ? credit.photographer !== image.credit?.photographer || credit.source !== image.credit?.source || credit.url !== image.credit?.url : image.credit != null);
+    const changed = alt.trim() !== image.alt;
 
     return (
         <div className="row" style={{ gap: 10, alignItems: "flex-start" }}>
@@ -332,11 +313,10 @@ function GalleryRow({ image, index, count, canManage, busy, onMove, onSave, onRe
                 <input className="input" aria-label={`Description of picture ${index + 1}`} value={alt} maxLength={200} disabled={!canManage}
                     onChange={(e) => setAlt(e.target.value)} onBlur={errors.touch("alt")} />
                 <FieldError message={errors.show("alt", altError)} />
-                {canManage && <CreditFields id={`credit-${image.id}`} credit={credit} disabled={false} onChange={setCredit} error={errors.show("credit", problem)} onBlur={errors.touch("credit")} />}
                 {canManage && changed && (
                     <button type="button" className="btn btn-sm btn-primary mt-s" onClick={() => {
-                        if (altError || problem) return errors.tried();
-                        onSave(alt.trim(), anyCredit ? { photographer: credit.photographer.trim(), source: credit.source.trim(), url: credit.url.trim() } : null);
+                        if (altError) return errors.tried();
+                        onSave(alt.trim());
                     }}>Save picture</button>
                 )}
             </div>

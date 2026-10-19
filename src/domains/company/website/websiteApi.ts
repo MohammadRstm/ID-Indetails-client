@@ -8,7 +8,6 @@ export type WebsiteProjects = Schemas["WebsiteProjectsResponse"];
 export type WebsiteContent = Schemas["WebsiteContentResponse"];
 export type WebsiteProjectBody = Schemas["WebsiteProjectRequest"];
 export type LinkCandidate = Schemas["WebsiteLinkCandidateResponse"];
-export type WebsiteImageCredit = Schemas["WebsiteImageCreditResponse"];
 export type WebsiteProjectType = WebsiteProject["type"];
 /** What the website shows; the API never sends null for a system project's status (the schema shares the nullable enum). */
 export type WebsiteStatus = "in_progress" | "completed";

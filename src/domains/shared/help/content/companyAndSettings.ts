@@ -230,7 +230,7 @@ export const company: Article[] = [
             steps(
                 step("Open **Website** in the company area.", "Company", "Website"),
                 step("Add a project with **New project**. **Link a system project** fills the form in, and keeps its status and year up to date."),
-                step("Add a thumbnail, a main picture, the place and a description, then switch on **Published**."),
+                step("Add the **card picture** (tall, for the project's card in the moving strip and the Projects grid), the **page picture** (wide, across the top of its own page), the place and a description, then switch on **Published**."),
                 step("Choose the projects in the **Moving strip**, up to 20, in order."),
             ),
             list(

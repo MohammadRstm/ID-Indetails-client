@@ -6,15 +6,15 @@ import { P } from "@/app/permissions/codes";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import type { WebsiteContent, WebsiteProject, WebsiteProjects } from "./websiteApi";
-import { creditError, missingToPublish, placeError, slugOf, splitPosition, yearError } from "./websiteRules";
+import { missingToPublish, placeError, slugOf, splitPosition, yearError } from "./websiteRules";
 
 const rana = personas.superAdmin;
 
 function project(id: number, title: string, change: Partial<WebsiteProject> = {}): WebsiteProject {
     return {
         id, slug: slugOf(title), title, type: "villa", status: "completed", year: 2022, shownStatus: "completed", shownYear: 2022,
-        client: "The Rizk family", city: "Beirut", country: "Lebanon", latitude: 33.8938, longitude: 35.5018, description: "A villa.",
-        thumbnailFileId: null, heroFileId: null, heroAlt: null, heroCredit: null, linkedProject: null, published: true, conveyorOrder: null,
+        client: "The Rizk family", city: "Beirut", country: "Lebanon", latitude: 33.8938, longitude: 35.5018, positionApproximate: false, description: "A villa.",
+        thumbnailFileId: null, heroFileId: null, heroAlt: null, linkedProject: null, published: true, conveyorOrder: null,
         gallery: [], missingToPublish: [], createdAt: "2026-10-01T09:00:00Z", updatedAt: null,
         ...change,
     };
@@ -22,12 +22,12 @@ function project(id: number, title: string, change: Partial<WebsiteProject> = {}
 
 const villa = project(1, "Villa Rizk", { conveyorOrder: 1 });
 const hotel = project(2, "Hotel Le Gray", { type: "hotel", conveyorOrder: 2 });
-const draft = project(3, "Batroun House", { published: false, status: "in_progress", shownStatus: "in_progress", missingToPublish: ["a thumbnail", "a main picture"] });
+const draft = project(3, "Batroun House", { published: false, status: "in_progress", shownStatus: "in_progress", missingToPublish: ["a card picture", "a page picture"] });
 const list = (canManage = true, projects = [villa, hotel, draft]): WebsiteProjects => ({ projects, conveyorLimit: 20, canManage });
 
 const content = (change: Partial<WebsiteContent> = {}): WebsiteContent => ({
     services: [{ id: 1, title: "Architecture", description: "Buildings from the first sketch." }, { id: 2, title: "Interiors", description: "Whole homes." }],
-    locations: [{ id: 1, city: "Beirut", country: "Lebanon", latitude: 33.8938, longitude: 35.5018, address: "Gemmayze", phone: "+961 1 234 567" }],
+    locations: [{ id: 1, city: "Beirut", country: "Lebanon", latitude: 33.8938, longitude: 35.5018, positionApproximate: true, address: "Gemmayze", phone: "+961 1 234 567" }],
     socialLinks: [{ id: 1, label: "Instagram", url: "https://instagram.com/indetails" }],
     contactEmail: "hello@indetails.com", faviconFileId: null, canManage: true,
     ...change,
@@ -95,7 +95,7 @@ describe("the Website page", () => {
         expect(screen.getByLabelText("Longitude")).toHaveValue("35.5125");
 
         await userEvent.click(screen.getByRole("switch", { name: "Published" }));
-        expect(await screen.findByText(/To publish it, add a city, a country, a description, a thumbnail, a main picture\./)).toBeInTheDocument();
+        expect(await screen.findByText(/To publish it, add a description, a card picture, a page picture\./)).toBeInTheDocument();
         await userEvent.click(screen.getByRole("switch", { name: "Published" }));
 
         await userEvent.click(screen.getByRole("button", { name: "Add project" }));
@@ -205,6 +205,44 @@ describe("the Website page", () => {
     });
 });
 
+describe("places on the Website page", () => {
+    it("adds an office from its city alone, and says when its point was picked in the city", async () => {
+        const added: unknown[] = [];
+        renderApp("/company/website?tab=locations", rana, ...handlers(),
+            http.post("/api/website/locations", async ({ request }) => { added.push(await request.json()); return HttpResponse.json(content()); }));
+        // the office already there shows its point was picked in Beirut
+        expect(await screen.findByText(/a point picked in Beirut/)).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: /Add office/ }));
+        await userEvent.type(screen.getByLabelText("Address"), "Old souks");
+        await userEvent.type(screen.getByLabelText("Phone"), "+961 9 540 000");
+        await userEvent.click(screen.getByRole("button", { name: "Save" }));
+        expect(await screen.findByText("Give the office's coordinates, or its city and country.")).toBeInTheDocument();
+        await userEvent.type(screen.getByLabelText("City"), "Byblos");
+        await userEvent.type(screen.getByLabelText("Country"), "Lebanon");
+        await userEvent.click(screen.getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(added).toEqual([{ city: "Byblos", country: "Lebanon", latitude: null, longitude: null, address: "Old souks", phone: "+961 9 540 000" }]));
+    });
+
+    it("explains a project's random point, and takes typed coordinates as exact", async () => {
+        const sent: unknown[] = [];
+        const picked = project(5, "Saifi Loft", { published: false, latitude: 33.8961, longitude: 35.5102, positionApproximate: true });
+        renderApp("/company/website", rana, ...handlers(list(true, [picked])),
+            http.put("/api/website/projects/5", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(picked); }));
+        await userEvent.click(await screen.findByText("Saifi Loft", { selector: "tr div" }));
+        expect(await screen.findByText("A point picked at random in Beirut. Type the real coordinates for the exact spot.")).toBeInTheDocument();
+        expect(screen.getByText("Card picture")).toBeInTheDocument();
+        expect(screen.getByText("Page picture")).toBeInTheDocument();
+        expect(screen.queryByLabelText("Photographer")).not.toBeInTheDocument();
+        await userEvent.clear(screen.getByLabelText("Latitude"));
+        await userEvent.click(screen.getByLabelText("Latitude"));
+        await userEvent.paste("33.8970, 35.5110");
+        expect(screen.queryByText(/A point picked at random/)).not.toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(sent).toHaveLength(1));
+        expect(sent[0]).toMatchObject({ latitude: 33.897, longitude: 35.511, city: "Beirut", country: "Lebanon" });
+    });
+});
+
 describe("the website form's checks", () => {
     it("match the API's", () => {
         expect(slugOf("  Hôtel   Le Gray — Beirut! ")).toBe("hotel-le-gray-beirut");
@@ -216,9 +254,10 @@ describe("the website form's checks", () => {
         expect(placeError("33.9", "181")).toBeTruthy();
         expect(splitPosition("33.8938, 35.5018")).toEqual(["33.8938", "35.5018"]);
         expect(splitPosition("33.8938")).toBeNull();
-        expect(creditError({ photographer: "", source: "", url: "" })).toBe(false);
-        expect(creditError({ photographer: "A", source: "Unsplash", url: "" })).toBeTruthy();
-        expect(creditError({ photographer: "A", source: "Unsplash", url: "http://unsplash.com/x" })).toBeTruthy();
+        // coordinates are enough; without them, the city and country
+        const place = { status: "completed", year: 2022, description: "x", thumbnail: 1, hero: 2 };
+        expect(missingToPublish({ ...place, city: "", country: "", latitude: "34.12", longitude: "35.65" })).toEqual([]);
+        expect(missingToPublish({ ...place, city: "Byblos", country: "", latitude: "", longitude: "" })).toEqual(["a country"]);
         expect(missingToPublish({ status: "completed", year: 2022, city: "Beirut", country: "Lebanon", latitude: "1", longitude: "2", description: "x", thumbnail: 1, hero: 2 })).toEqual([]);
     });
 });

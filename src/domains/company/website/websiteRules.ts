@@ -36,19 +36,6 @@ export function splitPosition(value: string): [string, string] | null {
     return match ? [match[1], match[2]] : null;
 }
 
-/** A photo credit: all three parts or none, the link a full https:// address. */
-export function creditError(credit: { photographer: string; source: string; url: string }): string | false {
-    const parts = [credit.photographer, credit.source, credit.url].map((v) => v.trim());
-    if (parts.every((v) => !v)) return false;
-    if (parts.some((v) => !v)) return "A credit needs the photographer, the source and the link, or none of them.";
-    try {
-        const url = new URL(parts[2]);
-        return (url.protocol !== "https:" || !url.hostname.includes(".")) && "The credit link must be a full https:// address.";
-    } catch {
-        return "The credit link must be a full https:// address.";
-    }
-}
-
 type Publishable = {
     status: string | null;
     year: number | null;
@@ -66,12 +53,14 @@ export function missingToPublish(p: Publishable): string[] {
     const missing: string[] = [];
     if (!p.status) missing.push("a status");
     if (p.year == null) missing.push("a year");
-    if (!p.city.trim()) missing.push("a city");
-    if (!p.country.trim()) missing.push("a country");
-    if (!p.latitude.trim() || !p.longitude.trim()) missing.push("a position on the map");
+    // coordinates are enough (the city and country are found from them), or a city and country (a point is picked there)
+    if (!p.latitude.trim() || !p.longitude.trim()) {
+        if (!p.city.trim()) missing.push("a city");
+        if (!p.country.trim()) missing.push("a country");
+    }
     if (!p.description.trim()) missing.push("a description");
-    if (p.thumbnail == null) missing.push("a thumbnail");
-    if (p.hero == null) missing.push("a main picture");
+    if (p.thumbnail == null) missing.push("a card picture");
+    if (p.hero == null) missing.push("a page picture");
     return missing;
 }
 

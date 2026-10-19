@@ -16838,13 +16838,7 @@ export interface components {
         };
         PublicImage: {
             alt: string;
-            credit: null | components["schemas"]["PublicImageCredit"];
             src: string;
-        };
-        PublicImageCredit: {
-            photographer: string;
-            source: string;
-            url: string;
         };
         PublicPlace: {
             city: string;
@@ -17856,29 +17850,16 @@ export interface components {
         WebsiteConveyorRequest: {
             projectIds?: number[];
         };
-        WebsiteImageCreditRequest: {
-            photographer?: string;
-            source?: string;
-            url?: string;
-        };
-        WebsiteImageCreditResponse: {
-            photographer: string;
-            source: string;
-            url: string;
-        };
         WebsiteImageEditRequest: {
             alt?: string;
-            credit?: null | components["schemas"]["WebsiteImageCreditRequest"];
         };
         WebsiteImageRequest: {
             alt?: string;
-            credit?: null | components["schemas"]["WebsiteImageCreditRequest"];
             /** Format: int64 */
             fileId?: number;
         };
         WebsiteImageResponse: {
             alt: string;
-            credit: null | components["schemas"]["WebsiteImageCreditResponse"];
             /** Format: int64 */
             fileId: number;
             /** Format: int64 */
@@ -17908,12 +17889,12 @@ export interface components {
         };
         WebsiteLocationRequest: {
             address?: string;
-            city?: string;
-            country?: string;
+            city?: null | string;
+            country?: null | string;
             /** Format: double */
-            latitude?: number;
+            latitude?: null | number;
             /** Format: double */
-            longitude?: number;
+            longitude?: null | number;
             phone?: string;
         };
         WebsiteLocationResponse: {
@@ -17927,6 +17908,7 @@ export interface components {
             /** Format: double */
             longitude: number;
             phone: string;
+            positionApproximate: boolean;
         };
         WebsiteOrderRequest: {
             ids?: number[];
@@ -17937,7 +17919,6 @@ export interface components {
             country?: null | string;
             description?: null | string;
             heroAlt?: null | string;
-            heroCredit?: null | components["schemas"]["WebsiteImageCreditRequest"];
             /** Format: int64 */
             heroFileId?: null | number;
             /** Format: double */
@@ -17967,7 +17948,6 @@ export interface components {
             description: null | string;
             gallery: components["schemas"]["WebsiteImageResponse"][];
             heroAlt: null | string;
-            heroCredit: null | components["schemas"]["WebsiteImageCreditResponse"];
             /** Format: int64 */
             heroFileId: null | number;
             /** Format: int64 */
@@ -17978,6 +17958,7 @@ export interface components {
             /** Format: double */
             longitude: null | number;
             missingToPublish: string[];
+            positionApproximate: boolean;
             published: boolean;
             shownStatus: null | components["schemas"]["WebsiteProjectStatus"];
             /** Format: int32 */
