@@ -258,6 +258,31 @@ describe("places on the Website page", () => {
     });
 });
 
+describe("a project's gallery", () => {
+    it("shows a picture as soon as it is added, without reopening the project", async () => {
+        const added: unknown[] = [];
+        // the server remembers the picture, as the real one does
+        let gallery: WebsiteProject["gallery"] = [];
+        renderApp("/company/website", rana,
+            // ahead of the usual handlers, so this list wins
+            http.get("/api/website/projects", () => HttpResponse.json(list(true, [{ ...villa, gallery }, hotel, draft]))),
+            ...handlers(),
+            http.post("/api/files", () => HttpResponse.json({ id: 50, name: "pool.jpg", mimeType: "image/jpeg", kind: "image", sizeBytes: 10, createdAt: "2026-10-19T09:00:00Z" }, { status: 201 })),
+            http.get("/api/files/50", () => new HttpResponse(new Blob(["x"], { type: "image/jpeg" }))),
+            http.post("/api/website/projects/1/images", async ({ request }) => {
+                added.push(await request.json());
+                gallery = [{ id: 7, fileId: 50, alt: "Villa Rizk" }];
+                return HttpResponse.json({ ...villa, gallery });
+            }));
+        await userEvent.click(await screen.findByText("Villa Rizk", { selector: "tr div" }));
+        expect(await screen.findByText(/No gallery pictures yet/)).toBeInTheDocument();
+        await userEvent.upload(screen.getByLabelText("Gallery pictures"), new File(["x"], "pool.jpg", { type: "image/jpeg" }));
+        await waitFor(() => expect(added).toEqual([{ fileId: 50, alt: "Villa Rizk" }]));
+        expect(await screen.findByLabelText("Description of picture 1")).toHaveValue("Villa Rizk");
+        expect(screen.queryByText(/No gallery pictures yet/)).not.toBeInTheDocument();
+    });
+});
+
 describe("the city picker", () => {
     it("never keeps a city typed but not picked", async () => {
         renderApp("/company/website?tab=locations", rana, ...handlers());
