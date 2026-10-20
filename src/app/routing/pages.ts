@@ -60,6 +60,8 @@ export const WebsiteLocationsPage = named(website, "WebsiteLocationsPage");
 export const WebsiteContactPage = named(website, "WebsiteContactPage");
 export const WebsiteSitePage = named(website, "WebsiteSitePage");
 export const WebsiteStaffPage = named(website, "WebsiteStaffPage");
+// its charts and tables are a chunk of their own, loaded only by those who open it
+export const WebsiteAnalyticsPage = page(() => import("@/domains/website/analytics/WebsiteAnalyticsPage"));
 export const MessagesPage = page(() => import("@/domains/shared/messages/MessagesPage"));
 export const ProtonPage = page(() => import("@/domains/shared/proton/ProtonPage"));
 export const NotificationsPage = page(() => import("@/domains/shared/notifications/NotificationsPage"));

@@ -63,7 +63,7 @@ export const PERMISSION_SECTIONS: PermissionSection[] = [
         title: "Services",
         groups: [
             { title: "Proton", codes: [P.PROTON_USE, P.PROTON_BUDGET_MANAGE] },
-            { title: "Website", codes: [P.WEBSITE_VIEW, P.WEBSITE_MANAGE] },
+            { title: "Website", codes: [P.WEBSITE_VIEW, P.WEBSITE_MANAGE, P.WEBSITE_ANALYTICS_VIEW] },
         ],
     },
 ];

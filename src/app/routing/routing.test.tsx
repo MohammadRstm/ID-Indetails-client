@@ -33,11 +33,13 @@ describe("the route table", () => {
         expect(companyNav(permissionsOf(personas.designAdmin))).toEqual([]);
         // the website is an area of its own: its pages, and its staff for whoever may see people
         const website = (u: typeof personas.superAdmin) => websiteNav(permissionsOf(u)).map((i) => i.label);
-        expect(website(personas.superAdmin)).toEqual(["Projects", "Services", "Locations", "Contact & social", "Site", "Staff"]);
-        expect(website(personas.websiteAdmin)).toEqual(["Projects", "Services", "Locations", "Contact & social", "Site"]);
+        expect(website(personas.superAdmin)).toEqual(["Projects", "Analytics", "Services", "Locations", "Contact & social", "Site", "Staff"]);
+        expect(website(personas.websiteAdmin)).toEqual(["Projects", "Analytics", "Services", "Locations", "Contact & social", "Site"]);
         expect(website(personas.designAdmin)).toEqual([]);
+        // the visitors are a permission of their own: editing the website doesn't show them, and seeing them alone opens only them
         expect(website(withPermissions(personas.designAdmin, { grant: [P.WEBSITE_MANAGE] })))
             .toEqual(["Projects", "Services", "Locations", "Contact & social", "Site", "Staff"]);
+        expect(website(withPermissions(personas.designAdmin, { grant: [P.WEBSITE_ANALYTICS_VIEW] }))).toEqual(["Analytics", "Staff"]);
     });
 
     it("follows personal grants and revokes, not the role", () => {

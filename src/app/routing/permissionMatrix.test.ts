@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { CurrentUser } from "@/api/types";
 import type { Domain } from "@/app/permissions/permissions";
 import { permissionsOf } from "@/app/permissions/permissions";
-import { personas, type PersonaName } from "@/test/personas";
+import { P } from "@/app/permissions/codes";
+import { personas, withPermissions, type PersonaName } from "@/test/personas";
 import { companyRoutes, domainRoutes, pageFor, websiteRoutes } from "./routeTable";
 
 /*
@@ -79,9 +80,12 @@ describe("the permission matrix", () => {
     it("opens the website area's pages by the website's permissions, and its staff to whoever may see people", () => {
         const website = (name: PersonaName) =>
             Object.fromEntries(websiteRoutes.map((r) => [r.path, r.access(permissionsOf(personas[name])) ? "open" : "denied"]));
-        const pages = { projects: "open", services: "open", locations: "open", contact: "open", site: "open", profile: "open", notifications: "open", messages: "open", help: "open" };
+        const pages = { projects: "open", analytics: "open", services: "open", locations: "open", contact: "open", site: "open", profile: "open", notifications: "open", messages: "open", help: "open" };
         expect(website("superAdmin")).toEqual({ ...pages, staff: "open" });
         expect(website("websiteAdmin")).toEqual({ ...pages, staff: "denied" });
+        // seeing the website's content isn't seeing its visitors
+        const viewer = withPermissions(personas.designAdmin, { grant: [P.WEBSITE_VIEW] });
+        expect(websiteRoutes.find((r) => r.path === "analytics")!.access(permissionsOf(viewer))).toBe(false);
         // the area guard keeps out whoever can't enter the website at all
         expect(permissionsOf(personas.designAdmin).hasWebsiteArea).toBe(false);
         expect(permissionsOf(personas.websiteAdmin).hasWebsiteArea).toBe(true);
