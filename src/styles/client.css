@@ -663,3 +663,14 @@ button.pc-comments { border: 0; cursor: pointer; }
 .launch-sec { margin: 22px 0 9px; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
 .launch-tile.soon { cursor: default; opacity: .72; }
 .launch-tile.soon:hover { border-color: var(--line); background: var(--surface); transform: none; }
+
+/* The permissions window's groups: one row per group (a checkbox for all of it, its count, and the arrow that opens it),
+   with its permissions indented beneath when open */
+.perm-group-head { margin-bottom: 4px; }
+.perm-group-toggle { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 0; border: 0; background: none; color: inherit;
+  font: inherit; text-align: left; cursor: pointer; }
+.perm-group-title { font-size: 13px; font-weight: 650; }
+.perm-group-count { margin-left: auto; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.perm-group-toggle .ic { width: 15px; height: 15px; color: var(--ink-3); flex: none; }
+.perm-group-note { margin: -2px 0 6px 34px; }
+.perm-group-items { margin: 0 0 10px 22px; }

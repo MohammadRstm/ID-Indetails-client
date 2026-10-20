@@ -461,5 +461,41 @@
     "defaultFor": [
       "super_admin"
     ]
+  },
+  {
+    "code": "proton:use",
+    "description": "Ask Proton, the company assistant, which proposes changes only for the person to confirm",
+    "domain": null,
+    "defaultFor": [
+      "super_admin",
+      "admin",
+      "employee"
+    ]
+  },
+  {
+    "code": "proton_budget:manage",
+    "description": "See Proton's costs and usage, and top up its monthly budget",
+    "domain": null,
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
+    "code": "website:view",
+    "description": "View the company website's content",
+    "domain": "website",
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
+  },
+  {
+    "code": "website:manage",
+    "description": "Edit the company website: projects, services, locations, contact details and favicon",
+    "domain": "website",
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
   }
 ]

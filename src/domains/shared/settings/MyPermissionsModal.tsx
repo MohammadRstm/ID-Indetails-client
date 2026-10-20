@@ -5,7 +5,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Modal from "@/shared/components/Overlays/Modal";
 import { plural } from "@/shared/format/labels";
 import Icon from "@/shared/icons/Icon";
-import { byArea, ROLE_LABEL } from "./permissionWords";
+import { grouped, ROLE_LABEL } from "./permissionWords";
 import { useMyPermissions, type MyPermission } from "./settingsApi";
 
 function Row({ permission: p }: { permission: MyPermission }) {
@@ -50,10 +50,15 @@ export default function MyPermissionsModal({ onClose }: { onClose: () => void })
             {loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="your permissions" />
                 : !query.data ? <SkeletonLines lines={10} /> : (
                     <>
-                        {byArea(held).map(([area, items]) => (
-                            <div key={area} style={{ marginBottom: 12 }}>
-                                <div className="u" style={{ marginBottom: 4 }}>{area}</div>
-                                {items.map((p) => <Row key={p.code} permission={p} />)}
+                        {grouped(held).map((section) => (
+                            <div key={section.title} style={{ marginBottom: 12 }}>
+                                <div className="u" style={{ marginBottom: 4 }}>{section.title}</div>
+                                {section.groups.map((group) => (
+                                    <div key={group.title} className="perm-group open">
+                                        <div className="perm-group-title" style={{ padding: "6px 2px 2px" }}>{group.title}</div>
+                                        {group.items.map((p) => <Row key={p.code} permission={p} />)}
+                                    </div>
+                                ))}
                             </div>
                         ))}
                         {removed.length > 0 && (

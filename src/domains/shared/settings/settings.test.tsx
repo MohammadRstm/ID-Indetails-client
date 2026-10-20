@@ -360,7 +360,8 @@ describe("admins and access", () => {
         const row = (await screen.findByText("Nadia Karam")).closest("tr") as HTMLElement;
         await userEvent.click(within(row).getByRole("button", { name: "Permissions" }));
         const dialog = await screen.findByRole("dialog", { name: "Nadia Karam's permissions" });
-        const company = await within(dialog).findByRole("checkbox", { name: "View the company overview across both domains" });
+        await userEvent.click(await within(dialog).findByRole("button", { name: "Show Company overview & expenses" }));
+        const company = within(dialog).getByRole("checkbox", { name: "View the company overview across both domains" });
         expect(company).not.toBeChecked();
         await userEvent.click(company);
         await userEvent.type(within(dialog).getByLabelText(/Reason/), "Covers the quarterly review");
@@ -375,12 +376,10 @@ describe("admins and access", () => {
         const row = (await screen.findByText("Nadia Karam")).closest("tr") as HTMLElement;
         await userEvent.click(within(row).getByRole("button", { name: "Permissions" }));
         const dialog = await screen.findByRole("dialog", { name: "Nadia Karam's permissions" });
-        const excuse = await within(dialog).findByRole("checkbox", { name: "Excuse hours and days off in the hours ledger" });
+        await userEvent.click(await within(dialog).findByRole("button", { name: "Show Payroll & schedules" }));
+        const excuse = within(dialog).getByRole("checkbox", { name: "Excuse hours and days off in the hours ledger" });
         const owed = within(dialog).getByRole("checkbox", { name: "View what each employee is owed" });
         expect(owed).not.toBeChecked();
-        // codes of one area stay together: sessions with people, categories with the company's expenses
-        expect(within(dialog).getAllByText("People")).toHaveLength(1);
-        expect(within(dialog).getAllByText("Company expenses")).toHaveLength(1);
 
         await userEvent.click(excuse);
         expect(owed).toBeChecked();
@@ -394,6 +393,64 @@ describe("admins and access", () => {
         await waitFor(() => expect(put.bodies).toHaveLength(1));
         expect((put.bodies[0] as { changes: { code: string; action: string }[] }).changes.map((c) => `${c.action} ${c.code}`).sort())
             .toEqual(["grant hours:excuse", "grant salary:view"]);
+    });
+
+    it("come in groups, each ticked as a whole and counted", async () => {
+        const put = recorder("put", "/api/users/:id/permissions", { ...settings.nadiaPermissions, isJoker: true });
+        renderApp(page("admins"), rana, put.handler, ...settingsHandlers);
+        const row = (await screen.findByText("Nadia Karam")).closest("tr") as HTMLElement;
+        await userEvent.click(within(row).getByRole("button", { name: "Permissions" }));
+        const dialog = await screen.findByRole("dialog", { name: "Nadia Karam's permissions" });
+
+        // the sections, and a group's count before it is opened
+        for (const section of ["Projects", "Work", "Money", "People", "Business", "Company", "Services"]) {
+            expect(within(dialog).getAllByText(section, { selector: ".u" })).toHaveLength(1);
+        }
+        // this Nadia was handed the money: all of its group
+        const money = await within(dialog).findByRole("checkbox", { name: "Money & billing" });
+        expect(money).toBeChecked();
+        expect(money.closest(".perm-group-head")).toHaveTextContent("8 of 8");
+        expect(within(dialog).getByRole("checkbox", { name: "Company overview & expenses" }).closest(".perm-group-head")).toHaveTextContent("0 of 3");
+        // a permission is hidden until its group is opened
+        expect(within(dialog).queryByRole("checkbox", { name: "Void issued invoices" })).not.toBeInTheDocument();
+
+        // the website is offered to a Design admin too, and ticking its group gives all of it
+        await userEvent.click(within(dialog).getByRole("checkbox", { name: "Website" }));
+        expect(within(dialog).getByRole("checkbox", { name: "Website" })).toBeChecked();
+        expect(within(dialog).getByRole("checkbox", { name: "Website" }).closest(".perm-group-head")).toHaveTextContent("2 of 2 · changed");
+
+        // one permission of a group: a dash, not a tick
+        await userEvent.click(within(dialog).getByRole("button", { name: "Show Payroll & schedules" }));
+        await userEvent.click(within(dialog).getByRole("checkbox", { name: "View what each employee is owed" }));
+        const payroll = within(dialog).getByRole("checkbox", { name: "Payroll & schedules" }) as HTMLInputElement;
+        expect(payroll).not.toBeChecked();
+        expect(payroll.indeterminate).toBe(true);
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(put.bodies).toHaveLength(1));
+        expect((put.bodies[0] as { changes: { code: string; action: string }[] }).changes.map((c) => `${c.action} ${c.code}`).sort())
+            .toEqual(["grant salary:view", "grant website:manage", "grant website:view"]);
+    });
+
+    it("say what a folded group's permissions need, and leave out logging hours for an admin", async () => {
+        renderApp(page("admins"), rana, ...settingsHandlers);
+        const row = (await screen.findByText("Nadia Karam")).closest("tr") as HTMLElement;
+        await userEvent.click(within(row).getByRole("button", { name: "Permissions" }));
+        const dialog = await screen.findByRole("dialog", { name: "Nadia Karam's permissions" });
+        await within(dialog).findByRole("checkbox", { name: "Payroll & schedules" });
+        // admins log no hours, so their own hours aren't offered; everyone's still are
+        expect(within(dialog).queryByRole("checkbox", { name: "Own hours" })).not.toBeInTheDocument();
+        expect(within(dialog).getByRole("checkbox", { name: "Team's hours" })).toBeInTheDocument();
+
+        // the whole group gives "View what each employee is owed" with excusing hours, so nothing is said to be missing
+        await userEvent.click(within(dialog).getByRole("checkbox", { name: "Payroll & schedules" }));
+        expect(within(dialog).getByRole("checkbox", { name: "Payroll & schedules" })).toBeChecked();
+        expect(within(dialog).queryByText(/to be usable\.$/)).not.toBeInTheDocument();
+
+        // a meeting recorded needs the projects it's on: folded, the group still says it brought them along
+        await userEvent.click(within(dialog).getByRole("checkbox", { name: "Projects" }));
+        expect(within(dialog).getByRole("checkbox", { name: "Projects" })).not.toBeChecked();
+        expect(within(dialog).getByText("Without it, “Record and remove project meetings” can't be used.")).toBeInTheDocument();
     });
 
     it("never offer a super admin's permissions to change", async () => {
