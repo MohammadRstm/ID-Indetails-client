@@ -29,7 +29,7 @@ const content = (change: Partial<WebsiteContent> = {}): WebsiteContent => ({
     services: [{ id: 1, title: "Architecture", description: "Buildings from the first sketch." }, { id: 2, title: "Interiors", description: "Whole homes." }],
     locations: [{ id: 1, city: "Beirut", country: "Lebanon", countryCode: "LB", latitude: 33.8938, longitude: 35.5018, positionApproximate: true, address: "Gemmayze", phone: "+961 1 234 567" }],
     socialLinks: [{ id: 1, label: "Instagram", url: "https://instagram.com/indetails" }],
-    contactEmail: "hello@indetails.com", faviconFileId: null, canManage: true,
+    contactEmail: "hello@indetails.com", faviconFileId: null, underConstructionSince: null, canManage: true,
     ...change,
 });
 
@@ -189,6 +189,48 @@ describe("the Website page", () => {
 
         await userEvent.click(screen.getAllByRole("button", { name: "Move service down" })[0]);
         await waitFor(() => expect(orders).toEqual([[2, 1]]));
+    });
+
+    it("puts the website under construction after asking, and says so on every page", async () => {
+        const sent: unknown[] = [];
+        let current = content();
+        renderApp("/website/site", rana, ...handlers(list(), current),
+            http.put("/api/website/under-construction", async ({ request }) => {
+                const body = (await request.json()) as { underConstruction: boolean };
+                sent.push(body);
+                current = content({ underConstructionSince: body.underConstruction ? "2026-10-21T09:30:00Z" : null });
+                return HttpResponse.json(current);
+            }));
+        expect(await screen.findByText("Live")).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "Put the website under construction" }));
+        const dialog = await screen.findByRole("dialog", { name: "Put the website under construction?" });
+        // nothing changes until it is confirmed
+        expect(sent).toEqual([]);
+        await userEvent.click(within(dialog).getByRole("button", { name: "Put it under construction" }));
+        await waitFor(() => expect(sent).toEqual([{ underConstruction: true }]));
+        expect(await screen.findByText(/^Under construction since/)).toBeInTheDocument();
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+        // the same button brings it back, after asking again
+        await userEvent.click(screen.getByRole("button", { name: "Bring the website back" }));
+        await userEvent.click(within(await screen.findByRole("dialog", { name: "Bring the website back?" })).getByRole("button", { name: "Bring it back" }));
+        await waitFor(() => expect(sent).toEqual([{ underConstruction: true }, { underConstruction: false }]));
+        expect(await screen.findByText("Live")).toBeInTheDocument();
+    });
+
+    it("reminds everyone on the other Website pages while it is under construction, and lets a viewer only look", async () => {
+        const viewer = withPermissions(rana, { revoke: [P.WEBSITE_MANAGE] });
+        const down = content({ underConstructionSince: "2026-10-21T09:30:00Z", canManage: false });
+        renderApp("/website/services", viewer, ...handlers(list(false), down));
+        const notice = await screen.findByRole("status");
+        expect(notice).toHaveTextContent(/The website is under construction since/);
+        await userEvent.click(within(notice).getByRole("link", { name: "Open Site" }));
+        expect(await screen.findByText(/^Under construction since/)).toBeInTheDocument();
+        // a viewer sees where things stand, with nothing to switch
+        expect(screen.queryByRole("button", { name: "Bring the website back" })).not.toBeInTheDocument();
+        expect(screen.getByText("Under construction", { selector: ".badge" })).toBeInTheDocument();
+        // the Site page's own panel says it, so the notice isn't repeated there
+        expect(screen.queryByText(/The website is under construction since/)).not.toBeInTheDocument();
     });
 
     it("saves the contact email, checking it first", async () => {

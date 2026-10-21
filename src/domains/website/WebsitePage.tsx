@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { PageHead } from "@/shared/components/Data/Panel";
 import CompanyPeople from "../company/people/CompanyPeople";
 import WebsiteProjectsTab from "./WebsiteProjectsTab";
-import { ContactTab, LocationsTab, ServicesTab, SiteTab } from "./WebsiteContentTabs";
+import { ContactTab, LocationsTab, ServicesTab, SiteTab, UnderConstructionNotice } from "./WebsiteContentTabs";
 
 /*
  * The Website area's pages: what the company's public website shows (website:view to look, website:manage to change),
@@ -11,10 +11,12 @@ import { ContactTab, LocationsTab, ServicesTab, SiteTab } from "./WebsiteContent
 
 const PUBLIC = "Saved changes are public straight away.";
 
-function WebsiteSection({ title, sub, children }: { title: string; sub: string; children: ReactNode }) {
+/** A Website page; while the website is under construction it says so at the top, except on Site, whose panel does. */
+function WebsiteSection({ title, sub, notice = true, children }: { title: string; sub: string; notice?: boolean; children: ReactNode }) {
     return (
         <div className="page">
             <PageHead title={title} sub={`${sub} ${PUBLIC}`} />
+            {notice && <UnderConstructionNotice />}
             <div className="mt">{children}</div>
         </div>
     );
@@ -37,7 +39,7 @@ export function WebsiteContactPage() {
 }
 
 export function WebsiteSitePage() {
-    return <WebsiteSection title="Site" sub="The website's favicon."><SiteTab /></WebsiteSection>;
+    return <WebsiteSection title="Site" sub="Whether the website is live, and its favicon." notice={false}><SiteTab /></WebsiteSection>;
 }
 
 /** The website's staff: admins who look after the website and nothing else. */
@@ -45,6 +47,7 @@ export function WebsiteStaffPage() {
     return (
         <div className="page">
             <PageHead title="Staff" sub="The people who look after the website. Anyone else can be given the website's permissions from their profile." />
+            <UnderConstructionNotice />
             <CompanyPeople domain="website" />
         </div>
     );
