@@ -1,4 +1,5 @@
 import { useRef, useState, type ReactNode } from "react";
+import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import { errorMessage } from "@/api/errors";
 import { loadFailed } from "@/api/queryState";
 import Panel from "@/shared/components/Data/Panel";
@@ -154,7 +155,7 @@ function Input({ id, label, value, onChange, onBlur, error, placeholder, multili
         <div className="field">
             <label className={optional ? "label" : "label required"} htmlFor={id}>{label}</label>
             {multiline
-                ? <textarea id={id} className="input" rows={3} value={value} placeholder={placeholder} maxLength={maxLength} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} />
+                ? <AutoGrowTextarea id={id} className="input" minRows={3} maxRows={25} value={value} placeholder={placeholder} maxLength={maxLength} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} />
                 : <input id={id} className="input" value={value} placeholder={placeholder} maxLength={maxLength} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} />}
             <FieldError message={error} />
         </div>

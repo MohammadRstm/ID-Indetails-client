@@ -689,3 +689,7 @@ button.pc-comments { border: 0; cursor: pointer; }
 @keyframes live-pulse { 0% { box-shadow: 0 0 0 0 var(--ok-soft); } 70% { box-shadow: 0 0 0 7px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
 @media (max-width: 1120px) { .analytics-traffic { grid-template-columns: minmax(0, 1fr); } }
+
+/* A text box that grows as it is typed in (AutoGrowTextarea): only down, never wider than its column, long words wrapped */
+.autogrow { display: block; width: 100%; max-width: 100%; height: auto; padding-top: 8px; padding-bottom: 8px; line-height: 1.5;
+  resize: none; overflow-wrap: anywhere; }
