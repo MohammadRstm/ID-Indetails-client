@@ -155,6 +155,15 @@ export function useSetFavicon() {
     });
 }
 
+/** Puts the website under construction, or brings it back (website:manage). */
+export function useSetUnderConstruction() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (underConstruction: boolean) => (await http.put<WebsiteContent>("/website/under-construction", { underConstruction })).data,
+        onSuccess: (content) => queryClient.setQueryData(contentKey, content),
+    });
+}
+
 /**
  * The company's own email: the website shows it and its contact form sends to it. It is a company setting too, so the
  * settings are read again (company_settings:manage or website:manage).

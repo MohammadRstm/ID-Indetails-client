@@ -12958,6 +12958,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/website/under-construction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WebsiteUnderConstructionRequest"];
+                    "application/json": components["schemas"]["WebsiteUnderConstructionRequest"];
+                    "text/json": components["schemas"]["WebsiteUnderConstructionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/json": components["schemas"]["WebsiteContentResponse"];
+                        "text/plain": components["schemas"]["WebsiteContentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/work-entries": {
         parameters: {
             query?: never;
@@ -17048,6 +17091,7 @@ export interface components {
         };
         PublicWebsiteSettings: {
             faviconUrl: null | string;
+            underConstruction: boolean;
         };
         PublicWebsiteSocialLink: {
             /** Format: int64 */
@@ -18152,6 +18196,8 @@ export interface components {
             locations: components["schemas"]["WebsiteLocationResponse"][];
             services: components["schemas"]["WebsiteServiceResponse"][];
             socialLinks: components["schemas"]["WebsiteSocialLinkResponse"][];
+            /** Format: date-time */
+            underConstructionSince: null | string;
         };
         WebsiteConveyorRequest: {
             projectIds?: number[];
@@ -18327,6 +18373,9 @@ export interface components {
             id: number;
             label: string;
             url: string;
+        };
+        WebsiteUnderConstructionRequest: {
+            underConstruction?: boolean;
         };
         WeekTotalResponse: {
             /** Format: int32 */

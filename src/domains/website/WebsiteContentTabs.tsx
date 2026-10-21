@@ -11,7 +11,13 @@ import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { Thumb } from "./WebsitePictures";
 import PlaceFields from "./WebsitePlaceFields";
-import { moved, PICTURE_TYPES, uploadPictures, useSetContactEmail, useSetFavicon, useWebsiteContent, useWebsiteList, type ListKind, type WebsiteContent } from "./websiteApi";
+import { Link } from "react-router";
+import Modal from "@/shared/components/Overlays/Modal";
+import { fmtDateY } from "@/shared/format/time";
+import {
+    moved, PICTURE_TYPES, uploadPictures, useSetContactEmail, useSetFavicon, useSetUnderConstruction, useWebsiteContent, useWebsiteList, type ListKind,
+    type WebsiteContent,
+} from "./websiteApi";
 import { linkError, placeError, splitPosition } from "./websiteRules";
 
 /** The content once loaded; a skeleton, or what went wrong, until then. */
@@ -303,9 +309,78 @@ function ContactEmail({ content }: { content: WebsiteContent }) {
     );
 }
 
-/** The website's favicon: a small square picture in the browser tab. */
+/** Whether the website is live or under construction, and its favicon: a small square picture in the browser tab. */
 export function SiteTab() {
-    return <WithContent>{(c) => <Favicon content={c} />}</WithContent>;
+    return <WithContent>{(c) => <><UnderConstruction content={c} /><Favicon content={c} /></>}</WithContent>;
+}
+
+/**
+ * The website under construction: it then shows only its construction page, which links to Contact, and its Contact
+ * and Privacy pages. One button, after a confirmation, switches it either way.
+ */
+function UnderConstruction({ content }: { content: WebsiteContent }) {
+    const set = useSetUnderConstruction();
+    const [confirming, setConfirming] = useState(false);
+    const since = content.underConstructionSince;
+    const down = since != null;
+
+    function confirm() {
+        set.mutate(!down, {
+            onSuccess: () => {
+                setConfirming(false);
+                toast(down
+                    ? { text: "The website is back", sub: "Every page shows again within a minute", icon: "checkCircle" }
+                    : { text: "The website is under construction", sub: "Visitors see the construction page within a minute", icon: "checkCircle" });
+            },
+        });
+    }
+
+    return (
+        <Panel title="Under construction">
+            <SwitchRow title={down ? `Under construction since ${fmtDateY(since)}` : "Live"}
+                description={down
+                    ? "Visitors see only the construction page, which links to Contact, and the Contact and Privacy pages."
+                    : "Every page of the website is shown. Putting it under construction shows only a construction page, with Contact and Privacy."}
+                control={content.canManage
+                    ? <button className={down ? "btn btn-sm btn-primary" : "btn btn-sm"} onClick={() => setConfirming(true)}>
+                        {down ? "Bring the website back" : "Put the website under construction"}
+                    </button>
+                    : <span className={down ? "badge badge-hold" : "badge"}>{down ? "Under construction" : "Live"}</span>} />
+            {confirming && (
+                <Modal title={down ? "Bring the website back?" : "Put the website under construction?"}
+                    sub={down
+                        ? "Every page of the website is shown again, within a minute."
+                        : "Within a minute, visitors see only the construction page, with a link to Contact. Contact and Privacy keep working."}
+                    onClose={() => setConfirming(false)}
+                    foot={
+                        <>
+                            <div className="grow">{set.error ? <span className="err"><Icon name="alert" />{errorMessage(set.error)}</span> : null}</div>
+                            <button className="btn" onClick={() => setConfirming(false)}>Cancel</button>
+                            <button className="btn btn-primary" disabled={set.isPending} onClick={confirm}>
+                                {set.isPending ? "Saving…" : down ? "Bring it back" : "Put it under construction"}
+                            </button>
+                        </>
+                    }>
+                    <p className="sec" style={{ margin: 0 }}>
+                        {down ? "Projects, services and everything else you have saved are shown as they are now." : "Nothing is deleted: everything you have saved comes back with the website."}
+                    </p>
+                </Modal>
+            )}
+        </Panel>
+    );
+}
+
+/** Across the top of every Website page while the website is under construction, so nobody forgets it is down. */
+export function UnderConstructionNotice() {
+    const since = useWebsiteContent().data?.underConstructionSince;
+    if (since == null) return null;
+    return (
+        <div className="banner hold" role="status" style={{ marginBottom: 14 }}>
+            <Icon name="alert" />
+            <div className="grow">The website is under construction since {fmtDateY(since)}: visitors see only its construction page, Contact and Privacy.</div>
+            <Link className="btn btn-sm" to="/website/site">Open Site</Link>
+        </div>
+    );
 }
 
 function Favicon({ content }: { content: WebsiteContent }) {
