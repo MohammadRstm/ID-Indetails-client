@@ -17,7 +17,7 @@ type AvatarProps = {
 
 /** A person's photo, or their generated avatar, or their initials; with an optional presence dot. */
 export default function Avatar({ person, size = 28, presence = false }: AvatarProps) {
-    const photo = useFileUrl(person.photoFileId);
+    const photo = useFileUrl(person.photoFileId, 160);
     const src = photo.url ?? safeAvatar(person.name);
     const img = src
         ? <img className="av" src={src} width={size} height={size} alt="" style={{ width: size, height: size }} />

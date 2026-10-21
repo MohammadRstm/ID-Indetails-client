@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { http } from "@/api/http";
 import type { Schemas } from "@/api/types";
-import { uploadFile } from "../design/work/workApi";
+import { uploadAll } from "@/shared/files/upload";
 
 export type WebsiteProject = Schemas["WebsiteProjectResponse"];
 export type WebsiteProjects = Schemas["WebsiteProjectsResponse"];
@@ -191,9 +191,13 @@ export function moved(ids: number[], id: number, by: -1 | 1): number[] {
 /** The pictures the website takes: photos only (no SVG, which can carry scripts). */
 export const PICTURE_TYPES = "image/png,image/jpeg,image/webp";
 
-/** Uploads picked pictures one by one; answers with their file ids, or the first error. */
-export async function uploadPictures(files: File[]): Promise<number[]> {
-    const ids: number[] = [];
-    for (const file of files) ids.push((await uploadFile(file)).id);
-    return ids;
+/**
+ * Uploads picked pictures, made small first (at most `maxEdge` px on their longest side, never cropped) and a few at a
+ * time; answers with their file ids in the order picked, or the first error.
+ */
+export function uploadPictures(files: File[], maxEdge = 1920, onProgress?: (done: number, fraction: number) => void): Promise<number[]> {
+    return uploadAll(files, { maxEdge, onProgress });
 }
+
+/** A card picture is shown at most about 540 px wide (twice that on sharp screens); a page picture up to about 1200. */
+export const CARD_EDGE = 1280;

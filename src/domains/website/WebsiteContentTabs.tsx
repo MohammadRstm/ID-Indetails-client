@@ -394,7 +394,7 @@ function Favicon({ content }: { content: WebsiteContent }) {
         setUploading(true);
         setFailed(undefined);
         try {
-            await set.mutateAsync((await uploadPictures([file]))[0]);
+            await set.mutateAsync((await uploadPictures([file], 256))[0]);
             toast({ text: "Favicon updated", sub: "Browsers may show the old one for a while", icon: "checkCircle" });
         } catch (e) {
             setFailed(errorMessage(e));

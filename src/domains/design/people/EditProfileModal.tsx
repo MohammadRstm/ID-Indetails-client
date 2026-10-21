@@ -96,7 +96,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     async function pick(f: File) {
         setUploading(true);
         try {
-            setPhotoId((await uploadFile(f)).id);
+            setPhotoId((await uploadFile(f, { maxEdge: 480 })).id);
         } catch (e) {
             toast({ text: "The photo wasn't uploaded", sub: errorMessage(e), icon: "alert" });
         } finally {

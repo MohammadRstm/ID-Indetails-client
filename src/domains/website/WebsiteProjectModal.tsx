@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { uploadingLabel } from "@/shared/files/upload";
 import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import Field, { FieldError } from "@/shared/components/Forms/Field";
@@ -241,21 +242,23 @@ function LinkPicker({ linked, onLink, onUnlink }: { linked: Linked | null; onLin
 function Gallery({ project, canManage }: { project: WebsiteProject; canManage: boolean }) {
     const gallery = useGallery(project.id);
     const input = useRef<HTMLInputElement>(null);
-    const [adding, setAdding] = useState(false);
+    // while pictures upload: how many are done of how many, and how far all of them have got
+    const [adding, setAdding] = useState<{ total: number; done: number; fraction: number } | null>(null);
     const [failed, setFailed] = useState<string>();
     const ids = project.gallery.map((i) => i.id);
     const error = failed ?? (gallery.order.error ?? gallery.remove.error ?? gallery.edit.error ? errorMessage(gallery.order.error ?? gallery.remove.error ?? gallery.edit.error) : undefined);
 
     async function add(files: File[]) {
         if (!files.length) return;
-        setAdding(true);
+        setAdding({ total: files.length, done: 0, fraction: 0 });
         setFailed(undefined);
         try {
-            for (const fileId of await uploadPictures(files)) await gallery.add.mutateAsync({ fileId, alt: project.title });
+            const uploaded = await uploadPictures(files, undefined, (done, fraction) => setAdding({ total: files.length, done, fraction }));
+            for (const fileId of uploaded) await gallery.add.mutateAsync({ fileId, alt: project.title });
         } catch (e) {
             setFailed(errorMessage(e));
         } finally {
-            setAdding(false);
+            setAdding(null);
         }
     }
 
@@ -265,7 +268,7 @@ function Gallery({ project, canManage }: { project: WebsiteProject; canManage: b
                 <div style={{ fontWeight: 600 }}>Gallery <span className="muted num">{project.gallery.length}</span></div>
                 {canManage && (
                     <>
-                        <button type="button" className="btn btn-sm" disabled={adding} onClick={() => input.current?.click()}><Icon name="plus" />{adding ? "Adding…" : "Add pictures"}</button>
+                        <button type="button" className="btn btn-sm" disabled={adding != null} onClick={() => input.current?.click()}><Icon name="plus" />{adding ? (adding.done === adding.total ? "Adding…" : uploadingLabel(adding.total, adding.done, adding.fraction)) : "Add pictures"}</button>
                         <input ref={input} type="file" accept={PICTURE_TYPES} multiple hidden aria-label="Gallery pictures"
                             onChange={(e) => { const files = [...(e.target.files ?? [])]; e.target.value = ""; void add(files); }} />
                     </>
