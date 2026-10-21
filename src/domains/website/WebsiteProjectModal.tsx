@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { uploadingLabel } from "@/shared/files/upload";
 import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
@@ -317,7 +318,8 @@ const MAX_CONCEPT = 5;
 function Gallery({ project, canManage, concept = false }: { project: WebsiteProject; canManage: boolean; concept?: boolean }) {
     const gallery = useGallery(project.id);
     const input = useRef<HTMLInputElement>(null);
-    const [adding, setAdding] = useState(false);
+    // while pictures upload: how many are done of how many, and how far all of them have got
+    const [adding, setAdding] = useState<{ total: number; done: number; fraction: number } | null>(null);
     const [failed, setFailed] = useState<string>();
     const images = concept ? project.conceptImages : project.gallery;
     const ids = images.map((i) => i.id);
@@ -327,14 +329,16 @@ function Gallery({ project, canManage, concept = false }: { project: WebsiteProj
 
     async function add(files: File[]) {
         if (!files.length) return;
-        setAdding(true);
+        const chosen = files.slice(0, room);
+        setAdding({ total: chosen.length, done: 0, fraction: 0 });
         setFailed(files.length > room ? `A project has at most ${MAX_CONCEPT} concept pictures: only the first ${room} were added.` : undefined);
         try {
-            for (const fileId of await uploadPictures(files.slice(0, room))) await gallery.add.mutateAsync({ fileId, alt: project.title, concept });
+            const uploaded = await uploadPictures(chosen, undefined, (done, fraction) => setAdding({ total: chosen.length, done, fraction }));
+            for (const fileId of uploaded) await gallery.add.mutateAsync({ fileId, alt: project.title, concept });
         } catch (e) {
             setFailed(errorMessage(e));
         } finally {
-            setAdding(false);
+            setAdding(null);
         }
     }
 
@@ -344,8 +348,8 @@ function Gallery({ project, canManage, concept = false }: { project: WebsiteProj
                 <div style={{ fontWeight: 600 }}>{concept ? "Concept pictures" : "Gallery"} <span className="muted num">{concept ? `${images.length} / ${MAX_CONCEPT}` : images.length}</span></div>
                 {canManage && (
                     <>
-                        <button type="button" className="btn btn-sm" disabled={adding || room <= 0} onClick={() => input.current?.click()}>
-                            <Icon name="plus" />{adding ? "Adding…" : concept ? "Add concept pictures" : "Add pictures"}
+                        <button type="button" className="btn btn-sm" disabled={adding != null || room <= 0} onClick={() => input.current?.click()}>
+                            <Icon name="plus" />{adding ? (adding.done === adding.total ? "Adding…" : uploadingLabel(adding.total, adding.done, adding.fraction)) : concept ? "Add concept pictures" : "Add pictures"}
                         </button>
                         <input ref={input} type="file" accept={PICTURE_TYPES} multiple hidden aria-label={concept ? "Concept pictures" : "Gallery pictures"}
                             onChange={(e) => { const files = [...(e.target.files ?? [])]; e.target.value = ""; void add(files); }} />

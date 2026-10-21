@@ -200,12 +200,8 @@ export function useRestoreEntry() {
     });
 }
 
-/** Uploads an image or video for an entry. */
-export async function uploadFile(file: File): Promise<Schemas["FileResponse"]> {
-    const form = new FormData();
-    form.append("file", file);
-    return (await http.post<Schemas["FileResponse"]>("/files", form)).data;
-}
+/** Uploads an image (made small first) or a video for an entry. */
+export { uploadFile } from "@/shared/files/upload";
 
 /** Moves a meeting on the timeline (its ends dragged). */
 export function useResizeMeeting() {

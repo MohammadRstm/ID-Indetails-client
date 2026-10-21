@@ -71,17 +71,20 @@ export default function Composer({ members, meId, sending, error, onSend, draftK
     async function onFiles(list: FileList | null) {
         const chosen = Array.from(list ?? []).slice(0, MAX_FILES - files.length);
         setUploadError(null);
-        for (const f of chosen) {
-            setUploading((n) => n + 1);
+        setUploading((n) => n + chosen.length);
+        // all at once, each made small first; they join the message in the order picked
+        const saved = await Promise.all(chosen.map(async (f): Promise<Picked | null> => {
             try {
-                const saved = await uploadFile(f);
-                setFiles((prev) => [...prev, { id: saved.id, name: saved.name, video: f.type.startsWith("video/"), preview: URL.createObjectURL(f) }]);
+                const file = await uploadFile(f);
+                return { id: file.id, name: file.name, video: f.type.startsWith("video/"), preview: URL.createObjectURL(f) };
             } catch (e) {
                 setUploadError(errorMessage(e));
+                return null;
             } finally {
                 setUploading((n) => n - 1);
             }
-        }
+        }));
+        setFiles((prev) => [...prev, ...saved.filter((p): p is Picked => p !== null)]);
     }
 
     function remove(id: number) {

@@ -239,6 +239,13 @@ describe("the Website page", () => {
         expect(screen.queryByText(/The website is under construction since/)).not.toBeInTheDocument();
     });
 
+    it("checks whether a picture found elsewhere is one of the website's", async () => {
+        renderApp("/website/site", rana, ...handlers(),
+            http.post("/api/website/watermark-check", () => HttpResponse.json({ found: true, fileId: 40, projectTitle: "Villa Rizk", confidence: 0.93 })));
+        await userEvent.upload(await screen.findByLabelText("Picture to check"), new File(["data"], "found.webp", { type: "image/webp" }));
+        expect(await screen.findByRole("status")).toHaveTextContent("It's ours: a picture of Villa Rizk (picture 40). The mark reads clearly in 93% of the picture.");
+    });
+
     it("saves the contact email, checking it first", async () => {
         const sent: unknown[] = [];
         renderApp("/website/contact", rana, ...handlers(),

@@ -98,7 +98,7 @@ export default function EntryRow({ entry: e, showProject = true, showPerson, sho
 /** An entry and its comments (the prototype's UI.EntryCommentsModal). */
 export function EntryCommentsModal({ entry: e, onClose }: { entry: WorkEntry; onClose: () => void }) {
     const [viewing, setViewing] = useState(false);
-    const { url } = useFileUrl(e.attachment && e.attachment.kind !== "video" ? e.attachment.id : null);
+    const { url } = useFileUrl(e.attachment && e.attachment.kind !== "video" ? e.attachment.id : null, 480);
     return (
         <Modal title="Work entry" sub={`${e.person.name} · ${e.project.title}`} onClose={onClose}
             foot={<><div className="grow" /><button className="btn" onClick={onClose}>Close</button></>}>

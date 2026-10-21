@@ -3070,13 +3070,7 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody: {
-                content: {
-                    "multipart/form-data": {
-                        file?: components["schemas"]["IFormFile"];
-                    };
-                };
-            };
+            requestBody?: never;
             responses: {
                 /** @description OK */
                 200: {
@@ -3106,7 +3100,9 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    size?: number;
+                };
                 header?: never;
                 path: {
                     id: number;
@@ -11113,7 +11109,9 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    size?: number;
+                };
                 header?: never;
                 path: {
                     id: number;
@@ -13035,6 +13033,49 @@ export interface paths {
             };
         };
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/watermark-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        file?: components["schemas"]["IFormFile"];
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WatermarkCheckResponse"];
+                        "text/json": components["schemas"]["WatermarkCheckResponse"];
+                        "text/plain": components["schemas"]["WatermarkCheckResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -18074,6 +18115,14 @@ export interface components {
         UserStatus: "invited" | "active" | "deactivated";
         VoidRequest: {
             reason?: string;
+        };
+        WatermarkCheckResponse: {
+            /** Format: double */
+            confidence: number;
+            /** Format: int64 */
+            fileId: null | number;
+            found: boolean;
+            projectTitle: null | string;
         };
         WebsiteAnalyticsChannel: {
             channel: string;
