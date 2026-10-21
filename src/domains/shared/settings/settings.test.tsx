@@ -417,7 +417,7 @@ describe("admins and access", () => {
         // the website is offered to a Design admin too, and ticking its group gives all of it
         await userEvent.click(within(dialog).getByRole("checkbox", { name: "Website" }));
         expect(within(dialog).getByRole("checkbox", { name: "Website" })).toBeChecked();
-        expect(within(dialog).getByRole("checkbox", { name: "Website" }).closest(".perm-group-head")).toHaveTextContent("2 of 2 · changed");
+        expect(within(dialog).getByRole("checkbox", { name: "Website" }).closest(".perm-group-head")).toHaveTextContent("3 of 3 · changed");
 
         // one permission of a group: a dash, not a tick
         await userEvent.click(within(dialog).getByRole("button", { name: "Show Payroll & schedules" }));
@@ -429,7 +429,7 @@ describe("admins and access", () => {
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
         await waitFor(() => expect(put.bodies).toHaveLength(1));
         expect((put.bodies[0] as { changes: { code: string; action: string }[] }).changes.map((c) => `${c.action} ${c.code}`).sort())
-            .toEqual(["grant salary:view", "grant website:manage", "grant website:view"]);
+            .toEqual(["grant salary:view", "grant website:manage", "grant website:view", "grant website_analytics:view"]);
     });
 
     it("say what a folded group's permissions need, and leave out logging hours for an admin", async () => {

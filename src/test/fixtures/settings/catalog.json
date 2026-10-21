@@ -497,5 +497,14 @@
       "super_admin",
       "admin"
     ]
+  },
+  {
+    "code": "website_analytics:view",
+    "description": "See the company website's visitor statistics from Google Analytics",
+    "domain": "website",
+    "defaultFor": [
+      "super_admin",
+      "admin"
+    ]
   }
 ]

@@ -15,7 +15,7 @@ const COMPANY_ONLY: PermissionCode[] = [
     P.OVERHEAD_CATEGORY_MANAGE, P.SESSION_MANAGE, P.EMPLOYEE_CHANGE_EMAIL, P.PROTON_BUDGET_MANAGE,
 ];
 /** The website's own: its staff hold them, and anyone else only when granted (which opens the Website area). */
-const WEBSITE: PermissionCode[] = [P.WEBSITE_VIEW, P.WEBSITE_MANAGE];
+const WEBSITE: PermissionCode[] = [P.WEBSITE_VIEW, P.WEBSITE_MANAGE, P.WEBSITE_ANALYTICS_VIEW];
 const EXECUTION_ONLY: PermissionCode[] = [
     P.PROJECT_PRICING_MANAGE, P.STATEMENT_CREATE, P.STATEMENT_SEND, P.MATERIAL_CREATE, P.MATERIAL_MANAGE,
     P.LABOUR_REPORT_CREATE, P.LABOUR_REPORT_MANAGE,

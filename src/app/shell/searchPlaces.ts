@@ -391,6 +391,12 @@ export const PLACES: Place[] = [
         targets: (ctx) => website(ctx, "projects"),
     },
     {
+        key: "website-analytics", icon: "chartTile", label: "Open the website's analytics", starter: "website",
+        words: ["website analytics", "analytics", "google analytics", "visitors", "website visitors", "traffic", "page views",
+            "who visits the website", "contact requests", "leads", "audience"],
+        targets: (ctx) => website(ctx, "analytics"),
+    },
+    {
         key: "website-services", icon: "briefcase", label: "Open the website's services", starter: "website",
         words: ["website services", "services", "what we offer", "offerings", "service list"],
         targets: (ctx) => website(ctx, "services"),

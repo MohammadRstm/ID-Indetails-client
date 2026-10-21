@@ -31,6 +31,7 @@ import {
     SalariesPage,
     SchedulesPage,
     SettingsPage,
+    WebsiteAnalyticsPage,
     WebsiteContactPage,
     WebsiteLocationsPage,
     WebsiteProjectsPage,
@@ -232,6 +233,8 @@ const website = (p: Permissions) => p.hasAny(P.WEBSITE_VIEW, P.WEBSITE_MANAGE);
  */
 export const websiteRoutes: CompanyRoute[] = [
     { path: "projects", nav: { label: "Projects", icon: "projects" }, element: <WebsiteProjectsPage />, access: website },
+    // the website's visitors, from Google Analytics: a permission of its own, not part of seeing the content
+    { path: "analytics", nav: { label: "Analytics", icon: "chartTile" }, element: <WebsiteAnalyticsPage />, access: (p) => p.has(P.WEBSITE_ANALYTICS_VIEW) },
     { path: "services", nav: { label: "Services", icon: "briefcase" }, element: <WebsiteServicesPage />, access: website },
     { path: "locations", nav: { label: "Locations", icon: "pin" }, element: <WebsiteLocationsPage />, access: website },
     { path: "contact", nav: { label: "Contact & social", icon: "mail" }, element: <WebsiteContactPage />, access: website },

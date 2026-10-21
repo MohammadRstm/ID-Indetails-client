@@ -11847,6 +11847,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/website/analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Compare?: boolean;
+                    From?: string;
+                    To?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteAnalyticsResponse"];
+                        "text/json": components["schemas"]["WebsiteAnalyticsResponse"];
+                        "text/plain": components["schemas"]["WebsiteAnalyticsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/website/analytics/realtime": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteAnalyticsRealtimeResponse"];
+                        "text/json": components["schemas"]["WebsiteAnalyticsRealtimeResponse"];
+                        "text/plain": components["schemas"]["WebsiteAnalyticsRealtimeResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/website/content": {
         parameters: {
             query?: never;
@@ -17911,6 +17989,145 @@ export interface components {
         VoidRequest: {
             reason?: string;
         };
+        WebsiteAnalyticsChannel: {
+            channel: string;
+            /** Format: double */
+            engagementRate: number;
+            /** Format: int64 */
+            keyEvents: number;
+            /** Format: int64 */
+            sessions: number;
+            /** Format: int64 */
+            visitors: number;
+        };
+        WebsiteAnalyticsCountry: {
+            code: string;
+            name: string;
+            /** Format: int64 */
+            sessions: number;
+            /** Format: int64 */
+            visitors: number;
+        };
+        WebsiteAnalyticsDay: {
+            /** Format: date */
+            date: string;
+            /** Format: date */
+            previousDate: null | string;
+            /** Format: int64 */
+            previousSessions: null | number;
+            /** Format: int64 */
+            previousViews: null | number;
+            /** Format: int64 */
+            previousVisitors: null | number;
+            /** Format: int64 */
+            sessions: number;
+            /** Format: int64 */
+            views: number;
+            /** Format: int64 */
+            visitors: number;
+        };
+        WebsiteAnalyticsEvent: {
+            /** Format: int64 */
+            count: number;
+            isKeyEvent: boolean;
+            name: string;
+            /** Format: int64 */
+            previousCount: null | number;
+            /** Format: int64 */
+            users: number;
+        };
+        WebsiteAnalyticsPage: {
+            /** Format: double */
+            averageEngagementSeconds: number;
+            /** Format: int64 */
+            events: number;
+            path: string;
+            projectTitle: null | string;
+            title: string;
+            /** Format: int64 */
+            views: number;
+            /** Format: int64 */
+            visitors: number;
+        };
+        WebsiteAnalyticsPeriod: {
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            previousFrom: null | string;
+            /** Format: date */
+            previousTo: null | string;
+            /** Format: date */
+            to: string;
+        };
+        WebsiteAnalyticsRealtimeResponse: {
+            countries: components["schemas"]["WebsiteRealtimeCountry"][];
+            pages: components["schemas"]["WebsiteRealtimePage"][];
+            /** Format: date-time */
+            retrievedAt: string;
+            /** Format: int64 */
+            visitorsNow: number;
+            visitorsPerMinute: number[];
+        };
+        WebsiteAnalyticsResponse: {
+            channels: components["schemas"]["WebsiteAnalyticsChannel"][];
+            countries: components["schemas"]["WebsiteAnalyticsCountry"][];
+            days: components["schemas"]["WebsiteAnalyticsDay"][];
+            devices: components["schemas"]["WebsiteAnalyticsShare"][];
+            events: components["schemas"]["WebsiteAnalyticsEvent"][];
+            hasData: boolean;
+            pages: components["schemas"]["WebsiteAnalyticsPage"][];
+            period: components["schemas"]["WebsiteAnalyticsPeriod"];
+            previousTotals: null | components["schemas"]["WebsiteAnalyticsTotals"];
+            /** Format: date-time */
+            retrievedAt: string;
+            sources: components["schemas"]["WebsiteAnalyticsSource"][];
+            thresholded: boolean;
+            timeZone: null | string;
+            totals: components["schemas"]["WebsiteAnalyticsTotals"];
+            visitorTypes: components["schemas"]["WebsiteAnalyticsShare"][];
+        };
+        WebsiteAnalyticsShare: {
+            key: string;
+            /** Format: int64 */
+            sessions: number;
+            /** Format: int64 */
+            visitors: number;
+        };
+        WebsiteAnalyticsSource: {
+            campaign: string;
+            /** Format: double */
+            engagementRate: number;
+            /** Format: int64 */
+            keyEvents: number;
+            medium: string;
+            /** Format: int64 */
+            sessions: number;
+            source: string;
+            /** Format: int64 */
+            visitors: number;
+        };
+        WebsiteAnalyticsTotals: {
+            /** Format: double */
+            averageEngagementSeconds: number;
+            /** Format: int64 */
+            contactRequests: number;
+            /** Format: double */
+            engagementRate: number;
+            /** Format: int64 */
+            events: number;
+            /** Format: int64 */
+            keyEvents: number;
+            /** Format: int64 */
+            newVisitors: number;
+            /** Format: int64 */
+            sessions: number;
+            /** Format: int64 */
+            views: number;
+            /** Format: double */
+            viewsPerSession: number;
+            /** Format: int64 */
+            visitors: number;
+        };
         WebsiteCityResponse: {
             /** Format: double */
             latitude: number;
@@ -18078,6 +18295,19 @@ export interface components {
         WebsiteProjectStatus: "in_progress" | "completed" | null;
         /** @enum {unknown} */
         WebsiteProjectType: "villa" | "residential" | "hotel";
+        WebsiteRealtimeCountry: {
+            code: string;
+            name: string;
+            /** Format: int64 */
+            visitors: number;
+        };
+        WebsiteRealtimePage: {
+            title: string;
+            /** Format: int64 */
+            views: number;
+            /** Format: int64 */
+            visitors: number;
+        };
         WebsiteServiceRequest: {
             description?: string;
             title?: string;

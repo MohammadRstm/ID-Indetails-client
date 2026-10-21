@@ -243,7 +243,31 @@ export const company: Article[] = [
             only(has(P.WEBSITE_MANAGE), links(link("Open the website's projects", { website: "projects" }))),
             only(not(has(P.WEBSITE_MANAGE)), para("You can look at the Website area; changing it needs “Edit the company website”.")),
         ],
-        related: ["company-details", "website-staff"],
+        related: ["company-details", "website-staff", "website-analytics"],
+    },
+    {
+        id: "website-analytics",
+        title: "Who visits the company website",
+        category: "website",
+        who: has(P.WEBSITE_ANALYTICS_VIEW),
+        summary: "The Website area's Analytics page shows the website's visitors from Google Analytics: how many, where they come from, what they read, and the contact requests they send.",
+        ask: ["website analytics", "google analytics", "visitors", "website visitors", "traffic", "page views", "where visitors come from",
+            "contact requests", "leads", "key events", "live visitors", "who is on the website", "engagement rate"],
+        blocks: [
+            steps(
+                step("Open **Analytics** in the Website area.", "Website", "Analytics"),
+                step("Choose the period: the last 7, 28 or 90 days, or your own dates. **Compare** puts each figure beside the period of the same length before it."),
+            ),
+            list(
+                "**Visitors** are the people who used the website in the period; **sessions** are their visits, and **views** the pages they opened.",
+                "**Contact requests** are messages sent from the website's contact form. Email and phone clicks are counted under **Contact and key actions**.",
+                "**Engagement rate** is the share of visits that lasted more than 10 seconds, opened two pages or more, or led to a contact. **Average engagement time** is how long the website was in front of each visitor.",
+                "Google takes up to two days to count a day fully, so the latest days can still go up. **Live** is different: it shows the last 30 minutes, a few minutes behind, and isn't part of the figures above it.",
+                "Only visitors who accept the website's cookie question are counted, and Google never says who anyone is.",
+            ),
+            links(link("Open the website's analytics", { website: "analytics" })),
+        ],
+        related: ["company-website", "website-staff"],
     },
     {
         id: "website-staff",
@@ -256,7 +280,7 @@ export const company: Article[] = [
         blocks: [
             list(
                 "The website's staff are admins who look after the website and nothing else: they sign in straight to it, and see no projects, clients or money.",
-                "Someone in Design or Execution given “View the company website's content” or “Edit the company website” keeps their business and also gets the **Website** card on All areas.",
+                "Someone in Design or Execution given “View the company website's content”, “Edit the company website” or the website's visitor statistics keeps their business and also gets the **Website** card on All areas.",
                 "Social media will be a service of its own, the same way.",
             ),
             only(has(P.EMPLOYEE_INVITE), steps(
