@@ -18,7 +18,14 @@ import PlaceFields from "./WebsitePlaceFields";
 
 type Linked = { id: number; title: string; domainCode: string; status: WebsiteStatus; year: number };
 
-/** A website project's form, new or existing; an existing one has its gallery under it. Read-only without website:manage. */
+type Step = 1 | 2 | 3;
+const STEPS: { step: Step; label: string }[] = [{ step: 1, label: "Details" }, { step: 2, label: "Concept" }, { step: 3, label: "Gallery" }];
+
+/**
+ * A website project's form, new or existing, in three steps: its details (saved on leaving, a new one as a draft),
+ * its concept (optional, and where it is published), then its gallery alone. An existing project opens on its details
+ * and can go to any step. Read-only without website:manage.
+ */
 export default function WebsiteProjectModal({ project, canManage, onClose }: { project: WebsiteProject | null; canManage: boolean; onClose: () => void }) {
     const save = useSaveWebsiteProject();
     const remove = useDeleteWebsiteProject();
@@ -37,6 +44,7 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     const [latitude, setLatitude] = useState(p?.latitude != null ? String(p.latitude) : "");
     const [longitude, setLongitude] = useState(p?.longitude != null ? String(p.longitude) : "");
     const [description, setDescription] = useState(p?.description ?? "");
+    const [conceptDescription, setConceptDescription] = useState(p?.conceptDescription ?? "");
     // the point was picked at random in the city: shown, and kept while the city stays the same
     const [approximate, setApproximate] = useState(p?.positionApproximate ?? false);
     const [linked, setLinked] = useState<Linked | null>(p?.linkedProject ? { ...p.linkedProject, status: p.linkedProject.status ?? "in_progress" } : null);
@@ -45,6 +53,7 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     const [heroAlt, setHeroAlt] = useState(p?.heroAlt ?? "");
     const [published, setPublished] = useState(p?.published ?? false);
     const [confirming, setConfirming] = useState(false);
+    const [step, setStep] = useState<Step>(1);
     const edit = canManage;
 
     const shownStatus = status || linked?.status || null;
@@ -63,26 +72,45 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
             title: title.trim(), type, status: status || null, year: year.trim() ? Number(year) : null,
             client: client.trim() || null, city: city.trim() || null, country: country.trim() || null,
             latitude: latitude.trim() ? Number(latitude) : null, longitude: longitude.trim() ? Number(longitude) : null,
-            description: description.trim() || null, projectId: linked?.id ?? null, thumbnailFileId: thumbnail, heroFileId: hero,
+            description: description.trim() || null, conceptDescription: conceptDescription.trim() || null, projectId: linked?.id ?? null, thumbnailFileId: thumbnail, heroFileId: hero,
             heroAlt: heroAlt.trim() || null,
             published,
         };
     }
 
-    function submit() {
+    /** Saves the whole form; the project's own details stay as the API worked them out. */
+    function store(publish: boolean, concept: string, after: (result: WebsiteProject) => void) {
         if (save.isPending) return;
-        if (titleError || statusError || yearProblem || positionError || publishError) return errors.tried();
-        save.mutate({ id: p?.id ?? null, body: body() }, {
+        save.mutate({ id: p?.id ?? null, body: { ...body(), published: publish, conceptDescription: concept.trim() || null } }, {
             onSuccess: (result) => {
-                const found = !city.trim() && result.city ? `${result.city}, ${result.country} found from the coordinates` : null;
-                toast({ text: p ? "Project saved" : "Project added", sub: found ?? (result.published ? "It's on the website" : "Saved as a draft"), icon: "checkCircle" });
                 // what the API worked out shows in the form: the city found, or the point picked in the city
                 setCity(result.city ?? ""); setCountry(result.country ?? "");
                 setLatitude(result.latitude != null ? String(result.latitude) : ""); setLongitude(result.longitude != null ? String(result.longitude) : "");
                 setApproximate(result.positionApproximate);
-                // a new project stays open, so its gallery can be filled
-                if (p) onClose(); else setSaved(result);
+                setSaved(result);
+                after(result);
             },
+        });
+    }
+
+    /** Step 1 to 2: the details checked and saved (a new project as a draft), so its concept pictures can be added. */
+    function next() {
+        if (titleError || statusError || yearProblem || positionError || publishError) return errors.tried();
+        store(p ? published : false, p?.conceptDescription ?? "", (result) => {
+            const found = !city.trim() && result.city ? `${result.city}, ${result.country} found from the coordinates` : null;
+            if (found || !p) toast({ text: p ? "Details saved" : "Project added as a draft", sub: found ?? "Next, its concept", icon: "checkCircle" });
+            setStep(2);
+        });
+    }
+
+    /** Step 2 to 3: the concept (or none, when skipped) and whether it is published. */
+    function publishAndContinue(skipConcept: boolean) {
+        if (publishError) return errors.tried();
+        const concept = skipConcept ? p?.conceptDescription ?? "" : conceptDescription;
+        if (skipConcept) setConceptDescription(concept);
+        store(published, concept, (result) => {
+            toast({ text: result.published ? "It's on the website" : "Saved as a draft", sub: "Last, its gallery", icon: "checkCircle" });
+            setStep(3);
         });
     }
 
@@ -110,19 +138,49 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
                     <div className="grow">
                         {save.error != null ? <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span>
                             : remove.error != null ? <span className="err"><Icon name="alert" />{errorMessage(remove.error)}</span>
-                                : p && confirming ? (
+                                : step === 1 && p && confirming ? (
                                     <span className="row" style={{ gap: 6 }}>
                                         <span className="muted">Delete it from the website for good?</span>
                                         <button className="btn btn-sm btn-danger" disabled={remove.isPending}
                                             onClick={() => remove.mutate(p.id, { onSuccess: () => { toast({ text: "Project deleted", sub: p.title, icon: "trash" }); onClose(); } })}>Delete</button>
                                         <button className="btn btn-sm" onClick={() => setConfirming(false)}>Keep</button>
                                     </span>
-                                ) : p ? <button className="btn btn-sm btn-quiet" onClick={() => setConfirming(true)}><Icon name="trash" />Delete</button> : null}
+                                ) : step === 1 && p ? <button className="btn btn-sm btn-quiet" onClick={() => setConfirming(true)}><Icon name="trash" />Delete</button> : null}
                     </div>
-                    <button className="btn" onClick={onClose}>{p ? "Close" : "Cancel"}</button>
-                    <button className="btn btn-primary" disabled={save.isPending} onClick={submit}>{p ? "Save" : "Add project"}</button>
+                    {step === 1 && (
+                        <>
+                            <button className="btn" onClick={onClose}>Cancel</button>
+                            <button className="btn btn-primary" disabled={save.isPending} onClick={next}>{save.isPending ? "Saving…" : p ? "Save and next" : "Add and next"}</button>
+                        </>
+                    )}
+                    {step === 2 && (
+                        <>
+                            <button className="btn" onClick={() => setStep(1)}>Back</button>
+                            <button className="btn" disabled={save.isPending} onClick={() => publishAndContinue(true)}>Skip the concept</button>
+                            <button className="btn btn-primary" disabled={save.isPending} onClick={() => publishAndContinue(false)}>
+                                {save.isPending ? "Saving…" : published ? "Publish and next" : "Save draft and next"}
+                            </button>
+                        </>
+                    )}
+                    {step === 3 && (
+                        <>
+                            <button className="btn" onClick={() => setStep(2)}>Back</button>
+                            <button className="btn btn-primary" onClick={onClose}>Done</button>
+                        </>
+                    )}
                 </>
             ) : <button className="btn" onClick={onClose}>Close</button>}>
+            <div className="row" role="tablist" aria-label="Steps" style={{ gap: 6, marginBottom: 14 }}>
+                {STEPS.map(({ step: s, label }) => (
+                    <button key={s} type="button" role="tab" aria-selected={step === s} className={step === s ? "btn btn-sm btn-primary" : "btn btn-sm btn-quiet"}
+                        // a new project reaches the concept and gallery once its details are saved
+                        disabled={!p && s !== 1} onClick={() => setStep(s)}>
+                        {s}. {label}{s === 2 && <span className="muted" style={{ fontWeight: 400 }}> · optional</span>}
+                    </button>
+                ))}
+            </div>
+
+            {step === 1 && (<>
             {edit && <LinkPicker linked={linked} onLink={link} onUnlink={() => {
                 // the values it followed become the project's own
                 if (linked) { setStatus(status || linked.status); setYear(year || String(linked.year)); }
@@ -186,14 +244,25 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
             <Field id="wp-hero-alt" label="Page picture description" hint="Read out to people who can't see it, e.g. “The villa at dusk”.">
                 <input id="wp-hero-alt" className="input" value={heroAlt} disabled={!edit} maxLength={200} onChange={(e) => setHeroAlt(e.target.value)} />
             </Field>
+            {p?.published && <FieldError message={errors.show("published", publishError)} />}
+            {!p && edit && <div className="hint mt">Saving adds it as a draft; its concept, its gallery and publishing it come next.</div>}
+            </>)}
 
-            <SwitchRow title="Published" style={{ marginTop: 14 }}
-                description={published ? "It's on the website: the globe, the projects page and its own page." : "A draft: only people on this page see it."}
-                control={<Toggle checked={published} disabled={!edit} label="Published" onChange={(on) => { setPublished(on); errors.touch("published")(); }} />} />
-            <FieldError message={errors.show("published", publishError)} />
+            {step === 2 && p && (<>
+                <div className="hint">A row on the project's own page, under its description: up to 5 concept pictures beside this text. It shows only when there is one or the other, so it can be skipped.</div>
+                <Field id="wp-concept" label="Concept description">
+                    <AutoGrowTextarea id="wp-concept" className="input" minRows={3} maxRows={25} maxLength={4000} value={conceptDescription} disabled={!edit}
+                        onChange={(e) => setConceptDescription(e.target.value)} />
+                </Field>
+                <Gallery project={p} canManage={edit} concept />
 
-            {p && <Gallery project={p} canManage={edit} />}
-            {!p && edit && <div className="hint mt">Gallery pictures are added once the project is saved.</div>}
+                <SwitchRow title="Published" style={{ marginTop: 18 }}
+                    description={published ? "It's on the website: the globe, the projects page and its own page." : "A draft: only people on this page see it."}
+                    control={<Toggle checked={published} disabled={!edit} label="Published" onChange={(on) => { setPublished(on); errors.touch("published")(); }} />} />
+                <FieldError message={errors.show("published", publishError)} />
+            </>)}
+
+            {step === 3 && p && <Gallery project={p} canManage={edit} />}
         </Modal>
     );
 }
@@ -238,21 +307,30 @@ function LinkPicker({ linked, onLink, onUnlink }: { linked: Linked | null; onLin
     );
 }
 
-/** The project's gallery: pictures added, described, ordered and removed straight away. */
-function Gallery({ project, canManage }: { project: WebsiteProject; canManage: boolean }) {
+/** At most this many concept pictures, as the API keeps. */
+const MAX_CONCEPT = 5;
+
+/**
+ * The project's gallery, or its concept pictures (`concept`): pictures added, described, ordered and removed straight
+ * away. The concept pictures are at most five, and the first is the main one.
+ */
+function Gallery({ project, canManage, concept = false }: { project: WebsiteProject; canManage: boolean; concept?: boolean }) {
     const gallery = useGallery(project.id);
     const input = useRef<HTMLInputElement>(null);
     const [adding, setAdding] = useState(false);
     const [failed, setFailed] = useState<string>();
-    const ids = project.gallery.map((i) => i.id);
+    const images = concept ? project.conceptImages : project.gallery;
+    const ids = images.map((i) => i.id);
+    const room = concept ? MAX_CONCEPT - images.length : Infinity;
+    const noun = concept ? "concept picture" : "picture";
     const error = failed ?? (gallery.order.error ?? gallery.remove.error ?? gallery.edit.error ? errorMessage(gallery.order.error ?? gallery.remove.error ?? gallery.edit.error) : undefined);
 
     async function add(files: File[]) {
         if (!files.length) return;
         setAdding(true);
-        setFailed(undefined);
+        setFailed(files.length > room ? `A project has at most ${MAX_CONCEPT} concept pictures: only the first ${room} were added.` : undefined);
         try {
-            for (const fileId of await uploadPictures(files)) await gallery.add.mutateAsync({ fileId, alt: project.title });
+            for (const fileId of await uploadPictures(files.slice(0, room))) await gallery.add.mutateAsync({ fileId, alt: project.title, concept });
         } catch (e) {
             setFailed(errorMessage(e));
         } finally {
@@ -263,19 +341,26 @@ function Gallery({ project, canManage }: { project: WebsiteProject; canManage: b
     return (
         <div className="mt">
             <div className="row" style={{ justifyContent: "space-between" }}>
-                <div style={{ fontWeight: 600 }}>Gallery <span className="muted num">{project.gallery.length}</span></div>
+                <div style={{ fontWeight: 600 }}>{concept ? "Concept pictures" : "Gallery"} <span className="muted num">{concept ? `${images.length} / ${MAX_CONCEPT}` : images.length}</span></div>
                 {canManage && (
                     <>
-                        <button type="button" className="btn btn-sm" disabled={adding} onClick={() => input.current?.click()}><Icon name="plus" />{adding ? "Adding…" : "Add pictures"}</button>
-                        <input ref={input} type="file" accept={PICTURE_TYPES} multiple hidden aria-label="Gallery pictures"
+                        <button type="button" className="btn btn-sm" disabled={adding || room <= 0} onClick={() => input.current?.click()}>
+                            <Icon name="plus" />{adding ? "Adding…" : concept ? "Add concept pictures" : "Add pictures"}
+                        </button>
+                        <input ref={input} type="file" accept={PICTURE_TYPES} multiple hidden aria-label={concept ? "Concept pictures" : "Gallery pictures"}
                             onChange={(e) => { const files = [...(e.target.files ?? [])]; e.target.value = ""; void add(files); }} />
                     </>
                 )}
             </div>
-            {project.gallery.length === 0 && <div className="muted mt-s">No gallery pictures yet. They show further down the project's own page; wide pictures (3:2) look best.</div>}
+            {images.length === 0 && (
+                <div className="muted mt-s">
+                    {concept ? "No concept pictures yet. The first one is the main one, shown biggest."
+                        : "No gallery pictures yet. They show further down the project's own page; wide pictures (3:2) look best."}
+                </div>
+            )}
             <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-                {project.gallery.map((image, index) => (
-                    <GalleryRow key={image.id} image={image} index={index} count={ids.length} canManage={canManage}
+                {images.map((image, index) => (
+                    <GalleryRow key={image.id} image={image} index={index} count={ids.length} canManage={canManage} noun={noun}
                         onMove={(by) => gallery.order.mutate(moved(ids, image.id, by))}
                         onSave={(alt) => gallery.edit.mutate({ imageId: image.id, body: { alt } })}
                         onRemove={() => gallery.remove.mutate(image.id)} busy={gallery.order.isPending || gallery.remove.isPending} />
@@ -288,6 +373,8 @@ function Gallery({ project, canManage }: { project: WebsiteProject; canManage: b
 
 type GalleryRowProps = {
     image: WebsiteProject["gallery"][number];
+    /** "picture" or "concept picture", for the controls' names. */
+    noun: string;
     index: number;
     count: number;
     canManage: boolean;
@@ -297,7 +384,7 @@ type GalleryRowProps = {
     onRemove: () => void;
 };
 
-function GalleryRow({ image, index, count, canManage, busy, onMove, onSave, onRemove }: GalleryRowProps) {
+function GalleryRow({ image, noun, index, count, canManage, busy, onMove, onSave, onRemove }: GalleryRowProps) {
     const [alt, setAlt] = useState(image.alt);
     const errors = useFormErrors();
     const altError = !alt.trim() && "Describe the picture.";
@@ -307,7 +394,7 @@ function GalleryRow({ image, index, count, canManage, busy, onMove, onSave, onRe
         <div className="row" style={{ gap: 10, alignItems: "flex-start" }}>
             <Thumb fileId={image.fileId} width={96} ratio={3 / 2} alt={image.alt} />
             <div className="grow">
-                <input className="input" aria-label={`Description of picture ${index + 1}`} value={alt} maxLength={200} disabled={!canManage}
+                <input className="input" aria-label={`Description of ${noun} ${index + 1}`} value={alt} maxLength={200} disabled={!canManage}
                     onChange={(e) => setAlt(e.target.value)} onBlur={errors.touch("alt")} />
                 <FieldError message={errors.show("alt", altError)} />
                 {canManage && changed && (
@@ -319,9 +406,9 @@ function GalleryRow({ image, index, count, canManage, busy, onMove, onSave, onRe
             </div>
             {canManage && (
                 <div className="row" style={{ gap: 4 }}>
-                    <button type="button" className="icon-btn" aria-label={`Move picture ${index + 1} up`} disabled={busy || index === 0} onClick={() => onMove(-1)}><Icon name="arrowUp" /></button>
-                    <button type="button" className="icon-btn" aria-label={`Move picture ${index + 1} down`} disabled={busy || index === count - 1} onClick={() => onMove(1)}><Icon name="arrowDown" /></button>
-                    <button type="button" className="icon-btn" aria-label={`Remove picture ${index + 1}`} disabled={busy} onClick={onRemove}><Icon name="trash" /></button>
+                    <button type="button" className="icon-btn" aria-label={`Move ${noun} ${index + 1} up`} disabled={busy || index === 0} onClick={() => onMove(-1)}><Icon name="arrowUp" /></button>
+                    <button type="button" className="icon-btn" aria-label={`Move ${noun} ${index + 1} down`} disabled={busy || index === count - 1} onClick={() => onMove(1)}><Icon name="arrowDown" /></button>
+                    <button type="button" className="icon-btn" aria-label={`Remove ${noun} ${index + 1}`} disabled={busy} onClick={onRemove}><Icon name="trash" /></button>
                 </div>
             )}
         </div>

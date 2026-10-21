@@ -17112,6 +17112,8 @@ export interface components {
         };
         PublicWebsiteProject: {
             client: string;
+            conceptDescription: null | string;
+            conceptImages: components["schemas"]["PublicImage"][];
             /** Format: int32 */
             conveyorOrder: null | number;
             description: string;
@@ -18256,6 +18258,7 @@ export interface components {
         };
         WebsiteImageRequest: {
             alt?: string;
+            concept?: boolean;
             /** Format: int64 */
             fileId?: number;
         };
@@ -18318,6 +18321,7 @@ export interface components {
         WebsiteProjectRequest: {
             city?: null | string;
             client?: null | string;
+            conceptDescription?: null | string;
             country?: null | string;
             description?: null | string;
             heroAlt?: null | string;
@@ -18341,6 +18345,8 @@ export interface components {
         WebsiteProjectResponse: {
             city: null | string;
             client: null | string;
+            conceptDescription: null | string;
+            conceptImages: components["schemas"]["WebsiteImageResponse"][];
             /** Format: int32 */
             conveyorOrder: null | number;
             country: null | string;
