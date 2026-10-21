@@ -155,6 +155,19 @@ export function useSetFavicon() {
     });
 }
 
+export type WatermarkCheck = Schemas["WatermarkCheckResponse"];
+
+/** Whether a picture found anywhere carries the company's invisible watermark, and which website picture it is (website:manage). */
+export function useCheckWatermark() {
+    return useMutation({
+        mutationFn: async (file: File) => {
+            const form = new FormData();
+            form.append("file", file);
+            return (await http.post<WatermarkCheck>("/website/watermark-check", form)).data;
+        },
+    });
+}
+
 /** Puts the website under construction, or brings it back (website:manage). */
 export function useSetUnderConstruction() {
     const queryClient = useQueryClient();

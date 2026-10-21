@@ -15,7 +15,7 @@ import { Link } from "react-router";
 import Modal from "@/shared/components/Overlays/Modal";
 import { fmtDateY } from "@/shared/format/time";
 import {
-    moved, PICTURE_TYPES, uploadPictures, useSetContactEmail, useSetFavicon, useSetUnderConstruction, useWebsiteContent, useWebsiteList, type ListKind,
+    moved, PICTURE_TYPES, uploadPictures, useCheckWatermark, useSetContactEmail, useSetFavicon, useSetUnderConstruction, useWebsiteContent, useWebsiteList, type ListKind,
     type WebsiteContent,
 } from "./websiteApi";
 import { linkError, placeError, splitPosition } from "./websiteRules";
@@ -311,7 +311,7 @@ function ContactEmail({ content }: { content: WebsiteContent }) {
 
 /** Whether the website is live or under construction, and its favicon: a small square picture in the browser tab. */
 export function SiteTab() {
-    return <WithContent>{(c) => <><UnderConstruction content={c} /><Favicon content={c} /></>}</WithContent>;
+    return <WithContent>{(c) => <><UnderConstruction content={c} /><Favicon content={c} />{c.canManage && <WatermarkCheckPanel />}</>}</WithContent>;
 }
 
 /**
@@ -366,6 +366,42 @@ function UnderConstruction({ content }: { content: WebsiteContent }) {
                     </p>
                 </Modal>
             )}
+        </Panel>
+    );
+}
+
+/**
+ * Whether a picture found anywhere (a download, a screenshot) is one of the website's: they carry an invisible mark
+ * that says which picture they are.
+ */
+function WatermarkCheckPanel() {
+    const check = useCheckWatermark();
+    const input = useRef<HTMLInputElement>(null);
+    const result = check.data;
+    return (
+        <Panel title="Check a picture">
+            <SwitchRow title="Is it ours?"
+                description="The website's pictures carry an invisible mark. Choose a picture found elsewhere (a download or a screenshot) to see whether it is one of them."
+                control={
+                    <>
+                        <button className="btn btn-sm" disabled={check.isPending} onClick={() => input.current?.click()}>
+                            <Icon name="search" />{check.isPending ? "Checking…" : "Choose a picture"}
+                        </button>
+                        <input ref={input} type="file" accept={PICTURE_TYPES} hidden aria-label="Picture to check"
+                            onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) check.mutate(f); }} />
+                    </>
+                } />
+            {check.error ? <FieldError message={errorMessage(check.error)} />
+                : result && (
+                    <div className={result.found ? "banner" : "banner hold"} role="status" style={{ marginTop: 8 }}>
+                        <Icon name={result.found ? "checkCircle" : "info"} />
+                        <div className="grow">
+                            {result.found
+                                ? <>It's ours: {result.projectTitle ? <>a picture of <b>{result.projectTitle}</b></> : "one of the website's pictures"} (picture {result.fileId}). The mark reads clearly in {Math.round(result.confidence * 100)}% of the picture.</>
+                                : "No mark found: it isn't one of the website's pictures, or it was cropped or edited too much to tell."}
+                        </div>
+                    </div>
+                )}
         </Panel>
     );
 }
