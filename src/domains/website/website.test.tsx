@@ -15,7 +15,7 @@ function project(id: number, title: string, change: Partial<WebsiteProject> = {}
         id, slug: slugOf(title), title, type: "villa", status: "completed", year: 2022, shownStatus: "completed", shownYear: 2022,
         client: "The Rizk family", city: "Beirut", country: "Lebanon", countryCode: "LB", latitude: 33.8938, longitude: 35.5018, positionApproximate: false, description: "A villa.",
         thumbnailFileId: null, heroFileId: null, heroAlt: null, linkedProject: null, published: true, conveyorOrder: null,
-        gallery: [], missingToPublish: [], createdAt: "2026-10-01T09:00:00Z", updatedAt: null,
+        gallery: [], conceptDescription: null, conceptImages: [], missingToPublish: [], createdAt: "2026-10-01T09:00:00Z", updatedAt: null,
         ...change,
     };
 }
@@ -96,7 +96,9 @@ describe("the Website page", () => {
                 return HttpResponse.json(project(9, "Saifi Loft", { published: false }), { status: 201 });
             }));
         await userEvent.click(await screen.findByRole("button", { name: /New project/ }));
-        await userEvent.click(screen.getByRole("button", { name: "Add project" }));
+        // the concept and gallery wait for the details to be saved
+        expect(screen.getByRole("tab", { name: /2\. Concept/ })).toBeDisabled();
+        await userEvent.click(screen.getByRole("button", { name: "Add and next" }));
         expect(await screen.findByText("Give the project a title.")).toBeInTheDocument();
         expect(screen.getByText("Choose a status, or link a system project to follow its status.")).toBeInTheDocument();
         expect(sent).toHaveLength(0);
@@ -115,15 +117,15 @@ describe("the Website page", () => {
         await userEvent.paste("33.8955, 35.5125");
         expect(screen.getByLabelText("Longitude")).toHaveValue("35.5125");
 
-        await userEvent.click(screen.getByRole("switch", { name: "Published" }));
-        expect(await screen.findByText(/To publish it, add a description, a card picture, a page picture\./)).toBeInTheDocument();
-        await userEvent.click(screen.getByRole("switch", { name: "Published" }));
-
-        await userEvent.click(screen.getByRole("button", { name: "Add project" }));
+        await userEvent.click(screen.getByRole("button", { name: "Add and next" }));
         await waitFor(() => expect(sent).toHaveLength(1));
         expect(sent[0]).toMatchObject({ title: "Saifi Loft", type: "villa", status: "completed", year: 2021, latitude: 33.8955, longitude: 35.5125, projectId: null, published: false });
-        // a new project stays open for its gallery
-        expect(await screen.findByRole("button", { name: /Add pictures/ })).toBeInTheDocument();
+
+        // a draft now: its concept is next, and publishing it is here
+        expect(await screen.findByLabelText("Concept description")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /Add concept pictures/ })).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("switch", { name: "Published" }));
+        expect(await screen.findByText(/To publish it, add a description, a card picture, a page picture\./)).toBeInTheDocument();
     });
 
     it("links a system project: the form fills in, and its status and year follow it", async () => {
@@ -144,7 +146,7 @@ describe("the Website page", () => {
         expect(screen.getByText("Follows the project: 2027")).toBeInTheDocument();
         expect(screen.getByLabelText(/^Status/)).toHaveTextContent("Follow the project (In progress)");
 
-        await userEvent.click(screen.getByRole("button", { name: "Add project" }));
+        await userEvent.click(screen.getByRole("button", { name: "Add and next" }));
         await waitFor(() => expect(sent).toHaveLength(1));
         expect(sent[0]).toMatchObject({ projectId: 40, status: null, year: null, description: "Three floors." });
     });
@@ -305,9 +307,51 @@ describe("places on the Website page", () => {
         await userEvent.click(screen.getByLabelText("Latitude"));
         await userEvent.paste("33.8970, 35.5110");
         expect(screen.queryByText(/A point picked near/)).not.toBeInTheDocument();
-        await userEvent.click(screen.getByRole("button", { name: "Save" }));
+        await userEvent.click(screen.getByRole("button", { name: "Save and next" }));
         await waitFor(() => expect(sent).toHaveLength(1));
         expect(sent[0]).toMatchObject({ latitude: 33.897, longitude: 35.511, city: "Beirut", country: "Lebanon" });
+    });
+
+    it("walks an existing project through its concept, where publishing is decided, then shows its gallery alone", async () => {
+        const sent: { conceptDescription: string | null; published: boolean }[] = [];
+        renderApp("/website/projects", rana, ...handlers(),
+            http.put("/api/website/projects/1", async ({ request }) => {
+                const body = (await request.json()) as { conceptDescription: string | null; published: boolean };
+                sent.push(body);
+                return HttpResponse.json({ ...villa, conceptDescription: body.conceptDescription, published: body.published });
+            }));
+        await userEvent.click(await screen.findByText("Villa Rizk", { selector: "tr div" }));
+        // an existing project goes to any step
+        await userEvent.click(await screen.findByRole("tab", { name: /2\. Concept/ }));
+        await userEvent.type(screen.getByLabelText("Concept description"), "Light first.");
+        expect(screen.getByText(/No concept pictures yet/)).toBeInTheDocument();
+        // publishing is decided here: this one goes back to a draft
+        await userEvent.click(screen.getByRole("switch", { name: "Published" }));
+        await userEvent.click(screen.getByRole("button", { name: "Save draft and next" }));
+        await waitFor(() => expect(sent).toEqual([expect.objectContaining({ conceptDescription: "Light first.", published: false })]));
+
+        // the gallery, and nothing else
+        expect(await screen.findByLabelText("Gallery pictures")).toBeInTheDocument();
+        expect(screen.queryByLabelText(/^Title/)).not.toBeInTheDocument();
+        expect(screen.queryByLabelText("Concept description")).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Done" })).toBeInTheDocument();
+    });
+
+    it("skips the concept, keeping what it had", async () => {
+        const sent: { conceptDescription: string | null }[] = [];
+        renderApp("/website/projects", rana, ...handlers(list(true, [{ ...villa, conceptDescription: "Kept." }, hotel, draft])),
+            http.put("/api/website/projects/1", async ({ request }) => {
+                const body = (await request.json()) as { conceptDescription: string | null };
+                sent.push(body);
+                return HttpResponse.json({ ...villa, conceptDescription: body.conceptDescription });
+            }));
+        await userEvent.click(await screen.findByText("Villa Rizk", { selector: "tr div" }));
+        await userEvent.click(await screen.findByRole("tab", { name: /2\. Concept/ }));
+        await userEvent.type(screen.getByLabelText("Concept description"), " Changed my mind.");
+        // a draft, so nothing is missing to publish
+        await userEvent.click(screen.getByRole("switch", { name: "Published" }));
+        await userEvent.click(screen.getByRole("button", { name: "Skip the concept" }));
+        await waitFor(() => expect(sent).toEqual([expect.objectContaining({ conceptDescription: "Kept." })]));
     });
 });
 
@@ -328,9 +372,10 @@ describe("a project's gallery", () => {
                 return HttpResponse.json({ ...villa, gallery });
             }));
         await userEvent.click(await screen.findByText("Villa Rizk", { selector: "tr div" }));
+        await userEvent.click(await screen.findByRole("tab", { name: /3\. Gallery/ }));
         expect(await screen.findByText(/No gallery pictures yet/)).toBeInTheDocument();
         await userEvent.upload(screen.getByLabelText("Gallery pictures"), new File(["x"], "pool.jpg", { type: "image/jpeg" }));
-        await waitFor(() => expect(added).toEqual([{ fileId: 50, alt: "Villa Rizk" }]));
+        await waitFor(() => expect(added).toEqual([{ fileId: 50, alt: "Villa Rizk", concept: false }]));
         expect(await screen.findByLabelText("Description of picture 1")).toHaveValue("Villa Rizk");
         expect(screen.queryByText(/No gallery pictures yet/)).not.toBeInTheDocument();
     });

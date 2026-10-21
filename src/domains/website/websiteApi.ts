@@ -108,7 +108,7 @@ export function useSetConveyor() {
 }
 
 /**
- * A project's gallery: add a picture, describe it, order or remove them. Each answers with the whole project, which
+ * A project's gallery or concept pictures (`concept` when added): add a picture, describe it, order or remove them. Each answers with the whole project, which
  * replaces it in the list straight away, so the open form shows the change.
  */
 export function useGallery(projectId: number) {
