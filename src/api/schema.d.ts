@@ -12302,6 +12302,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/website/places/cities-elsewhere": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    country?: string;
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteCityElsewhereResponse"][];
+                        "text/json": components["schemas"]["WebsiteCityElsewhereResponse"][];
+                        "text/plain": components["schemas"]["WebsiteCityElsewhereResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/website/places/countries": {
         parameters: {
             query?: never;
@@ -18171,6 +18211,11 @@ export interface components {
             viewsPerSession: number;
             /** Format: int64 */
             visitors: number;
+        };
+        WebsiteCityElsewhereResponse: {
+            countryCode: string;
+            countryName: string;
+            name: string;
         };
         WebsiteCityResponse: {
             /** Format: double */

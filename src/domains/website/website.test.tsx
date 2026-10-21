@@ -45,6 +45,10 @@ const handlers = (projects = list(), c = content()) => [
         const search = (q.get("search") ?? "").toLowerCase();
         return HttpResponse.json(all.filter((c) => c.name.toLowerCase().includes(search)));
     }),
+    http.get("/api/website/places/cities-elsewhere", ({ request }) => {
+        const search = (new URL(request.url).searchParams.get("search") ?? "").toLowerCase();
+        return HttpResponse.json("paris".startsWith(search) ? [{ name: "Paris", countryCode: "FR", countryName: "France" }] : []);
+    }),
 ];
 
 describe("the Website page", () => {
@@ -333,6 +337,17 @@ describe("a project's gallery", () => {
 });
 
 describe("the city picker", () => {
+    it("says which country has a city the chosen one doesn't, and switches to it", async () => {
+        renderApp("/website/locations", rana, ...handlers());
+        await userEvent.click(await screen.findByRole("button", { name: /Add office/ }));
+        await userEvent.click(screen.getByLabelText("Country"));
+        await userEvent.click(await screen.findByRole("option", { name: "Lebanon" }));
+        await userEvent.type(screen.getByLabelText("City"), "Paris");
+        await userEvent.click(await screen.findByRole("button", { name: /Paris is in France/ }));
+        expect(screen.getByLabelText("Country")).toHaveTextContent("France");
+        expect(screen.getByLabelText("City")).toHaveValue("Paris");
+    });
+
     it("never keeps a city typed but not picked", async () => {
         renderApp("/website/locations", rana, ...handlers());
         await userEvent.click(await screen.findByRole("button", { name: /Add office/ }));

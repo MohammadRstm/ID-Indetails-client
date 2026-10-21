@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import Field, { FieldError } from "@/shared/components/Forms/Field";
@@ -173,7 +174,7 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
                 </Field>
             </div>
             <Field id="wp-description" label="Description">
-                <textarea id="wp-description" className="input" rows={4} maxLength={4000} value={description} disabled={!edit} onChange={(e) => setDescription(e.target.value)} />
+                <AutoGrowTextarea id="wp-description" className="input" minRows={4} maxRows={25} maxLength={4000} value={description} disabled={!edit} onChange={(e) => setDescription(e.target.value)} />
             </Field>
 
             <div className="grid g-2 mt">
