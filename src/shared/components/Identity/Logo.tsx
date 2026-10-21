@@ -1,6 +1,7 @@
+import { COMPANY_MARK, COMPANY_MARK_BOX } from "./companyMark";
 import { useBranding } from "./useBranding";
 
-/** The company logo when one is uploaded, otherwise the ID InDetails mark. */
+/** The company logo when one is uploaded, otherwise the company's mark on a tile, as on the favicon. */
 export default function Logo({ size = 27 }: { size?: number }) {
     const branding = useBranding();
     if (branding.data?.hasLogo) {
@@ -19,9 +20,11 @@ export default function Logo({ size = 27 }: { size?: number }) {
 
     return (
         <svg className="logo-mark" viewBox="0 0 28 28" width={size} height={size} aria-hidden="true">
-            <rect x="0.6" y="0.6" width="26.8" height="26.8" rx="8" fill="var(--accent)" />
-            <circle cx="14" cy="14" r="7.6" fill="none" stroke="var(--on-accent)" strokeWidth="1.7" opacity="0.55" />
-            <path d="M14 8.6V14h5.2" fill="none" stroke="var(--on-accent)" strokeWidth="2" strokeLinecap="round" />
+            {/* black on white in light mode, white on black in dark: the logo sheet's two ways */}
+            <rect x="0.6" y="0.6" width="26.8" height="26.8" rx="8" fill="var(--ink)" />
+            <svg x="7.5" y="2.6" width="13" height="22.8" viewBox={COMPANY_MARK_BOX}>
+                <path fill="var(--surface)" d={COMPANY_MARK} />
+            </svg>
         </svg>
     );
 }
