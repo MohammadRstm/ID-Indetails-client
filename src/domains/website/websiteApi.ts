@@ -43,6 +43,7 @@ export function useLinkCandidates(search: string, enabled: boolean) {
 
 export type WebsiteCountry = Schemas["WebsiteCountryResponse"];
 export type WebsiteCity = Schemas["WebsiteCityResponse"];
+export type WebsiteCityElsewhere = Schemas["WebsiteCityElsewhereResponse"];
 
 /** The countries a place is chosen from; they never change while the page is open. */
 export function useCountries() {
@@ -61,6 +62,16 @@ export function useCities(countryCode: string | undefined, search: string, enabl
         enabled: enabled && !!countryCode,
         staleTime: Infinity,
         placeholderData: keepPreviousData,
+    });
+}
+
+/** Cities of that name in other countries, for one the chosen country doesn't have (three letters typed at least). */
+export function useCitiesElsewhere(countryCode: string | undefined, search: string, enabled: boolean) {
+    return useQuery({
+        queryKey: ["website", "places", "elsewhere", countryCode, search],
+        queryFn: async () => (await http.get<WebsiteCityElsewhere[]>("/website/places/cities-elsewhere", { params: { country: countryCode, search } })).data,
+        enabled: enabled && !!countryCode && search.length >= 3,
+        staleTime: Infinity,
     });
 }
 
@@ -97,7 +108,7 @@ export function useSetConveyor() {
 }
 
 /**
- * A project's gallery: add a picture, describe it, order or remove them. Each answers with the whole project, which
+ * A project's gallery or concept pictures (`concept` when added): add a picture, describe it, order or remove them. Each answers with the whole project, which
  * replaces it in the list straight away, so the open form shows the change.
  */
 export function useGallery(projectId: number) {

@@ -12300,6 +12300,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/website/places/cities-elsewhere": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    country?: string;
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebsiteCityElsewhereResponse"][];
+                        "text/json": components["schemas"]["WebsiteCityElsewhereResponse"][];
+                        "text/plain": components["schemas"]["WebsiteCityElsewhereResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/website/places/countries": {
         parameters: {
             query?: never;
@@ -17113,6 +17153,8 @@ export interface components {
         };
         PublicWebsiteProject: {
             client: string;
+            conceptDescription: null | string;
+            conceptImages: components["schemas"]["PublicImage"][];
             /** Format: int32 */
             conveyorOrder: null | number;
             description: string;
@@ -18221,6 +18263,11 @@ export interface components {
             /** Format: int64 */
             visitors: number;
         };
+        WebsiteCityElsewhereResponse: {
+            countryCode: string;
+            countryName: string;
+            name: string;
+        };
         WebsiteCityResponse: {
             /** Format: double */
             latitude: number;
@@ -18260,6 +18307,7 @@ export interface components {
         };
         WebsiteImageRequest: {
             alt?: string;
+            concept?: boolean;
             /** Format: int64 */
             fileId?: number;
         };
@@ -18322,6 +18370,7 @@ export interface components {
         WebsiteProjectRequest: {
             city?: null | string;
             client?: null | string;
+            conceptDescription?: null | string;
             country?: null | string;
             description?: null | string;
             heroAlt?: null | string;
@@ -18345,6 +18394,8 @@ export interface components {
         WebsiteProjectResponse: {
             city: null | string;
             client: null | string;
+            conceptDescription: null | string;
+            conceptImages: components["schemas"]["WebsiteImageResponse"][];
             /** Format: int32 */
             conveyorOrder: null | number;
             country: null | string;
