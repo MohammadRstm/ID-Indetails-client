@@ -695,3 +695,9 @@ button.pc-comments { border: 0; cursor: pointer; }
 /* A text box that grows as it is typed in (AutoGrowTextarea): only down, never wider than its column, long words wrapped */
 .autogrow { display: block; width: 100%; max-width: 100%; height: auto; padding-top: 8px; padding-bottom: 8px; line-height: 1.5;
   resize: none; overflow-wrap: anywhere; }
+
+/* A list reordered by dragging (useDragOrder): grabbed anywhere but its controls, and the place it would land marked. */
+.drag-item { cursor: grab; }
+.drag-item[data-dragging] { opacity: .45; }
+.drag-item[data-drop="before"] { box-shadow: inset 0 2px 0 var(--accent); }
+.drag-item[data-drop="after"] { box-shadow: inset 0 -2px 0 var(--accent); }
