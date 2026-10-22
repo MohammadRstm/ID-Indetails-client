@@ -59,7 +59,8 @@ are part of the same app and need nothing more from nginx.
 
   The app turns zod's code generation off (`src/main.tsx`), so the CSP needs no `unsafe-eval`.
 - **WebSockets** for `/hubs`, kept open for up to an hour of quiet. Uploads are allowed up to 101 MB, matching the
-  API's limit.
+  API's limit. A picture checked for the website's watermark (`/api/website/watermark-check`) is sent as it is, up to
+  16 MB, the API's limit there. Any other API request is refused over 1 MB.
 - **Logs** go to stdout **without query strings or referrers**. The live connection sends the access token as
   `?access_token=`, and sign-up and reset links carry their token in the page's query string. Configure the TLS
   proxy's logs the same way.

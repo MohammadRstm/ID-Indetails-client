@@ -142,8 +142,17 @@ export const dismissPeek = () => set({ peek: null });
 /** How loudly the blob talks at `now`, read by its animation each frame: the voice speaking, or text arriving. */
 export const voiceAt = (now: number) => (now < speech.until ? speech.level : now < state.talkingUntil ? state.voice : 0);
 
+/*
+ * Which person's Proton this is: it moves on whenever the session is reset (sign-out, or another account signing in
+ * in another tab). An answer that arrives for an earlier one is dropped: it belongs to the person who asked.
+ */
+let session = 0;
+
+export const protonSession = () => session;
+
 /** The chat goes with the person. */
 export function resetProton() {
+    session += 1;
     state = { ...initial };
     setAssistantOpen(false);
     listeners.forEach((l) => l());

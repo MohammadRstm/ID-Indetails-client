@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, describe, expect, it } from "vitest";
 import { resetSessionState } from "@/app/session/sessionReset";
-import { resetProton } from "./protonStore";
+import { currentChat, resetProton } from "./protonStore";
 import { liveReply, sseError, sseReply } from "./protonTesting";
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
@@ -452,6 +452,26 @@ describe("Proton", () => {
         expect(within(panel).queryByText("This month,")).not.toBeInTheDocument();
         expect(within(panel).getByRole("button", { name: "Send" })).toBeInTheDocument();
         expect(panel.querySelector(".proton-turn.error")).toBeNull();
+    });
+
+    it("drop an answer still coming when the person signs out, so it never reaches whoever signs in next", async () => {
+        const live = liveReply();
+        const { handlers } = protonHandlers([]);
+        renderApp("/design/help", personas.designAdmin, http.post("/api/proton/messages/stream", () => live.response()), ...handlers);
+
+        const { panel } = await openAndAsk("Compare everyone's hours this month");
+        live.send("delta", { trip: 1, text: "Comparing… " });
+        await within(panel).findByText("Comparing…");
+
+        // the person signs out (or another account signs in in another tab) while the answer is still coming
+        resetSessionState();
+        live.finish({ ...reply("Rana logged 162 hours, Karim 98."), uiCommands: [{ type: "open_page", label: "Reports", page: "reports" }] });
+
+        // nothing of it lands in the next person's chat: not the answer, not even a note that it stopped
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        expect(currentChat().turns).toEqual([]);
+        expect(JSON.stringify(sessionStorage)).not.toContain("162 hours");
+        expect(screen.queryByText("Rana logged 162 hours, Karim 98.")).not.toBeInTheDocument();
     });
 
     it("say why an answer that had started couldn't finish", async () => {

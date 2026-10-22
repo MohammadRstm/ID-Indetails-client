@@ -1,10 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { toApiError } from "@/api/errors";
+import { onSessionReset } from "@/app/session/sessionReset";
 import { fetchProtonChat, useRefreshChats, type AskBody, type ProtonChoice, type ProtonQuickReplyOption } from "./protonApi";
 import { chatOf, emptyChat, type ProtonTurn } from "./protonChat";
 import { parseBlocks } from "./protonFigures";
-import { answered, asking, changeChat, currentChat, failed, heard, stopped, useProton, wrote } from "./protonStore";
+import { answered, asking, changeChat, currentChat, failed, heard, protonSession, stopped, useProton, wrote } from "./protonStore";
 import { streamQuestion } from "./protonStream";
 import { startVoice, tellVoiceAnswer, type VoiceAnswer } from "./protonVoice";
 import { useRunProtonCommands } from "./uiCommands";
@@ -34,14 +35,27 @@ export function useProtonConversation() {
     const latest = useRef({ page, run });
     useLayoutEffect(() => { latest.current = { page, run }; });
 
+    // Signing out, or another account signing in in another tab, ends the question running: its answer belongs to the
+    // person who asked, never to whoever comes next. So does the host going away.
+    useEffect(() => {
+        const unsubscribe = onSessionReset(() => running.current?.abort());
+        return () => {
+            unsubscribe();
+            running.current?.abort();
+        };
+    }, []);
+
     const add = (...turns: ProtonTurn[]) => changeChat((c) => ({ ...c, turns: [...c.turns, ...turns] }));
 
     const send = async (conversationId: string | null, body: Ask, retried = false): Promise<VoiceAnswer> => {
         asking();
         const controller = new AbortController();
         running.current = controller;
+        const asker = protonSession();
         try {
             const reply = await streamQuestion({ conversationId, page: latest.current.page, ...body }, { onStatus: heard, onDelta: wrote }, controller.signal);
+            // asked by someone who has since signed out: nothing of it reaches the chat, the page or the cache
+            if (protonSession() !== asker) return { kind: "replaced" };
             queryClient.setQueryData(["proton", "usage"], reply.usage);
             const did = latest.current.run(reply.uiCommands);
             changeChat((c) => ({
@@ -61,6 +75,7 @@ export function useProtonConversation() {
             refreshChats();
             return { kind: "answer", reply };
         } catch (error) {
+            if (protonSession() !== asker) return { kind: "replaced" };
             if (controller.signal.aborted) {
                 stopped();
                 add({ from: "note", text: STOPPED });
@@ -134,7 +149,9 @@ export function useProtonConversation() {
         /** Shows a saved chat, to read and carry on. Rejects with the API's error when it can't be read. */
         open: async (id: string) => {
             if (currentChat().conversationId === id) return;
+            const opener = protonSession();
             const saved = await fetchProtonChat(id);
+            if (protonSession() !== opener) return;
             running.current?.abort();
             changeChat(() => chatOf(saved));
         },

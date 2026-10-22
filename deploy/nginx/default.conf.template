@@ -61,6 +61,19 @@ server {
         gzip off;
     }
 
+    # Checking a picture for the website's watermark: the photo as it is (not made small first, which would change its
+    # pixels), up to the API's own 16 MB (WebsiteController.CheckWatermark).
+    location = /api/website/watermark-check {
+        proxy_pass ${API_UPSTREAM};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
+        proxy_set_header X-Forwarded-Host $host;
+        client_max_body_size 16m;
+        gzip off;
+    }
+
     # The live connection (SignalR over WebSockets), open for as long as the page is.
     location /hubs/ {
         proxy_pass ${API_UPSTREAM};
