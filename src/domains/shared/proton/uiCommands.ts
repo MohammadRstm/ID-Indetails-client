@@ -151,6 +151,9 @@ export function stepOf(command: unknown, p: Permissions, current: Domain | null)
     }
 }
 
+/** The most a reply carries (ProtonUiCommand.Pick): a place, a fill, the theme and the sounds. */
+const MAX_COMMANDS = 4;
+
 /**
  * Runs the commands of a reply or a confirmed action: one navigation at most, as the API sends them. Returns what was
  * done, in words, for a line in the chat (or that something couldn't be opened here).
@@ -162,11 +165,13 @@ export function useRunProtonCommands() {
     const area = useArea();
     const current = area.kind === "domain" ? area.domain : null;
 
-    return useCallback((commands: unknown): string | null => {
+    /** `report`: where a fill that waited for its form says, later, what became of it. */
+    return useCallback((commands: unknown, report?: (message: string) => void): string | null => {
         if (!Array.isArray(commands) || commands.length === 0) return null;
-        // the API sends at most one place, then the display choices: run them in that order
+        // the API sends at most one place, a fill, then the display choices (theme, sounds): run them in that order
         const done: string[] = [];
-        for (const command of commands.slice(0, 3)) {
+        let moved = false;
+        for (const command of commands.slice(0, MAX_COMMANDS)) {
             const step = stepOf(command, p, current);
             if (!step) {
                 done.push("That couldn't be opened here.");
@@ -178,24 +183,28 @@ export function useRunProtonCommands() {
                     // a window that opens on the way doesn't take the keyboard from the person
                     markAssistantOpening();
                     navigate(step.path);
+                    moved = true;
                     done.push(`Opened ${step.label}.`);
                     break;
                 case "opener":
                     markAssistantOpening();
+                    moved = true;
                     done.push(runOpener(step.id) ? `Opened ${step.label}.` : "That couldn't be opened here.");
                     break;
                 case "log_work":
                     markAssistantOpening();
                     openLogWork();
+                    moved = true;
                     done.push(`Opened ${step.label}.`);
                     break;
                 case "fill":
-                    done.push(fillForm(step.fill));
+                    done.push(fillForm(step.fill, { afterMove: moved, report }));
                     break;
                 case "draft":
                     markAssistantOpening();
                     setDraft(step.chat, step.body);
                     navigate(step.path);
+                    moved = true;
                     done.push(`Wrote ${step.label}: read it, then press Send.`);
                     break;
                 case "theme":

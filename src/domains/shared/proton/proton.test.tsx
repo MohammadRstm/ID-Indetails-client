@@ -250,6 +250,25 @@ describe("Proton", () => {
         expect(screen.getByRole("dialog", { name: "Proton" })).toBeInTheDocument();
     });
 
+    it("run every command of a reply: a place, a fill and both display choices", async () => {
+        const opening = {
+            ...reply("Opening the meetings, in the dark, quietly."),
+            uiCommands: [
+                { type: "open_page", label: "Meetings", page: "meetings", domain: "design" },
+                { type: "refresh", label: "Refresh" },
+                { type: "set_preference", label: "Theme", theme: "dark" },
+                { type: "set_preference", label: "Sounds", sounds: false },
+            ],
+        };
+        const { handlers } = protonHandlers([opening]);
+        renderApp("/design/help", personas.designAdmin, ...handlers);
+
+        const { panel } = await openAndAsk("Meetings, dark mode, and no sounds please");
+
+        // the fourth one used to be dropped
+        expect(await within(panel).findByText(/Message sounds are off\./)).toBeInTheDocument();
+    });
+
     it("refuse commands it doesn't know or the person may not follow", async () => {
         const bad = {
             ...reply("Opening it."),
