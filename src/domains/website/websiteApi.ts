@@ -8,14 +8,12 @@ export type WebsiteProjects = Schemas["WebsiteProjectsResponse"];
 export type WebsiteContent = Schemas["WebsiteContentResponse"];
 export type WebsiteProjectBody = Schemas["WebsiteProjectRequest"];
 export type LinkCandidate = Schemas["WebsiteLinkCandidateResponse"];
-export type WebsiteProjectType = WebsiteProject["type"];
 /** What the website shows; the API never sends null for a system project's status (the schema shares the nullable enum). */
 export type WebsiteStatus = "in_progress" | "completed";
 
 /** The website's moving strip shows at most this many projects (the API says so too, as conveyorLimit). */
 export const CONVEYOR_LIMIT = 20;
 
-export const TYPE_LABEL: Record<WebsiteProjectType, string> = { villa: "Villa", residential: "Residential", hotel: "Hotel" };
 export const STATUS_LABEL: Record<WebsiteStatus, string> = { in_progress: "In progress", completed: "Completed" };
 
 const projectsKey = ["website", "projects"] as const;

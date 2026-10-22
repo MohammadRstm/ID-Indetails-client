@@ -12,7 +12,7 @@ import Select from "@/shared/components/Forms/Select";
 import Icon from "@/shared/icons/Icon";
 import { Thumb } from "./WebsitePictures";
 import WebsiteProjectModal from "./WebsiteProjectModal";
-import { moved, STATUS_LABEL, TYPE_LABEL, useSetConveyor, useWebsiteProjects, type WebsiteProject, type WebsiteProjects } from "./websiteApi";
+import { moved, STATUS_LABEL, useSetConveyor, useWebsiteProjects, type WebsiteProject, type WebsiteProjects } from "./websiteApi";
 
 type Show = "all" | "published" | "drafts";
 
@@ -49,7 +49,7 @@ export default function WebsiteProjectsTab() {
                 </div>
             ),
         },
-        { key: "type", header: "Type", cell: (p) => TYPE_LABEL[p.type] },
+        { key: "type", header: "Type", cell: (p) => p.type },
         { key: "status", header: "Status", cell: (p) => p.shownStatus ? <StatusBadge status={p.shownStatus === "completed" ? "completed" : "active"} label={STATUS_LABEL[p.shownStatus]} /> : <span className="muted">-</span> },
         { key: "year", header: "Year", cell: (p) => p.shownYear ?? <span className="muted">-</span>, nowrap: true },
         {
