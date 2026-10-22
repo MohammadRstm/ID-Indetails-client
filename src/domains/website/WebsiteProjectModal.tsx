@@ -132,7 +132,7 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     ];
 
     return (
-        <Modal title={p ? p.title : "New website project"} sub={p ? `/projects/${p.slug}` : "Everything here can be public: it shows on the company's website once published."}
+        <Modal surfaceId={p ? "edit_website_project" : "new_website_project"} title={p ? p.title : "New website project"} sub={p ? `/projects/${p.slug}` : "Everything here can be public: it shows on the company's website once published."}
             size="lg" onClose={onClose}
             foot={edit ? (
                 <>

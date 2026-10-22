@@ -41,7 +41,7 @@ const reply = (text: string, cards: typeof action | (typeof action)[] | null = n
 const noBriefing = { items: [] as unknown[], more: 0 };
 
 // The page context the panel sends from the Help page.
-const onHelp = { area: "design", page: "help", entityType: null, entityId: null, section: null, surface: null };
+const onHelp = { area: "design", page: "help", entityType: null, entityId: null, section: null, part: null, surface: null };
 
 /** Proton's endpoints, recording what the panel sends. */
 function protonHandlers(answers: ReturnType<typeof reply>[], confirmOpens: Record<string, unknown>[] = [], briefing = noBriefing, statuses: unknown[] = []) {

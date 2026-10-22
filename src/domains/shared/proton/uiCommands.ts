@@ -4,7 +4,7 @@ import { useNavigate } from "react-router";
 import type { Schemas } from "@/api/types";
 import type { Domain, Permissions } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
-import { canOpen, companyRoutes } from "@/app/routing/routeTable";
+import { canOpen, companyRoutes, websiteRoutes } from "@/app/routing/routeTable";
 import { useArea } from "@/app/shell/useArea";
 import { openLogWork } from "@/domains/design/work/logWorkStore";
 import { setMessageSounds } from "@/domains/shared/messages/messageSounds";
@@ -33,8 +33,11 @@ const DOMAINS: readonly Domain[] = ["design", "execution"];
 /** A project page's tabs Proton may name; the page itself falls back to the person's first tab for one they don't have. */
 const SECTIONS = {
     financials: "financials", overview: "overview", analytics: "analytics", contributors: "contributors",
-    requirements: "requirements", timeline: "timeline", meetings: "meetings",
+    requirements: "requirements", timeline: "timeline", meetings: "meetings", files: "files", portal: "portal",
 } as const;
+/** The parts of the files and client portal tabs: their sections, and on the portal the client's access and the discussion. */
+const FILE_PARTS = ["presentation", "model", "drawing"] as const;
+const PORTAL_PARTS = [...FILE_PARTS, "access", "discussion"] as const;
 const TABS = ["overview", "projects", "clients", "billing", "costs"] as const;
 
 /** The values object each form takes in a fill: a fill naming one form with another's values is dropped. */
@@ -42,8 +45,11 @@ const FILLS: Record<FormFill["form"], keyof FormFill> = {
     client: "client", meeting: "meeting", new_project: "newProject", edit_project: "editProject", report_bug: "reportBug", invite: "invite", message: "message", log_work: "logWork",
 };
 
-/** Every page Proton may name, and where it lives here. The company ones are checked against the company routes. */
-const PAGES: Record<NonNullable<Schemas["ProtonPage"]>, { path: string; company?: true }> = {
+/**
+ * Every page Proton may name, and where it lives here. The company ones are checked against the company routes, the
+ * Website ones against the Website area's.
+ */
+const PAGES: Record<NonNullable<Schemas["ProtonPage"]>, { path: string; company?: true; website?: true }> = {
     dashboard: { path: "overview" },
     projects: { path: "projects" },
     clients: { path: "clients" },
@@ -70,6 +76,14 @@ const PAGES: Record<NonNullable<Schemas["ProtonPage"]>, { path: string; company?
     my_work: { path: "my-work" },
     my_pay: { path: "pay" },
     my_profile: { path: "profile" },
+    // the Website area: no business of its own
+    website_projects: { path: "projects", website: true },
+    website_analytics: { path: "analytics", website: true },
+    website_services: { path: "services", website: true },
+    website_locations: { path: "locations", website: true },
+    website_contact: { path: "contact", website: true },
+    website_site: { path: "site", website: true },
+    website_staff: { path: "staff", website: true },
 };
 
 const isId = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v > 0;
@@ -94,8 +108,10 @@ export function stepOf(command: unknown, p: Permissions, current: Domain | null)
             return { kind: "refresh" };
         case "open_project": {
             if (!isId(c.id) || !visible(c.domain)) return null;
-            const tab = c.section != null && has(SECTIONS, c.section) ? `?tab=${SECTIONS[c.section]}` : "";
-            return domainPath(c.domain, `projects/${c.id}${tab}`);
+            const section = c.section != null && has(SECTIONS, c.section) ? SECTIONS[c.section] : null;
+            const parts: readonly string[] = section === "files" ? FILE_PARTS : section === "portal" ? PORTAL_PARTS : [];
+            const part = has(parts, c.part) ? `&part=${c.part}` : "";
+            return domainPath(c.domain, `projects/${c.id}${section ? `?tab=${section}${part}` : ""}`);
         }
         case "open_client":
             return isId(c.id) && visible(c.domain) ? domainPath(c.domain, `clients/${c.id}`) : null;
@@ -108,6 +124,9 @@ export function stepOf(command: unknown, p: Permissions, current: Domain | null)
             if (!has(PAGES, c.page)) return null;
             const page = PAGES[c.page];
             if (c.page === "launcher") return { kind: "go", path: "/company", label };
+            if (page.website) {
+                return p.hasWebsiteArea && websiteRoutes.find((r) => r.path === page.path)?.access(p) ? { kind: "go", path: `/website/${page.path}`, label } : null;
+            }
             if (page.company) {
                 return companyRoutes.find((r) => r.path === page.path)?.access(p) ? { kind: "go", path: `/company/${page.path}`, label } : null;
             }
@@ -119,12 +138,15 @@ export function stepOf(command: unknown, p: Permissions, current: Domain | null)
         }
         case "open_surface": {
             if (!has(SURFACES, c.surface)) return null;
-            const domain = c.domain == null ? null : visible(c.domain) ? c.domain : undefined;
-            if (domain === undefined) return null;
+            // the Website area is no business: its surfaces check it themselves, and a business's never opens there
+            const website = c.domain === "website";
+            const domain = c.domain == null || website ? null : visible(c.domain) ? c.domain : undefined;
+            if (domain === undefined || (website && !p.hasWebsiteArea)) return null;
             const target = SURFACES[c.surface]({
-                p, domain: domain ?? current, id: isId(c.id) ? c.id : null,
+                p, domain: website ? null : domain ?? current, id: isId(c.id) ? c.id : null,
                 section: typeof c.settingsSection === "string" ? c.settingsSection : null,
                 tab: typeof c.companyTab === "string" ? c.companyTab : null,
+                itemId: isId(c.itemId) ? c.itemId : null,
             });
             if (!target) return null;
             return target.kind === "go" ? { kind: "go", path: target.path, label }

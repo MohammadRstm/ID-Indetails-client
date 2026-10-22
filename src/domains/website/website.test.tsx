@@ -87,6 +87,22 @@ describe("the Website page", () => {
         expect(screen.queryByRole("button", { name: /Add service/ })).not.toBeInTheDocument();
     });
 
+    it("opens a project's window, or the new project's, from its link", async () => {
+        renderApp("/website/projects?project=2", rana, ...handlers());
+        expect(await screen.findByRole("dialog", { name: "Hotel Le Gray" })).toBeInTheDocument();
+        // closing it takes the window out of the link
+        await userEvent.keyboard("{Escape}");
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+        expect(window.location.search).toBe("");
+    });
+
+    it("opens the new project's window from its link only for those who manage the website", async () => {
+        const viewer = withPermissions(rana, { revoke: [P.WEBSITE_MANAGE] });
+        renderApp("/website/projects?new=1", viewer, ...handlers(list(false), content({ canManage: false })));
+        await screen.findByRole("list", { name: "Moving strip" });
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
     it("adds a project, saying what's wrong as it is typed and what publishing still needs", async () => {
         const sent: unknown[] = [];
         renderApp("/website/projects", rana, ...handlers(),

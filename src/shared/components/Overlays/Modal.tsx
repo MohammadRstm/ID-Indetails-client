@@ -98,12 +98,16 @@ type DrawerProps = {
     head?: ReactNode;
     foot?: ReactNode;
     onClose: () => void;
+    /** What the assistant calls this panel, as a Modal's surfaceId. */
+    surfaceId?: string;
     children: ReactNode;
 };
 
 /** A panel sliding in from the right (the prototype's UI.Drawer). */
-export function Drawer({ title, head, foot, onClose, children }: DrawerProps) {
+export function Drawer({ title, head, foot, onClose, surfaceId, children }: DrawerProps) {
     const close = useEffectEvent(() => onClose());
+
+    useEffect(() => (surfaceId ? surfaceOpened(surfaceId) : undefined), [surfaceId]);
 
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
