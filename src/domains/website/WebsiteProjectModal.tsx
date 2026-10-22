@@ -11,11 +11,12 @@ import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { PictureSlot, Thumb } from "./WebsitePictures";
 import {
-    moved, PICTURE_TYPES, STATUS_LABEL, uploadPictures, TYPE_LABEL, useDeleteWebsiteProject, useGallery, useLinkCandidates, useSaveWebsiteProject, useWebsiteProjects,
-    type LinkCandidate, type WebsiteProject, type WebsiteProjectBody, type WebsiteProjectType, type WebsiteStatus,
+    moved, PICTURE_TYPES, STATUS_LABEL, uploadPictures, useDeleteWebsiteProject, useGallery, useLinkCandidates, useSaveWebsiteProject, useWebsiteProjects,
+    type LinkCandidate, type WebsiteProject, type WebsiteProjectBody, type WebsiteStatus,
 } from "./websiteApi";
-import { missingToPublish, placeError, slugOf, splitPosition, yearError } from "./websiteRules";
+import { cleanType, missingToPublish, placeError, slugOf, splitPosition, typeChoices, typeError, yearError } from "./websiteRules";
 import PlaceFields from "./WebsitePlaceFields";
+import TypePicker from "./WebsiteTypePicker";
 
 type Linked = { id: number; title: string; domainCode: string; status: WebsiteStatus; year: number };
 
@@ -33,10 +34,11 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     const errors = useFormErrors();
     const [saved, setSaved] = useState<WebsiteProject | null>(project);
     // the project as the list has it now: a gallery change shows here as soon as it is saved
-    const listed = useWebsiteProjects().data?.projects.find((x) => x.id === saved?.id);
+    const projects = useWebsiteProjects().data?.projects;
+    const listed = projects?.find((x) => x.id === saved?.id);
     const p = listed ?? saved;
     const [title, setTitle] = useState(p?.title ?? "");
-    const [type, setType] = useState<WebsiteProjectType>(p?.type ?? "villa");
+    const [type, setType] = useState(p?.type ?? "");
     const [status, setStatus] = useState<WebsiteStatus | "">(p?.status ?? "");
     const [year, setYear] = useState(p?.year != null ? String(p.year) : "");
     const [client, setClient] = useState(p?.client ?? "");
@@ -62,6 +64,9 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     const titleError = !title.trim() ? "Give the project a title."
         : title.trim().length > 150 ? "A title can be at most 150 characters."
             : !slugOf(title) && "The name needs at least one Latin letter or digit: the project's page address is made from it.";
+    const typeProblem = typeError(type);
+    // the suggested types and the ones the other projects have
+    const types = typeChoices((projects ?? []).filter((x) => x.id !== p?.id).map((x) => x.type));
     const statusError = !linked && !status && "Choose a status, or link a system project to follow its status.";
     const yearProblem = yearError(year, !!linked);
     const positionError = placeError(latitude, longitude);
@@ -70,7 +75,7 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
 
     function body(): WebsiteProjectBody {
         return {
-            title: title.trim(), type, status: status || null, year: year.trim() ? Number(year) : null,
+            title: title.trim(), type: cleanType(type), status: status || null, year: year.trim() ? Number(year) : null,
             client: client.trim() || null, city: city.trim() || null, country: country.trim() || null,
             latitude: latitude.trim() ? Number(latitude) : null, longitude: longitude.trim() ? Number(longitude) : null,
             description: description.trim() || null, conceptDescription: conceptDescription.trim() || null, projectId: linked?.id ?? null, thumbnailFileId: thumbnail, heroFileId: hero,
@@ -96,7 +101,7 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
 
     /** Step 1 to 2: the details checked and saved (a new project as a draft), so its concept pictures can be added. */
     function next() {
-        if (titleError || statusError || yearProblem || positionError || publishError) return errors.tried();
+        if (titleError || typeProblem || statusError || yearProblem || positionError || publishError) return errors.tried();
         store(p ? published : false, p?.conceptDescription ?? "", (result) => {
             const found = !city.trim() && result.city ? `${result.city}, ${result.country} found from the coordinates` : null;
             if (found || !p) toast({ text: p ? "Details saved" : "Project added as a draft", sub: found ?? "Next, its concept", icon: "checkCircle" });
@@ -132,7 +137,8 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     ];
 
     return (
-        <Modal title={p ? p.title : "New website project"} sub={p ? `/projects/${p.slug}` : "Everything here can be public: it shows on the company's website once published."}
+        // kept at the top, so moving between steps of different heights doesn't move the form
+        <Modal title={p ? p.title : "New website project"} scrimClass="scrim-top" sub={p ? `/projects/${p.slug}` : "Everything here can be public: it shows on the company's website once published."}
             size="lg" onClose={onClose}
             foot={edit ? (
                 <>
@@ -198,9 +204,8 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
                 </Field>
             </div>
             <div className="grid g-3 mt">
-                <Field id="wp-type" label="Type" required={edit}>
-                    <Select id="wp-type" value={type} disabled={!edit} onChange={setType}
-                        options={(Object.keys(TYPE_LABEL) as WebsiteProjectType[]).map((t) => ({ value: t, label: TYPE_LABEL[t] }))} />
+                <Field id="wp-type" label="Type" required={edit} error={errors.show("type", typeProblem)}>
+                    <TypePicker id="wp-type" value={type} choices={types} disabled={!edit} onChange={setType} onBlur={errors.touch("type")} />
                 </Field>
                 <Field id="wp-status" label="Status" required={edit && !linked} error={errors.show("status", statusError)}>
                     <Select id="wp-status" value={status} disabled={!edit} onChange={(v) => { setStatus(v as WebsiteStatus | ""); errors.touch("status")(); }} options={statusOptions} />

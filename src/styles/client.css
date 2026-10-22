@@ -172,6 +172,8 @@ table { line-height: normal; font-weight: normal; }
    address bar, which hid a window's buttons). On a phone it uses nearly all of the screen, and its footer puts a
    total or a note on a line of its own above the buttons, which share the next line. */
 .modal { max-height: calc(100dvh - 52px); }
+/* A dialog whose height changes as it's used (a form in steps) stays at the top instead of re-centring. */
+.scrim-top > .modal { margin-top: 0; }
 .side { height: 100dvh; }
 @media (max-width: 640px) {
   .scrim { padding: 12px 8px; }

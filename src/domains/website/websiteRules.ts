@@ -11,6 +11,41 @@ export function slugOf(title: string): string {
     return slug.slice(0, MAX_SLUG).replace(/-+$/, "");
 }
 
+/** The architectural types the form suggests; any other can be typed in. */
+export const PROJECT_TYPES = [
+    "Villa", "Private house", "Residential", "Apartment building", "Mixed-use", "Hotel", "Resort", "Restaurant & café", "Retail",
+    "Office", "Commercial", "Healthcare", "Education", "Cultural", "Religious", "Sports & leisure", "Industrial", "Landscape",
+    "Interior design", "Urban planning", "Renovation & restoration",
+];
+
+const MAX_TYPE = 60;
+
+/** A type tidied as the API saves it: trimmed, single spaces and a capital first letter. */
+export function cleanType(type: string): string {
+    const tidy = type.trim().replace(/\s+/g, " ");
+    return tidy.charAt(0).toUpperCase() + tidy.slice(1);
+}
+
+/**
+ * The types to pick from: the suggested ones, then the others the projects have, each once. Two with the same key
+ * (slugOf) are one type, spelt as the projects have it, as the API keeps it so.
+ */
+export function typeChoices(used: string[]): string[] {
+    const byKey = new Map(used.map((t) => [slugOf(t), t]));
+    const suggested = PROJECT_TYPES.map((t) => byKey.get(slugOf(t)) ?? t);
+    const keys = new Set(suggested.map(slugOf));
+    const others = [...byKey].filter(([key]) => key && !keys.has(key)).map(([, t]) => t).sort((a, b) => a.localeCompare(b));
+    return [...suggested, ...others];
+}
+
+/** A type: required, at most 60 characters and with a Latin letter or digit, as the API's key is made from it. */
+export function typeError(type: string): string | false {
+    const tidy = cleanType(type);
+    if (!tidy) return "Pick a type, or type your own.";
+    if (tidy.length > MAX_TYPE) return `A type can be at most ${MAX_TYPE} characters.`;
+    return !slugOf(tidy) && "The type needs at least one Latin letter or digit.";
+}
+
 /** A year: required when nothing is linked, between 1900 and 2100 when given. */
 export function yearError(year: string, linked: boolean): string | false {
     if (!year.trim()) return !linked && "Enter a year, or link a system project to follow its year.";

@@ -12,7 +12,7 @@ const rana = personas.superAdmin;
 
 function project(id: number, title: string, change: Partial<WebsiteProject> = {}): WebsiteProject {
     return {
-        id, slug: slugOf(title), title, type: "villa", status: "completed", year: 2022, shownStatus: "completed", shownYear: 2022,
+        id, slug: slugOf(title), title, type: "Villa", status: "completed", year: 2022, shownStatus: "completed", shownYear: 2022,
         client: "The Rizk family", city: "Beirut", country: "Lebanon", countryCode: "LB", latitude: 33.8938, longitude: 35.5018, positionApproximate: false, description: "A villa.",
         thumbnailFileId: null, heroFileId: null, heroAlt: null, linkedProject: null, published: true, conveyorOrder: null,
         gallery: [], conceptDescription: null, conceptImages: [], missingToPublish: [], createdAt: "2026-10-01T09:00:00Z", updatedAt: null,
@@ -21,7 +21,7 @@ function project(id: number, title: string, change: Partial<WebsiteProject> = {}
 }
 
 const villa = project(1, "Villa Rizk", { conveyorOrder: 1 });
-const hotel = project(2, "Hotel Le Gray", { type: "hotel", conveyorOrder: 2 });
+const hotel = project(2, "Hotel Le Gray", { type: "Hotel", conveyorOrder: 2 });
 const draft = project(3, "Batroun House", { published: false, status: "in_progress", shownStatus: "in_progress", missingToPublish: ["a card picture", "a page picture"] });
 const list = (canManage = true, projects = [villa, hotel, draft]): WebsiteProjects => ({ projects, conveyorLimit: 20, canManage });
 
@@ -101,7 +101,20 @@ describe("the Website page", () => {
         await userEvent.click(screen.getByRole("button", { name: "Add and next" }));
         expect(await screen.findByText("Give the project a title.")).toBeInTheDocument();
         expect(screen.getByText("Choose a status, or link a system project to follow its status.")).toBeInTheDocument();
+        expect(screen.getByText("Pick a type, or type your own.")).toBeInTheDocument();
         expect(sent).toHaveLength(0);
+
+        // the type is picked from the list, or typed in
+        const type = screen.getByRole("combobox", { name: /^Type/ });
+        await userEvent.click(type);
+        expect(screen.getByRole("option", { name: "Mixed-use" })).toBeInTheDocument();
+        expect(screen.getByRole("option", { name: "Hotel" })).toBeInTheDocument();
+        await userEvent.type(type, "HOTEL");
+        expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["Hotel"]);
+        await userEvent.type(type, "{Escape}");
+        await userEvent.clear(type);
+        await userEvent.type(type, "beach   house");
+        expect(screen.getByText("“Beach house” will be added as a new type.")).toBeInTheDocument();
 
         await userEvent.type(screen.getByLabelText(/^Title/), "Saifi Loft");
         expect(screen.getByText(/Page address: \/projects\/saifi-loft/)).toBeInTheDocument();
@@ -109,6 +122,8 @@ describe("the Website page", () => {
         await userEvent.click(screen.getByLabelText(/^Status/));
         await userEvent.click(screen.getByRole("option", { name: "Completed" }));
         await userEvent.type(screen.getByLabelText(/^Year/), "2021");
+        // tidied on leaving the box
+        expect(type).toHaveValue("Beach house");
         await userEvent.type(screen.getByLabelText("Latitude"), "95");
         expect(await screen.findByText("Give both the latitude and the longitude, or neither.")).toBeInTheDocument();
         // a position pasted from a map fills both
@@ -119,7 +134,7 @@ describe("the Website page", () => {
 
         await userEvent.click(screen.getByRole("button", { name: "Add and next" }));
         await waitFor(() => expect(sent).toHaveLength(1));
-        expect(sent[0]).toMatchObject({ title: "Saifi Loft", type: "villa", status: "completed", year: 2021, latitude: 33.8955, longitude: 35.5125, projectId: null, published: false });
+        expect(sent[0]).toMatchObject({ title: "Saifi Loft", type: "Beach house", status: "completed", year: 2021, latitude: 33.8955, longitude: 35.5125, projectId: null, published: false });
 
         // a draft now: its concept is next, and publishing it is here
         expect(await screen.findByLabelText("Concept description")).toBeInTheDocument();
@@ -146,9 +161,11 @@ describe("the Website page", () => {
         expect(screen.getByText("Follows the project: 2027")).toBeInTheDocument();
         expect(screen.getByLabelText(/^Status/)).toHaveTextContent("Follow the project (In progress)");
 
+        await userEvent.click(screen.getByRole("combobox", { name: /^Type/ }));
+        await userEvent.click(screen.getByRole("option", { name: "Villa" }));
         await userEvent.click(screen.getByRole("button", { name: "Add and next" }));
         await waitFor(() => expect(sent).toHaveLength(1));
-        expect(sent[0]).toMatchObject({ projectId: 40, status: null, year: null, description: "Three floors." });
+        expect(sent[0]).toMatchObject({ type: "Villa", projectId: 40, status: null, year: null, description: "Three floors." });
     });
 
     it("keeps the moving strip in order: moved, taken out and added", async () => {
