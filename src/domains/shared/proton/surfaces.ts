@@ -60,6 +60,8 @@ export const SURFACES: Record<ProtonSurface, (a: Ask) => SurfaceTarget | null> =
     edit_website_project: (a) => (a.id != null ? inWebsite(a, `projects?project=${a.id}`) : null),
     invite_website_staff: (a) => inWebsite(a, "staff?invite=1", a.p.hasAny(P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN)),
     file_comments: (a) => (a.itemId != null ? onDesignProject(a, `tab=files&comments=${a.itemId}`, a.p.has(P.PROJECT_VIEW)) : null),
+    // a file to look at: the files tab opens it (a picture or video in the lightbox, anything else with Open and Download)
+    view_project_file: (a) => (a.itemId != null ? onDesignProject(a, `tab=files&view=${a.itemId}`, a.p.has(P.PROJECT_VIEW)) : null),
     // the discussion is for whoever takes part in it, which only the server knows: the tab shows it to them alone
     portal_discussion: (a) => onDesignProject(a, `tab=portal&part=discussion${a.itemId != null ? `&item=${a.itemId}` : ""}`),
     // the preview has a page of its own, outside the app's shell

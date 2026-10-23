@@ -17011,7 +17011,7 @@ export interface components {
             text: string;
         };
         /** @enum {unknown} */
-        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_statement" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | "new_website_project" | "edit_website_project" | "file_comments" | "portal_discussion" | "portal_preview" | "invite_website_staff" | null;
+        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_statement" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | "new_website_project" | "edit_website_project" | "file_comments" | "portal_discussion" | "portal_preview" | "invite_website_staff" | "view_project_file" | null;
         ProtonTableBlock: {
             columns: components["schemas"]["ProtonColumn"][];
             rows: components["schemas"]["ProtonDataRow"][];
