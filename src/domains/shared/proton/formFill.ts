@@ -14,10 +14,18 @@ type FormName = FormFill["form"];
 /** A fill for a form that isn't open yet is dropped after this long, or when another arrives. */
 const WAIT_MS = 10_000;
 
-type Adapter = { recordId: number | null; apply: (fill: FormFill) => string[] };
+/** After a move, how long the page has to change before a form still open on it counts as the one to fill. */
+const SETTLE_MS = 300;
+
+/** `path`: where the form was opened, to tell a form that stays through a move from one the move is closing. */
+type Adapter = { recordId: number | null; path: string; apply: (fill: FormFill) => string[] };
+
+type Waiting = { fill: FormFill; at: number; report?: (message: string) => void; timers: ReturnType<typeof setTimeout>[] };
 
 const adapters = new Map<FormName, Adapter>();
-let waiting: { fill: FormFill; at: number } | null = null;
+let waiting: Waiting | null = null;
+
+const here = () => window.location.pathname;
 
 function applyTo(adapter: Adapter, fill: FormFill): string {
     // a form open for another record is not this fill's: nothing goes into it
@@ -26,17 +34,54 @@ function applyTo(adapter: Adapter, fill: FormFill): string {
     return filled.length > 0 ? `Filled ${filled.join(", ")}: check it and save.` : "The form already had everything I would have filled.";
 }
 
+function stopWaiting() {
+    waiting?.timers.forEach(clearTimeout);
+    waiting = null;
+}
+
+/** The waiting fill goes into this form, and says what happened. */
+function take(adapter: Adapter) {
+    const entry = waiting;
+    if (!entry) return;
+    stopWaiting();
+    // filled first: `report?.(…)` alone wouldn't even fill the form when nobody listens
+    const said = applyTo(adapter, entry.fill);
+    entry.report?.(said);
+}
+
+export type FillOptions = {
+    /** A move came first in the same answer: the form open now may be another record's, about to close. */
+    afterMove?: boolean;
+    /** Says what became of a fill that waited for its form, once it was filled or didn't open in time. */
+    report?: (message: string) => void;
+};
+
 /** Sends a fill to its form, now or once it opens; says what happened, in words. */
-export function fillForm(fill: FormFill): string {
+export function fillForm(fill: FormFill, { afterMove = false, report }: FillOptions = {}): string {
     const adapter = adapters.get(fill.form);
-    if (adapter) {
+    stopWaiting();
+    if (adapter && !afterMove) return applyTo(adapter, fill);
+
+    const entry: Waiting = { fill, at: Date.now(), report, timers: [] };
+    waiting = entry;
+    entry.timers.push(setTimeout(() => {
+        if (waiting !== entry) return;
         waiting = null;
-        return applyTo(adapter, fill);
+        report?.("The form didn't open, so I couldn't fill it.");
+    }, WAIT_MS));
+    if (afterMove) {
+        // the same form may stay open through the move (its own record's page): it takes the fill once the page settled
+        entry.timers.push(setTimeout(() => {
+            const open = adapters.get(fill.form);
+            if (waiting === entry && open && open.path === here()) take(open);
+        }, SETTLE_MS));
     }
 
-    waiting = { fill, at: Date.now() };
     return "I'll fill the form as it opens: check it and save.";
 }
+
+/** Keys that move around a form or hold a modifier without changing anything in it. */
+const PASSING_KEYS = new Set(["Tab", "Shift", "Control", "Alt", "Meta", "Escape", "CapsLock"]);
 
 /** Only a value for an empty field: what the person typed stays. */
 export function fillEmpty<T>(current: T, value: T | null | undefined, set: (value: T) => void, name: string, filled: string[]) {
@@ -70,6 +115,7 @@ export function useProtonForm(form: FormName, recordId: number | null, apply: (f
     useEffect(() => {
         const adapter: Adapter = {
             recordId,
+            path: here(),
             apply: (fill) => {
                 const names = latest.current(fill);
                 if (names.length > 0) {
@@ -81,11 +127,7 @@ export function useProtonForm(form: FormName, recordId: number | null, apply: (f
             },
         };
         adapters.set(form, adapter);
-        if (waiting && waiting.fill.form === form) {
-            const { fill, at } = waiting;
-            waiting = null;
-            if (Date.now() - at < WAIT_MS) applyTo(adapter, fill);
-        }
+        if (waiting && waiting.fill.form === form && Date.now() - waiting.at < WAIT_MS) take(adapter);
 
         return () => {
             if (adapters.get(form) === adapter) adapters.delete(form);
@@ -102,7 +144,8 @@ export function useProtonForm(form: FormName, recordId: number | null, apply: (f
                     return;
                 }
 
-                if (e.key !== "Enter") touched.current = true;
+                // moving through the form isn't changing it: Tab then Enter mustn't send what the person hasn't read
+                if (e.key !== "Enter" && !PASSING_KEYS.has(e.key)) touched.current = true;
             },
             onPointerDownCapture: () => { touched.current = true; },
         },

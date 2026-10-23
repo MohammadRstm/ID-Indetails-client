@@ -6,14 +6,15 @@ import { useCompanySettings } from "@/app/shell/shellQueries";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { FieldError } from "@/shared/components/Forms/Field";
-import { Segmented, SwitchRow } from "@/shared/components/Forms/Filters";
+import { Segmented, SwitchRow, Toggle } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import Logo from "@/shared/components/Identity/Logo";
 import Icon from "@/shared/icons/Icon";
 import { setTheme, useTheme } from "@/shared/theme";
 import { uploadFile } from "../../design/work/workApi";
 import { companyToday, DAYS_LONG } from "@/shared/format/time";
-import { useSaveCompanySettings, useSetLogo, useSetWorkingTime, useWorkingTime, type CompanySettings, type WorkingTime } from "./settingsApi";
+import { useCurrentUser } from "@/app/session/useSession";
+import { useSaveCompanySettings, useSetLogo, useSetMyProtonSuggestions, useSetProtonFiles, useSetProtonSuggestions, useSetWorkingTime, useWorkingTime, type CompanySettings, type WorkingTime } from "./settingsApi";
 import { daysText, nextChange } from "./workingTime";
 import { notSaved, saved } from "./settingsToasts";
 import { loadFailed } from "@/api/queryState";
@@ -39,7 +40,8 @@ const themeIcon = { width: 13, height: 13, display: "inline-block", marginRight:
  * and time format, for whoever may change them.
  */
 export default function CompanySettingsSection() {
-    const manages = usePermissions().has(P.COMPANY_SETTINGS_MANAGE);
+    const permissions = usePermissions();
+    const manages = permissions.has(P.COMPANY_SETTINGS_MANAGE);
     const query = useCompanySettings();
     const settings = query.data;
     const theme = useTheme();
@@ -61,7 +63,8 @@ export default function CompanySettingsSection() {
                     } />
                 </div>
             </div>
-            {!manages ? null : settings ? <Company settings={settings} />
+            {permissions.has(P.PROTON_USE) && settings && <MyProtonSuggestions companyAllows={settings.protonReplySuggestions} />}
+            {!manages ? null : settings ? <><Company settings={settings} /><ProtonFiles settings={settings} /></>
                 : <div className="panel"><div className="panel-body">
                     {loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the company's settings" /> : <SkeletonLines lines={6} />}
                 </div></div>}
@@ -171,6 +174,60 @@ function Company({ settings: s }: { settings: CompanySettings }) {
                             options={[{ value: "12", label: "4:00 PM" }, { value: "24", label: "16:00" }]} />
                     } />
                 </div>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Whether Proton may read the projects' files to answer about them. Reading one sends its content to Anthropic,
+ * Proton's AI provider, so it is off until someone who manages the company settings turns it on.
+ */
+function ProtonFiles({ settings: s }: { settings: CompanySettings }) {
+    const save = useSetProtonFiles();
+    const suggest = useSetProtonSuggestions();
+    return (
+        <div className="panel" style={{ marginTop: 14 }}>
+            <div className="panel-head"><div><div className="panel-title">Proton</div></div></div>
+            <div className="panel-body">
+                <SwitchRow title="Let Proton read project files"
+                    description="Proton can then read a project's PDFs, pictures, videos and Office files to answer about them. Each file it reads is sent to Anthropic, Proton's AI provider, and isn't kept after the conversation. Off, Proton can still list the files and open them for you."
+                    control={
+                        <Toggle checked={s.protonReadsFiles} label="Let Proton read project files" disabled={save.isPending}
+                            onChange={(on) => save.mutate(on, { onSuccess: saved(on ? "Proton can read project files" : "Proton no longer reads project files"), onError: notSaved })} />
+                    } />
+                <SwitchRow title="Suggest replies to clients"
+                    description="In a project's discussion with its client, Proton suggests a reply to the client's latest message, which the person takes with Tab and sends themselves. Off, nobody gets suggestions; on, each person can still turn them off for themselves."
+                    control={
+                        <Toggle checked={s.protonReplySuggestions} label="Suggest replies to clients" disabled={suggest.isPending}
+                            onChange={(on) => suggest.mutate(on, { onSuccess: saved(on ? "Proton suggests replies to clients" : "Proton no longer suggests replies"), onError: notSaved })} />
+                    } />
+            </div>
+        </div>
+    );
+}
+
+/** The person's own choice of Proton's reply suggestions; while the company has them off, it says so and waits. */
+function MyProtonSuggestions({ companyAllows }: { companyAllows: boolean }) {
+    const me = useCurrentUser();
+    const save = useSetMyProtonSuggestions();
+    return (
+        <div className="panel" style={{ marginBottom: 14 }}>
+            <div className="panel-head">
+                <div>
+                    <div className="panel-title">Proton</div>
+                    <div className="panel-sub">Your own choice: it changes nothing for anyone else.</div>
+                </div>
+            </div>
+            <div className="panel-body">
+                <SwitchRow title="Suggest my replies to clients"
+                    description={companyAllows
+                        ? "In a project's discussion with its client, Proton suggests a reply to the client's latest message: Tab writes it in, Escape dismisses it, and you send it yourself."
+                        : "The company has turned reply suggestions off for everyone. Your choice applies once they are back on."}
+                    control={
+                        <Toggle checked={me.protonReplySuggestions} label="Suggest my replies to clients" disabled={save.isPending}
+                            onChange={(on) => save.mutate(on, { onSuccess: saved(on ? "Proton suggests your replies" : "Proton no longer suggests your replies"), onError: notSaved })} />
+                    } />
             </div>
         </div>
     );

@@ -3,6 +3,7 @@ import { Segmented } from "@/shared/components/Forms/Filters";
 import type { Project } from "../../../shared/projects/projectsApi";
 import { PORTAL_SECTIONS, SECTION_LABEL, type PortalSection } from "./contentApi";
 import FileComments from "./FileComments";
+import FileView from "./FileView";
 import { useProjectFiles } from "./filesApi";
 import PortalSectionView from "./PortalSectionView";
 
@@ -15,14 +16,17 @@ const idOf = (value: string | null) => {
  * A Design project's Project files tab, for everyone who sees the project: all its files, one section each, kept in
  * the link (?part=model). Anyone uploads; a file's uploader or a project_files:manage holder changes it; managers set
  * the order; client_portal:manage holders choose the client's files. A file's comments open in a panel beside them
- * (?comments={itemId}); a link that names only the file opens the section it is in.
+ * (?comments={itemId}); a link that names only the file opens the section it is in. ?view={itemId} opens the file
+ * itself, to look at (as Proton does).
  */
 export default function ProjectFilesTab({ project }: { project: Project }) {
     const [params, setParams] = useSearchParams();
     const files = useProjectFiles(project.id);
     const commentsOn = idOf(params.get("comments"));
+    const viewOn = idOf(params.get("view"));
+    const viewed = files.data?.items.find((item) => item.id === viewOn);
     const requested = PORTAL_SECTIONS.find((s) => s === params.get("part"));
-    const holder = files.data?.items.find((item) => item.id === commentsOn)?.section;
+    const holder = files.data?.items.find((item) => item.id === commentsOn)?.section ?? viewed?.section;
     const part: PortalSection = requested ?? holder ?? PORTAL_SECTIONS[0];
 
     function choose(next: PortalSection) {
@@ -30,6 +34,14 @@ export default function ProjectFilesTab({ project }: { project: Project }) {
         if (next === PORTAL_SECTIONS[0]) link.delete("part");
         else link.set("part", next);
         link.delete("comments");
+        link.delete("view");
+        setParams(link, { replace: true });
+    }
+
+    function closeView() {
+        const link = new URLSearchParams(params);
+        link.delete("view");
+        if (part !== PORTAL_SECTIONS[0]) link.set("part", part);
         setParams(link, { replace: true });
     }
 
@@ -55,6 +67,7 @@ export default function ProjectFilesTab({ project }: { project: Project }) {
             </div>
             <PortalSectionView key={part} project={project} section={part} mode="files" onComments={openComments} />
             {commentsOn != null && <FileComments projectId={project.id} itemId={commentsOn} onClose={closeComments} />}
+            {viewed && <FileView projectId={project.id} item={viewed} onClose={closeView} />}
         </>
     );
 }

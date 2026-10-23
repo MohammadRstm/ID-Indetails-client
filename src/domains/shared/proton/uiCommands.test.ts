@@ -53,16 +53,29 @@ describe("Proton's UI commands", () => {
 describe("the page context", () => {
     it("names the area, page, record and tab only", () => {
         expect(pageContextOf("/design/projects/42", "?tab=requirements&report=1"))
-            .toEqual({ area: "design", page: "projects", entityType: "project", entityId: 42, section: "requirements", surface: null });
+            .toEqual({ area: "design", page: "projects", entityType: "project", entityId: 42, section: "requirements", part: null, surface: null });
         expect(pageContextOf("/design/projects/42", "?tab=contributors")?.section).toBe("contributors");
         expect(pageContextOf("/design/projects/42", "?tab=analytics")?.section).toBe("analytics");
-        expect(pageContextOf("/execution/clients/7", "")).toEqual({ area: "execution", page: "clients", entityType: "client", entityId: 7, section: null, surface: null });
-        expect(pageContextOf("/design/people/5", "?tab=requirements")).toEqual({ area: "design", page: "people", entityType: "person", entityId: 5, section: null, surface: null });
-        expect(pageContextOf("/company/overhead", "")).toEqual({ area: "company", page: "company_expenses", entityType: null, entityId: null, section: null, surface: null });
-        expect(pageContextOf("/design/settings", "?section=admins")).toEqual({ area: "design", page: "settings", entityType: null, entityId: null, section: null, surface: null });
-        expect(pageContextOf("/design/projects/new-thing", "")).toEqual({ area: "design", page: "projects", entityType: null, entityId: null, section: null, surface: null });
-        expect(pageContextOf("/company", "")).toEqual({ area: "company", page: "launcher", entityType: null, entityId: null, section: null, surface: null });
+        expect(pageContextOf("/execution/clients/7", "")).toEqual({ area: "execution", page: "clients", entityType: "client", entityId: 7, section: null, part: null, surface: null });
+        expect(pageContextOf("/design/people/5", "?tab=requirements")).toEqual({ area: "design", page: "people", entityType: "person", entityId: 5, section: null, part: null, surface: null });
+        expect(pageContextOf("/company/overhead", "")).toEqual({ area: "company", page: "company_expenses", entityType: null, entityId: null, section: null, part: null, surface: null });
+        expect(pageContextOf("/design/settings", "?section=admins")).toEqual({ area: "design", page: "settings", entityType: null, entityId: null, section: null, part: null, surface: null });
+        expect(pageContextOf("/design/projects/new-thing", "")).toEqual({ area: "design", page: "projects", entityType: null, entityId: null, section: null, part: null, surface: null });
+        expect(pageContextOf("/company", "")).toEqual({ area: "company", page: "launcher", entityType: null, entityId: null, section: null, part: null, surface: null });
         expect(pageContextOf("/no-access", "")).toBeNull();
+    });
+
+    it("names a files or portal tab's part, and the Website area's pages and open project", () => {
+        expect(pageContextOf("/design/projects/42", "?tab=portal&part=discussion&item=3")).toMatchObject({ section: "portal", part: "discussion" });
+        expect(pageContextOf("/design/projects/42", "?tab=files&part=drawing")).toMatchObject({ section: "files", part: "drawing" });
+        // a part another tab doesn't have, or no tab at all, names none
+        expect(pageContextOf("/design/projects/42", "?tab=files&part=discussion")?.part).toBeNull();
+        expect(pageContextOf("/design/projects/42", "?part=access")?.part).toBeNull();
+        expect(pageContextOf("/website/projects", "?project=8")).toEqual({
+            area: "website", page: "website_projects", entityType: "website_project", entityId: 8, section: null, part: null, surface: null,
+        });
+        expect(pageContextOf("/website/analytics", "?project=8")).toMatchObject({ page: "website_analytics", entityType: null, entityId: null });
+        expect(pageContextOf("/website/projects/8", "")).toMatchObject({ entityType: null, entityId: null });
     });
 });
 
@@ -114,6 +127,48 @@ describe("Proton opening forms and windows", () => {
         expect(stepOf(command({ type: "open_page", page: "my_pay", domain: "design" }), designer, "design")).toMatchObject({ path: "/design/pay" });
         expect(stepOf(command({ type: "open_page", page: "my_profile", domain: "design" }), designer, "design")).toMatchObject({ path: "/design/profile" });
         expect(stepOf(command({ type: "open_page", page: "my_pay", domain: "design" }), designAdmin, "design")).toBeNull();
+    });
+
+    it("opens the Website area for those who may enter it", () => {
+        const webEditor = permissionsOf(personas.websiteAdmin);
+        expect(stepOf(command({ type: "open_page", page: "website_projects" }), superAdmin, "design")).toMatchObject({ path: "/website/projects" });
+        expect(stepOf(command({ type: "open_page", page: "website_analytics" }), webEditor, null)).toMatchObject({ path: "/website/analytics" });
+        expect(stepOf(surface("new_website_project", { domain: "website" }), webEditor, null)).toMatchObject({ path: "/website/projects?new=1" });
+        // a website project opens in its form
+        expect(stepOf(surface("edit_website_project", { id: 8, domain: "website" }), superAdmin, "design")).toMatchObject({ path: "/website/projects?project=8" });
+        expect(stepOf(surface("invite_website_staff", { domain: "website" }), superAdmin, "design")).toMatchObject({ path: "/website/staff?invite=1" });
+
+        // a Design admin has no Website area; website staff see no people, so no staff page
+        expect(stepOf(command({ type: "open_page", page: "website_projects" }), designAdmin, "design")).toBeNull();
+        expect(stepOf(surface("edit_website_project", { id: 8, domain: "website" }), designAdmin, "design")).toBeNull();
+        expect(stepOf(command({ type: "open_page", page: "website_staff" }), webEditor, null)).toBeNull();
+        expect(stepOf(surface("invite_website_staff", { domain: "website" }), webEditor, null)).toBeNull();
+        // a business's form never opens in the Website area
+        expect(stepOf(surface("new_project", { domain: "website" }), superAdmin, "design")).toBeNull();
+    });
+
+    it("opens a Design project's files and client portal on their parts", () => {
+        expect(stepOf(command({ type: "open_project", id: 42, domain: "design", section: "files", part: "drawing" }), designAdmin, "design"))
+            .toMatchObject({ path: "/design/projects/42?tab=files&part=drawing" });
+        expect(stepOf(command({ type: "open_project", id: 42, domain: "design", section: "portal", part: "discussion" }), designAdmin, "design"))
+            .toMatchObject({ path: "/design/projects/42?tab=portal&part=discussion" });
+        // a part the tab doesn't have is dropped
+        expect(stepOf(command({ type: "open_project", id: 42, domain: "design", section: "files", part: "access" }), designAdmin, "design"))
+            .toMatchObject({ path: "/design/projects/42?tab=files" });
+
+        expect(stepOf(surface("file_comments", { id: 42, domain: "design", itemId: 5 }), designAdmin, "design"))
+            .toMatchObject({ path: "/design/projects/42?tab=files&comments=5" });
+        expect(stepOf(surface("view_project_file", { id: 42, domain: "design", itemId: 5 }), designAdmin, "design"))
+            .toMatchObject({ path: "/design/projects/42?tab=files&view=5" });
+        expect(stepOf(surface("view_project_file", { id: 42, domain: "design" }), designAdmin, "design")).toBeNull();
+        expect(stepOf(surface("portal_discussion", { id: 42, domain: "design", itemId: 5 }), designAdmin, "design"))
+            .toMatchObject({ path: "/design/projects/42?tab=portal&part=discussion&item=5" });
+        expect(stepOf(surface("portal_preview", { id: 42, domain: "design" }), superAdmin, "design")).toMatchObject({ path: "/design/projects/42/portal-preview" });
+
+        // a file's comments need the file; the preview, the portal's files; neither is on a site
+        expect(stepOf(surface("file_comments", { id: 42, domain: "design" }), designAdmin, "design")).toBeNull();
+        expect(stepOf(surface("portal_preview", { id: 42, domain: "design" }), permissionsOf(personas.designEmployee), "design")).toBeNull();
+        expect(stepOf(surface("portal_discussion", { id: 7, domain: "execution" }), superAdmin, "execution")).toBeNull();
     });
 
     it("opens the pages Proton couldn't reach before, for those who may", () => {

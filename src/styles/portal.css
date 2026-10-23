@@ -362,6 +362,10 @@ button.pp-thumb:hover img, button.pp-thumb:hover video { transform: scale(1.03);
 .dp-composer { position: relative; display: grid; gap: 6px; min-width: 0; }
 .dp-input { min-height: 56px; max-height: 38vh; resize: vertical; font-size: 13.5px; }
 .dp-input.bad { border-color: var(--now); box-shadow: 0 0 0 3px var(--now-soft); }
+/* Proton's suggested reply waits as the placeholder: a little stronger than a placeholder, still clearly not written */
+.dp-input.dp-suggested::placeholder { color: var(--ink-3, var(--muted)); font-style: italic; opacity: 1; }
+.dp-suggestion { display: flex; align-items: center; gap: 6px; }
+.dp-suggestion kbd { font: inherit; font-size: 11px; padding: 0 4px; border: 1px solid var(--line, currentColor); border-radius: 4px; }
 .dp-composer-foot { display: flex; align-items: center; gap: 8px; }
 .dp-count { color: var(--ink-3); font-size: 11.5px; font-variant-numeric: tabular-nums; }
 .dp-count.over { color: var(--now-badge); font-weight: 650; }

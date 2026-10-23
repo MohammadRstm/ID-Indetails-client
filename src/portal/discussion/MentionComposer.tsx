@@ -24,6 +24,9 @@ type Props = {
     /** Gives up an edit (the Cancel button and Escape). */
     onCancel?: () => void;
     focusOnOpen?: boolean;
+    /** A reply Proton suggests, shown in the empty box: Tab writes it in, Escape dismisses it. */
+    suggestion?: string | null;
+    onDismissSuggestion?: () => void;
 };
 
 /** One choice of the "@" list: a person, or the whole client side ("@Client"). */
@@ -38,7 +41,9 @@ const EVERYONE = "client:everyone";
  * names every client contact who takes part. A send that fails keeps the words and offers Retry, which sends them again
  * as the same message (the hooks keep its clientToken).
  */
-export default function MentionComposer({ label, placeholder, max, people, closed, initial, submitLabel = "Send", onSubmit, onCancel, focusOnOpen }: Props) {
+export default function MentionComposer({
+    label, placeholder, max, people, closed, initial, submitLabel = "Send", onSubmit, onCancel, focusOnOpen, suggestion, onDismissSuggestion,
+}: Props) {
     const [text, setText] = useState(initial?.body ?? "");
     const [caret, setCaret] = useState(initial?.body.length ?? 0);
     // the people picked from the list; the ones whose @Name is still in the text are sent
@@ -52,6 +57,7 @@ export default function MentionComposer({ label, placeholder, max, people, close
     const area = useRef<HTMLTextAreaElement>(null);
     const caretTo = useRef<number | null>(null);
     const listId = useId();
+    const hintId = useId();
 
     const trimmed = text.trim();
     const empty = trimmed.length === 0;
@@ -68,6 +74,8 @@ export default function MentionComposer({ label, placeholder, max, people, close
         ...mentionCandidates(people, mention.query).map((p) => ({ key: p.key, name: p.name, label: p.name, tag: p.kind === "client" ? "Client" : "Team", person: p })),
     ] : [];
     const offered = choices.length > 0;
+    // Proton's suggestion waits in the empty box, never over anything written
+    const suggested = text.length === 0 && suggestion ? suggestion : null;
     const chosen = Math.min(active, choices.length - 1);
     const over = trimmed.length - max;
     const problem = tooLong ? `Too long by ${over} character${over === 1 ? "" : "s"}. Shorten it to send.` : attempted && empty ? "Write something to send." : undefined;
@@ -137,6 +145,18 @@ export default function MentionComposer({ label, placeholder, max, people, close
     }
 
     function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+        if (suggested && !e.nativeEvent.isComposing && (e.key === "Tab" || e.key === "Escape") && !e.shiftKey) {
+            e.preventDefault();
+            if (e.key === "Escape") {
+                e.stopPropagation();
+                onDismissSuggestion?.();
+                return;
+            }
+            setText(suggested);
+            setCaret(suggested.length);
+            caretTo.current = suggested.length;
+            return;
+        }
         // "@client" and a space (or Enter or Tab, with no list to pick from) becomes "@Client", for every client contact
         if (typedClient && !e.nativeEvent.isComposing && (e.key === " " || (!offered && (e.key === "Enter" || e.key === "Tab")))) {
             e.preventDefault();
@@ -185,10 +205,16 @@ export default function MentionComposer({ label, placeholder, max, people, close
                 </div>
             )}
             {/* a combobox: "@" offers a list of people, and the option the arrow keys are on is the box's active descendant */}
-            <textarea ref={area} className={cx("textarea dp-input", problem && "bad")} rows={2} value={text} placeholder={placeholder} aria-label={label}
+            <textarea ref={area} className={cx("textarea dp-input", problem && "bad", suggested && "dp-suggested")} rows={2} value={text}
+                placeholder={suggested ?? placeholder} aria-label={label} aria-describedby={suggested ? hintId : undefined}
                 role="combobox" aria-autocomplete="list" aria-expanded={offered} aria-controls={offered ? listId : undefined}
                 aria-activedescendant={offered ? `${listId}-${chosen}` : undefined} aria-invalid={problem ? true : undefined}
                 readOnly={busy} onChange={change} onSelect={(e) => setCaret(e.currentTarget.selectionStart)} onKeyDown={onKeyDown} />
+            {suggested && (
+                <div className="hint dp-suggestion" id={hintId}>
+                    <Icon name="chat" />Proton suggests a reply: <kbd>Tab</kbd> to use it, <kbd>Esc</kbd> to dismiss it.
+                </div>
+            )}
             <FieldError message={problem} />
             {failure != null && (
                 <div className="err" role="alert">

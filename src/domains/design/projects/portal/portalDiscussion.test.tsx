@@ -9,7 +9,8 @@ import { resetLinks } from "@/portal/presentation/presentationLinks";
 import type { PortalPresentation } from "@/portal/presentation/presentationTypes";
 import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
 import { work, workHandlers } from "@/test/fixtures/work";
-import { personas } from "@/test/personas";
+import { settings } from "@/test/fixtures/settings";
+import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import { server } from "@/test/server";
 import PresentationPreview from "./PresentationPreview";
@@ -261,5 +262,75 @@ describe("the staff's preview of the draft", () => {
         expect(within(lightbox).queryByRole("button", { name: /Comment/ })).toBeNull();
         expect(within(lightbox).queryByRole("complementary")).toBeNull();
         expect(asked).toBe(false);
+    });
+});
+
+describe("Proton's suggested reply in the project chat", () => {
+    const suggestion = "Thanks, we'll check the island's position and come back to you.";
+
+    /** The chat as Nadia sees it, the client having written last, and Proton's answer. */
+    function clientLast(companyAllows = true) {
+        const who = (key: string) => peopleFor("u2").find((p) => p.key === key)!;
+        const { box, handlers } = mockDiscussion(STAFF_BASE, {
+            viewer: "u2",
+            summary: summaryOf("u2"),
+            messages: [messageOf(1, who("u2"), "Welcome aboard"), messageOf(2, who("c7"), "Can we move the kitchen island?")],
+        });
+        const asked: unknown[] = [];
+        return {
+            box, asked,
+            handlers: [
+                ...handlers,
+                http.get("/api/company/settings", () => HttpResponse.json({ ...settings.company, protonReplySuggestions: companyAllows })),
+                http.post("/api/proton/reply-suggestions", async ({ request }) => {
+                    asked.push(await request.json());
+                    return HttpResponse.json({ text: suggestion, unavailable: null });
+                }),
+            ],
+        };
+    }
+
+    it("offers it in the empty box: Tab writes it in, to be edited and sent", async () => {
+        const { asked, handlers } = clientLast();
+        renderApp(discussion, nadia, ...projectWorkHandlers, ...handlers);
+
+        const box = await screen.findByRole("combobox", { name: "Message" });
+        await waitFor(() => expect(box).toHaveAttribute("placeholder", suggestion));
+        expect(screen.getByText(/Proton suggests a reply/)).toBeInTheDocument();
+        expect(asked).toEqual([{ projectId: projectWork.project.id }]);
+
+        box.focus();
+        await userEvent.keyboard("{Tab}");
+        expect(box).toHaveValue(suggestion);
+        // nothing is sent until the person sends it
+        expect(screen.queryByText(/Proton suggests a reply/)).toBeNull();
+    });
+
+    it("goes away with Escape, and never covers what the person writes", async () => {
+        const { handlers } = clientLast();
+        renderApp(discussion, nadia, ...projectWorkHandlers, ...handlers);
+        const box = await screen.findByRole("combobox", { name: "Message" });
+        await waitFor(() => expect(box).toHaveAttribute("placeholder", suggestion));
+
+        await userEvent.type(box, "On it");
+        expect(box).not.toHaveAttribute("placeholder", suggestion);
+        await userEvent.clear(box);
+        await userEvent.keyboard("{Escape}");
+        expect(box).not.toHaveAttribute("placeholder", suggestion);
+        expect(box).toHaveValue("");
+    });
+
+    it("isn't asked for when the company turned suggestions off, or for someone without Proton", async () => {
+        const off = clientLast(false);
+        const { unmount } = renderApp(discussion, nadia, ...projectWorkHandlers, ...off.handlers);
+        await screen.findByText("Can we move the kitchen island?");
+        await screen.findByRole("combobox", { name: "Message" });
+        expect(off.asked).toEqual([]);
+        unmount();
+
+        const noProton = clientLast();
+        renderApp(discussion, withPermissions(nadia, { revoke: ["proton:use"] }), ...projectWorkHandlers, ...noProton.handlers);
+        await screen.findByText("Can we move the kitchen island?");
+        expect(noProton.asked).toEqual([]);
     });
 });

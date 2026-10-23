@@ -18,7 +18,7 @@ type ActionCardProps = {
 /** A two-step card's Confirm waits this long after Review, so a double click can't pass both steps. */
 const ARM_MS = 600;
 
-const AREAS: Record<string, string> = { design: "Design", execution: "Execution", company: "Company" };
+const AREAS: Record<string, string> = { design: "Design", execution: "Execution", website: "Website", company: "Company" };
 
 /** What the API says became of a card brought back after a reload. */
 function stateOf(summary: ProtonActionSummary): ActionState {
