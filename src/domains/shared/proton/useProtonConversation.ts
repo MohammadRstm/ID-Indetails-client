@@ -57,7 +57,10 @@ export function useProtonConversation() {
             // asked by someone who has since signed out: nothing of it reaches the chat, the page or the cache
             if (protonSession() !== asker) return { kind: "replaced" };
             queryClient.setQueryData(["proton", "usage"], reply.usage);
-            const did = latest.current.run(reply.uiCommands);
+            // a fill that waits for its form says later what became of it, in this person's chat only
+            const did = latest.current.run(reply.uiCommands, (message) => {
+                if (protonSession() === asker) add({ from: "note", text: message });
+            });
             changeChat((c) => ({
                 ...c,
                 conversationId: reply.conversationId,

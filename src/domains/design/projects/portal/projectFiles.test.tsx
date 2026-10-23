@@ -646,3 +646,35 @@ describe("choosing the client's files", () => {
         }
     });
 });
+
+describe("a file opened from its link, as Proton opens one", () => {
+    const drawing = projectFileOf(21, "Ground floor", fileOf(31, "Ground floor.pdf", { contentType: "application/pdf", preview: "pdf" }), { section: "drawing" });
+    const model = projectFileOf(22, "Massing", fileOf(32, "Massing.skp", { contentType: "application/octet-stream", preview: "none" }), { section: "model" });
+
+    it("opens a picture in the viewer, on its own section", async () => {
+        renderApp(`${page}?tab=files&view=5`, nadia, servedFiles(filesOf([living, drawing])), ...projectWorkHandlers);
+        expect(await screen.findByRole("dialog", { name: "Living room v3" })).toBeInTheDocument();
+    });
+
+    it("offers to open a PDF in a new tab, on the person's own click, and goes back to the section when closed", async () => {
+        renderApp(`${page}?tab=files&view=21`, nadia, servedFiles(filesOf([living, drawing])), ...projectWorkHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "Ground floor" });
+        expect(within(dialog).getByRole("button", { name: /Open/ })).toBeInTheDocument();
+        expect(within(screen.getByRole("tablist", { name: "Project files" })).getByRole("tab", { selected: true })).toHaveTextContent("Drawings");
+        await userEvent.keyboard("{Escape}");
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+        expect(window.location.search).toBe("?tab=files&part=drawing");
+    });
+
+    it("offers only a download for a file the browser can't show, and nothing for a file that isn't the project's", async () => {
+        const { unmount } = renderApp(`${page}?tab=files&view=22`, nadia, servedFiles(filesOf([model])), ...projectWorkHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "Massing" });
+        expect(within(dialog).getByRole("button", { name: /Download/ })).toBeInTheDocument();
+        expect(within(dialog).queryByRole("button", { name: /^Open/ })).not.toBeInTheDocument();
+        unmount();
+
+        renderApp(`${page}?tab=files&part=model&view=999`, nadia, servedFiles(filesOf([model])), ...projectWorkHandlers);
+        await screen.findByText("Massing");
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+});

@@ -63,6 +63,76 @@ describe("Proton filling a form", () => {
         await user.keyboard("{Enter}");
         expect(submit).toHaveBeenCalledTimes(1);
     });
+
+    it("doesn't count moving through the form as touching it: Tab then Enter still sends nothing", async () => {
+        const submit = vi.fn();
+        render(<ClientForm onSubmit={submit} />);
+        act(() => { fillForm(fill({ client: { name: "Acme", note: null, organisation: null, email: null, phone: null } })); });
+
+        act(() => screen.getByRole("textbox", { name: "Name" }).focus());
+        const user = userEvent.setup();
+        await user.keyboard("{Tab}{Enter}");
+        expect(screen.getByRole("textbox", { name: "Note" })).toHaveFocus();
+        expect(submit).not.toHaveBeenCalled();
+
+        // typing is touching it: then Enter is the person's own
+        await user.keyboard("!{Enter}");
+        expect(submit).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("Proton filling a form after opening it in the same answer", () => {
+    const acme = () => fill({ client: { name: "Acme", note: null, organisation: null, email: null, phone: null } });
+
+    it("leaves the form the move is closing alone, and fills the one that opens, saying so", () => {
+        vi.useFakeTimers();
+        try {
+            window.history.pushState({}, "", "/execution/clients");
+            const closing = render(<ClientForm onSubmit={() => {}} />);
+            const report = vi.fn();
+
+            // Proton moves to another page, where the same kind of form opens
+            window.history.pushState({}, "", "/design/clients");
+            expect(fillForm(acme(), { afterMove: true, report })).toMatch(/as it opens/);
+            act(() => { vi.advanceTimersByTime(500); });
+            expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("");
+
+            closing.unmount();
+            render(<ClientForm onSubmit={() => {}} />);
+            expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Acme");
+            expect(report).toHaveBeenCalledWith("Filled name: check it and save.");
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("fills a form that stays open through the move once the page has settled", () => {
+        vi.useFakeTimers();
+        try {
+            window.history.pushState({}, "", "/design/clients");
+            render(<ClientForm onSubmit={() => {}} />);
+            const report = vi.fn();
+
+            fillForm(acme(), { afterMove: true, report });
+            act(() => { vi.advanceTimersByTime(500); });
+            expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Acme");
+            expect(report).toHaveBeenCalledWith("Filled name: check it and save.");
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("says so when the form never opened", () => {
+        vi.useFakeTimers();
+        try {
+            const report = vi.fn();
+            fillForm(fill({ form: "meeting" }), { afterMove: true, report });
+            act(() => { vi.advanceTimersByTime(10_000); });
+            expect(report).toHaveBeenCalledWith("The form didn't open, so I couldn't fill it.");
+        } finally {
+            vi.useRealTimers();
+        }
+    });
 });
 
 describe("a draft from Proton", () => {
