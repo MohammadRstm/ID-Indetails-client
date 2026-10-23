@@ -1608,9 +1608,52 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/*+json": components["schemas"]["CompanyProtonFilesRequest"];
-                    "application/json": components["schemas"]["CompanyProtonFilesRequest"];
-                    "text/json": components["schemas"]["CompanyProtonFilesRequest"];
+                    "application/*+json": components["schemas"]["CompanyProtonSwitchRequest"];
+                    "application/json": components["schemas"]["CompanyProtonSwitchRequest"];
+                    "text/json": components["schemas"]["CompanyProtonSwitchRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CompanySettingsResponse"];
+                        "text/json": components["schemas"]["CompanySettingsResponse"];
+                        "text/plain": components["schemas"]["CompanySettingsResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company/proton-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["CompanyProtonSwitchRequest"];
+                    "application/json": components["schemas"]["CompanyProtonSwitchRequest"];
+                    "text/json": components["schemas"]["CompanyProtonSwitchRequest"];
                 };
             };
             responses: {
@@ -4805,6 +4848,49 @@ export interface paths {
             };
         };
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/proton-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["MyProtonSuggestionsRequest"];
+                    "application/json": components["schemas"]["MyProtonSuggestionsRequest"];
+                    "text/json": components["schemas"]["MyProtonSuggestionsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CurrentUserResponse"];
+                        "text/json": components["schemas"]["CurrentUserResponse"];
+                        "text/plain": components["schemas"]["CurrentUserResponse"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -10952,6 +11038,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/proton/reply-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SuggestReplyRequest"];
+                    "application/json": components["schemas"]["SuggestReplyRequest"];
+                    "text/json": components["schemas"]["SuggestReplyRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProtonReplySuggestion"];
+                        "text/json": components["schemas"]["ProtonReplySuggestion"];
+                        "text/plain": components["schemas"]["ProtonReplySuggestion"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/proton/usage": {
         parameters: {
             query?: never;
@@ -14033,7 +14162,7 @@ export interface components {
             unconvertedInvoices: components["schemas"]["UnconvertedInvoicesResponse"][];
             unconvertedOverhead: components["schemas"]["CurrencyTotalResponse"][];
         };
-        CompanyProtonFilesRequest: {
+        CompanyProtonSwitchRequest: {
             enabled?: boolean;
         };
         CompanySettingsResponse: {
@@ -14045,6 +14174,7 @@ export interface components {
             logoFileId: null | number;
             name: string;
             protonReadsFiles: boolean;
+            protonReplySuggestions: boolean;
             timeZone: string;
             /** Format: date-time */
             updatedAt: null | string;
@@ -14209,6 +14339,7 @@ export interface components {
             /** Format: int64 */
             photoFileId: null | number;
             position: null | string;
+            protonReplySuggestions: boolean;
             role: string;
             team: null | components["schemas"]["TeamSummaryResponse"];
             visibleDomains: string[];
@@ -15301,6 +15432,9 @@ export interface components {
             /** Format: int32 */
             totalMinutes: number;
             weekly: components["schemas"]["WeekTotalResponse"][];
+        };
+        MyProtonSuggestionsRequest: {
+            enabled?: boolean;
         };
         MyRequirementProjectResponse: {
             icon: null | string;
@@ -17024,6 +17158,10 @@ export interface components {
             uiCommands: components["schemas"]["ProtonUiCommand"][];
             usage: components["schemas"]["ProtonUsageResponse"];
         };
+        ProtonReplySuggestion: {
+            text: null | string;
+            unavailable: null | string;
+        };
         ProtonSeries: {
             key: string;
             label: string;
@@ -17965,6 +18103,10 @@ export interface components {
             days?: components["schemas"]["LabourDayRequest"][];
             expectedVersion?: null | string;
             note?: null | string;
+        };
+        SuggestReplyRequest: {
+            /** Format: int64 */
+            projectId?: number;
         };
         TaskCommentResponse: {
             attachment: null | components["schemas"]["FileResponse"];

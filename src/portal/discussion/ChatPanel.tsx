@@ -6,6 +6,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Icon from "@/shared/icons/Icon";
 import BubbleRow, { type RowAction } from "./BubbleRow";
 import { useChatMessages, useDeleteMessage, useEditMessage, useMarkRead, useSendMessage, type Discussion } from "./discussionApi";
+import { useReplySuggestion } from "./replySuggestion";
 import { mentionNames } from "./textParts";
 import { MAX_MESSAGE, type DiscussionSummary, type Draft, type PortalChatMessage } from "./discussionTypes";
 import { ConfirmDelete } from "./DiscussionBits";
@@ -18,6 +19,8 @@ type Props = {
     discussion: Discussion;
     projectId: number;
     summary: DiscussionSummary;
+    /** The team's side, where Proton may suggest replies to clients (the company's and the person's switches allow it). */
+    suggestReplies?: boolean;
 };
 
 /** How far from the end the list may be and still count as at the end (pixels). */
@@ -31,7 +34,7 @@ const READ_AFTER_MS = 600;
  * (asking first). The list follows new messages while you are at the end; if you are reading further up, a "New
  * messages" button says so instead. Having the newest message on screen in a visible tab marks the chat read.
  */
-export default function ChatPanel({ discussion, projectId, summary }: Props) {
+export default function ChatPanel({ discussion, projectId, summary, suggestReplies = false }: Props) {
     const messages = useChatMessages(discussion, projectId);
     const send = useSendMessage(discussion, projectId);
     const edit = useEditMessage(discussion, projectId);
@@ -46,6 +49,8 @@ export default function ChatPanel({ discussion, projectId, summary }: Props) {
     const [seenId, setSeenId] = useState(0);
     const [editing, setEditing] = useState<number | null>(null);
     const [deleting, setDeleting] = useState<number | null>(null);
+    // the message whose suggestion was dismissed: the next client message brings a new one
+    const [dismissed, setDismissed] = useState<number | null>(null);
 
     const shown = [...(messages.data?.pages ?? [])].reverse().flatMap((page) => page.messages);
     const oldestId = shown[0]?.id ?? 0;
@@ -53,6 +58,7 @@ export default function ChatPanel({ discussion, projectId, summary }: Props) {
     const newestId = newest?.id ?? 0;
     const newestIsYours = newest?.author.isYou ?? false;
     const unread = summary.unreadMessages;
+    const suggestion = useReplySuggestion(projectId, newest, suggestReplies && summary.canWrite);
 
     // what is on screen at the end is seen
     if (atEnd && seenId !== newestId) setSeenId(newestId);
@@ -155,6 +161,7 @@ export default function ChatPanel({ discussion, projectId, summary }: Props) {
             <div className="dp-foot">
                 <MentionComposer label="Message" placeholder="Write a message. Type @ to mention someone." max={MAX_MESSAGE}
                     people={summary.participants} closed={closed}
+                    suggestion={dismissed === newestId ? null : suggestion} onDismissSuggestion={() => setDismissed(newestId)}
                     onSubmit={async (draft) => { await send.mutateAsync(draft); }} />
             </div>
         </div>

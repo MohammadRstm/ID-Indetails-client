@@ -1,4 +1,8 @@
 import { Link, useSearchParams } from "react-router";
+import { P } from "@/app/permissions/codes";
+import { usePermissions } from "@/app/permissions/usePermissions";
+import { useCurrentUser } from "@/app/session/useSession";
+import { useCompanySettings } from "@/app/shell/shellQueries";
 import ChatPanel from "@/portal/discussion/ChatPanel";
 import CommentThreadPanel from "@/portal/discussion/CommentThreadPanel";
 import CommentThreadsList from "@/portal/discussion/CommentThreadsList";
@@ -11,12 +15,17 @@ import { staffDiscussion } from "./staffDiscussion";
 /**
  * The Client portal tab's Discussion part: the project's chat with the client's contacts on the left (above on narrow
  * screens) and the comments they and the team wrote on files on the right. A link with ?item={id} opens that file's
- * comments in place of the list, with a way back. Whoever takes part sees it, whatever their permissions.
+ * comments in place of the list, with a way back. Whoever takes part sees it, whatever their permissions. Proton
+ * suggests replies to clients there for those who use it, unless the company or the person turned that off.
  */
 export default function DiscussionPart({ project }: { project: Project }) {
     const [params, setParams] = useSearchParams();
     const itemParam = Number(params.get("item"));
     const itemId = Number.isInteger(itemParam) && itemParam > 0 ? itemParam : null;
+    const me = useCurrentUser();
+    const usesProton = usePermissions().has(P.PROTON_USE);
+    const company = useCompanySettings().data;
+    const suggestReplies = usesProton && me.protonReplySuggestions && company?.protonReplySuggestions === true;
 
     function openItem(next: number) {
         const link = new URLSearchParams(params);
@@ -33,7 +42,7 @@ export default function DiscussionPart({ project }: { project: Project }) {
             {(summary) => (
                 <div className="dp-split">
                     <Panel title="Project chat" sub="The client's contacts and the team write here. Everyone in the discussion sees it." flush bodyClassName="dp-pane">
-                        <ChatPanel discussion={staffDiscussion} projectId={project.id} summary={summary} />
+                        <ChatPanel discussion={staffDiscussion} projectId={project.id} summary={summary} suggestReplies={suggestReplies} />
                     </Panel>
                     <Panel title={itemId == null ? "Comments on files" : "Comments"} flush bodyClassName="dp-pane"
                         sub={itemId == null ? "Every file clients have commented on, newest first." : undefined}

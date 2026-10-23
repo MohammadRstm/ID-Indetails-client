@@ -103,6 +103,21 @@ describe("Settings", () => {
         expect(screen.getByRole("switch", { name: "Let Proton read project files" })).toHaveAttribute("aria-checked", "true");
     });
 
+    it("lets anyone who uses Proton turn its reply suggestions off for themselves, and a super admin for everyone", async () => {
+        const mine = recorder("put", "/api/me/proton-suggestions", { ...rana, protonReplySuggestions: false });
+        const company = recorder("put", "/api/company/proton-suggestions", { ...settings.company, protonReplySuggestions: false });
+        renderApp("/design/settings", rana, mine.handler, company.handler, ...settingsHandlers);
+
+        await userEvent.click(await screen.findByRole("switch", { name: "Suggest my replies to clients" }));
+        await waitFor(() => expect(mine.bodies).toEqual([{ enabled: false }]));
+        expect(await screen.findByText("Proton no longer suggests your replies")).toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole("switch", { name: "Suggest replies to clients" }));
+        await waitFor(() => expect(company.bodies).toEqual([{ enabled: false }]));
+        // with the company's off, a person's own switch says it waits for it
+        expect(await screen.findByText(/turned reply suggestions off for everyone/)).toBeInTheDocument();
+    });
+
     it("doesn't show the Proton switch to an admin who can't change the company settings", async () => {
         renderApp("/design/settings", personas.designAdmin, ...settingsHandlers);
         await screen.findByRole("navigation", { name: "Settings" });
