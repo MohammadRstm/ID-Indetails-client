@@ -6,14 +6,14 @@ import { useCompanySettings } from "@/app/shell/shellQueries";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { FieldError } from "@/shared/components/Forms/Field";
-import { Segmented, SwitchRow } from "@/shared/components/Forms/Filters";
+import { Segmented, SwitchRow, Toggle } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import Logo from "@/shared/components/Identity/Logo";
 import Icon from "@/shared/icons/Icon";
 import { setTheme, useTheme } from "@/shared/theme";
 import { uploadFile } from "../../design/work/workApi";
 import { companyToday, DAYS_LONG } from "@/shared/format/time";
-import { useSaveCompanySettings, useSetLogo, useSetWorkingTime, useWorkingTime, type CompanySettings, type WorkingTime } from "./settingsApi";
+import { useSaveCompanySettings, useSetLogo, useSetProtonFiles, useSetWorkingTime, useWorkingTime, type CompanySettings, type WorkingTime } from "./settingsApi";
 import { daysText, nextChange } from "./workingTime";
 import { notSaved, saved } from "./settingsToasts";
 import { loadFailed } from "@/api/queryState";
@@ -61,7 +61,7 @@ export default function CompanySettingsSection() {
                     } />
                 </div>
             </div>
-            {!manages ? null : settings ? <Company settings={settings} />
+            {!manages ? null : settings ? <><Company settings={settings} /><ProtonFiles settings={settings} /></>
                 : <div className="panel"><div className="panel-body">
                     {loadFailed(query) ? <LoadError error={query.error} retry={() => query.refetch()} what="the company's settings" /> : <SkeletonLines lines={6} />}
                 </div></div>}
@@ -171,6 +171,27 @@ function Company({ settings: s }: { settings: CompanySettings }) {
                             options={[{ value: "12", label: "4:00 PM" }, { value: "24", label: "16:00" }]} />
                     } />
                 </div>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Whether Proton may read the projects' files to answer about them. Reading one sends its content to Anthropic,
+ * Proton's AI provider, so it is off until someone who manages the company settings turns it on.
+ */
+function ProtonFiles({ settings: s }: { settings: CompanySettings }) {
+    const save = useSetProtonFiles();
+    return (
+        <div className="panel" style={{ marginTop: 14 }}>
+            <div className="panel-head"><div><div className="panel-title">Proton</div></div></div>
+            <div className="panel-body">
+                <SwitchRow title="Let Proton read project files"
+                    description="Proton can then read a project's PDFs, pictures, videos and Office files to answer about them. Each file it reads is sent to Anthropic, Proton's AI provider, and isn't kept after the conversation. Off, Proton can still list the files and open them for you."
+                    control={
+                        <Toggle checked={s.protonReadsFiles} label="Let Proton read project files" disabled={save.isPending}
+                            onChange={(on) => save.mutate(on, { onSuccess: saved(on ? "Proton can read project files" : "Proton no longer reads project files"), onError: notSaved })} />
+                    } />
             </div>
         </div>
     );

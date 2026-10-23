@@ -1591,6 +1591,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/company/proton-files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["CompanyProtonFilesRequest"];
+                    "application/json": components["schemas"]["CompanyProtonFilesRequest"];
+                    "text/json": components["schemas"]["CompanyProtonFilesRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CompanySettingsResponse"];
+                        "text/json": components["schemas"]["CompanySettingsResponse"];
+                        "text/plain": components["schemas"]["CompanySettingsResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/company/salaries": {
         parameters: {
             query?: never;
@@ -13990,6 +14033,9 @@ export interface components {
             unconvertedInvoices: components["schemas"]["UnconvertedInvoicesResponse"][];
             unconvertedOverhead: components["schemas"]["CurrencyTotalResponse"][];
         };
+        CompanyProtonFilesRequest: {
+            enabled?: boolean;
+        };
         CompanySettingsResponse: {
             address: null | string;
             contactEmail: null | string;
@@ -13998,6 +14044,7 @@ export interface components {
             /** Format: int64 */
             logoFileId: null | number;
             name: string;
+            protonReadsFiles: boolean;
             timeZone: string;
             /** Format: date-time */
             updatedAt: null | string;
