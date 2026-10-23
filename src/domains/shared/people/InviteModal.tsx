@@ -138,7 +138,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     }
 
     return (
-        <Modal surfaceId="invite_person" title={fixed === "website" ? "Add staff" : fixed ? "Add employee" : "Add person"}
+        <Modal surfaceId={fixed === "website" ? "invite_website_staff" : "invite_person"} title={fixed === "website" ? "Add staff" : fixed ? "Add employee" : "Add person"}
             sub={`They get an invitation and appear in the ${fixed === "website" ? "staff" : fixed ? "employee" : "people"} list straight away.`} onClose={onClose}
             foot={
                 <>

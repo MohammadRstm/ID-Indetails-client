@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useSearchParams } from "react-router";
 import { errorMessage } from "@/api/errors";
 import { loadFailed } from "@/api/queryState";
 import Panel from "@/shared/components/Data/Panel";
@@ -21,15 +22,30 @@ type Show = "all" | "published" | "drafts";
 /** Projects on each page of the list. */
 const PAGE_SIZE = 15;
 
-/** The website's projects: every project, published or not, 15 to a page, then the moving strip. */
+/**
+ * The website's projects: every project, published or not, 15 to a page, then the moving strip. A link opens a
+ * project's window (?project={id}) or the new project's (?new=1, for those who manage the website), as Proton does.
+ */
 export default function WebsiteProjectsTab() {
     const query = useWebsiteProjects();
-    const [open, setOpen] = useState<WebsiteProject | "new" | null>(null);
+    const [params, setParams] = useSearchParams();
+    const [picked, setPicked] = useState<WebsiteProject | "new" | null>(null);
     const [show, setShow] = useState<Show>("all");
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const top = useRef<HTMLDivElement>(null);
     const data = query.data;
+    const linked = params.get("new") === "1" ? (data?.canManage ? "new" as const : null)
+        : data?.projects.find((p) => String(p.id) === params.get("project")) ?? null;
+    const open = picked ?? linked;
+    const setOpen = (next: WebsiteProject | "new" | null) => {
+        setPicked(next);
+        if (next == null && (params.has("new") || params.has("project"))) {
+            params.delete("new");
+            params.delete("project");
+            setParams(params, { replace: true });
+        }
+    };
 
     if (!data) {
         return (
