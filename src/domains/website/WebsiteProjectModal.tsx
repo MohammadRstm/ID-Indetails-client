@@ -7,15 +7,17 @@ import Field, { FieldError } from "@/shared/components/Forms/Field";
 import { SearchInput, SwitchRow, Toggle } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
+import { useDragOrder, type DragItemProps } from "@/shared/hooks/useDragOrder";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { PictureSlot, Thumb } from "./WebsitePictures";
 import {
-    moved, PICTURE_TYPES, STATUS_LABEL, uploadPictures, TYPE_LABEL, useDeleteWebsiteProject, useGallery, useLinkCandidates, useSaveWebsiteProject, useWebsiteProjects,
-    type LinkCandidate, type WebsiteProject, type WebsiteProjectBody, type WebsiteProjectType, type WebsiteStatus,
+    moved, PICTURE_TYPES, STATUS_LABEL, uploadPictures, useDeleteWebsiteProject, useGallery, useLinkCandidates, useSaveWebsiteProject, useWebsiteProjects,
+    type LinkCandidate, type WebsiteProject, type WebsiteProjectBody, type WebsiteStatus,
 } from "./websiteApi";
-import { missingToPublish, placeError, slugOf, splitPosition, yearError } from "./websiteRules";
+import { cleanType, missingToPublish, placeError, slugOf, splitPosition, typeChoices, typeError, yearError } from "./websiteRules";
 import PlaceFields from "./WebsitePlaceFields";
+import TypePicker from "./WebsiteTypePicker";
 
 type Linked = { id: number; title: string; domainCode: string; status: WebsiteStatus; year: number };
 
@@ -33,10 +35,11 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     const errors = useFormErrors();
     const [saved, setSaved] = useState<WebsiteProject | null>(project);
     // the project as the list has it now: a gallery change shows here as soon as it is saved
-    const listed = useWebsiteProjects().data?.projects.find((x) => x.id === saved?.id);
+    const projects = useWebsiteProjects().data?.projects;
+    const listed = projects?.find((x) => x.id === saved?.id);
     const p = listed ?? saved;
     const [title, setTitle] = useState(p?.title ?? "");
-    const [type, setType] = useState<WebsiteProjectType>(p?.type ?? "villa");
+    const [type, setType] = useState(p?.type ?? "");
     const [status, setStatus] = useState<WebsiteStatus | "">(p?.status ?? "");
     const [year, setYear] = useState(p?.year != null ? String(p.year) : "");
     const [client, setClient] = useState(p?.client ?? "");
@@ -62,15 +65,22 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     const titleError = !title.trim() ? "Give the project a title."
         : title.trim().length > 150 ? "A title can be at most 150 characters."
             : !slugOf(title) && "The name needs at least one Latin letter or digit: the project's page address is made from it.";
+    const typeProblem = typeError(type);
+    // the suggested types and the ones the other projects have
+    const types = typeChoices((projects ?? []).filter((x) => x.id !== p?.id).map((x) => x.type));
     const statusError = !linked && !status && "Choose a status, or link a system project to follow its status.";
     const yearProblem = yearError(year, !!linked);
     const positionError = placeError(latitude, longitude);
     const missing = missingToPublish({ status: shownStatus, year: shownYear, city, country, latitude, longitude, description, thumbnail, hero });
     const publishError = published && missing.length > 0 && `To publish it, add ${missing.join(", ")}.`;
+    // the concept is optional, but it is its text and its pictures together, or neither
+    const conceptPictures = p?.conceptImages.length ?? 0;
+    const conceptError = conceptDescription.trim() && conceptPictures === 0 ? "Add at least one concept picture for this text, or clear the text."
+        : !conceptDescription.trim() && conceptPictures > 0 && "Describe the concept pictures, or remove them.";
 
     function body(): WebsiteProjectBody {
         return {
-            title: title.trim(), type, status: status || null, year: year.trim() ? Number(year) : null,
+            title: title.trim(), type: cleanType(type), status: status || null, year: year.trim() ? Number(year) : null,
             client: client.trim() || null, city: city.trim() || null, country: country.trim() || null,
             latitude: latitude.trim() ? Number(latitude) : null, longitude: longitude.trim() ? Number(longitude) : null,
             description: description.trim() || null, conceptDescription: conceptDescription.trim() || null, projectId: linked?.id ?? null, thumbnailFileId: thumbnail, heroFileId: hero,
@@ -96,7 +106,7 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
 
     /** Step 1 to 2: the details checked and saved (a new project as a draft), so its concept pictures can be added. */
     function next() {
-        if (titleError || statusError || yearProblem || positionError || publishError) return errors.tried();
+        if (titleError || typeProblem || statusError || yearProblem || positionError || publishError) return errors.tried();
         store(p ? published : false, p?.conceptDescription ?? "", (result) => {
             const found = !city.trim() && result.city ? `${result.city}, ${result.country} found from the coordinates` : null;
             if (found || !p) toast({ text: p ? "Details saved" : "Project added as a draft", sub: found ?? "Next, its concept", icon: "checkCircle" });
@@ -104,10 +114,10 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
         });
     }
 
-    /** Step 2 to 3: the concept (or none, when skipped) and whether it is published. */
+    /** Step 2 to 3: the concept (or none, when skipped: only a project without concept pictures) and whether it is published. */
     function publishAndContinue(skipConcept: boolean) {
-        if (publishError) return errors.tried();
-        const concept = skipConcept ? p?.conceptDescription ?? "" : conceptDescription;
+        if (publishError || (!skipConcept && conceptError)) return errors.tried();
+        const concept = skipConcept ? "" : conceptDescription;
         if (skipConcept) setConceptDescription(concept);
         store(published, concept, (result) => {
             toast({ text: result.published ? "It's on the website" : "Saved as a draft", sub: "Last, its gallery", icon: "checkCircle" });
@@ -132,7 +142,8 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     ];
 
     return (
-        <Modal surfaceId={p ? "edit_website_project" : "new_website_project"} title={p ? p.title : "New website project"} sub={p ? `/projects/${p.slug}` : "Everything here can be public: it shows on the company's website once published."}
+        // kept at the top, so moving between steps of different heights doesn't move the form
+        <Modal surfaceId={p ? "edit_website_project" : "new_website_project"} title={p ? p.title : "New website project"} scrimClass="scrim-top" sub={p ? `/projects/${p.slug}` : "Everything here can be public: it shows on the company's website once published."}
             size="lg" onClose={onClose}
             foot={edit ? (
                 <>
@@ -157,7 +168,8 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
                     {step === 2 && (
                         <>
                             <button className="btn" onClick={() => setStep(1)}>Back</button>
-                            <button className="btn" disabled={save.isPending} onClick={() => publishAndContinue(true)}>Skip the concept</button>
+                            <button className="btn" disabled={save.isPending || conceptPictures > 0} onClick={() => publishAndContinue(true)}
+                                title={conceptPictures > 0 ? "It has concept pictures: remove them to skip the concept." : undefined}>Skip the concept</button>
                             <button className="btn btn-primary" disabled={save.isPending} onClick={() => publishAndContinue(false)}>
                                 {save.isPending ? "Saving…" : published ? "Publish and next" : "Save draft and next"}
                             </button>
@@ -198,9 +210,8 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
                 </Field>
             </div>
             <div className="grid g-3 mt">
-                <Field id="wp-type" label="Type" required={edit}>
-                    <Select id="wp-type" value={type} disabled={!edit} onChange={setType}
-                        options={(Object.keys(TYPE_LABEL) as WebsiteProjectType[]).map((t) => ({ value: t, label: TYPE_LABEL[t] }))} />
+                <Field id="wp-type" label="Type" required={edit} error={errors.show("type", typeProblem)}>
+                    <TypePicker id="wp-type" value={type} choices={types} disabled={!edit} onChange={setType} onBlur={errors.touch("type")} />
                 </Field>
                 <Field id="wp-status" label="Status" required={edit && !linked} error={errors.show("status", statusError)}>
                     <Select id="wp-status" value={status} disabled={!edit} onChange={(v) => { setStatus(v as WebsiteStatus | ""); errors.touch("status")(); }} options={statusOptions} />
@@ -250,12 +261,13 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
             </>)}
 
             {step === 2 && p && (<>
-                <div className="hint">A row on the project's own page, under its description: up to 5 concept pictures beside this text. It shows only when there is one or the other, so it can be skipped.</div>
-                <Field id="wp-concept" label="Concept description">
+                <div className="hint">A row on the project's own page, under its description: up to 5 concept pictures beside this text. It's optional, but it's both or neither: pictures need a text, and a text needs a picture.</div>
+                <Field id="wp-concept" label="Concept description" required={edit && conceptPictures > 0}>
                     <AutoGrowTextarea id="wp-concept" className="input" minRows={3} maxRows={25} maxLength={4000} value={conceptDescription} disabled={!edit}
-                        onChange={(e) => setConceptDescription(e.target.value)} />
+                        onChange={(e) => setConceptDescription(e.target.value)} onBlur={errors.touch("concept")} />
                 </Field>
                 <Gallery project={p} canManage={edit} concept />
+                <FieldError message={errors.show("concept", conceptError)} />
 
                 <SwitchRow title="Published" style={{ marginTop: 18 }}
                     description={published ? "It's on the website: the globe, the projects page and its own page." : "A draft: only people on this page see it."}
@@ -322,7 +334,10 @@ function Gallery({ project, canManage, concept = false }: { project: WebsiteProj
     const [adding, setAdding] = useState<{ total: number; done: number; fraction: number } | null>(null);
     const [failed, setFailed] = useState<string>();
     const images = concept ? project.conceptImages : project.gallery;
-    const ids = images.map((i) => i.id);
+    // while a new order saves, it shows already
+    const ids = gallery.order.isPending && gallery.order.variables ? gallery.order.variables : images.map((i) => i.id);
+    const ordered = ids.map((id) => images.find((i) => i.id === id)).filter((i) => i != null);
+    const drag = useDragOrder(ids, (next) => gallery.order.mutate(next), !canManage || gallery.order.isPending || gallery.remove.isPending);
     const room = concept ? MAX_CONCEPT - images.length : Infinity;
     const noun = concept ? "concept picture" : "picture";
     const error = failed ?? (gallery.order.error ?? gallery.remove.error ?? gallery.edit.error ? errorMessage(gallery.order.error ?? gallery.remove.error ?? gallery.edit.error) : undefined);
@@ -362,9 +377,10 @@ function Gallery({ project, canManage, concept = false }: { project: WebsiteProj
                         : "No gallery pictures yet. They show further down the project's own page; wide pictures (3:2) look best."}
                 </div>
             )}
+            {canManage && images.length > 1 && <div className="hint">Drag a picture to its place, or use its arrows.</div>}
             <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-                {images.map((image, index) => (
-                    <GalleryRow key={image.id} image={image} index={index} count={ids.length} canManage={canManage} noun={noun}
+                {ordered.map((image, index) => (
+                    <GalleryRow key={image.id} image={image} index={index} count={ids.length} canManage={canManage} noun={noun} drag={drag.item(image.id)}
                         onMove={(by) => gallery.order.mutate(moved(ids, image.id, by))}
                         onSave={(alt) => gallery.edit.mutate({ imageId: image.id, body: { alt } })}
                         onRemove={() => gallery.remove.mutate(image.id)} busy={gallery.order.isPending || gallery.remove.isPending} />
@@ -386,16 +402,18 @@ type GalleryRowProps = {
     onMove: (by: -1 | 1) => void;
     onSave: (alt: string) => void;
     onRemove: () => void;
+    /** Its part in dragging the pictures into order (useDragOrder). */
+    drag: DragItemProps;
 };
 
-function GalleryRow({ image, noun, index, count, canManage, busy, onMove, onSave, onRemove }: GalleryRowProps) {
+function GalleryRow({ image, noun, index, count, canManage, busy, onMove, onSave, onRemove, drag }: GalleryRowProps) {
     const [alt, setAlt] = useState(image.alt);
     const errors = useFormErrors();
     const altError = !alt.trim() && "Describe the picture.";
     const changed = alt.trim() !== image.alt;
 
     return (
-        <div className="row" style={{ gap: 10, alignItems: "flex-start" }}>
+        <div className={canManage ? "row drag-item" : "row"} style={{ gap: 10, alignItems: "flex-start", padding: "3px 0" }} {...drag}>
             <Thumb fileId={image.fileId} width={96} ratio={3 / 2} alt={image.alt} />
             <div className="grow">
                 <input className="input" aria-label={`Description of ${noun} ${index + 1}`} value={alt} maxLength={200} disabled={!canManage}

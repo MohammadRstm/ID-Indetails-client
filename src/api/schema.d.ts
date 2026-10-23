@@ -17175,6 +17175,7 @@ export interface components {
             thumbnail: string;
             title: string;
             type: string;
+            typeLabel: string;
             /** Format: int32 */
             year: number;
         };
@@ -18393,7 +18394,7 @@ export interface components {
             /** Format: int64 */
             thumbnailFileId?: null | number;
             title?: string;
-            type?: components["schemas"]["WebsiteProjectType"];
+            type?: string;
             /** Format: int32 */
             year?: null | number;
         };
@@ -18431,7 +18432,7 @@ export interface components {
             /** Format: int64 */
             thumbnailFileId: null | number;
             title: string;
-            type: components["schemas"]["WebsiteProjectType"];
+            type: string;
             /** Format: date-time */
             updatedAt: null | string;
             /** Format: int32 */
@@ -18445,8 +18446,6 @@ export interface components {
         };
         /** @enum {unknown} */
         WebsiteProjectStatus: "in_progress" | "completed" | null;
-        /** @enum {unknown} */
-        WebsiteProjectType: "villa" | "residential" | "hotel";
         WebsiteRealtimeCountry: {
             code: string;
             name: string;
