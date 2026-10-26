@@ -61,6 +61,24 @@ export function useSetProtonFiles() {
     });
 }
 
+/** Whether Proton suggests replies in the discussions with clients, for everyone (company_settings:manage). */
+export function useSetProtonSuggestions() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (enabled: boolean) => (await http.put<CompanySettings>("/company/proton-suggestions", { enabled })).data,
+        onSuccess: (saved) => queryClient.setQueryData(companySettingsKey, saved),
+    });
+}
+
+/** The person's own choice of whether Proton suggests replies to them. */
+export function useSetMyProtonSuggestions() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (enabled: boolean) => (await http.put<Schemas["CurrentUserResponse"]>("/me/proton-suggestions", { enabled })).data,
+        onSuccess: (me) => queryClient.setQueryData(ME_KEY, me),
+    });
+}
+
 /** A new logo from an uploaded file, or null for the ID InDetails mark (company_settings:manage). */
 export function useSetLogo() {
     const invalidate = useInvalidate();

@@ -55,6 +55,7 @@ function user(id: number, first: string, role: string, domain: string | null, pe
         permissions: [...permissions].sort(),
         isJoker: false,
         visibleDomains: domain ? [domain] : ["design", "execution", "website"],
+        protonReplySuggestions: true,
     };
 }
 
