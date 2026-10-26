@@ -17,7 +17,11 @@ import HelpTip from "@/shared/components/Feedback/HelpTip";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 
-type ContactDraft = { kind: "email" | "phone"; value: string; label: string; isWhatsapp: boolean };
+/** `key` is the saved contact's id, or one made up for a contact added here, so removing a contact leaves the others' rows in place. */
+type ContactDraft = { key: string; kind: "email" | "phone"; value: string; label: string; isWhatsapp: boolean };
+
+const newContact = (kind: ContactDraft["kind"], value: string, label: string, isWhatsapp: boolean): ContactDraft =>
+    ({ key: crypto.randomUUID(), kind, value, label, isWhatsapp });
 
 type ClientModalProps = {
     domain: string;
@@ -37,8 +41,8 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
     const [label, setLabel] = useState(client?.label ?? "Client");
     const [note, setNote] = useState(client?.note ?? "");
     const [contacts, setContacts] = useState<ContactDraft[]>(
-        client?.contacts.map((c) => ({ kind: c.kind, value: c.value, label: c.label ?? "", isWhatsapp: c.isWhatsapp }))
-            ?? [{ kind: "email", value: "", label: "Main", isWhatsapp: false }],
+        client?.contacts.map((c) => ({ key: String(c.id), kind: c.kind, value: c.value, label: c.label ?? "", isWhatsapp: c.isWhatsapp }))
+            ?? [newContact("email", "", "Main", false)],
     );
     // Proton can fill the empty fields; the person checks them and saves
     const proton = useProtonForm("client", client?.id ?? null, (fill) => {
@@ -53,7 +57,7 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
             if (!value || next.some((c) => c.kind === kind && c.value.trim())) continue;
             const empty = next.findIndex((c) => c.kind === kind && !c.value.trim());
             if (empty >= 0) next[empty] = { ...next[empty], value };
-            else next.push({ kind, value, label: "Main", isWhatsapp: false });
+            else next.push(newContact(kind, value, "Main", false));
             done.push(kind);
         }
         if (next.some((c, i) => c !== contacts[i]) || next.length !== contacts.length) setContacts(next);
@@ -181,17 +185,17 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
                     <label className="label required">Contact details</label>
                     <div className="stack" style={{ gap: 8 }}>
                         {contacts.map((c, i) => (
-                            <div key={i}>
+                            <div key={c.key}>
                                 <div className="contact-edit">
                                     <Select className="select sm" style={{ width: 94 }} aria-label="Kind" value={c.kind}
                                         options={[{ value: "email", label: "Email" }, { value: "phone", label: "Phone" }]}
                                         onChange={(kind) => setContact(i, { kind, isWhatsapp: kind === "phone" ? c.isWhatsapp : false })} />
                                     {c.kind === "email" ? (
                                         <input className="input grow" placeholder="name@company.com" aria-label="Email address" value={c.value}
-                                            onChange={(e) => setContact(i, { value: e.target.value })} onBlur={errors.touch(`contact-${i}`)} />
+                                            onChange={(e) => setContact(i, { value: e.target.value })} onBlur={errors.touch(`contact-${c.key}`)} />
                                     ) : (
                                         <PhoneField placeholder="3 555 142" aria-label="Phone number" value={c.value}
-                                            onChange={(value) => setContact(i, { value })} onBlur={errors.touch(`contact-${i}`)} />
+                                            onChange={(value) => setContact(i, { value })} onBlur={errors.touch(`contact-${c.key}`)} />
                                     )}
                                     <input className="input" style={{ width: 108 }} placeholder="e.g. Office" aria-label="Contact label" value={c.label} onChange={(e) => setContact(i, { label: e.target.value })} />
                                     {c.kind === "phone" && (
@@ -203,13 +207,13 @@ export default function ClientModal({ domain, client, prefillName, onClose }: Cl
                                         <Icon name="x" />
                                     </button>
                                 </div>
-                                <FieldError message={errors.show(`contact-${i}`, emailError(c))} />
+                                <FieldError message={errors.show(`contact-${c.key}`, emailError(c))} />
                             </div>
                         ))}
                     </div>
                     <FieldError message={errors.show("contacts", contactsError)} />
                     <button type="button" className="btn btn-sm btn-quiet mt-s"
-                        onClick={() => setContacts([...contacts, { kind: "phone", value: "", label: "", isWhatsapp: true }])}>
+                        onClick={() => setContacts([...contacts, newContact("phone", "", "", true)])}>
                         <Icon name="plus" />Add another contact
                     </button>
                     <div className="hint">Used to identify and reach the client. They never receive anything from this system.</div>

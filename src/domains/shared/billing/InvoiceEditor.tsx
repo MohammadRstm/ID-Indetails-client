@@ -17,7 +17,10 @@ import InvoiceDoc, { ScaledDoc } from "./InvoiceDoc";
 import { billToContactOf, type DocFlash } from "./invoiceDocData";
 import { leftToInvoice, termOptions } from "./invoicePlan";
 
-type Line = { description: string; amount: number };
+/** `key` is the saved line's id, or one made up for a line added here, so removing a line leaves the others' rows in place. */
+type Line = { key: string; description: string; amount: number };
+
+const newLine = (amount = 0): Line => ({ key: crypto.randomUUID(), description: "", amount });
 
 type InvoiceEditorProps = {
     project: Project;
@@ -39,8 +42,8 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
     const value = m?.revenue ?? 0;
     const remaining = leftToInvoice(project, existing ? 0 : m?.billing.drafts ?? 0);
 
-    const [lines, setLines] = useState<Line[]>(existing ? existing.lines.map((l) => ({ description: l.description, amount: l.amount }))
-        : [{ description: "", amount: remaining > 0 ? Math.round(remaining) : 0 }]);
+    const [lines, setLines] = useState<Line[]>(existing ? existing.lines.map((l) => ({ key: String(l.id), description: l.description, amount: l.amount }))
+        : [newLine(remaining > 0 ? Math.round(remaining) : 0)]);
     const [terms, setTerms] = useState<number | null>(existing ? existing.termsDays : null);
     const [notes, setNotes] = useState(existing?.notes ?? "");
     const [flash, setFlash] = useState<DocFlash>({ key: null, n: 0 });
@@ -64,7 +67,7 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
         touched("amount" in patch ? "total" : `line-${i}`);
     }
     function suggest(amount: number, label: string) {
-        setLines([{ description: lines[0].description || label, amount: Math.round(amount) }, ...lines.slice(1)]);
+        setLines([{ ...lines[0], description: lines[0].description || label, amount: Math.round(amount) }, ...lines.slice(1)]);
         touched("total");
     }
     function submit(send: boolean) {
@@ -116,7 +119,7 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
 
                     <div className="u" style={{ marginBottom: 4 }}>Line items</div>
                     {lines.map((l, i) => (
-                        <div key={i} className="line-row">
+                        <div key={l.key} className="line-row">
                             <input className="input" placeholder="What is being billed" aria-label={`Line ${i + 1}`} value={l.description}
                                 onChange={(e) => setLine(i, { description: e.target.value })} />
                             <AmountField value={l.amount} currency="USD" currencies={false} aria-label={`Line ${i + 1} amount`} onChange={(amount) => setLine(i, { amount })} />
@@ -125,7 +128,7 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
                             </button>
                         </div>
                     ))}
-                    <button className="btn btn-sm mt-s" onClick={() => { setLines([...lines, { description: "", amount: 0 }]); touched(`line-${lines.length}`); }}>
+                    <button className="btn btn-sm mt-s" onClick={() => { setLines([...lines, newLine()]); touched(`line-${lines.length}`); }}>
                         <Icon name="plus" />Add line
                     </button>
 

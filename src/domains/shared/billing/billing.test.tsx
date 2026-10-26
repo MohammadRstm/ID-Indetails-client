@@ -111,6 +111,20 @@ describe("a project's billing", () => {
         expect(saved).toBe(false);
     });
 
+    it("keeps the other lines' rows in place when a line above them is removed", async () => {
+        renderApp(path, admin, ...handlers);
+        await userEvent.click(within(await band()).getByRole("button", { name: "New invoice" }));
+        const dialog = await screen.findByRole("dialog", { name: "New invoice" });
+        await userEvent.type(within(dialog).getByLabelText("Line 1"), "First milestone");
+        await userEvent.click(within(dialog).getByRole("button", { name: /Add line/ }));
+        await userEvent.type(within(dialog).getByLabelText("Line 2"), "Site visits");
+        const second = within(dialog).getByLabelText("Line 2");
+        await userEvent.click(within(dialog).getAllByRole("button", { name: "Remove line" })[0]);
+        // the same field moves up, rather than the first row's field taking the second line's text
+        expect(within(dialog).getByLabelText("Line 1")).toBe(second);
+        expect(second).toHaveValue("Site visits");
+    });
+
     it("records a download as a delivery", async () => {
         const delivered: unknown[] = [];
         renderApp(`${path}?send=${inv.id}`, admin,

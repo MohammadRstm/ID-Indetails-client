@@ -103,6 +103,22 @@ describe("the clients list", () => {
             name: "Rania Khoury", contacts: [expect.objectContaining({ kind: "email", value: "rania@mail.test" })],
         })]));
     });
+
+    it("keeps a contact's error with it when a contact above it is removed", async () => {
+        renderApp("/design/clients", admin,
+            http.post("/api/clients/check", () => HttpResponse.json({ nameTaken: false, contactTakenBy: null })),
+            ...projectHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: /add client/i }));
+        const dialog = await screen.findByRole("dialog", { name: "Add client" });
+        await userEvent.click(within(dialog).getByRole("button", { name: /Add another contact/ }));
+        await userEvent.click(within(dialog).getAllByRole("button", { name: "Kind" })[1]);
+        await userEvent.click(screen.getByRole("option", { name: "Email" }));
+        await userEvent.type(within(dialog).getAllByLabelText("Email address")[1], "omar@");
+        // leaving the second email for the first contact's Remove marks it as visited, so its error shows
+        await userEvent.click(within(dialog).getAllByRole("button", { name: "Remove contact" })[0]);
+        expect(within(dialog).getByLabelText("Email address")).toHaveValue("omar@");
+        expect(within(dialog).getByText("Enter an email like name@company.com.")).toBeInTheDocument();
+    });
 });
 
 describe("a client", () => {
