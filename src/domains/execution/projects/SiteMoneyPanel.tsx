@@ -55,7 +55,7 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onStatement, 
     const done = project.status === "completed" || project.status === "archived";
     const editPricing = x.locked ? undefined : onEditPricing;
     const steps: WaterfallStep[] = [
-        { label: "Received", value: x.received, kind: "start", sub: plural(x.payments, "payment") },
+        { label: "Received", value: x.received + x.fromBox, kind: "start", sub: x.fromBox ? `${money.short(x.fromBox)} from the box` : plural(x.payments, "payment") },
         ...(x.materialCost ? [{ label: "Materials", value: x.materialCost, kind: "cost" as const }] : []),
         ...(x.labour ? [{ label: "Ground labour", value: x.labour, kind: "cost" as const }] : []),
         ...(x.other ? [{ label: "Expenses", value: x.other, kind: "cost" as const }] : []),
@@ -84,7 +84,7 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onStatement, 
                     <Kpi label="Spent so far" value={money.exact(x.spent)}
                         sub={<span><Money short value={x.materialCost} /> materials · <Money short value={x.labour} /> labour{x.other ? ` · ${money.short(x.other)} other` : ""}</span>} />
                     <Kpi label={<>Profit so far<HelpHint article="site-money" label="profit so far">What the client has paid, minus what the site has cost.</HelpHint></>} value={<span className={x.cashProfit < 0 ? "down" : "up"}>{money.exact(x.cashProfit)}</span>}
-                        sub={<span>received − spent</span>} />
+                        sub={<span>{x.fromBox ? <>received + <b>{money.short(x.fromBox)} from the box</b> − spent</> : "received − spent"}</span>} />
                     <Kpi label={paidAhead ? "Paid ahead" : "Client still owes"} value={money.exact(paidAhead ? x.credit : x.owed)}
                         sub={<span>of {money.exact(x.agreed)} agreed so far</span>} />
                     <Kpi label={<>Expected profit<HelpHint article="site-money" label="expected profit">What is left once the client has paid everything agreed so far: the agreed amount minus the cost.</HelpHint></>} value={<span className={x.expectedProfit < 0 ? "down" : undefined}>{money.exact(x.expectedProfit)}</span>}
@@ -113,6 +113,9 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onStatement, 
                                 </div>
                             )}
                             <div><span>Received</span><b className="mono">{money.exact(x.received)}</b><em>{plural(x.payments, "payment")}</em></div>
+                            {x.fromBox > 0 && (
+                                <div><span>From the box</span><b className="mono">{money.exact(x.fromBox)}</b><em>moved from the Execution box, not owed by the client</em></div>
+                            )}
                             <div className={cx((paidAhead || x.owed <= 0.5) && "ok")}>
                                 <span>{paidAhead ? "Paid ahead" : "Still owed"}</span>
                                 <b className="mono">{money.exact(paidAhead ? x.credit : x.owed)}</b>

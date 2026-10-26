@@ -3140,6 +3140,172 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/execution/box": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoxResponse"];
+                        "text/json": components["schemas"]["BoxResponse"];
+                        "text/plain": components["schemas"]["BoxResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/execution/box/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Page?: number;
+                    PageSize?: number;
+                    ProjectId?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfBoxEntryResponse"];
+                        "text/json": components["schemas"]["PagedResponseOfBoxEntryResponse"];
+                        "text/plain": components["schemas"]["PagedResponseOfBoxEntryResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/execution/box/projects/{projectId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["BoxDecisionRequest"];
+                    "application/json": components["schemas"]["BoxDecisionRequest"];
+                    "text/json": components["schemas"]["BoxDecisionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoxResponse"];
+                        "text/json": components["schemas"]["BoxResponse"];
+                        "text/plain": components["schemas"]["BoxResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/execution/box/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["BoxTransferRequest"];
+                    "application/json": components["schemas"]["BoxTransferRequest"];
+                    "text/json": components["schemas"]["BoxTransferRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoxResponse"];
+                        "text/json": components["schemas"]["BoxResponse"];
+                        "text/plain": components["schemas"]["BoxResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/files": {
         parameters: {
             query?: never;
@@ -7276,7 +7442,9 @@ export interface paths {
         put?: never;
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    box?: components["schemas"]["BoxChoice"];
+                };
                 header?: never;
                 path: {
                     projectId: number;
@@ -7360,7 +7528,9 @@ export interface paths {
         put?: never;
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    box?: components["schemas"]["BoxChoice"];
+                };
                 header?: never;
                 path: {
                     projectId: number;
@@ -9880,7 +10050,9 @@ export interface paths {
         put?: never;
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    box?: components["schemas"]["BoxChoice"];
+                };
                 header?: never;
                 path: {
                     projectId: number;
@@ -14203,6 +14375,63 @@ export interface components {
             /** Format: date-time */
             savedAt: null | string;
         };
+        /** @enum {unknown} */
+        BoxChoice: "remove" | "keep" | "readd" | "fresh";
+        BoxDecisionRequest: {
+            decision?: components["schemas"]["BoxChoice"];
+        };
+        /** @enum {unknown} */
+        BoxEntryKind: "payment_in" | "payment_voided" | "transfer" | "removed" | "readded";
+        BoxEntryProjectResponse: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+        };
+        BoxEntryResponse: {
+            /** Format: double */
+            amount: number;
+            by: null | components["schemas"]["PersonRefResponse"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["BoxEntryKind"];
+            note: null | string;
+            project: components["schemas"]["BoxEntryProjectResponse"];
+        };
+        BoxProjectResponse: {
+            boxState: components["schemas"]["BoxState"];
+            /** Format: double */
+            cashProfit: number;
+            clientName: null | string;
+            /** Format: double */
+            contributed: number;
+            /** Format: double */
+            fromBox: number;
+            /** Format: int64 */
+            id: number;
+            status: components["schemas"]["ProjectStatus"];
+            title: string;
+        };
+        BoxResponse: {
+            /** Format: double */
+            balance: number;
+            /** Format: double */
+            contributedTotal: number;
+            contributing: components["schemas"]["BoxProjectResponse"][];
+            currency: string;
+            inTheRed: components["schemas"]["BoxProjectResponse"][];
+            pending: components["schemas"]["BoxProjectResponse"][];
+        };
+        /** @enum {unknown} */
+        BoxState: "in" | "pending" | "removed";
+        BoxTransferRequest: {
+            /** Format: double */
+            amount?: number;
+            note?: null | string;
+            /** Format: int64 */
+            projectId?: number;
+        };
         BrandingResponse: {
             hasLogo: boolean;
             /** Format: int64 */
@@ -16179,6 +16408,15 @@ export interface components {
             /** Format: int32 */
             totalCount: number;
         };
+        PagedResponseOfBoxEntryResponse: {
+            items: components["schemas"]["BoxEntryResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
         PagedResponseOfClientSummaryResponse: {
             items: components["schemas"]["ClientSummaryResponse"][];
             /** Format: int32 */
@@ -17042,6 +17280,7 @@ export interface components {
         };
         ProjectMoneyResponse: {
             billing: components["schemas"]["ProjectBillingResponse"];
+            boxState: null | components["schemas"]["BoxState"];
             /** Format: double */
             cashProfit: null | number;
             cost: components["schemas"]["ProjectCostResponse"];
@@ -17049,6 +17288,8 @@ export interface components {
             costPerHour: number;
             currency: string;
             expenseTotals: components["schemas"]["CurrencyTotalResponse"][];
+            /** Format: double */
+            fromBox: null | number;
             isLocked: boolean;
             /** Format: double */
             labourHours: number;

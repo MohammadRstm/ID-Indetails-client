@@ -11,6 +11,7 @@ import {
     DailyLogPage,
     MySitesPage,
     SiteLogsPage,
+    BoxPage,
     CompanyOverviewPage,
     CompanyProfilePage,
     CompanySettingsPage,
@@ -162,6 +163,12 @@ export const domainRoutes: DomainRoute[] = [
         path: "financials",
         nav: { label: "Financials", icon: "card" },
         admin: { element: <FinancialsRoute />, access: all(P.FINANCIAL_VIEW) },
+    },
+    {
+        // the pool of every site's client payments, and the money moved to sites in the red
+        path: "box",
+        nav: { label: "The box", icon: "database" },
+        admin: { element: <BoxPage />, access: executionOnly(all(P.FINANCIAL_VIEW)) },
     },
     {
         path: "my-work",

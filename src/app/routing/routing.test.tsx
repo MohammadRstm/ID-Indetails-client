@@ -28,7 +28,7 @@ describe("the route table", () => {
         // site staff: what happens on their sites, and the sites themselves
         expect(navLabels(personas.executionEmployee, "execution")).toEqual(["Daily log", "My sites", "Profile"]);
         expect(navLabels(personas.superAdmin, "execution"))
-            .toEqual(["Dashboard", "Projects", "Clients", "Daily logs", "Financials", "Meetings", "Settings"]);
+            .toEqual(["Dashboard", "Projects", "Clients", "Daily logs", "Financials", "The box", "Meetings", "Settings"]);
         expect(companyNav(permissionsOf(personas.superAdmin)).map((i) => i.label))
             .toEqual(["Overview", "Expenses", "Salaries", "Project pay", "Schedules", "Proton", "Settings"]);
         expect(companyNav(permissionsOf(personas.designAdmin))).toEqual([]);
