@@ -76,18 +76,20 @@ export function MySitesPage() {
                         : (
                             <div className="grid g-3" role="list" aria-label="My sites">
                                 {sites.data.map((s) => (
-                                    <div key={s.id} role="listitem" className="panel click" {...clickable(() => navigate(`/execution/projects/${s.id}`), "link")}>
-                                        <div className="panel-body">
-                                            <div className="row" style={{ gap: 10 }}>
-                                                <ProjectTile />
-                                                <div className="grow" style={{ minWidth: 0 }}>
-                                                    <div className="trunc" style={{ fontWeight: 650 }}>{s.title}</div>
-                                                    <div className="muted trunc" style={{ fontSize: 12 }}>{[s.clientName, s.location].filter(Boolean).join(" · ") || "-"}</div>
+                                    <div key={s.id} role="listitem">
+                                        <div className="panel click" {...clickable(() => navigate(`/execution/projects/${s.id}`), "link")}>
+                                            <div className="panel-body">
+                                                <div className="row" style={{ gap: 10 }}>
+                                                    <ProjectTile />
+                                                    <div className="grow" style={{ minWidth: 0 }}>
+                                                        <div className="trunc" style={{ fontWeight: 650 }}>{s.title}</div>
+                                                        <div className="muted trunc" style={{ fontSize: 12 }}>{[s.clientName, s.location].filter(Boolean).join(" · ") || "-"}</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="row spread mt" style={{ fontSize: 12 }}>
-                                                <span className="badge">{PROJECT_STATUS[s.status].label}</span>
-                                                <span className="muted">since {fmtDateY(s.assignedAt)}</span>
+                                                <div className="row spread mt" style={{ fontSize: 12 }}>
+                                                    <span className="badge">{PROJECT_STATUS[s.status].label}</span>
+                                                    <span className="muted">since {fmtDateY(s.assignedAt)}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

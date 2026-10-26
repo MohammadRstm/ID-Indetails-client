@@ -107,11 +107,13 @@ describe("the route table", () => {
         expect(canOpen(admin, "design", "no-such-page")).toBe(false);
     });
 
-    it("gives everyone the same projects page, its parts by permission", () => {
+    it("gives everyone the same projects page, its parts by permission, but site staff their own sites", () => {
         const projects = domainRoutes.find((r) => r.path === "projects")!;
-        expect(projects.employee).toBeUndefined();
         expect(pageFor(projects, permissionsOf(personas.designAdmin))).toBe(projects.admin);
-        expect(pageFor(projects, permissionsOf(personas.designEmployee))).toBe(projects.admin);
+        // the same page; the employee entry only keeps site staff out
+        expect(pageFor(projects, permissionsOf(personas.designEmployee))).toBe(projects.employee);
+        expect(canOpen(permissionsOf(personas.designEmployee), "design", "projects")).toBe(true);
+        expect(canOpen(permissionsOf(personas.executionEmployee), "execution", "projects")).toBe(false);
         // a page that is only someone's own still goes by workspace
         const myWork = domainRoutes.find((r) => r.path === "my-work")!;
         expect(pageFor(myWork, permissionsOf(personas.designEmployee))).toBe(myWork.employee);

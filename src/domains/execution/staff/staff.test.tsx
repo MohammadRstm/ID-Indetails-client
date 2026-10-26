@@ -38,12 +38,12 @@ describe("a site staff member's daily log", () => {
             http.get("/api/me/site-logs", () => HttpResponse.json(page(myLogs))),
             ...siteHandlers);
         expect(await screen.findByRole("heading", { name: "Daily log" })).toBeInTheDocument();
-        const today = await screen.findByRole("list", { name: "Logs of Sep 30, 2026" });
+        const today = await screen.findByRole("list", { name: "Logs of Wednesday, September 30, 2026" });
         expect(within(today).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
             expect.stringContaining("The glue shipment is delayed until tomorrow."),
             expect.stringContaining("Concrete shipment arrived with 3 bags missing."),
         ]);
-        const earlier = screen.getByRole("list", { name: "Logs of Sep 28, 2026" });
+        const earlier = screen.getByRole("list", { name: "Logs of Monday, September 28, 2026" });
         expect(earlier).toHaveTextContent("Dbayeh marina villa");
         // today's can still be changed, an earlier day's can't
         expect(within(today).getAllByRole("button", { name: "Edit" })).toHaveLength(2);
@@ -83,7 +83,7 @@ describe("a site staff member's daily log", () => {
                 return HttpResponse.json({ ...myLogs[0], body: "The glue arrives on Friday." });
             }),
             ...siteHandlers);
-        const today = await screen.findByRole("list", { name: "Logs of Sep 30, 2026" });
+        const today = await screen.findByRole("list", { name: "Logs of Wednesday, September 30, 2026" });
         await userEvent.click(within(today).getAllByRole("button", { name: "Edit" })[0]);
         const box = within(today).getByLabelText("Change the log");
         await userEvent.clear(box);
@@ -98,7 +98,7 @@ describe("a site staff member's daily log", () => {
             http.get("/api/me/sites", () => HttpResponse.json(sites)),
             http.get("/api/me/site-logs", ({ request }) => { asked.push(new URL(request.url).searchParams); return HttpResponse.json(page(myLogs)); }),
             ...siteHandlers);
-        await screen.findByRole("list", { name: "Logs of Sep 30, 2026" });
+        await screen.findByRole("list", { name: "Logs of Wednesday, September 30, 2026" });
         await userEvent.click(screen.getByLabelText("Filter by site"));
         await userEvent.click(screen.getByRole("option", { name: "Mar Mikhael loft renovation" }));
         await userEvent.type(screen.getByLabelText("Search the logs"), "glue");
@@ -165,7 +165,7 @@ describe("a site's staff and logs, for admins", () => {
             http.get("/api/site-logs", ({ request }) => { asked.push(new URL(request.url).searchParams); return HttpResponse.json(page(myLogs)); }),
             ...siteHandlers);
         expect(await screen.findByRole("heading", { name: "Daily logs" })).toBeInTheDocument();
-        const today = await screen.findByRole("list", { name: "Logs of Sep 30, 2026" });
+        const today = await screen.findByRole("list", { name: "Logs of Wednesday, September 30, 2026" });
         expect(today).toHaveTextContent("Tarek Nasser");
         await userEvent.click(screen.getByLabelText("Filter by person"));
         await userEvent.click(await screen.findByRole("option", { name: "Nour Aziz" }));
