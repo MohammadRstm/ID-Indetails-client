@@ -37,7 +37,7 @@ export const projects: Article[] = [
                 "Once a project has an invoice or a payment, it can't move to another client or become internal: invoices and payments keep the client they were made for.",
                 "A finished project can't be edited until it is reopened.",
             ),
-            only(and(sees("design"), has(P.FINANCIAL_VIEW)), para("The customer payment (a Design project's agreed revenue) is changed from **More → Edit customer payment**; **Set a customer payment** turns an internal project into client work.")),
+            only(and(sees("design"), has(P.FINANCIAL_VIEW)), para("The customer payment (a Design project's agreed revenue) is the first thing on the **Financials** tab: its pencil changes it, with why it changes, and **History** lists every change. **More → Client & type** turns an internal project into client work, or client work into internal.")),
         ],
         related: ["project-status"],
     },

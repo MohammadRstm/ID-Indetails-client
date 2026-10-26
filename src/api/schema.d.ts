@@ -8515,6 +8515,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{projectId}/payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["UpdateProjectPaymentRequest"];
+                    "application/json": components["schemas"]["UpdateProjectPaymentRequest"];
+                    "text/json": components["schemas"]["UpdateProjectPaymentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectResponse"];
+                        "text/json": components["schemas"]["ProjectResponse"];
+                        "text/plain": components["schemas"]["ProjectResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/payment-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectPaymentChangeResponse"][];
+                        "text/json": components["schemas"]["ProjectPaymentChangeResponse"][];
+                        "text/plain": components["schemas"]["ProjectPaymentChangeResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{projectId}/payments": {
         parameters: {
             query?: never;
@@ -16482,6 +16566,22 @@ export interface components {
             id: number;
             name: string;
         };
+        ProjectPaymentChangeResponse: {
+            /** Format: double */
+            amount: number;
+            /** Format: date-time */
+            changedAt: string;
+            changedBy: null | components["schemas"]["ProjectOwnerResponse"];
+            description: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            materialMarkup: null | number;
+            /** Format: double */
+            previousAmount: null | number;
+            /** Format: double */
+            previousMaterialMarkup: null | number;
+        };
         ProjectPayPersonResponse: {
             basis: null | components["schemas"]["PayBasis"];
             currency: string;
@@ -18082,10 +18182,14 @@ export interface components {
             billingType?: components["schemas"]["BillingType"];
             /** Format: int64 */
             clientId?: null | number;
+        };
+        UpdateProjectPaymentRequest: {
+            description?: string;
             /** Format: double */
-            revenue?: null | number;
+            revenue?: number;
         };
         UpdateProjectPricingRequest: {
+            description?: string;
             /** Format: double */
             materialMarkup?: number;
             /** Format: double */

@@ -43,32 +43,92 @@ describe("a project's money", () => {
         expect(screen.getByText("Financial breakdown")).toBeInTheDocument();
     });
 
-    it("edits the customer payment from the header", async () => {
+    it("puts the customer payment first on the Financials tab, in bold, with no pencil left in the header", async () => {
+        renderApp(path, admin, ...projectWorkHandlers);
+        const section = await screen.findByRole("region", { name: "Customer payment" });
+        expect(within(section).getByText(money.exact(m.revenue))).toHaveClass("pay-amount");
+        // before everything else on the tab
+        expect(section.compareDocumentPosition(await band()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(screen.getAllByRole("button", { name: "Edit customer payment" })).toHaveLength(1);
+        expect(within(section).getByRole("button", { name: "Edit customer payment" })).toBeInTheDocument();
+    });
+
+    it("changes the customer payment only with why it changes", async () => {
         const saved: unknown[] = [];
         renderApp(path, admin,
-            http.put(`/api/projects/${project.id}/billing`, async ({ request }) => { saved.push(await request.json()); return HttpResponse.json(project); }),
+            http.put(`/api/projects/${project.id}/payment`, async ({ request }) => { saved.push(await request.json()); return HttpResponse.json(project); }),
             ...projectWorkHandlers);
-        await userEvent.click(await screen.findByRole("button", { name: "Edit payment" }));
+        await userEvent.click(within(await screen.findByRole("region", { name: "Customer payment" })).getByRole("button", { name: "Edit customer payment" }));
+        const dialog = await screen.findByRole("dialog", { name: "Customer payment" });
+        const save = within(dialog).getByRole("button", { name: "Save" });
+
+        // the same amount, and no reason: both are said, nothing is sent
+        await userEvent.click(save);
+        expect(within(dialog).getByText(`The payment is already ${money.exact(m.revenue)}: enter the new amount.`)).toBeInTheDocument();
+        expect(within(dialog).getByText("Say why the payment changes.")).toBeInTheDocument();
+        expect(saved).toEqual([]);
+
+        const amount = within(dialog).getByLabelText("Customer payment");
+        await userEvent.clear(amount);
+        await userEvent.type(amount, "30000");
+        expect(within(dialog).queryByText(/The payment is already/)).not.toBeInTheDocument();
+        await userEvent.type(within(dialog).getByLabelText("Why it changes"), "  The client added a guest house  ");
+        expect(within(dialog).queryByText("Say why the payment changes.")).not.toBeInTheDocument();
+        await userEvent.click(save);
+        await waitFor(() => expect(saved).toEqual([{ revenue: 30000, description: "The client added a guest house" }]));
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    });
+
+    it("says why the API refused a payment change, keeping the form", async () => {
+        renderApp(path, admin,
+            http.put(`/api/projects/${project.id}/payment`, () => HttpResponse.json(
+                { type: "business_rule", code: "project_locked", message: "The project is finished: reopen it to change its money." }, { status: 422 })),
+            ...projectWorkHandlers);
+        await userEvent.click(within(await screen.findByRole("region", { name: "Customer payment" })).getByRole("button", { name: "Edit customer payment" }));
         const dialog = await screen.findByRole("dialog", { name: "Customer payment" });
         const amount = within(dialog).getByLabelText("Customer payment");
         await userEvent.clear(amount);
         await userEvent.type(amount, "30000");
+        await userEvent.type(within(dialog).getByLabelText("Why it changes"), "More rooms");
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-        await waitFor(() => expect(saved).toEqual([{ billingType: "client", clientId: project.client!.id, revenue: 30000 }]));
-        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+        expect(await within(dialog).findByText("The project is finished: reopen it to change its money.")).toBeInTheDocument();
+        expect(within(dialog).getByLabelText("Why it changes")).toHaveValue("More rooms");
+    });
+
+    it("shows every change of the payment, newest first, in its own window", async () => {
+        const changes = [
+            { id: 2, amount: 30000, previousAmount: 25000, materialMarkup: null, previousMaterialMarkup: null, description: "The client added a guest house", changedAt: "2026-09-20T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
+            { id: 1, amount: 25000, previousAmount: null, materialMarkup: null, previousMaterialMarkup: null, description: "Agreed at the start", changedAt: "2026-06-01T09:00:00Z", changedBy: null },
+        ];
+        renderApp(path, admin, http.get(`/api/projects/${project.id}/payment-changes`, () => HttpResponse.json(changes)), ...projectWorkHandlers);
+        await userEvent.click(within(await screen.findByRole("region", { name: "Customer payment" })).getByRole("button", { name: "History" }));
+        const dialog = await screen.findByRole("dialog", { name: "Payment history" });
+        const rows = await within(dialog).findAllByRole("listitem");
+        expect(rows).toHaveLength(2);
+        expect(rows[0]).toHaveTextContent(`${money.exact(25000)} → ${money.exact(30000)}`);
+        expect(rows[0]).toHaveTextContent("Sep 20, 2026 · Rana Haddad");
+        expect(rows[0]).toHaveTextContent("The client added a guest house");
+        expect(rows[1]).toHaveTextContent(money.exact(25000));
+        expect(rows[1]).toHaveTextContent("Agreed at the start");
+        expect(rows[1]).not.toHaveTextContent("→");
     });
 
     it("warns that changing the client ends the current client's access to the client portal", async () => {
         const warning = `${project.client?.displayName}'s contacts lose access to this project's client portal. Its chat and comments stay `
             + "with the project: if it gets a client again, that client's contacts will see them once invited.";
-        renderApp(path, admin, ...projectWorkHandlers);
-        await userEvent.click(await screen.findByRole("button", { name: "Edit payment" }));
-        const dialog = await screen.findByRole("dialog", { name: "Customer payment" });
+        renderApp(path, admin, http.get("/api/clients", () => HttpResponse.json(clients)), ...projectWorkHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+        await userEvent.click(screen.getByRole("button", { name: "Client & type" }));
+        const dialog = await screen.findByRole("dialog", { name: "Client & type" });
         // the same client: nothing to warn about
         expect(within(dialog).queryByText(warning)).toBeNull();
 
         await userEvent.click(within(dialog).getByRole("tab", { name: "Internal" }));
-        expect(within(dialog).getByRole("note")).toHaveTextContent(warning);
+        const notes = within(dialog).getAllByRole("note");
+        expect(notes.map((n) => n.textContent)).toEqual([
+            "Its customer payment drops to 0, and the payment history says it became internal work.",
+            warning,
+        ]);
         // a warning, not a stop
         expect(within(dialog).getByRole("button", { name: "Save" })).toBeEnabled();
 
@@ -76,7 +136,7 @@ describe("a project's money", () => {
         expect(within(dialog).queryByRole("note")).toBeNull();
     });
 
-    it("turns client work into internal work, and asks which client when it goes back", async () => {
+    it("turns internal work into client work from the Financials tab, asking which client, with no payment in the same step", async () => {
         const saved: unknown[] = [];
         const internal = { ...project, billingType: "internal", client: null, money: { ...m, revenue: 0, profit: -m.cost.total, margin: null } };
         renderApp(path, admin,
@@ -84,10 +144,13 @@ describe("a project's money", () => {
             http.get("/api/clients", () => HttpResponse.json(clients)),
             http.put(`/api/projects/${project.id}/billing`, async ({ request }) => { saved.push(await request.json()); return HttpResponse.json(project); }),
             ...projectWorkHandlers);
-        await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
-        await userEvent.click(screen.getByRole("button", { name: "Set a customer payment" }));
-        const dialog = await screen.findByRole("dialog", { name: "Customer payment" });
+        const section = await screen.findByRole("region", { name: "Customer payment" });
+        expect(within(section).getByText(/Internal project - no client and no payment\./)).toBeInTheDocument();
+        expect(within(section).queryByRole("button", { name: "History" })).not.toBeInTheDocument();
+        await userEvent.click(within(section).getByRole("button", { name: "Make it client work" }));
+        const dialog = await screen.findByRole("dialog", { name: "Client & type" });
         await userEvent.click(within(dialog).getByRole("tab", { name: "Client project" }));
+        expect(within(dialog).getByText("It starts with no payment: set it on the Financials tab once saved.")).toBeInTheDocument();
         const save = within(dialog).getByRole("button", { name: "Save" });
         // client work needs its client: saving without one says so
         await userEvent.click(save);
@@ -95,9 +158,8 @@ describe("a project's money", () => {
         expect(saved).toEqual([]);
         await userEvent.click(within(dialog).getByLabelText("Client"));
         await userEvent.click(screen.getByRole("option", { name: "Cedar Bank SAL" }));
-        await userEvent.type(within(dialog).getByLabelText("Customer payment"), "12000");
         await userEvent.click(save);
-        await waitFor(() => expect(saved).toEqual([{ billingType: "client", clientId: 7, revenue: 12000 }]));
+        await waitFor(() => expect(saved).toEqual([{ billingType: "client", clientId: 7 }]));
     });
 
     it("adds an expense", async () => {
@@ -159,6 +221,7 @@ describe("a project's money", () => {
             ...projectWorkHandlers);
         await screen.findByText("Total hours");
         expect(screen.queryByText("Where the cost sits")).not.toBeInTheDocument();
+        expect(screen.queryByRole("region", { name: "Customer payment" })).not.toBeInTheDocument();
         expect(screen.queryByText("Financial breakdown")).not.toBeInTheDocument();
         expect(asked).toEqual([]);
     });
@@ -167,11 +230,15 @@ describe("a project's money", () => {
         renderApp(path, withPermissions(admin, { revoke: [P.PROJECT_EDIT, P.EXPENSE_MANAGE] }), ...projectWorkHandlers);
         const panel = await band();
         expect(await within(panel).findByText(`${projectWork.expenses.items.length} items`)).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Edit payment" })).not.toBeInTheDocument();
+        const section = screen.getByRole("region", { name: "Customer payment" });
+        expect(within(section).queryByRole("button", { name: "Edit customer payment" })).not.toBeInTheDocument();
+        // the history is for whoever sees the money
+        expect(within(section).getByRole("button", { name: "History" })).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Add expense" })).not.toBeInTheDocument();
         await userEvent.click(screen.getByRole("button", { name: "More actions" }));
         expect(screen.queryByRole("button", { name: "Add project expense" })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: /customer payment/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Client & type" })).not.toBeInTheDocument();
     });
 
     it("says the profit is final once the project is closed", async () => {
@@ -181,7 +248,9 @@ describe("a project's money", () => {
         const panel = await band();
         expect(within(panel).getByText("Final profit", { selector: ".u" })).toBeInTheDocument();
         expect(within(panel).getByText("finalised Sep 28")).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Edit payment" })).not.toBeInTheDocument();
+        const section = screen.getByRole("region", { name: "Customer payment" });
+        expect(within(section).getByText("locked")).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Edit customer payment" })).not.toBeInTheDocument();
         expect(within(panel).queryByRole("button", { name: "Close project…" })).not.toBeInTheDocument();
     });
 });

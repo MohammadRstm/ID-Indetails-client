@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
-import type { Paged, Schemas } from "@/api/types";
+import type { Schemas } from "@/api/types";
 
 export type Expense = Schemas["ExpenseResponse"];
 export type CostTimeline = Schemas["ProjectCostTimelineResponse"];
@@ -39,7 +39,7 @@ export function useDeleteExpense(projectId: number) {
     });
 }
 
-/** Client or internal work, its client and its customer payment (project:edit). */
+/** Client or internal work, and its client (project:edit and financial:view). The payment is changed on its own. */
 export function useSetProjectBilling(projectId: number) {
     const refresh = useInvalidateMoney();
     return useMutation({
@@ -53,17 +53,6 @@ export function useCostTimeline(projectId: number, enabled: boolean) {
     return useQuery({
         queryKey: [...keys.projects.detail(projectId), "cost-timeline"],
         queryFn: async () => (await http.get<CostTimeline>(`/projects/${projectId}/cost-timeline`)).data,
-        enabled,
-    });
-}
-
-/** The customer payment's last changes, from the project's money events (activity:view). */
-export function useRevenueHistory(projectId: number, enabled: boolean) {
-    return useQuery({
-        queryKey: [...keys.activity.all, "revenue", projectId],
-        queryFn: async () => (await http.get<Paged<Schemas["ActivityItemResponse"]>>("/activity", { params: { projectId, group: "money", page: 1, pageSize: 40 } })).data.items
-            .filter((e) => e.kind === "revenue_set" || e.kind === "revenue_changed")
-            .slice(0, 4),
         enabled,
     });
 }

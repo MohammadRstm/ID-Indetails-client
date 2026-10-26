@@ -30,11 +30,13 @@ import { useRequirements } from "../requirements/requirementsApi";
 import ExpenseModal from "../../design/projects/money/ExpenseModal";
 import BillingModalHost from "../billing/BillingModalHost";
 import { useBillingLinks } from "../billing/billingLinks";
+import ClientTypeModal from "../../design/projects/money/ClientTypeModal";
 import PaymentModal from "../../design/projects/money/PaymentModal";
 import { staffDiscussion } from "../../design/projects/portal/staffDiscussion";
 import ReportModal from "../../design/projects/report/ReportModal";
 import { useMaterials } from "../../execution/materials/materialsApi";
 import PricingModal from "../../execution/projects/PricingModal";
+import PaymentHistoryModal from "./PaymentHistoryModal";
 import StatementHost from "../../execution/statements/StatementHost";
 import { useStatementLinks } from "../../execution/statements/statementLinks";
 import CompleteProjectModal from "./CompleteProjectModal";
@@ -159,13 +161,16 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const days = daysBetween(project.startDate, end) + 1;
     const m = seesMoney ? project.money : null;
     const openRequirements = requirements.data ? requirements.data.total - requirements.data.done : 0;
-    // The money windows, opened from the header or the panels (?money=payment|expense|pricing): Design's customer
-    // payment, an Execution site's fee and material profit, and either one's expenses
+    // The money windows, opened from the Financials tab or the menu (?money=payment|client|history|expense|pricing):
+    // Design's customer payment and its client and type, an Execution site's fee and material profit, the payment's
+    // history, and either one's expenses
     const moneyAction = m ? params.get("money") : null;
-    const canEditPayment = !site && !!m && !m.isLocked && permissions.has(P.PROJECT_EDIT);
+    const canEditBilling = !site && !!m && !m.isLocked && permissions.has(P.PROJECT_EDIT);
+    const canEditPayment = canEditBilling && project.billingType === "client";
+    const hasPaymentHistory = !!m && (site || project.billingType === "client");
     const canEditPricing = site && !!m && !m.isLocked && permissions.has(P.PROJECT_PRICING_MANAGE);
     const canAddExpense = !!m && !m.isLocked && permissions.has(P.EXPENSE_MANAGE);
-    const openMoney = (action: "payment" | "expense" | "pricing") => { params.set("money", action); setParams(params); };
+    const openMoney = (action: "payment" | "client" | "expense" | "pricing") => { params.set("money", action); setParams(params); };
     const closeMoney = () => { params.delete("money"); setParams(params, { replace: true }); };
     const billing = useBillingLinks();
     const bill = m?.billing;
@@ -176,7 +181,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const materialCount = useMaterials(project.id, {}, site && client && permissions.has(P.STATEMENT_CREATE)).data?.all.count ?? 0;
     const canStatement = site && client && permissions.has(P.STATEMENT_CREATE) && materialCount > 0;
     const statements = useStatementLinks();
-    const moneyItems = canAddExpense || canEditPayment || canEditPricing || canStatement || canNewInvoice || canRecordPayment;
+    const moneyItems = canAddExpense || canEditBilling || canEditPricing || canStatement || canNewInvoice || canRecordPayment;
     // name, description, location and target date, while the project is open
     const canEditDetails = permissions.has(P.PROJECT_EDIT) && project.status !== "completed" && project.status !== "archived";
 
@@ -250,11 +255,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                 </span>
                             ) : (
                                 <span className="row" style={{ gap: 6 }}>Payment <b className="sec mono">{money.fmt(m.revenue)}</b>
-                                    {m.isLocked ? <LockedSince at={project.finalizedAt} /> : canEditPayment && (
-                                        <button className="icon-btn" style={{ width: 22, height: 22 }} aria-label="Edit payment" onClick={() => openMoney("payment")}>
-                                            <Icon name="edit" style={{ width: 13, height: 13 }} />
-                                        </button>
-                                    )}
+                                    {m.isLocked && <LockedSince at={project.finalizedAt} />}
                                 </span>
                             ))}
                         </div>
@@ -286,11 +287,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                     )}
                                     {canChangeStatus && !closed && moneyItems && <div className="pop-sep" />}
                                     {canAddExpense && <button className="pop-item" onClick={() => { close(); openMoney("expense"); }}><Icon name="plus" />Add project expense</button>}
-                                    {canEditPayment && (
-                                        <button className="pop-item" onClick={() => { close(); openMoney("payment"); }}>
-                                            <Icon name="card" />{project.billingType === "internal" ? "Set a customer payment" : "Edit customer payment"}
-                                        </button>
-                                    )}
+                                    {canEditPayment && <button className="pop-item" onClick={() => { close(); openMoney("payment"); }}><Icon name="card" />Edit customer payment</button>}
+                                    {canEditBilling && <button className="pop-item" onClick={() => { close(); openMoney("client"); }}><Icon name="user" />Client & type</button>}
                                     {canEditPricing && <button className="pop-item" onClick={() => { close(); openMoney("pricing"); }}><Icon name="card" />Fee & material profit</button>}
                                     {canStatement && <button className="pop-item" onClick={() => { close(); statements.newStatement(); }}><Icon name="file" />Client statement</button>}
                                     {canNewInvoice && <button className="pop-item" onClick={() => { close(); billing.newInvoice(); }}><Icon name="file" />New invoice</button>}
@@ -358,6 +356,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                 <CompleteProjectModal project={project} openRequirements={openRequirements} onClose={closeComplete} />
             )}
             {moneyAction === "payment" && canEditPayment && <PaymentModal project={project} onClose={closeMoney} />}
+            {moneyAction === "client" && canEditBilling && <ClientTypeModal project={project} onClose={closeMoney} />}
+            {moneyAction === "history" && hasPaymentHistory && <PaymentHistoryModal project={project} onClose={closeMoney} />}
             {moneyAction === "pricing" && canEditPricing && <PricingModal project={project} onClose={closeMoney} />}
             {moneyAction === "expense" && canAddExpense && <ExpenseModal project={project} onClose={closeMoney} />}
             <BillingModalHost project={project} />
