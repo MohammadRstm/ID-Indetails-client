@@ -48,17 +48,6 @@ describe("My work (Design)", () => {
     });
 });
 
-describe("My work (Execution)", () => {
-    it("is the requirements assigned to them", async () => {
-        const item = work.requirements.items[0];
-        renderApp("/execution/my-work", personas.executionEmployee,
-            http.get("/api/me/requirements", () => HttpResponse.json({ items: [item], done: 3, overdue: 0, dueSoon: 0, projects: 1 })));
-        expect(await screen.findByText(item.text)).toBeInTheDocument();
-        expect(screen.getByText("Open, assigned to you")).toBeInTheDocument();
-        expect(await screen.findByText("of 4 ever assigned to you")).toBeInTheDocument();
-    });
-});
-
 describe("My pay", () => {
     const salary = work.pay.salary!;
 

@@ -1,33 +1,15 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Paged, Schemas } from "@/api/types";
 import { site, siteHandlers } from "@/test/fixtures/site";
-import activeJson from "@/test/fixtures/site/sitesActive.json";
+import type { Schemas } from "@/api/types";
 import recordsJson from "@/test/fixtures/site/siteRecords.json";
-import summariesJson from "@/test/fixtures/site/siteSummaries.json";
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
-/*
- * The seeded sites as Nour sees them: she recorded the loft's four materials this morning, and nothing on
- * the other two sites.
- */
-const active = activeJson as unknown as Paged<Schemas["ProjectSummaryResponse"]>;
-const summaries = summariesJson as unknown as Schemas["SiteSummaryResponse"][];
 const records = recordsJson as unknown as Schemas["SiteRecordsResponse"];
 const tarek = personas.executionEmployee;
-const held = { ...active.items[2], status: "hold" as const };
-
-const homeHandlers = [
-    http.get("/api/projects", ({ request }) => {
-        const status = new URL(request.url).searchParams.get("status");
-        const items = status === "active" ? active.items.slice(0, 2) : status === "hold" ? [held] : [];
-        return HttpResponse.json({ items, page: 1, pageSize: 100, totalCount: items.length });
-    }),
-    http.get("/api/projects/site-summary", () => HttpResponse.json(summaries)),
-];
 
 beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
@@ -35,67 +17,159 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
-describe("an Execution employee's projects", () => {
-    it("say when what was recorded on them can't be loaded", async () => {
-        renderApp("/execution/projects", tarek,
-            http.get("/api/projects/site-summary", () => HttpResponse.json({ code: "forbidden", message: "You can't see that." }, { status: 403 })),
-            ...homeHandlers);
-        expect(await screen.findByText(/Couldn't load what has been recorded on your projects\./)).toBeInTheDocument();
-        await screen.findAllByText("Mar Mikhael loft renovation");
-        expect(screen.queryAllByText("…")).toHaveLength(0);
-    });
+const sites = [
+    { id: 30, title: "Mar Mikhael loft renovation", clientName: "Karam family", status: "active", location: "Mar Mikhael", assignedAt: "2026-09-01T08:00:00Z" },
+    { id: 31, title: "Dbayeh marina villa", clientName: "Marina SAL", status: "hold", location: null, assignedAt: "2026-08-01T08:00:00Z" },
+];
+const log = (id: number, body: string, createdAt: string, canEdit = false, project = sites[0]) => ({
+    id, project: { id: project.id, title: project.title }, person: { id: tarek.id, name: "Tarek Nasser" }, body, createdAt, updatedAt: null, canEdit,
+});
+const myLogs = [
+    log(3, "The glue shipment is delayed until tomorrow.", "2026-09-30T14:00:00Z", true),
+    log(2, "Concrete shipment arrived with 3 bags missing.", "2026-09-30T11:00:00Z", true),
+    log(1, "Scaffolding up on the north side.", "2026-09-28T09:00:00Z", false, sites[1]),
+];
+const page = (items: unknown[]) => ({ items, page: 1, pageSize: 25, totalCount: items.length });
 
-    it("are the open sites, the one they last recorded on first, with what was recorded there", async () => {
-        renderApp("/execution/projects", tarek, ...homeHandlers);
-        expect(await screen.findByText("Good afternoon, Tarek")).toBeInTheDocument();
-        const cards = await screen.findAllByText(/materials on record/);
-        expect(cards).toHaveLength(3);
-        const titles = [...document.querySelectorAll(".pcard-title")].map((t) => t.textContent);
-        expect(titles).toEqual(["Mar Mikhael loft renovation", "Achrafieh Towers lobby", "Dbayeh marina villa"]);
-        const loft = screen.getByText("Mar Mikhael loft renovation").closest(".pcard") as HTMLElement;
-        // Regression: the site's cost total is company money; without financial:view the API sends none and the
-        // card shows a dash, never an amount
-        expect(within(loft).getByTitle("Amounts need the financial permission")).toHaveTextContent("—");
-        expect(within(loft).queryByText(/\$/)).not.toBeInTheDocument();
-        expect(within(loft).getByText(/you last recorded here/)).toBeInTheDocument();
-        expect(within(loft).getByText(/site works, materials and ground labour/)).toBeInTheDocument();
-        // the held site sits under Paused
-        const paused = screen.getByText("Paused").parentElement as HTMLElement;
-        expect(within(paused).getByText("Dbayeh marina villa")).toBeInTheDocument();
-        expect(within(paused).getAllByText("On hold")).toHaveLength(2);
-        // no hours anywhere
-        expect(screen.queryByText("Your week so far")).not.toBeInTheDocument();
+describe("a site staff member's daily log", () => {
+    it("is their home, and keeps each log apart under its day, newest first", async () => {
+        renderApp("/execution", tarek,
+            http.get("/api/me/sites", () => HttpResponse.json(sites)),
+            http.get("/api/me/site-logs", () => HttpResponse.json(page(myLogs))),
+            ...siteHandlers);
+        expect(await screen.findByRole("heading", { name: "Daily log" })).toBeInTheDocument();
+        const today = await screen.findByRole("list", { name: "Logs of Wednesday, September 30, 2026" });
+        expect(within(today).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
+            expect.stringContaining("The glue shipment is delayed until tomorrow."),
+            expect.stringContaining("Concrete shipment arrived with 3 bags missing."),
+        ]);
+        const earlier = screen.getByRole("list", { name: "Logs of Monday, September 28, 2026" });
+        expect(earlier).toHaveTextContent("Dbayeh marina villa");
+        // today's can still be changed, an earlier day's can't
+        expect(within(today).getAllByRole("button", { name: "Edit" })).toHaveLength(2);
+        expect(within(earlier).queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+        // no hours, no projects list, no meetings
         expect(screen.queryByRole("button", { name: "Log work" })).not.toBeInTheDocument();
     });
 
-    it("filter by the last time they recorded there", async () => {
-        renderApp("/execution/projects", tarek, ...homeHandlers);
-        await screen.findAllByText(/materials on record/);
-        await userEvent.click(screen.getByLabelText("Last worked"));
-        await userEvent.click(screen.getByRole("option", { name: "Never worked on" }));
-        expect(await screen.findByText("2 of 3 projects")).toBeInTheDocument();
-        expect(screen.queryByText("Mar Mikhael loft renovation")).not.toBeInTheDocument();
+    it("writes a log for the site picked, saying what is missing first", async () => {
+        const sent: unknown[] = [];
+        renderApp("/execution/daily-log", tarek,
+            http.get("/api/me/sites", () => HttpResponse.json(sites)),
+            http.post("/api/projects/:id/site-logs", async ({ params, request }) => {
+                sent.push({ projectId: Number(params.id), ...(await request.json() as object) });
+                return HttpResponse.json(log(9, "Tiles delivered, two boxes cracked.", "2026-09-30T09:00:00Z", true, sites[1]), { status: 201 });
+            }),
+            ...siteHandlers);
+        const form = await screen.findByRole("form", { name: "Write a log" });
+        await userEvent.click(within(form).getByRole("button", { name: "Save log" }));
+        expect(within(form).getByText("Say what happened.")).toBeInTheDocument();
+        expect(sent).toEqual([]);
+        await userEvent.click(within(form).getByLabelText("Site"));
+        await userEvent.click(screen.getByRole("option", { name: "Dbayeh marina villa" }));
+        await userEvent.type(within(form).getByLabelText("What happened?"), "  Tiles delivered, two boxes cracked.  ");
+        await userEvent.click(within(form).getByRole("button", { name: "Save log" }));
+        await waitFor(() => expect(sent).toEqual([{ projectId: 31, body: "Tiles delivered, two boxes cracked." }]));
+        await waitFor(() => expect(within(form).getByLabelText("What happened?")).toHaveValue(""));
+    });
+
+    it("changes a log of today in place", async () => {
+        const sent: unknown[] = [];
+        renderApp("/execution/daily-log", tarek,
+            http.get("/api/me/sites", () => HttpResponse.json(sites)),
+            http.get("/api/me/site-logs", () => HttpResponse.json(page(myLogs))),
+            http.put("/api/site-logs/:id", async ({ params, request }) => {
+                sent.push({ id: Number(params.id), ...(await request.json() as object) });
+                return HttpResponse.json({ ...myLogs[0], body: "The glue arrives on Friday." });
+            }),
+            ...siteHandlers);
+        const today = await screen.findByRole("list", { name: "Logs of Wednesday, September 30, 2026" });
+        await userEvent.click(within(today).getAllByRole("button", { name: "Edit" })[0]);
+        const box = within(today).getByLabelText("Change the log");
+        await userEvent.clear(box);
+        await userEvent.type(box, "The glue arrives on Friday.");
+        await userEvent.click(within(today).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(sent).toEqual([{ id: 3, body: "The glue arrives on Friday." }]));
+    });
+
+    it("asks the API for the site, the days and the words picked", async () => {
+        const asked: URLSearchParams[] = [];
+        renderApp("/execution/daily-log", tarek,
+            http.get("/api/me/sites", () => HttpResponse.json(sites)),
+            http.get("/api/me/site-logs", ({ request }) => { asked.push(new URL(request.url).searchParams); return HttpResponse.json(page(myLogs)); }),
+            ...siteHandlers);
+        await screen.findByRole("list", { name: "Logs of Wednesday, September 30, 2026" });
+        await userEvent.click(screen.getByLabelText("Filter by site"));
+        await userEvent.click(screen.getByRole("option", { name: "Mar Mikhael loft renovation" }));
+        await userEvent.type(screen.getByLabelText("Search the logs"), "glue");
+        await waitFor(() => expect(asked.at(-1)?.get("search")).toBe("glue"));
+        expect(asked.at(-1)?.get("projectId")).toBe("30");
+    });
+
+    it("lists the sites they oversee, each opening its page", async () => {
+        renderApp("/execution/sites", tarek, http.get("/api/me/sites", () => HttpResponse.json(sites)), ...siteHandlers);
+        const list = await screen.findByRole("list", { name: "My sites" });
+        const cards = within(list).getAllByRole("listitem");
+        expect(cards.map((c) => c.textContent)).toEqual([expect.stringContaining("Mar Mikhael loft renovation"), expect.stringContaining("Dbayeh marina villa")]);
+        expect(cards[1]).toHaveTextContent("On hold");
     });
 });
 
 describe("a site, for an Execution employee", () => {
-    it("is built around what they record, and shows no money", async () => {
-        const noMoney = { ...site.losingProject, money: null };
-        renderApp(`/execution/projects/${noMoney.id}`, tarek,
-            http.get("/api/projects/:id", () => HttpResponse.json(noMoney)),
-            http.get("/api/projects/:id/materials", () => HttpResponse.json({
-                ...site.openMaterials, defaultMarkup: null, all: { ...site.openMaterials.all, charge: null }, matching: { ...site.openMaterials.matching, charge: null },
-                items: site.openMaterials.items.map((m) => ({ ...m, clientPrice: null, markup: null, priceSource: null })),
-            })),
-            ...siteHandlers);
-        expect(await screen.findByText("Materials", { selector: ".kpi-label" })).toBeInTheDocument();
-        expect(await screen.findByLabelText("Type 1")).toHaveValue("Plasterboard");
-        expect(screen.getByText("Weekly labour")).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: "Add materials" })).toBeInTheDocument();
+    it("is their labour and their logs, without materials or money", async () => {
+        const noMoney = { ...site.losingProject, money: null, staff: [{ id: tarek.id, name: "Tarek Nasser" }] };
+        renderApp(`/execution/projects/${noMoney.id}`, tarek, http.get("/api/projects/:id", () => HttpResponse.json(noMoney)), ...siteHandlers);
+        expect(await screen.findByText("Weekly labour")).toBeInTheDocument();
+        expect(await screen.findByRole("form", { name: "Write a log" })).toBeInTheDocument();
+        expect(within(screen.getByRole("form", { name: "Write a log" })).queryByLabelText("Site")).not.toBeInTheDocument();
+        expect(screen.queryByText("Materials", { selector: ".kpi-label" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Add materials" })).not.toBeInTheDocument();
         for (const text of ["Project money", "Client payments", "Charged to the client", "Client price", "Material profit", "Ground labour and profit"]) {
             expect(screen.queryByText(text)).not.toBeInTheDocument();
         }
         expect(screen.queryByRole("button", { name: "More actions" })).not.toBeInTheDocument();
+    });
+
+    it("takes no log from someone who doesn't oversee it", async () => {
+        const notMine = { ...site.losingProject, money: null, staff: [{ id: 13, name: "Nour Aziz" }] };
+        renderApp(`/execution/projects/${notMine.id}`, tarek, http.get("/api/projects/:id", () => HttpResponse.json(notMine)), ...siteHandlers);
+        expect(await screen.findByText("Weekly labour")).toBeInTheDocument();
+        expect(screen.getByLabelText("Site staff")).toHaveTextContent("Nour Aziz");
+        expect(screen.queryByRole("form", { name: "Write a log" })).not.toBeInTheDocument();
+    });
+});
+
+describe("a site's staff and logs, for admins", () => {
+    it("change who oversees the site, at least one", async () => {
+        const sent: unknown[] = [];
+        const withStaff = { ...site.project, staff: [{ id: 13, name: "Nour Aziz" }] };
+        renderApp(`/execution/projects/${withStaff.id}?tab=overview`, personas.executionAdmin,
+            http.get("/api/projects/:id", () => HttpResponse.json(withStaff)),
+            http.put("/api/projects/:id/staff", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(withStaff); }),
+            ...siteHandlers);
+        const panel = await screen.findByLabelText("Site staff");
+        await userEvent.click(within(panel).getByRole("button", { name: "Change" }));
+        const dialog = await screen.findByRole("dialog", { name: "Site staff" });
+        await userEvent.click(await within(dialog).findByRole("button", { name: /Nour Aziz/ }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        expect(within(dialog).getByText("Choose at least one staff member to oversee the site.")).toBeInTheDocument();
+        expect(sent).toEqual([]);
+        await userEvent.click(within(dialog).getByRole("button", { name: /Tarek Nasser/ }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(sent).toEqual([{ staffIds: [5] }]));
+    });
+
+    it("read every site's logs, by person", async () => {
+        const asked: URLSearchParams[] = [];
+        renderApp("/execution/site-logs", personas.executionAdmin,
+            http.get("/api/site-logs", ({ request }) => { asked.push(new URL(request.url).searchParams); return HttpResponse.json(page(myLogs)); }),
+            ...siteHandlers);
+        expect(await screen.findByRole("heading", { name: "Daily logs" })).toBeInTheDocument();
+        const today = await screen.findByRole("list", { name: "Logs of Wednesday, September 30, 2026" });
+        expect(today).toHaveTextContent("Tarek Nasser");
+        await userEvent.click(screen.getByLabelText("Filter by person"));
+        await userEvent.click(await screen.findByRole("option", { name: "Nour Aziz" }));
+        await waitFor(() => expect(asked.at(-1)?.get("userId")).toBe("13"));
     });
 });
 

@@ -44,6 +44,9 @@ export const MeetingsPage = named(() => import("@/domains/shared/meetings/Meetin
 export const ProjectRoute = page(() => import("@/domains/shared/projects/ProjectRoute"));
 export const ProjectsPage = page(() => import("@/domains/shared/projects/ProjectsPage"));
 export const MyWorkRoute = page(() => import("@/domains/shared/requirements/MyWorkRoute"));
+export const DailyLogPage = named(() => import("@/domains/execution/staff/StaffPages"), "DailyLogPage");
+export const MySitesPage = named(() => import("@/domains/execution/staff/StaffPages"), "MySitesPage");
+export const SiteLogsPage = named(() => import("@/domains/execution/staff/StaffPages"), "SiteLogsPage");
 export const SettingsPage = page(() => import("@/domains/shared/settings/SettingsPage"));
 export const CompanySettingsPage = named(() => import("@/domains/shared/settings/SettingsPage"), "CompanySettingsPage");
 export const CompanyProfilePage = page(() => import("@/domains/company/profile/CompanyProfilePage"));

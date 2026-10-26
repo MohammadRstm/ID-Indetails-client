@@ -18,6 +18,7 @@ import StatementList from "../statements/StatementList";
 import LabourHealth from "./LabourHealth";
 import MaterialMargins from "../materials/MaterialMargins";
 import SiteMoneyPanel from "./SiteMoneyPanel";
+import { SiteStaffPanels } from "../staff/StaffPages";
 import PaymentSection from "../../shared/projects/PaymentSection";
 import { pctOf } from "./siteMoney";
 
@@ -26,11 +27,15 @@ import { pctOf } from "./siteMoney";
  * progress, requirements, materials and ground labour. Its money is on the Financials tab.
  */
 export default function ExecutionOverview({ project }: { project: Project }) {
+    const permissions = usePermissions();
+    // site staff report labour and write logs; materials are recorded by whoever is given them
+    const seesMaterials = permissions.hasAny(P.MATERIAL_CREATE, P.MATERIAL_MANAGE, P.FINANCIAL_VIEW);
     return (
         <>
             <SiteKpis project={project} />
-            <MaterialsPanel project={project} />
+            {seesMaterials && <MaterialsPanel project={project} />}
             <LabourPanel project={project} />
+            <SiteStaffPanels project={project} />
         </>
     );
 }
@@ -87,10 +92,10 @@ function SiteKpis({ project }: { project: Project }) {
             sub: <span className={r?.overdue ? "down" : undefined}>{!r ? "" : r.total ? (r.overdue ? `${r.overdue} overdue` : `${r.total - r.done} open`) : "none yet"}</span>,
         });
     }
-    items.push(
-        { key: "materials", label: "Materials", value: <Money short value={materials?.cost ?? 0} />, sub: <span>{materials?.count ?? 0} records</span> },
-        { key: "labour", label: "Ground labour", value: <Money short value={labour?.total ?? 0} />, sub: <span>{labour?.reportedWeeks ?? 0} weeks reported</span> },
-    );
+    if (permissions.hasAny(P.MATERIAL_CREATE, P.MATERIAL_MANAGE, P.FINANCIAL_VIEW)) {
+        items.push({ key: "materials", label: "Materials", value: <Money short value={materials?.cost ?? 0} />, sub: <span>{materials?.count ?? 0} records</span> });
+    }
+    items.push({ key: "labour", label: "Ground labour", value: <Money short value={labour?.total ?? 0} />, sub: <span>{labour?.reportedWeeks ?? 0} weeks reported</span> });
     if (m && b) {
         const ahead = b.paidAhead > 0.5;
         items.push({

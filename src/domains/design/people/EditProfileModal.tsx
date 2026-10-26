@@ -17,7 +17,7 @@ import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { isEmail } from "@/shared/utils/email";
-import { currentPay, hasFixedSalary, HOURS_PER_MONTH, monthlyToHourly } from "../pay/payRules";
+import { currentPay, hasFixedSalary, paidMonthlyOnly, HOURS_PER_MONTH, monthlyToHourly } from "../pay/payRules";
 import { uploadFile } from "../work/workApi";
 import { useChangeEmail, useChangeMyEmail, useChangePay, usePayHistory, useSetPhoto, useTeams, useUpdateEmployee, useUpdateMyProfile } from "./peopleWorkApi";
 
@@ -77,7 +77,9 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     const [from, setFrom] = useState(today);
     // admins and super admins are paid a fixed monthly salary
     const salaried = hasFixedSalary(person.role ?? "employee");
-    if (pays && pay == null && history.data) setPay({ basis: salaried ? "monthly" : terms?.basis ?? "hourly", amount: terms?.amount ?? 0, currency: terms?.currency ?? "USD" });
+    // site staff log no hours, so they are paid by the month too
+    const monthlyOnly = paidMonthlyOnly(person.role ?? "employee", person.domain);
+    if (pays && pay == null && history.data) setPay({ basis: monthlyOnly ? "monthly" : terms?.basis ?? "hourly", amount: terms?.amount ?? 0, currency: terms?.currency ?? "USD" });
     // someone with no pay yet (an invited admin) keeps none until an amount is typed
     const payChanged = !!pay && (terms ? pay.basis !== terms.basis || pay.currency !== terms.currency || Math.abs(pay.amount - terms.amount) > 0.004 : pay.amount > 0);
     const errors = useFormErrors();
@@ -222,7 +224,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                         <div className="field">
                             <div className="spread" style={{ alignItems: "center" }}>
                                 <label className="label" htmlFor="ep-pay" style={{ margin: 0 }}>{salaried ? "Monthly salary" : "Pay"}</label>
-                                {salaried ? <span className="badge">Fixed salary</span> : (
+                                {salaried ? <span className="badge">Fixed salary</span> : monthlyOnly ? <span className="badge">Per month</span> : (
                                     <Segmented value={pay.basis} onChange={(basis) => setPay({ ...pay, basis })} aria-label="Pay basis"
                                         options={[{ value: "hourly", label: "Per hour" }, { value: "monthly", label: "Per month" }]} />
                                 )}

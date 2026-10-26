@@ -22,6 +22,7 @@ import ClientModal from "../clients/ClientModal";
 import ClientPicker from "../clients/ClientPicker";
 import { useClient } from "../clients/clientsApi";
 import { personName, useProjectOwners } from "../people/peopleApi";
+import { StaffPicker } from "../../execution/staff/StaffPages";
 import { useCreateProject } from "./projectsApi";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
@@ -61,6 +62,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const [fee, setFee] = useState(0);
     // materials are charged as they cost unless a profit is chosen: not every material earns one
     const [markupPct, setMarkupPct] = useState<number | "">(0);
+    // who oversees a site: chosen when it is created
+    const [staffIds, setStaffIds] = useState<number[]>([]);
     // Proton fills the project's details, never its money: the "more details" section opens to show what it filled
     const proton = useProtonForm("new_project", null, (fill) => {
         const v = fill.newProject;
@@ -84,7 +87,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const errors = useFormErrors();
     const titleError = title.trim() === "" && "Give the project a name.";
     const clientError = billing === "client" && clientId == null && "Choose who the project is for, or make it internal.";
-    const ok = !titleError && !clientError;
+    const staffError = execution && staffIds.length === 0 && "Choose at least one staff member to oversee the site.";
+    const ok = !titleError && !clientError && !staffError;
 
     // Who can own it: the domain's admins and the super admins (the creator first, when they are one), never an employee.
     const owners = [
@@ -120,6 +124,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                     ? { amount: initialPay, currency: "USD", method: payMethod as "bank", receivedOn: payDate, note: "Initial payment", reference: null }
                     : null,
                 labourDefaults: execution && (workers !== "" || dailyPay) ? { workers: +workers || 0, dailyPay: dailyPay || 0 } : null,
+                staffIds: execution ? staffIds : null,
             });
             toast({
                 text: `"${project.title}" created · active from today`,
@@ -164,6 +169,15 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                         {errors.show("title", titleError) ? <FieldError message={errors.show("title", titleError)} />
                             : <div className="hint">Press Enter to create. You can add details later.</div>}
                     </div>
+
+                    {execution && (
+                        <div className="field mt">
+                            <label className="label required">Site staff</label>
+                            <StaffPicker value={staffIds} onChange={setStaffIds} />
+                            {errors.show("staff", staffError) ? <FieldError message={errors.show("staff", staffError)} />
+                                : <div className="hint">Who oversees the site: they report its ground labour and write its daily logs.</div>}
+                        </div>
+                    )}
 
                     {execution ? (
                         <div className="hint mt">Every Execution project is for a client. What the client owes builds up from the materials (at client prices) and the project fee.</div>

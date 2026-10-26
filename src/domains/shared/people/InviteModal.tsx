@@ -80,7 +80,9 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     const [sent, setSent] = useState<Schemas["InvitationResponse"] | null>(null);
     // admins and super admins are paid a fixed monthly salary, which their invitation must carry
     const fixedSalary = hasFixedSalary(role);
-    const monthly = fixedSalary || basis === "monthly";
+    // site staff log no hours: a month's salary, never an hourly rate
+    const siteStaff = !fixedSalary && domain === "execution";
+    const monthly = fixedSalary || siteStaff || basis === "monthly";
     const setsPay = permissions.has(P.EMPLOYEE_PAY_MANAGE);
     const emailError = !email.trim() ? "Enter their work email." : !isEmail(email) && "Enter an email like name@company.com.";
     const payError = setsPay && !(amount > 0) && (fixedSalary ? "Enter their monthly salary." : `Enter their pay ${monthly ? "per month" : "per hour"}.`);
@@ -178,7 +180,8 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                                 <div className="spread" style={{ alignItems: "center" }}>
                                     <label className="label required" htmlFor="ae-rate" style={{ margin: 0 }}>{fixedSalary ? "Monthly salary" : "Pay"}</label>
                                     {fixedSalary ? <span className="badge">Fixed salary</span>
-                                        : <Segmented value={basis} onChange={setBasis} aria-label="Pay basis" options={[{ value: "hourly", label: "Per hour" }, { value: "monthly", label: "Per month" }]} />}
+                                        : siteStaff ? <span className="badge">Per month</span>
+                                            : <Segmented value={basis} onChange={setBasis} aria-label="Pay basis" options={[{ value: "hourly", label: "Per hour" }, { value: "monthly", label: "Per month" }]} />}
                                 </div>
                                 <div className="grid g-2 mt-s">
                                     <div className="field">

@@ -8,6 +8,9 @@ import {
     ClientPage,
     ClientsPage,
     CompanyExpensesPage,
+    DailyLogPage,
+    MySitesPage,
+    SiteLogsPage,
     CompanyOverviewPage,
     CompanyProfilePage,
     CompanySettingsPage,
@@ -85,6 +88,7 @@ const signedIn: AccessRule = () => true;
 const all = (...codes: Parameters<Permissions["hasAll"]>): AccessRule => ({ p }) => p.hasAll(...codes);
 const any = (...codes: Parameters<Permissions["hasAny"]>): AccessRule => ({ p }) => p.hasAny(...codes);
 const designOnly = (rule: AccessRule): AccessRule => (ctx) => ctx.domain === "design" && rule(ctx);
+const executionOnly = (rule: AccessRule): AccessRule => (ctx) => ctx.domain === "execution" && rule(ctx);
 
 /** Anything a settings page lets someone manage. */
 const SETTINGS_CODES = [
@@ -101,6 +105,17 @@ const SETTINGS_CODES = [
 
 export const domainRoutes: DomainRoute[] = [
     {
+        // an Execution site staff member's home: what happened on their sites, one log at a time
+        path: "daily-log",
+        nav: { label: "Daily log", icon: "file" },
+        employee: { element: <DailyLogPage />, access: executionOnly(all(P.SITE_LOG_CREATE)) },
+    },
+    {
+        path: "sites",
+        nav: { label: "My sites", icon: "projects" },
+        employee: { element: <MySitesPage />, access: executionOnly(any(P.SITE_LOG_CREATE, P.LABOUR_REPORT_CREATE)) },
+    },
+    {
         path: "overview",
         nav: { label: (d) => (d === "execution" ? "Dashboard" : "Overview"), icon: "overview" },
         admin: { element: <OverviewRoute />, access: all(P.REPORT_VIEW) },
@@ -109,6 +124,8 @@ export const domainRoutes: DomainRoute[] = [
         path: "projects",
         nav: { label: "Projects", icon: "projects", count: "projects" },
         admin: { element: <ProjectsPage />, access: all(P.PROJECT_VIEW) },
+        // site staff reach their sites from My sites
+        employee: { element: <ProjectsPage />, access: designOnly(all(P.PROJECT_VIEW)) },
     },
     {
         path: "projects/:id",
@@ -137,6 +154,11 @@ export const domainRoutes: DomainRoute[] = [
         admin: { element: <PersonProfilePage />, access: all(P.EMPLOYEE_VIEW) },
     },
     {
+        path: "site-logs",
+        nav: { label: "Daily logs", icon: "file" },
+        admin: { element: <SiteLogsPage />, access: executionOnly(all(P.SITE_LOG_VIEW_ALL)) },
+    },
+    {
         path: "financials",
         nav: { label: "Financials", icon: "card" },
         admin: { element: <FinancialsRoute />, access: all(P.FINANCIAL_VIEW) },
@@ -146,7 +168,8 @@ export const domainRoutes: DomainRoute[] = [
         nav: { label: "My work", icon: "clock" },
         employee: {
             element: <MyWorkRoute />,
-            access: (ctx) => (ctx.domain === "design" ? ctx.p.has(P.WORK_ENTRY_VIEW_OWN) : ctx.p.has(P.REQUIREMENT_VIEW)),
+            // site staff have their daily log instead
+            access: designOnly(all(P.WORK_ENTRY_VIEW_OWN)),
         },
     },
     {
@@ -158,7 +181,7 @@ export const domainRoutes: DomainRoute[] = [
         path: "meetings",
         nav: { label: "Meetings", icon: "calendar" },
         admin: { element: <MeetingsPage />, access: all(P.PROJECT_VIEW) },
-        employee: { element: <MeetingsPage />, access: all(P.PROJECT_VIEW) },
+        employee: { element: <MeetingsPage />, access: designOnly(all(P.PROJECT_VIEW)) },
     },
     {
         path: "activity",

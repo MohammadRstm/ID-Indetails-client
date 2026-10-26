@@ -24,7 +24,7 @@ export const PERMISSION_SECTIONS: PermissionSection[] = [
         groups: [
             { title: "Own hours", codes: [P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN] },
             { title: "Team's hours", codes: [P.WORK_ENTRY_VIEW_ALL, P.WORK_ENTRY_COMMENT] },
-            { title: "Site work", codes: [P.MATERIAL_CREATE, P.MATERIAL_MANAGE, P.LABOUR_REPORT_CREATE, P.LABOUR_REPORT_MANAGE] },
+            { title: "Site work", codes: [P.MATERIAL_CREATE, P.MATERIAL_MANAGE, P.LABOUR_REPORT_CREATE, P.LABOUR_REPORT_MANAGE, P.SITE_LOG_CREATE, P.SITE_LOG_VIEW_ALL] },
         ],
     },
     {

@@ -79,8 +79,8 @@ describe("who gets the Project files tab", () => {
 
     it("isn't on an Execution project, even by link", async () => {
         renderApp(`/execution/projects/${site.losingProject.id}?tab=files`, personas.executionEmployee, ...siteHandlers);
-        expect(await screen.findByText("Materials", { selector: ".kpi-label" })).toBeInTheDocument();
-        expect(tabs()).toEqual(["Overview", "Requirements", "Meetings"]);
+        expect(await screen.findByText("Weekly labour")).toBeInTheDocument();
+        expect(tabs()).not.toContain("Project files");
     });
 });
 

@@ -4974,6 +4974,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/site-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    From?: string;
+                    Page?: number;
+                    PageSize?: number;
+                    ProjectId?: number;
+                    Search?: string;
+                    To?: string;
+                    UserId?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfSiteLogResponse"];
+                        "text/json": components["schemas"]["PagedResponseOfSiteLogResponse"];
+                        "text/plain": components["schemas"]["PagedResponseOfSiteLogResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/site-records": {
         parameters: {
             query?: never;
@@ -4999,6 +5044,43 @@ export interface paths {
                         "application/json": components["schemas"]["SiteRecordsResponse"];
                         "text/json": components["schemas"]["SiteRecordsResponse"];
                         "text/plain": components["schemas"]["SiteRecordsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/sites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MySiteResponse"][];
+                        "text/json": components["schemas"]["MySiteResponse"][];
+                        "text/plain": components["schemas"]["MySiteResponse"][];
                     };
                 };
             };
@@ -10119,6 +10201,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{projectId}/site-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SaveSiteLogRequest"];
+                    "application/json": components["schemas"]["SaveSiteLogRequest"];
+                    "text/json": components["schemas"]["SaveSiteLogRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SiteLogResponse"];
+                        "text/json": components["schemas"]["SiteLogResponse"];
+                        "text/plain": components["schemas"]["SiteLogResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{projectId}/site-money/timeline": {
         parameters: {
             query?: never;
@@ -10151,6 +10278,51 @@ export interface paths {
             };
         };
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["UpdateProjectStaffRequest"];
+                    "application/json": components["schemas"]["UpdateProjectStaffRequest"];
+                    "text/json": components["schemas"]["UpdateProjectStaffRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectResponse"];
+                        "text/json": components["schemas"]["ProjectResponse"];
+                        "text/plain": components["schemas"]["ProjectResponse"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -11734,6 +11906,96 @@ export interface paths {
             };
         };
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/site-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    From?: string;
+                    Page?: number;
+                    PageSize?: number;
+                    ProjectId?: number;
+                    Search?: string;
+                    To?: string;
+                    UserId?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfSiteLogResponse"];
+                        "text/json": components["schemas"]["PagedResponseOfSiteLogResponse"];
+                        "text/plain": components["schemas"]["PagedResponseOfSiteLogResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/site-logs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SaveSiteLogRequest"];
+                    "application/json": components["schemas"]["SaveSiteLogRequest"];
+                    "text/json": components["schemas"]["SaveSiteLogRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SiteLogResponse"];
+                        "text/json": components["schemas"]["SiteLogResponse"];
+                        "text/plain": components["schemas"]["SiteLogResponse"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -13566,6 +13828,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/work-entries/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WorkEntryResponse"];
+                        "text/json": components["schemas"]["WorkEntryResponse"];
+                        "text/plain": components["schemas"]["WorkEntryResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/work-entries/{id}/scope": {
         parameters: {
             query?: never;
@@ -13605,45 +13906,6 @@ export interface paths {
             };
         };
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/work-entries/{id}/restore": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["WorkEntryResponse"];
-                        "text/json": components["schemas"]["WorkEntryResponse"];
-                        "text/plain": components["schemas"]["WorkEntryResponse"];
-                    };
-                };
-            };
-        };
         delete?: never;
         options?: never;
         head?: never;
@@ -14427,6 +14689,7 @@ export interface components {
             projectFee?: null | number;
             /** Format: double */
             revenue?: null | number;
+            staffIds?: null | number[];
             /** Format: date */
             targetDate?: null | string;
             tint?: null | string;
@@ -14634,6 +14897,8 @@ export interface components {
             domain: null | string;
             email: string;
             firstName: null | string;
+            /** Format: date */
+            fixedPayFrom: null | string;
             /** Format: int64 */
             id: number;
             isJoker: boolean;
@@ -15671,6 +15936,16 @@ export interface components {
             day: components["schemas"]["MyScheduleDayResponse"];
             schedule: components["schemas"]["PersonScheduleResponse"];
         };
+        MySiteResponse: {
+            /** Format: date-time */
+            assignedAt: string;
+            clientName: null | string;
+            /** Format: int64 */
+            id: number;
+            location: null | string;
+            status: components["schemas"]["ProjectStatus"];
+            title: string;
+        };
         NewMaterialRequest: {
             /** Format: double */
             amount?: null | number;
@@ -15969,6 +16244,15 @@ export interface components {
         };
         PagedResponseOfSalaryRowResponse: {
             items: components["schemas"]["SalaryRowResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfSiteLogResponse: {
+            items: components["schemas"]["SiteLogResponse"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -16573,11 +16857,6 @@ export interface components {
             weekly: components["schemas"]["WeekTotalResponse"][];
         };
         ProjectContributorResponse: {
-            /**
-             * Format: int32
-             * @default 0
-             */
-            outsideScopeMinutes: number;
             /** Format: int32 */
             entries: number;
             labourCost: null | components["schemas"]["LabourCostResponse"];
@@ -16586,6 +16865,11 @@ export interface components {
             /** Format: int32 */
             minutes: number;
             name: string;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            outsideScopeMinutes: number;
             /** Format: int32 */
             overtimeMinutes: number;
             /** Format: int32 */
@@ -16914,6 +17198,7 @@ export interface components {
             owner: components["schemas"]["ProjectOwnerResponse"];
             /** Format: int32 */
             progressPct: number;
+            staff: null | components["schemas"]["PersonRefResponse"][];
             /** Format: date */
             startDate: string;
             status: components["schemas"]["ProjectStatus"];
@@ -16978,11 +17263,6 @@ export interface components {
             title: string;
         };
         ProjectWorkResponse: {
-            /**
-             * Format: int32
-             * @default 0
-             */
-            outsideScopeMinutes: number;
             activityLevel: components["schemas"]["ActivityLevel"];
             /** Format: int32 */
             contributorCount: number;
@@ -16996,6 +17276,11 @@ export interface components {
             minutesLast14Days: number;
             /** Format: int32 */
             minutesPrevious14Days: number;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            outsideScopeMinutes: number;
             /** Format: int64 */
             projectId: number;
             /** Format: int32 */
@@ -17936,8 +18221,10 @@ export interface components {
             deadline?: null | string;
             text?: string;
         };
+        SaveSiteLogRequest: {
+            body?: string;
+        };
         SaveWorkEntryRequest: {
-            outsideScope?: null | boolean;
             /** Format: int64 */
             attachmentFileId?: null | number;
             deletes?: number[];
@@ -17945,6 +18232,7 @@ export interface components {
             /** Format: date-time */
             endedAt?: string;
             moves?: components["schemas"]["WorkEntryMoveRequest"][];
+            outsideScope?: null | boolean;
             /** Format: int64 */
             projectId?: number;
             /** Format: date-time */
@@ -18041,6 +18329,23 @@ export interface components {
             /** Format: int32 */
             startMinute?: number;
             workDays?: number[];
+        };
+        SiteLogProjectResponse: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+        };
+        SiteLogResponse: {
+            body: string;
+            canEdit: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            id: number;
+            person: components["schemas"]["PersonRefResponse"];
+            project: components["schemas"]["SiteLogProjectResponse"];
+            /** Format: date-time */
+            updatedAt: null | string;
         };
         SiteMoneyTimelineResponse: {
             currency: string;
@@ -18454,11 +18759,16 @@ export interface components {
             tint?: null | string;
             title?: string;
         };
+        UpdateProjectStaffRequest: {
+            staffIds?: number[];
+        };
         UpdateUserPermissionsRequest: {
             changes?: components["schemas"]["PermissionChangeRequest"][];
         };
         UserPermissionsResponse: {
             domain: null | string;
+            /** Format: date */
+            fixedPayFrom: null | string;
             isJoker: boolean;
             isLocked: boolean;
             overrides: components["schemas"]["PermissionOverrideResponse"][];
@@ -18883,7 +19193,6 @@ export interface components {
             title: string;
         };
         WorkEntryResponse: {
-            outsideScope: boolean;
             attachment: null | components["schemas"]["FileResponse"];
             canEdit: boolean;
             /** Format: int32 */
@@ -18897,6 +19206,7 @@ export interface components {
             id: number;
             /** Format: int32 */
             minutes: number;
+            outsideScope: boolean;
             /** Format: int32 */
             overtimeMinutes: number;
             person: components["schemas"]["WorkEntryPersonResponse"];
