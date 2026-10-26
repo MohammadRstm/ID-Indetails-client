@@ -89,7 +89,10 @@ describe("client statements", () => {
         const dialog = await screen.findByRole("dialog", { name: "Client statement" });
         const price = await within(dialog).findByLabelText("Client price for Paint");
         await userEvent.clear(price);
-        await userEvent.type(price, "1100{Enter}");
+        await userEvent.type(price, "1100");
+        // shown with its comma as it is typed, sent as a plain number
+        expect(price).toHaveValue("1,100");
+        await userEvent.keyboard("{Enter}");
         await waitFor(() => expect(priced).toEqual([{ clientPrice: 1100 }]));
         const row = price.closest(".stmt-row") as HTMLElement;
         await userEvent.click(within(row).getByRole("button", { name: "+25%" }));

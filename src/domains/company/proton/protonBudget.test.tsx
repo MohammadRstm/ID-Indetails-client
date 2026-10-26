@@ -47,7 +47,14 @@ describe("Proton budget", () => {
         expect(within(proposals).getByText("Failed: The project is closed.")).toBeInTheDocument();
 
         const user = userEvent.setup();
+        // a top-up is at most $10,000, said next to the amount as it is typed
+        await user.type(screen.getByLabelText("Amount (USD)"), "15000");
+        expect(screen.getByLabelText("Amount (USD)")).toHaveValue("15,000");
+        expect(screen.getByText("Up to $10,000 at a time.")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Add to the budget" })).toBeDisabled();
+        await user.clear(screen.getByLabelText("Amount (USD)"));
         await user.type(screen.getByLabelText("Amount (USD)"), "20");
+        expect(screen.queryByText("Up to $10,000 at a time.")).not.toBeInTheDocument();
         await user.type(screen.getByLabelText("Note (optional)"), "Busy month");
         await user.click(screen.getByRole("button", { name: "Add to the budget" }));
         expect(await screen.findByText("$20 added")).toBeInTheDocument();

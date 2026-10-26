@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { groupedNumber } from "@/shared/components/Forms/groupedNumber";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { COLS, resolveUnit, rowUsed, UNITS, type Col, type ColKey, type Row, type RowProblems } from "./materialRules";
@@ -51,6 +52,17 @@ function Cell({ col, n, r, c, value, readOnly, bad, dash, eager, onCommit, onNav
         }
         return col.type === "num" ? t.replace(/[^0-9.]/g, "") : t;
     }
+    function change(t: string) {
+        setText(t);
+        setDirty(true);
+        setHi(0);
+        moved.current = false;
+        if (combo) setOpen(true);
+        if (eager) onCommit(combo ? t : valueOf(t), true);
+    }
+    // a money cell shows its commas while it is typed in; what is kept and handed up has none
+    const shown = dirty ? text : value;
+    const amount = col.money ? groupedNumber(shown, null) : null;
     function commit(t: string) {
         editing.current = false;
         setDirty(false);
@@ -82,7 +94,7 @@ function Cell({ col, n, r, c, value, readOnly, bad, dash, eager, onCommit, onNav
 
     return (
         <td className={cx("sh-cell", col.type === "num" && "r", bad && "bad", open && "open")} title={bad}>
-            <input className={cx("sh-in", col.type !== "text" && "mono")} data-r={r} data-c={c} value={dirty ? text : value}
+            <input className={cx("sh-in", col.type !== "text" && "mono")} data-r={r} data-c={c} value={amount ? amount.value : shown}
                 aria-label={`${col.label} ${n}`} placeholder={dash && col.dash ? "-" : ""} inputMode={col.type === "num" ? "decimal" : undefined}
                 autoComplete="off" spellCheck={false} style={col.strong ? { fontWeight: 600 } : undefined} disabled={readOnly}
                 onFocus={() => {
@@ -93,16 +105,8 @@ function Cell({ col, n, r, c, value, readOnly, bad, dash, eager, onCommit, onNav
                     if (combo) { setOpen(true); setHi(Math.max(0, UNITS.indexOf(value))); }
                 }}
                 onBlur={() => { if (editing.current) commit(text); }}
-                onChange={(e) => {
-                    const t = e.target.value;
-                    setText(t);
-                    setDirty(true);
-                    setHi(0);
-                    moved.current = false;
-                    if (combo) setOpen(true);
-                    if (eager) onCommit(combo ? t : valueOf(t), true);
-                }}
-                onKeyDown={onKey}
+                onChange={(e) => change(amount ? amount.next(e) ?? "" : e.target.value)}
+                onKeyDown={(e) => { amount?.onKeyDown(e); onKey(e); }}
                 onPaste={onPaste ? (e) => {
                     const t = e.clipboardData.getData("text");
                     if (/[\t\n]/.test(t)) { e.preventDefault(); editing.current = false; setDirty(false); onPaste(t); }

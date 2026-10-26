@@ -9,9 +9,10 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
 import { FieldError } from "@/shared/components/Forms/Field";
 import { Segmented } from "@/shared/components/Forms/Filters";
+import { groupedNumber } from "@/shared/components/Forms/groupedNumber";
 import Modal from "@/shared/components/Overlays/Modal";
 import { plural } from "@/shared/format/labels";
-import { AMOUNT, fitNumber, upTo } from "@/shared/format/limits";
+import { AMOUNT, upTo } from "@/shared/format/limits";
 import { money } from "@/shared/format/money";
 import { companyToday, fmtDateY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -321,6 +322,8 @@ function NewStatement({ project, onMade, onClose }: { project: Project; onMade: 
                                             const on = !off[m.id], price = priceOf(m);
                                             const mk = m.cost > 0 ? price / m.cost - 1 : null;
                                             const sameType = groups.get(typeKey(m.name))?.earlier.length ?? 0;
+                                            // the price as it is typed, with commas between the thousands
+                                            const priceInput = groupedNumber(typing[m.id] ?? String(price), AMOUNT);
                                             return (
                                                 <div key={m.id} className={cx("stmt-row", !on && "off")}>
                                                     <input type="checkbox" checked={on} aria-label={`Include ${m.name}`} onChange={(e) => toggle(m, e.target.checked)} />
@@ -347,14 +350,14 @@ function NewStatement({ project, onMade, onClose }: { project: Project; onMade: 
                                                         </div>
                                                     )}
                                                     <input className="input mono stmt-price" inputMode="decimal" aria-label={`Client price for ${m.name}`} disabled={!canPrice}
-                                                        value={typing[m.id] ?? String(price)}
+                                                        value={priceInput.value}
                                                         onChange={(e) => {
-                                                            const v = fitNumber(e.target.value, AMOUNT, typing[m.id] ?? String(price));
+                                                            const v = priceInput.next(e);
                                                             setRefused(v == null ? m.id : null);
                                                             if (v != null) setTyping((t) => ({ ...t, [m.id]: v }));
                                                         }}
                                                         onBlur={() => { setRefused(null); commitTyping(m); }}
-                                                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } }} />
+                                                        onKeyDown={(e) => { priceInput.onKeyDown(e); if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } }} />
                                                     {refused === m.id && <FieldError message={upTo(AMOUNT)} />}
                                                 </div>
                                             );

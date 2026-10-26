@@ -20,15 +20,16 @@ export type Row = {
     note: string;
 };
 export type ColKey = keyof Row;
-export type Col = { k: ColKey; label: string; type: "text" | "num" | "combo"; w: string; dash?: boolean; strong?: boolean };
+/** `money` cells show commas between the thousands as they are typed. */
+export type Col = { k: ColKey; label: string; type: "text" | "num" | "combo"; w: string; dash?: boolean; strong?: boolean; money?: boolean };
 export type RowProblems = Partial<Record<ColKey, string>> | null;
 
 export const COLS: Col[] = [
     { k: "name", label: "Type", type: "text", w: "24%" },
     { k: "quantity", label: "Qty", type: "num", w: "8%", dash: true },
     { k: "unit", label: "Unit", type: "combo", w: "8%", dash: true },
-    { k: "unitCost", label: "Unit cost", type: "num", w: "10%", dash: true },
-    { k: "amount", label: "Total", type: "num", w: "11%", strong: true },
+    { k: "unitCost", label: "Unit cost", type: "num", w: "10%", dash: true, money: true },
+    { k: "amount", label: "Total", type: "num", w: "11%", strong: true, money: true },
     { k: "supplier", label: "Supplier", type: "text", w: "13%" },
     { k: "note", label: "Note", type: "text", w: "13%" },
 ];

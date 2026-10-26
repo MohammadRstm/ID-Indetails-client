@@ -101,7 +101,7 @@ describe("the materials on a site", () => {
         const p = await panel();
         await typeInto(await within(p).findByLabelText("Qty 1"), "100");
         await waitFor(() => expect(saved).toHaveLength(1));
-        await waitFor(() => expect(within(p).getByLabelText("Total 1")).toHaveValue("1100"));
+        await waitFor(() => expect(within(p).getByLabelText("Total 1")).toHaveValue("1,100"));
         await typeInto(within(p).getByLabelText("Unit cost 1"), "12");
         await waitFor(() => expect(saved[1]).toMatchObject({ quantity: 100, unitCost: 12 }));
         release();
@@ -302,7 +302,11 @@ describe("the Add materials sheet", () => {
         const sheet = await openSheet();
         await waitFor(() => expect(within(sheet).getByLabelText("Type 5")).toHaveFocus());
         expect(within(sheet).queryByLabelText("Client price 5")).not.toBeInTheDocument();
-        await userEvent.keyboard("Glass{Enter}{Enter}{Enter}{Enter}9400{Enter}");
+        await userEvent.keyboard("Glass{Enter}{Enter}{Enter}{Enter}9400");
+        // the total shows its comma as it is typed, and is sent as a plain number
+        expect(within(sheet).getByLabelText("Total 5")).toHaveValue("9,400");
+        await userEvent.keyboard("{Enter}");
+        expect(within(sheet).getByLabelText("Total 5")).toHaveValue("9,400");
         await userEvent.click(within(sheet).getByRole("button", { name: "Add 1 material" }));
         await waitFor(() => expect(added[0]?.items[0]).toMatchObject({ name: "Glass", amount: 9400, clientPrice: null }));
     });

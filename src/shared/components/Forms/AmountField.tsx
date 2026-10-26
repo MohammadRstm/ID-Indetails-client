@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent } from "react";
-import { AMOUNT, fitNumber, upTo } from "@/shared/format/limits";
+import { AMOUNT, upTo } from "@/shared/format/limits";
 import { FieldError } from "./Field";
+import { groupedNumber } from "./groupedNumber";
 import Select from "./Select";
 
 type AmountFieldProps = {
@@ -26,12 +27,13 @@ const shown = (value: number | null) => (value === 0 || value ? String(value) : 
 const parsed = (text: string) => (text === "" ? 0 : Number(text) || 0);
 
 /**
- * An amount with its currency sign and an optional USD / LBP picker (the prototype's UI.AmountField). It takes no
- * more digits or decimals than an amount can have, and says so under itself when a key is refused.
+ * An amount with its currency sign and an optional USD / LBP picker (the prototype's UI.AmountField). It shows
+ * commas between the thousands as it is typed (400,000) and hands up the plain number. It takes no more digits or
+ * decimals than an amount can have, and says so under itself when a key is refused.
  */
 export default function AmountField({ value, onChange, currency = "USD", onCurrency, currencies = true, id, placeholder = "0", r, c, onKeyDown, onBlur, ...rest }: AmountFieldProps) {
-    // The text as typed, so "42." and "42.50" stay as they are while the amount they give is handed up;
-    // an amount set from outside replaces it.
+    // The text as typed without its commas, so "42." and "42.50" stay as they are while the amount they give is
+    // handed up; an amount set from outside replaces it.
     const [text, setText] = useState(() => shown(value));
     const [refused, setRefused] = useState(false);
     const [last, setLast] = useState(value);
@@ -39,6 +41,7 @@ export default function AmountField({ value, onChange, currency = "USD", onCurre
         setLast(value);
         if (parsed(text) !== (value ?? 0)) setText(shown(value));
     }
+    const input = groupedNumber(text, AMOUNT);
 
     return (
         <>
@@ -50,16 +53,19 @@ export default function AmountField({ value, onChange, currency = "USD", onCurre
                 className="input mono"
                 inputMode="decimal"
                 placeholder={placeholder}
-                value={text}
+                value={input.value}
                 data-r={r}
                 data-c={c}
-                onKeyDown={onKeyDown}
+                onKeyDown={(e) => {
+                    input.onKeyDown(e);
+                    onKeyDown?.(e);
+                }}
                 onBlur={() => {
                     setRefused(false);
                     onBlur?.();
                 }}
                 onChange={(e) => {
-                    const raw = fitNumber(e.target.value, AMOUNT, text);
+                    const raw = input.next(e);
                     setRefused(raw == null);
                     if (raw == null) return;
                     setText(raw);
