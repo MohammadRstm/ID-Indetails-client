@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { errorMessage } from "@/api/errors";
 import { loadFailed } from "@/api/queryState";
 import Panel from "@/shared/components/Data/Panel";
 import { Badge, StatusBadge } from "@/shared/components/Data/Pills";
 import DataTable, { type Column } from "@/shared/components/Data-Tables/DataTable";
+import Pager from "@/shared/components/Data-Tables/Pager";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { SearchInput, Segmented } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
+import { useDragOrder } from "@/shared/hooks/useDragOrder";
 import Icon from "@/shared/icons/Icon";
 import { Thumb } from "./WebsitePictures";
 import WebsiteProjectModal from "./WebsiteProjectModal";
@@ -16,12 +18,17 @@ import { moved, STATUS_LABEL, useSetConveyor, useWebsiteProjects, type WebsitePr
 
 type Show = "all" | "published" | "drafts";
 
-/** The website's projects: the moving strip, then every project, published or not. */
+/** Projects on each page of the list. */
+const PAGE_SIZE = 15;
+
+/** The website's projects: every project, published or not, 15 to a page, then the moving strip. */
 export default function WebsiteProjectsTab() {
     const query = useWebsiteProjects();
     const [open, setOpen] = useState<WebsiteProject | "new" | null>(null);
     const [show, setShow] = useState<Show>("all");
     const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
+    const top = useRef<HTMLDivElement>(null);
     const data = query.data;
 
     if (!data) {
@@ -36,6 +43,9 @@ export default function WebsiteProjectsTab() {
     const rows = data.projects.filter((p) =>
         (show === "all" || (show === "published") === p.published)
         && (!term || [p.title, p.slug, p.city, p.country, p.client, p.linkedProject?.title].some((v) => v?.toLowerCase().includes(term))));
+    // a page that no longer exists (a project deleted, a narrower search) shows the last one
+    const shownPage = Math.min(page, Math.max(1, Math.ceil(rows.length / PAGE_SIZE)));
+    const pageRows = rows.slice((shownPage - 1) * PAGE_SIZE, shownPage * PAGE_SIZE);
 
     const columns: Column<WebsiteProject>[] = [
         { key: "picture", header: "", width: 48, cell: (p) => <Thumb fileId={p.thumbnailFileId} alt="" /> },
@@ -61,20 +71,24 @@ export default function WebsiteProjectsTab() {
 
     return (
         <>
-            <ConveyorPanel data={data} />
-            <Panel className="mt" flush title="Projects" sub="Published projects show on the website's globe, its projects page and their own pages."
+            <div ref={top} />
+            <Panel flush title="Projects" sub="Published projects show on the website's globe, its projects page and their own pages."
                 tools={
                     <div className="row" style={{ gap: 8 }}>
-                        <SearchInput value={search} onChange={setSearch} placeholder="Search projects" width={180} aria-label="Search projects" />
-                        <Segmented value={show} onChange={setShow} aria-label="Show"
+                        <SearchInput value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search projects" width={180} aria-label="Search projects" />
+                        <Segmented value={show} onChange={(v) => { setShow(v); setPage(1); }} aria-label="Show"
                             options={[{ value: "all", label: "All" }, { value: "published", label: "Published" }, { value: "drafts", label: "Drafts" }]} />
                         {data.canManage && <button className="btn btn-sm btn-primary" onClick={() => setOpen("new")}><Icon name="plus" />New project</button>}
                     </div>
                 }>
-                <DataTable columns={columns} rows={rows} rowKey={(p) => p.id} what="the website's projects" onRowClick={setOpen}
+                <DataTable columns={columns} rows={pageRows} rowKey={(p) => p.id} what="the website's projects" onRowClick={setOpen}
                     empty={<Empty art="search" title={data.projects.length ? "No project matches" : "No projects on the website yet"}
                         text={data.projects.length ? "Try another search or filter." : data.canManage ? "Add the company's work, from scratch or from a system project." : undefined} />} />
+                <div style={{ padding: "0 14px 10px" }}>
+                    <Pager page={shownPage} pageSize={PAGE_SIZE} total={rows.length} onPage={setPage} anchor={top} />
+                </div>
             </Panel>
+            <ConveyorPanel data={data} />
             {open != null && <WebsiteProjectModal project={open === "new" ? null : open} canManage={data.canManage} onClose={() => setOpen(null)} />}
         </>
     );
@@ -83,19 +97,23 @@ export default function WebsiteProjectsTab() {
 /** The website's moving strip: up to 20 published projects, in order; every change is saved straight away. */
 function ConveyorPanel({ data }: { data: WebsiteProjects }) {
     const save = useSetConveyor();
-    const strip = data.projects.filter((p) => p.conveyorOrder != null).sort((a, b) => a.conveyorOrder! - b.conveyorOrder!);
-    const ids = strip.map((p) => p.id);
+    const saved = data.projects.filter((p) => p.conveyorOrder != null).sort((a, b) => a.conveyorOrder! - b.conveyorOrder!);
+    // while a new order saves, it shows already
+    const ids = save.isPending && save.variables ? save.variables : saved.map((p) => p.id);
+    const strip = ids.map((id) => data.projects.find((p) => p.id === id)).filter((p) => p != null);
     const addable = data.projects.filter((p) => p.published && p.conveyorOrder == null);
     const full = strip.length >= data.conveyorLimit;
     const set = (next: number[]) => save.mutate(next);
+    const drag = useDragOrder(ids, set, !data.canManage || save.isPending);
 
     return (
-        <Panel title="Moving strip" sub={`The projects that slide across the website's home page, in this order. At most ${data.conveyorLimit}; only published projects.`}
+        <Panel className="mt" title="Moving strip"
+            sub={`The projects that slide across the website's home page, in this order${data.canManage ? ": drag one to its place" : ""}. At most ${data.conveyorLimit}; only published projects.`}
             tools={<span className="badge" aria-label="Projects in the strip">{strip.length} / {data.conveyorLimit}</span>}>
             {strip.length === 0 ? <div className="muted">No project is in the strip yet.</div> : (
                 <ol aria-label="Moving strip" style={{ display: "grid", gap: 6, margin: 0, padding: 0, listStyle: "none" }}>
                     {strip.map((p, index) => (
-                        <li key={p.id} className="row" style={{ gap: 10 }}>
+                        <li key={p.id} className={data.canManage ? "row drag-item" : "row"} style={{ gap: 10, padding: "3px 0" }} {...drag.item(p.id)}>
                             <span className="muted num" style={{ width: 20, textAlign: "right" }}>{index + 1}</span>
                             <Thumb fileId={p.thumbnailFileId} width={28} />
                             <span className="grow">{p.title}</span>

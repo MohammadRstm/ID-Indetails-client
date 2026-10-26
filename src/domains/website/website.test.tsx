@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
@@ -185,6 +185,31 @@ describe("the Website page", () => {
         expect(screen.queryByRole("option", { name: "Batroun House" })).not.toBeInTheDocument();
         await userEvent.click(screen.getByRole("option", { name: "Hotel Le Gray" }));
         await waitFor(() => expect(strips.at(-1)).toEqual([1, 2]));
+
+        // dragged: the hotel dropped on the villa takes its place
+        const strip = screen.getByRole("list", { name: "Moving strip" });
+        const [first, second] = within(strip).getAllByRole("listitem");
+        const dataTransfer = { setData: () => undefined, effectAllowed: "", dropEffect: "" };
+        fireEvent.pointerDown(second);
+        fireEvent.dragStart(second, { dataTransfer });
+        fireEvent.dragOver(first, { dataTransfer });
+        fireEvent.drop(first, { dataTransfer });
+        await waitFor(() => expect(strips.at(-1)).toEqual([2, 1]));
+        await waitFor(() => expect(within(strip).getAllByRole("listitem")[0]).toHaveTextContent("Hotel Le Gray"));
+    });
+
+    it("shows the projects 15 to a page, above the moving strip", async () => {
+        const many = Array.from({ length: 20 }, (_, i) => project(100 + i, `Project ${String(i + 1).padStart(2, "0")}`));
+        renderApp("/website/projects", rana, ...handlers(list(true, many)));
+        expect(await screen.findByText("Project 01", { selector: "tr div" })).toBeInTheDocument();
+        expect(screen.getAllByRole("row")).toHaveLength(16);
+        expect(screen.queryByText("Project 16", { selector: "tr div" })).not.toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "Next page" }));
+        expect(await screen.findByText("Project 16", { selector: "tr div" })).toBeInTheDocument();
+        expect(screen.getAllByRole("row")).toHaveLength(6);
+        // the list first, then the strip
+        const table = screen.getByRole("table");
+        expect(table.compareDocumentPosition(screen.getByText("Moving strip")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
     it("says the strip is full at 20", async () => {
@@ -338,17 +363,19 @@ describe("places on the Website page", () => {
 
     it("walks an existing project through its concept, where publishing is decided, then shows its gallery alone", async () => {
         const sent: { conceptDescription: string | null; published: boolean }[] = [];
-        renderApp("/website/projects", rana, ...handlers(),
+        const withPicture = { ...villa, conceptImages: [{ id: 9, fileId: 60, alt: "Sketch" }] };
+        renderApp("/website/projects", rana, ...handlers(list(true, [withPicture, hotel, draft])),
+            http.get("/api/files/60", () => new HttpResponse(new Blob(["x"], { type: "image/jpeg" }))),
             http.put("/api/website/projects/1", async ({ request }) => {
                 const body = (await request.json()) as { conceptDescription: string | null; published: boolean };
                 sent.push(body);
-                return HttpResponse.json({ ...villa, conceptDescription: body.conceptDescription, published: body.published });
+                return HttpResponse.json({ ...withPicture, conceptDescription: body.conceptDescription, published: body.published });
             }));
         await userEvent.click(await screen.findByText("Villa Rizk", { selector: "tr div" }));
         // an existing project goes to any step
         await userEvent.click(await screen.findByRole("tab", { name: /2\. Concept/ }));
-        await userEvent.type(screen.getByLabelText("Concept description"), "Light first.");
-        expect(screen.getByText(/No concept pictures yet/)).toBeInTheDocument();
+        await userEvent.type(screen.getByLabelText(/^Concept description/), "Light first.");
+        expect(screen.getByLabelText("Description of concept picture 1")).toHaveValue("Sketch");
         // publishing is decided here: this one goes back to a draft
         await userEvent.click(screen.getByRole("switch", { name: "Published" }));
         await userEvent.click(screen.getByRole("button", { name: "Save draft and next" }));
@@ -361,7 +388,32 @@ describe("places on the Website page", () => {
         expect(screen.getByRole("button", { name: "Done" })).toBeInTheDocument();
     });
 
-    it("skips the concept, keeping what it had", async () => {
+    it("asks for the concept's text and pictures together, or neither", async () => {
+        const sent: unknown[] = [];
+        renderApp("/website/projects", rana, ...handlers(),
+            http.put("/api/website/projects/1", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(villa); }));
+        await userEvent.click(await screen.findByText("Villa Rizk", { selector: "tr div" }));
+        await userEvent.click(await screen.findByRole("tab", { name: /2\. Concept/ }));
+        await userEvent.type(screen.getByLabelText("Concept description"), "Light first.");
+        await userEvent.click(screen.getByRole("button", { name: "Publish and next" }));
+        expect(await screen.findByText("Add at least one concept picture for this text, or clear the text.")).toBeInTheDocument();
+        expect(sent).toHaveLength(0);
+        // cleared, there's no concept, which is fine
+        await userEvent.clear(screen.getByLabelText("Concept description"));
+        expect(screen.queryByText("Add at least one concept picture for this text, or clear the text.")).not.toBeInTheDocument();
+    });
+
+    it("asks for a text for the concept pictures, and skips only a concept without any", async () => {
+        const withPictures = { ...villa, conceptImages: [{ id: 9, fileId: 60, alt: "Sketch" }] };
+        renderApp("/website/projects", rana, ...handlers(list(true, [withPictures, hotel, draft])), http.get("/api/files/60", () => new HttpResponse(new Blob(["x"], { type: "image/jpeg" }))));
+        await userEvent.click(await screen.findByText("Villa Rizk", { selector: "tr div" }));
+        await userEvent.click(await screen.findByRole("tab", { name: /2\. Concept/ }));
+        expect(screen.getByRole("button", { name: "Skip the concept" })).toBeDisabled();
+        await userEvent.click(screen.getByRole("button", { name: "Publish and next" }));
+        expect(await screen.findByText("Describe the concept pictures, or remove them.")).toBeInTheDocument();
+    });
+
+    it("skips the concept, leaving none", async () => {
         const sent: { conceptDescription: string | null }[] = [];
         renderApp("/website/projects", rana, ...handlers(list(true, [{ ...villa, conceptDescription: "Kept." }, hotel, draft])),
             http.put("/api/website/projects/1", async ({ request }) => {
@@ -375,7 +427,7 @@ describe("places on the Website page", () => {
         // a draft, so nothing is missing to publish
         await userEvent.click(screen.getByRole("switch", { name: "Published" }));
         await userEvent.click(screen.getByRole("button", { name: "Skip the concept" }));
-        await waitFor(() => expect(sent).toEqual([expect.objectContaining({ conceptDescription: "Kept." })]));
+        await waitFor(() => expect(sent).toEqual([expect.objectContaining({ conceptDescription: null })]));
     });
 });
 

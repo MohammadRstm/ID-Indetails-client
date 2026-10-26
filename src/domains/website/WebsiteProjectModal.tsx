@@ -7,6 +7,7 @@ import Field, { FieldError } from "@/shared/components/Forms/Field";
 import { SearchInput, SwitchRow, Toggle } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
+import { useDragOrder, type DragItemProps } from "@/shared/hooks/useDragOrder";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { PictureSlot, Thumb } from "./WebsitePictures";
@@ -72,6 +73,10 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     const positionError = placeError(latitude, longitude);
     const missing = missingToPublish({ status: shownStatus, year: shownYear, city, country, latitude, longitude, description, thumbnail, hero });
     const publishError = published && missing.length > 0 && `To publish it, add ${missing.join(", ")}.`;
+    // the concept is optional, but it is its text and its pictures together, or neither
+    const conceptPictures = p?.conceptImages.length ?? 0;
+    const conceptError = conceptDescription.trim() && conceptPictures === 0 ? "Add at least one concept picture for this text, or clear the text."
+        : !conceptDescription.trim() && conceptPictures > 0 && "Describe the concept pictures, or remove them.";
 
     function body(): WebsiteProjectBody {
         return {
@@ -109,10 +114,10 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
         });
     }
 
-    /** Step 2 to 3: the concept (or none, when skipped) and whether it is published. */
+    /** Step 2 to 3: the concept (or none, when skipped: only a project without concept pictures) and whether it is published. */
     function publishAndContinue(skipConcept: boolean) {
-        if (publishError) return errors.tried();
-        const concept = skipConcept ? p?.conceptDescription ?? "" : conceptDescription;
+        if (publishError || (!skipConcept && conceptError)) return errors.tried();
+        const concept = skipConcept ? "" : conceptDescription;
         if (skipConcept) setConceptDescription(concept);
         store(published, concept, (result) => {
             toast({ text: result.published ? "It's on the website" : "Saved as a draft", sub: "Last, its gallery", icon: "checkCircle" });
@@ -163,7 +168,8 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
                     {step === 2 && (
                         <>
                             <button className="btn" onClick={() => setStep(1)}>Back</button>
-                            <button className="btn" disabled={save.isPending} onClick={() => publishAndContinue(true)}>Skip the concept</button>
+                            <button className="btn" disabled={save.isPending || conceptPictures > 0} onClick={() => publishAndContinue(true)}
+                                title={conceptPictures > 0 ? "It has concept pictures: remove them to skip the concept." : undefined}>Skip the concept</button>
                             <button className="btn btn-primary" disabled={save.isPending} onClick={() => publishAndContinue(false)}>
                                 {save.isPending ? "Saving…" : published ? "Publish and next" : "Save draft and next"}
                             </button>
@@ -255,12 +261,13 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
             </>)}
 
             {step === 2 && p && (<>
-                <div className="hint">A row on the project's own page, under its description: up to 5 concept pictures beside this text. It shows only when there is one or the other, so it can be skipped.</div>
-                <Field id="wp-concept" label="Concept description">
+                <div className="hint">A row on the project's own page, under its description: up to 5 concept pictures beside this text. It's optional, but it's both or neither: pictures need a text, and a text needs a picture.</div>
+                <Field id="wp-concept" label="Concept description" required={edit && conceptPictures > 0}>
                     <AutoGrowTextarea id="wp-concept" className="input" minRows={3} maxRows={25} maxLength={4000} value={conceptDescription} disabled={!edit}
-                        onChange={(e) => setConceptDescription(e.target.value)} />
+                        onChange={(e) => setConceptDescription(e.target.value)} onBlur={errors.touch("concept")} />
                 </Field>
                 <Gallery project={p} canManage={edit} concept />
+                <FieldError message={errors.show("concept", conceptError)} />
 
                 <SwitchRow title="Published" style={{ marginTop: 18 }}
                     description={published ? "It's on the website: the globe, the projects page and its own page." : "A draft: only people on this page see it."}
@@ -327,7 +334,10 @@ function Gallery({ project, canManage, concept = false }: { project: WebsiteProj
     const [adding, setAdding] = useState<{ total: number; done: number; fraction: number } | null>(null);
     const [failed, setFailed] = useState<string>();
     const images = concept ? project.conceptImages : project.gallery;
-    const ids = images.map((i) => i.id);
+    // while a new order saves, it shows already
+    const ids = gallery.order.isPending && gallery.order.variables ? gallery.order.variables : images.map((i) => i.id);
+    const ordered = ids.map((id) => images.find((i) => i.id === id)).filter((i) => i != null);
+    const drag = useDragOrder(ids, (next) => gallery.order.mutate(next), !canManage || gallery.order.isPending || gallery.remove.isPending);
     const room = concept ? MAX_CONCEPT - images.length : Infinity;
     const noun = concept ? "concept picture" : "picture";
     const error = failed ?? (gallery.order.error ?? gallery.remove.error ?? gallery.edit.error ? errorMessage(gallery.order.error ?? gallery.remove.error ?? gallery.edit.error) : undefined);
@@ -367,9 +377,10 @@ function Gallery({ project, canManage, concept = false }: { project: WebsiteProj
                         : "No gallery pictures yet. They show further down the project's own page; wide pictures (3:2) look best."}
                 </div>
             )}
+            {canManage && images.length > 1 && <div className="hint">Drag a picture to its place, or use its arrows.</div>}
             <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-                {images.map((image, index) => (
-                    <GalleryRow key={image.id} image={image} index={index} count={ids.length} canManage={canManage} noun={noun}
+                {ordered.map((image, index) => (
+                    <GalleryRow key={image.id} image={image} index={index} count={ids.length} canManage={canManage} noun={noun} drag={drag.item(image.id)}
                         onMove={(by) => gallery.order.mutate(moved(ids, image.id, by))}
                         onSave={(alt) => gallery.edit.mutate({ imageId: image.id, body: { alt } })}
                         onRemove={() => gallery.remove.mutate(image.id)} busy={gallery.order.isPending || gallery.remove.isPending} />
@@ -391,16 +402,18 @@ type GalleryRowProps = {
     onMove: (by: -1 | 1) => void;
     onSave: (alt: string) => void;
     onRemove: () => void;
+    /** Its part in dragging the pictures into order (useDragOrder). */
+    drag: DragItemProps;
 };
 
-function GalleryRow({ image, noun, index, count, canManage, busy, onMove, onSave, onRemove }: GalleryRowProps) {
+function GalleryRow({ image, noun, index, count, canManage, busy, onMove, onSave, onRemove, drag }: GalleryRowProps) {
     const [alt, setAlt] = useState(image.alt);
     const errors = useFormErrors();
     const altError = !alt.trim() && "Describe the picture.";
     const changed = alt.trim() !== image.alt;
 
     return (
-        <div className="row" style={{ gap: 10, alignItems: "flex-start" }}>
+        <div className={canManage ? "row drag-item" : "row"} style={{ gap: 10, alignItems: "flex-start", padding: "3px 0" }} {...drag}>
             <Thumb fileId={image.fileId} width={96} ratio={3 / 2} alt={image.alt} />
             <div className="grow">
                 <input className="input" aria-label={`Description of ${noun} ${index + 1}`} value={alt} maxLength={200} disabled={!canManage}
