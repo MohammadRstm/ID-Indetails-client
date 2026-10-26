@@ -13,6 +13,7 @@ import EntryComments from "./EntryComments";
 import { commentCount } from "./entryWords";
 import { entryBody, uploadFile, useSaveEntry, type WorkEntry } from "./workApi";
 import { clickable } from "@/shared/utils/clickable";
+import { ScopeTag } from "./Scope";
 
 
 type EntryRowProps = {
@@ -69,6 +70,7 @@ export default function EntryRow({ entry: e, showProject = true, showPerson, sho
                             <span className="row" style={{ gap: 5 }}><ProjectTile icon={e.project.icon} tint={e.project.tint} size="sm" />{e.project.title}</span>
                         )}
                         <span>{fmtDayDate(e.startedAt)}</span>
+                        {e.outsideScope && <ScopeTag />}
                         {showCreated && <span className="muted">logged {relTime(e.createdAt)}</span>}
                         {e.attachment && (
                             <span className="link" {...clickable((ev) => { ev.stopPropagation(); setViewing(true); }, "button")}>

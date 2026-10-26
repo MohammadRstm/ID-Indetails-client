@@ -292,6 +292,45 @@ describe("deleting a logged task on the Log work timeline", () => {
         await waitFor(() => expect(sent).toEqual(["delete 999", "restore 74"]));
     });
 
+    it("logs work as outside the original scope when its box is ticked", async () => {
+        let body: Record<string, unknown> | null = null;
+        renderApp("/design/projects", sarah,
+            http.post("/api/work-entries", async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>;
+                return HttpResponse.json({ ...work.day.entries[0], id: 999, minutes: 60, startedAt: body.startedAt, endedAt: body.endedAt, outsideScope: true });
+            }),
+            ...workHandlers);
+        await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
+        const dialog = await logWindow();
+        const scope = within(dialog).getByRole("checkbox", { name: /Outside the original scope/ });
+        expect(scope).not.toBeChecked();
+        await userEvent.type(within(dialog).getByLabelText("What did you work on?"), "The guest house the client added");
+        await userEvent.click(scope);
+        await userEvent.click(await within(dialog).findByRole("button", { name: /^Log / }));
+        await waitFor(() => expect(body).toMatchObject({ description: "The guest house the client added", outsideScope: true }));
+    });
+
+    it("ticks the scope box per log on the home page's Add logs timeline", async () => {
+        const posted: Record<string, unknown>[] = [];
+        renderApp("/design/projects", sarah,
+            http.post("/api/work-entries", async ({ request }) => {
+                const body = (await request.json()) as Record<string, unknown>;
+                posted.push(body);
+                return HttpResponse.json({ ...work.day.entries[0], id: 999, minutes: 60, startedAt: body.startedAt, endedAt: body.endedAt });
+            }),
+            ...workHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Add logs" }));
+        const panel = (await screen.findByText(/^Add logs · /)).closest(".panel") as HTMLElement;
+        const scope = within(panel).getByRole("checkbox", { name: /Outside the original scope/ });
+        await userEvent.type(within(panel).getByLabelText("What did you work on?"), "Extra bathroom");
+        await userEvent.click(scope);
+        await userEvent.click(within(panel).getByRole("button", { name: "Add log" }));
+        await waitFor(() => expect(posted).toHaveLength(1));
+        expect(posted[0]).toMatchObject({ description: "Extra bathroom", outsideScope: true });
+        // ready for the next log, which says for itself
+        await waitFor(() => expect(scope).not.toBeChecked());
+    });
+
     it("works the same on the home page's Add logs timeline", async () => {
         const posted: Record<string, unknown>[] = [];
         const sent: string[] = [];

@@ -10,7 +10,10 @@ import MediaLightbox from "@/shared/components/Overlays/MediaLightbox";
 import Modal from "@/shared/components/Overlays/Modal";
 import { fmtDayDateY, fmtDur, fmtRange, relTime } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import { errorMessage } from "@/api/errors";
 import EntryComments from "../work/EntryComments";
+import { ScopeCheck, ScopeTag } from "../work/Scope";
+import { useSetEntryScope } from "../work/workApi";
 import { useEmployeeTeam, useEntryDetail } from "./projectWorkApi";
 import { loadFailed } from "@/api/queryState";
 
@@ -29,6 +32,9 @@ export default function EntryModal({ entryId, onClose, overDrawer }: EntryModalP
     const d = detail.data;
     const e = d?.entry;
     const position = useEmployeeTeam(e?.person.id ?? 0, !!e && permissions.has(P.EMPLOYEE_VIEW)).data?.position;
+    const scope = useSetEntryScope();
+    // admins who see everyone's work correct it on anyone's entry, past the edit window too
+    const canSetScope = permissions.has(P.WORK_ENTRY_VIEW_ALL);
 
     return (
         <Modal title="Work entry" scrimClass={overDrawer ? "scrim-over-drawer" : undefined} onClose={onClose}
@@ -67,6 +73,13 @@ export default function EntryModal({ entryId, onClose, overDrawer }: EntryModalP
                             <div className="u">Work description</div>
                             <p style={{ marginTop: 4, fontSize: "13.5px" }}>{e.description}</p>
                         </div>
+                        {canSetScope ? (
+                            <div className="mt">
+                                <ScopeCheck checked={scope.isPending ? !!scope.variables?.outsideScope : e.outsideScope} disabled={scope.isPending}
+                                    onChange={(outsideScope) => scope.mutate({ id: e.id, outsideScope }, { onSuccess: () => void detail.refetch() })} />
+                                {scope.error != null && <div className="err"><Icon name="alert" />{errorMessage(scope.error)}</div>}
+                            </div>
+                        ) : e.outsideScope && <div className="mt"><ScopeTag /></div>}
                         <EntryComments entryId={e.id} author={e.person} domain="design" />
                     </>
                 )}
