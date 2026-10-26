@@ -15,7 +15,7 @@ const open = site.losingProject;
 // the materials are on the Overview; someone who sees money opens on the Financials tab
 const openPath = `/execution/projects/${open.id}?tab=overview`;
 // Achrafieh Towers lobby: every material is on its client statement
-const statedPath = `/execution/projects/${site.project.id}`;
+const statedPath = `/execution/projects/${site.project.id}?tab=overview`;
 const plasterboard = site.openMaterials.items[0];
 
 beforeEach(() => {
@@ -87,12 +87,11 @@ describe("the materials on a site", () => {
 
     it("start the next change on a row from what was just saved, before the list comes back", async () => {
         const saved: Record<string, unknown>[] = [];
-        let lists = 0;
         let release = () => {};
         const held = new Promise<void>((resolve) => { release = resolve; });
         renderApp(openPath, karim,
-            // the list is slow to come back after the first save
-            http.get("/api/projects/:id/materials", async () => { if (lists++ > 1) await held; return listWith(site.openMaterials.items); }),
+            // the list is slow to come back once something is saved
+            http.get("/api/projects/:id/materials", async () => { if (saved.length > 0) await held; return listWith(site.openMaterials.items); }),
             http.put("/api/projects/:id/materials/:materialId", async ({ request }) => {
                 const body = await request.json() as Record<string, number>;
                 saved.push(body);

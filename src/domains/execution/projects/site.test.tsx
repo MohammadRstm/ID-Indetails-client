@@ -81,9 +81,8 @@ describe("an Execution site's overview", () => {
         expect(paint).toHaveTextContent("Sent Sep 30");
         expect(within(margins).getByText("Sent to the client").closest("tr")).toHaveTextContent("4 of 4 · counted in revenue");
         expect(within(margins).getByRole("columnheader", { name: "Profit" })).toBeInTheDocument();
-        // it sits under the materials table
-        const materials = screen.getByText("Materials", { selector: ".panel-title" }).closest(".panel") as HTMLElement;
-        expect(materials.compareDocumentPosition(margins) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        // it is money, on the Financials tab: the materials table is on the Overview
+        expect(screen.queryByText("Materials", { selector: ".panel-title" })).not.toBeInTheDocument();
         expect(within(await moneyPanel()).queryByText("Not sent yet")).not.toBeInTheDocument();
     });
 
