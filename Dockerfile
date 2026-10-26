@@ -18,10 +18,11 @@ RUN npm run build
 FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine AS runtime
 
 # The image's own example site is replaced by ours.
-# pcre2 is upgraded for CVE-2026-103111 (fixed in 10.49-r0) until the base image ships it; only that package, as a
-# full upgrade could replace nginx.org's nginx with Alpine's.
+# Packages with fixed high-severity CVEs are upgraded until the base image ships them: pcre2 (CVE-2026-103111, 10.49-r0),
+# brotli-libs (CVE-2026-111497, 1.2.1-r0), curl and libcurl (CVE-2026-92392, 8.23.0-r0). Only those, as a full
+# upgrade could replace nginx.org's nginx with Alpine's.
 USER root
-RUN apk upgrade --no-cache pcre2 && rm -f /etc/nginx/conf.d/default.conf
+RUN apk upgrade --no-cache pcre2 brotli-libs curl libcurl && rm -f /etc/nginx/conf.d/default.conf
 # The site and its security headers are templates, filled in when the container starts with API_UPSTREAM and
 # CONTENT_STORE_ORIGIN. The nginx image only fills in variables that are set, which is why the latter has a default below.
 COPY deploy/nginx/default.conf.template /etc/nginx/templates/default.conf.template
