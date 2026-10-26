@@ -89,6 +89,26 @@ describe("Settings", () => {
         expect(await screen.findByText("Company details updated")).toBeInTheDocument();
     });
 
+    it("lets a super admin allow Proton to read project files, saying where they are sent", async () => {
+        const put = recorder("put", "/api/company/proton-files", { ...settings.company, protonReadsFiles: true });
+        renderApp("/design/settings", rana, put.handler, ...settingsHandlers);
+        const toggle = await screen.findByRole("switch", { name: "Let Proton read project files" });
+        expect(toggle).toHaveAttribute("aria-checked", "false");
+        expect(screen.getByText(/sent to Anthropic/)).toBeInTheDocument();
+
+        await userEvent.click(toggle);
+
+        await waitFor(() => expect(put.bodies).toEqual([{ enabled: true }]));
+        expect(await screen.findByText("Proton can read project files")).toBeInTheDocument();
+        expect(screen.getByRole("switch", { name: "Let Proton read project files" })).toHaveAttribute("aria-checked", "true");
+    });
+
+    it("doesn't show the Proton switch to an admin who can't change the company settings", async () => {
+        renderApp("/design/settings", personas.designAdmin, ...settingsHandlers);
+        await screen.findByRole("navigation", { name: "Settings" });
+        expect(screen.queryByRole("switch", { name: "Let Proton read project files" })).not.toBeInTheDocument();
+    });
+
     it("sets the working week: Monday to Friday, or the days ticked, and where the week starts", async () => {
         const post = recorder("post", "/api/company/working-time", settings.workingTime);
         const put = recorder("put", "/api/company/settings", settings.company);

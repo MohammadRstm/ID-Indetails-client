@@ -158,6 +158,9 @@ describe("Proton opening forms and windows", () => {
 
         expect(stepOf(surface("file_comments", { id: 42, domain: "design", itemId: 5 }), designAdmin, "design"))
             .toMatchObject({ path: "/design/projects/42?tab=files&comments=5" });
+        expect(stepOf(surface("view_project_file", { id: 42, domain: "design", itemId: 5 }), designAdmin, "design"))
+            .toMatchObject({ path: "/design/projects/42?tab=files&view=5" });
+        expect(stepOf(surface("view_project_file", { id: 42, domain: "design" }), designAdmin, "design")).toBeNull();
         expect(stepOf(surface("portal_discussion", { id: 42, domain: "design", itemId: 5 }), designAdmin, "design"))
             .toMatchObject({ path: "/design/projects/42?tab=portal&part=discussion&item=5" });
         expect(stepOf(surface("portal_preview", { id: 42, domain: "design" }), superAdmin, "design")).toMatchObject({ path: "/design/projects/42/portal-preview" });

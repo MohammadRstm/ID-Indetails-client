@@ -52,6 +52,15 @@ export function useSaveCompanySettings() {
     });
 }
 
+/** Whether Proton may read project files, which sends their content to Anthropic (company_settings:manage). */
+export function useSetProtonFiles() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (enabled: boolean) => (await http.put<CompanySettings>("/company/proton-files", { enabled })).data,
+        onSuccess: (saved) => queryClient.setQueryData(companySettingsKey, saved),
+    });
+}
+
 /** A new logo from an uploaded file, or null for the ID InDetails mark (company_settings:manage). */
 export function useSetLogo() {
     const invalidate = useInvalidate();
