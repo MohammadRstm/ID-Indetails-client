@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 import { errorMessage } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -26,6 +27,8 @@ import {
     type Requirement, type SaveRequirementBody,
 } from "./requirementsApi";
 import { loadFailed } from "@/api/queryState";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillChange, fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 
 type Person = { id: number; name: string };
 
@@ -104,6 +107,8 @@ function useAssignable(domain: string, enabled: boolean) {
 
 type ReqFormProps = {
     domain: string;
+    /** The project, for a new requirement: Proton fills only the one its fill is for. */
+    projectId: number;
     requirement?: Requirement;
     busy?: boolean;
     error?: unknown;
@@ -111,12 +116,27 @@ type ReqFormProps = {
     onCancel?: () => void;
 };
 
-function ReqForm({ domain, requirement, busy, error, onSubmit, onCancel }: ReqFormProps) {
+function ReqForm({ domain, projectId, requirement, busy, error, onSubmit, onCancel }: ReqFormProps) {
     const permissions = usePermissions();
     const options = useAssignable(domain, permissions.has(P.EMPLOYEE_VIEW));
     const [text, setText] = useState(requirement?.text ?? "");
     const [who, setWho] = useState<number[]>(requirement?.assignees.map((a) => a.id) ?? []);
     const [due, setDue] = useState(requirement?.deadline ?? "");
+    // Proton fills the add form (or the requirement being edited): its text, deadline and the people it assigns
+    const proton = useProtonForm("requirement", requirement?.id ?? null, (fill) => {
+        const v = fill.requirement;
+        const done: string[] = [];
+        if (!v) return done;
+        const fillText = requirement ? fillChange : fillEmpty;
+        fillText(text, v.text, setText, "requirement", done);
+        fillText(due, v.deadline, setDue, "deadline", done);
+        const known = (v.assigneeIds ?? []).filter((id) => options.some((o) => o.id === id));
+        if (known.length > 0 && known.join() !== who.join()) {
+            setWho(known);
+            done.push("assigned to");
+        }
+        return done;
+    }, requirement ? null : projectId);
 
     async function submit() {
         if (!text.trim()) return;
@@ -129,7 +149,8 @@ function ReqForm({ domain, requirement, busy, error, onSubmit, onCancel }: ReqFo
     }
 
     return (
-        <div className="req-form">
+        <div className="req-form" {...proton.guard}>
+            <FilledNote fields={proton.filled} />
             <textarea className="textarea" rows={2} placeholder={`What has to be achieved? e.g. ${domain === "execution" ? "Kitchen tiling finished and inspected" : "Concept design approved by the client"}`}
                 aria-label="Requirement" value={text} onChange={(e) => setText(e.target.value)} />
             <div className="req-form-row">
@@ -226,8 +247,10 @@ export function ProjectRequirementsTab({ project }: { project: { id: number; dom
     const update = useUpdateRequirement(project.id);
     const tick = useTickRequirement(project.id);
     const remove = useDeleteRequirement(project.id);
-    const [editing, setEditing] = useState<Requirement | null>(null);
+    const [picked, setPicked] = useState<Requirement | null>(null);
     const [show, setShow] = useState<"all" | "open" | "done">("all");
+    // ?requirement={id} opens that one's edit window (Proton fills it there)
+    const [params, setParams] = useSearchParams();
     const locked = project.status === "completed" || project.status === "archived";
     const canManage = permissions.has(P.REQUIREMENT_MANAGE) && !locked;
     const canTickOwn = permissions.has(P.REQUIREMENT_COMPLETE_OWN) && !locked;
@@ -237,6 +260,15 @@ export function ProjectRequirementsTab({ project }: { project: { id: number; dom
     const open = list.filter((r) => !r.isDone).length;
     const mineOpen = list.filter((r) => !r.isDone && r.assignees.some((a) => a.id === me)).length;
     const shown = show === "open" ? list.filter((r) => !r.isDone) : show === "done" ? list.filter((r) => r.isDone) : list;
+    const linked = canManage ? list.find((r) => String(r.id) === params.get("requirement")) ?? null : null;
+    const editing = picked ?? linked;
+    const setEditing = (next: Requirement | null) => {
+        setPicked(next);
+        if (next == null && params.has("requirement")) {
+            params.delete("requirement");
+            setParams(params, { replace: true });
+        }
+    };
 
     function onToggle(r: Requirement, done: boolean) {
         tick.mutate({ id: r.id, done }, {
@@ -268,7 +300,7 @@ export function ProjectRequirementsTab({ project }: { project: { id: number; dom
             ) : canManage && (
                 <Panel className="mt" title="Add a requirement"
                     sub="Something that has to be achieved for this project to be done. Assign it to employees of this business, or leave it open.">
-                    <ReqForm domain={project.domain} busy={add.isPending} error={add.error}
+                    <ReqForm domain={project.domain} projectId={project.id} busy={add.isPending} error={add.error}
                         onSubmit={(body) => add.mutateAsync(body).then(() => toast({
                             text: `Requirement added${body.assigneeIds.length ? ` · ${body.assigneeIds.length} notified` : ""}`, icon: "checkCircle",
                         }))} />
@@ -295,7 +327,7 @@ export function ProjectRequirementsTab({ project }: { project: { id: number; dom
 
             {editing && (
                 <Modal title="Edit requirement" onClose={() => setEditing(null)}>
-                    <ReqForm domain={project.domain} requirement={editing} busy={update.isPending} error={update.error} onCancel={() => setEditing(null)}
+                    <ReqForm domain={project.domain} projectId={project.id} requirement={editing} busy={update.isPending} error={update.error} onCancel={() => setEditing(null)}
                         onSubmit={(body) => update.mutateAsync({ id: editing.id, body }).then(() => {
                             setEditing(null);
                             toast({ text: "Requirement updated", icon: "checkCircle" });

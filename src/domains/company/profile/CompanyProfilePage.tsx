@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { accessLabel } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { fullName, useCurrentUser } from "@/app/session/useSession";
@@ -20,7 +20,14 @@ export default function CompanyProfilePage() {
     const navigate = useNavigate();
     const permissions = usePermissions();
     const me = useCurrentUser();
-    const [editing, setEditing] = useState(false);
+    const [editingNow, setEditing] = useState(false);
+    // ?edit=1 opens "Edit your profile" (Proton fills it there)
+    const [params, setParams] = useSearchParams();
+    const editing = editingNow || params.get("edit") === "1";
+    const closeEdit = () => {
+        setEditing(false);
+        if (params.has("edit")) { params.delete("edit"); setParams(params, { replace: true }); }
+    };
     const [viewingPermissions, setViewingPermissions] = useState(false);
     const name = fullName(me);
     const access = accessLabel(permissions, me.position);
@@ -60,7 +67,7 @@ export default function CompanyProfilePage() {
 
             {viewingPermissions && <MyPermissionsModal onClose={() => setViewingPermissions(false)} />}
             {editing && (
-                <EditProfileModal self onClose={() => setEditing(false)} person={{
+                <EditProfileModal self onClose={closeEdit} person={{
                     id: me.id, firstName: me.firstName, lastName: me.lastName, email: me.email, phone: me.phone, photoFileId: me.photoFileId,
                     position: me.position, team: me.team, domain: me.domain,
                 }} />

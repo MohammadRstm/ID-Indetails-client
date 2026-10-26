@@ -1,4 +1,6 @@
 import { useRef, useState } from "react";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillChange, fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 import { uploadingLabel } from "@/shared/files/upload";
 import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import { errorMessage } from "@/api/errors";
@@ -59,6 +61,32 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
     const [confirming, setConfirming] = useState(false);
     const [step, setStep] = useState<Step>(1);
     const edit = canManage;
+    // Proton fills the details (never the pictures): a new project's empty fields, or the changes asked for in one
+    const proton = useProtonForm("website_project", p?.id ?? null, (fill) => {
+        const v = fill.websiteProject;
+        const done: string[] = [];
+        if (!v || !edit) return done;
+        const text = p ? fillChange : fillEmpty;
+        text(title, v.title, setTitle, "title", done);
+        text(type, v.type, setType, "type", done);
+        text(client, v.client, setClient, "client", done);
+        text(description, v.description, setDescription, "description", done);
+        text(conceptDescription, v.conceptDescription, setConceptDescription, "concept", done);
+        text(heroAlt, v.pictureAlt, setHeroAlt, "picture description", done);
+        if (v.status && v.status !== status) { setStatus(v.status); done.push("status"); }
+        if (v.year != null && String(v.year) !== year) { setYear(String(v.year)); done.push("year"); }
+        if ((v.city && v.city !== city) || (v.country && v.country !== country)) {
+            if (v.country) setCountry(v.country);
+            if (v.city) setCity(v.city);
+            // a new place gets its own point once saved
+            setLatitude("");
+            setLongitude("");
+            setApproximate(false);
+            done.push("place");
+        }
+        if (done.length > 0) setStep(1);
+        return done;
+    });
 
     const shownStatus = status || linked?.status || null;
     const shownYear = year.trim() ? Number(year) : linked?.year ?? null;
@@ -183,7 +211,8 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
                     )}
                 </>
             ) : <button className="btn" onClick={onClose}>Close</button>}>
-            <div className="row" role="tablist" aria-label="Steps" style={{ gap: 6, marginBottom: 14 }}>
+            <FilledNote fields={proton.filled} />
+            <div className="row" role="tablist" aria-label="Steps" style={{ gap: 6, marginBottom: 14 }} {...proton.guard}>
                 {STEPS.map(({ step: s, label }) => (
                     <button key={s} type="button" role="tab" aria-selected={step === s} className={step === s ? "btn btn-sm btn-primary" : "btn btn-sm btn-quiet"}
                         // a new project reaches the concept and gallery once its details are saved

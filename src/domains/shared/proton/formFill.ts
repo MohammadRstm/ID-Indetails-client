@@ -18,18 +18,44 @@ const WAIT_MS = 10_000;
 const SETTLE_MS = 300;
 
 /** `path`: where the form was opened, to tell a form that stays through a move from one the move is closing. */
-type Adapter = { recordId: number | null; path: string; apply: (fill: FormFill) => string[] };
+type Adapter = { form: FormName; key: string; recordId: number | null; path: string; apply: (fill: FormFill) => string[] };
 
 type Waiting = { fill: FormFill; at: number; report?: (message: string) => void; timers: ReturnType<typeof setTimeout>[] };
 
-const adapters = new Map<FormName, Adapter>();
+/**
+ * The open forms, by form and the record they are for ("requirement:new" beside "requirement:42"): one form can be
+ * open twice on a page (adding a requirement, and editing another in a window).
+ */
+const adapters = new Map<string, Adapter>();
 let waiting: Waiting | null = null;
+
+/** `scope`: the project a new record's form is on (a new requirement, a new invoice), so one meant for another project waits. */
+const keyOf = (form: FormName, recordId: number | null | undefined, scope?: number | null) =>
+    `${form}:${recordId ?? "new"}${scope != null ? `@${scope}` : ""}`;
+
+/** The project a fill for a new record names, for the forms that are on one. */
+function scopeOf(fill: FormFill): number | null {
+    // a message to the client goes to the project chat, or to one file's comments beside it
+    if (fill.form === "portal_message") return fill.portalMessage?.itemId ?? null;
+    if (fill.id != null) return null;
+    if (fill.form === "requirement") return fill.requirement?.projectId ?? null;
+    if (fill.form === "invoice") return fill.invoice?.projectId ?? null;
+    return null;
+}
+
+const fillKey = (fill: FormFill) => keyOf(fill.form, fill.id, scopeOf(fill));
+const adapterFor = (fill: FormFill) => adapters.get(fillKey(fill));
+
+/** Whether the form a fill is for is open now, for the record it names. */
+export function isFormOpen(fill: FormFill): boolean {
+    return adapterFor(fill) != null;
+}
 
 const here = () => window.location.pathname;
 
 function applyTo(adapter: Adapter, fill: FormFill): string {
-    // a form open for another record is not this fill's: nothing goes into it
-    if (fill.id != null && adapter.recordId !== fill.id) return "That form is open for something else, so I left it alone.";
+    // a form open for another record (or another project's new one) is not this fill's: nothing goes into it
+    if (adapter.key !== fillKey(fill)) return "That form is open for something else, so I left it alone.";
     const filled = adapter.apply(fill);
     return filled.length > 0 ? `Filled ${filled.join(", ")}: check it and save.` : "The form already had everything I would have filled.";
 }
@@ -58,9 +84,11 @@ export type FillOptions = {
 
 /** Sends a fill to its form, now or once it opens; says what happened, in words. */
 export function fillForm(fill: FormFill, { afterMove = false, report }: FillOptions = {}): string {
-    const adapter = adapters.get(fill.form);
     stopWaiting();
-    if (adapter && !afterMove) return applyTo(adapter, fill);
+    if (!afterMove) {
+        const adapter = adapterFor(fill) ?? [...adapters.values()].find((a) => a.form === fill.form);
+        if (adapter) return applyTo(adapter, fill);
+    }
 
     const entry: Waiting = { fill, at: Date.now(), report, timers: [] };
     waiting = entry;
@@ -72,7 +100,7 @@ export function fillForm(fill: FormFill, { afterMove = false, report }: FillOpti
     if (afterMove) {
         // the same form may stay open through the move (its own record's page): it takes the fill once the page settled
         entry.timers.push(setTimeout(() => {
-            const open = adapters.get(fill.form);
+            const open = adapterFor(fill);
             if (waiting === entry && open && open.path === here()) take(open);
         }, SETTLE_MS));
     }
@@ -106,14 +134,17 @@ export function fillChange(current: string, value: string | null | undefined, se
  * the names it filled. Returns those names, for the form to show, and handlers that keep Enter from submitting a
  * filled form the person hasn't touched.
  */
-export function useProtonForm(form: FormName, recordId: number | null, apply: (fill: FormFill) => string[]) {
+export function useProtonForm(form: FormName, recordId: number | null, apply: (fill: FormFill) => string[], scope: number | null = null) {
     const [filled, setFilled] = useState<string[]>([]);
     const touched = useRef(true);
     const latest = useRef(apply);
     useEffect(() => { latest.current = apply; });
 
     useEffect(() => {
+        const key = keyOf(form, recordId, scope);
         const adapter: Adapter = {
+            form,
+            key,
             recordId,
             path: here(),
             apply: (fill) => {
@@ -126,13 +157,13 @@ export function useProtonForm(form: FormName, recordId: number | null, apply: (f
                 return names;
             },
         };
-        adapters.set(form, adapter);
-        if (waiting && waiting.fill.form === form && Date.now() - waiting.at < WAIT_MS) take(adapter);
+        adapters.set(key, adapter);
+        if (waiting && fillKey(waiting.fill) === key && Date.now() - waiting.at < WAIT_MS) take(adapter);
 
         return () => {
-            if (adapters.get(form) === adapter) adapters.delete(form);
+            if (adapters.get(key) === adapter) adapters.delete(key);
         };
-    }, [form, recordId]);
+    }, [form, recordId, scope]);
 
     return {
         filled,

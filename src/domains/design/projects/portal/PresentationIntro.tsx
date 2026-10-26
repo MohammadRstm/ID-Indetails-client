@@ -1,4 +1,6 @@
 import { useRef, useState, type ChangeEvent } from "react";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillChange, useProtonForm } from "@/domains/shared/proton/formFill";
 import { z } from "zod";
 import { errorMessage } from "@/api/errors";
 import Panel from "@/shared/components/Data/Panel";
@@ -211,6 +213,12 @@ function IntroForm({ projectId, saved }: { projectId: number; saved: string }) {
     const error = form.errors.summary ?? (rule.success ? undefined : rule.error.issues[0].message);
     const text = form.values.summary;
     const dirty = text !== saved;
+    // Proton writes the introduction the person asked for; the client sees it only once it is saved and published
+    const proton = useProtonForm("portal_intro", projectId, (fill) => {
+        const done: string[] = [];
+        fillChange(text, fill.portalIntro?.text, (value) => form.set("summary", value), "introduction", done);
+        return done;
+    });
 
     async function submit() {
         if (save.isPending || !dirty || !form.validate()) return;
@@ -225,7 +233,8 @@ function IntroForm({ projectId, saved }: { projectId: number; saved: string }) {
     }
 
     return (
-        <form onSubmit={(e) => { e.preventDefault(); void submit(); }} noValidate>
+        <form onSubmit={(e) => { e.preventDefault(); void submit(); }} noValidate {...proton.guard}>
+            <FilledNote fields={proton.filled} />
             <Field id="pc-summary" label="Introduction for the client" error={error}>
                 <textarea id="pc-summary" className="textarea" rows={5} value={text} aria-describedby="pc-summary-count"
                     onChange={(e) => form.set("summary", e.target.value)} />

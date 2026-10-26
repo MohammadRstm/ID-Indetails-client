@@ -1,4 +1,6 @@
 import { useRef, useState } from "react";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillChange, useProtonForm } from "@/domains/shared/proton/formFill";
 import { errorMessage, toApiError } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -62,6 +64,17 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
 
     const [name, setName] = useState(`${person.firstName ?? ""} ${person.lastName ?? ""}`.trim());
     const [phone, setPhone] = useState(person.phone ?? "");
+    // Proton fills one's own name and phone only (another person's window has its own id, which no fill names)
+    const proton = useProtonForm("profile", self ? null : person.id, (fill) => {
+        const v = fill.profile;
+        const done: string[] = [];
+        if (!v || !self) return done;
+        const first = v.firstName ?? person.firstName ?? "";
+        const last = v.lastName ?? person.lastName ?? "";
+        if (v.firstName != null || v.lastName != null) fillChange(name, `${first} ${last}`.trim(), setName, "name", done);
+        fillChange(phone, v.phone, setPhone, "phone", done);
+        return done;
+    });
     const [photo, setPhotoId] = useState<number | null>(person.photoFileId);
     const [uploading, setUploading] = useState(false);
     const [position, setPosition] = useState(person.position ?? "");
@@ -145,7 +158,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                     <button className="btn btn-primary" disabled={busy} onClick={save}><Icon name="check" />Save</button>
                 </>
             }>
-            <div className="row" style={{ gap: 14, alignItems: "flex-start" }}>
+            <FilledNote fields={proton.filled} />
+            <div className="row" style={{ gap: 14, alignItems: "flex-start" }} {...proton.guard}>
                 <div style={{ textAlign: "center", width: 96, flex: "none" }}>
                     <Avatar person={{ name: name || person.email, photoFileId: photo }} size={72} />
                     {editsDetails && (

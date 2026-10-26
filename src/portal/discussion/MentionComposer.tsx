@@ -1,5 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import { errorMessage } from "@/api/errors";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
@@ -27,6 +29,8 @@ type Props = {
     /** A reply Proton suggests, shown in the empty box: Tab writes it in, Escape dismisses it. */
     suggestion?: string | null;
     onDismissSuggestion?: () => void;
+    /** The team's own box for a project's chat (or one file's comments): Proton writes a draft there when asked. */
+    fillFor?: { projectId: number; itemId: number | null };
 };
 
 /** One choice of the "@" list: a person, or the whole client side ("@Client"). */
@@ -42,7 +46,7 @@ const EVERYONE = "client:everyone";
  * as the same message (the hooks keep its clientToken).
  */
 export default function MentionComposer({
-    label, placeholder, max, people, closed, initial, submitLabel = "Send", onSubmit, onCancel, focusOnOpen, suggestion, onDismissSuggestion,
+    label, placeholder, max, people, closed, initial, submitLabel = "Send", onSubmit, onCancel, focusOnOpen, suggestion, onDismissSuggestion, fillFor,
 }: Props) {
     const [text, setText] = useState(initial?.body ?? "");
     const [caret, setCaret] = useState(initial?.body.length ?? 0);
@@ -58,6 +62,13 @@ export default function MentionComposer({
     const caretTo = useRef<number | null>(null);
     const listId = useId();
     const hintId = useId();
+    // a draft Proton wrote, in the empty box: the person reads it and presses Send (no box outside the team's takes one)
+    const proton = useProtonForm("portal_message", fillFor?.projectId ?? null, (fill) => {
+        const done: string[] = [];
+        if (!fillFor) return done;
+        fillEmpty(text, fill.portalMessage?.body, (body) => { setText(body); setCaret(body.length); }, "message", done);
+        return done;
+    }, fillFor?.itemId ?? null);
 
     const trimmed = text.trim();
     const empty = trimmed.length === 0;
@@ -191,7 +202,8 @@ export default function MentionComposer({
     }
 
     return (
-        <div className="dp-composer">
+        <div className="dp-composer" {...proton.guard}>
+            <FilledNote fields={proton.filled} />
             {offered && (
                 <div className="dp-pop" id={listId} role="listbox" aria-label="Mention someone">
                     {/* chosen with the arrow keys from the box, which keeps the focus: the options aren't tab stops */}

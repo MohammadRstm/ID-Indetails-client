@@ -4,6 +4,8 @@ import { toast } from "@/shared/components/Feedback/toast";
 import Field, { FieldError } from "@/shared/components/Forms/Field";
 import { useForm } from "@/shared/components/Forms/useForm";
 import Modal from "@/shared/components/Overlays/Modal";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillChange, useProtonForm } from "@/domains/shared/proton/formFill";
 import Icon from "@/shared/icons/Icon";
 import type { CardItem } from "./cards";
 import { useDeleteFile, useUpdateFile } from "./filesApi";
@@ -17,6 +19,12 @@ export function RenameModal({ projectId, item, onClose }: { projectId: number; i
     // checked as it is typed, not only when Save is pressed
     const rule = schema.safeParse(form.values);
     const titleError = form.errors.title ?? (rule.success ? undefined : rule.error.issues[0].message);
+    // Proton puts the new title in; the old one shows beside it until the person saves
+    const proton = useProtonForm("file_rename", item.id, (fill) => {
+        const done: string[] = [];
+        fillChange(form.values.title, fill.fileRename?.title, (title) => form.set("title", title), "title", done);
+        return done;
+    });
 
     async function submit() {
         if (update.isPending || !form.validate()) return;
@@ -40,7 +48,8 @@ export function RenameModal({ projectId, item, onClose }: { projectId: number; i
                     <button type="button" className="btn btn-primary" disabled={update.isPending} onClick={() => void submit()}>Save</button>
                 </>
             }>
-            <form onSubmit={(e) => { e.preventDefault(); void submit(); }} noValidate>
+            <form onSubmit={(e) => { e.preventDefault(); void submit(); }} noValidate {...proton.guard}>
+                <FilledNote fields={proton.filled} />
                 <Field id="pc-title" label="Title" required error={titleError} hint="Up to 200 characters.">
                     <input id="pc-title" className="input" autoFocus value={form.values.title} onChange={(e) => form.set("title", e.target.value)} />
                 </Field>

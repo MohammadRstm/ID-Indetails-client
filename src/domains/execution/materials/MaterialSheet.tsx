@@ -16,6 +16,8 @@ import MaterialGrid, { type GridRow } from "./MaterialGrid";
 import { BLOCK, blankRows, COLS, costOf, entryOf, link, pasteInto, rowOf, rowProblems, rowUsed, type ColKey, type Row } from "./materialRules";
 import { useAddMaterials, useAllMaterials } from "./materialsApi";
 import { loadFailed } from "@/api/queryState";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { useProtonForm } from "@/domains/shared/proton/formFill";
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 /** Every row in use: ten more. */
@@ -42,6 +44,20 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
     // a saved batch leaves the sheet at once, so a failure further on never sends it twice
     const add = useAddMaterials(project.id, (count) => setRows((current) => dropSaved(current, count)));
     const [tried, setTried] = useState(false);
+    // Proton types rows into the empty ones below what the person typed; a unit cost only when money actions are on and it was typed
+    const proton = useProtonForm("materials", project.id, (fill) => {
+        const given = fill.materials?.rows ?? [];
+        if (given.length === 0) return [];
+        const text = (n: number | null | undefined) => (n == null ? "" : String(n));
+        setRows((current) => {
+            let next = current.filter(rowUsed);
+            next = next.concat(given.map((g) => link({
+                ...blankRows(1)[0], name: g.type ?? "", quantity: text(g.quantity), unit: g.unit ?? "", unitCost: text(g.unitCost), supplier: g.supplier ?? "", note: g.note ?? "",
+            }, "unitCost")));
+            return next.length < BLOCK ? next.concat(blankRows(BLOCK - next.length)) : grow(next);
+        });
+        return [plural(given.length, "material")];
+    });
 
     // the recorded materials, oldest first
     const recorded: GridRow[] = (saved.data?.items ?? []).slice().reverse().map((m) => ({ ...rowOf(m), id: m.id, by: m.addedBy.name }));
@@ -113,7 +129,8 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
                     <span>Profit <b className="mono xm-profit">{money.exact(r2(x.received - x.spent - total))}</b>{total > 0 && <> <em className="mono">(−{money.exact(total)})</em></>}</span>
                 </div>
             )}
-            <div className="sh-help">
+            <FilledNote fields={proton.filled} />
+            <div className="sh-help" {...proton.guard}>
                 <span><kbd>Enter</kbd> next column</span><span><kbd>Shift</kbd>+<kbd>Enter</kbd> back</span>
                 <span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move between cells</span><span>Paste straight from Excel</span>
                 <span className="grow" />

@@ -19,6 +19,8 @@ import { useInvoices, useRateOn, useRecordPayment } from "./billingApi";
 import { invoiceStateOf } from "./invoiceStatus";
 import { loadFailed } from "@/api/queryState";
 import LoadError from "@/shared/components/Feedback/LoadError";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 
 const cents = (usd: number) => Math.round(usd * 100);
 
@@ -56,6 +58,19 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
     const overInvoice = !!target && cents(usd) > cents(balance);
     const overProject = !target && usd + received > (project.money?.revenue ?? 0) + 0.5;
     const errors = useFormErrors();
+    // Proton fills it only when money actions are on and the person typed the amount; they check it and record it
+    const proton = useProtonForm("payment", project.id, (fill) => {
+        const v = fill.payment;
+        const done: string[] = [];
+        if (!v) return done;
+        if (v.invoiceId != null && String(v.invoiceId) !== invoiceId && open.some((i) => i.id === v.invoiceId)) { setPicked(String(v.invoiceId)); done.push("invoice"); }
+        if (v.currency && v.currency !== currency) { setCurrency(v.currency); done.push("currency"); }
+        if (v.amount != null && amount == null) { setAmount(v.amount); done.push("amount"); }
+        if (v.receivedOn && v.receivedOn <= today && v.receivedOn !== date) { setDate(v.receivedOn); done.push("date received"); }
+        if (v.method && v.method !== method) { setMethod(v.method); done.push("method"); }
+        fillEmpty(reference, v.reference, setReference, "reference", done);
+        return done;
+    });
     const amountError = !(value > 0) && "Enter the amount received.";
     const rateError = currency !== "USD" && !(fx > 0) && "Enter the exchange rate of the day.";
 
@@ -95,7 +110,8 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
                     <button className="btn btn-primary" disabled={!invoices || record.isPending} onClick={submit}><Icon name="check" />Record payment</button>
                 </>
             }>
-            <div className="field">
+            <FilledNote fields={proton.filled} />
+            <div className="field" {...proton.guard}>
                 <label className="label required" htmlFor="pay-inv">Against which invoice?</label>
                 <Select id="pay-inv" value={invoiceId} onChange={pick} options={[
                     ...open.map((i) => ({ value: String(i.id), label: `${i.number} - ${money.exact(i.balance ?? 0, "USD", { cents: true })} outstanding${invoiceStateOf(i) === "overdue" ? " · overdue" : ""}` })),

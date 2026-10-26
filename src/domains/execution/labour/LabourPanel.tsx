@@ -1,4 +1,7 @@
 import { useRef, useState, type KeyboardEvent } from "react";
+import { useSearchParams } from "react-router";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { useProtonForm } from "@/domains/shared/proton/formFill";
 import { errorMessage } from "@/api/errors";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -9,7 +12,7 @@ import Select from "@/shared/components/Forms/Select";
 import NumberField from "@/shared/components/Forms/NumberField";
 import { WORKERS } from "@/shared/format/limits";
 import { money } from "@/shared/format/money";
-import { companyToday, DAYS, fmtDate, fmtDateY, partsOf } from "@/shared/format/time";
+import { addDays, companyToday, DAYS, fmtDate, fmtDateY, partsOf } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../shared/projects/projectsApi";
@@ -49,7 +52,12 @@ export default function LabourPanel({ project }: { project: Project }) {
     const [history, setHistory] = useState(false);
     const navRef = useRef<HTMLDivElement>(null);
     const list = weeks.data?.weeks ?? [];
-    const chosen = picked ?? list.find((w) => w.isReported)?.weekStart ?? list[0]?.weekStart ?? null;
+    // ?labour={a day} opens the week it falls in, ?labour=current this week (Proton fills it there)
+    const [params] = useSearchParams();
+    const asked = params.get("labour");
+    const day = asked === "current" ? companyToday() : asked;
+    const linked = day ? list.find((w) => w.weekStart <= day && day < addDays(w.weekStart, 7))?.weekStart ?? null : null;
+    const chosen = picked ?? linked ?? list.find((w) => w.isReported)?.weekStart ?? list[0]?.weekStart ?? null;
     const week = useLabourWeek(project.id, chosen);
     const current = defaults.data?.current;
 
@@ -184,6 +192,27 @@ function WeekEditor({ projectId, week, defaults, onNav }: { projectId: number; w
     const submit = useSubmitWeek(projectId);
     const [days, setDays] = useState<Day[]>(() => week.days.map((d) => ({ date: d.date, workers: d.workers, dailyPay: d.dailyPay })));
     const editable = week.canEdit;
+    // Proton sets the days asked for in this week (pay only when money actions are on and the person typed it); they check and submit
+    const proton = useProtonForm("labour_week", projectId, (fill) => {
+        const v = fill.labourWeek;
+        if (!v || !editable) return [];
+        const inWeek = (date: string | null | undefined) => !!date && week.weekStart <= date && date < addDays(week.weekStart, 7);
+        if (v.week && !inWeek(v.week)) return [];
+        const given = (v.days ?? []).filter((g) => inWeek(g.date));
+        let changed = 0;
+        const next = days.map((d) => {
+            const g = given.find((x) => x.date === d.date);
+            if (!g) return d;
+            const workers = g.workers ?? d.workers;
+            const dailyPay = g.dailyWage ?? d.dailyPay;
+            if (workers === d.workers && dailyPay === d.dailyPay) return d;
+            changed++;
+            return { ...d, workers, dailyPay };
+        });
+        if (changed === 0) return [];
+        setDays(next);
+        return [changed === 1 ? "1 day" : `${changed} days`];
+    });
     const cost = (d: Day) => (+d.workers || 0) * (d.dailyPay || 0);
     const total = days.reduce((t, d) => t + cost(d), 0);
     const cur = defaults.current;
@@ -211,7 +240,8 @@ function WeekEditor({ projectId, week, defaults, onNav }: { projectId: number; w
     }
 
     return (
-        <div className="mt-s">
+        <div className="mt-s" {...proton.guard}>
+            <FilledNote fields={proton.filled} />
             {editable && (
                 <div className="lab-keys">
                     <span><kbd>Enter</kbd> next field</span><span><kbd>Shift</kbd>+<kbd>Enter</kbd> back</span>

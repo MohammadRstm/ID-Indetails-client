@@ -25,6 +25,8 @@ import { useClient } from "../../../shared/clients/clientsApi";
 import type { Project } from "../../../shared/projects/projectsApi";
 import { useProjectExpenses } from "../money/moneyApi";
 import { useProjectTimeline, useProjectWork } from "../projectWorkApi";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { useProtonForm } from "@/domains/shared/proton/formFill";
 import { rangeOptions, type RangeKey } from "../ranges";
 
 type Section = Schemas["ProjectReportSection"];
@@ -82,6 +84,17 @@ export default function ReportModal({ project, onClose }: { project: Project; on
     // the PDF report, or the work entries as a spreadsheet: a format is previewed, and only downloaded when asked
     const [format, setFormat] = useState<"pdf" | "csv">("pdf");
     const ranges = rangeOptions(project, today);
+    // Proton sets the report's kind, format and period (one of the periods offered here; another is left to the person)
+    const proton = useProtonForm("report_options", project.id, (fill) => {
+        const v = fill.reportOptions;
+        const done: string[] = [];
+        if (!v) return done;
+        if (v.kind && v.kind !== kind) { setKind(v.kind); done.push("report"); }
+        if (v.csv != null && (v.csv ? "csv" : "pdf") !== format) { setFormat(v.csv ? "csv" : "pdf"); done.push("format"); }
+        const period = (Object.keys(ranges) as RangeKey[]).find((k) => (!v.from || ranges[k].from === v.from) && (!v.to || ranges[k].to === v.to) && (v.from || v.to));
+        if (period && period !== rangeKey) { setRangeKey(period); done.push("period"); }
+        return done;
+    });
     const picked = ranges[rangeKey];
     const range = { label: picked.label, from: picked.from ?? project.startDate, to: picked.to ?? today };
     const client = kind === "client";
@@ -158,6 +171,7 @@ export default function ReportModal({ project, onClose }: { project: Project; on
                     <button className="btn btn-primary" disabled={working} onClick={pdf}><Icon name="download" />{working ? "Generating…" : "Download PDF"}</button>
                 </>
             )}>
+            <FilledNote fields={proton.filled} />
             <div className="rep-split" style={{ display: "flex", minHeight: 460, maxHeight: "68vh" }}>
                 {format === "csv" ? <CsvPreview file={csvFile} name={csvName} retry={() => void csvFile.refetch()} /> : (
                 <div className="rep-shell">

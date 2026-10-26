@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { z } from "zod";
 import { errorMessage } from "@/api/errors";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 import { loadFailed } from "@/api/queryState";
 import DiscussionText from "@/portal/discussion/DiscussionText";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -43,7 +45,7 @@ export default function FileComments({ projectId, itemId, onClose }: Props) {
     if (files && query.data) {
         foot = !files.canEdit ? <Note text={files.readOnlyReason ?? "This project's comments can only be read."} />
             : !files.canManage && comments.length === 0 ? <Note text="Only admins start comments on a file." />
-                : <CommentForm id="pf-comment" label="Add a comment" submitLabel="Send" onSubmit={(body) => add.mutateAsync(body)} />;
+                : <CommentForm id="pf-comment" label="Add a comment" submitLabel="Send" fillFor={itemId} onSubmit={(body) => add.mutateAsync(body)} />;
     }
 
     const row = (comment: FileComment) => <CommentRow key={comment.id} projectId={projectId} itemId={itemId} comment={comment} writable={writable} />;
@@ -163,14 +165,23 @@ type FormProps = {
     submitLabel: string;
     onSubmit: (body: string) => Promise<unknown>;
     onCancel?: () => void;
+    /** The new comment's box on this file: Proton writes the comment the person asked for there. */
+    fillFor?: number;
 };
 
 /**
  * A comment's box, with the count against the limit. Too long is said as it is typed; an empty box when it is sent.
  * What the API refuses is said under it, and the words stay.
  */
-function CommentForm({ id, label, initial = "", submitLabel, onSubmit, onCancel }: FormProps) {
+function CommentForm({ id, label, initial = "", submitLabel, onSubmit, onCancel, fillFor }: FormProps) {
     const form = useForm({ body: initial }, schema);
+    // an edit box registers as no file's, so only the new comment's box takes a fill
+    const proton = useProtonForm("file_comment", fillFor ?? null, (fill) => {
+        const done: string[] = [];
+        if (fillFor == null) return done;
+        fillEmpty(form.values.body, fill.fileComment?.body, (body) => form.set("body", body), "comment", done);
+        return done;
+    });
     const [busy, setBusy] = useState(false);
     const text = form.values.body;
     const length = text.trim().length;
@@ -193,7 +204,8 @@ function CommentForm({ id, label, initial = "", submitLabel, onSubmit, onCancel 
     }
 
     return (
-        <form className="pf-form" onSubmit={(e) => { e.preventDefault(); void submit(); }} noValidate>
+        <form className="pf-form" onSubmit={(e) => { e.preventDefault(); void submit(); }} noValidate {...proton.guard}>
+            <FilledNote fields={proton.filled} />
             <Field id={id} label={label} error={error}>
                 <textarea id={id} className={cx("textarea dp-input", error && "bad")} rows={3} value={text} autoFocus={initial !== ""}
                     aria-invalid={error ? true : undefined} aria-describedby={`${id}-count`} onChange={(e) => form.set("body", e.target.value)} />

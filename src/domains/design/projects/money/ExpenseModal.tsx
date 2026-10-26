@@ -12,6 +12,8 @@ import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import type { Project } from "../../../shared/projects/projectsApi";
 import { useAddExpense } from "./moneyApi";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 
 const EXPENSE_CATEGORIES = [
     { value: "assets", label: "Assets & licences" }, { value: "services", label: "Services" }, { value: "contractor", label: "Contractor" },
@@ -28,6 +30,18 @@ export default function ExpenseModal({ project, onClose }: { project: Project; o
     const [category, setCategory] = useState("services");
     const [date, setDate] = useState(today);
     const errors = useFormErrors();
+    // Proton fills it only when money actions are on and the person typed the amount; they check it and add it
+    const proton = useProtonForm("project_expense", project.id, (fill) => {
+        const v = fill.projectExpense;
+        const done: string[] = [];
+        if (!v) return done;
+        fillEmpty(label, v.label, setLabel, "what it was", done);
+        if (v.amount != null && amount === 0) { setAmount(v.amount); done.push("amount"); }
+        if (v.currency && v.currency !== currency && amount === 0) { setCurrency(v.currency); done.push("currency"); }
+        if (v.date && v.date <= today && v.date !== date) { setDate(v.date); done.push("date"); }
+        if (v.category && v.category !== category && EXPENSE_CATEGORIES.some((c) => c.value === v.category)) { setCategory(v.category); done.push("category"); }
+        return done;
+    });
     const labelError = !label.trim() && "Say what the money went on.";
     const amountError = !(amount > 0) && "Enter the amount spent.";
 
@@ -51,7 +65,8 @@ export default function ExpenseModal({ project, onClose }: { project: Project; o
                     <button className="btn btn-primary" disabled={add.isPending} onClick={submit}>Add expense</button>
                 </>
             }>
-            <div className="field">
+            <FilledNote fields={proton.filled} />
+            <div className="field" {...proton.guard}>
                 <label className="label required" htmlFor="ex-label">What was it?</label>
                 <input id="ex-label" className="input" autoFocus placeholder="e.g. Plan printing and material samples" value={label} onChange={(e) => setLabel(e.target.value)} onBlur={errors.touch("label")} />
                 <FieldError message={errors.show("label", labelError)} />

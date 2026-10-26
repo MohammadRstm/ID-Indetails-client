@@ -1,4 +1,6 @@
 import { useState } from "react";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillChange, useProtonForm } from "@/domains/shared/proton/formFill";
 import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
@@ -28,6 +30,17 @@ export default function OverheadModal({ line, onClose }: { line: OverheadLine | 
     const sorts = usePermissions().has(P.OVERHEAD_CATEGORY_MANAGE);
     const [groupId, setGroupId] = useState(line ? String(line.group.id) : "");
     const [from, setFrom] = useState(thisMonth);
+    // Proton fills the name and category, and an amount only when money actions are on and the person typed it
+    const proton = useProtonForm("company_expense", line?.id ?? null, (fill) => {
+        const v = fill.companyExpense;
+        const done: string[] = [];
+        if (!v) return done;
+        fillChange(name, v.name, setName, "name", done);
+        if (v.groupId != null && String(v.groupId) !== groupId && groups.some((g) => g.id === v.groupId)) { setGroupId(String(v.groupId)); done.push("category"); }
+        if (v.monthlyAmount != null && v.monthlyAmount !== amount) { setAmount(v.monthlyAmount); done.push("monthly cost"); }
+        if (v.currency && v.currency !== currency) { setCurrency(v.currency); done.push("currency"); }
+        return done;
+    });
     const pending = add.isPending || change.isPending;
     const error = add.error ?? change.error;
     const newCurrency = !!line && currency !== line.currency;
@@ -69,7 +82,8 @@ export default function OverheadModal({ line, onClose }: { line: OverheadLine | 
                     <button className="btn btn-primary" disabled={pending} onClick={submit}>{line ? "Save" : "Add expense"}</button>
                 </>
             }>
-            <div className="field">
+            <FilledNote fields={proton.filled} />
+            <div className="field" {...proton.guard}>
                 <label className="label required" htmlFor="ov-name">Name</label>
                 <input id="ov-name" className="input" autoFocus placeholder="e.g. AutoCAD licences" value={name} onChange={(e) => setName(e.target.value)} onBlur={errors.touch("name")} />
                 <FieldError message={errors.show("name", nameError)} />

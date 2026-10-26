@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import type { Schemas } from "@/api/types";
 import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
@@ -84,6 +84,13 @@ export default function SchedulesPage() {
     const settingsIn = domain === "all" ? domains[0] : domain;
     const canSettings = !!settingsIn && permissions.has(P.WORKING_TIME_MANAGE) && canOpen(permissions, settingsIn, "settings");
     const canEdit = (p: PersonSchedule) => p.role !== "super_admin" || permissions.has(P.EMPLOYEE_INVITE_SUPER_ADMIN);
+    // ?schedule={person} opens their week (Proton fills it there)
+    const [params, setParams] = useSearchParams();
+    const linked = !editing ? people.find((p) => String(p.userId) === params.get("schedule") && canEdit(p)) ?? null : null;
+    const closeEditing = () => {
+        setEditing(null);
+        if (params.has("schedule")) { params.delete("schedule"); setParams(params, { replace: true }); }
+    };
 
     return (
         <div className="page">
@@ -178,7 +185,7 @@ export default function SchedulesPage() {
                     </div>
                 </>
             )}
-            {editing && cw && <ScheduleModal person={editing} companyWeek={cw} onClose={() => setEditing(null)} />}
+            {(editing ?? linked) && cw && <ScheduleModal person={(editing ?? linked)!} companyWeek={cw} onClose={closeEditing} />}
         </div>
     );
 }

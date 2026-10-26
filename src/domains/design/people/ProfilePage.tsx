@@ -91,7 +91,13 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
     const permissions = usePermissions();
     const domain = useDomain();
     const [params, setParams] = useSearchParams();
-    const [editing, setEditing] = useState(false);
+    const [editingNow, setEditing] = useState(false);
+    // ?edit=1 opens one's own "Edit your profile" (Proton fills it there)
+    const editing = editingNow || (self && params.get("edit") === "1");
+    const closeEdit = () => {
+        setEditing(false);
+        if (params.has("edit")) { params.delete("edit"); setParams(params, { replace: true }); }
+    };
     const [permissionsOpen, setPermissionsOpen] = useState(false);
     const [viewingMine, setViewingMine] = useState(false);
     const name = fullNameOf(person);
@@ -170,7 +176,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                 <DesignWork userId={self ? null : person.id} first={first} self={self} />
             ) : null}
 
-            {editing && <EditProfileModal person={{ ...person, role: extra.role, status: extra.status }} self={self} onClose={() => setEditing(false)} />}
+            {editing && <EditProfileModal person={{ ...person, role: extra.role, status: extra.status }} self={self} onClose={closeEdit} />}
             {viewingMine && <MyPermissionsModal onClose={() => setViewingMine(false)} />}
             {permissionsOpen && <PermissionsModal person={{ id: person.id, name, domain: person.domain }} onClose={() => setPermissionsOpen(false)} />}
         </div>

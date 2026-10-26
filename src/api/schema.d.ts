@@ -14190,6 +14190,24 @@ export interface components {
         CompanyContactEmailRequest: {
             email?: null | string;
         };
+        CompanyDetailsFill: {
+            address: null | string;
+            contactEmail: null | string;
+            name: null | string;
+            website: null | string;
+        };
+        CompanyExpenseFill: {
+            /** @description USD or LBP. */
+            currency: null | string;
+            /**
+             * Format: int64
+             * @description A category id from get_company_expenses.
+             */
+            groupId: null | number;
+            /** Format: double */
+            monthlyAmount: null | number;
+            name: null | string;
+        };
         CompanyMonthResponse: {
             /** Format: double */
             adminSalaries: number;
@@ -14683,8 +14701,18 @@ export interface components {
             /** Format: date */
             spentOn: string;
         };
+        FileCommentFill: {
+            body: null | string;
+            /** Format: int64 */
+            projectId: null | number;
+        };
         /** @enum {unknown} */
         FileKind: "image" | "video";
+        FileRenameFill: {
+            /** Format: int64 */
+            projectId: null | number;
+            title: null | string;
+        };
         FileResponse: {
             /** Format: date-time */
             createdAt: string;
@@ -14838,6 +14866,17 @@ export interface components {
             minutes: number;
             weekday: components["schemas"]["DayOfWeek"];
         };
+        HourExcuseFill: {
+            days: null | string[];
+            /** @description true: excused and paid; false: unpaid leave. */
+            excused: null | boolean;
+            /**
+             * Format: double
+             * @description Hours to excuse, or leave out and give days.
+             */
+            hours: null | number;
+            reason: null | string;
+        };
         HourExcuseResponse: {
             /** Format: date-time */
             createdAt: string;
@@ -14925,6 +14964,22 @@ export interface components {
             recipient: null | string;
             /** Format: date-time */
             sentAt: string;
+        };
+        InvoiceFill: {
+            lines: null | components["schemas"]["InvoiceLineFill"][];
+            note: null | string;
+            /** Format: int64 */
+            projectId: null | number;
+            /**
+             * Format: int32
+             * @description Days the client has to pay.
+             */
+            termsDays: null | number;
+        };
+        InvoiceLineFill: {
+            /** Format: double */
+            amount: null | number;
+            description: null | string;
         };
         InvoiceLineRequest: {
             /** Format: double */
@@ -15032,6 +15087,14 @@ export interface components {
             /** Format: double */
             usd: number;
         };
+        LabourDayFill: {
+            /** Format: double */
+            dailyWage: null | number;
+            /** Format: date */
+            date: null | string;
+            /** Format: int32 */
+            workers: null | number;
+        };
         LabourDayRequest: {
             /** Format: double */
             dailyPay?: number;
@@ -15066,6 +15129,14 @@ export interface components {
             canEdit: boolean;
             current: null | components["schemas"]["LabourDefaultResponse"];
             history: components["schemas"]["LabourDefaultResponse"][];
+        };
+        LabourWeekFill: {
+            days: null | components["schemas"]["LabourDayFill"][];
+            /**
+             * Format: date
+             * @description Any day of the week: the form shows its whole week.
+             */
+            week: null | string;
         };
         LabourWeekListResponse: {
             canReport: boolean;
@@ -15200,6 +15271,19 @@ export interface components {
             unitCost: null | number;
             /** Format: date-time */
             updatedAt: null | string;
+        };
+        MaterialRowFill: {
+            note: null | string;
+            /** Format: double */
+            quantity: null | number;
+            supplier: null | string;
+            type: null | string;
+            unit: null | string;
+            /** Format: double */
+            unitCost: null | number;
+        };
+        MaterialsFill: {
+            rows: null | components["schemas"]["MaterialRowFill"][];
         };
         MaterialSupplierResponse: {
             key: string;
@@ -15951,6 +16035,21 @@ export interface components {
         };
         /** @enum {unknown} */
         PayBasis: "hourly" | "monthly";
+        PaymentFill: {
+            /** Format: double */
+            amount: null | number;
+            /** @description USD or LBP. */
+            currency: null | string;
+            /**
+             * Format: int64
+             * @description The invoice it pays, from list_invoices; leave out for a payment on account.
+             */
+            invoiceId: null | number;
+            method: null | components["schemas"]["PaymentMethod"];
+            /** Format: date */
+            receivedOn: null | string;
+            reference: null | string;
+        };
         /** @enum {unknown} */
         PaymentMethod: "bank" | "cheque" | "cash" | "other";
         PaymentResponse: {
@@ -16307,6 +16406,9 @@ export interface components {
             /** Format: date-time */
             urlExpiresAt: null | string;
         };
+        PortalIntroFill: {
+            text: null | string;
+        };
         PortalInvitationPreviewResponse: {
             email: string;
             /** Format: date-time */
@@ -16318,6 +16420,14 @@ export interface components {
         };
         /** @enum {unknown} */
         PortalItemState: "new" | "changed" | "unchanged" | "removed" | null;
+        PortalMessageFill: {
+            body: null | string;
+            /**
+             * Format: int64
+             * @description A file's item id, for a comment on it; leave out for the project chat.
+             */
+            itemId: null | number;
+        };
         PortalMessagePageResponse: {
             hasMore: boolean;
             messages: components["schemas"]["PortalChatMessageResponse"][];
@@ -16476,6 +16586,11 @@ export interface components {
         };
         /** @enum {unknown} */
         PriceSource: "auto" | "manual" | "stated" | null;
+        ProfileFill: {
+            firstName: null | string;
+            lastName: null | string;
+            phone: null | string;
+        };
         ProjectBillingResponse: {
             /** Format: double */
             drafts: number;
@@ -16562,6 +16677,16 @@ export interface components {
         ProjectCostTimelineResponse: {
             currency: string;
             weeks: components["schemas"]["CostWeekResponse"][];
+        };
+        ProjectExpenseFill: {
+            /** Format: double */
+            amount: null | number;
+            category: null | string;
+            /** @description USD or LBP. */
+            currency: null | string;
+            /** Format: date */
+            date: null | string;
+            label: null | string;
         };
         ProjectFileCommentCountsResponse: {
             /** Format: int32 */
@@ -17139,19 +17264,42 @@ export interface components {
         /** @enum {unknown} */
         ProtonFinancialsTab: "overview" | "projects" | "clients" | "billing" | "costs" | null;
         /** @enum {unknown} */
-        ProtonForm: "client" | "meeting" | "new_project" | "edit_project" | "report_bug" | "invite" | "message" | "log_work";
+        ProtonForm: "client" | "meeting" | "new_project" | "edit_project" | "report_bug" | "invite" | "message" | "log_work" | "requirement" | "work_entry_comment" | "report_options" | "team" | "profile" | "file_rename" | "file_comment" | "portal_intro" | "portal_message" | "website_project" | "website_service" | "website_location" | "website_social_link" | "company_details" | "company_expense" | "materials" | "invoice" | "payment" | "project_expense" | "labour_week" | "schedule" | "hour_excuse";
         ProtonFormFill: {
             client: null | components["schemas"]["ClientFill"];
+            companyDetails: null | components["schemas"]["CompanyDetailsFill"];
+            companyExpense: null | components["schemas"]["CompanyExpenseFill"];
             editProject: null | components["schemas"]["EditProjectFill"];
+            fileComment: null | components["schemas"]["FileCommentFill"];
+            fileRename: null | components["schemas"]["FileRenameFill"];
             form: components["schemas"]["ProtonForm"];
+            hourExcuse: null | components["schemas"]["HourExcuseFill"];
             /** Format: int64 */
             id: null | number;
             invite: null | components["schemas"]["InviteFill"];
+            invoice: null | components["schemas"]["InvoiceFill"];
+            labourWeek: null | components["schemas"]["LabourWeekFill"];
             logWork: null | components["schemas"]["LogWorkFill"];
+            materials: null | components["schemas"]["MaterialsFill"];
             meeting: null | components["schemas"]["MeetingFill"];
             message: null | components["schemas"]["MessageFill"];
             newProject: null | components["schemas"]["NewProjectFill"];
+            payment: null | components["schemas"]["PaymentFill"];
+            portalIntro: null | components["schemas"]["PortalIntroFill"];
+            portalMessage: null | components["schemas"]["PortalMessageFill"];
+            profile: null | components["schemas"]["ProfileFill"];
+            projectExpense: null | components["schemas"]["ProjectExpenseFill"];
             reportBug: null | components["schemas"]["ReportBugFill"];
+            reportOptions: null | components["schemas"]["ReportOptionsFill"];
+            requirement: null | components["schemas"]["RequirementFill"];
+            schedule: null | components["schemas"]["ScheduleFill"];
+            team: null | components["schemas"]["TeamFill"];
+            values: unknown;
+            websiteLocation: null | components["schemas"]["WebsiteLocationFill"];
+            websiteProject: null | components["schemas"]["WebsiteProjectFill"];
+            websiteService: null | components["schemas"]["WebsiteServiceFill"];
+            websiteSocialLink: null | components["schemas"]["WebsiteSocialLinkFill"];
+            workEntryComment: null | components["schemas"]["WorkEntryCommentFill"];
         };
         ProtonKpi: {
             /** Format: double */
@@ -17563,6 +17711,15 @@ export interface components {
             totalCostUsd: number;
             unconvertedExpenses: components["schemas"]["CurrencyAmountResponse"][];
         };
+        ReportOptionsFill: {
+            /** @description csv: the work entries as a spreadsheet instead of the PDF. */
+            csv: null | boolean;
+            /** Format: date */
+            from: null | string;
+            kind: null | components["schemas"]["ProjectReportKind"];
+            /** Format: date */
+            to: null | string;
+        };
         ReportPersonResponse: {
             /** Format: int32 */
             entries: number;
@@ -17588,6 +17745,18 @@ export interface components {
             status: components["schemas"]["ProjectStatus"];
             title: string;
             weekly: number[];
+        };
+        RequirementFill: {
+            /** @description People to assign: ids from find, of the project's business. */
+            assigneeIds: null | number[];
+            /** Format: date */
+            deadline: null | string;
+            /**
+             * Format: int64
+             * @description The project, for a new requirement.
+             */
+            projectId: null | number;
+            text: null | string;
         };
         RequirementListResponse: {
             /** Format: int32 */
@@ -17894,6 +18063,17 @@ export interface components {
             /** Format: date-time */
             startedAt?: string;
         };
+        ScheduleDayFill: {
+            /** Format: int32 */
+            endMinute: null | number;
+            /** Format: int32 */
+            startMinute: null | number;
+            /**
+             * Format: int32
+             * @description 0 Sunday to 6 Saturday.
+             */
+            weekday: null | number;
+        };
         ScheduleDayRequest: {
             /** Format: int32 */
             endMinute: number;
@@ -17911,6 +18091,12 @@ export interface components {
             startMinute: number;
             /** Format: int32 */
             weekday: number;
+        };
+        ScheduleFill: {
+            /** @description Every working day of the week, with its hours; a day left out is a day off. */
+            days: null | components["schemas"]["ScheduleDayFill"][];
+            /** @description Back to the company's working week. */
+            followsDefault: null | boolean;
         };
         ScheduleInvoiceRequest: {
             /** Format: date */
@@ -18231,6 +18417,9 @@ export interface components {
             personName: string;
             /** Format: date-time */
             startedAt: string;
+        };
+        TeamFill: {
+            name: null | string;
         };
         TeamResponse: {
             domain: string;
@@ -18640,6 +18829,12 @@ export interface components {
             /** Format: int32 */
             year: number;
         };
+        WebsiteLocationFill: {
+            address: null | string;
+            city: null | string;
+            country: null | string;
+            phone: null | string;
+        };
         WebsiteLocationRequest: {
             address?: string;
             city?: null | string;
@@ -18666,6 +18861,20 @@ export interface components {
         };
         WebsiteOrderRequest: {
             ids?: number[];
+        };
+        WebsiteProjectFill: {
+            city: null | string;
+            client: null | string;
+            conceptDescription: null | string;
+            country: null | string;
+            description: null | string;
+            /** @description What the page picture shows, for people who can't see it. */
+            pictureAlt: null | string;
+            status: null | components["schemas"]["WebsiteProjectStatus"];
+            title: null | string;
+            type: null | string;
+            /** Format: int32 */
+            year: null | number;
         };
         WebsiteProjectRequest: {
             city?: null | string;
@@ -18752,6 +18961,10 @@ export interface components {
             /** Format: int64 */
             visitors: number;
         };
+        WebsiteServiceFill: {
+            description: null | string;
+            title: null | string;
+        };
         WebsiteServiceRequest: {
             description?: string;
             title?: string;
@@ -18761,6 +18974,11 @@ export interface components {
             /** Format: int64 */
             id: number;
             title: string;
+        };
+        WebsiteSocialLinkFill: {
+            label: null | string;
+            /** @description Only an https address the user typed. */
+            url: null | string;
         };
         WebsiteSocialLinkRequest: {
             label?: string;
@@ -18788,6 +19006,11 @@ export interface components {
             id: number;
             name: string;
             role: string;
+        };
+        WorkEntryCommentFill: {
+            body: null | string;
+            /** @description Also post it to the person's team chat. */
+            shareWithTeam: null | boolean;
         };
         WorkEntryCommentResponse: {
             author: components["schemas"]["WorkEntryCommentAuthorResponse"];

@@ -55,9 +55,11 @@ export default function CompanyExpensesPage() {
     const asked = params.get("add") === "1" && canEdit;
     const closeEditing = () => {
         setEditing(null);
-        if (asked) { params.delete("add"); setParams(params, { replace: true }); }
+        if (asked || params.has("edit")) { params.delete("add"); params.delete("edit"); setParams(params, { replace: true }); }
     };
     const o = overhead.data;
+    // ?edit={id} opens that expense's window (Proton fills it there)
+    const linkedLine = canEdit && !editing ? o?.lines.find((l) => String(l.id) === params.get("edit")) ?? null : null;
     const list = months.data ?? [];
     // company expenses per month, from whichever the person may see
     const perMonthRows = seesCompany ? months.data?.map((m) => ({ month: m.month, overhead: m.overhead }))
@@ -221,7 +223,7 @@ export default function CompanyExpensesPage() {
                 </>
             )}
             {managing && <OverheadGroupsModal onClose={() => setManaging(false)} />}
-            {(editing || asked) && <OverheadModal line={editing && editing !== true ? editing : null} onClose={closeEditing} />}
+            {(editing || asked || linkedLine) && <OverheadModal line={editing && editing !== true ? editing : linkedLine} onClose={closeEditing} />}
         </div>
     );
 }

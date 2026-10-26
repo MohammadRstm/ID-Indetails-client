@@ -4,6 +4,8 @@ import type { Project } from "../../../shared/projects/projectsApi";
 import { PORTAL_SECTIONS, SECTION_LABEL, type PortalSection } from "./contentApi";
 import FileComments from "./FileComments";
 import FileView from "./FileView";
+import { fileCard } from "./cards";
+import { RenameModal } from "./ContentModals";
 import { useProjectFiles } from "./filesApi";
 import PortalSectionView from "./PortalSectionView";
 
@@ -25,8 +27,10 @@ export default function ProjectFilesTab({ project }: { project: Project }) {
     const commentsOn = idOf(params.get("comments"));
     const viewOn = idOf(params.get("view"));
     const viewed = files.data?.items.find((item) => item.id === viewOn);
+    // ?rename={itemId}: a file's rename window, for someone who may change it (Proton fills it there)
+    const renaming = files.data?.items.find((item) => item.id === idOf(params.get("rename")) && item.canEdit && !item.removed);
     const requested = PORTAL_SECTIONS.find((s) => s === params.get("part"));
-    const holder = files.data?.items.find((item) => item.id === commentsOn)?.section ?? viewed?.section;
+    const holder = files.data?.items.find((item) => item.id === commentsOn)?.section ?? viewed?.section ?? renaming?.section;
     const part: PortalSection = requested ?? holder ?? PORTAL_SECTIONS[0];
 
     function choose(next: PortalSection) {
@@ -41,6 +45,7 @@ export default function ProjectFilesTab({ project }: { project: Project }) {
     function closeView() {
         const link = new URLSearchParams(params);
         link.delete("view");
+        link.delete("rename");
         if (part !== PORTAL_SECTIONS[0]) link.set("part", part);
         setParams(link, { replace: true });
     }
@@ -68,6 +73,7 @@ export default function ProjectFilesTab({ project }: { project: Project }) {
             <PortalSectionView key={part} project={project} section={part} mode="files" onComments={openComments} />
             {commentsOn != null && <FileComments projectId={project.id} itemId={commentsOn} onClose={closeComments} />}
             {viewed && <FileView projectId={project.id} item={viewed} onClose={closeView} />}
+            {renaming && <RenameModal projectId={project.id} item={fileCard(renaming)} onClose={closeView} />}
         </>
     );
 }

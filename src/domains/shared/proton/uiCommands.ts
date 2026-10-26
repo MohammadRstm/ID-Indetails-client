@@ -10,7 +10,9 @@ import { openLogWork } from "@/domains/design/work/logWorkStore";
 import { setMessageSounds } from "@/domains/shared/messages/messageSounds";
 import { markAssistantOpening, runOpener } from "@/shared/components/Overlays/assistantLayer";
 import { setTheme } from "@/shared/theme";
-import { chatOf, fillForm, setDraft, type FormFill } from "./formFill";
+import { chatOf, fillForm, isFormOpen, setDraft, type FormFill } from "./formFill";
+import { placeOf } from "./formPlaces";
+import type { SurfaceTarget } from "./surfaces";
 import { SURFACES } from "./surfaces";
 
 export type ProtonUiCommand = Schemas["ProtonUiCommand"];
@@ -23,7 +25,8 @@ export type UiStep =
     | { kind: "go"; path: string; label: string }
     | { kind: "opener"; id: string; label: string }
     | { kind: "log_work"; label: string }
-    | { kind: "fill"; fill: FormFill }
+    /** `place`: where the form lives, opened first when it isn't open yet (null: the person can't open it here). */
+    | { kind: "fill"; fill: FormFill; place: SurfaceTarget | null }
     | { kind: "draft"; path: string; chat: string; body: string; label: string }
     | { kind: "theme"; theme: "light" | "dark" }
     | { kind: "sounds"; on: boolean }
@@ -43,6 +46,11 @@ const TABS = ["overview", "projects", "clients", "billing", "costs"] as const;
 /** The values object each form takes in a fill: a fill naming one form with another's values is dropped. */
 const FILLS: Record<FormFill["form"], keyof FormFill> = {
     client: "client", meeting: "meeting", new_project: "newProject", edit_project: "editProject", report_bug: "reportBug", invite: "invite", message: "message", log_work: "logWork",
+    requirement: "requirement", work_entry_comment: "workEntryComment", report_options: "reportOptions", team: "team", profile: "profile",
+    file_rename: "fileRename", file_comment: "fileComment", portal_intro: "portalIntro", portal_message: "portalMessage",
+    website_project: "websiteProject", website_service: "websiteService", website_location: "websiteLocation", website_social_link: "websiteSocialLink",
+    company_details: "companyDetails", company_expense: "companyExpense", materials: "materials", invoice: "invoice", payment: "payment",
+    project_expense: "projectExpense", labour_week: "labourWeek", schedule: "schedule", hour_excuse: "hourExcuse",
 };
 
 /**
@@ -156,7 +164,12 @@ export function stepOf(command: unknown, p: Permissions, current: Domain | null)
         case "fill_form": {
             const fill = c.fill as FormFill | null | undefined;
             if (!fill || !has(FILLS, fill.form) || fill[FILLS[fill.form]] == null) return null;
-            if (fill.form !== "message") return { kind: "fill", fill };
+            if (fill.form !== "message") {
+                const at = { id: isId(c.id) ? c.id : null, domain: c.domain == null ? null : visible(c.domain) ? c.domain : undefined };
+                // a business this person can't see: the form isn't theirs to open
+                if (at.domain === undefined) return null;
+                return { kind: "fill", fill, place: placeOf(fill, { id: at.id, domain: at.domain }, p, current) };
+            }
             // a draft opens its chat, then waits in the composer for the person to send
             const team = c.surface === "message_team";
             if (!isId(fill.id) || (!team && c.surface !== "message_person")) return null;
@@ -220,6 +233,15 @@ export function useRunProtonCommands() {
                     done.push(`Opened ${step.label}.`);
                     break;
                 case "fill":
+                    // the form opens itself when the answer didn't open it: its own link, as a person would follow it
+                    if (!moved && !isFormOpen(step.fill) && step.place) {
+                        markAssistantOpening();
+                        if (step.place.kind === "go") navigate(step.place.path);
+                        else if (step.place.kind === "opener") runOpener(step.place.id);
+                        else openLogWork();
+                        moved = true;
+                    }
+
                     done.push(fillForm(step.fill, { afterMove: moved, report }));
                     break;
                 case "draft":

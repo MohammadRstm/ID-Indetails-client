@@ -13,6 +13,8 @@ import { useTeams } from "../../design/people/peopleWorkApi";
 import { useDeleteTeam, useSaveTeam, type Team } from "./settingsApi";
 import { saved } from "./settingsToasts";
 import { loadFailed } from "@/api/queryState";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { useProtonForm } from "@/domains/shared/proton/formFill";
 
 /**
  * A business's teams: what each person belongs to, shown on their profile and in the schedules. The
@@ -59,6 +61,13 @@ function TeamRow({ domain, team, canEdit, onDone }: { domain: Domain; team: Team
     const editing = name != null;
     const error = save.error ?? remove.error;
     const nameError = tried && !name?.trim() ? "Give the team a name." : undefined;
+    // Proton renames a team: the row opens for editing with the new name, and the person saves it
+    const proton = useProtonForm("team", team?.id ?? null, (fill) => {
+        const next = fill.team?.name;
+        if (!team || !canEdit || !next || next === (name ?? team.name)) return [];
+        setName(next);
+        return [`name (was "${team.name}")`];
+    });
 
     function submit() {
         if (save.isPending) return;
@@ -69,8 +78,9 @@ function TeamRow({ domain, team, canEdit, onDone }: { domain: Domain; team: Team
     }
 
     return (
-        <div className="switch-row">
+        <div className="switch-row" {...proton.guard}>
             <div className="grow">
+                <FilledNote fields={proton.filled} />
                 {editing ? (
                     <>
                         <input className="input" autoFocus aria-label="Team name" placeholder={domain === "execution" ? "e.g. Finishing crew" : "e.g. Interiors"} value={name} maxLength={100}
