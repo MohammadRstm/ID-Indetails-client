@@ -34,6 +34,7 @@ import { companyNow } from "../work/day";
 import EntryRow from "../work/EntryRow";
 import OvertimePanel from "../work/OvertimePanel";
 import type { WorkEntry } from "../work/workApi";
+import { SiteLogBrowser } from "../../execution/staff/SiteLogs";
 import SiteWork from "../../execution/staff/SiteWork";
 import MyPermissionsModal from "../../shared/settings/MyPermissionsModal";
 import PermissionsModal from "../../shared/settings/PermissionsModal";
@@ -165,7 +166,14 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
             </div>
 
             {execution ? (
-                (self || permissions.has(P.EMPLOYEE_VIEW)) && <SiteWork userId={self ? null : person.id} joinedOn={extra.joinedOn ?? null} />
+                (self || permissions.has(P.EMPLOYEE_VIEW)) && (
+                    <>
+                        <SiteWork userId={self ? null : person.id} joinedOn={extra.joinedOn ?? null} />
+                        {/* their daily logs: their own, or anyone's for whoever reads every site's */}
+                        {self ? permissions.has(P.SITE_LOG_CREATE) && <SiteLogBrowser mine title="Daily logs" />
+                            : permissions.has(P.SITE_LOG_VIEW_ALL) && <SiteLogBrowser mine={false} userId={person.id} title="Daily logs" />}
+                    </>
+                )
             ) : seesWork ? (
                 <DesignWork userId={self ? null : person.id} first={first} self={self} />
             ) : null}

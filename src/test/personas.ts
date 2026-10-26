@@ -18,7 +18,7 @@ const COMPANY_ONLY: PermissionCode[] = [
 const WEBSITE: PermissionCode[] = [P.WEBSITE_VIEW, P.WEBSITE_MANAGE, P.WEBSITE_ANALYTICS_VIEW];
 const EXECUTION_ONLY: PermissionCode[] = [
     P.PROJECT_PRICING_MANAGE, P.STATEMENT_CREATE, P.STATEMENT_SEND, P.MATERIAL_CREATE, P.MATERIAL_MANAGE,
-    P.LABOUR_REPORT_CREATE, P.LABOUR_REPORT_MANAGE,
+    P.LABOUR_REPORT_CREATE, P.LABOUR_REPORT_MANAGE, P.SITE_LOG_CREATE, P.SITE_LOG_VIEW_ALL,
 ];
 /** Money and hiring: super admins only, unless granted. */
 const SUPER_ADMIN_ONLY: PermissionCode[] = [
@@ -66,7 +66,7 @@ export const personas: Record<PersonaName, CurrentUser> = {
     designEmployee: user(4, "Sarah", "employee", "design",
         [P.PROJECT_VIEW, P.REQUIREMENT_VIEW, P.REQUIREMENT_COMPLETE_OWN, P.MEETING_CREATE, P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN, P.PROTON_USE], "Interior designer"),
     executionEmployee: user(5, "Tarek", "employee", "execution",
-        [P.PROJECT_VIEW, P.REQUIREMENT_VIEW, P.REQUIREMENT_COMPLETE_OWN, P.MEETING_CREATE, P.MATERIAL_CREATE, P.LABOUR_REPORT_CREATE, P.PROTON_USE], "Site engineer"),
+        [P.PROJECT_VIEW, P.REQUIREMENT_VIEW, P.REQUIREMENT_COMPLETE_OWN, P.MEETING_CREATE, P.LABOUR_REPORT_CREATE, P.SITE_LOG_CREATE, P.PROTON_USE], "Site engineer"),
     // the website's staff: admins with the website's permissions and nothing else
     websiteAdmin: user(6, "Lea", "admin", "website", WEBSITE, "Web editor"),
 };

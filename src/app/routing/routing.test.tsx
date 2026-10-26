@@ -23,11 +23,12 @@ describe("the route table", () => {
             .toEqual(["Overview", "Projects", "Clients", "Employees", "Meetings", "Activity", "Reports", "Settings"]);
         // Execution runs on site, not on a clock: no Employees list, Activity or Reports.
         expect(navLabels(personas.executionAdmin, "execution"))
-            .toEqual(["Dashboard", "Projects", "Clients", "Meetings", "Settings"]);
+            .toEqual(["Dashboard", "Projects", "Clients", "Daily logs", "Meetings", "Settings"]);
         expect(navLabels(personas.designEmployee, "design")).toEqual(["Projects", "My work", "My pay", "Meetings", "Profile"]);
-        expect(navLabels(personas.executionEmployee, "execution")).toEqual(["Projects", "My work", "Meetings", "Profile"]);
+        // site staff: what happens on their sites, and the sites themselves
+        expect(navLabels(personas.executionEmployee, "execution")).toEqual(["Daily log", "My sites", "Profile"]);
         expect(navLabels(personas.superAdmin, "execution"))
-            .toEqual(["Dashboard", "Projects", "Clients", "Financials", "Meetings", "Settings"]);
+            .toEqual(["Dashboard", "Projects", "Clients", "Daily logs", "Financials", "Meetings", "Settings"]);
         expect(companyNav(permissionsOf(personas.superAdmin)).map((i) => i.label))
             .toEqual(["Overview", "Expenses", "Salaries", "Project pay", "Schedules", "Proton", "Settings"]);
         expect(companyNav(permissionsOf(personas.designAdmin))).toEqual([]);
@@ -82,7 +83,7 @@ describe("the route table", () => {
         expect(homePath(permissionsOf(personas.designAdmin))).toBe("/design/overview");
         expect(homePath(permissionsOf(personas.executionAdmin))).toBe("/execution/overview");
         expect(homePath(permissionsOf(personas.designEmployee))).toBe("/design/projects");
-        expect(homePath(permissionsOf(personas.executionEmployee))).toBe("/execution/projects");
+        expect(homePath(permissionsOf(personas.executionEmployee))).toBe("/execution/daily-log");
         // No report:view: the first thing they can open instead.
         expect(homePath(permissionsOf(withPermissions(personas.designAdmin, { revoke: [P.REPORT_VIEW] })))).toBe("/design/projects");
         // A grant that opens the other domain brings the launcher.

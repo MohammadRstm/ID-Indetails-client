@@ -301,8 +301,13 @@ describe("a new Execution project", () => {
         expect(within(dialog).queryByLabelText(/Material profit/i)).toBeNull();
         expect(within(dialog).queryByText("Money")).toBeNull();
         await userEvent.type(within(dialog).getByLabelText("Project name"), "Lobby works");
+        // a site needs the staff who oversee it
         await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
-        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ projectFee: null, materialMarkup: null, initialPayment: null })]));
+        expect(within(dialog).getByText("Choose at least one staff member to oversee the site.")).toBeInTheDocument();
+        expect(bodies).toEqual([]);
+        await userEvent.click(await within(dialog).findByRole("button", { name: /Tarek Nasser/ }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ projectFee: null, materialMarkup: null, initialPayment: null, staffIds: [5] })]));
     });
 
     it("asks a super admin for the fee, the material profit and the payment", async () => {

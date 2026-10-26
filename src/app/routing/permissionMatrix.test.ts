@@ -28,18 +28,20 @@ function outcome(user: CurrentUser, domain: Domain, path: string): Outcome {
 const PATHS = [
     "overview", "projects", "projects/:id", "clients", "clients/:id", "people", "people/:id", "financials",
     "my-work", "pay", "meetings", "activity", "reports", "profile", "settings", "notifications", "messages", "assistant/:chatId?", "help",
+    "daily-log", "sites", "site-logs",
 ] as const;
 
 // one letter per path, in PATHS order: o open, h home, d denied (everyone here has Proton, so its page opens in their business)
 const MATRIX: Record<PersonaName, Record<Domain, string>> = {
-    superAdmin:        { design: "oooooooohhooohooooo", execution: "ooooodoohhoddhooooo" },
+    superAdmin:        { design: "oooooooohhooohooooo hhd", execution: "ooooodoohhoddhooooo hho" },
     // admins: no Financials until a super admin hands them the money
-    designAdmin:       { design: "ooooooodhhooohooooo", execution: "hhhhhhhhhhhhhhhhhhh" },
-    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhhh", execution: "ooooododhhoddhooooo" },
-    designEmployee:    { design: "doodddddoooddodoooo", execution: "hhhhhhhhhhhhhhhhhhh" },
-    executionEmployee: { design: "hhhhhhhhhhhhhhhhhhh", execution: "doodddddododdodoooo" },
+    designAdmin:       { design: "ooooooodhhooohooooo hhd", execution: "hhhhhhhhhhhhhhhhhhh hhh" },
+    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhhh hhh", execution: "ooooododhhoddhooooo hho" },
+    designEmployee:    { design: "doodddddoooddodoooo ddd", execution: "hhhhhhhhhhhhhhhhhhh hhh" },
+    // site staff: their daily log and their sites, which open from My sites, not the project list
+    executionEmployee: { design: "hhhhhhhhhhhhhhhhhhh hhh", execution: "ddoddddddddddodoooo ood" },
     // the website's staff belong to no business
-    websiteAdmin:      { design: "hhhhhhhhhhhhhhhhhhh", execution: "hhhhhhhhhhhhhhhhhhh" },
+    websiteAdmin:      { design: "hhhhhhhhhhhhhhhhhhh hhh", execution: "hhhhhhhhhhhhhhhhhhh hhh" },
 };
 
 const LETTER: Record<string, Outcome> = { o: "open", h: "home", d: "denied" };

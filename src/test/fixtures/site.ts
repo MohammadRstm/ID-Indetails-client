@@ -51,6 +51,15 @@ export const site = {
 
 const losing = (id: unknown) => String(id) === String(site.losingProject.id);
 
+/** Execution employees who can oversee a site: Tarek (the persona) and Nour. */
+export const siteStaff = [
+    { id: 5, firstName: "Tarek", lastName: "Nasser", email: "tarek@id-indetails.test", domain: "execution", role: "employee", status: "active" },
+    { id: 13, firstName: "Nour", lastName: "Aziz", email: "nour@id-indetails.test", domain: "execution", role: "employee", status: "active" },
+].map((p) => ({
+    ...p, isJoker: false, joinedOn: "2026-01-12", lastSeenAt: null, leftOn: null, online: false, photoFileId: null, position: "Site engineer",
+    sessionsRevokedAt: null, team: null,
+})) as unknown as Schemas["EmployeeSummaryResponse"][];
+
 export const siteHandlers = [
     http.get("/api/projects/totals", () => HttpResponse.json({})),
     http.get("/api/projects/:id", ({ params }) => HttpResponse.json(losing(params.id) ? site.losingProject : site.project)),
@@ -68,7 +77,14 @@ export const siteHandlers = [
     http.get("/api/projects/:id/meetings", () => HttpResponse.json([])),
     http.get("/api/payments", () => HttpResponse.json(site.payments)),
     http.get("/api/invoices", () => HttpResponse.json(site.invoices)),
-    http.get("/api/employees", () => HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 })),
+    // the Execution employees who can oversee a site; nobody else
+    http.get("/api/employees", ({ request }) => {
+        const items = new URL(request.url).searchParams.get("role") === "employee" ? siteStaff : [];
+        return HttpResponse.json({ items, page: 1, pageSize: 100, totalCount: items.length });
+    }),
+    http.get("/api/me/sites", () => HttpResponse.json([])),
+    http.get("/api/me/site-logs", () => HttpResponse.json({ items: [], page: 1, pageSize: 25, totalCount: 0 })),
+    http.get("/api/site-logs", () => HttpResponse.json({ items: [], page: 1, pageSize: 25, totalCount: 0 })),
     // a client with an email and a WhatsApp number, to send to
     http.get("/api/clients/:id", () => HttpResponse.json(billing.client)),
 ];

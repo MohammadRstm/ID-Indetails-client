@@ -230,20 +230,24 @@ export const work: Article[] = [
         related: ["labour-defaults", "materials-labour"],
     },
     {
-        id: "my-assignments",
-        title: "What's assigned to me, and what's due",
+        id: "daily-log",
+        title: "Writing the daily log",
         category: "work",
         who: executionEmployee,
-        summary: "My work lists the requirements assigned to you: open, overdue, due in the next 7 days and done.",
-        ask: ["my work", "my tasks", "assigned to me", "due soon", "overdue", "deadlines", "my requirements"],
+        summary: "Daily log is your home: write what happened on a site as it happens, one log at a time, and find any earlier one by its site, day or words.",
+        ask: ["daily log", "log", "summary", "what happened", "site diary", "delivery", "missing", "delay", "my sites"],
         blocks: [
-            list(
-                "**Overdue**: still open, and its deadline has passed.",
-                "**Due in 7 days**: its deadline is today or in the next 7 days.",
-                "You're notified the day before a deadline, and once it has passed.",
+            steps(
+                step("Open **Daily log**, pick the site and say what happened: a delivery, a shortage, a delay.", "Daily log"),
+                step("Save. Each log is kept on its own with the time you wrote it, so a day can have several."),
             ),
-            links(link("Open my work", { business: "my-work", only: "execution" })),
+            list(
+                "You can change a log until the end of the day you wrote it; after that it stays as it is.",
+                "You write on the sites you oversee. **My sites** lists them; an admin puts you on a site.",
+                "Your earlier logs are under the form: filter them by site and days, or search their words.",
+            ),
+            links(link("Open the daily log", { business: "daily-log", only: "execution" })),
         ],
-        related: ["tick-requirement"],
+        related: ["labour-week"],
     },
 ];

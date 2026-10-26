@@ -24,6 +24,8 @@ export const P = {
     MATERIAL_MANAGE: "material:manage",
     LABOUR_REPORT_CREATE: "labour_report:create",
     LABOUR_REPORT_MANAGE: "labour_report:manage",
+    SITE_LOG_CREATE: "site_log:create",
+    SITE_LOG_VIEW_ALL: "site_log:view_all",
     CLIENT_VIEW: "client:view",
     CLIENT_CREATE: "client:create",
     CLIENT_MANAGE: "client:manage",

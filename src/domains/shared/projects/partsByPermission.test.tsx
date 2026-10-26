@@ -135,9 +135,10 @@ describe("a Design project, by permission", () => {
 });
 
 describe("an Execution site, by permission", () => {
-    it("shows an employee what is recorded on it, its requirements, its meetings and its team", async () => {
+    it("shows its staff their labour, its requirements, its meetings and its team, without materials", async () => {
         renderApp(`/execution/projects/${site.losingProject.id}`, tarek, ...siteHandlers);
-        expect(await screen.findByText("Materials", { selector: ".kpi-label" })).toBeInTheDocument();
+        expect(await screen.findByText("Ground labour", { selector: ".kpi-label" })).toBeInTheDocument();
+        expect(screen.queryByText("Materials", { selector: ".kpi-label" })).toBeNull();
         expect(tabs()).toEqual(["Overview", "Requirements", "Meetings"]);
         expect(document.querySelectorAll(".page-head .av-stack > *")).toHaveLength(site.losingProject.team!.count);
         for (const name of ["Mark as done", "More actions"]) expect(screen.queryByRole("button", { name })).toBeNull();

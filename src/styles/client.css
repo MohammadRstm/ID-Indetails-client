@@ -713,3 +713,8 @@ button.pc-comments { border: 0; cursor: pointer; }
 .scope-check { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; font-size: 13px; }
 .scope-check input { margin-top: 2px; }
 .scope-tag { white-space: nowrap; }
+
+/* An Execution site's daily logs: each its own, under its day. */
+.site-logs { list-style: none; margin: 6px 0 0; padding: 0; }
+.site-log { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.site-log:last-child { border-bottom: 0; }

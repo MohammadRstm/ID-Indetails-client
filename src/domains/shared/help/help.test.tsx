@@ -74,7 +74,9 @@ describe("Help's content", () => {
         }
         // each business's own work
         expect(de).toEqual(expect.arrayContaining(["log-work", "timer", "my-pay", "hours-balance", "pay", "deductions", "behind"]));
-        expect(xe).toEqual(expect.arrayContaining(["record-materials", "labour-week", "my-assignments"]));
+        // site staff report labour and write daily logs; materials are recorded by whoever is given them
+        expect(xe).toEqual(expect.arrayContaining(["labour-week", "daily-log"]));
+        expect(xe).not.toContain("record-materials");
         expect(xe).not.toContain("log-work");
         expect(de).not.toContain("record-materials");
         expect(xm).toEqual(expect.arrayContaining(["set-pricing", "client-statement", "execution-pricing", "site-money"]));
