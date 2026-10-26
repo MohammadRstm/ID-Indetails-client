@@ -25,13 +25,16 @@ const moneyPanel = async () => (await screen.findByText("Project money")).closes
 
 describe("an Execution site's overview", () => {
     it("shows its progress, materials and labour, and what the client paid against what it cost", async () => {
-        renderApp(path, karim, ...siteHandlers);
+        renderApp(`${path}?tab=overview`, karim, ...siteHandlers);
         const kpis = (await screen.findByText("Ground labour", { selector: ".kpi-label" })).closest(".kpis") as HTMLElement;
         expect(await within(kpis).findByText("4 weeks reported")).toBeInTheDocument();
         expect(within(kpis).getByText("1 / 3")).toBeInTheDocument();
         expect(within(kpis).getByText(money.short(site.materials.all.cost))).toBeInTheDocument();
         expect(within(kpis).getByText("4 records")).toBeInTheDocument();
         expect(within(kpis).getByText("Client owes")).toBeInTheDocument();
+        // the money is on its own tab
+        expect(screen.queryByText("Project money")).not.toBeInTheDocument();
+        await userEvent.click(screen.getByRole("tab", { name: "Financials" }));
 
         const panel = await moneyPanel();
         expect(within(panel).getByText(money.exact(m.billing.received), { selector: ".kpi-val" })).toBeInTheDocument();
@@ -167,9 +170,58 @@ describe("the fee and material profit", () => {
         await userEvent.clear(fee);
         await userEvent.type(fee, "8500.50");
         expect(fee).toHaveValue("8500.50");
+        await userEvent.type(within(dialog).getByLabelText("Why it changes"), "The client asked for a second floor");
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-        await waitFor(() => expect(saved).toEqual([{ projectFee: 8500.5, materialMarkup: 0.25 }]));
+        await waitFor(() => expect(saved).toEqual([{ projectFee: 8500.5, materialMarkup: 0.25, description: "The client asked for a second floor" }]));
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    });
+
+    it("need why they change, and a change", async () => {
+        const saved: unknown[] = [];
+        renderApp(`${path}?money=pricing`, karim,
+            http.put("/api/projects/:id/pricing", async ({ request }) => { saved.push(await request.json()); return HttpResponse.json(project); }),
+            ...siteHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "Fee & material profit" });
+        const save = within(dialog).getByRole("button", { name: "Save" });
+        await userEvent.click(save);
+        expect(within(dialog).getByText("Change the fee or the material profit, or cancel.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Say why the fee or the material profit changes.")).toBeInTheDocument();
+        expect(saved).toEqual([]);
+
+        // the material profit alone is a change
+        await userEvent.click(within(dialog).getByRole("button", { name: "25%" }));
+        expect(within(dialog).queryByText("Change the fee or the material profit, or cancel.")).not.toBeInTheDocument();
+        await userEvent.click(save);
+        expect(saved).toEqual([]);
+        await userEvent.type(within(dialog).getByLabelText("Why it changes"), "Imported tiles");
+        await userEvent.click(save);
+        await waitFor(() => expect(saved).toEqual([{ projectFee: m.projectFee, materialMarkup: 0.25, description: "Imported tiles" }]));
+    });
+
+    it("come first on the Financials tab, in bold, with their history", async () => {
+        const changes = [
+            { id: 4, amount: 9000, previousAmount: 8000, materialMarkup: 0.15, previousMaterialMarkup: 0.1, description: "A second floor", changedAt: "2026-09-10T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
+            { id: 3, amount: 8000, previousAmount: null, materialMarkup: 0.1, previousMaterialMarkup: null, description: "Agreed at the start", changedAt: "2026-05-01T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
+        ];
+        renderApp(path, karim, http.get(`/api/projects/${project.id}/payment-changes`, () => HttpResponse.json(changes)), ...siteHandlers);
+        expect(await screen.findByRole("tab", { name: "Financials", selected: true })).toBeInTheDocument();
+        const section = await screen.findByRole("region", { name: "Project fee" });
+        expect(within(section).getByText(money.exact(m.projectFee!))).toHaveClass("pay-amount");
+        expect(section).toHaveTextContent("default material profit of 15%");
+        expect(section.compareDocumentPosition(await moneyPanel()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+        await userEvent.click(within(section).getByRole("button", { name: "Edit project fee" }));
+        expect(await screen.findByRole("dialog", { name: "Fee & material profit" })).toBeInTheDocument();
+        await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
+
+        await userEvent.click(within(section).getByRole("button", { name: "History" }));
+        const dialog = await screen.findByRole("dialog", { name: "Project fee history" });
+        const rows = await within(dialog).findAllByRole("listitem");
+        expect(rows[0]).toHaveTextContent(`${money.exact(8000)} → ${money.exact(9000)}`);
+        expect(rows[0]).toHaveTextContent("Material profit 10% → 15%");
+        expect(rows[0]).toHaveTextContent("A second floor");
+        expect(rows[1]).toHaveTextContent("Material profit 10%");
+        expect(rows[1]).toHaveTextContent("Agreed at the start");
     });
 
     it("say which materials keep their price", async () => {
@@ -183,6 +235,7 @@ describe("the fee and material profit", () => {
         renderApp(`${path}?money=pricing`, withPermissions(karim, { revoke: [P.PROJECT_PRICING_MANAGE] }), ...siteHandlers);
         const panel = await moneyPanel();
         expect(within(panel).queryByRole("button", { name: "Fee & material profit" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Edit project fee" })).not.toBeInTheDocument();
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
         await userEvent.click(screen.getByRole("button", { name: "More actions" }));
         const menu = screen.getByRole("button", { name: "Put on hold" }).closest(".pop") as HTMLElement;
@@ -194,5 +247,8 @@ describe("the fee and material profit", () => {
         renderApp(path, karim, http.get(`/api/projects/${project.id}`, () => HttpResponse.json(locked)), ...siteHandlers);
         const panel = await moneyPanel();
         expect(within(panel).queryByRole("button", { name: "Fee & material profit" })).not.toBeInTheDocument();
+        const section = screen.getByRole("region", { name: "Project fee" });
+        expect(within(section).getByText("locked")).toBeInTheDocument();
+        expect(within(section).queryByRole("button", { name: "Edit project fee" })).not.toBeInTheDocument();
     });
 });

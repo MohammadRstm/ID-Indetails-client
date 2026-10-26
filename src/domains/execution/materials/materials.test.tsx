@@ -12,7 +12,8 @@ import { renderApp } from "@/test/renderApp";
 const karim = withPermissions(personas.executionAdmin, { grant: MONEY_AND_HIRING });
 // Mar Mikhael loft renovation: four materials, none on a statement yet
 const open = site.losingProject;
-const openPath = `/execution/projects/${open.id}`;
+// the materials are on the Overview; someone who sees money opens on the Financials tab
+const openPath = `/execution/projects/${open.id}?tab=overview`;
 // Achrafieh Towers lobby: every material is on its client statement
 const statedPath = `/execution/projects/${site.project.id}`;
 const plasterboard = site.openMaterials.items[0];

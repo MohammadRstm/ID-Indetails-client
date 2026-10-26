@@ -2,13 +2,17 @@ import { useState } from "react";
 import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
+import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
+import { FieldError } from "@/shared/components/Forms/Field";
 import NumberField from "@/shared/components/Forms/NumberField";
 import { MARKUP_PERCENT } from "@/shared/format/limits";
 import Modal from "@/shared/components/Overlays/Modal";
 import { plural } from "@/shared/format/labels";
 import { money } from "@/shared/format/money";
+import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import { PAYMENT_DESCRIPTION_MAX } from "../../shared/projects/paymentApi";
 import type { Project } from "../../shared/projects/projectsApi";
 import { useAllMaterials } from "../materials/materialsApi";
 import { useSetPricing } from "./siteApi";
@@ -18,8 +22,9 @@ const MARKUPS = [0, 5, 10, 15, 25];
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
- * The project fee and the default material profit (the prototype's EX.MoneyModal). A new default re-prices
- * every material still on it; one with a price of its own, or already on a client statement, keeps its price.
+ * The project fee and the default material profit (the prototype's EX.MoneyModal), and why they change, which joins
+ * the payment history. A new default re-prices every material still on it; one with a price of its own, or already
+ * on a client statement, keeps its price.
  */
 export default function PricingModal({ project, onClose }: { project: Project; onClose: () => void }) {
     const x = siteMoneyOf(project.money!);
@@ -27,8 +32,13 @@ export default function PricingModal({ project, onClose }: { project: Project; o
     const save = useSetPricing(project.id);
     const [fee, setFee] = useState(x.fee);
     const [pct, setPct] = useState<number | "">(Math.round(x.markup * 1000) / 10);
+    const [description, setDescription] = useState("");
+    const errors = useFormErrors();
     const markup = pct === "" ? 0 : pct;
     const valid = markup >= 0 && markup <= 500;
+    const unchanged = fee === x.fee && Math.round(markup * 100) / 10000 === x.markup && "Change the fee or the material profit, or cancel.";
+    const descriptionError = !description.trim() ? "Say why the fee or the material profit changes."
+        : description.trim().length > PAYMENT_DESCRIPTION_MAX && `At most ${PAYMENT_DESCRIPTION_MAX} characters.`;
 
     const list = materials ?? [];
     const auto = list.filter((m) => m.priceSource === "auto").length;
@@ -42,8 +52,9 @@ export default function PricingModal({ project, onClose }: { project: Project; o
     const keep = [own > 0 && `${own} with a price of their own`, stated > 0 && `${stated} already on a client statement`].filter(Boolean).join(" and ");
 
     function submit() {
-        if (!valid) return;
-        save.mutate({ projectFee: fee, materialMarkup: Math.round(markup * 100) / 10000 }, {
+        if (!valid || save.isPending) return;
+        if (unchanged || descriptionError) return errors.tried();
+        save.mutate({ projectFee: fee, materialMarkup: Math.round(markup * 100) / 10000, description: description.trim() }, {
             onSuccess: (saved) => {
                 const m = saved.money;
                 toast({
@@ -90,6 +101,14 @@ export default function PricingModal({ project, onClose }: { project: Project; o
                         : changedMarkup ? `Re-prices the ${plural(auto, "material")} on the default material profit${keep ? `; the ${keep} keep their price.` : "."}`
                             : "What new materials are charged at, over their cost. Any material can still get a price of its own."}
                 </div>
+            </div>
+            <FieldError message={errors.show("unchanged", unchanged)} />
+            <div className="field mt">
+                <label className="label required" htmlFor="xm-why">Why it changes</label>
+                <AutoGrowTextarea id="xm-why" className="input" minRows={3} maxRows={10} maxLength={PAYMENT_DESCRIPTION_MAX} value={description}
+                    placeholder="e.g. The client asked for a second floor." onChange={(e) => setDescription(e.target.value)} onBlur={errors.touch("description")} />
+                <div className="hint">Kept in the payment history, for the project report.</div>
+                <FieldError message={errors.show("description", descriptionError)} />
             </div>
             <div className="xm-owed mt">
                 <div><span>Materials charged</span><b className="mono">{money.exact(charge)}</b><em>on {money.exact(x.materialCost)} cost</em></div>

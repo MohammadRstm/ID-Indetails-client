@@ -1,53 +1,36 @@
 import { useState } from "react";
 import { errorMessage } from "@/api/errors";
-import { P } from "@/app/permissions/codes";
-import { usePermissions } from "@/app/permissions/usePermissions";
-import { CostRow } from "@/shared/components/Data/Money";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
+import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import { FieldError } from "@/shared/components/Forms/Field";
-import { Segmented } from "@/shared/components/Forms/Filters";
-import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
-import { fmtDateY } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
-import { useClients } from "../../../shared/clients/clientsApi";
+import { PAYMENT_DESCRIPTION_MAX, useSetPayment } from "../../../shared/projects/paymentApi";
 import type { Project } from "../../../shared/projects/projectsApi";
-import { useRevenueHistory, useSetProjectBilling } from "./moneyApi";
-
-type Billing = "client" | "internal";
 
 /**
- * The customer payment (the prototype's PF.PaymentModal): client work with its payment, or internal work
- * with none. Client work needs a client, so one is asked for when an internal project becomes client work.
+ * A client project's customer payment and why it changes (the prototype's PF.PaymentModal, with the reason the
+ * project report needs). Both are required; the change joins the payment history.
  */
 export default function PaymentModal({ project, onClose }: { project: Project; onClose: () => void }) {
-    const permissions = usePermissions();
-    const save = useSetProjectBilling(project.id);
-    const [billing, setBilling] = useState<Billing>(project.billingType === "internal" ? "internal" : "client");
-    const [amount, setAmount] = useState(project.money?.revenue ?? 0);
-    const [clientId, setClientId] = useState(project.client ? String(project.client.id) : "");
-    const needsClient = billing === "client" && !project.client;
-    const clients = useClients({ domain: project.domain, pageSize: 100 }, needsClient).data?.items ?? [];
-    const history = useRevenueHistory(project.id, permissions.has(P.ACTIVITY_VIEW)).data ?? [];
+    const save = useSetPayment(project.id);
+    const current = project.money?.revenue ?? 0;
+    const [amount, setAmount] = useState(current);
+    const [description, setDescription] = useState("");
     const errors = useFormErrors();
-    const clientError = billing === "client" && !clientId && "Choose the client this work is for.";
-    // the client that would be saved; another one than now (or none) ends the current client's portal access
-    const chosenClientId = billing === "internal" || !clientId ? null : +clientId;
-    const changesClient = project.domain === "design" && project.client != null && chosenClientId !== project.client.id;
+    const amountError = amount === current && `The payment is already ${money.exact(current)}: enter the new amount.`;
+    const descriptionError = !description.trim() ? "Say why the payment changes."
+        : description.trim().length > PAYMENT_DESCRIPTION_MAX && `At most ${PAYMENT_DESCRIPTION_MAX} characters.`;
 
     function submit() {
         if (save.isPending) return;
-        if (clientError) return errors.tried();
-        save.mutate({
-            billingType: billing,
-            clientId: billing === "internal" ? null : +clientId,
-            revenue: billing === "client" ? amount : null,
-        }, {
+        if (amountError || descriptionError) return errors.tried();
+        save.mutate({ revenue: amount, description: description.trim() }, {
             onSuccess: () => {
-                toast({ text: billing === "internal" ? `${project.title} is now an internal project` : `Payment set to ${money.fmt(amount)}`, icon: "checkCircle" });
+                toast({ text: `Payment set to ${money.fmt(amount)}`, sub: project.title, icon: "checkCircle" });
                 onClose();
             },
         });
@@ -57,52 +40,24 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
         <Modal surfaceId="project_payment_terms" title="Customer payment" sub={project.title} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{save.error ? <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span> : "The amount can be changed until the project is completed."}</div>
+                    <div className="grow">{save.error ? <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span> : "The payment can be changed until the project is completed."}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" disabled={save.isPending} onClick={submit}>Save</button>
+                    <button className="btn btn-primary" disabled={save.isPending} onClick={submit}>{save.isPending ? "Saving…" : "Save"}</button>
                 </>
             }>
             <div className="field">
-                <label className="label required">Project type</label>
-                <Segmented value={billing} onChange={setBilling} aria-label="Project type" options={[{ value: "client", label: "Client project" }, { value: "internal", label: "Internal" }]} />
-                <div className="hint">
-                    {billing === "client" ? "A client project carries a payment amount and can show profit and margin."
-                        : `An internal project has no payment - its labour and expenses are tracked as company cost.${project.client ? ` It will no longer belong to ${project.client.displayName}.` : ""}`}
-                </div>
+                <label className="label required" htmlFor="pay-amount">Customer payment</label>
+                <AmountField id="pay-amount" value={amount} currency="USD" currencies={false} onChange={setAmount} />
+                <div className="hint">Total amount the company is paid for this project. Now {money.exact(current)}.</div>
+                <FieldError message={errors.show("amount", amountError)} />
             </div>
-            {changesClient && (
-                <div className="banner hold mt" role="note">
-                    <Icon name="alert" />
-                    <div className="grow">
-                        {project.client?.displayName}'s contacts lose access to this project's client portal. Its chat and comments stay with the
-                        project: if it gets a client again, that client's contacts will see them once invited.
-                    </div>
-                </div>
-            )}
-            {needsClient && (
-                <div className="field mt">
-                    <label className="label required" htmlFor="pay-client">Client</label>
-                    <Select id="pay-client" value={clientId} onChange={setClientId}
-                        options={[{ value: "", label: "Choose the client" }, ...clients.map((c) => ({ value: String(c.id), label: c.displayName }))]} />
-                    <FieldError message={errors.show("client", clientError)} />
-                </div>
-            )}
-            {billing === "client" && (
-                <div className="field mt">
-                    <label className="label optional" htmlFor="pay-amount">Customer payment</label>
-                    <AmountField id="pay-amount" value={amount} currency="USD" currencies={false} onChange={setAmount} />
-                    <div className="hint">Total amount the company is paid for this project.</div>
-                </div>
-            )}
-            {history.length > 0 && (
-                <div className="mt">
-                    <div className="u" style={{ marginBottom: 4 }}>History</div>
-                    {history.map((e) => (
-                        <CostRow key={e.id} label={e.kind === "revenue_changed" ? `Changed from ${money.fmt(e.prevAmount ?? 0)}` : "Set"}
-                            meta={fmtDateY(e.occurredAt)} value={money.fmt(e.amount ?? 0)} />
-                    ))}
-                </div>
-            )}
+            <div className="field mt">
+                <label className="label required" htmlFor="pay-why">Why it changes</label>
+                <AutoGrowTextarea id="pay-why" className="input" minRows={3} maxRows={10} maxLength={PAYMENT_DESCRIPTION_MAX} value={description}
+                    placeholder="e.g. The client added a guest house to the brief." onChange={(e) => setDescription(e.target.value)} onBlur={errors.touch("description")} />
+                <div className="hint">Kept in the payment history, for the project report.</div>
+                <FieldError message={errors.show("description", descriptionError)} />
+            </div>
         </Modal>
     );
 }

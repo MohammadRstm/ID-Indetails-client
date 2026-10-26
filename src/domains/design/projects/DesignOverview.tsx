@@ -30,6 +30,7 @@ import { rangeOptions, type RangeKey } from "./ranges";
 import EntryModal from "./EntryModal";
 import { useLatestEntry, useProjectTimeline, useProjectWork, type Contributor, type ProjectWork } from "./projectWorkApi";
 import BillingBand from "../../shared/billing/BillingBand";
+import PaymentSection from "../../shared/projects/PaymentSection";
 import FinancialBreakdown, { CostFigures } from "./money/FinancialBreakdown";
 import MoneyBand from "./money/MoneyBand";
 import { useProjectExpenses } from "./money/moneyApi";
@@ -44,7 +45,10 @@ export function DesignProgress({ project }: { project: Project }) {
     return <Kpis project={project} work={undefined} />;
 }
 
-/** A Design project's Financials tab: its profit, where the cost sits, the client's payments and invoices, and the breakdown. */
+/**
+ * A Design project's Financials tab: its customer payment first, then its profit, where the cost sits, the client's
+ * payments and invoices, and the breakdown.
+ */
 export function DesignFinancials({ project }: { project: Project }) {
     const permissions = usePermissions();
     const seesWork = permissions.has(P.WORK_ENTRY_VIEW_ALL);
@@ -59,11 +63,23 @@ export function DesignFinancials({ project }: { project: Project }) {
     if (!m) return null;
     const onAddExpense = permissions.has(P.EXPENSE_MANAGE) ? open("money", "expense") : undefined;
     const allRange = rangeOptions(project, companyNow().today).all;
+    const clientWork = project.billingType === "client";
+    const canEditMoney = permissions.has(P.PROJECT_EDIT) && !m.isLocked;
 
     return (
         <>
+            <PaymentSection label="Customer payment" amount={clientWork ? m.revenue : null} locked={m.isLocked}
+                sub={clientWork ? "The total the client pays for this project. Each change is kept with why it changed." : undefined}
+                onEdit={clientWork && canEditMoney ? open("money", "payment") : undefined}
+                onHistory={clientWork ? open("money", "history") : undefined}
+                empty={(
+                    <span className="row" style={{ gap: 10 }}>
+                        Internal project - no client and no payment.
+                        {canEditMoney && <button className="btn btn-sm" onClick={open("money", "client")}>Make it client work</button>}
+                    </span>
+                )} />
             <MoneyBand project={project} money={m} contributors={all.data?.contributorCount} expenseCount={expenses.data?.items.length}
-                onEditPayment={permissions.has(P.PROJECT_EDIT) ? open("money", "payment") : undefined} onAddExpense={onAddExpense}
+                onEditPayment={clientWork && canEditMoney ? open("money", "payment") : undefined} onAddExpense={onAddExpense}
                 onCloseProject={permissions.has(P.PROJECT_CHANGE_STATUS) && !closed ? open("complete", "1") : undefined} />
             {project.billingType === "client" && <BillingBand project={project} />}
             <FinancialBreakdown project={project} money={m} contributors={seesWork ? all.data?.contributors : undefined} entryCount={all.data?.entryCount}

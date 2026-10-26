@@ -18,36 +18,51 @@ import StatementList from "../statements/StatementList";
 import LabourHealth from "./LabourHealth";
 import MaterialMargins from "../materials/MaterialMargins";
 import SiteMoneyPanel from "./SiteMoneyPanel";
+import PaymentSection from "../../shared/projects/PaymentSection";
+import { pctOf } from "./siteMoney";
 
 /**
  * An Execution site's Overview tab (the Execution side of the prototype's AdminProject and P.EmpProject):
- * progress, requirements, materials and ground labour, and for those who see money, what the client has paid
- * against what the site has cost.
+ * progress, requirements, materials and ground labour. Its money is on the Financials tab.
  */
 export default function ExecutionOverview({ project }: { project: Project }) {
+    return (
+        <>
+            <SiteKpis project={project} />
+            <MaterialsPanel project={project} />
+            <LabourPanel project={project} />
+        </>
+    );
+}
+
+/**
+ * An Execution site's Financials tab, for those who see money: its project fee first, then what the client has paid
+ * against what the site has cost, its invoices and statements, what each material earns and how long labour lasts.
+ */
+export function ExecutionFinancials({ project }: { project: Project }) {
     const permissions = usePermissions();
     const links = useBillingLinks();
     const statements = useStatementLinks();
     const [params, setParams] = useSearchParams();
     const m = permissions.has(P.FINANCIAL_VIEW) ? project.money : null;
+    if (!m) return null;
     const client = project.billingType === "client" && !!project.client;
-    const openPricing = () => { params.set("money", "pricing"); setParams(params); };
+    const open = (value: string) => () => { params.set("money", value); setParams(params); };
+    const canPrice = permissions.has(P.PROJECT_PRICING_MANAGE) && !m.isLocked;
 
     return (
         <>
-            <SiteKpis project={project} />
-            {m && (
-                <SiteMoneyPanel project={project}
-                    onRecordPayment={client && permissions.has(P.PAYMENT_RECORD) ? () => links.recordPayment() : undefined}
-                    onStatement={client && permissions.has(P.STATEMENT_CREATE) ? statements.newStatement : undefined}
-                    onEditPricing={permissions.has(P.PROJECT_PRICING_MANAGE) ? openPricing : undefined} />
-            )}
-            {m && client && <BillingBand project={project} />}
-            {m && client && <StatementList project={project} />}
-            <MaterialsPanel project={project} />
-            {m && client && <MaterialMargins project={project} />}
-            <LabourPanel project={project} />
-            {m && client && <LabourHealth project={project} />}
+            <PaymentSection label="Project fee" amount={m.projectFee ?? 0} locked={m.isLocked}
+                sub={<>A fixed amount for doing the job, on top of what materials earn at the default material profit of <b>{pctOf(m.materialMarkup ?? 0)}</b>. Each change is kept with why it changed.</>}
+                onEdit={canPrice ? open("pricing") : undefined} onHistory={open("history")} />
+            <SiteMoneyPanel project={project}
+                onRecordPayment={client && permissions.has(P.PAYMENT_RECORD) ? () => links.recordPayment() : undefined}
+                onStatement={client && permissions.has(P.STATEMENT_CREATE) ? statements.newStatement : undefined}
+                onEditPricing={canPrice ? open("pricing") : undefined} />
+            {client && <BillingBand project={project} />}
+            {client && <StatementList project={project} />}
+            {client && <MaterialMargins project={project} />}
+            {client && <LabourHealth project={project} />}
         </>
     );
 }
