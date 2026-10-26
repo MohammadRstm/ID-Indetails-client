@@ -16898,13 +16898,14 @@ export interface components {
         /** @enum {unknown} */
         ProtonMessageRole: "user" | "proton";
         /** @enum {unknown} */
-        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_pay" | "my_profile" | null;
+        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_pay" | "my_profile" | "website_projects" | "website_analytics" | "website_services" | "website_locations" | "website_contact" | "website_site" | "website_staff" | null;
         ProtonPageContext: {
             area: string;
             /** Format: int64 */
             entityId: null | number;
             entityType: null | components["schemas"]["ProtonRefType"];
             page: null | components["schemas"]["ProtonPage"];
+            part: null | components["schemas"]["ProtonProjectPart"];
             section: null | components["schemas"]["ProtonProjectSection"];
             surface: null | components["schemas"]["ProtonSurface"];
         };
@@ -16940,7 +16941,9 @@ export interface components {
             title: string;
         };
         /** @enum {unknown} */
-        ProtonProjectSection: "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | null;
+        ProtonProjectPart: "presentation" | "model" | "drawing" | "access" | "discussion" | null;
+        /** @enum {unknown} */
+        ProtonProjectSection: "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal" | null;
         /** @enum {unknown} */
         ProtonQuickReply: "yes" | "no" | "design" | "execution" | "today" | "this_week" | "last_week" | "this_month" | "last_month" | "this_quarter" | "last_quarter" | "this_year" | "last_year";
         ProtonQuickReplyOption: {
@@ -16955,7 +16958,7 @@ export interface components {
             type: components["schemas"]["ProtonRefType"];
         };
         /** @enum {unknown} */
-        ProtonRefType: "project" | "client" | "person" | "team";
+        ProtonRefType: "project" | "client" | "person" | "team" | "website_project";
         ProtonReplyResponse: {
             blocks: components["schemas"]["ProtonBlock"][];
             choices: components["schemas"]["ProtonChoice"][];
@@ -17008,7 +17011,7 @@ export interface components {
             text: string;
         };
         /** @enum {unknown} */
-        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_statement" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | null;
+        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_statement" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | "new_website_project" | "edit_website_project" | "file_comments" | "portal_discussion" | "portal_preview" | "invite_website_staff" | null;
         ProtonTableBlock: {
             columns: components["schemas"]["ProtonColumn"][];
             rows: components["schemas"]["ProtonDataRow"][];
@@ -17046,8 +17049,11 @@ export interface components {
             fill: null | components["schemas"]["ProtonFormFill"];
             /** Format: int64 */
             id: null | number;
+            /** Format: int64 */
+            itemId: null | number;
             label: string;
             page: null | components["schemas"]["ProtonPage"];
+            part: null | components["schemas"]["ProtonProjectPart"];
             section: null | components["schemas"]["ProtonProjectSection"];
             settingsSection: null | components["schemas"]["ProtonSettingsSection"];
             sounds: null | boolean;
@@ -18440,7 +18446,6 @@ export interface components {
         };
         /** @enum {unknown} */
         WebsiteProjectStatus: "in_progress" | "completed" | null;
-        /** @enum {unknown} */
         WebsiteRealtimeCountry: {
             code: string;
             name: string;

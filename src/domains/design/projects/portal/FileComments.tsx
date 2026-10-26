@@ -49,7 +49,7 @@ export default function FileComments({ projectId, itemId, onClose }: Props) {
     const row = (comment: FileComment) => <CommentRow key={comment.id} projectId={projectId} itemId={itemId} comment={comment} writable={writable} />;
 
     return (
-        <Drawer title={item ? `Comments on ${item.title}` : "Comments"} onClose={onClose}
+        <Drawer surfaceId="file_comments" title={item ? `Comments on ${item.title}` : "Comments"} onClose={onClose}
             head={
                 <div>
                     <div className="modal-title">Comments</div>

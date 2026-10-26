@@ -41,7 +41,7 @@ const reply = (text: string, cards: typeof action | (typeof action)[] | null = n
 const noBriefing = { items: [] as unknown[], more: 0 };
 
 // The page context the panel sends from the Help page.
-const onHelp = { area: "design", page: "help", entityType: null, entityId: null, section: null, surface: null };
+const onHelp = { area: "design", page: "help", entityType: null, entityId: null, section: null, part: null, surface: null };
 
 /** Proton's endpoints, recording what the panel sends. */
 function protonHandlers(answers: ReturnType<typeof reply>[], confirmOpens: Record<string, unknown>[] = [], briefing = noBriefing, statuses: unknown[] = []) {
@@ -248,6 +248,25 @@ describe("Proton", () => {
         // no backdrop: the page stays in view and the chat stays open
         expect(document.querySelector(".drawer-scrim")).toBeNull();
         expect(screen.getByRole("dialog", { name: "Proton" })).toBeInTheDocument();
+    });
+
+    it("run every command of a reply: a place, a fill and both display choices", async () => {
+        const opening = {
+            ...reply("Opening the meetings, in the dark, quietly."),
+            uiCommands: [
+                { type: "open_page", label: "Meetings", page: "meetings", domain: "design" },
+                { type: "refresh", label: "Refresh" },
+                { type: "set_preference", label: "Theme", theme: "dark" },
+                { type: "set_preference", label: "Sounds", sounds: false },
+            ],
+        };
+        const { handlers } = protonHandlers([opening]);
+        renderApp("/design/help", personas.designAdmin, ...handlers);
+
+        const { panel } = await openAndAsk("Meetings, dark mode, and no sounds please");
+
+        // the fourth one used to be dropped
+        expect(await within(panel).findByText(/Message sounds are off\./)).toBeInTheDocument();
     });
 
     it("refuse commands it doesn't know or the person may not follow", async () => {
