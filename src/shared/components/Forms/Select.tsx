@@ -151,6 +151,7 @@ export default function Select<V extends string>({ value, options, onChange, id,
                                     key={`${o.value}|${i}`}
                                     role="option"
                                     aria-selected={on}
+                                    aria-disabled={o.disabled || undefined}
                                     className={cx("sel-opt", i === active && "act", on && "on", o.disabled && "dis")}
                                     onMouseDown={(e) => e.preventDefault()}
                                     onMouseMove={() => active !== i && setActive(i)}

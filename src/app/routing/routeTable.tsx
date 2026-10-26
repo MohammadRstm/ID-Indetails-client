@@ -122,6 +122,12 @@ export const domainRoutes: DomainRoute[] = [
         admin: { element: <OverviewRoute />, access: all(P.REPORT_VIEW) },
     },
     {
+        // the pool of every site's client payments, and the money moved to sites in the red
+        path: "box",
+        nav: { label: "The box", icon: "database" },
+        admin: { element: <BoxPage />, access: executionOnly(all(P.FINANCIAL_VIEW)) },
+    },
+    {
         path: "projects",
         nav: { label: "Projects", icon: "projects", count: "projects" },
         admin: { element: <ProjectsPage />, access: all(P.PROJECT_VIEW) },
@@ -163,12 +169,6 @@ export const domainRoutes: DomainRoute[] = [
         path: "financials",
         nav: { label: "Financials", icon: "card" },
         admin: { element: <FinancialsRoute />, access: all(P.FINANCIAL_VIEW) },
-    },
-    {
-        // the pool of every site's client payments, and the money moved to sites in the red
-        path: "box",
-        nav: { label: "The box", icon: "database" },
-        admin: { element: <BoxPage />, access: executionOnly(all(P.FINANCIAL_VIEW)) },
     },
     {
         path: "my-work",

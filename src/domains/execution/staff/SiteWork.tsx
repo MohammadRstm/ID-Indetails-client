@@ -1,4 +1,6 @@
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import Pager from "@/shared/components/Data-Tables/Pager";
 import { RankBars } from "@/shared/components/Charts/Bars";
 import Columns from "@/shared/components/Charts/Columns";
 import Figure from "@/shared/components/Charts/Figure";
@@ -16,12 +18,16 @@ import { loadFailed } from "@/api/queryState";
 
 type Record_ = SiteRecords["recent"][number];
 
+const RECENT_PAGE = 10;
+
 /**
  * What an Execution person recorded (the Execution side of the prototype's Profile): they log no hours, so their
  * trail is the materials they added and the weekly labour they reported, in dollars.
  */
 export default function SiteWork({ userId, joinedOn }: { userId: number | null; joinedOn: string | null }) {
-    const records = useSiteRecords(userId ?? "me");
+    const [page, setPage] = useState(1);
+    const records = useSiteRecords(userId ?? "me", page, RECENT_PAGE);
+    const anchor = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const r = records.data;
     if (loadFailed(records)) return <div className="panel"><div className="panel-body"><LoadError error={records.error} retry={() => records.refetch()} what="what they recorded" /></div></div>;
@@ -61,7 +67,7 @@ export default function SiteWork({ userId, joinedOn }: { userId: number | null; 
             </div>
 
             <div className="grid g-7-5 mt">
-                <div className="panel">
+                <div className="panel" ref={anchor} aria-label="Recent activity">
                     <div className="panel-head"><div><div className="panel-title">Recent activity</div><div className="panel-sub">Newest entries, grouped by day.</div></div></div>
                     <div className="panel-body" style={{ paddingTop: 2 }}>
                         {!r ? <SkeletonLines lines={6} /> : r.recent.length === 0 ? <Empty art="time" title="No activity recorded yet" /> : groupByDay(r.recent).map((g) => (
@@ -81,6 +87,7 @@ export default function SiteWork({ userId, joinedOn }: { userId: number | null; 
                                 </div>
                             </div>
                         ))}
+                        {r && <Pager page={page} pageSize={RECENT_PAGE} total={r.recentTotal} onPage={setPage} anchor={anchor} />}
                     </div>
                 </div>
 
