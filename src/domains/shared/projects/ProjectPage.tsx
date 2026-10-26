@@ -37,13 +37,14 @@ import ReportModal from "../../design/projects/report/ReportModal";
 import { useMaterials } from "../../execution/materials/materialsApi";
 import PricingModal from "../../execution/projects/PricingModal";
 import PaymentHistoryModal from "./PaymentHistoryModal";
+import BoxChoiceModal from "../../execution/box/BoxChoice";
 import StatementHost from "../../execution/statements/StatementHost";
 import { useStatementLinks } from "../../execution/statements/statementLinks";
 import CompleteProjectModal from "./CompleteProjectModal";
 import { useUrlFlag } from "@/shared/hooks/useUrlFlag";
 import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
-import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
+import { asksBox, useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
 
 type TabKey = "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
 
@@ -119,6 +120,15 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const asksParticipation = clientProject && !portalByPermission;
     const participation = useDiscussionSummary(staffDiscussion, project.id, { enabled: asksParticipation, retry: false });
     const [showDone, setShowDone] = useState(false);
+    // archiving an open site or reopening a removed one asks first what happens to its money in the box
+    const [boxAsk, setBoxAsk] = useState<"archive" | "reopen" | null>(null);
+    function asksFirst(action: StatusAction) {
+        if ((action === "archive" || action === "reopen") && asksBox(project, action, permissions.has(P.FINANCIAL_VIEW))) {
+            setBoxAsk(action);
+            return true;
+        }
+        return false;
+    }
     // its own link (?details=1), so Proton or a shared link can open it
     const [editing, setEditing] = useUrlFlag("details");
     // the report opens through the link too (?report=1), as the projects list's menu does
@@ -196,6 +206,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         setParams(params);
     }
     function run(action: StatusAction, text: string) {
+        if (asksFirst(action)) return;
         change.mutate(action, {
             onSuccess: () => toast({ text, icon: "checkCircle" }),
             onError: (e) => toast({ text: "The status didn't change", sub: errorMessage(e), icon: "alert" }),
@@ -224,7 +235,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                             {canChangeStatus ? (
                                 <MenuButton buttonClass="btn btn-sm" align="left" width={200} label="Project status"
                                     text={<span className="row" style={{ gap: 6 }}><StatusBadge status={project.status} /><Icon name="chevronDown" /></span>}>
-                                    {(close) => <ProjectStatusItems project={project} close={close} onComplete={() => setShowDone(true)} />}
+                                    {(close) => <ProjectStatusItems project={project} close={close} onComplete={() => setShowDone(true)} asksFirst={asksFirst} />}
                                 </MenuButton>
                             ) : <StatusBadge status={project.status} />}
                         </div>
@@ -355,6 +366,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {(showDone || completeFromList) && canChangeStatus && !closed && (
                 <CompleteProjectModal project={project} openRequirements={openRequirements} onClose={closeComplete} />
             )}
+            {boxAsk && canChangeStatus && <BoxChoiceModal project={project} action={boxAsk} onClose={() => setBoxAsk(null)} />}
             {moneyAction === "payment" && canEditPayment && <PaymentModal project={project} onClose={closeMoney} />}
             {moneyAction === "client" && canEditBilling && <ClientTypeModal project={project} onClose={closeMoney} />}
             {moneyAction === "history" && hasPaymentHistory && <PaymentHistoryModal project={project} onClose={closeMoney} />}

@@ -15,7 +15,9 @@ export type SiteMoney = {
     labour: number;
     /** Project expenses and employee labour together. */
     other: number;
-    /** Received − spent: the headline. */
+    /** What the Execution box moved to the site. */
+    fromBox: number;
+    /** Received + from the box − spent: the headline. */
     cashProfit: number;
     /** The project fee + the materials sent to the client, at client prices. */
     agreed: number;
@@ -46,7 +48,8 @@ export function siteMoneyOf(m: ProjectMoney): SiteMoney {
         materialCost: m.cost.materials,
         labour: m.cost.groundLabour,
         other: m.cost.expenses + m.cost.labour,
-        cashProfit: m.cashProfit ?? m.billing.received - m.cost.total,
+        fromBox: m.fromBox ?? 0,
+        cashProfit: m.cashProfit ?? m.billing.received + (m.fromBox ?? 0) - m.cost.total,
         agreed: m.revenue,
         owed: m.billing.owed,
         credit: m.billing.paidAhead,

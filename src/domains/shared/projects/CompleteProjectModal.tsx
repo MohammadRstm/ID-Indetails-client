@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { errorMessage } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
@@ -14,7 +15,9 @@ import { money } from "@/shared/format/money";
 import { fmtDayDateY, companyToday, fmtH } from "@/shared/format/time";
 import type { IconName } from "@/shared/icons/icons";
 import Icon from "@/shared/icons/Icon";
-import { useChangeProjectStatus, type Project } from "./projectsApi";
+import { closeOptions } from "../../execution/box/boxApi";
+import { BoxOptions } from "../../execution/box/BoxChoice";
+import { asksBox, useChangeProjectStatus, type BoxChoice, type Project } from "./projectsApi";
 
 type CompleteProjectModalProps = {
     project: Project;
@@ -36,16 +39,19 @@ export default function CompleteProjectModal({ project, openRequirements, contri
     const costOnly = internal || unpriced;
     // what the client owes is frozen on completing, so every material must have been sent to them first
     const unsent = execution && m ? m.unsentMaterials : 0;
+    // what happens to an Execution site's money in the box: asked of whoever sees money, removal recommended
+    const asks = asksBox(project, "complete", permissions.has(P.FINANCIAL_VIEW));
+    const [box, setBox] = useState<BoxChoice>("remove");
 
     function confirm() {
-        change.mutate("complete", {
+        change.mutate(asks ? { action: "complete", box } : "complete", {
             onSuccess: () => {
                 toast({
                     text: `${project.title} closed${m && !costOnly && m.margin != null ? ` at ${money.pct(m.margin)} margin` : ""}`,
                     sub: "Removed from employee lists · history kept",
                     icon: "checkCircle",
                     actionLabel: "Undo",
-                    action: () => change.mutate("reopen"),
+                    action: () => change.mutate(asks && box === "remove" ? { action: "reopen", box: "readd" } : "reopen"),
                 });
                 onClose();
                 navigate(`/${project.domain}/projects/${project.id}`, { replace: true });
@@ -150,6 +156,13 @@ export default function CompleteProjectModal({ project, openRequirements, contri
                     {execution ? <Kpi label="Ground labour" value={<Money short value={m.cost.groundLabour} />} /> : <Kpi label="Contributors" value={contributors ?? "-"} />}
                     <Kpi label="Project expenses" value={<Money short value={m.cost.expenses} />} />
                     {execution ? <Kpi label="Total direct cost" value={<Money short value={m.cost.total} />} /> : <Kpi label="Cost per hour" value={money.fmt(m.costPerHour)} />}
+                </div>
+            )}
+
+            {asks && (
+                <div className="mt">
+                    <div className="u" style={{ marginBottom: 6 }}>The Execution box</div>
+                    <BoxOptions options={closeOptions(project)} value={box} onChange={setBox} />
                 </div>
             )}
 
