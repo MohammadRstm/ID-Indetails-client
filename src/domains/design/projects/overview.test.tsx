@@ -171,9 +171,10 @@ describe("a contributor and their entries", () => {
             contributors: [{ ...maya, outsideScopeMinutes: 270 }, ...rest.map((c) => ({ ...c, outsideScopeMinutes: 0 }))],
         };
         renderApp(analytics, admin, http.get("/api/projects/:id/work", () => HttpResponse.json(work)), ...projectWorkHandlers);
-        const kpi = (await screen.findByText("Outside the scope")).closest(".kpi") as HTMLElement;
-        expect(kpi).toHaveTextContent(fmtH(270));
-        expect(kpi).toHaveTextContent(`${Math.round(270 / work.totalMinutes * 100)}% of the hours, asked for beyond what was agreed`);
+        // the strip shows its labels while it loads: wait for the figures
+        const kpi = () => screen.getByText("Outside the scope").closest(".kpi") as HTMLElement;
+        await waitFor(() => expect(kpi()).toHaveTextContent(fmtH(270)));
+        expect(kpi()).toHaveTextContent(`${Math.round(270 / work.totalMinutes * 100)}% of the hours, asked for beyond what was agreed`);
         await userEvent.click(screen.getByRole("tab", { name: "Contributors" }));
         const panel = await contributorsPanel();
         expect(within(panel).getByRole("columnheader", { name: "Out of scope" })).toBeInTheDocument();
