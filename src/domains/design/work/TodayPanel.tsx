@@ -13,6 +13,7 @@ import DayChips from "./DayChips";
 import DayTrack from "./DayTrack";
 import DragDay from "./DragDay";
 import OvertimeWarning from "./OvertimeWarning";
+import { ScopeCheck } from "./Scope";
 import TimeRange from "./TimeRange";
 import {
     loggableProjects, useDomainSettings, useMyDay, useMyProjects, useMySchedule, useOvertimeFor, useSaveEntry, useUndoLog,
@@ -83,6 +84,7 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
     const [slotFor, setSlotFor] = useState<string | null>(today);
     const [projectId, setProjectId] = useState<number | null>(null);
     const [desc, setDesc] = useState("");
+    const [outside, setOutside] = useState(false);
     const [touched, setTouched] = useState(false);
     const [swaps, setSwaps] = useState<Moves>({});
     // logs deleted on the timeline, sent with the save
@@ -124,7 +126,12 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
         // what Undo puts back, worked out before the day reloads with the entries moved
         const restore = restoreOf(list, date, swaps);
         const deleted = deletes;
-        save.mutate({ body: { projectId: pid, description: desc, startedAt: startAt, endedAt: endAt, attachmentFileId: attachment.file?.id ?? null, moves: movesFor(date, swaps), deletes } }, {
+        save.mutate({
+            body: {
+                projectId: pid, description: desc, startedAt: startAt, endedAt: endAt, attachmentFileId: attachment.file?.id ?? null, outsideScope: outside,
+                moves: movesFor(date, swaps), deletes,
+            },
+        }, {
             onSuccess: (entry) => {
                 toast({
                     text: `${fmtDur(entry.minutes)} logged on ${title}`,
@@ -138,6 +145,8 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                 setSwaps({});
                 setDeletes([]);
                 setDesc("");
+                // each log says for itself whether it is outside the scope
+                setOutside(false);
                 attachment.clear();
                 setTouched(false);
             },
@@ -173,6 +182,7 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                                 onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)} />
                         </div>
                     </div>
+                    <div className="mt"><ScopeCheck checked={outside} onChange={setOutside} /></div>
                     <div className="mt">
                         <TimeRange date={date} startMin={startMin} duration={duration} preview={preview} onChange={(s, d) => setSlot({ s, d })} />
                     </div>

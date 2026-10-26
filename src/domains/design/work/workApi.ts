@@ -164,6 +164,16 @@ export function useSaveEntry() {
     });
 }
 
+/** An admin's correction of whether someone's entry is outside the project's original scope (work_entry:view_all). */
+export function useSetEntryScope() {
+    const changed = useWorkChanged();
+    return useMutation({
+        mutationFn: async ({ id, outsideScope }: { id: number; outsideScope: boolean }) =>
+            (await http.put<WorkEntry>(`/work-entries/${id}/scope`, { outsideScope })).data,
+        onSuccess: changed,
+    });
+}
+
 export function useDeleteEntry() {
     const changed = useWorkChanged();
     return useMutation({
@@ -222,6 +232,7 @@ export function entryBody(entry: WorkEntry, change: Partial<SaveEntryBody> = {})
         startedAt: entry.startedAt,
         endedAt: entry.endedAt,
         attachmentFileId: entry.attachment?.id ?? null,
+        outsideScope: entry.outsideScope,
         ...change,
     };
 }

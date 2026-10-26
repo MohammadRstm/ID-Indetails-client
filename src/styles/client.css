@@ -708,3 +708,8 @@ button.pc-comments { border: 0; cursor: pointer; }
 .pay-hist { list-style: none; margin: 0; padding: 0; }
 .pay-hist-row { padding: 10px 0; border-bottom: 1px solid var(--line); }
 .pay-hist-row:last-child { border-bottom: 0; }
+
+/* Work logged as outside the project's original scope: the box in the log forms, and the tag on the entry. */
+.scope-check { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; font-size: 13px; }
+.scope-check input { margin-top: 2px; }
+.scope-tag { white-space: nowrap; }

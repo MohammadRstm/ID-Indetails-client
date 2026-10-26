@@ -163,6 +163,10 @@ function Kpis({ project, work: w }: { project: Project; work: ProjectWork | unde
                 sub: w?.totalOvertimeMinutes ? <span>{fmtH(normal)} normal · <span className="ot-text">{fmtH(w.totalOvertimeMinutes)} overtime</span></span> : undefined,
                 delta: w && <Delta value={w.minutesLast14Days} prev={w.minutesPrevious14Days} label="last 14 days vs previous" />,
             },
+            {
+                key: "scope", label: "Outside the scope", value: fmtH(w?.outsideScopeMinutes ?? 0),
+                sub: <span>{w?.outsideScopeMinutes ? `${Math.round(w.outsideScopeMinutes / Math.max(1, w.totalMinutes) * 100)}% of the hours, asked for beyond what was agreed` : "all within what was agreed"}</span>,
+            },
             { key: "entries", label: "Work entries", value: fmtNumber(w?.entryCount ?? 0), sub: <span>avg {w?.entryCount ? fmtDur(w.totalMinutes / w.entryCount) : "-"} per entry</span> },
             {
                 key: "people", label: "Contributors", value: w?.contributorCount ?? 0,
@@ -258,6 +262,7 @@ function Contributors({ work, error, retry, range, rangeKey, ranges, setRangeKey
                                     <th className="r" title="Hours inside the working day">Normal</th>
                                     <th className="r" title="Outside the working day, on a day off, or past what the day asks for">Overtime</th>
                                     <SortTh sortKey="hours" sort={sort} onSort={setSort} right>Total</SortTh>
+                                    <th className="r" title="Work the client asked for beyond what was agreed">Out of scope</th>
                                     {seesMoney && <th className="r">Labour cost</th>}
                                     <th style={{ width: 120 }}>{showCost ? "Share of cost" : "Share"}</th>
                                     <th>Last 8 weeks</th>
@@ -272,6 +277,7 @@ function Contributors({ work, error, retry, range, rangeKey, ranges, setRangeKey
                                         <td className="r mono">{fmtDur(c.minutes - c.overtimeMinutes)}</td>
                                         <td className={cx("r mono", c.overtimeMinutes ? "ot-text" : "muted")}>{c.overtimeMinutes ? fmtDur(c.overtimeMinutes) : "-"}</td>
                                         <td className="r mono" style={{ fontWeight: 600 }}>{fmtDur(c.minutes)}</td>
+                                        <td className={cx("r mono", !c.outsideScopeMinutes && "muted")}>{c.outsideScopeMinutes ? fmtDur(c.outsideScopeMinutes) : "-"}</td>
                                         {seesMoney && (
                                             <td className="r mono">
                                                 {money.fmt(c.labourCost?.usd ?? 0)}

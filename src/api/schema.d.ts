@@ -13566,6 +13566,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/work-entries/{id}/scope": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SetWorkEntryScopeRequest"];
+                    "application/json": components["schemas"]["SetWorkEntryScopeRequest"];
+                    "text/json": components["schemas"]["SetWorkEntryScopeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WorkEntryResponse"];
+                        "text/json": components["schemas"]["WorkEntryResponse"];
+                        "text/plain": components["schemas"]["WorkEntryResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/work-entries/{id}/restore": {
         parameters: {
             query?: never;
@@ -16528,6 +16573,11 @@ export interface components {
             weekly: components["schemas"]["WeekTotalResponse"][];
         };
         ProjectContributorResponse: {
+            /**
+             * Format: int32
+             * @default 0
+             */
+            outsideScopeMinutes: number;
             /** Format: int32 */
             entries: number;
             labourCost: null | components["schemas"]["LabourCostResponse"];
@@ -16928,6 +16978,11 @@ export interface components {
             title: string;
         };
         ProjectWorkResponse: {
+            /**
+             * Format: int32
+             * @default 0
+             */
+            outsideScopeMinutes: number;
             activityLevel: components["schemas"]["ActivityLevel"];
             /** Format: int32 */
             contributorCount: number;
@@ -17882,6 +17937,7 @@ export interface components {
             text?: string;
         };
         SaveWorkEntryRequest: {
+            outsideScope?: null | boolean;
             /** Format: int64 */
             attachmentFileId?: null | number;
             deletes?: number[];
@@ -17969,6 +18025,9 @@ export interface components {
             /** Format: date */
             effectiveFrom?: null | string;
             followsDefault?: boolean;
+        };
+        SetWorkEntryScopeRequest: {
+            outsideScope?: boolean;
         };
         SetWorkingTimeRequest: {
             /** Format: int32 */
@@ -18824,6 +18883,7 @@ export interface components {
             title: string;
         };
         WorkEntryResponse: {
+            outsideScope: boolean;
             attachment: null | components["schemas"]["FileResponse"];
             canEdit: boolean;
             /** Format: int32 */

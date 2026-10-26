@@ -17,6 +17,7 @@ import DayChips from "./DayChips";
 import DragDay from "./DragDay";
 import { closeLogWork, type LogWorkOptions } from "./logWorkStore";
 import OvertimeWarning from "./OvertimeWarning";
+import { ScopeCheck } from "./Scope";
 import TimeRange from "./TimeRange";
 import { startTimer } from "./timer";
 import {
@@ -75,6 +76,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
     const [startMin, setStartMin] = useState(initial.s);
     const [duration, setDuration] = useState(initial.d);
     const [desc, setDesc] = useState(ed?.description ?? "");
+    const [outside, setOutside] = useState(ed?.outsideScope ?? false);
     const [touched, setTouched] = useState(false);
     const [swaps, setSwaps] = useState<Moves>({});
     // logs deleted on the timeline, sent with the save
@@ -161,7 +163,10 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
         const back = movesBack();
         // worked out now, while the day is loaded: the form has closed by the time Undo is pressed
         const restore = restoreOf(list, date, swaps);
-        const body = { projectId, description: desc, startedAt: startAt, endedAt: endAt, attachmentFileId: attachment.file?.id ?? null, moves: movesFor(date, swaps), deletes };
+        const body = {
+            projectId, description: desc, startedAt: startAt, endedAt: endAt, attachmentFileId: attachment.file?.id ?? null, outsideScope: outside,
+            moves: movesFor(date, swaps), deletes,
+        };
         const title = project?.title ?? "the project";
         save.mutate({ id: ed?.id, body }, {
             onSuccess: (saved) => {
@@ -221,6 +226,8 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                         value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)}
                         onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit(); }} />
                 </div>
+
+                <div className="mt"><ScopeCheck checked={outside} onChange={setOutside} /></div>
 
                 <AttachmentField state={attachment} />
 

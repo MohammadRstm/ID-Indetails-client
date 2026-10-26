@@ -139,10 +139,47 @@ describe("a contributor and their entries", () => {
         expect(await within(dialog).findByText("Work description")).toBeInTheDocument();
 
         await userEvent.type(within(dialog).getByLabelText("Add a comment"), "Looks good - add the joinery detail");
-        await userEvent.click(within(dialog).getByRole("checkbox"));
+        await userEvent.click(within(dialog).getByRole("checkbox", { name: /Also send to the/ }));
         await userEvent.click(within(dialog).getByRole("button", { name: "Comment" }));
         await waitFor(() => expect(posted).toEqual({ body: "Looks good - add the joinery detail", sendToGroup: true }));
         expect(await screen.findByText("Comment added")).toBeInTheDocument();
+    });
+
+    it("lets an admin mark someone's entry as outside the original scope, from the entry", async () => {
+        const sent: unknown[] = [];
+        const first = projectWork.contributor.recentEntries[0];
+        renderApp(contributorsTab, admin,
+            http.put("/api/work-entries/:id/scope", async ({ params, request }) => {
+                sent.push({ id: Number(params.id), ...(await request.json() as object) });
+                return HttpResponse.json({ ...first, outsideScope: true });
+            }),
+            ...projectWorkHandlers);
+        const panel = await contributorsPanel();
+        await userEvent.click(await within(panel).findByText("62h 40m"));
+        await userEvent.click((await within(drawer()).findAllByText(first.description))[0]);
+        const dialog = await screen.findByRole("dialog", { name: "Work entry" });
+        const scope = await within(dialog).findByRole("checkbox", { name: /Outside the original scope/ });
+        expect(scope).not.toBeChecked();
+        await userEvent.click(scope);
+        await waitFor(() => expect(sent).toEqual([{ id: first.id, outsideScope: true }]));
+    });
+
+    it("shows how much of the work was outside the original scope, and whose", async () => {
+        const [maya, ...rest] = projectWork.work.contributors;
+        const work = {
+            ...projectWork.work, outsideScopeMinutes: 270,
+            contributors: [{ ...maya, outsideScopeMinutes: 270 }, ...rest.map((c) => ({ ...c, outsideScopeMinutes: 0 }))],
+        };
+        renderApp(analytics, admin, http.get("/api/projects/:id/work", () => HttpResponse.json(work)), ...projectWorkHandlers);
+        // the strip shows its labels while it loads: wait for the figures
+        const kpi = () => screen.getByText("Outside the scope").closest(".kpi") as HTMLElement;
+        await waitFor(() => expect(kpi()).toHaveTextContent(fmtH(270)));
+        expect(kpi()).toHaveTextContent(`${Math.round(270 / work.totalMinutes * 100)}% of the hours, asked for beyond what was agreed`);
+        await userEvent.click(screen.getByRole("tab", { name: "Contributors" }));
+        const panel = await contributorsPanel();
+        expect(within(panel).getByRole("columnheader", { name: "Out of scope" })).toBeInTheDocument();
+        const row = (await within(panel).findByText(maya.name)).closest("tr") as HTMLElement;
+        expect(row).toHaveTextContent("4h 30m");
     });
 
     it("shows the comments without the box to someone without work_entry:comment", async () => {
