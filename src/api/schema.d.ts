@@ -3000,7 +3000,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    RecentPage?: number;
+                    RecentPageSize?: number;
+                };
                 header?: never;
                 path: {
                     userId: number;
@@ -3187,9 +3190,13 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    From?: string;
+                    Kind?: components["schemas"]["BoxEntryKind"];
                     Page?: number;
                     PageSize?: number;
                     ProjectId?: number;
+                    Search?: string;
+                    To?: string;
                 };
                 header?: never;
                 path?: never;
@@ -5194,7 +5201,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    RecentPage?: number;
+                    RecentPageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -18658,6 +18668,8 @@ export interface components {
             person: components["schemas"]["PersonRefResponse"];
             projects: components["schemas"]["SiteRecordsProjectResponse"][];
             recent: components["schemas"]["SiteRecordResponse"][];
+            /** Format: int32 */
+            recentTotal: number;
             /** Format: double */
             thisQuarter: number;
             /** Format: double */

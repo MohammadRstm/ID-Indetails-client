@@ -47,15 +47,19 @@ export function StaffPicker({ value, onChange }: { value: number[]; onChange: (i
 /** A site staff member's home: what happened on site today, written as logs, and every log they wrote before. */
 export function DailyLogPage() {
     const sites = useMySites();
-    const open = (sites.data ?? []).filter((s) => s.status === "active" || s.status === "hold");
-    const options = open.map((s) => ({ value: String(s.id), label: s.title }));
+    const isOpen = (s: { status: string }) => s.status === "active" || s.status === "hold";
+    const open = (sites.data ?? []).filter(isOpen);
+    // a closed site stays in the list, greyed out, so it doesn't seem to be missing: it takes no new logs
+    const options = (sites.data ?? []).map((s) => isOpen(s)
+        ? { value: String(s.id), label: s.title }
+        : { value: String(s.id), label: `${s.title} (${PROJECT_STATUS[s.status].label.toLowerCase()})`, disabled: true });
 
     return (
         <div className="page">
             <PageHead title="Daily log" sub="What happened on your sites: deliveries, shortages, delays. Write a log as it happens; each one is kept on its own." />
             {loadFailed(sites) ? <LoadError error={sites.error} retry={() => sites.refetch()} what="your sites" />
                 : !sites.data ? <SkeletonLines lines={4} />
-                    : options.length === 0 ? <Empty art="search" title="You oversee no open site" text="An admin puts you on a site when it starts." />
+                    : open.length === 0 ? <Empty art="search" title="You oversee no open site" text="An admin puts you on a site when it starts. Completed and archived sites take no new logs." />
                         : <WriteSiteLog sites={options} />}
             <SiteLogBrowser mine title="Your logs" sites={(sites.data ?? []).map((s) => ({ value: String(s.id), label: s.title }))} />
         </div>
@@ -82,7 +86,7 @@ export function MySitesPage() {
                                                 <div className="row" style={{ gap: 10 }}>
                                                     <ProjectTile />
                                                     <div className="grow" style={{ minWidth: 0 }}>
-                                                        <div className="trunc" style={{ fontWeight: 650 }}>{s.title}</div>
+                                                        <div className="trunc site-card-title" style={{ fontWeight: 650 }}>{s.title}</div>
                                                         <div className="muted trunc" style={{ fontSize: 12 }}>{[s.clientName, s.location].filter(Boolean).join(" · ") || "-"}</div>
                                                     </div>
                                                 </div>

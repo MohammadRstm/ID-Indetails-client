@@ -18,9 +18,11 @@ export function useBox() {
     return useQuery({ queryKey: keys.box.summary(), queryFn: async () => (await http.get<Box>("/execution/box")).data });
 }
 
-/** The box's movements, newest first. */
-export function useBoxEntries(page: number, pageSize = 20) {
-    const params = { page, pageSize };
+export type BoxEntryFilters = { projectId?: number | null; kind?: BoxEntryKind | ""; from?: string; to?: string; search?: string; page?: number; pageSize?: number };
+
+/** The box's movements, newest first: of a project and kind, between days (both inclusive), with words of the project, note or person. */
+export function useBoxEntries(filters: BoxEntryFilters) {
+    const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v != null && v !== ""));
     return useQuery({
         queryKey: keys.box.entries(params),
         queryFn: async () => (await http.get<Paged<BoxEntry>>("/execution/box/entries", { params })).data,

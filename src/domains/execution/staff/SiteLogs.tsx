@@ -19,15 +19,17 @@ import { SITE_LOG_MAX, useEditSiteLog, useSiteLogs, useWriteSiteLog, type SiteLo
 
 const PAGE_SIZE = 25;
 
-type Option = { value: string; label: string };
+type Option = { value: string; label: string; disabled?: boolean };
 
 /** "What happened on site today": the site it is about and the words, saved as a log of its own. */
 export function WriteSiteLog({ sites, fixedSiteId }: { sites: Option[]; fixedSiteId?: number }) {
     const write = useWriteSiteLog();
-    const [siteId, setSiteId] = useState(fixedSiteId ? String(fixedSiteId) : sites[0]?.value ?? "");
+    const first = sites.find((s) => !s.disabled)?.value ?? "";
+    const [siteId, setSiteId] = useState(fixedSiteId ? String(fixedSiteId) : first);
     const [body, setBody] = useState("");
     const errors = useFormErrors();
-    const chosen = fixedSiteId ? String(fixedSiteId) : sites.some((s) => s.value === siteId) ? siteId : sites[0]?.value ?? "";
+    const chosen = fixedSiteId ? String(fixedSiteId) : sites.some((s) => s.value === siteId && !s.disabled) ? siteId : first;
+    const closed = sites.filter((s) => s.disabled).length;
     const siteError = !chosen && "Choose the site this is about.";
     const bodyError = !body.trim() ? "Say what happened." : body.trim().length > SITE_LOG_MAX && `At most ${SITE_LOG_MAX} characters.`;
 
@@ -50,6 +52,7 @@ export function WriteSiteLog({ sites, fixedSiteId }: { sites: Option[]; fixedSit
                     <div className="field">
                         <label className="label required" htmlFor="sl-site">Site</label>
                         <Select id="sl-site" value={chosen} onChange={setSiteId} options={sites} />
+                        {closed > 0 && <div className="hint">Completed and archived sites take no new logs.</div>}
                         <FieldError message={errors.show("site", siteError)} />
                     </div>
                 )}

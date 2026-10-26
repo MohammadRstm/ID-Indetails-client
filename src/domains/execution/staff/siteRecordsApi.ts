@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { http } from "@/api/http";
 import { keys } from "@/api/keys";
 import type { Schemas } from "@/api/types";
@@ -17,11 +17,16 @@ export function useSiteSummaries(ids: number[]) {
     });
 }
 
-/** What someone recorded on sites: the signed-in person's own, or anyone's with employee:view. */
-export function useSiteRecords(userId: number | "me", enabled = true) {
+/**
+ * What someone recorded on sites: the signed-in person's own, or anyone's with employee:view. The recent records come
+ * a page at a time, newest first.
+ */
+export function useSiteRecords(userId: number | "me", recentPage = 1, recentPageSize = 10, enabled = true) {
+    const params = { recentPage, recentPageSize };
     return useQuery({
-        queryKey: [...keys.projects.all, "site-records", userId],
-        queryFn: async () => (await http.get<SiteRecords>(userId === "me" ? "/me/site-records" : `/employees/${userId}/site-records`)).data,
+        queryKey: [...keys.projects.all, "site-records", userId, params],
+        queryFn: async () => (await http.get<SiteRecords>(userId === "me" ? "/me/site-records" : `/employees/${userId}/site-records`, { params })).data,
+        placeholderData: keepPreviousData,
         enabled,
     });
 }

@@ -1205,6 +1205,10 @@ tr.voided .mono, .cost-row.voided .mono { text-decoration: line-through; }
 /* ---------------- project history: a day as a card timeline (UI.DayStory, 59-timeline-day.js) ---------------- */
 .vt-card.click { cursor: pointer; transition: border-color .12s ease, box-shadow .12s ease; }
 .vt-card.click:hover { border-color: var(--line-2); box-shadow: var(--shadow-2); }
+/* a whole panel that opens something, such as a site card on My sites */
+.panel.click { cursor: pointer; transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease; }
+.panel.click:hover { border-color: var(--line-2); box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.panel.click:hover .site-card-title { color: var(--accent-ink); }
 .vt-open .ic { width: 13px; height: 13px; }
 .modal.ds-modal { width: min(1240px, 100%); }
 .ds { padding: 14px 17px 12px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
