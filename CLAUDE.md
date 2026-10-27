@@ -61,14 +61,24 @@ A feature usually needs the API and the client together: one `MR-<Topic>` branch
   - make the mutations that change that data invalidate it, e.g. billing changes also invalidate `keys.box`.
 - **Forms** show each validation error live, next to its field (`useFormErrors`, `FieldError`). Money amounts use `AmountField`, which shows commas as you type.
 
-### Working on this machine
+### Working on the user's machines
 
-- **One core, low priority.** The development laptop shuts down under load, and other sessions may be running checks.
-  - Run `npx vitest run --maxWorkers=1 --no-file-parallelism <files>`, only for the files you touched.
-  - Run `tsc -b` and `eslint` the same way.
+- **Ask before running builds or tests.** The user works from two machines:
+  - a laptop that shuts down under load;
+  - a desktop that comfortably runs on several cores.
+
+  Before the first build or test run in a session, ask whether to run on **one core at low priority** (the laptop) or normally (the desktop). Keep to the answer for the rest of the session.
+- **On the laptop:** run `npx vitest run --maxWorkers=1 --no-file-parallelism <files>` for the files you touched, and run `tsc -b` and `eslint` at low priority.
   - CI runs the whole suite.
 - The first test or two of a page-heavy file can time out locally on a cold start. Re-run before treating it as a failure.
 - **Deploying** is by hand from the API repo (Actions → Deploy). Never start it unless asked.
+
+### Keeping this file current
+
+This file is how every new session learns the project, so keep it true:
+- **When your work changes something written here, propose an edit to this file.** That includes a rule, a workflow, a file or folder, a command, or a business rule.
+- **When the user tells you a new rule or preference, also propose an edit** so later sessions follow it.
+- **Ask the user's permission first, every time.** Show the exact change and wait for a yes. This applies above all to the rules sections. Never change this file on your own.
 
 ### Known quirks
 
@@ -90,7 +100,7 @@ A feature usually needs the API and the client together: one `MR-<Topic>` branch
 - `npm run api:types`: regenerates `src/api/schema.d.ts` from the running API's OpenAPI document. Don't edit `schema.d.ts` by hand.
 - `node scripts/seed-dev.mjs`: seeds an empty dev database through the API. It needs `SETUP_KEY` and Mailpit.
 
-Vitest is capped at 2 workers with a 15s timeout because the development laptop crashes under heavy load. Don't raise those limits or start large parallel runs.
+Vitest is capped at 2 workers with a 15s timeout because the development laptop crashes under heavy load. Don't raise those limits. Ask before larger runs (see "Working on the user's machines").
 
 CI (`.github/workflows/ci.yml`) runs `tsc -b`, lint, tests and `vite build`, then fails if the bundle contains `localhost:<port>`, `127.0.0.1`, secret-like strings or source maps.
 
