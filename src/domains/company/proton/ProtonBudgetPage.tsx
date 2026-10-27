@@ -6,6 +6,8 @@ import { KpiStrip } from "@/shared/components/Data/Kpi";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
+import AmountField from "@/shared/components/Forms/AmountField";
+import { FieldError } from "@/shared/components/Forms/Field";
 import { money } from "@/shared/format/money";
 import { fmtDate, fmtDateY, fmtMonthY, fmtNumber } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -100,16 +102,17 @@ function Proposals() {
 
 function TopUp({ budget }: { budget: ProtonBudget }) {
     const topUp = useTopUpBudget();
-    const [amount, setAmount] = useState("");
+    const [amount, setAmount] = useState<number | null>(null);
     const [note, setNote] = useState("");
-    const value = Number(amount);
-    const valid = amount.trim() !== "" && value > 0 && value <= 10_000;
+    const value = amount ?? 0;
+    const tooMuch = value > 10_000;
+    const valid = value > 0 && !tooMuch;
 
     const submit = () => {
         if (!valid || topUp.isPending) return;
         topUp.mutate({ amountUsd: value, note: note.trim() || null }, {
             onSuccess: (next) => {
-                setAmount("");
+                setAmount(null);
                 setNote("");
                 toast({ text: `${money.exact(value, "USD", { cents: true })} added`, sub: `${cost(next.remainingUsd)} left this month.`, icon: "checkCircle" });
             },
@@ -123,7 +126,8 @@ function TopUp({ budget }: { budget: ProtonBudget }) {
             <form className="panel-body stack" onSubmit={(e) => { e.preventDefault(); submit(); }}>
                 <div className="field">
                     <label className="label" htmlFor="pb-amount">Amount (USD)</label>
-                    <input id="pb-amount" className="input" type="number" min={0.01} max={10000} step={0.01} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                    <AmountField id="pb-amount" value={amount} currency="USD" currencies={false} onChange={setAmount} />
+                    {tooMuch && <FieldError message="Up to $10,000 at a time." />}
                 </div>
                 <div className="field">
                     <label className="label" htmlFor="pb-note">Note (optional)</label>

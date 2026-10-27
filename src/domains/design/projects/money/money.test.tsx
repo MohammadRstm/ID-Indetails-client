@@ -192,8 +192,8 @@ describe("a project's money", () => {
         await userEvent.type(within(dialog).getByLabelText("What was it?"), "Marble");
         const amount = within(dialog).getByLabelText("Amount");
         await userEvent.type(amount, "99999999999999999999");
-        // thirteen digits, after the 0 the field starts with
-        expect(amount).toHaveValue("09999999999999");
+        // thirteen digits, with commas between the thousands (the 0 the field starts with goes)
+        expect(amount).toHaveValue("9,999,999,999,999");
         expect(within(dialog).getByText("Up to 9,999,999,999,999.99, with at most 2 decimals.")).toBeInTheDocument();
         await userEvent.click(within(dialog).getByRole("button", { name: "Add expense" }));
         await waitFor(() => expect(added).toHaveLength(1));

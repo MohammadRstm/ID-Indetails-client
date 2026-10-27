@@ -168,7 +168,7 @@ describe("the fee and material profit", () => {
         const fee = within(dialog).getByLabelText("Project fee");
         await userEvent.clear(fee);
         await userEvent.type(fee, "8500.50");
-        expect(fee).toHaveValue("8500.50");
+        expect(fee).toHaveValue("8,500.50");
         await userEvent.type(within(dialog).getByLabelText("Why it changes"), "The client asked for a second floor");
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
         await waitFor(() => expect(saved).toEqual([{ projectFee: 8500.5, materialMarkup: 0.25, description: "The client asked for a second floor" }]));

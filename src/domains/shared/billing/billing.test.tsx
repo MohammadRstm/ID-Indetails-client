@@ -159,6 +159,7 @@ describe("a project's billing", () => {
         const dialog = await screen.findByRole("dialog", { name: "Record a client payment" });
         expect(await within(dialog).findByText("On account - no invoice yet")).toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Amount received"), "2500");
+        expect(within(dialog).getByLabelText("Amount received")).toHaveValue("2,500");
         await userEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
         await waitFor(() => expect(recorded).toEqual([expect.objectContaining({ amount: 2500, invoiceId: null })]));
     });
@@ -296,6 +297,7 @@ describe("a project's billing", () => {
         const firstAmount = within(dialog).getByLabelText("Invoice 1 amount");
         await userEvent.clear(firstAmount);
         await userEvent.type(firstAmount, "5000");
+        expect(firstAmount).toHaveValue("5,000");
         expect(within(dialog).getByText(/The invoices add up to .* short of/)).toBeInTheDocument();
         await userEvent.click(within(dialog).getByRole("button", { name: "Schedule 3 invoices" }));
         expect(planned).toBe(false);
