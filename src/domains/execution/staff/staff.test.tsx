@@ -106,6 +106,19 @@ describe("a site staff member's daily log", () => {
         expect(asked.at(-1)?.get("projectId")).toBe("30");
     });
 
+    it("keeps a closed site in the list, greyed out, since it takes no new logs", async () => {
+        const closed = { id: 32, title: "Rawda Residences, Block A", clientName: null, status: "completed", location: null, assignedAt: "2026-07-01T08:00:00Z" };
+        renderApp("/execution/daily-log", tarek,
+            http.get("/api/me/sites", () => HttpResponse.json([...sites, closed])),
+            http.get("/api/me/site-logs", () => HttpResponse.json(page([]))),
+            ...siteHandlers);
+        const form = await screen.findByRole("form", { name: "Write a log" });
+        expect(within(form).getByText("Completed and archived sites take no new logs.")).toBeInTheDocument();
+        await userEvent.click(within(form).getByLabelText("Site"));
+        expect(screen.getByRole("option", { name: "Rawda Residences, Block A (completed)" })).toHaveAttribute("aria-disabled", "true");
+        expect(screen.getByRole("option", { name: "Mar Mikhael loft renovation" })).not.toHaveAttribute("aria-disabled", "true");
+    });
+
     it("lists the sites they oversee, each opening its page", async () => {
         renderApp("/execution/sites", tarek, http.get("/api/me/sites", () => HttpResponse.json(sites)), ...siteHandlers);
         const list = await screen.findByRole("list", { name: "My sites" });
@@ -182,6 +195,21 @@ describe("an Execution person's profile", () => {
         expect(within(recent).getByText("Plasterboard · Mar Mikhael loft renovation")).toBeInTheDocument();
         const projects = (screen.getAllByText("Projects").find((e) => e.classList.contains("panel-title")))!.closest(".panel") as HTMLElement;
         expect(within(projects).getByText("Mar Mikhael loft renovation")).toBeInTheDocument();
+    });
+
+    it("pages their recent activity, ten records at a time", async () => {
+        const asked: (string | null)[] = [];
+        renderApp("/execution/profile", tarek,
+            http.get("/api/me/site-records", ({ request }) => {
+                const q = new URL(request.url).searchParams;
+                asked.push(`${q.get("recentPage")}/${q.get("recentPageSize")}`);
+                return HttpResponse.json({ ...records, recentTotal: 23 });
+            }),
+            ...siteHandlers);
+        const recent = await screen.findByLabelText("Recent activity");
+        await waitFor(() => expect(asked).toEqual(["1/10"]));
+        await userEvent.click(await within(recent).findByRole("button", { name: /next/i }));
+        await waitFor(() => expect(asked.at(-1)).toBe("2/10"));
     });
 
     it("shows someone else's records to people with employee:view", async () => {

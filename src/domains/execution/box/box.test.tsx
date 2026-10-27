@@ -16,41 +16,87 @@ const row = (id: number, title: string, over: Partial<BoxProject> = {}): BoxProj
 const villa = row(31, "Dbayeh marina villa", { contributed: 6000, cashProfit: 2400 });
 const loft = row(30, "Mar Mikhael loft", { contributed: 1000, fromBox: 200, cashProfit: -700 });
 const lobby = row(32, "Achrafieh lobby", { status: "completed", boxState: "pending", contributed: 1500, cashProfit: 300 });
+const shop = row(33, "Jbeil shop", { status: "completed", boxState: "removed", contributed: 0, cashProfit: -2100 });
 const box: Schemas["BoxResponse"] = {
-    balance: 6300, currency: "USD", contributing: [villa, loft, lobby], contributedTotal: 8500, inTheRed: [loft], pending: [lobby],
+    balance: 6300, currency: "USD", contributing: [villa, loft, lobby], contributedTotal: 8500, inTheRed: [shop, loft], pending: [lobby],
 };
 const entries = {
     items: [
         { id: 3, kind: "transfer", amount: -200, project: { id: 30, title: loft.title }, note: "Tiles", createdAt: "2026-09-29T09:00:00Z", by: { id: 1, name: "Rana Haddad" } },
         { id: 2, kind: "payment_in", amount: 6000, project: { id: 31, title: villa.title }, note: null, createdAt: "2026-09-20T09:00:00Z", by: { id: 1, name: "Rana Haddad" } },
     ],
-    page: 1, pageSize: 20, totalCount: 2,
+    page: 1, pageSize: 30, totalCount: 2,
 };
 const boxHandlers = [
     http.get("/api/execution/box", () => HttpResponse.json(box)),
     http.get("/api/execution/box/entries", () => HttpResponse.json(entries)),
 ];
+const titles = (table: HTMLElement) => within(table).getAllByRole("row").slice(1, -1).map((r) => within(r).getAllByRole("cell")[0].querySelector("a")!.textContent);
 
 describe("the Execution box", () => {
-    it("shows its balance, who waits for a decision, who is in the red, who put money in and every movement", async () => {
+    it("opens on its contributors: the vault first, then every project, the deepest in the red reddest", async () => {
         renderApp("/execution/box", personas.superAdmin, ...boxHandlers, ...siteHandlers);
         expect(await screen.findByRole("heading", { name: "The box" })).toBeInTheDocument();
-        expect((await screen.findByText("In the box")).parentElement).toHaveTextContent(money.fmt(6300));
+        expect(screen.getByRole("tab", { name: "Contributors" })).toHaveAttribute("aria-selected", "true");
+        const vault = (await screen.findByText("In the box")).parentElement!;
+        expect(vault).toHaveTextContent(money.fmt(6300));
 
-        const pending = screen.getByLabelText("Waiting for a decision");
-        expect(within(pending).getAllByRole("row").slice(1).map((r) => r.textContent)).toEqual([expect.stringContaining("Achrafieh lobby")]);
+        const projects = screen.getByLabelText("Projects");
+        // the vault comes before the table
+        expect(vault.compareDocumentPosition(projects) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        // deepest in the red first, and a site that left the box but is in the red is there too
+        expect(titles(projects)).toEqual(["Jbeil shop", "Mar Mikhael loft", "Achrafieh lobby", "Dbayeh marina villa"]);
+        const profit = (title: string) => (within(projects).getByText(title).closest("tr") as HTMLElement).querySelectorAll("td")[4] as HTMLElement;
+        expect(profit("Jbeil shop")).toHaveAttribute("data-red", "60");
+        expect(profit("Mar Mikhael loft")).toHaveAttribute("data-red", "28");
+        expect(profit("Dbayeh marina villa")).not.toHaveAttribute("data-red");
+        expect(within(projects).getByText("Jbeil shop").closest("tr")).toHaveTextContent("Out of the box");
+        expect(within(projects).getByText("Achrafieh lobby").closest("tr")).toHaveTextContent("Decision due");
+        expect(within(projects).getAllByRole("row").at(-1)).toHaveTextContent(`Total put in${money.exact(8500)}`);
+        expect(within(projects).getAllByRole("button", { name: /Move money to/ })).toHaveLength(2);
 
-        const red = screen.getByLabelText("In the red");
-        expect(within(red).getByText("Mar Mikhael loft").closest("tr")).toHaveTextContent(money.exact(-700));
-        expect(within(red).queryByText("Dbayeh marina villa")).not.toBeInTheDocument();
+        // a site closed by someone who can't see money waits below
+        expect(screen.getByLabelText("Waiting for a decision")).toHaveTextContent("Achrafieh lobby");
+        expect(screen.queryByLabelText("Transactions")).not.toBeInTheDocument();
+    });
 
-        const contributing = screen.getByLabelText("Contributing projects");
-        expect(within(contributing).getAllByRole("row").at(-1)).toHaveTextContent(`Total put in${money.exact(8500)}`);
-        expect(within(contributing).getByText("Achrafieh lobby").closest("tr")).toHaveTextContent("Decision due");
+    it("filters the projects by name, by red or green, and sorts them", async () => {
+        renderApp("/execution/box", personas.superAdmin, ...boxHandlers, ...siteHandlers);
+        const projects = await screen.findByLabelText("Projects");
+        await userEvent.click(within(projects).getByRole("tab", { name: "In the green" }));
+        expect(titles(projects)).toEqual(["Achrafieh lobby", "Dbayeh marina villa"]);
+        await userEvent.click(within(projects).getByRole("tab", { name: "In the red" }));
+        expect(titles(projects)).toEqual(["Jbeil shop", "Mar Mikhael loft"]);
+        await userEvent.click(within(projects).getByRole("tab", { name: "All" }));
 
-        const moves = await within(screen.getByLabelText("Transactions")).findAllByRole("row");
-        expect(moves[1]).toHaveTextContent(`Moved to projectTilesMar Mikhael loftRana Haddad−${money.exact(200)}`);
-        expect(moves[2]).toHaveTextContent(`+${money.exact(6000)}`);
+        await userEvent.click(within(projects).getByLabelText("Sort the projects"));
+        await userEvent.click(screen.getByRole("option", { name: "Most put in first" }));
+        expect(titles(projects)).toEqual(["Dbayeh marina villa", "Achrafieh lobby", "Mar Mikhael loft", "Jbeil shop"]);
+
+        await userEvent.type(within(projects).getByLabelText("Search the projects"), "mar");
+        expect(titles(projects)).toEqual(["Dbayeh marina villa", "Mar Mikhael loft"]);
+    });
+
+    it("lists every movement on its own tab, 30 a page, searched and filtered by the API", async () => {
+        const asked: URLSearchParams[] = [];
+        renderApp("/execution/box?tab=transactions", personas.superAdmin,
+            http.get("/api/execution/box/entries", ({ request }) => { asked.push(new URL(request.url).searchParams); return HttpResponse.json(entries); }),
+            ...boxHandlers, ...siteHandlers);
+        const moves = await screen.findByLabelText("Transactions");
+        const rows = await within(moves).findAllByRole("row");
+        expect(rows[1]).toHaveTextContent(`Moved to projectTilesMar Mikhael loftRana Haddad−${money.exact(200)}`);
+        expect(rows[2]).toHaveTextContent(`+${money.exact(6000)}`);
+        expect(screen.queryByText("In the box")).not.toBeInTheDocument();
+        expect(asked[0].get("pageSize")).toBe("30");
+
+        await userEvent.click(within(moves).getByLabelText("Filter by movement"));
+        await userEvent.click(screen.getByRole("option", { name: "Moved to project" }));
+        await userEvent.click(within(moves).getByLabelText("Filter by project"));
+        await userEvent.click(screen.getByRole("option", { name: "Jbeil shop" }));
+        await userEvent.type(within(moves).getByLabelText("Search the transactions"), "tiles");
+        await waitFor(() => expect(asked.at(-1)?.get("search")).toBe("tiles"));
+        expect(asked.at(-1)?.get("kind")).toBe("transfer");
+        expect(asked.at(-1)?.get("projectId")).toBe("33");
     });
 
     it("moves money to a site in the red, never more than brings it back to zero", async () => {
