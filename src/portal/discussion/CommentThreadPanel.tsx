@@ -116,6 +116,7 @@ export default function CommentThreadPanel({ discussion, projectId, itemId, summ
             <div className="dp-foot">
                 <MentionComposer label="Comment" placeholder="Write a comment. Type @ to mention someone." max={MAX_COMMENT}
                     people={summary.participants} closed={closed}
+                    fillFor={discussion.side === "staff" ? { projectId, itemId } : undefined}
                     onSubmit={async (draft) => { await add.mutateAsync({ itemId, ...draft }); }} />
             </div>
         </div>

@@ -10,23 +10,23 @@ export type ProtonSurface = NonNullable<Schemas["ProtonSurface"]>;
 export type SurfaceTarget = { kind: "go"; path: string } | { kind: "opener"; id: string } | { kind: "log_work" };
 
 /** `itemId`: a project file, for its comments or its thread in the discussion. */
-type Ask = { p: Permissions; domain: Domain | null; id: number | null; section: string | null; tab: string | null; itemId?: number | null };
+export type Ask = { p: Permissions; domain: Domain | null; id: number | null; section: string | null; tab: string | null; itemId?: number | null };
 
 /** The settings sections and company tabs a link may name: the pages' own. */
 const SETTINGS = ["general", "time", "finance", "projects", "notifications", "teams", "admins", "data"] as const;
 const COMPANY_TABS = ["overview", "people", "teams"] as const;
 
-const inArea = (a: Ask, path: string, allowed = true): SurfaceTarget | null =>
+export const inArea = (a: Ask, path: string, allowed = true): SurfaceTarget | null =>
     allowed && a.domain && canOpen(a.p, a.domain, path.split("?")[0]) ? { kind: "go", path: `/${a.domain}/${path}` } : null;
-const inCompany = (a: Ask, path: string, allowed = true): SurfaceTarget | null =>
+export const inCompany = (a: Ask, path: string, allowed = true): SurfaceTarget | null =>
     allowed && companyRoutes.find((r) => r.path === path.split("?")[0])?.access(a.p) ? { kind: "go", path: `/company/${path}` } : null;
-const onRecord = (a: Ask, page: "projects" | "clients", query: string, allowed: boolean) =>
+export const onRecord = (a: Ask, page: "projects" | "clients", query: string, allowed: boolean) =>
     a.id != null ? inArea(a, `${page}/${a.id}?${query}`, allowed) : null;
 /** In the Website area, which isn't a business: for those who may enter it and open the page. */
-const inWebsite = (a: Ask, path: string, allowed = true): SurfaceTarget | null =>
+export const inWebsite = (a: Ask, path: string, allowed = true): SurfaceTarget | null =>
     allowed && a.p.hasWebsiteArea && websiteRoutes.find((r) => r.path === path.split("?")[0])?.access(a.p) ? { kind: "go", path: `/website/${path}` } : null;
 /** A Design project's files and client portal tabs: the page itself works out who may see which part. */
-const onDesignProject = (a: Ask, query: string, allowed = true) => (a.domain === "design" ? onRecord(a, "projects", query, allowed) : null);
+export const onDesignProject = (a: Ask, query: string, allowed = true) => (a.domain === "design" ? onRecord(a, "projects", query, allowed) : null);
 const seesPortalFiles = (p: Permissions) => p.hasAny(P.CLIENT_PORTAL_MANAGE, P.CLIENT_ACCESS_MANAGE);
 
 /**

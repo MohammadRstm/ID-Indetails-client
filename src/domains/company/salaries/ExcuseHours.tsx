@@ -9,6 +9,8 @@ import { DAYS, fmtDate, fmtH, fmtMonthY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useAddExcuse, useRemoveExcuse, type HourExcuse, type SalaryDetail } from "./salariesApi";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const dayList = (days: string[]) => days.map((d) => fmtDate(d)).join(", ");
@@ -50,6 +52,31 @@ export default function ExcuseHours({ detail, month, canExcuse }: ExcuseHoursPro
     const pickedMins = detail.workingDays.filter((d) => picked.includes(d.date)).reduce((t, d) => t + d.requiredMinutes, 0);
     // only a salary loses anything for unpaid time; without the hours rule there is nothing else to excuse
     const canUnpaid = monthly;
+    // Proton opens the form and fills it (only while pay-rule actions are on); the person checks it and excuses or records
+    const proton = useProtonForm("hour_excuse", s.userId, (fill) => {
+        const v = fill.hourExcuse;
+        const filled: string[] = [];
+        if (!v || !canExcuse || !(ruled || canUnpaid)) return filled;
+        // unpaid only where it costs something; paid only under the hours rule
+        if (v.excused === false && !canUnpaid) return filled;
+        if (v.excused === true && !ruled) return filled;
+        const days = (v.days ?? []).filter((d) => detail.workingDays.some((w) => w.date === d) && !done.has(d));
+        if ((v.days?.length ?? 0) > 0 && days.length === 0) return filled;
+        setOpen(true);
+        add.reset();
+        if (v.excused != null && unpaid !== !v.excused) { setUnpaid(!v.excused); filled.push(v.excused ? "paid" : "unpaid"); }
+        if (days.length > 0) {
+            setMode("days");
+            setPicked(days);
+            filled.push(plural(days.length, "day"));
+        } else if (v.hours != null) {
+            setMode("hours");
+            setHours(String(v.hours));
+            filled.push("hours");
+        }
+        fillEmpty(note, v.reason, setNote, "reason", filled);
+        return filled;
+    });
     if (!ruled && !canUnpaid && detail.excuses.length === 0) return null;
 
     function start() {
@@ -101,7 +128,8 @@ export default function ExcuseHours({ detail, month, canExcuse }: ExcuseHoursPro
             {canExcuse && (ruled || canUnpaid) && (!open ? (
                 <button className="btn btn-sm" onClick={start}><Icon name="plus" />{ruled ? "Excuse hours or days…" : "Record unpaid leave…"}</button>
             ) : (
-                <div className="hl-excuse-form">
+                <div className="hl-excuse-form" {...proton.guard}>
+                    <FilledNote fields={proton.filled} />
                     <div className="spread" style={{ marginBottom: 8 }}>
                         <Segmented aria-label="What to excuse" value={mode} onChange={setMode}
                             options={[{ value: "hours", label: "Hours" }, { value: "days", label: "Days off" }]} />

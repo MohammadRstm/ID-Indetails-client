@@ -16,6 +16,8 @@ import Icon from "@/shared/icons/Icon";
 import { useAddComment, useEmployeeTeam } from "../projects/projectWorkApi";
 import { commentCount } from "./entryWords";
 import { loadFailed } from "@/api/queryState";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 
 type Comment = Schemas["WorkEntryCommentResponse"];
 
@@ -65,6 +67,18 @@ function Compose({ entryId, author, domain, canSeeTeam }: { entryId: number; aut
     const team = who?.team && who.domain === domain ? who.team : null;
     const [text, setText] = useState("");
     const [send, setSend] = useState(false);
+    // Proton writes the comment the person asked for; they read it and press Comment
+    const proton = useProtonForm("work_entry_comment", entryId, (fill) => {
+        const v = fill.workEntryComment;
+        const done: string[] = [];
+        if (!v) return done;
+        fillEmpty(text, v.body, setText, "comment", done);
+        if (v.shareWithTeam && team && !send) {
+            setSend(true);
+            done.push("send to the group chat");
+        }
+        return done;
+    });
 
     function submit() {
         if (!text.trim()) return;
@@ -81,9 +95,10 @@ function Compose({ entryId, author, domain, canSeeTeam }: { entryId: number; aut
     }
 
     return (
-        <div className="cm-compose">
+        <div className="cm-compose" {...proton.guard}>
             <Avatar person={{ name: fullName(me), photoFileId: me.photoFileId }} size={30} />
             <div className="grow">
+                <FilledNote fields={proton.filled} />
                 <textarea className="textarea cm-input" rows={2} placeholder="Add a comment…" aria-label="Add a comment" value={text} onChange={(e) => setText(e.target.value)} />
                 <div className="cm-actions">
                     {team && (

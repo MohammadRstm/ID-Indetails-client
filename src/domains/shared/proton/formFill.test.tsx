@@ -6,9 +6,8 @@ import Composer from "@/domains/shared/messages/Composer";
 import FilledNote from "./FilledNote";
 import { fillEmpty, fillForm, setDraft, useProtonForm, type FormFill } from "./formFill";
 
-const fill = (fields: Partial<FormFill>): FormFill => ({
-    form: "client", id: null, client: null, meeting: null, newProject: null, editProject: null, reportBug: null, invite: null, message: null, logWork: null, ...fields,
-});
+// a fill gives one form's values: the other slots are left out
+const fill = (fields: Partial<FormFill>): FormFill => ({ form: "client", id: null, ...fields }) as FormFill;
 
 function ClientForm({ recordId = null, onSubmit }: { recordId?: number | null; onSubmit: () => void }) {
     const [name, setName] = useState("");
@@ -132,6 +131,35 @@ describe("Proton filling a form after opening it in the same answer", () => {
         } finally {
             vi.useRealTimers();
         }
+    });
+});
+
+function RequirementForm({ projectId }: { projectId: number }) {
+    const [text, setText] = useState("");
+    const proton = useProtonForm("requirement", null, (f) => {
+        const done: string[] = [];
+        fillEmpty(text, f.requirement?.text, setText, "requirement", done);
+        return done;
+    }, projectId);
+    return <input aria-label={`Requirement for ${projectId}`} value={text} onChange={(e) => setText(e.target.value)} {...proton.guard} />;
+}
+
+describe("Proton filling a new record's form on a project", () => {
+    const forProject = (projectId: number) => fill({ form: "requirement", requirement: { projectId, text: "Lighting plan", deadline: null, assigneeIds: null } });
+
+    it("fills the form on the project the fill names, never another project's", () => {
+        render(<><RequirementForm projectId={5} /><RequirementForm projectId={6} /></>);
+        act(() => { fillForm(forProject(6)); });
+        expect(screen.getByRole("textbox", { name: "Requirement for 6" })).toHaveValue("Lighting plan");
+        expect(screen.getByRole("textbox", { name: "Requirement for 5" })).toHaveValue("");
+    });
+
+    it("leaves another project's form alone when only that one is open", () => {
+        render(<RequirementForm projectId={5} />);
+        let said = "";
+        act(() => { said = fillForm(forProject(6)); });
+        expect(said).toMatch(/something else/);
+        expect(screen.getByRole("textbox", { name: "Requirement for 5" })).toHaveValue("");
     });
 });
 

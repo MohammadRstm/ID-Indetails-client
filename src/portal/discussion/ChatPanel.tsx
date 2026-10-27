@@ -162,6 +162,7 @@ export default function ChatPanel({ discussion, projectId, summary, suggestRepli
                 <MentionComposer label="Message" placeholder="Write a message. Type @ to mention someone." max={MAX_MESSAGE}
                     people={summary.participants} closed={closed}
                     suggestion={dismissed === newestId ? null : suggestion} onDismissSuggestion={() => setDismissed(newestId)}
+                    fillFor={discussion.side === "staff" ? { projectId, itemId: null } : undefined}
                     onSubmit={async (draft) => { await send.mutateAsync(draft); }} />
             </div>
         </div>

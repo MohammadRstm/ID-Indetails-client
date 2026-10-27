@@ -21,6 +21,12 @@ import ExcuseHours from "./ExcuseHours";
 import { useSalary, type SalaryDetail, type SalaryRow } from "./salariesApi";
 import { loadFailed } from "@/api/queryState";
 
+/** A person's drawer opened by link (?person={id}): their row comes with their month, wherever they are in the list. */
+export function LinkedSalaryDrawer({ userId, month, multiplier, onClose }: Omit<SalaryDrawerProps, "row"> & { userId: number }) {
+    const row = useSalary(userId, month).data?.salary;
+    return row ? <SalaryDrawer row={row} month={month} multiplier={multiplier} onClose={onClose} /> : null;
+}
+
 const cash = (v: number, cur: string, cents = false) => money.exact(v, cur, cents ? { cents: true } : undefined);
 
 type SalaryDrawerProps = {

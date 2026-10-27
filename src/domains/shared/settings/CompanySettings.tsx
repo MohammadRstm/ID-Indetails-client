@@ -14,6 +14,8 @@ import { setTheme, useTheme } from "@/shared/theme";
 import { uploadFile } from "../../design/work/workApi";
 import { companyToday, DAYS_LONG } from "@/shared/format/time";
 import { useCurrentUser } from "@/app/session/useSession";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillChange, useProtonForm } from "@/domains/shared/proton/formFill";
 import { useSaveCompanySettings, useSetLogo, useSetMyProtonSuggestions, useSetProtonFiles, useSetProtonSuggestions, useSetWorkingTime, useWorkingTime, type CompanySettings, type WorkingTime } from "./settingsApi";
 import { daysText, nextChange } from "./workingTime";
 import { notSaved, saved } from "./settingsToasts";
@@ -82,6 +84,17 @@ function Company({ settings: s }: { settings: CompanySettings }) {
     const [website, setWebsite] = useState(s.website ?? "");
     const [address, setAddress] = useState(s.address ?? "");
     const [contactEmail, setContactEmail] = useState(s.contactEmail ?? "");
+    // Proton fills the company's details: the person checks them and presses Save
+    const proton = useProtonForm("company_details", null, (fill) => {
+        const v = fill.companyDetails;
+        const done: string[] = [];
+        if (!v || !canEdit) return done;
+        fillChange(name, v.name, setName, "company name", done);
+        fillChange(website, v.website, setWebsite, "website", done);
+        fillChange(address, v.address, setAddress, "address", done);
+        fillChange(contactEmail, v.contactEmail, setContactEmail, "contact email", done);
+        return done;
+    });
     const saveEmail = useSetContactEmail();
     const [uploading, setUploading] = useState(false);
     const detailsChanged = name.trim() !== s.name || website.trim() !== (s.website ?? "") || address.trim() !== (s.address ?? "");
@@ -114,7 +127,8 @@ function Company({ settings: s }: { settings: CompanySettings }) {
     return (
         <div className="panel">
             <div className="panel-head"><div><div className="panel-title">Company</div>{!canEdit && <div className="panel-sub">Only a super admin can change these.</div>}</div></div>
-            <div className="panel-body">
+            <div className="panel-body" {...proton.guard}>
+                <FilledNote fields={proton.filled} />
                 <div className="grid g-2">
                     <div className="field">
                         <label className={canEdit ? "label required" : "label"} htmlFor="s-name">Company name</label>

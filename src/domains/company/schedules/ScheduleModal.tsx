@@ -12,6 +12,8 @@ import { cx } from "@/shared/utils/cx";
 import { daysText, hoursText, weekOrder } from "@/domains/shared/settings/workingTime";
 import { useSetSchedule, type PersonSchedule } from "./schedulesApi";
 import { companyWeekOf, sameWeek, weekMinutes, weekOf, workDaysOf, type Week } from "./weekDays";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { useProtonForm } from "@/domains/shared/proton/formFill";
 
 /** What a schedule decides about this person's pay, from the rules Salaries uses. */
 function payEffect(person: PersonSchedule, multiplier: number): string {
@@ -48,6 +50,25 @@ export default function ScheduleModal({ person, companyWeek, onClose }: Schedule
     const first = person.name.split(" ")[0];
     const firstOn = order.find((d) => days[d]);
     const sub = [person.position, person.team?.name, person.domain ? AREAS[person.domain as Domain]?.label : null].filter(Boolean).join(" · ");
+    // Proton sets the week asked for (only while pay-rule actions are on): the days given are the working days, the rest are off
+    const proton = useProtonForm("schedule", person.userId, (fill) => {
+        const v = fill.schedule;
+        if (!v) return [];
+        if (v.followsDefault) {
+            if (sameWeek(days, def)) return [];
+            setDays(def);
+            return ["the company's week"];
+        }
+        if (!v.days || v.days.length === 0) return [];
+        const next: Week = {};
+        for (let d = 0; d < 7; d++) next[d] = null;
+        for (const day of v.days) {
+            if (day.weekday != null && day.startMinute != null && day.endMinute != null) next[day.weekday] = { s: day.startMinute, e: day.endMinute };
+        }
+        if (sameWeek(days, next)) return [];
+        setDays(next);
+        return [`working days (${daysText(workDaysOf(next), formatSettings().weekStart)})`];
+    });
 
     function submit(toDefault: boolean) {
         const followsDefault = toDefault || same;
@@ -79,7 +100,8 @@ export default function ScheduleModal({ person, companyWeek, onClose }: Schedule
                     <button className="btn btn-primary" disabled={save.isPending} onClick={() => submit(false)}>Save</button>
                 </>
             }>
-            <div className="banner hold" role="note" style={{ marginBottom: 12 }}>
+            <FilledNote fields={proton.filled} />
+            <div className="banner hold" role="note" style={{ marginBottom: 12 }} {...proton.guard}>
                 <Icon name="alert" />
                 <div><b>This changes {first}'s pay</b> from {fmtDate(from)}. {payEffect(person, companyWeek.overtimeMultiplier)} Past days are paid as they were.</div>
             </div>

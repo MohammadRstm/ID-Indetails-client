@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useSearchParams } from "react-router";
 import { errorMessage } from "@/api/errors";
 import { CostRow } from "@/shared/components/Data/Money";
 import Pager from "@/shared/components/Data-Tables/Pager";
@@ -68,6 +69,13 @@ export default function MaterialsPanel({ project }: { project: Project }) {
     const onlyType = type && !supplier && !by && !period && !q.trim() ? d?.types.find((t) => t.key === type)?.label : null;
     const filterLabel = onlyType ?? "filtered";
     const canAdd = d?.canAdd ?? false;
+    // ?materials=add opens the sheet (Proton fills it there)
+    const [params, setParams] = useSearchParams();
+    const linked = canAdd && params.get("materials") === "add";
+    const closeAdding = () => {
+        setAdding(false);
+        if (params.has("materials")) { params.delete("materials"); setParams(params, { replace: true }); }
+    };
     const items = d?.items ?? [];
     // a page emptied by a deletion or a filter falls back to the last one there is
     const pages = Math.max(1, Math.ceil((d?.matching.count ?? 0) / PER_PAGE));
@@ -204,7 +212,7 @@ export default function MaterialsPanel({ project }: { project: Project }) {
                             </div>
                         )}
             </div>
-            {adding && <MaterialSheet project={project} onClose={() => setAdding(false)} />}
+            {(adding || linked) && <MaterialSheet project={project} onClose={closeAdding} />}
         </div>
     );
 }

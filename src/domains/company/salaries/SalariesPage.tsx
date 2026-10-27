@@ -20,7 +20,7 @@ import Icon from "@/shared/icons/Icon";
 import { hasFixedSalary, HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
 import type { Schemas } from "@/api/types";
 import { Banner } from "@/shared/components/Data/Bits";
-import SalaryDrawer from "./SalaryDrawer";
+import SalaryDrawer, { LinkedSalaryDrawer } from "./SalaryDrawer";
 import SalaryYear from "./SalaryYear";
 import { useSalaries, type SalaryRole, type SalaryRow } from "./salariesApi";
 import { clickable } from "@/shared/utils/clickable";
@@ -108,6 +108,9 @@ export default function SalariesPage() {
     const ruled = sum?.expectedMinutes != null;
     const otPaid = sum ? sum.overtimeMinutes - sum.madeUpMinutes : 0;
     const multiplier = r?.overtimeMultiplier ?? 1;
+    // ?person={id} opens their month (Proton fills an excuse there)
+    const linkedPerson = Number(params.get("person")) || null;
+    const closeLinked = () => { params.delete("person"); setParams(params, { replace: true }); };
 
     const goMonth = (m: string) => { setPage(1); setParams(m === thisMonth ? {} : { month: m }, { replace: true }); };
     const goYear = (y: number) => setParams(y === thisYear ? { view: "year" } : { view: "year", year: String(y) }, { replace: true });
@@ -308,7 +311,8 @@ export default function SalariesPage() {
                     </div>
                 </>
             )}
-            {open && <SalaryDrawer row={open} month={month} multiplier={multiplier} onClose={() => setOpen(null)} />}
+            {open ? <SalaryDrawer row={open} month={month} multiplier={multiplier} onClose={() => setOpen(null)} />
+                : linkedPerson != null && <LinkedSalaryDrawer userId={linkedPerson} month={month} multiplier={multiplier} onClose={closeLinked} />}
         </div>
     );
 }

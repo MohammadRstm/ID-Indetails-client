@@ -16,6 +16,8 @@ import BillingSetupNotice from "./BillingSetupNotice";
 import InvoiceDoc, { ScaledDoc } from "./InvoiceDoc";
 import { billToContactOf, type DocFlash } from "./invoiceDocData";
 import { leftToInvoice, termOptions } from "./invoicePlan";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { fillChange, useProtonForm } from "@/domains/shared/proton/formFill";
 
 /** `key` is the saved line's id, or one made up for a line added here, so removing a line leaves the others' rows in place. */
 type Line = { key: string; description: string; amount: number };
@@ -48,6 +50,20 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
     const [notes, setNotes] = useState(existing?.notes ?? "");
     const [flash, setFlash] = useState<DocFlash>({ key: null, n: 0 });
     const termsDays = terms ?? settings?.defaultTermsDays ?? 0;
+    // Proton writes the lines (their amounts only when money actions are on and the person typed them), terms and
+    // note; a new invoice is this project's, a draft is the one asked for; the person reads it beside the document and saves
+    const proton = useProtonForm("invoice", existing?.id ?? null, (fill) => {
+        const v = fill.invoice;
+        const done: string[] = [];
+        if (!v) return done;
+        if (v.lines && v.lines.length > 0) {
+            setLines(v.lines.map((l) => ({ ...newLine(l.amount ?? 0), description: l.description ?? "" })));
+            done.push(existing ? `lines (were ${existing.lines.length})` : "lines");
+        }
+        if (v.termsDays != null && v.termsDays !== termsDays) { setTerms(v.termsDays); done.push("terms"); }
+        fillChange(notes, v.note, setNotes, "note", done);
+        return done;
+    }, existing ? null : project.id);
     const touched = (key: string) => setFlash((f) => ({ key, n: f.n + 1 }));
 
     const total = lines.reduce((t, l) => t + (Number(l.amount) || 0), 0);
@@ -108,8 +124,9 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
                     )}
                 </>
             }>
-            <div className="inv-edit">
+            <div className="inv-edit" {...proton.guard}>
                 <div className="inv-edit-form">
+                    <FilledNote fields={proton.filled} />
                     <div className="row wrap" style={{ gap: 8, marginBottom: 12 }}>
                         <span className="u" style={{ alignSelf: "center" }}>Suggested</span>
                         {remaining > 0 && <button className="chip" onClick={() => suggest(remaining, "Balance of the agreed fee")}>Remaining {money.short(remaining)}</button>}

@@ -20,6 +20,22 @@ import {
     type WebsiteContent,
 } from "./websiteApi";
 import { linkError, placeError, splitPosition } from "./websiteRules";
+import { useSearchParams } from "react-router";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { useProtonForm, type FormFill } from "@/domains/shared/proton/formFill";
+
+/** The values a fill gives, set over a row's own (only those it gives, and only when they differ), and their names. */
+function filled<Body extends Record<string, string>>(body: Body, given: Partial<Record<keyof Body, string | null | undefined>>, names: Partial<Record<keyof Body, string>>) {
+    let next = body;
+    const done: string[] = [];
+    for (const key of Object.keys(given) as (keyof Body)[]) {
+        const value = given[key];
+        if (value == null || value === body[key]) continue;
+        next = { ...next, [key]: value };
+        done.push(names[key] ?? String(key));
+    }
+    return { body: next, done };
+}
 
 /** The content once loaded; a skeleton, or what went wrong, until then. */
 function WithContent({ children }: { children: (content: WebsiteContent) => ReactNode }) {
@@ -36,6 +52,9 @@ type Problems = Record<string, string | false>;
 
 type ListSpec<Row extends { id: number }, Body> = {
     kind: ListKind;
+    /** The form Proton fills for a row of this list. */
+    form: "website_service" | "website_location" | "website_social_link";
+    fromFill: (fill: FormFill, body: Body) => { body: Body; done: string[] };
     /** What one row is called: "service", "office", "link". */
     noun: string;
     blank: Body;
@@ -50,13 +69,25 @@ type ListSpec<Row extends { id: number }, Body> = {
 /** One of the website's ordered lists, edited in place: add, change, remove (after asking) and move up or down. */
 function OrderedList<Row extends { id: number }, Body>({ spec, rows, canManage }: { spec: ListSpec<Row, Body>; rows: Row[]; canManage: boolean }) {
     const list = useWebsiteList<object>(spec.kind);
-    const [editing, setEditing] = useState<number | "new" | null>(null);
+    const [picked, setPicked] = useState<number | "new" | null>(null);
+    // ?add=1 opens a new row, ?edit={id} a row's editor (Proton fills them there)
+    const [params, setParams] = useSearchParams();
+    const linked = !canManage ? null : params.get("add") === "1" ? "new" as const : rows.find((r) => String(r.id) === params.get("edit"))?.id ?? null;
+    const editing = picked ?? linked;
+    const setEditing = (next: number | "new" | null) => {
+        setPicked(next);
+        if (next == null && (params.has("add") || params.has("edit"))) {
+            params.delete("add");
+            params.delete("edit");
+            setParams(params, { replace: true });
+        }
+    };
     const ids = rows.map((r) => r.id);
     return (
         <>
             {rows.length === 0 && editing !== "new" && <div className="muted">Nothing here yet.</div>}
             {rows.map((row, index) => editing === row.id
-                ? <RowEditor key={row.id} spec={spec} initial={spec.fromRow(row)} save={(body, done) => list.update.mutate({ id: row.id, body }, { onSuccess: done })}
+                ? <RowEditor key={row.id} recordId={row.id} spec={spec} initial={spec.fromRow(row)} save={(body, done) => list.update.mutate({ id: row.id, body }, { onSuccess: done })}
                     pending={list.update.isPending} error={list.update.error} onDone={() => setEditing(null)} />
                 : <ListRow key={row.id} view={spec.view(row)} noun={spec.noun} canManage={canManage} first={index === 0} last={index === rows.length - 1}
                     busy={list.order.isPending || list.remove.isPending}
@@ -64,7 +95,7 @@ function OrderedList<Row extends { id: number }, Body>({ spec, rows, canManage }
                     onMove={(by) => list.order.mutate(moved(ids, row.id, by))}
                     onRemove={(done) => list.remove.mutate(row.id, { onSettled: done })} />)}
             {editing === "new" && (
-                <RowEditor spec={spec} initial={spec.blank} save={(body, done) => list.add.mutate(body, { onSuccess: done })}
+                <RowEditor recordId={null} spec={spec} initial={spec.blank} save={(body, done) => list.add.mutate(body, { onSuccess: done })}
                     pending={list.add.isPending} error={list.add.error} onDone={() => setEditing(null)} />
             )}
             {(list.order.error ?? list.remove.error) != null && <FieldError message={errorMessage(list.order.error ?? list.remove.error)} />}
@@ -114,6 +145,8 @@ function ListRow({ view, noun, canManage, first, last, busy, onEdit, onMove, onR
 }
 
 type RowEditorProps<Row extends { id: number }, Body> = {
+    /** The row being edited, or null for a new one. */
+    recordId: number | null;
     spec: ListSpec<Row, Body>;
     initial: Body;
     save: (body: object, done: () => void) => void;
@@ -122,8 +155,14 @@ type RowEditorProps<Row extends { id: number }, Body> = {
     onDone: () => void;
 };
 
-function RowEditor<Row extends { id: number }, Body>({ spec, initial, save, pending, error, onDone }: RowEditorProps<Row, Body>) {
+function RowEditor<Row extends { id: number }, Body>({ recordId, spec, initial, save, pending, error, onDone }: RowEditorProps<Row, Body>) {
     const [body, setBody] = useState(initial);
+    // Proton fills the row asked for; the person saves it, and only then does the website show it
+    const proton = useProtonForm(spec.form, recordId, (fill) => {
+        const result = spec.fromFill(fill, body);
+        if (result.done.length > 0) setBody(result.body);
+        return result.done;
+    });
     const errors = useFormErrors();
     const problems = spec.problems(body);
     function submit() {
@@ -132,8 +171,9 @@ function RowEditor<Row extends { id: number }, Body>({ spec, initial, save, pend
         save(spec.clean(body), () => { toast({ text: "Saved", sub: "It's on the website", icon: "checkCircle" }); onDone(); });
     }
     return (
-        <div className="switch-row" style={{ alignItems: "flex-start" }}>
+        <div className="switch-row" style={{ alignItems: "flex-start" }} {...proton.guard}>
             <div className="grow" onKeyDown={(e) => { if (e.key === "Escape") onDone(); }}>
+                <FilledNote fields={proton.filled} />
                 {spec.fields(body, setBody, (field) => errors.show(field, problems[field]), errors.touch)}
                 {error != null && <FieldError message={errorMessage(error)} />}
             </div>
@@ -169,6 +209,8 @@ type LinkBody = { label: string; url: string };
 
 const SERVICES: ListSpec<WebsiteContent["services"][number], ServiceBody> = {
     kind: "services",
+    form: "website_service",
+    fromFill: (fill, b) => filled(b, { title: fill.websiteService?.title, description: fill.websiteService?.description }, { title: "service" }),
     noun: "service",
     blank: { title: "", description: "" },
     fromRow: (s) => ({ title: s.title, description: s.description }),
@@ -191,6 +233,14 @@ function positionInput(b: LocationBody, which: "latitude" | "longitude", value: 
 
 const LOCATIONS: ListSpec<WebsiteContent["locations"][number], LocationBody> = {
     kind: "locations",
+    form: "website_location",
+    fromFill: (fill, b) => {
+        const v = fill.websiteLocation;
+        const result = filled(b, { country: v?.country, city: v?.city, address: v?.address, phone: v?.phone }, {});
+        // a new place gets its own point once saved
+        const moved = result.body.city !== b.city || result.body.country !== b.country;
+        return moved ? { body: { ...result.body, latitude: "", longitude: "" }, done: result.done } : result;
+    },
     noun: "office",
     blank: { city: "", country: "", latitude: "", longitude: "", address: "", phone: "" },
     // a point picked in the city goes back unchanged, so it stays while the city does
@@ -226,6 +276,8 @@ const LOCATIONS: ListSpec<WebsiteContent["locations"][number], LocationBody> = {
 
 const LINKS: ListSpec<WebsiteContent["socialLinks"][number], LinkBody> = {
     kind: "social-links",
+    form: "website_social_link",
+    fromFill: (fill, b) => filled(b, { label: fill.websiteSocialLink?.label, url: fill.websiteSocialLink?.url }, { label: "name", url: "link" }),
     noun: "link",
     blank: { label: "", url: "" },
     fromRow: (l) => ({ label: l.label, url: l.url }),
