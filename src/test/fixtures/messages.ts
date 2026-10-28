@@ -3,8 +3,8 @@ import type { Schemas } from "@/api/types";
 
 /*
  * Chats as Rana sees them. The development seed has no messages, so these are written in the API's shape:
- * the Interiors team's chat (Sarah and Lina, a mention of Rana, a shared task comment) and a direct chat
- * with Nadia.
+ * Announcements (one of Rana's), the Interiors team's chat (Sarah and Lina, a mention of Rana, a shared task
+ * comment) and a direct chat with Nadia.
  */
 
 type Message = Schemas["MessageResponse"];
@@ -47,10 +47,16 @@ export const withNadia = [
     message(202, rana, "Yes, after lunch.", "2026-09-30T07:05:00Z", { viaProton: true }),
 ];
 
+export const announcements = [
+    message(301, rana, "The office is closed on Friday.", "2026-09-28T07:00:00Z"),
+];
+
 export const messages = {
     contacts: [people.nadia, people.sarah, people.lina, people.karim, people.tarek],
     members: [rana, people.nadia, people.sarah, people.lina],
     conversations: [
+        // always first, whoever reads it
+        { type: "announcements", team: null, person: null, lastMessage: announcements[0], unread: 0, unreadMention: false },
         { type: "group", team: { id: 13, name: "Interiors", domain: "design" }, person: null, lastMessage: interiors[3], unread: 2, unreadMention: true },
         { type: "group", team: { id: 20, name: "Site", domain: "execution" }, person: null, lastMessage: null, unread: 0, unreadMention: false },
         { type: "dm", team: null, person: people.nadia, lastMessage: withNadia[1], unread: 0, unreadMention: false },
@@ -66,5 +72,7 @@ export const messageHandlers = [
     http.get("/api/messages/direct/2", () => HttpResponse.json({ items: withNadia, hasMore: false })),
     http.get("/api/messages/direct/:id", () => HttpResponse.json({ items: [], hasMore: false })),
     http.post("/api/messages/:type/:id/read", () => HttpResponse.json({ unread: 0, mention: false })),
+    http.get("/api/messages/announcements", () => HttpResponse.json({ items: announcements, hasMore: false })),
+    http.post("/api/messages/announcements/read", () => HttpResponse.json({ unread: 0, mention: false })),
     http.get("/api/presence", () => HttpResponse.json({ online: [3] })),
 ];

@@ -5452,6 +5452,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/messages/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Before?: number;
+                    Limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MessagePageResponse"];
+                        "text/json": components["schemas"]["MessagePageResponse"];
+                        "text/plain": components["schemas"]["MessagePageResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SendMessageRequest"];
+                    "application/json": components["schemas"]["SendMessageRequest"];
+                    "text/json": components["schemas"]["SendMessageRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MessageResponse"];
+                        "text/json": components["schemas"]["MessageResponse"];
+                        "text/plain": components["schemas"]["MessageResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/announcements/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MessagesBadgeResponse"];
+                        "text/json": components["schemas"]["MessagesBadgeResponse"];
+                        "text/plain": components["schemas"]["MessagesBadgeResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/messages/badge": {
         parameters: {
             query?: never;
@@ -14868,7 +14972,7 @@ export interface components {
             unreadMention: boolean;
         };
         /** @enum {unknown} */
-        ConversationType: "dm" | "group";
+        ConversationType: "dm" | "group" | "announcements";
         /** @enum {unknown} */
         CostSource: "labour" | "expenses" | "materials" | "ground_labour";
         CostWeekResponse: {
