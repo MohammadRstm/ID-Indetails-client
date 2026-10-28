@@ -9,6 +9,8 @@ export type Notification = Schemas["NotificationResponse"];
 export type Reader = {
     userId: number;
     isAdmin: boolean;
+    /** Their meetings are on the company overview. */
+    isSuperAdmin?: boolean;
     /** They log Design work and keep it in My work: the words about logging are for them. */
     logsWork: boolean;
     /** Their own business, or the one they are looking at; a notification about a project uses the project's. */
@@ -51,6 +53,13 @@ export function describe(note: Notification, reader: Reader): NotificationView {
     // pages about the reader themself: an employee's own profile or pay; admins have none of their own
     const mine = !reader.isAdmin && reader.domain ? `/${reader.domain}/profile` : undefined;
     const by = note.actor ? `By ${who}` : undefined;
+    // admins keep meetings on their Overview's tab, super admins on the company overview's, Design employees on a page
+    const meetings = reader.isSuperAdmin ? "/company/overview?tab=meetings"
+        : !d ? undefined
+            : reader.isAdmin ? `/${d}/overview?tab=meetings`
+                : d === "design" ? "/design/meetings" : undefined;
+    const when = s(p.startsAt) ? `${fmtDayDate(s(p.startsAt))} · ${fmtRange(s(p.startsAt), s(p.endsAt) || s(p.startsAt))}` : undefined;
+    const topic = p.topic ? `: ${s(p.topic)}` : "";
 
     switch (note.kind) {
         case "requirement_assigned":
@@ -90,15 +99,34 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 text: `Weekly summary: you logged ${fmtDur(n(p.minutes))} last week`,
                 sub: `Across ${plural(n(p.projects), "project")} · ${plural(n(p.entries), "entry", "entries")}`, icon: "reports", route: "/design/my-work",
             };
-
-        case "meeting_scheduled": {
-            const start = s(p.startsAt), end = s(p.endsAt);
+        // the morning after a working day logged short: a reminder, as logging stays open all month
+        case "hours_missed":
             return {
-                text: `${s(p.authorName) || who} scheduled a meeting on ${title}`,
-                sub: start ? `${fmtDayDate(start)} · ${fmtRange(start, end || start)}${p.topic ? ` · ${s(p.topic)}` : ""}` : undefined,
-                icon: "calendar", route: d ? `/${d}/meetings` : undefined,
+                text: `You logged ${fmtH(n(p.loggedMinutes))} of the ${fmtH(n(p.requiredMinutes))} ${fmtDate(s(p.day))} asked for`,
+                sub: "You can still log the rest this month", icon: "clock", route: "/design/my-work",
+            };
+        case "hours_missed_list": {
+            const people = (p.people as { name?: string; loggedMinutes?: number; requiredMinutes?: number }[] | undefined) ?? [];
+            return {
+                text: `${plural(n(p.count) || people.length, "employee")} logged less than their working day on ${fmtDate(s(p.day))}`,
+                sub: people.slice(0, 3).map((x) => `${(x.name ?? "").split(" ")[0]} ${fmtH(x.loggedMinutes ?? 0)} of ${fmtH(x.requiredMinutes ?? 0)}`).join(" · ") || undefined,
+                icon: "people", route: "/design/people",
             };
         }
+
+        case "meeting_scheduled":
+            return {
+                text: `${s(p.authorName) || who} scheduled a meeting on ${title}`,
+                sub: when && `${when}${p.topic ? ` · ${s(p.topic)}` : ""}`,
+                icon: "calendar", route: meetings,
+            };
+        // a general meeting's attendees
+        case "meeting_invited":
+            return { text: `${s(p.authorName) || who} invited you to a meeting${topic}`, sub: when, icon: "calendar", route: meetings };
+        case "meeting_moved":
+            return { text: `${s(p.authorName) || who} moved a meeting${topic}`, sub: when && `Now ${when}`, icon: "calendar", route: meetings };
+        case "meeting_cancelled":
+            return { text: `${s(p.authorName) || who} cancelled a meeting${topic}`, sub: when, icon: "calendar", route: meetings };
         case "materials_added":
             return { text: `${who} added ${plural(n(p.count), "material")} to ${title}`, icon: "list", route: project };
         case "labour_week_submitted":
@@ -219,7 +247,8 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             const from = s(p.effectiveFrom);
             return {
                 text: from && from > companyToday() ? `Your pay changes from ${fmtDate(from)}` : `Your pay changed${from ? ` from ${fmtDate(from)}` : ""}`,
-                sub: by, icon: "card", route: logsWork ? "/design/pay" : mine,
+                // employees don't see their pay, so there is nothing to open
+                sub: by, icon: "card", route: undefined,
             };
         }
         case "schedule_changed": {
@@ -231,7 +260,7 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             const text = p.kind === 2 ? `${fmtMonthY(month)} ${paid ? "excused" : "marked unpaid"} as a whole`
                 : p.kind === 1 ? `${plural(days, paid ? "day off" : "unpaid day off", paid ? "days off" : "unpaid days off")}${paid ? " excused" : ""} in ${fmtMonthY(month)}`
                     : `${fmtH(n(p.minutes))} ${paid ? "excused" : "of unpaid leave"} in ${fmtMonthY(month)}`;
-            return { text, sub: by, icon: "checkCircle", route: logsWork ? "/design/pay" : mine };
+            return { text, sub: by, icon: "checkCircle", route: logsWork ? "/design/projects" : mine };
         }
         case "hours_short": {
             const people = (p.people as { name?: string; shortMinutes?: number }[] | undefined) ?? [];

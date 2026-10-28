@@ -3923,6 +3923,8 @@ export interface paths {
                 query?: {
                     ClientId?: number;
                     Domain?: string;
+                    IssuedFrom?: string;
+                    IssuedTo?: string;
                     Overdue?: boolean;
                     Page?: number;
                     PageSize?: number;
@@ -4769,45 +4771,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/me/pay": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    Month?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["MyPayResponse"];
-                        "text/json": components["schemas"]["MyPayResponse"];
-                        "text/plain": components["schemas"]["MyPayResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/me/permissions": {
         parameters: {
             query?: never;
@@ -5391,7 +5354,34 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SaveGeneralMeetingRequest"];
+                    "application/json": components["schemas"]["SaveGeneralMeetingRequest"];
+                    "text/json": components["schemas"]["SaveGeneralMeetingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MeetingResponse"];
+                        "text/json": components["schemas"]["MeetingResponse"];
+                        "text/plain": components["schemas"]["MeetingResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -6171,6 +6161,8 @@ export interface paths {
                     Page?: number;
                     PageSize?: number;
                     ProjectId?: number;
+                    ReceivedFrom?: string;
+                    ReceivedTo?: string;
                 };
                 header?: never;
                 path?: never;
@@ -14501,6 +14493,8 @@ export interface components {
             /** Format: date */
             effectiveFrom?: null | string;
             note?: null | string;
+            /** Format: double */
+            overtimeRate?: null | number;
         };
         ChangeRoleRequest: {
             domainCode?: null | string;
@@ -15463,6 +15457,8 @@ export interface components {
             currency?: string;
             /** Format: date */
             effectiveFrom?: null | string;
+            /** Format: double */
+            overtimeRate?: null | number;
         };
         InvitationPreviewResponse: {
             domain: null | string;
@@ -15885,17 +15881,19 @@ export interface components {
             title: string;
         };
         MeetingResponse: {
+            attendees: components["schemas"]["MeetingPersonResponse"][];
             /** Format: date-time */
             createdAt: string;
             createdBy: null | components["schemas"]["MeetingPersonResponse"];
             description: null | string;
+            domain: null | string;
             /** Format: date-time */
             endsAt: string;
             /** Format: int64 */
             id: number;
             /** Format: int32 */
             minutes: number;
-            project: components["schemas"]["MeetingProjectResponse"];
+            project: null | components["schemas"]["MeetingProjectResponse"];
             /** Format: date-time */
             startsAt: string;
             topic: null | string;
@@ -16070,36 +16068,6 @@ export interface components {
             /** Format: int32 */
             paidMinutes: null | number;
         };
-        MyPayDayResponse: {
-            /** Format: date */
-            date: string;
-            dayOff: boolean;
-            /** Format: int32 */
-            differenceMinutes: null | number;
-            excused: boolean;
-            /** Format: int32 */
-            insideMinutes: number;
-            isToday: boolean;
-            /** Format: int32 */
-            loggedMinutes: number;
-            /** Format: int32 */
-            overtimeMinutes: number;
-            /** Format: int32 */
-            requiredMinutes: number;
-        };
-        MyPayResponse: {
-            days: components["schemas"]["MyPayDayResponse"][];
-            excuses: components["schemas"]["MyExcuseResponse"][];
-            /** Format: date */
-            firstMonth: string;
-            inProgress: boolean;
-            /** Format: date */
-            joinedOn: string;
-            ledger: null | components["schemas"]["MyLedgerMonthResponse"];
-            /** Format: date */
-            month: string;
-            salary: null | components["schemas"]["MySalaryResponse"];
-        };
         MyPermissionResponse: {
             code: string;
             description: string;
@@ -16185,51 +16153,6 @@ export interface components {
             overdue: number;
             /** Format: int32 */
             projects: number;
-        };
-        MySalaryResponse: {
-            /** Format: double */
-            amount: number;
-            /** Format: double */
-            basePay: number;
-            basis: components["schemas"]["PayBasis"];
-            currency: string;
-            /** Format: double */
-            deduction: number;
-            /** Format: int32 */
-            deductionMinutes: number;
-            /** Format: double */
-            earnedSoFar: number;
-            /** Format: int32 */
-            excusedMinutes: number;
-            /** Format: double */
-            fullMonthEstimate: null | number;
-            /** Format: double */
-            hourlyRate: number;
-            /** Format: int32 */
-            madeUpMinutes: number;
-            /** Format: int32 */
-            normalMinutes: number;
-            /** Format: int32 */
-            overtimeMinutes: number;
-            /** Format: double */
-            overtimeMultiplier: number;
-            /** Format: double */
-            overtimePay: number;
-            /** Format: int32 */
-            paidBreakDays: number;
-            /** Format: double */
-            paidBreakPay: number;
-            proRated: boolean;
-            /** Format: double */
-            standardHourlyRate: number;
-            /** Format: double */
-            total: number;
-            /** Format: int32 */
-            workingDays: number;
-            /** Format: int32 */
-            workingDaysPaid: number;
-            /** Format: double */
-            wouldLose: number;
         };
         MyScheduleDayResponse: {
             /** Format: date */
@@ -16671,6 +16594,8 @@ export interface components {
             /** Format: int64 */
             id: number;
             note: null | string;
+            /** Format: double */
+            overtimeRate: number;
         };
         PeriodCostResponse: {
             /** Format: double */
@@ -17918,7 +17843,7 @@ export interface components {
         /** @enum {unknown} */
         ProtonMessageRole: "user" | "proton";
         /** @enum {unknown} */
-        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_pay" | "my_profile" | "website_projects" | "website_analytics" | "website_services" | "website_locations" | "website_contact" | "website_site" | "website_staff" | null;
+        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_profile" | "website_projects" | "website_analytics" | "website_services" | "website_locations" | "website_contact" | "website_site" | "website_staff" | null;
         ProtonPageContext: {
             area: string;
             /** Format: int64 */
@@ -18480,6 +18405,8 @@ export interface components {
             overtimeMinutes: number;
             /** Format: double */
             overtimePay: number;
+            /** Format: double */
+            overtimeRate: number;
             /** Format: int64 */
             photoFileId: null | number;
             position: null | string;
@@ -18487,8 +18414,6 @@ export interface components {
             role: string;
             /** Format: int32 */
             shortMinutes: null | number;
-            /** Format: double */
-            standardHourlyRate: number;
             team: null | components["schemas"]["TeamSummaryResponse"];
             /** Format: double */
             total: number;
@@ -18607,6 +18532,16 @@ export interface components {
             timerEnabled?: boolean;
             weeklySummary?: boolean;
         };
+        SaveGeneralMeetingRequest: {
+            attendeeIds?: number[];
+            description?: null | string;
+            domain?: null | string;
+            /** Format: date-time */
+            endsAt?: string;
+            /** Format: date-time */
+            startsAt?: string;
+            topic?: null | string;
+        };
         SaveInvoiceRequest: {
             billToContact?: null | string;
             billToName?: null | string;
@@ -18616,6 +18551,7 @@ export interface components {
             termsDays?: null | number;
         };
         SaveMeetingRequest: {
+            attendeeIds?: null | number[];
             description?: null | string;
             /** Format: date-time */
             endsAt?: string;

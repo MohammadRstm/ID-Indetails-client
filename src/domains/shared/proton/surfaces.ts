@@ -47,7 +47,10 @@ export const SURFACES: Record<ProtonSurface, (a: Ask) => SurfaceTarget | null> =
     new_invoice: (a) => onRecord(a, "projects", "invoice=new", a.p.hasAll(P.FINANCIAL_VIEW, P.INVOICE_CREATE)),
     record_payment: (a) => onRecord(a, "projects", "pay=1", a.p.hasAll(P.FINANCIAL_VIEW, P.PAYMENT_RECORD)),
     new_statement: (a) => onRecord(a, "projects", "statement=new", a.domain === "execution" && a.p.has(P.STATEMENT_CREATE)),
-    new_meeting: (a) => inArea(a, "meetings?new=1", a.p.hasAny(P.MEETING_CREATE, P.MEETING_MANAGE)),
+    // admins set meetings from their Overview's Meetings tab, super admins from the company overview's
+    new_meeting: (a) => (!a.p.isAdmin ? inArea(a, "meetings?new=1", a.p.hasAny(P.MEETING_CREATE, P.MEETING_MANAGE))
+        : a.p.isSuperAdmin ? inCompany(a, "overview?tab=meetings&new=1", a.p.has(P.MEETING_MANAGE))
+            : inArea(a, "overview?tab=meetings&new=1", a.p.has(P.MEETING_MANAGE))),
     add_company_expense: (a) => inCompany(a, "overhead?add=1", a.p.has(P.OVERHEAD_MANAGE)),
     message_person: (a) => (a.id != null ? inArea(a, `messages?with=${a.id}`) : null),
     message_team: (a) => (a.id != null ? inArea(a, `messages?group=${a.id}`) : null),

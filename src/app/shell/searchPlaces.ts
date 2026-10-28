@@ -91,6 +91,13 @@ function teams(ctx: PlaceContext): Target[] {
 }
 
 /** Everyone in the company for those who see it; a business's employees for its admins. */
+/** Admins keep meetings on their Overview's tab, super admins on the company overview's, Design employees on a page. */
+function meetings(ctx: PlaceContext): Target[] {
+    if (!ctx.p.isAdmin) return inBusinesses(ctx, "meetings");
+    if (ctx.p.isSuperAdmin) return company(ctx, "overview?tab=meetings");
+    return when(ctx.p.has(P.MEETING_MANAGE), () => inBusinesses(ctx, "overview?tab=meetings"));
+}
+
 function people(ctx: PlaceContext): Target[] {
     if (ctx.p.hasAll(P.COMPANY_VIEW, P.EMPLOYEE_VIEW)) return company(ctx, "overview?tab=people");
     return inBusinesses(ctx, "people");
@@ -218,7 +225,7 @@ export const PLACES: Place[] = [
         key: "meetings", icon: "calendar", label: "Open meetings",
         words: ["meetings", "meeting", "calls", "call", "appointments", "appointment", "calendar", "schedule a meeting", "client meeting",
             "site visit", "minutes", "agenda"],
-        targets: (ctx) => inBusinesses(ctx, "meetings"),
+        targets: meetings,
     },
     {
         key: "messages", icon: "chat", label: "Open messages",
@@ -310,12 +317,6 @@ export const PLACES: Place[] = [
         words: ["log work", "log time", "log hours", "add hours", "track time", "record time", "timer", "start timer", "clock in",
             "time entry", "new entry", "add entry", "add work"],
         targets: (ctx) => when(ctx.p.canSeeDomain("design") && ctx.p.has(P.WORK_ENTRY_CREATE), () => [{ act: ctx.run.logWork }]),
-    },
-    {
-        key: "my-pay", icon: "card", label: "My pay",
-        words: ["my pay", "my salary", "salary", "pay", "payslip", "pay slip", "wages", "my wages", "earnings", "how much i earn",
-            "hours balance", "overtime", "paycheck", "compensation", "hours short", "behind on hours"],
-        targets: (ctx) => when(!ctx.p.isAdmin, () => inBusinesses(ctx, "pay")),
     },
     {
         key: "profile", icon: "user", label: "My profile", starter: "employee",

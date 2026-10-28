@@ -1,12 +1,10 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { P } from "@/app/permissions/codes";
-import { money } from "@/shared/format/money";
 import { fmtDur } from "@/shared/format/time";
 import { work, workHandlers } from "@/test/fixtures/work";
-import { personas, withPermissions } from "@/test/personas";
+import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
 const sarah = personas.designEmployee;
@@ -48,57 +46,14 @@ describe("My work (Design)", () => {
     });
 });
 
-describe("My pay", () => {
-    const salary = work.pay.salary!;
-
-    it("shows what they have earned so far and how it adds up", async () => {
-        renderApp("/design/pay", sarah, ...workHandlers);
-        expect(await screen.findByText("Earned so far", { selector: ".kpi-label" })).toBeInTheDocument();
-        expect(screen.getAllByText(money.exact(salary.earnedSoFar, salary.currency)).length).toBeGreaterThan(0);
-        expect(screen.getByText(`Salaried · ${money.exact(salary.amount, salary.currency)} a month`)).toBeInTheDocument();
-        expect(screen.getByText("On track")).toBeInTheDocument();
-    });
-
-    it("shows ten days, then all of them", async () => {
-        renderApp("/design/pay", sarah, ...workHandlers);
-        const table = (await screen.findByText("Day by day")).closest(".panel")!;
-        expect(within(table as HTMLElement).getAllByRole("row")).toHaveLength(11);
-        await userEvent.click(screen.getByRole("button", { name: `Show all ${work.pay.days.length} days` }));
-        expect(within(table as HTMLElement).getAllByRole("row")).toHaveLength(work.pay.days.length + 1);
-    });
-
-    it("says how far behind they are, with a way to log the missing time", async () => {
-        const behind = { ...work.pay, ledger: { ...work.pay.ledger!, status: "behind", shortMinutes: 120 } };
-        renderApp("/design/pay", sarah, http.get("/api/me/pay", () => HttpResponse.json(behind)), ...workHandlers);
-        expect(await screen.findByText("You're 2h behind.")).toBeInTheDocument();
-        const banner = screen.getByText("You're 2h behind.").closest(".banner") as HTMLElement;
-        expect(within(banner).getByRole("button", { name: /log work/i })).toBeInTheDocument();
-    });
-
-    it("says what the deduction covers: a missed day costs its paid break too", async () => {
-        // a closed month, 7h short from one missed day: the day's 8 paid hours come off, at $10.38 an hour
-        const closed = {
-            ...work.pay, inProgress: false,
-            salary: { ...salary, deductionMinutes: 480, deduction: 83.08, basePay: salary.amount - 83.08 },
-            ledger: { ...work.pay.ledger!, inProgress: false, status: "short", shortMinutes: 420 },
-        };
-        renderApp("/design/pay", sarah, http.get("/api/me/pay", () => HttpResponse.json(closed)), ...workHandlers);
-        expect(await screen.findByText(/^Short 7h · 8h unpaid · at \$10\.38\/h$/)).toBeInTheDocument();
-        expect(screen.getByText(`−${money.exact(83.08, salary.currency)}`)).toBeInTheDocument();
-    });
-
-    it("is closed to someone without work_entry:view_own", async () => {
-        renderApp("/design/pay", withPermissions(sarah, { revoke: [P.WORK_ENTRY_VIEW_OWN] }), ...workHandlers);
-        expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
-    });
-});
-
 describe("the hours balance on the home page", () => {
     it("flags a month that closed short, and shows the balance", async () => {
         renderApp("/design/projects", sarah, ...workHandlers);
-        // August closed short in the fixture; Sarah is salaried, so the hours come off the salary
+        // August closed short in the fixture: said in hours only, since employees don't see their pay
         expect(await screen.findByText(/August 2026 closed .* short\./)).toBeInTheDocument();
-        expect(await screen.findByText("Unless it's excused, the missing hours come off that month's salary.", { exact: false })).toBeInTheDocument();
+        expect(screen.getByText("Unless it's excused, the month stays marked short.", { exact: false })).toBeInTheDocument();
+        expect(screen.queryByText(/salary/)).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /pay/i })).not.toBeInTheDocument();
         expect(screen.getByText("Hours balance")).toBeInTheDocument();
     });
 });

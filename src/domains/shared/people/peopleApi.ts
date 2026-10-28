@@ -41,11 +41,12 @@ export function useProjectOwners(domain: string, enabled: boolean, seesSuperAdmi
 export type PeopleQuery = { search?: string; domain?: string; role?: string; status?: string; page: number; pageSize: number };
 
 /** Everyone the viewer may see, a page at a time: the company area's list of people (employee:view). */
-export function usePeople(params: PeopleQuery) {
+export function usePeople(params: PeopleQuery, enabled = true) {
     const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ""));
     return useQuery({
         queryKey: keys.employees.list(p),
         queryFn: async () => (await http.get<Paged<EmployeeSummary>>("/employees", { params: p })).data,
         placeholderData: keepPreviousData,
+        enabled,
     });
 }
