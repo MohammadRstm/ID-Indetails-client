@@ -46,9 +46,10 @@ group("A notification's words", () => {
         expect(describe(note("role_changed", { from: "employee", to: "admin", domain: "design", automatic: true }, { actor: nadia }), designer))
             .toMatchObject({ text: "You're now an admin", sub: "After a change to your permissions", route: "/design/profile" });
         expect(describe(note("hours_excused", { month: "2026-09", kind: 1, minutes: null, days: ["2026-09-03", "2026-09-04"], isPaid: false }, { actor: nadia }), designer))
-            .toMatchObject({ text: "2 unpaid days off in September 2026", route: "/design/pay" });
+            .toMatchObject({ text: "2 unpaid days off in September 2026", route: "/design/projects" });
         expect(describe(note("hours_excused", { month: "2026-08", kind: 2, minutes: null, days: [], isPaid: true }), designer).text).toBe("August 2026 excused as a whole");
-        expect(describe(note("pay_changed", { effectiveFrom: "2026-10-01" }, { actor: nadia }), designer).text).toBe("Your pay changes from Oct 1");
+        // employees don't see their pay, so the notice opens nothing
+        expect(describe(note("pay_changed", { effectiveFrom: "2026-10-01" }, { actor: nadia }), designer)).toMatchObject({ text: "Your pay changes from Oct 1", route: undefined });
         expect(describe(note("something_new", {}), designer).text).toBe("Something new");
     });
 

@@ -24,7 +24,7 @@ describe("the route table", () => {
         // Execution runs on site, not on a clock: no Employees list, Activity or Reports.
         expect(navLabels(personas.executionAdmin, "execution"))
             .toEqual(["Dashboard", "Projects", "Clients", "Daily logs", "Meetings", "Settings"]);
-        expect(navLabels(personas.designEmployee, "design")).toEqual(["Projects", "My work", "My pay", "Meetings", "Profile"]);
+        expect(navLabels(personas.designEmployee, "design")).toEqual(["Projects", "My work", "Meetings", "Profile"]);
         // site staff: what happens on their sites, and the sites themselves
         expect(navLabels(personas.executionEmployee, "execution")).toEqual(["Daily log", "My sites", "Profile"]);
         expect(navLabels(personas.superAdmin, "execution"))
@@ -54,7 +54,7 @@ describe("the route table", () => {
         expect(navLabels(noActivity, "design")).not.toContain("Activity");
         // an employee given activity:view gets the page, and loses it again when it is taken back
         const watcher = withPermissions(personas.designEmployee, { grant: [P.ACTIVITY_VIEW] });
-        expect(navLabels(watcher, "design")).toEqual(["Projects", "My work", "My pay", "Meetings", "Activity", "Profile"]);
+        expect(navLabels(watcher, "design")).toEqual(["Projects", "My work", "Meetings", "Activity", "Profile"]);
         expect(navLabels(withPermissions(watcher, { revoke: [P.ACTIVITY_VIEW] }), "design")).not.toContain("Activity");
         expect(navLabels(withPermissions(personas.executionEmployee, { grant: [P.ACTIVITY_VIEW] }), "execution")).not.toContain("Activity");
     });
@@ -62,7 +62,7 @@ describe("the route table", () => {
     it("gives an employee each admin page as soon as a permission opens it, and takes it away again", () => {
         const employee = personas.designEmployee;
         const plus = (...grant: (typeof P)[keyof typeof P][]) => navLabels(withPermissions(employee, { grant }), "design");
-        expect(plus(P.REPORT_VIEW)).toEqual(["Overview", "Projects", "My work", "My pay", "Meetings", "Reports", "Profile"]);
+        expect(plus(P.REPORT_VIEW)).toEqual(["Overview", "Projects", "My work", "Meetings", "Reports", "Profile"]);
         expect(plus(P.CLIENT_VIEW)).toContain("Clients");
         expect(plus(P.FINANCIAL_VIEW)).toContain("Financials");
         expect(plus(P.TEAM_MANAGE)).toContain("Settings");
@@ -74,7 +74,7 @@ describe("the route table", () => {
         // with everything, the admin's pages and their own
         const all = withPermissions(employee, { grant: Object.values(P) });
         expect(navLabels(all, "design")).toEqual(
-            ["Overview", "Projects", "Clients", "Employees", "Financials", "My work", "My pay", "Meetings", "Activity", "Reports", "Profile", "Settings"]);
+            ["Overview", "Projects", "Clients", "Employees", "Financials", "My work", "Meetings", "Activity", "Reports", "Profile", "Settings"]);
         expect(navLabels(withPermissions(all, { revoke: [P.FINANCIAL_VIEW, P.CLIENT_VIEW] }), "design")).not.toContain("Clients");
     });
 
@@ -152,7 +152,9 @@ describe("the guards", () => {
     it("shows the sidebar each persona may use", async () => {
         renderApp("/design/projects", personas.designEmployee);
         const nav = await screen.findByRole("navigation");
-        expect(within(nav).getByText("My pay")).toBeInTheDocument();
+        expect(within(nav).getByText("My work")).toBeInTheDocument();
+        // employees never see their own pay
+        expect(within(nav).queryByText("My pay")).not.toBeInTheDocument();
         expect(within(nav).queryByText("Financials")).not.toBeInTheDocument();
         expect(within(nav).queryByText("All areas")).not.toBeInTheDocument();
     });
