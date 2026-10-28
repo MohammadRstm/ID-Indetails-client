@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { AREAS } from "@/app/routing/areas";
 import { canOpen } from "@/app/routing/routeTable";
@@ -14,7 +15,7 @@ import { dayKey, fmtDayDate, fmtDayDateY, fmtRange, fmtTime, relDay } from "@/sh
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import Composer from "./Composer";
-import GroupTile from "./GroupTile";
+import GroupTile, { AnnouncementsTile } from "./GroupTile";
 import { mentionParts, startsRun } from "./messageText";
 import { chatKey, useMarkChatRead, usePresence, useSendMessage, useTeamMembers, useThread, type Chat, type Contact, type Message } from "./messagesApi";
 import { playReceived, playSent } from "./messageSounds";
@@ -118,11 +119,13 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
     const markChat = markRead.mutate;
     const key = chatKey(chat);
     const loaded = !!thread.data;
-    const kind = chat.kind, id = chat.kind === "group" ? chat.teamId : chat.userId;
+    const kind = chat.kind, id = chat.kind === "group" ? chat.teamId : chat.kind === "dm" ? chat.userId : 0;
+    // everyone reads Announcements; only message:announce writes in it
+    const writes = kind !== "announcements" || permissions.has(P.MESSAGE_ANNOUNCE);
 
     // read up to the newest message, whenever a new one arrives
     useEffect(() => {
-        if (loaded) markChat(kind === "group" ? { kind, teamId: id } : { kind, userId: id });
+        if (loaded) markChat(kind === "group" ? { kind, teamId: id } : kind === "dm" ? { kind, userId: id } : { kind });
     }, [kind, id, newest, loaded, markChat]);
 
     // someone else's message arriving in the open chat chimes (marking it read keeps the badge from doing so)
@@ -177,6 +180,14 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                             </div>
                         </div>
                     </div>
+                ) : chat.kind === "announcements" ? (
+                    <div className="row" style={{ gap: 10 }}>
+                        <AnnouncementsTile />
+                        <div>
+                            <div style={{ fontWeight: 650 }}>Announcements</div>
+                            <div className="muted" style={{ fontSize: "11.5px" }}>Everyone in the company reads it</div>
+                        </div>
+                    </div>
                 ) : null}
                 <div className="grow" />
                 <SoundToggle />
@@ -199,7 +210,7 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                                     {day.items.map((m, i) => {
                                         const mine = m.sender.id === meId;
                                         const first = startsRun(m, day.items[i - 1]);
-                                        if (chat.kind === "group" && !mine) {
+                                        if (chat.kind !== "dm" && !mine) {
                                             return (
                                                 <div key={m.id} className={cx("msg-row", first && "first")}>
                                                     <div className="msg-av">{first && <Avatar person={{ name: m.sender.name, photoFileId: m.sender.photoFileId }} size={30} />}</div>
@@ -214,12 +225,16 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                         </>
                     )}
             </div>
-            <Composer key={key} draftKey={key} members={chat.kind === "group" ? members.data ?? [] : null} meId={meId} sending={send.isPending} error={send.error}
-                onSend={async (body) => {
-                    const sent = await send.mutateAsync(body);
-                    playSent();
-                    return sent;
-                }} />
+            {writes ? (
+                <Composer key={key} draftKey={key} members={chat.kind === "group" ? members.data ?? [] : null} meId={meId} sending={send.isPending} error={send.error}
+                    onSend={async (body) => {
+                        const sent = await send.mutateAsync(body);
+                        playSent();
+                        return sent;
+                    }} />
+            ) : (
+                <div className="msg-composer-wrap msg-readonly"><Icon name="megaphone" />Only super admins write here.</div>
+            )}
         </>
     );
 }

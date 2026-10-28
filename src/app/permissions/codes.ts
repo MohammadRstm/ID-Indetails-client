@@ -60,6 +60,7 @@ export const P = {
     WORKING_TIME_MANAGE: "working_time:manage",
     SCHEDULE_MANAGE: "schedule:manage",
     HOURS_EXCUSE: "hours:excuse",
+    MESSAGE_ANNOUNCE: "message:announce",
     PROTON_USE: "proton:use",
     PROTON_BUDGET_MANAGE: "proton_budget:manage",
     WEBSITE_VIEW: "website:view",
