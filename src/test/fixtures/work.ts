@@ -5,7 +5,6 @@ import entriesJson from "./work/entries.json";
 import hoursJson from "./work/hours.json";
 import myProjectsJson from "./work/myProjects.json";
 import overtimeJson from "./work/overtime.json";
-import payJson from "./work/pay.json";
 import previewJson from "./work/preview.json";
 import projectJson from "./work/project.json";
 import projectWorkJson from "./work/projectWork.json";
@@ -32,8 +31,6 @@ export const work = {
     preview: previewJson as unknown as Schemas["OvertimePreviewResponse"],
     /** Her entries from 21 to 30 September. */
     entries: entriesJson as unknown as Paged<Schemas["WorkEntryResponse"]>,
-    /** September's pay: salaried, in progress, on track. */
-    pay: payJson as unknown as Schemas["MyPayResponse"],
     requirements: requirementsJson as unknown as Schemas["MyRequirementsResponse"],
 };
 
@@ -52,7 +49,6 @@ export const workHandlers = [
     http.get("/api/me/overtime", () => HttpResponse.json(work.overtime)),
     http.get("/api/me/hours", () => HttpResponse.json(work.hours)),
     http.get("/api/me/work-entries", () => HttpResponse.json(work.entries)),
-    http.get("/api/me/pay", () => HttpResponse.json(work.pay)),
     http.get("/api/me/requirements", () => HttpResponse.json(work.requirements)),
     http.post("/api/me/overtime-preview", () => HttpResponse.json(work.preview)),
     http.get("/api/domain-settings/:domain", () => HttpResponse.json(work.settings)),

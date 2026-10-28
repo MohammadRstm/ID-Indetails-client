@@ -162,6 +162,30 @@ describe("Add employee", () => {
         expect(bodies).toEqual([expect.objectContaining({ role: "admin", domainCode: "design", pay: { basis: "monthly", amount: 2500, currency: "USD" } })]);
     });
 
+    it("suggests a salaried employee's overtime rate, the salary ÷ 184, until it is typed over", async () => {
+        const bodies: unknown[] = [];
+        renderApp("/design/people?invite=1", nadia, sendsTo(bodies), ...peopleHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "Add employee" });
+        await userEvent.type(within(dialog).getByLabelText("Work email"), "lina@id-indetails.test");
+        // paid by the hour, their rate is their overtime rate: nothing to set
+        expect(within(dialog).queryByLabelText("Overtime rate")).not.toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("tab", { name: "Per month" }));
+        await userEvent.type(within(dialog).getByLabelText("Pay"), "4232");
+        const overtime = within(dialog).getByLabelText("Overtime rate");
+        expect(overtime).toHaveValue("23");
+        await userEvent.clear(overtime);
+        await userEvent.type(overtime, "25");
+        // a changed salary leaves a typed rate alone
+        const pay = within(dialog).getByLabelText("Pay");
+        await userEvent.clear(pay);
+        await userEvent.type(pay, "4600");
+        expect(overtime).toHaveValue("25");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
+
+        await screen.findByRole("dialog", { name: "Invitation sent" });
+        expect(bodies).toEqual([expect.objectContaining({ pay: { basis: "monthly", amount: 4600, currency: "USD", overtimeRate: 25 } })]);
+    });
+
     it("says why the invitation failed, next to the button", async () => {
         renderApp("/design/people?invite=1", nadia,
             http.post("/api/invitations", () => HttpResponse.json({ type: "conflict", code: "email_taken", message: "Someone already uses that email." }, { status: 409 })),
@@ -233,11 +257,30 @@ describe("Someone's profile", () => {
         const pay = await within(dialog).findByLabelText("Pay");
         await userEvent.clear(pay);
         await userEvent.type(pay, "1800");
+        // the overtime rate follows the new salary: 1,800 ÷ 184
+        expect(within(dialog).getByLabelText("Overtime rate")).toHaveValue("9.78");
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
 
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
         expect(updates).toEqual([{ firstName: "Yara", lastName: "Mansour", phone: yara.phone, position: "Senior visualiser", teamId: yara.team!.id }]);
-        expect(pays).toEqual([{ basis: "monthly", amount: 1800, currency: "USD", effectiveFrom: "2026-09-30" }]);
+        expect(pays).toEqual([{ basis: "monthly", amount: 1800, currency: "USD", overtimeRate: 9.78, effectiveFrom: "2026-09-30" }]);
+    });
+
+    it("changes only the overtime rate, as a pay change with the same salary", async () => {
+        const pays: unknown[] = [];
+        renderApp("/design/people/9", nadia,
+            http.put("/api/employees/9", () => HttpResponse.json(yara)),
+            http.post("/api/employees/9/pay", async ({ request }) => { pays.push(await request.json()); return HttpResponse.json(people.payHistory[0]); }),
+            ...peopleHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
+        const overtime = await within(dialog).findByLabelText("Overtime rate");
+        expect(overtime).toHaveValue("8.7");
+        await userEvent.clear(overtime);
+        await userEvent.type(overtime, "10");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+
+        await waitFor(() => expect(pays).toEqual([{ basis: "monthly", amount: 1600, currency: "USD", overtimeRate: 10, effectiveFrom: "2026-09-30" }]));
     });
 
     it("saves the profile of someone with no pay yet, and sets no pay", async () => {

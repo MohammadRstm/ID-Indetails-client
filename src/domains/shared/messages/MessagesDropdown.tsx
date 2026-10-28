@@ -6,7 +6,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Avatar from "@/shared/components/Identity/Avatar";
 import { relTime } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
-import GroupTile from "./GroupTile";
+import GroupTile, { AnnouncementsTile } from "./GroupTile";
 import { firstName, snippet } from "./messageText";
 import { chatQuery, useConversations, type Conversation } from "./messagesApi";
 import SoundToggle from "./SoundToggle";
@@ -32,13 +32,14 @@ export default function MessagesDropdown({ messagesPath, close }: { messagesPath
                                 const last = c.lastMessage!;
                                 return (
                                     <div key={chatQuery(c)} className={cx("notif", c.unread > 0 && "unread")} {...clickable(() => open(c), "button")}>
-                                        {c.person ? <Avatar person={{ name: c.person.name, photoFileId: c.person.photoFileId }} size={28} /> : <GroupTile domain={c.team?.domain ?? ""} />}
+                                        {c.person ? <Avatar person={{ name: c.person.name, photoFileId: c.person.photoFileId }} size={28} />
+                                            : c.type === "announcements" ? <AnnouncementsTile /> : <GroupTile domain={c.team?.domain ?? ""} />}
                                         <div className="grow" style={{ minWidth: 0 }}>
                                             <div className="notif-txt trunc">
-                                                {c.person ? c.person.name : `${c.team?.name} · ${AREAS[c.team?.domain as "design"]?.label ?? ""}`}
+                                                {c.person ? c.person.name : c.type === "announcements" ? "Announcements" : `${c.team?.name} · ${AREAS[c.team?.domain as "design"]?.label ?? ""}`}
                                                 {c.unreadMention && <> <span className="msg-mention-flag">@</span></>}
                                             </div>
-                                            <div className="muted trunc" style={{ fontSize: "11.5px" }}>{c.type === "group" ? `${firstName(last.sender.name)}: ` : ""}{snippet(last)}</div>
+                                            <div className="muted trunc" style={{ fontSize: "11.5px" }}>{c.type !== "dm" ? `${firstName(last.sender.name)}: ` : ""}{snippet(last)}</div>
                                             <div className="notif-meta">{relTime(last.createdAt)}</div>
                                         </div>
                                         {c.unread > 0 && <span className="dot dot-on" style={{ marginTop: 6 }} aria-label="Unread" />}

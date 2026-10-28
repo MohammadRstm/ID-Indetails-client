@@ -57,6 +57,7 @@ export const PERMISSION_SECTIONS: PermissionSection[] = [
             { title: "Company overview & expenses", codes: [P.COMPANY_VIEW, P.OVERHEAD_MANAGE, P.OVERHEAD_CATEGORY_MANAGE] },
             { title: "Payroll & schedules", codes: [P.SALARY_VIEW, P.HOURS_EXCUSE, P.SCHEDULE_MANAGE, P.WORKING_TIME_MANAGE] },
             { title: "Company settings & rates", codes: [P.COMPANY_SETTINGS_MANAGE, P.EXCHANGE_RATE_MANAGE] },
+            { title: "Announcements", codes: [P.MESSAGE_ANNOUNCE] },
         ],
     },
     {

@@ -14,7 +14,7 @@ import { money } from "@/shared/format/money";
 import { companyToday, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange } from "@/shared/format/time";
 import { clickable } from "@/shared/utils/clickable";
 import { cx } from "@/shared/utils/cx";
-import { hasFixedSalary, HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
+import { hasFixedSalary } from "@/domains/design/pay/payRules";
 import { useMyOvertime } from "@/domains/design/work/workApi";
 import { policyOn, useWorkingTime } from "@/domains/shared/settings/settingsApi";
 import ExcuseHours from "./ExcuseHours";
@@ -149,7 +149,7 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openPro
                     )}
                     {s.tracksHours && (
                         <div>
-                            <span>Overtime · {fmtH(s.overtimeMinutes)}{s.madeUpMinutes ? ` (of ${fmtH(otLogged)} logged)` : ""} at {cash(s.standardHourlyRate * multiplier, cur, true)}/h{multiplier !== 1 ? ` (×${multiplier})` : ""}</span>
+                            <span>Overtime · {fmtH(s.overtimeMinutes)}{s.madeUpMinutes ? ` (of ${fmtH(otLogged)} logged)` : ""} at {cash(s.overtimeRate * multiplier, cur, true)}/h{multiplier !== 1 ? ` (×${multiplier})` : ""}</span>
                             <span className="mono">{cash(s.overtimePay, cur)}</span>
                         </div>
                     )}
@@ -159,7 +159,7 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openPro
                     <div className="hint mt-s">
                         Salaried: {s.proRated ? "the salary is pro-rated by the working days they were employed" : "the salary is paid in full"}.
                         {" "}An hour this month is {cash(s.amount, cur)} ÷ the month's paid hours = {cash(s.hourlyRate, cur, true)}/h (it prices any deduction)
-                        {s.tracksHours ? `; overtime is paid from the true hourly rate, ${cash(s.amount, cur)} ÷ ${HOURS_PER_MONTH.toFixed(1)} h = ${cash(s.standardHourlyRate, cur, true)}/h, whatever the month` : ""}.
+                        {s.tracksHours ? `; overtime is paid at the overtime rate set with the pay, ${cash(s.overtimeRate, cur, true)}/h (the salary ÷ 184 unless set otherwise), whatever the month` : ""}.
                         {s.deduction > 0 && d.missedDays.length > 0 && !d.inProgress ? " A whole day missed costs the full paid day, its break included." : ""}
                     </div>
                 )}
@@ -217,7 +217,7 @@ function HoursByProject({ detail: d, multiplier, openProject }: { detail: Salary
             </div>
             <div className="hint mt-s">
                 {s.basis === "monthly"
-                    ? `Hours are priced at the salary's rate that month, overtime at the true hourly rate${multiplier !== 1 ? ` ×${multiplier}` : ""}.`
+                    ? `Hours are priced at the salary's rate that month, overtime at the overtime rate${multiplier !== 1 ? ` ×${multiplier}` : ""}.`
                     : `Hours are priced at their rate on the day worked${multiplier !== 1 ? `, overtime at ×${multiplier}` : ""}.`}
                 {s.basis === "monthly"
                     ? " The salary is paid whatever the projects, and its deductions belong to none, so these don't add up to it."

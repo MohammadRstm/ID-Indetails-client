@@ -9,7 +9,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import GroupTile from "./GroupTile";
+import GroupTile, { AnnouncementsTile } from "./GroupTile";
 import Thread from "./Thread";
 import { chatKey, chatOf, useContacts, useConversations, usePresence, type Chat, type Conversation } from "./messagesApi";
 import { loadFailed } from "@/api/queryState";
@@ -19,8 +19,9 @@ import { clickable } from "@/shared/utils/clickable";
 const LEVELS = [{ role: "super_admin", label: "Super admins" }, { role: "admin", label: "Admins" }, { role: "employee", label: "Employees" }];
 const areaLabel = (d: string | null | undefined) => (d ? AREAS[d as "design"]?.label ?? "" : "");
 
-/** The chat asked for in the address (?group=4, ?with=12), or none. */
+/** The chat asked for in the address (?group=4, ?with=12, ?announcements=1), or none. */
 function chatFrom(params: URLSearchParams): Chat | null {
+    if (params.get("announcements") === "1") return { kind: "announcements" };
     const group = Number(params.get("group")), person = Number(params.get("with"));
     if (Number.isInteger(group) && group > 0) return { kind: "group", teamId: group };
     if (Number.isInteger(person) && person > 0) return { kind: "dm", userId: person };
@@ -28,7 +29,7 @@ function chatFrom(params: URLSearchParams): Chat | null {
 }
 
 /**
- * Team chats and direct messages (the prototype's P.Messages): the chats down the side, the one open beside
+ * Announcements, team chats and direct messages (the prototype's P.Messages): the chats down the side, the one open beside
  * them, at every width. On a phone there is room for one at a time, as in WhatsApp: the chats, then the one
  * picked, with a way back. Who talks to whom follows the API: a team's chat has its people, their business's
  * admins and the super admins; anyone messages their own business and the super admins.
@@ -54,7 +55,7 @@ export default function MessagesPage() {
     useEffect(() => {
         if (!fallbackKey) return;
         const [kind, id] = fallbackKey.split("-");
-        setParams(kind === "group" ? { group: id } : { with: id }, { replace: true });
+        setParams(kind === "announcements" ? { announcements: "1" } : kind === "group" ? { group: id } : { with: id }, { replace: true });
     }, [fallbackKey, setParams]);
     const byChat = new Map(list.flatMap((c) => { const k = chatOf(c); return k ? [[chatKey(k), c] as const] : []; }));
     const open = chat ? byChat.get(chatKey(chat)) : undefined;
@@ -66,8 +67,10 @@ export default function MessagesPage() {
     const people = (contacts.data ?? []).filter((c) => !q || c.name.toLowerCase().includes(q));
     const select = (next: Chat) => {
         setReading(true);
-        setParams(next.kind === "group" ? { group: String(next.teamId) } : { with: String(next.userId) });
+        setParams(next.kind === "announcements" ? { announcements: "1" } : next.kind === "group" ? { group: String(next.teamId) } : { with: String(next.userId) });
     };
+    const announcements = list.find((c) => c.type === "announcements");
+    const showAnnouncements = !!announcements && (!q || "announcements".includes(q));
     const person = chat?.kind === "dm" ? (contacts.data ?? []).find((c) => c.id === chat.userId) ?? open?.person ?? null : null;
     const team = chat?.kind === "group" ? open?.team ?? null : null;
 
@@ -85,6 +88,17 @@ export default function MessagesPage() {
                         ? <LoadError error={conversations.error ?? contacts.error} retry={() => { void conversations.refetch(); void contacts.refetch(); }} what="your chats" />
                         : !conversations.data || !contacts.data ? <SkeletonLines lines={8} /> : (
                             <>
+                                {/* everyone's, pinned above the rest */}
+                                {showAnnouncements && (
+                                    <div className={cx("msg-contact-row", chat?.kind === "announcements" && "on")} {...clickable(() => select({ kind: "announcements" }), "button")}>
+                                        <AnnouncementsTile size="sm" />
+                                        <div className="grow" style={{ minWidth: 0 }}>
+                                            <div className="trunc" style={{ fontWeight: 600 }}>Announcements</div>
+                                            <div className="muted trunc" style={{ fontSize: 11 }}>Everyone</div>
+                                        </div>
+                                        {count(announcements)}
+                                    </div>
+                                )}
                                 {groups.length > 0 && <div className="msg-sec-label">Groups</div>}
                                 {groups.map((c) => {
                                     const k: Chat = { kind: "group", teamId: c.team!.id };
@@ -122,7 +136,7 @@ export default function MessagesPage() {
                                         </div>
                                     );
                                 })}
-                                {groups.length === 0 && people.length === 0 && <Empty art="search" title="No matches" />}
+                                {!showAnnouncements && groups.length === 0 && people.length === 0 && <Empty art="search" title="No matches" />}
                             </>
                         )}
                 </div>

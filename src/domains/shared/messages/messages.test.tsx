@@ -2,7 +2,7 @@ import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { interiors, messageHandlers, messages, people } from "@/test/fixtures/messages";
+import { announcements, interiors, messageHandlers, messages, people } from "@/test/fixtures/messages";
 import { live } from "@/test/liveHub";
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
@@ -85,7 +85,7 @@ describe("Messages", () => {
     it("send a message with a mention picked from the group's members", async () => {
         const sent: unknown[] = [];
         renderApp("/design/messages?group=13", rana,
-            http.post("/api/messages/teams/13", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(messages.conversations[0].lastMessage); }),
+            http.post("/api/messages/teams/13", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(messages.conversations[1].lastMessage); }),
             ...messageHandlers);
         const box = await screen.findByRole("textbox", { name: "Message" });
         await userEvent.type(box, "Thanks @Li");
@@ -101,7 +101,7 @@ describe("Messages", () => {
         URL.revokeObjectURL = vi.fn();
         renderApp("/design/messages?with=2", rana,
             http.post("/api/files", () => HttpResponse.json({ id: 55, name: "site.png", mimeType: "image/png", kind: "image", sizeBytes: 10, createdAt: "2026-09-30T08:59:00Z" }, { status: 201 })),
-            http.post("/api/messages/direct/2", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(messages.conversations[2].lastMessage); }),
+            http.post("/api/messages/direct/2", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(messages.conversations[3].lastMessage); }),
             ...messageHandlers);
         await screen.findByText("Can we talk about the Q4 plan?");
         const input = document.querySelector('.msg-composer input[type="file"]') as HTMLInputElement;
@@ -157,7 +157,7 @@ describe("Messages", () => {
             http.get("/api/messages/direct/2", ({ request }) => {
                 const before = new URL(request.url).searchParams.get("before");
                 asked.push(before);
-                return HttpResponse.json(before ? { items: [], hasMore: false } : { items: [messages.conversations[2].lastMessage], hasMore: true });
+                return HttpResponse.json(before ? { items: [], hasMore: false } : { items: [messages.conversations[3].lastMessage], hasMore: true });
             }),
             ...messageHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Show older messages" }));
@@ -186,6 +186,41 @@ describe("Messages", () => {
         act(() => live.emit("messages", { userId: 2 }));
         const nadia = within(sidebar()).getByText("Nadia Karam").closest(".msg-contact-row") as HTMLElement;
         await waitFor(() => expect(within(nadia).getByText("4")).toHaveClass("msg-count"));
+    });
+});
+
+describe("Announcements", () => {
+    it("come first for everyone, who reads them without writing", async () => {
+        const read: string[] = [];
+        renderApp("/design/messages?announcements=1", personas.designEmployee,
+            http.post("/api/messages/announcements/read", () => { read.push("announcements"); return HttpResponse.json({ unread: 0, mention: false }); }),
+            ...messageHandlers);
+        const t = await screen.findByText("The office is closed on Friday.").then(() => thread());
+        expect(sidebar().querySelector(".msg-contact-row")).toHaveTextContent("Announcements");
+        expect(within(t.querySelector(".msg-thread-head") as HTMLElement).getByText("Announcements")).toBeInTheDocument();
+        // each message under who wrote it
+        expect(within(t).getByText("Rana Khoury", { selector: ".msg-sender *, .msg-sender" })).toBeInTheDocument();
+        expect(within(t).queryByRole("textbox", { name: "Message" })).not.toBeInTheDocument();
+        expect(within(t).getByText("Only super admins write here.")).toBeInTheDocument();
+        await waitFor(() => expect(read).toEqual(["announcements"]));
+    });
+
+    it("are written by a super admin, for everyone", async () => {
+        const sent: unknown[] = [];
+        renderApp("/design/messages?announcements=1", rana,
+            http.post("/api/messages/announcements", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(announcements[0], { status: 201 }); }),
+            ...messageHandlers);
+        const box = await screen.findByRole("textbox", { name: "Message" });
+        await userEvent.type(box, "Happy holidays{Enter}");
+        await waitFor(() => expect(sent).toEqual([{ body: "Happy holidays", mentionIds: [], attachmentIds: [] }]));
+    });
+
+    it("show in the chat icon's list once written in", async () => {
+        renderApp("/design/overview", rana, ...messageHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Messages" }));
+        const row = await screen.findByText("Announcements", { selector: ".notif-txt" });
+        await userEvent.click(row);
+        await waitFor(() => expect(window.location.pathname + window.location.search).toBe("/design/messages?announcements=1"));
     });
 });
 

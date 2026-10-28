@@ -6,20 +6,23 @@ export type Conversation = Schemas["ConversationResponse"];
 export type Contact = Schemas["ContactResponse"];
 export type Message = Schemas["MessageResponse"];
 
-/** A chat: a team's group chat, or the direct chat with one person. */
-export type Chat = { kind: "group"; teamId: number } | { kind: "dm"; userId: number };
+/** A chat: a team's group chat, the direct chat with one person, or Announcements, which everyone reads. */
+export type Chat = { kind: "group"; teamId: number } | { kind: "dm"; userId: number } | { kind: "announcements" };
 
-export const chatKey = (chat: Chat) => (chat.kind === "group" ? `group-${chat.teamId}` : `dm-${chat.userId}`);
-const chatPath = (chat: Chat) => (chat.kind === "group" ? `/messages/teams/${chat.teamId}` : `/messages/direct/${chat.userId}`);
-/** A chat's address on the messages page: ?group=4 or ?with=12. */
-export const chatQuery = (c: Conversation) => (c.type === "group" && c.team ? `group=${c.team.id}` : c.person ? `with=${c.person.id}` : "");
+export const chatKey = (chat: Chat) => (chat.kind === "group" ? `group-${chat.teamId}` : chat.kind === "dm" ? `dm-${chat.userId}` : "announcements");
+const chatPath = (chat: Chat) =>
+    chat.kind === "group" ? `/messages/teams/${chat.teamId}` : chat.kind === "dm" ? `/messages/direct/${chat.userId}` : "/messages/announcements";
+/** A chat's address on the messages page: ?group=4, ?with=12 or ?announcements=1. */
+export const chatQuery = (c: Conversation) =>
+    c.type === "announcements" ? "announcements=1" : c.type === "group" && c.team ? `group=${c.team.id}` : c.person ? `with=${c.person.id}` : "";
 export const chatOf = (c: Conversation): Chat | null =>
-    c.type === "group" && c.team ? { kind: "group", teamId: c.team.id } : c.person ? { kind: "dm", userId: c.person.id } : null;
+    c.type === "announcements" ? { kind: "announcements" }
+        : c.type === "group" && c.team ? { kind: "group", teamId: c.team.id } : c.person ? { kind: "dm", userId: c.person.id } : null;
 
 // every key starts with "messages", so the live connection's signal refreshes all of them
 const messagesKey = ["messages"] as const;
 
-/** Every team chat the person is in, and their direct chats, newest first. */
+/** Announcements first, then every team chat the person is in and their direct chats, newest first. */
 export function useConversations(enabled = true) {
     return useQuery({
         queryKey: [...messagesKey, "conversations"],
