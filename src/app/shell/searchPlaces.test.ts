@@ -99,8 +99,10 @@ describe("finding a page by what people call it", () => {
         expect(labels(personas.designAdmin, design, "make admin")).not.toContain("Admins and access");
     });
 
-    it("lets an employee find their own pay and work, never the company's", () => {
-        expect(top(personas.designEmployee, design, "salary")).toEqual({ label: "My pay", path: "/design/pay", strong: true });
+    it("lets an employee find their own work, never their pay or the company's", () => {
+        for (const query of ["salary", "my pay", "payslip"]) {
+            expect(labels(personas.designEmployee, design, query), query).not.toContain("My pay");
+        }
         expect(top(personas.designEmployee, design, "timesheet")?.path).toBe("/design/my-work");
         expect(top(personas.designEmployee, design, "log hours")?.label).toBe("Log work");
         expect(top(personas.designEmployee, design, "my profile")?.path).toBe("/design/profile");
