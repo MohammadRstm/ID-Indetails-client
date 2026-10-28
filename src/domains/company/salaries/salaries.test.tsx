@@ -192,7 +192,10 @@ describe("A person's salary", () => {
         expect(within(drawer).getByText("…of which made up missing hours (paid as normal)").parentElement).toHaveTextContent("10h 50m");
         expect(within(drawer).getByText("Hours covered")).toBeInTheDocument();
         expect(within(drawer).getByText("Monthly salary").parentElement).toHaveTextContent(money.exact(1800));
-        expect(within(drawer).getByText(/Overtime · 2h 10m \(of 13h logged\)/)).toBeInTheDocument();
+        expect(within(drawer).getByText(/Overtime · 2h 10m \(of 13h logged\) at \$9\.78\/h/)).toBeInTheDocument();
+        // overtime is paid at the rate set with her pay, not one worked out from a standard month
+        expect(drawer).toHaveTextContent("overtime is paid at the overtime rate set with the pay, $9.78/h");
+        expect(drawer).not.toHaveTextContent("173");
         expect(await within(drawer).findByText("Client revisions to the lounge")).toBeInTheDocument();
         expect(within(drawer).getByText("10 days")).toBeInTheDocument();
         expect(within(drawer).getByRole("button", { name: "Open profile" })).toBeInTheDocument();

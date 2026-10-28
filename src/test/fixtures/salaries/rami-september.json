@@ -13,7 +13,7 @@
     "amount": 14,
     "currency": "USD",
     "hourlyRate": 14,
-    "standardHourlyRate": 14,
+    "overtimeRate": 14,
     "tracksHours": true,
     "expectedMinutes": 8820,
     "normalMinutes": 7460,

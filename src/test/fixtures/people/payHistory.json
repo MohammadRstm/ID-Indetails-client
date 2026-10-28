@@ -5,6 +5,7 @@
     "basis": "monthly",
     "amount": 1600,
     "currency": "USD",
+    "overtimeRate": 8.7,
     "note": "Set at invitation",
     "createdAt": "2026-09-30T04:51:24.541Z",
     "createdById": 1

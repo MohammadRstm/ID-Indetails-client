@@ -90,6 +90,20 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 text: `Weekly summary: you logged ${fmtDur(n(p.minutes))} last week`,
                 sub: `Across ${plural(n(p.projects), "project")} · ${plural(n(p.entries), "entry", "entries")}`, icon: "reports", route: "/design/my-work",
             };
+        // the morning after a working day logged short: a reminder, as logging stays open all month
+        case "hours_missed":
+            return {
+                text: `You logged ${fmtH(n(p.loggedMinutes))} of the ${fmtH(n(p.requiredMinutes))} ${fmtDate(s(p.day))} asked for`,
+                sub: "You can still log the rest this month", icon: "clock", route: "/design/my-work",
+            };
+        case "hours_missed_list": {
+            const people = (p.people as { name?: string; loggedMinutes?: number; requiredMinutes?: number }[] | undefined) ?? [];
+            return {
+                text: `${plural(n(p.count) || people.length, "employee")} logged less than their working day on ${fmtDate(s(p.day))}`,
+                sub: people.slice(0, 3).map((x) => `${(x.name ?? "").split(" ")[0]} ${fmtH(x.loggedMinutes ?? 0)} of ${fmtH(x.requiredMinutes ?? 0)}`).join(" · ") || undefined,
+                icon: "people", route: "/design/people",
+            };
+        }
 
         case "meeting_scheduled": {
             const start = s(p.startsAt), end = s(p.endsAt);
@@ -219,7 +233,8 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             const from = s(p.effectiveFrom);
             return {
                 text: from && from > companyToday() ? `Your pay changes from ${fmtDate(from)}` : `Your pay changed${from ? ` from ${fmtDate(from)}` : ""}`,
-                sub: by, icon: "card", route: logsWork ? "/design/pay" : mine,
+                // employees don't see their pay, so there is nothing to open
+                sub: by, icon: "card", route: undefined,
             };
         }
         case "schedule_changed": {
@@ -231,7 +246,7 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             const text = p.kind === 2 ? `${fmtMonthY(month)} ${paid ? "excused" : "marked unpaid"} as a whole`
                 : p.kind === 1 ? `${plural(days, paid ? "day off" : "unpaid day off", paid ? "days off" : "unpaid days off")}${paid ? " excused" : ""} in ${fmtMonthY(month)}`
                     : `${fmtH(n(p.minutes))} ${paid ? "excused" : "of unpaid leave"} in ${fmtMonthY(month)}`;
-            return { text, sub: by, icon: "checkCircle", route: logsWork ? "/design/pay" : mine };
+            return { text, sub: by, icon: "checkCircle", route: logsWork ? "/design/projects" : mine };
         }
         case "hours_short": {
             const people = (p.people as { name?: string; shortMinutes?: number }[] | undefined) ?? [];

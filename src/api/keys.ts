@@ -61,7 +61,6 @@ export const keys = {
         overtime: (month: string) => ["work", "overtime", month] as const,
         preview: (body: object) => ["work", "preview", body] as const,
         hours: ["work", "hours"] as const,
-        pay: (month: string) => ["work", "pay", month] as const,
         requirements: ["work", "requirements"] as const,
         /** Reports are built from logged work, so they refresh with it. */
         report: (params: object) => ["work", "report", params] as const,

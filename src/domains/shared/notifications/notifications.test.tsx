@@ -26,6 +26,9 @@ group("A notification's words", () => {
     it("say what happened and link to it, from what the API keeps", () => {
         expect(describe(byKind("labour_week_submitted"), admin)).toMatchObject({ text: "Karim Jaber updated a labour report for Achrafieh Towers lobby", sub: "Week of Sep 21", route: "/execution/projects/7" });
         expect(describe(byKind("hours_short"), admin)).toMatchObject({ text: "7 employees finished August 2026 short of their hours", sub: "Elie 147h · Lina 147h · Maya 147h", route: "/company/salaries?month=2026-08" });
+        const missed = { day: "2026-09-29", count: 2, people: [{ id: 4, name: "Sarah Haddad", loggedMinutes: 180, requiredMinutes: 420 }, { id: 6, name: "Elie Khoury", loggedMinutes: 60, requiredMinutes: 420 }] };
+        expect(describe(note("hours_missed_list", missed), admin))
+            .toMatchObject({ text: "2 employees logged less than their working day on Sep 29", sub: "Sarah 3h of 7h · Elie 1h of 7h", route: "/design/people" });
         expect(describe(byKind("invoice_overdue"), admin)).toMatchObject({ text: "ID-2026-003 is 10 days overdue", sub: "Villa Mounir interiors", route: "/design/projects/2?invoice=3" });
         expect(describe(note("work_digest", { minutes: 150, latestName: "Sarah Haddad", projectTitle: "Villa Mounir interiors" }, { count: 3 }), admin))
             .toMatchObject({ text: "Today's work: 3 entries logged · 2h 30m", sub: "Latest: Sarah Haddad on Villa Mounir interiors", route: "/design/activity" });
@@ -46,9 +49,13 @@ group("A notification's words", () => {
         expect(describe(note("role_changed", { from: "employee", to: "admin", domain: "design", automatic: true }, { actor: nadia }), designer))
             .toMatchObject({ text: "You're now an admin", sub: "After a change to your permissions", route: "/design/profile" });
         expect(describe(note("hours_excused", { month: "2026-09", kind: 1, minutes: null, days: ["2026-09-03", "2026-09-04"], isPaid: false }, { actor: nadia }), designer))
-            .toMatchObject({ text: "2 unpaid days off in September 2026", route: "/design/pay" });
+            .toMatchObject({ text: "2 unpaid days off in September 2026", route: "/design/projects" });
         expect(describe(note("hours_excused", { month: "2026-08", kind: 2, minutes: null, days: [], isPaid: true }), designer).text).toBe("August 2026 excused as a whole");
-        expect(describe(note("pay_changed", { effectiveFrom: "2026-10-01" }, { actor: nadia }), designer).text).toBe("Your pay changes from Oct 1");
+        // employees don't see their pay, so the notice opens nothing
+        expect(describe(note("pay_changed", { effectiveFrom: "2026-10-01" }, { actor: nadia }), designer)).toMatchObject({ text: "Your pay changes from Oct 1", route: undefined });
+        // a reminder the next morning: logging stays open all month
+        expect(describe(note("hours_missed", { day: "2026-09-29", loggedMinutes: 180, requiredMinutes: 420 }), designer))
+            .toMatchObject({ text: "You logged 3h of the 7h Sep 29 asked for", sub: "You can still log the rest this month", route: "/design/my-work" });
         expect(describe(note("something_new", {}), designer).text).toBe("Something new");
     });
 

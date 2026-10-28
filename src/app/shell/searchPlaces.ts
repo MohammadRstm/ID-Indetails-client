@@ -312,12 +312,6 @@ export const PLACES: Place[] = [
         targets: (ctx) => when(ctx.p.canSeeDomain("design") && ctx.p.has(P.WORK_ENTRY_CREATE), () => [{ act: ctx.run.logWork }]),
     },
     {
-        key: "my-pay", icon: "card", label: "My pay",
-        words: ["my pay", "my salary", "salary", "pay", "payslip", "pay slip", "wages", "my wages", "earnings", "how much i earn",
-            "hours balance", "overtime", "paycheck", "compensation", "hours short", "behind on hours"],
-        targets: (ctx) => when(!ctx.p.isAdmin, () => inBusinesses(ctx, "pay")),
-    },
-    {
         key: "profile", icon: "user", label: "My profile", starter: "employee",
         words: ["profile", "my profile", "my account", "account", "my details", "my info", "photo", "picture", "avatar",
             "profile picture", "phone number", "edit profile", "my name", "me"],
