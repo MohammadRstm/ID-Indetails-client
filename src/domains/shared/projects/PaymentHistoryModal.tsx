@@ -15,7 +15,7 @@ export default function PaymentHistoryModal({ project, onClose }: { project: Pro
     const site = project.domain === "execution";
 
     return (
-        <Modal title={site ? "Project fee history" : "Payment history"} sub={project.title} onClose={onClose}
+        <Modal title="Payment history" sub={project.title} onClose={onClose}
             foot={<button className="btn" onClick={onClose}>Close</button>}>
             {changes.data ? (
                 changes.data.length === 0 ? <div className="muted">No change recorded yet.</div> : (
@@ -42,6 +42,11 @@ function ChangeRow({ change: c, site }: { change: PaymentChange; site: boolean }
             {site && c.materialMarkup != null && (
                 <div className="muted" style={{ fontSize: 12 }}>
                     Material profit {markupChanged ? <>{pct(c.previousMaterialMarkup!)} → {pct(c.materialMarkup)}</> : pct(c.materialMarkup)}
+                </div>
+            )}
+            {c.tvaRate != null && (
+                <div className="muted" style={{ fontSize: 12 }}>
+                    TVA {c.previousTvaRate != null && c.previousTvaRate !== c.tvaRate ? <>{pct(c.previousTvaRate)} → {pct(c.tvaRate)}</> : pct(c.tvaRate)}
                 </div>
             )}
             <div style={{ marginTop: 2, whiteSpace: "pre-wrap" }}>{c.description}</div>

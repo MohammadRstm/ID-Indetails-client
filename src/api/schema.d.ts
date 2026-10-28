@@ -14974,7 +14974,6 @@ export interface components {
             description?: null | string;
             domainCode?: null | string;
             icon?: null | string;
-            initialPayment?: null | components["schemas"]["InitialPaymentRequest"];
             labourDefaults?: null | components["schemas"]["SetLabourDefaultsRequest"];
             location?: null | string;
             /** Format: double */
@@ -14990,6 +14989,8 @@ export interface components {
             targetDate?: null | string;
             tint?: null | string;
             title?: string;
+            /** Format: double */
+            tvaRate?: null | number;
         };
         CreateStatementRequest: {
             excludedMaterialIds?: number[];
@@ -15438,6 +15439,11 @@ export interface components {
             stillToEarn: number;
             /** Format: date */
             to: string;
+            /**
+             * Format: double
+             * @default 0
+             */
+            tvaCollected: number;
             unconverted: components["schemas"]["UnconvertedCostResponse"][];
             /** Format: int32 */
             unpricedLabourMinutes: number;
@@ -15486,18 +15492,6 @@ export interface components {
         };
         /** Format: binary */
         IFormFile: string;
-        InitialPaymentRequest: {
-            /** Format: double */
-            amount?: number;
-            currency?: string;
-            /** Format: double */
-            fxRate?: null | number;
-            method?: components["schemas"]["PaymentMethod"];
-            note?: null | string;
-            /** Format: date */
-            receivedOn?: null | string;
-            reference?: null | string;
-        };
         InvitationPayRequest: {
             /** Format: double */
             amount?: number;
@@ -17540,6 +17534,8 @@ export interface components {
             /** Format: double */
             materialProfit: null | number;
             /** Format: double */
+            paymentWithTva: number;
+            /** Format: double */
             profit: number;
             projected: null | components["schemas"]["ProjectProjectionResponse"];
             /** Format: double */
@@ -17549,7 +17545,11 @@ export interface components {
             /** Format: double */
             revenue: number;
             /** Format: double */
+            revenueWithTva: number;
+            /** Format: double */
             toPocket: null | number;
+            /** Format: double */
+            tvaRate: number;
             /** Format: int32 */
             unconvertedMaterials: number;
             /** Format: double */
@@ -17577,6 +17577,10 @@ export interface components {
             previousAmount: null | number;
             /** Format: double */
             previousMaterialMarkup: null | number;
+            /** Format: double */
+            previousTvaRate: null | number;
+            /** Format: double */
+            tvaRate: null | number;
         };
         ProjectPayPersonResponse: {
             basis: null | components["schemas"]["PayBasis"];
@@ -19287,6 +19291,8 @@ export interface components {
             description?: string;
             /** Format: double */
             revenue?: number;
+            /** Format: double */
+            tvaRate?: null | number;
         };
         UpdateProjectPricingRequest: {
             description?: string;
@@ -19294,6 +19300,8 @@ export interface components {
             materialMarkup?: number;
             /** Format: double */
             projectFee?: number;
+            /** Format: double */
+            tvaRate?: null | number;
         };
         UpdateProjectRequest: {
             description?: null | string;

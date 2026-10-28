@@ -1706,6 +1706,8 @@ tr.voided .mono, .cost-row.voided .mono { text-decoration: line-through; }
 /* the pocket money: its pocket in the middle, the balance under it */
 .pocket-hero { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 22px 20px; text-align: center; }
 .pocket-art { margin-bottom: 4px; }
+/* a payment's TVA and total, beside the payment itself */
+.pay-tva { display: inline-flex; align-items: baseline; gap: 6px; font-size: 13px; }
 @media (max-width: 640px) { .stmt-quick { display: none; } }
 @media screen { .stmt-print { display: none; } }
 @media print {

@@ -14,6 +14,7 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { PAYMENT_DESCRIPTION_MAX } from "../../shared/projects/paymentApi";
 import type { Project } from "../../shared/projects/projectsApi";
+import TvaField from "../../shared/projects/TvaField";
 import { useAllMaterials } from "../materials/materialsApi";
 import { useSetPricing } from "./siteApi";
 import { siteMoneyOf } from "./siteMoney";
@@ -33,11 +34,15 @@ export default function PricingModal({ project, onClose }: { project: Project; o
     const [fee, setFee] = useState(x.fee);
     const [pct, setPct] = useState<number | "">(Math.round(x.markup * 1000) / 10);
     const [description, setDescription] = useState("");
+    const currentTva = project.money!.tvaRate;
+    const [tvaPct, setTvaPct] = useState<number | "">(Math.round(currentTva * 10000) / 100);
+    const tva = Math.round((+tvaPct || 0) * 100) / 10000;
     const errors = useFormErrors();
     const markup = pct === "" ? 0 : pct;
     const valid = markup >= 0 && markup <= 500;
-    const unchanged = fee === x.fee && Math.round(markup * 100) / 10000 === x.markup && "Change the fee or the material profit, or cancel.";
-    const descriptionError = !description.trim() ? "Say why the fee or the material profit changes."
+    const unchanged = fee === x.fee && Math.round(markup * 100) / 10000 === x.markup && tva === currentTva
+        && "Change the payment, the material profit or the TVA, or cancel.";
+    const descriptionError = !description.trim() ? "Say why the payment, the material profit or the TVA changes."
         : description.trim().length > PAYMENT_DESCRIPTION_MAX && `At most ${PAYMENT_DESCRIPTION_MAX} characters.`;
 
     const list = materials ?? [];
@@ -54,11 +59,11 @@ export default function PricingModal({ project, onClose }: { project: Project; o
     function submit() {
         if (!valid || save.isPending) return;
         if (unchanged || descriptionError) return errors.tried();
-        save.mutate({ projectFee: fee, materialMarkup: Math.round(markup * 100) / 10000, description: description.trim() }, {
+        save.mutate({ projectFee: fee, materialMarkup: Math.round(markup * 100) / 10000, tvaRate: tva, description: description.trim() }, {
             onSuccess: (saved) => {
                 const m = saved.money;
                 toast({
-                    text: "Fee & material profit saved",
+                    text: "Payment & material profit saved",
                     sub: m ? `Agreed so far ${money.exact(m.revenue)} · expected profit ${money.exact(m.profit)}` : undefined,
                     icon: "checkCircle",
                 });
@@ -68,7 +73,7 @@ export default function PricingModal({ project, onClose }: { project: Project; o
     }
 
     return (
-        <Modal surfaceId="site_pricing" title="Fee & material profit" sub={project.title} onClose={onClose}
+        <Modal surfaceId="site_pricing" title="Payment & material profit" sub={project.title} onClose={onClose}
             foot={
                 <>
                     <div className="grow muted" style={{ fontSize: 12 }}>
@@ -81,9 +86,13 @@ export default function PricingModal({ project, onClose }: { project: Project; o
                 </>
             }>
             <div className="field">
-                <label className="label optional" htmlFor="xm-fee">Project fee</label>
+                <label className="label optional" htmlFor="xm-fee">Customer payment</label>
                 <AmountField id="xm-fee" value={fee} currencies={false} onChange={setFee} />
-                <div className="hint">A fixed amount for doing the job, on top of what materials earn. Ground labour is paid out of it.</div>
+                <div className="hint">The agreed amount, before TVA. Materials come on top at their client prices; ground labour is paid out of it.</div>
+            </div>
+            <div className="mt">
+                <TvaField id="xm-tva" value={tvaPct} onChange={setTvaPct} />
+                <div className="hint">On everything the client pays, materials included. They only see totals with it included. Now {money.pct(currentTva)}.</div>
             </div>
             <div className="field mt">
                 <label className="label required" htmlFor="xm-markup">Default material profit</label>

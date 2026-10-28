@@ -57,8 +57,9 @@ export function ExecutionFinancials({ project }: { project: Project }) {
 
     return (
         <>
-            <PaymentSection label="Project fee" amount={m.projectFee ?? 0} locked={m.isLocked}
-                sub={<>A fixed amount for doing the job, on top of what materials earn at the default material profit of <b>{pctOf(m.materialMarkup ?? 0)}</b>. Each change is kept with why it changed.</>}
+            <PaymentSection label="Customer payment" amount={m.projectFee ?? 0} locked={m.isLocked}
+                tva={{ rate: m.tvaRate, withTva: m.paymentWithTva }}
+                sub={<>The agreed amount, before TVA. Materials come on top at their client prices, with a default material profit of <b>{pctOf(m.materialMarkup ?? 0)}</b>. Each change is kept with why it changed.</>}
                 onEdit={canPrice ? open("pricing") : undefined} onHistory={open("history")} />
             <SiteMoneyPanel project={project}
                 onRecordPayment={client && permissions.has(P.PAYMENT_RECORD) ? () => links.recordPayment() : undefined}

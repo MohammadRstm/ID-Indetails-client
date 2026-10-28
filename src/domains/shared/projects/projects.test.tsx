@@ -263,11 +263,13 @@ describe("a new Execution project", () => {
     const karim = withPermissions(personas.executionAdmin, { grant: MONEY_AND_HIRING });
     const newProject = () => screen.findByRole("dialog", { name: "New project" });
 
-    it("takes the first payment from people who record payments", async () => {
+    it("asks for the agreed payment and its TVA, and leaves the down payment to a payment after", async () => {
         renderApp("/execution/projects?new=1", karim, ...siteHandlers, ...projectHandlers);
         const dialog = await newProject();
-        expect(within(dialog).getByLabelText("Initial payment received")).toBeInTheDocument();
-        expect(within(dialog).getByLabelText(/Project fee/)).toBeInTheDocument();
+        expect(within(dialog).getByLabelText("Customer payment")).toBeInTheDocument();
+        expect(within(dialog).getByLabelText("TVA")).toHaveValue("15");
+        expect(within(dialog).queryByLabelText("Initial payment received")).toBeNull();
+        expect(within(dialog).queryByLabelText(/Material profit/i)).toBeNull();
     });
 
     it("stars what is required and says what is optional", async () => {
@@ -275,19 +277,32 @@ describe("a new Execution project", () => {
         const dialog = await newProject();
         const label = (name: string) => within(dialog).getByText(name, { selector: "label" });
         expect(label("Project name")).toHaveClass("required");
-        expect(label("Initial payment received")).toHaveClass("optional");
-        expect(label("Project fee")).toHaveClass("optional");
+        expect(label("Customer payment")).toHaveClass("optional");
+        expect(label("TVA")).toHaveClass("required");
         expect(within(dialog).getByLabelText("Location")).toHaveAttribute("placeholder", expect.stringMatching(/^Optional/));
     });
 
-    it("leaves the payment out without payment:record, as the API would refuse the project", async () => {
-        renderApp("/execution/projects?new=1", withPermissions(karim, { revoke: [P.PAYMENT_RECORD] }), ...siteHandlers, ...projectHandlers);
+    it("sends the agreed payment and the TVA a super admin gives it", async () => {
+        const bodies: Record<string, unknown>[] = [];
+        renderApp(`/execution/projects?new=1&client=${fixtures.client.id}`, personas.superAdmin,
+            http.post("/api/projects", async ({ request }) => {
+                bodies.push((await request.json()) as Record<string, unknown>);
+                return HttpResponse.json({ ...fixtures.project, id: 78, title: "Harbour offices" }, { status: 201 });
+            }),
+            ...siteHandlers, ...projectHandlers);
         const dialog = await newProject();
-        expect(within(dialog).queryByLabelText("Initial payment received")).not.toBeInTheDocument();
-        expect(within(dialog).getByLabelText(/Project fee/)).toBeInTheDocument();
+        await userEvent.type(within(dialog).getByLabelText("Project name"), "Harbour offices");
+        await userEvent.type(within(dialog).getByLabelText("Customer payment"), "2000");
+        const tva = within(dialog).getByLabelText("TVA");
+        await userEvent.clear(tva);
+        await userEvent.type(tva, "11");
+        await userEvent.click(await within(dialog).findByRole("button", { name: /Tarek Nasser/ }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ projectFee: 2000, tvaRate: 0.11, staffIds: [5] })]));
+        expect(bodies[0]).not.toHaveProperty("initialPayment");
     });
 
-    it("leaves the fee, the material profit and the payment to a super admin for a plain Execution admin", async () => {
+    it("leaves the payment and its TVA to a super admin for a plain Execution admin", async () => {
         const bodies: Record<string, unknown>[] = [];
         renderApp(`/execution/projects?new=1&client=${fixtures.client.id}`, personas.executionAdmin,
             http.post("/api/projects", async ({ request }) => {
@@ -296,9 +311,8 @@ describe("a new Execution project", () => {
             }),
             ...siteHandlers, ...projectHandlers);
         const dialog = await newProject();
-        expect(within(dialog).queryByLabelText("Initial payment received")).toBeNull();
-        expect(within(dialog).queryByLabelText(/Project fee/)).toBeNull();
-        expect(within(dialog).queryByLabelText(/Material profit/i)).toBeNull();
+        expect(within(dialog).queryByLabelText("Customer payment")).toBeNull();
+        expect(within(dialog).queryByLabelText("TVA")).toBeNull();
         expect(within(dialog).queryByText("Money")).toBeNull();
         await userEvent.type(within(dialog).getByLabelText("Project name"), "Lobby works");
         // a site needs the staff who oversee it
@@ -307,15 +321,7 @@ describe("a new Execution project", () => {
         expect(bodies).toEqual([]);
         await userEvent.click(await within(dialog).findByRole("button", { name: /Tarek Nasser/ }));
         await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
-        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ projectFee: null, materialMarkup: null, initialPayment: null, staffIds: [5] })]));
-    });
-
-    it("asks a super admin for the fee, the material profit and the payment", async () => {
-        renderApp("/execution/projects?new=1", personas.superAdmin, ...siteHandlers, ...projectHandlers);
-        const dialog = await newProject();
-        expect(within(dialog).getByLabelText("Initial payment received")).toBeInTheDocument();
-        expect(within(dialog).getByLabelText(/Project fee/)).toBeInTheDocument();
-        expect(within(dialog).getByLabelText(/Material profit/i)).toBeInTheDocument();
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ projectFee: null, tvaRate: null, staffIds: [5] })]));
     });
 });
 

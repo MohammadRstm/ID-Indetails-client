@@ -74,7 +74,7 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onStatement, 
                     {onStatement && (
                         <button className="btn btn-sm" onClick={onStatement} disabled={!materials?.all.count}><Icon name="file" />Client statement</button>
                     )}
-                    {editPricing && <button className="btn btn-sm" onClick={editPricing}><Icon name="edit" />Fee & material profit</button>}
+                    {editPricing && <button className="btn btn-sm" onClick={editPricing}><Icon name="edit" />Payment & material profit</button>}
                 </div>
             </div>
             <div className="panel-body">
