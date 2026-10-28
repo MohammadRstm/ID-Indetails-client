@@ -37,14 +37,14 @@ import ReportModal from "../../design/projects/report/ReportModal";
 import { useMaterials } from "../../execution/materials/materialsApi";
 import PricingModal from "../../execution/projects/PricingModal";
 import PaymentHistoryModal from "./PaymentHistoryModal";
-import BoxChoiceModal from "../../execution/box/BoxChoice";
+import { AskPocketModal, MoveToPocketModal } from "../../execution/pocket/PocketActions";
 import StatementHost from "../../execution/statements/StatementHost";
 import { useStatementLinks } from "../../execution/statements/statementLinks";
 import CompleteProjectModal from "./CompleteProjectModal";
 import { useUrlFlag } from "@/shared/hooks/useUrlFlag";
 import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
-import { asksBox, useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
+import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
 
 type TabKey = "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
 
@@ -120,15 +120,6 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const asksParticipation = clientProject && !portalByPermission;
     const participation = useDiscussionSummary(staffDiscussion, project.id, { enabled: asksParticipation, retry: false });
     const [showDone, setShowDone] = useState(false);
-    // archiving an open site or reopening a removed one asks first what happens to its money in the box
-    const [boxAsk, setBoxAsk] = useState<"archive" | "reopen" | null>(null);
-    function asksFirst(action: StatusAction) {
-        if ((action === "archive" || action === "reopen") && asksBox(project, action, permissions.has(P.FINANCIAL_VIEW))) {
-            setBoxAsk(action);
-            return true;
-        }
-        return false;
-    }
     // its own link (?details=1), so Proton or a shared link can open it
     const [editing, setEditing] = useUrlFlag("details");
     // the report opens through the link too (?report=1), as the projects list's menu does
@@ -180,7 +171,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const hasPaymentHistory = !!m && (site || project.billingType === "client");
     const canEditPricing = site && !!m && !m.isLocked && permissions.has(P.PROJECT_PRICING_MANAGE);
     const canAddExpense = !!m && !m.isLocked && permissions.has(P.EXPENSE_MANAGE);
-    const openMoney = (action: "payment" | "client" | "expense" | "pricing") => { params.set("money", action); setParams(params); };
+    // an Execution client site moves money with the pocket money: part of its profit in, or a request for some back
+    const canUsePocket = site && !!m && project.billingType === "client";
+    const openMoney = (action: "payment" | "client" | "expense" | "pricing" | "to-pocket" | "ask-pocket") => { params.set("money", action); setParams(params); };
     const closeMoney = () => { params.delete("money"); setParams(params, { replace: true }); };
     const billing = useBillingLinks();
     const bill = m?.billing;
@@ -191,7 +184,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const materialCount = useMaterials(project.id, {}, site && client && permissions.has(P.STATEMENT_CREATE)).data?.all.count ?? 0;
     const canStatement = site && client && permissions.has(P.STATEMENT_CREATE) && materialCount > 0;
     const statements = useStatementLinks();
-    const moneyItems = canAddExpense || canEditBilling || canEditPricing || canStatement || canNewInvoice || canRecordPayment;
+    const moneyItems = canAddExpense || canEditBilling || canEditPricing || canStatement || canNewInvoice || canRecordPayment || canUsePocket;
     // name, description, location and target date, while the project is open
     const canEditDetails = permissions.has(P.PROJECT_EDIT) && project.status !== "completed" && project.status !== "archived";
 
@@ -206,7 +199,6 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         setParams(params);
     }
     function run(action: StatusAction, text: string) {
-        if (asksFirst(action)) return;
         change.mutate(action, {
             onSuccess: () => toast({ text, icon: "checkCircle" }),
             onError: (e) => toast({ text: "The status didn't change", sub: errorMessage(e), icon: "alert" }),
@@ -235,7 +227,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                             {canChangeStatus ? (
                                 <MenuButton buttonClass="btn btn-sm" align="left" width={200} label="Project status"
                                     text={<span className="row" style={{ gap: 6 }}><StatusBadge status={project.status} /><Icon name="chevronDown" /></span>}>
-                                    {(close) => <ProjectStatusItems project={project} close={close} onComplete={() => setShowDone(true)} asksFirst={asksFirst} />}
+                                    {(close) => <ProjectStatusItems project={project} close={close} onComplete={() => setShowDone(true)} />}
                                 </MenuButton>
                             ) : <StatusBadge status={project.status} />}
                         </div>
@@ -304,6 +296,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                     {canStatement && <button className="pop-item" onClick={() => { close(); statements.newStatement(); }}><Icon name="file" />Client statement</button>}
                                     {canNewInvoice && <button className="pop-item" onClick={() => { close(); billing.newInvoice(); }}><Icon name="file" />New invoice</button>}
                                     {canRecordPayment && <button className="pop-item" onClick={() => { close(); billing.recordPayment(); }}><Icon name="card" />Record a client payment</button>}
+                                    {canUsePocket && <button className="pop-item" onClick={() => { close(); openMoney("to-pocket"); }}><Icon name="arrowRight" />Move to pocket money</button>}
+                                    {canUsePocket && <button className="pop-item" onClick={() => { close(); openMoney("ask-pocket"); }}><Icon name="arrowDown" />Ask the pocket money</button>}
                                 </div>
                             )}
                         </MenuButton>
@@ -366,12 +360,13 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {(showDone || completeFromList) && canChangeStatus && !closed && (
                 <CompleteProjectModal project={project} openRequirements={openRequirements} onClose={closeComplete} />
             )}
-            {boxAsk && canChangeStatus && <BoxChoiceModal project={project} action={boxAsk} onClose={() => setBoxAsk(null)} />}
             {moneyAction === "payment" && canEditPayment && <PaymentModal project={project} onClose={closeMoney} />}
             {moneyAction === "client" && canEditBilling && <ClientTypeModal project={project} onClose={closeMoney} />}
             {moneyAction === "history" && hasPaymentHistory && <PaymentHistoryModal project={project} onClose={closeMoney} />}
             {moneyAction === "pricing" && canEditPricing && <PricingModal project={project} onClose={closeMoney} />}
             {moneyAction === "expense" && canAddExpense && <ExpenseModal project={project} onClose={closeMoney} />}
+            {moneyAction === "to-pocket" && canUsePocket && <MoveToPocketModal project={project} onClose={closeMoney} />}
+            {moneyAction === "ask-pocket" && canUsePocket && <AskPocketModal project={project} onClose={closeMoney} />}
             <BillingModalHost project={project} />
             {site && <StatementHost project={project} />}
             {showReport && canReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}

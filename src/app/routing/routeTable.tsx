@@ -11,7 +11,7 @@ import {
     DailyLogPage,
     MySitesPage,
     SiteLogsPage,
-    BoxPage,
+    PocketPage,
     CompanyOverviewPage,
     CompanyProfilePage,
     CompanySettingsPage,
@@ -122,10 +122,10 @@ export const domainRoutes: DomainRoute[] = [
         admin: { element: <OverviewRoute />, access: all(P.REPORT_VIEW) },
     },
     {
-        // the pool of every site's client payments, and the money moved to sites in the red
-        path: "box",
-        nav: { label: "The box", icon: "database" },
-        admin: { element: <BoxPage />, access: executionOnly(all(P.FINANCIAL_VIEW)) },
+        // money set aside from sites by hand, paid back to sites that run short
+        path: "pocket",
+        nav: { label: "Pocket money", icon: "briefcase" },
+        admin: { element: <PocketPage />, access: executionOnly(all(P.FINANCIAL_VIEW)) },
     },
     {
         path: "projects",

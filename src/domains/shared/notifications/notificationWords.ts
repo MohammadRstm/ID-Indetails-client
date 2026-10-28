@@ -164,6 +164,12 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 sub: `${p.invoiceNumber ? `Against ${s(p.invoiceNumber)}` : p.isInitial ? "The initial payment" : "On account"}${note.actor ? ` · by ${who}` : ""}`,
                 icon: "card", route: project,
             };
+        case "pocket_requested":
+            return {
+                text: `${title} asks for pocket money`,
+                sub: note.actor ? `Asked by ${who} · approve or deny it` : "Raised by the system · approve or deny it",
+                icon: "card", route: "/execution/pocket",
+            };
         case "statement_sent":
             return { text: `${s(p.number) || "A statement"} was sent to the client`, sub: `${title}${note.actor ? ` · by ${who}` : ""}`, icon: "file", route: project && note.subjectId ? `${project}?statement=${note.subjectId}` : project };
         case "client_added":
