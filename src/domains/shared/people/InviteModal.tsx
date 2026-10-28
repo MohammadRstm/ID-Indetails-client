@@ -197,8 +197,8 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                                                     : (amount ? `${money.fmt(amount * HOURS_PER_MONTH, currency)} / month` : "-")}
                                             </div>
                                             <div className="hint">
-                                                {monthly ? "The salary ÷ a standard month: 40 paid hours a week (the 1h break included) × 52 ÷ 12 = "
-                                                    : "40 paid hours a week (the 1h break included) × 52 ÷ 12 = "}{HOURS_PER_MONTH.toFixed(1)} h.
+                                                {monthly ? "The salary ÷ a standard month: 40 paid hours a week × 52 ÷ 12 = "
+                                                    : "40 paid hours a week × 52 ÷ 12 = "}{HOURS_PER_MONTH.toFixed(1)} h.
                                             </div>
                                         </div>
                                     )}

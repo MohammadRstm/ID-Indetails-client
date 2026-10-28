@@ -187,11 +187,11 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
     }
 
     const failure = save.error ? errorMessage(save.error) : null;
-    const required = preview?.requiredMinutes ?? schedule.data?.day.requiredMinutes ?? 7 * 60;
+    const required = preview?.requiredMinutes ?? schedule.data?.day.requiredMinutes;
 
     return (
         <Modal surfaceId={ed ? undefined : "log_work"} size="md" title={ed ? "Edit work entry" : options.overtime ? "Log overtime" : "Log work"} onClose={closeLogWork}
-            sub={options.overtime ? `Work outside your working hours, on a day off, or past the ${fmtH(required)} your day asks for counts as overtime.` : "What you did, and exactly when you did it."}
+            sub={options.overtime ? `Work outside your working hours, on a day off, or past the ${required != null ? fmtH(required) : "hours"} your day asks for counts as overtime.` : "What you did, and exactly when you did it."}
             foot={
                 <>
                     <div className="grow">

@@ -87,6 +87,20 @@ describe("My pay", () => {
         expect(screen.getByText(`−${money.exact(83.08, salary.currency)}`)).toBeInTheDocument();
     });
 
+    it("asks for the whole day when the company has no break", async () => {
+        const days = work.schedule.schedule.days.map((d) => ({ ...d, requiredMinutes: 480 }));
+        const noBreak = {
+            ...work.schedule,
+            schedule: { ...work.schedule.schedule, days, requiredMinutesPerWeek: 2400 },
+            companyWeek: { ...work.schedule.companyWeek, breakMinutes: 0, requiredMinutesPerDay: 480, requiredMinutesPerWeek: 2400 },
+            day: { ...work.schedule.day, requiredMinutes: 480, paidBreakMinutes: 0 },
+        };
+        renderApp("/design/pay", sarah, http.get("/api/me/schedule", () => HttpResponse.json(noBreak)), ...workHandlers);
+        expect(await screen.findByText("A working day of 9 AM – 5 PM asks for 8h of work.")).toBeInTheDocument();
+        expect(screen.getByText(/There's no separate paid break: log the whole 9 to 5\./)).toBeInTheDocument();
+        expect(screen.queryByText(/Your break is paid/)).not.toBeInTheDocument();
+    });
+
     it("is closed to someone without work_entry:view_own", async () => {
         renderApp("/design/pay", withPermissions(sarah, { revoke: [P.WORK_ENTRY_VIEW_OWN] }), ...workHandlers);
         expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();

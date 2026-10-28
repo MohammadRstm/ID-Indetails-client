@@ -221,7 +221,7 @@ function HoursByProject({ detail: d, multiplier, openProject }: { detail: Salary
                     : `Hours are priced at their rate on the day worked${multiplier !== 1 ? `, overtime at ×${multiplier}` : ""}.`}
                 {s.basis === "monthly"
                     ? " The salary is paid whatever the projects, and its deductions belong to none, so these don't add up to it."
-                    : " Paid breaks belong to no project, so these don't add up to the pay."}
+                    : (d.paidBreakPay > 0 ? " Paid breaks belong to no project, so these don't add up to the pay." : "")}
             </div>
         </div>
     );
