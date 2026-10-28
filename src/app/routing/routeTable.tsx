@@ -20,7 +20,6 @@ import {
     MeetingsPage,
     MessagesPage,
     ProtonPage,
-    MyPayPage,
     MyProfilePage,
     MyWorkRoute,
     NotificationsPage,
@@ -178,11 +177,6 @@ export const domainRoutes: DomainRoute[] = [
             // site staff have their daily log instead
             access: designOnly(all(P.WORK_ENTRY_VIEW_OWN)),
         },
-    },
-    {
-        path: "pay",
-        nav: { label: "My pay", icon: "card" },
-        employee: { element: <MyPayPage />, access: designOnly(all(P.WORK_ENTRY_VIEW_OWN)) },
     },
     {
         path: "meetings",

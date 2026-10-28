@@ -82,7 +82,6 @@ const PAGES: Record<NonNullable<Schemas["ProtonPage"]>, { path: string; company?
     launcher: { path: "", company: true },
     // the person's own pages, in their domain
     my_work: { path: "my-work" },
-    my_pay: { path: "pay" },
     my_profile: { path: "profile" },
     // the Website area: no business of its own
     website_projects: { path: "projects", website: true },

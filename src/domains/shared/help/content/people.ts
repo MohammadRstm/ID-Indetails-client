@@ -207,7 +207,7 @@ export const people: Article[] = [
                 "Super admins' pay is a company matter: only those who see salaries see it.",
                 "Notifications and the activity feed never show money amounts.",
             ),
-            only(isEmployee, para("Your own hours, balance and pay are on My work and My pay.")),
+            only(isEmployee, para("Your own hours are on My work, and your hours balance on your projects page.")),
         ],
         related: ["roles", "colleague-hours"],
     },

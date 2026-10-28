@@ -1,12 +1,11 @@
 import { P } from "@/app/permissions/codes";
 import { or as orFact } from "../helpFacts";
 import {
-    and, formula, has, isEmployee, list, note, only, or, para, sees, tracksOwnHours, type Article,
+    and, formula, has, list, note, only, or, para, sees, tracksOwnHours, type Article,
 } from "../helpModel";
 
 /** They log Design work. */
 const logs = and(sees("design"), has(P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN));
-const designEmployee = and(isEmployee, sees("design"), has(P.WORK_ENTRY_VIEW_OWN));
 const seesSalaries = has(P.SALARY_VIEW);
 
 export const explainedPay: Article[] = [
@@ -89,7 +88,8 @@ export const explainedPay: Article[] = [
         id: "pay",
         title: "How pay is calculated",
         category: "pay",
-        who: or(designEmployee, seesSalaries, has(P.EMPLOYEE_PAY_MANAGE)),
+        // employees don't see their pay, nor how it's worked out
+        who: or(seesSalaries, has(P.EMPLOYEE_PAY_MANAGE)),
         summary: "Pay is a monthly salary or an hourly rate, plus overtime, minus any deductions. It is worked out fresh from the records each time.",
         ask: ["how is pay calculated", "salary calculation", "hourly rate", "monthly salary", "pay", "173", "true hourly rate", "31 days", "28 days", "pro rata", "overtime pay", "base pay"],
         blocks: [
@@ -114,13 +114,13 @@ export const explainedPay: Article[] = [
                 "Execution staff log no hours, so they're paid their salary.",
             )),
         ],
-        related: ["deductions", "overtime", "working-day", "my-pay-estimates"],
+        related: ["deductions", "overtime", "working-day"],
     },
     {
         id: "deductions",
         title: "Deductions: missed hours and unpaid leave",
         category: "pay",
-        who: or(tracksOwnHours, seesSalaries, has(P.EMPLOYEE_PAY_MANAGE)),
+        who: or(seesSalaries, has(P.EMPLOYEE_PAY_MANAGE)),
         summary: "On a monthly salary, a month that ends short loses the missing hours, and a whole missed day costs the whole paid day, break included.",
         ask: ["deduction", "deducted", "missed day", "missing hours", "unpaid leave", "salary cut", "why was my pay lower", "short month"],
         blocks: [
@@ -140,23 +140,6 @@ export const explainedPay: Article[] = [
             ),
         ],
         related: ["hours-balance", "excuses", "pay"],
-    },
-    {
-        id: "my-pay-estimates",
-        title: "The estimates on My pay",
-        category: "pay",
-        who: designEmployee,
-        summary: "While a month runs, My pay shows what you've earned so far and what the month comes to if things stay as they are.",
-        ask: ["earned so far", "full month estimate", "as things stand", "would lose", "estimate", "my pay this month"],
-        blocks: [
-            list(
-                "**Earned so far**: your base pay for the share of the month's required hours so far, plus overtime pay.",
-                "**Full month, as things stand**: the month's base pay plus overtime, minus what you'd lose if the month ended short by what you're behind today.",
-                "Catching up the hours you're behind removes what you'd lose.",
-                "Once the month ends, the figure is the month's pay.",
-            ),
-        ],
-        related: ["pay", "hours-balance", "deductions"],
     },
     {
         id: "closed-months",
@@ -187,7 +170,7 @@ export const explainedPay: Article[] = [
                 "**Unpaid**: the hours stop counting as missing, but on a monthly salary the time is deducted.",
                 "A month can be excused afterwards; never a future month, and never by the person themselves.",
             ),
-            only(tracksOwnHours, para("You're told when hours of yours are excused, and they show on My pay.")),
+            only(tracksOwnHours, para("You're told when hours of yours are excused, and they show in your hours balance.")),
         ],
         related: ["deductions", "hours-balance"],
     },
