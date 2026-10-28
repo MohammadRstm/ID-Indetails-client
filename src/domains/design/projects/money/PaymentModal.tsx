@@ -16,7 +16,8 @@ import TvaField from "../../../shared/projects/TvaField";
  * A client project's customer payment and why it changes (the prototype's PF.PaymentModal, with the reason the
  * project report needs). Both are required; the change joins the payment history.
  */
-export default function PaymentModal({ project, onClose }: { project: Project; onClose: () => void }) {
+/** <paramref name="onSaved"/> follows a save, instead of closing: the page offers to send the quote. */
+export default function PaymentModal({ project, onClose, onSaved }: { project: Project; onClose: () => void; onSaved?: () => void }) {
     const save = useSetPayment(project.id);
     const current = project.money?.revenue ?? 0;
     const currentTva = project.money?.tvaRate ?? 0;
@@ -35,7 +36,7 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
         save.mutate({ revenue: amount, tvaRate: tva, description: description.trim() }, {
             onSuccess: () => {
                 toast({ text: `Payment set to ${money.fmt(amount)}`, sub: project.title, icon: "checkCircle" });
-                onClose();
+                (onSaved ?? onClose)();
             },
         });
     }

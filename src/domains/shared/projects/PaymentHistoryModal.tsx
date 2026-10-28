@@ -4,6 +4,9 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { fmtDateY } from "@/shared/format/time";
+import { P } from "@/app/permissions/codes";
+import { usePermissions } from "@/app/permissions/usePermissions";
+import { useQuotes } from "../billing/quoteApi";
 import { usePaymentChanges, type PaymentChange } from "./paymentApi";
 import type { Project } from "./projectsApi";
 
@@ -13,6 +16,7 @@ const pct = (fraction: number) => `${Math.round(fraction * 1000) / 10}%`;
 export default function PaymentHistoryModal({ project, onClose }: { project: Project; onClose: () => void }) {
     const changes = usePaymentChanges(project.id, true);
     const site = project.domain === "execution";
+    const quotes = useQuotes(project.id, usePermissions().has(P.INVOICE_SEND) && project.billingType === "client").data ?? [];
 
     return (
         <Modal title="Payment history" sub={project.title} onClose={onClose}
@@ -25,6 +29,24 @@ export default function PaymentHistoryModal({ project, onClose }: { project: Pro
                 )
             ) : loadFailed(changes) ? <LoadError error={changes.error} retry={() => changes.refetch()} what="the payment history" />
                 : <SkeletonLines lines={4} />}
+            {quotes.length > 0 && (
+                <>
+                    <div className="u mt" style={{ marginBottom: 6 }}>Quotes sent</div>
+                    <ol className="pay-hist" aria-label="Quotes">
+                        {quotes.map((q) => (
+                            <li key={q.id} className="pay-hist-row">
+                                <div className="row" style={{ justifyContent: "space-between", gap: 12 }}>
+                                    <b className="mono">{q.number} · {money.exact(q.totalUsd)}</b>
+                                    <span className="muted" style={{ fontSize: 12 }}>{fmtDateY(q.createdAt)} · {q.createdBy.name}</span>
+                                </div>
+                                <div className="muted" style={{ fontSize: 12 }}>
+                                    {q.deliveries.length ? `Sent ${q.deliveries.length === 1 ? "once" : `${q.deliveries.length} times`}` : "Not sent"} · {money.exact(q.netUsd)} + TVA {pct(q.tvaRate)}
+                                </div>
+                            </li>
+                        ))}
+                    </ol>
+                </>
+            )}
         </Modal>
     );
 }

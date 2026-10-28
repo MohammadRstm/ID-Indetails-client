@@ -10137,6 +10137,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{projectId}/quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuoteResponse"][];
+                        "text/json": components["schemas"]["QuoteResponse"][];
+                        "text/plain": components["schemas"]["QuoteResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuoteResponse"];
+                        "text/json": components["schemas"]["QuoteResponse"];
+                        "text/plain": components["schemas"]["QuoteResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{projectId}/reopen": {
         parameters: {
             query?: never;
@@ -12046,6 +12108,170 @@ export interface paths {
                         "text/json": components["schemas"]["PublicWebsiteSocialLink"][];
                         "text/plain": components["schemas"]["PublicWebsiteSocialLink"][];
                     };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quotes/{quoteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    quoteId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuoteResponse"];
+                        "text/json": components["schemas"]["QuoteResponse"];
+                        "text/plain": components["schemas"]["QuoteResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quotes/{quoteId}/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    quoteId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["RecordDeliveryRequest"];
+                    "application/json": components["schemas"]["RecordDeliveryRequest"];
+                    "text/json": components["schemas"]["RecordDeliveryRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuoteResponse"];
+                        "text/json": components["schemas"]["QuoteResponse"];
+                        "text/plain": components["schemas"]["QuoteResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quotes/{quoteId}/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    quoteId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["EmailDocumentRequest"];
+                    "application/json": components["schemas"]["EmailDocumentRequest"];
+                    "text/json": components["schemas"]["EmailDocumentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuoteResponse"];
+                        "text/json": components["schemas"]["QuoteResponse"];
+                        "text/plain": components["schemas"]["QuoteResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quotes/{quoteId}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    quoteId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };
@@ -18327,6 +18553,38 @@ export interface components {
             minutes: number;
             /** Format: date */
             quarterStart: string;
+        };
+        QuoteDeliveryResponse: {
+            channel: components["schemas"]["DeliveryChannel"];
+            /** Format: int64 */
+            id: number;
+            note: null | string;
+            recipient: null | string;
+            /** Format: date-time */
+            sentAt: string;
+            sentBy: null | components["schemas"]["PersonRefResponse"];
+        };
+        QuoteResponse: {
+            client: components["schemas"]["InvoiceClientResponse"];
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: components["schemas"]["PersonRefResponse"];
+            deliveries: components["schemas"]["QuoteDeliveryResponse"][];
+            domain: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            netUsd: number;
+            number: string;
+            /** Format: int64 */
+            projectId: number;
+            projectLocation: null | string;
+            projectTitle: string;
+            scope: null | string;
+            /** Format: double */
+            totalUsd: number;
+            /** Format: double */
+            tvaRate: number;
         };
         ReactivateEmployeeRequest: {
             payGap?: null | boolean;

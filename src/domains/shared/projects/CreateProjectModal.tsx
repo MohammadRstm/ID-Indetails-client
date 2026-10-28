@@ -127,8 +127,10 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                 action: () => navigate(`/${domain}/projects/${project.id}`),
             });
             onClose();
-            // Straight to Requirements: a new project's progress means nothing until it has some.
-            navigate(`/${domain}/projects/${project.id}?tab=requirements`);
+            // Straight to Requirements: a new project's progress means nothing until it has some. Whoever sends quotes
+            // is asked there whether this one gets one.
+            const quote = billing === "client" && permissions.has(P.INVOICE_SEND) ? "&quote=new" : "";
+            navigate(`/${domain}/projects/${project.id}?tab=requirements${quote}`);
         } catch {
             // Shown in the foot.
         }

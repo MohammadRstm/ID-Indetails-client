@@ -27,7 +27,7 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
  * the payment history. A new default re-prices every material still on it; one with a price of its own, or already
  * on a client statement, keeps its price.
  */
-export default function PricingModal({ project, onClose }: { project: Project; onClose: () => void }) {
+export default function PricingModal({ project, onClose, onSaved }: { project: Project; onClose: () => void; onSaved?: () => void }) {
     const x = siteMoneyOf(project.money!);
     const materials = useAllMaterials(project.id).data?.items;
     const save = useSetPricing(project.id);
@@ -67,7 +67,7 @@ export default function PricingModal({ project, onClose }: { project: Project; o
                     sub: m ? `Agreed so far ${money.exact(m.revenue)} · expected profit ${money.exact(m.profit)}` : undefined,
                     icon: "checkCircle",
                 });
-                onClose();
+                (onSaved ?? onClose)();
             },
         });
     }
