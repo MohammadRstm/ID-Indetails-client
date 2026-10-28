@@ -90,6 +90,20 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 text: `Weekly summary: you logged ${fmtDur(n(p.minutes))} last week`,
                 sub: `Across ${plural(n(p.projects), "project")} · ${plural(n(p.entries), "entry", "entries")}`, icon: "reports", route: "/design/my-work",
             };
+        // the morning after a working day logged short: a reminder, as logging stays open all month
+        case "hours_missed":
+            return {
+                text: `You logged ${fmtH(n(p.loggedMinutes))} of the ${fmtH(n(p.requiredMinutes))} ${fmtDate(s(p.day))} asked for`,
+                sub: "You can still log the rest this month", icon: "clock", route: "/design/my-work",
+            };
+        case "hours_missed_list": {
+            const people = (p.people as { name?: string; loggedMinutes?: number; requiredMinutes?: number }[] | undefined) ?? [];
+            return {
+                text: `${plural(n(p.count) || people.length, "employee")} logged less than their working day on ${fmtDate(s(p.day))}`,
+                sub: people.slice(0, 3).map((x) => `${(x.name ?? "").split(" ")[0]} ${fmtH(x.loggedMinutes ?? 0)} of ${fmtH(x.requiredMinutes ?? 0)}`).join(" · ") || undefined,
+                icon: "people", route: "/design/people",
+            };
+        }
 
         case "meeting_scheduled": {
             const start = s(p.startsAt), end = s(p.endsAt);
