@@ -219,7 +219,8 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             const from = s(p.effectiveFrom);
             return {
                 text: from && from > companyToday() ? `Your pay changes from ${fmtDate(from)}` : `Your pay changed${from ? ` from ${fmtDate(from)}` : ""}`,
-                sub: by, icon: "card", route: logsWork ? "/design/pay" : mine,
+                // employees don't see their pay, so there is nothing to open
+                sub: by, icon: "card", route: undefined,
             };
         }
         case "schedule_changed": {
@@ -231,7 +232,7 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             const text = p.kind === 2 ? `${fmtMonthY(month)} ${paid ? "excused" : "marked unpaid"} as a whole`
                 : p.kind === 1 ? `${plural(days, paid ? "day off" : "unpaid day off", paid ? "days off" : "unpaid days off")}${paid ? " excused" : ""} in ${fmtMonthY(month)}`
                     : `${fmtH(n(p.minutes))} ${paid ? "excused" : "of unpaid leave"} in ${fmtMonthY(month)}`;
-            return { text, sub: by, icon: "checkCircle", route: logsWork ? "/design/pay" : mine };
+            return { text, sub: by, icon: "checkCircle", route: logsWork ? "/design/projects" : mine };
         }
         case "hours_short": {
             const people = (p.people as { name?: string; shortMinutes?: number }[] | undefined) ?? [];

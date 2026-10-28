@@ -3,7 +3,7 @@ import { onSessionReset } from "@/app/session/sessionReset";
 import type { WorkEntry } from "./workApi";
 
 /*
- * The Log work window is opened from many places (the top bar, project cards, the timer, My pay), so it
+ * The Log work window is opened from many places (the top bar, project cards, the timer), so it
  * lives outside any one page: this says whether it is open and how, and <LogWorkHost /> shows it.
  */
 

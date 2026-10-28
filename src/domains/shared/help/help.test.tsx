@@ -73,7 +73,9 @@ describe("Help's content", () => {
             for (const other of [da, xa, de, xe]) expect(other, id).not.toContain(id);
         }
         // each business's own work
-        expect(de).toEqual(expect.arrayContaining(["log-work", "timer", "my-pay", "hours-balance", "pay", "deductions", "behind"]));
+        expect(de).toEqual(expect.arrayContaining(["log-work", "timer", "hours-balance", "behind"]));
+        // employees don't see their pay, nor how it's worked out
+        for (const id of ["my-pay", "my-pay-estimates", "pay", "deductions"]) expect(de, id).not.toContain(id);
         // site staff report labour and write daily logs; materials are recorded by whoever is given them
         expect(xe).toEqual(expect.arrayContaining(["labour-week", "daily-log"]));
         expect(xe).not.toContain("record-materials");
@@ -118,7 +120,7 @@ describe("Help's content", () => {
         expect(top(money, "revenue vs expected revenue")[0]).toBe("expected-revenue");
         expect(top(ctxOf("designAdmin"), "outstanding")).not.toContain("billing-terms");
         expect(top(ctxOf("designEmployee"), "outstanding")).not.toContain("billing-terms");
-        expect(top(ctxOf("designEmployee"), "how is my salary calculated")).toContain("pay");
+        expect(top(ctxOf("designEmployee"), "how is my salary calculated")).not.toContain("pay");
     });
 
     it("resolves links for the reader: a super admin's business links name the business", () => {
