@@ -20,15 +20,15 @@ describe("the route table", () => {
 
     it("builds each persona's sidebar from what they may open", () => {
         expect(navLabels(personas.designAdmin, "design"))
-            .toEqual(["Overview", "Projects", "Clients", "Employees", "Meetings", "Activity", "Reports", "Settings"]);
+            .toEqual(["Overview", "Projects", "Clients", "Employees", "Activity", "Reports", "Settings"]);
         // Execution runs on site, not on a clock: no Employees list, Activity or Reports.
         expect(navLabels(personas.executionAdmin, "execution"))
-            .toEqual(["Dashboard", "Projects", "Clients", "Daily logs", "Meetings", "Settings"]);
+            .toEqual(["Dashboard", "Projects", "Clients", "Daily logs", "Settings"]);
         expect(navLabels(personas.designEmployee, "design")).toEqual(["Projects", "My work", "Meetings", "Profile"]);
         // site staff: what happens on their sites, and the sites themselves
         expect(navLabels(personas.executionEmployee, "execution")).toEqual(["Daily log", "My sites", "Profile"]);
         expect(navLabels(personas.superAdmin, "execution"))
-            .toEqual(["Dashboard", "The box", "Projects", "Clients", "Daily logs", "Financials", "Meetings", "Settings"]);
+            .toEqual(["Dashboard", "The box", "Projects", "Clients", "Daily logs", "Financials", "Settings"]);
         expect(companyNav(permissionsOf(personas.superAdmin)).map((i) => i.label))
             .toEqual(["Overview", "Expenses", "Salaries", "Project pay", "Schedules", "Proton", "Settings"]);
         expect(companyNav(permissionsOf(personas.designAdmin))).toEqual([]);

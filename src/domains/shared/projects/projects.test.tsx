@@ -355,7 +355,7 @@ describe("meetings", () => {
 
     it("are asked for by the page's own domain", async () => {
         const asked: (string | null)[] = [];
-        renderApp("/design/meetings", personas.superAdmin,
+        renderApp("/design/meetings", personas.designEmployee,
             http.get("/api/meetings", ({ request }) => { asked.push(new URL(request.url).searchParams.get("domain")); return HttpResponse.json(fixtures.meetings); }),
             ...projectHandlers);
         await screen.findByRole("button", { name: /new meeting/i });

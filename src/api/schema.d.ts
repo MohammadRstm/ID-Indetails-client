@@ -5354,7 +5354,34 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SaveGeneralMeetingRequest"];
+                    "application/json": components["schemas"]["SaveGeneralMeetingRequest"];
+                    "text/json": components["schemas"]["SaveGeneralMeetingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MeetingResponse"];
+                        "text/json": components["schemas"]["MeetingResponse"];
+                        "text/plain": components["schemas"]["MeetingResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -15854,17 +15881,19 @@ export interface components {
             title: string;
         };
         MeetingResponse: {
+            attendees: components["schemas"]["MeetingPersonResponse"][];
             /** Format: date-time */
             createdAt: string;
             createdBy: null | components["schemas"]["MeetingPersonResponse"];
             description: null | string;
+            domain: null | string;
             /** Format: date-time */
             endsAt: string;
             /** Format: int64 */
             id: number;
             /** Format: int32 */
             minutes: number;
-            project: components["schemas"]["MeetingProjectResponse"];
+            project: null | components["schemas"]["MeetingProjectResponse"];
             /** Format: date-time */
             startsAt: string;
             topic: null | string;
@@ -18503,6 +18532,16 @@ export interface components {
             timerEnabled?: boolean;
             weeklySummary?: boolean;
         };
+        SaveGeneralMeetingRequest: {
+            attendeeIds?: number[];
+            description?: null | string;
+            domain?: null | string;
+            /** Format: date-time */
+            endsAt?: string;
+            /** Format: date-time */
+            startsAt?: string;
+            topic?: null | string;
+        };
         SaveInvoiceRequest: {
             billToContact?: null | string;
             billToName?: null | string;
@@ -18512,6 +18551,7 @@ export interface components {
             termsDays?: null | number;
         };
         SaveMeetingRequest: {
+            attendeeIds?: null | number[];
             description?: null | string;
             /** Format: date-time */
             endsAt?: string;

@@ -70,7 +70,7 @@ describe("finding a page by what people call it", () => {
 
     it.each([
         ["customers", "Open clients", "/design/clients"], ["add customer", "Add client", "/design/clients?new=1"],
-        ["timesheets", "Open reports", "/design/reports"], ["audit log", "Open activity", "/design/activity"], ["calendar", "Open meetings", "/design/meetings"],
+        ["timesheets", "Open reports", "/design/reports"], ["audit log", "Open activity", "/design/activity"], ["calendar", "Open meetings", "/design/overview?tab=meetings"],
         ["chat", "Open messages", "/design/messages"], ["alerts", "Open notifications", "/design/notifications"],
         ["create project", "New project", "/design/projects?new=1"], ["dashboard", "Open overview", "/design/overview"],
         ["auto archive", "Project settings", "/design/settings?section=projects"], ["weekly summary", "Notification settings", "/design/settings?section=notifications"],

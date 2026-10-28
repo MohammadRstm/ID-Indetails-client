@@ -32,11 +32,12 @@ const PATHS = [
 ] as const;
 
 // one letter per path, in PATHS order: o open, h home, d denied (everyone here has Proton, so its page opens in their business)
+// admins set meetings from a tab on their Overview, super admins from the company overview: no Meetings page for them
 const MATRIX: Record<PersonaName, Record<Domain, string>> = {
-    superAdmin:        { design: "oooooooohooohooooo hhdd", execution: "ooooodoohoddhooooo hhoo" },
+    superAdmin:        { design: "oooooooohhoohooooo hhdd", execution: "ooooodoohhddhooooo hhoo" },
     // admins: no Financials until a super admin hands them the money
-    designAdmin:       { design: "ooooooodhooohooooo hhdd", execution: "hhhhhhhhhhhhhhhhhh hhhh" },
-    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhh hhhh", execution: "ooooododhoddhooooo hhod" },
+    designAdmin:       { design: "ooooooodhhoohooooo hhdd", execution: "hhhhhhhhhhhhhhhhhh hhhh" },
+    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhh hhhh", execution: "ooooododhhddhooooo hhod" },
     designEmployee:    { design: "doodddddooddodoooo dddd", execution: "hhhhhhhhhhhhhhhhhh hhhh" },
     // site staff: their daily log and their sites, which open from My sites, not the project list
     executionEmployee: { design: "hhhhhhhhhhhhhhhhhh hhhh", execution: "ddodddddddddodoooo oodd" },
