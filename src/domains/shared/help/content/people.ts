@@ -67,7 +67,7 @@ export const people: Article[] = [
                 "Nobody sets their own pay.",
                 "Admins and super admins are paid a fixed monthly salary, set when they're invited: they log no hours.",
             ),
-            para("A monthly salary is the same every month. An hour of it is the salary ÷ that month's paid hours, which prices deductions and the cost of their hours on projects; their overtime is paid from the true hourly rate, the salary ÷ 173.33 (a standard month: a 40-hour paid week × 52 ÷ 12), whatever the month."),
+            para("A monthly salary is the same every month. An hour of it is the salary ÷ that month's paid hours, which prices deductions and the cost of their hours on projects; their overtime is paid at the overtime rate set with the pay (the salary ÷ 184 unless set otherwise), whatever the month."),
         ],
         related: ["pay", "project-cost"],
     },

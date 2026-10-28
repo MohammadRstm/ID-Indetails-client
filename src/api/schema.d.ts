@@ -14466,6 +14466,8 @@ export interface components {
             /** Format: date */
             effectiveFrom?: null | string;
             note?: null | string;
+            /** Format: double */
+            overtimeRate?: null | number;
         };
         ChangeRoleRequest: {
             domainCode?: null | string;
@@ -15428,6 +15430,8 @@ export interface components {
             currency?: string;
             /** Format: date */
             effectiveFrom?: null | string;
+            /** Format: double */
+            overtimeRate?: null | number;
         };
         InvitationPreviewResponse: {
             domain: null | string;
@@ -16561,6 +16565,8 @@ export interface components {
             /** Format: int64 */
             id: number;
             note: null | string;
+            /** Format: double */
+            overtimeRate: number;
         };
         PeriodCostResponse: {
             /** Format: double */
@@ -18370,6 +18376,8 @@ export interface components {
             overtimeMinutes: number;
             /** Format: double */
             overtimePay: number;
+            /** Format: double */
+            overtimeRate: number;
             /** Format: int64 */
             photoFileId: null | number;
             position: null | string;
@@ -18377,8 +18385,6 @@ export interface components {
             role: string;
             /** Format: int32 */
             shortMinutes: null | number;
-            /** Format: double */
-            standardHourlyRate: number;
             team: null | components["schemas"]["TeamSummaryResponse"];
             /** Format: double */
             total: number;

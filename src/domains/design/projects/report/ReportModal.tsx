@@ -284,7 +284,7 @@ export default function ReportModal({ project, onClose }: { project: Project; on
                                     </tbody>
                                 </table>
                                 <p style={{ marginTop: 8, fontSize: "10.5px", color: "#6B7674" }}>
-                                    Labour is each of the {fmtNumber(entries)} work entries at the hourly rate in force on its day, with the paid break of each day worked.
+                                    Labour is each of the {fmtNumber(entries)} work entries at the hourly rate in force on its day, its hours paid as overtime at the overtime rate, with the paid break of each day worked.
                                     {m ? ` Effective cost ${money.exact(m.costPerHour)} per hour over the whole project.` : ""}
                                 </p>
                             </div>

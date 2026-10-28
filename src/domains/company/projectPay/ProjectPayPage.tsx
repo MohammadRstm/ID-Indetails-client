@@ -19,7 +19,6 @@ import { money } from "@/shared/format/money";
 import { companyToday, fmtDate, fmtH, fmtNumber } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import { HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
 import { policyOn, useWorkingTime } from "@/domains/shared/settings/settingsApi";
 import { useProjects } from "@/domains/shared/projects/projectsApi";
 import { periodDates, periodLabel, periodOf, stepPeriod, type PayPeriod, type PayUnit } from "./payPeriod";
@@ -135,7 +134,7 @@ export default function ProjectPayPage() {
                         <Icon name="info" />
                         <span>
                             Pay is the hours at each person's hourly rate on the day they were worked - salaried staff at their salary ÷ that month's paid hours;
-                            overtime (outside each person's working hours, or on their days off) at their true hourly rate (a salary ÷ {HOURS_PER_MONTH.toFixed(1)} h) × {multiplier ?? "the overtime rate"} - except overtime that made up hours
+                            overtime (outside each person's working hours, or on their days off) at the overtime rate set with their pay (a salary ÷ 184 unless set otherwise) × {multiplier ?? "the overtime multiplier"} - except overtime that made up hours
                             someone was short that month, which counts and is paid as normal time. Amounts in different currencies are totalled separately.
                         </span>
                     </div>
