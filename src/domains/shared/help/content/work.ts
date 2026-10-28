@@ -1,13 +1,15 @@
 import { P } from "@/app/permissions/codes";
 import { or as orFact } from "../helpFacts";
 import {
-    and, has, hasAny, isEmployee, link, links, list, note, only, para, sees, step, steps, tracksOwnHours, type Article,
+    and, has, hasAny, isEmployee, isSuperAdmin, link, links, list, note, not, only, para, sees, step, steps, tracksOwnHours, type Article,
 } from "../helpModel";
 
 /** They log Design work: the Log work button and the timer. */
 const logs = and(sees("design"), has(P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN));
 const designEmployee = and(isEmployee, sees("design"), has(P.WORK_ENTRY_VIEW_OWN));
 const executionEmployee = and(isEmployee, sees("execution"), has(P.REQUIREMENT_VIEW));
+/** Admins set meetings from their Overview's Meetings tab; super admins from the company overview's. */
+const domainAdmin = and(not(isEmployee), not(isSuperAdmin));
 
 export const work: Article[] = [
     {
@@ -140,16 +142,27 @@ export const work: Article[] = [
         title: "Setting up a meeting",
         category: "work",
         who: hasAny(P.MEETING_CREATE, P.MEETING_MANAGE),
-        summary: "Meetings → New meeting: pick the project, the topic, the day and the time.",
+        summary: "New meeting: what it is about, the topic, the day and the time. Admins also set general meetings for the people they choose.",
         ask: ["meeting", "new meeting", "schedule meeting", "book a meeting", "client meeting", "site visit", "move meeting", "cancel meeting"],
         blocks: [
-            steps(
+            only(isEmployee, steps(
                 step("Open **Meetings** and choose **New meeting**.", "Meetings"),
-                step("Pick the **Project**, the **Topic**, the **Date** and the **Time**, then **Schedule meeting**."),
-            ),
-            only(has(P.MEETING_MANAGE), para("You may record and remove anyone's meetings.")),
+                step("Pick the project it is **About**, the **Topic**, the **Date** and the **Time**, then **Schedule meeting**."),
+            )),
+            only(domainAdmin, steps(
+                step("Open **Overview**, go to **Meetings** and choose **New meeting**.", "Overview", "Meetings"),
+                step("Leave **About** on **General meeting** and choose the **Attendees**, or pick a project. Add the **Topic**, the **Date** and the **Time**, then **Schedule meeting**."),
+            )),
+            only(isSuperAdmin, steps(
+                step("Open the company **Overview**, go to **Meetings** and choose **New meeting**.", "Company", "Overview", "Meetings"),
+                step("Leave **About** on **General meeting**, choose who it is **For** (the whole company or one business) and the **Attendees**, or pick a project. Add the **Topic**, the **Date** and the **Time**, then **Schedule meeting**."),
+            )),
+            para("New meetings are about active projects only."),
+            only(has(P.MEETING_MANAGE), para("A general meeting's attendees are told when they are invited, when it moves and when it is cancelled. You may record and remove anyone's meetings.")),
             only(and(has(P.MEETING_CREATE), (ctx) => !ctx.p.has(P.MEETING_MANAGE)), para("You can move or remove the meetings you set. Whoever manages meetings is told about the ones you set.")),
-            links(link("Open meetings", { business: "meetings" })),
+            only(isEmployee, links(link("Open meetings", { business: "meetings" }))),
+            only(domainAdmin, links(link("Open meetings", { business: "overview?tab=meetings" }))),
+            only(isSuperAdmin, links(link("Open meetings", { company: "overview?tab=meetings" }))),
         ],
     },
     {

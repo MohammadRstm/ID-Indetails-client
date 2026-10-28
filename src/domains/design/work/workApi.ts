@@ -210,7 +210,9 @@ export function useResizeMeeting() {
         mutationFn: async ({ id, body }: { id: number; body: Schemas["SaveMeetingRequest"] }) =>
             (await http.put<Schemas["MeetingResponse"]>(`/meetings/${id}`, body)).data,
         // it shows on its project's timeline too
-        onSuccess: (meeting) => { void invalidate(keys.meetings.all, keys.work.all, keys.projects.detail(meeting.project.id)); },
+        onSuccess: (meeting) => {
+            void invalidate(keys.meetings.all, keys.work.all, ...(meeting.project ? [keys.projects.detail(meeting.project.id)] : []));
+        },
     });
 }
 

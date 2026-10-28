@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import type { Domain } from "@/app/permissions/permissions";
@@ -9,16 +9,19 @@ import { useCompanySettings } from "@/app/shell/shellQueries";
 import Board, { BoardButton } from "@/shared/components/Board/Board";
 import { Delta } from "@/shared/components/Charts/Bars";
 import { KpiTabs, type KpiTab } from "@/shared/components/Data/Kpi";
+import Tabs from "@/shared/components/Data/Tabs";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import { PersonAvatar } from "@/shared/components/Identity/People";
 import { Money } from "@/shared/components/Data/Money";
+import { DOMAIN_LABEL } from "@/shared/format/labels";
 import { money } from "@/shared/format/money";
 import { customRange, periodRange, quarterLabel, quarterOf, type PeriodKind } from "@/shared/format/periods";
 import { addDays, companyToday, DAYS_LONG, fmtDayDateY, fmtH, fmtNumber, isoWeek, partsOf } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useClientOverview } from "../../shared/clients/clientsApi";
+import { MeetingsBoard } from "../../shared/meetings/Meetings";
 import { costPartsOf, costWords } from "../../shared/finance/costParts";
 import { useFinanceAttention, useFinanceBilling, useFinanceClients, useFinanceMonthly, useFinanceProjects, useFinanceSummary } from "../../shared/finance/financeApi";
 import { useProjects } from "../../shared/projects/projectsApi";
@@ -40,17 +43,46 @@ function Failed({ query, what }: { query: { error: unknown; refetch: () => unkno
 const orFailed = (query: { isError: boolean; data: unknown; error: unknown; refetch: () => unknown }, what: string, node: ReactNode) =>
     loadFailed(query) ? <Failed query={query} what={what} /> : node;
 
-/** The overview an admin lands on: Design's, or Execution's dashboard. */
+type Tab = "overview" | "meetings";
+
+/**
+ * The overview an admin lands on: Design's, or Execution's dashboard. Admins set meetings from its Meetings tab;
+ * super admins have theirs on the company overview, so they see them in one place.
+ */
 export default function OverviewRoute() {
     const domain = useDomain();
-    return <OverviewPage key={domain} domain={domain} />;
+    const permissions = usePermissions();
+    const [params, setParams] = useSearchParams();
+    const meetings = permissions.isAdmin && !permissions.isSuperAdmin && permissions.has(P.MEETING_MANAGE);
+    const tab: Tab = meetings && params.get("tab") === "meetings" ? "meetings" : "overview";
+    const label = domain === "execution" ? "Dashboard" : "Overview";
+    const open = (next: Tab) => {
+        if (next === "overview") params.delete("tab");
+        else params.set("tab", next);
+        setParams(params, { replace: true });
+    };
+    const tabs = meetings && <Tabs value={tab} onChange={open} items={[{ key: "overview", label }, { key: "meetings", label: "Meetings" }]} />;
+
+    if (tab === "overview") return <OverviewPage key={domain} domain={domain} tabs={tabs} />;
+    return (
+        <div className="page">
+            <div className="page-head">
+                <div>
+                    <h1 className="page-title">{label}</h1>
+                    <div className="page-sub">General meetings, and the meetings of {DOMAIN_LABEL[domain]}'s projects</div>
+                </div>
+            </div>
+            {tabs}
+            <MeetingsBoard domain={domain} newButton />
+        </div>
+    );
 }
 
 /**
  * This period's work and money on a board each person arranges (the prototype's P.AdminOverview). Execution
  * logs no hours, so its dashboard is the same board without the cards about work.
  */
-function OverviewPage({ domain }: { domain: Domain }) {
+function OverviewPage({ domain, tabs }: { domain: Domain; tabs: ReactNode }) {
     const navigate = useNavigate();
     const permissions = usePermissions();
     const me = useCurrentUser();
@@ -180,6 +212,7 @@ function OverviewPage({ domain }: { domain: Domain }) {
                 </div>
             </div>
 
+            {tabs}
             {loadFailed(overview) && <div style={{ marginBottom: 14 }}><Failed query={overview} what="the overview" /></div>}
             {/* Execution's board, and Design's project counts, come from the dashboard */}
             {loadFailed(dashboard) && <div style={{ marginBottom: 14 }}><Failed query={dashboard} what="the dashboard" /></div>}

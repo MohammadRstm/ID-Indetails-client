@@ -20,6 +20,7 @@ import { useCompanyOverview, type CompanyOverview } from "./companyApi";
 import { companyPeriod, lastChoice, rememberChoice, type PeriodChoice } from "./companyPeriod";
 import PeriodBar from "./PeriodBar";
 import CompanyPeople from "./people/CompanyPeople";
+import { MeetingsBoard } from "../shared/meetings/Meetings";
 import { loadFailed } from "@/api/queryState";
 import HelpHint from "@/domains/shared/help/HelpHint";
 
@@ -28,7 +29,13 @@ const merged = (amounts: { currency: string; amount: number }[]) =>
     [...amounts.reduce((m, a) => m.set(a.currency, (m.get(a.currency) ?? 0) + a.amount), new Map<string, number>())].map(([currency, amount]) => ({ currency, amount }));
 
 type DomainFigures = CompanyOverview["domains"][number];
-type Tab = "overview" | "people" | "teams";
+type Tab = "overview" | "people" | "teams" | "meetings";
+
+const SUBS: Record<Exclude<Tab, "overview">, string> = {
+    people: "Everyone in Design, Execution and above them",
+    teams: "The teams of both businesses",
+    meetings: "General meetings, and the meetings of both businesses' projects",
+};
 
 function Line({ label, value, strong, rule, tone }: { label: string; value: number; strong?: boolean; rule?: boolean; tone?: "auto" }) {
     return (
@@ -51,6 +58,7 @@ export default function CompanyOverviewPage() {
         { key: "overview", label: "Overview" },
         ...(permissions.has(P.EMPLOYEE_VIEW) ? [{ key: "people" as const, label: "People" }] : []),
         { key: "teams", label: "Teams" },
+        ...(permissions.has(P.MEETING_MANAGE) ? [{ key: "meetings" as const, label: "Meetings" }] : []),
     ];
     const requested = params.get("tab");
     const tab = tabs.find((t) => t.key === requested)?.key ?? "overview";
@@ -67,11 +75,11 @@ export default function CompanyOverviewPage() {
                     <div className="page-head">
                         <div>
                             <h1 className="page-title">Company overview</h1>
-                            <div className="page-sub">{tab === "people" ? "Everyone in Design, Execution and above them" : "The teams of both businesses"}</div>
+                            <div className="page-sub">{SUBS[tab]}</div>
                         </div>
                     </div>
                     <Tabs value={tab} onChange={open} items={tabs} />
-                    {tab === "people" ? <CompanyPeople /> : (
+                    {tab === "people" ? <CompanyPeople /> : tab === "meetings" ? <MeetingsBoard domain={null} newButton /> : (
                         <div className="grid g-2">
                             <TeamsSettings domain="design" named />
                             <TeamsSettings domain="execution" named />

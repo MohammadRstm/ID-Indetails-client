@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useNavigate } from "react-router";
 import type { Schemas } from "@/api/types";
+import { P } from "@/app/permissions/codes";
 import type { Domain, Permissions } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { canOpen, companyRoutes, websiteRoutes } from "@/app/routing/routeTable";
@@ -138,6 +139,12 @@ export function stepOf(command: unknown, p: Permissions, current: Domain | null)
                 return companyRoutes.find((r) => r.path === page.path)?.access(p) ? { kind: "go", path: `/company/${page.path}`, label } : null;
             }
             if (!visible(c.domain)) return null;
+            // admins keep meetings on their Overview's tab, super admins on the company overview's
+            if (c.page === "meetings" && p.isAdmin) {
+                if (!p.has(P.MEETING_MANAGE)) return null;
+                if (!p.isSuperAdmin) return domainPath(c.domain, "overview?tab=meetings");
+                return companyRoutes.find((r) => r.path === "overview")?.access(p) ? { kind: "go", path: "/company/overview?tab=meetings", label } : null;
+            }
             const query = c.page === "projects" && isId(c.clientId) ? `?client=${c.clientId}`
                 : c.page === "financials" && has(TABS, c.tab) ? `?tab=${c.tab}`
                 : "";

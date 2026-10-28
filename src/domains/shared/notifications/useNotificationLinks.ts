@@ -16,7 +16,10 @@ export function useReader(): Reader {
     const area = useArea();
     const visible = (["design", "execution"] as Domain[]).filter((d) => permissions.canSeeDomain(d));
     const domain = area.kind === "domain" ? area.domain : (user.domain as Domain | null) ?? visible[0] ?? null;
-    return { userId: user.id, isAdmin: permissions.isAdmin, logsWork: permissions.has(P.WORK_ENTRY_CREATE) && canOpen(permissions, "design", "my-work"), domain };
+    return {
+        userId: user.id, isAdmin: permissions.isAdmin, isSuperAdmin: permissions.isSuperAdmin,
+        logsWork: permissions.has(P.WORK_ENTRY_CREATE) && canOpen(permissions, "design", "my-work"), domain,
+    };
 }
 
 /** Whether this person may open a page: a business's page by its route's rules, a company page by its own. */

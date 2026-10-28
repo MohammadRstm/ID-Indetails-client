@@ -9,6 +9,8 @@ export type Notification = Schemas["NotificationResponse"];
 export type Reader = {
     userId: number;
     isAdmin: boolean;
+    /** Their meetings are on the company overview. */
+    isSuperAdmin?: boolean;
     /** They log Design work and keep it in My work: the words about logging are for them. */
     logsWork: boolean;
     /** Their own business, or the one they are looking at; a notification about a project uses the project's. */
@@ -51,6 +53,13 @@ export function describe(note: Notification, reader: Reader): NotificationView {
     // pages about the reader themself: an employee's own profile or pay; admins have none of their own
     const mine = !reader.isAdmin && reader.domain ? `/${reader.domain}/profile` : undefined;
     const by = note.actor ? `By ${who}` : undefined;
+    // admins keep meetings on their Overview's tab, super admins on the company overview's, Design employees on a page
+    const meetings = reader.isSuperAdmin ? "/company/overview?tab=meetings"
+        : !d ? undefined
+            : reader.isAdmin ? `/${d}/overview?tab=meetings`
+                : d === "design" ? "/design/meetings" : undefined;
+    const when = s(p.startsAt) ? `${fmtDayDate(s(p.startsAt))} · ${fmtRange(s(p.startsAt), s(p.endsAt) || s(p.startsAt))}` : undefined;
+    const topic = p.topic ? `: ${s(p.topic)}` : "";
 
     switch (note.kind) {
         case "requirement_assigned":
@@ -105,14 +114,19 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             };
         }
 
-        case "meeting_scheduled": {
-            const start = s(p.startsAt), end = s(p.endsAt);
+        case "meeting_scheduled":
             return {
                 text: `${s(p.authorName) || who} scheduled a meeting on ${title}`,
-                sub: start ? `${fmtDayDate(start)} · ${fmtRange(start, end || start)}${p.topic ? ` · ${s(p.topic)}` : ""}` : undefined,
-                icon: "calendar", route: d ? `/${d}/meetings` : undefined,
+                sub: when && `${when}${p.topic ? ` · ${s(p.topic)}` : ""}`,
+                icon: "calendar", route: meetings,
             };
-        }
+        // a general meeting's attendees
+        case "meeting_invited":
+            return { text: `${s(p.authorName) || who} invited you to a meeting${topic}`, sub: when, icon: "calendar", route: meetings };
+        case "meeting_moved":
+            return { text: `${s(p.authorName) || who} moved a meeting${topic}`, sub: when && `Now ${when}`, icon: "calendar", route: meetings };
+        case "meeting_cancelled":
+            return { text: `${s(p.authorName) || who} cancelled a meeting${topic}`, sub: when, icon: "calendar", route: meetings };
         case "materials_added":
             return { text: `${who} added ${plural(n(p.count), "material")} to ${title}`, icon: "list", route: project };
         case "labour_week_submitted":
