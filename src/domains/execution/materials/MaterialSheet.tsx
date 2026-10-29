@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { errorMessage } from "@/api/errors";
+import FormFailure from "@/domains/shared/projects/FormFailure";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -112,7 +112,7 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
                         {used.length ? <><b className="mono" style={{ color: "var(--ink)" }}>{money.exact(total)}</b> · {used.length} new material{used.length === 1 ? "" : "s"}</> : "Nothing new typed yet"}
                         {N > 0 && <span className="muted"> · {used.length ? `${money.exact(recordedTotal + total)} for the project with them` : `${money.exact(recordedTotal)} recorded so far`}</span>}
                         {tried && nBad > 0 && <span className="sh-warn"> · {nBad} row{nBad === 1 ? " needs" : "s need"} {otherBad ? "fixing - point at a red cell to see why" : "a type and a cost - quantity × unit cost, or a total"}</span>}
-                        {add.error && <span className="sh-warn"> · {errorMessage(add.error)}</span>}
+                        {add.error && <> · <FormFailure error={add.error} onForced={onClose} /></>}
                     </div>
                     <button className="btn" onClick={close}>Cancel</button>
                     <button className="btn btn-primary" disabled={!used.length || add.isPending} onClick={submit}>

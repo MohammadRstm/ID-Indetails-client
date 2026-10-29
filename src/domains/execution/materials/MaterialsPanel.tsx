@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import { errorMessage } from "@/api/errors";
+import { errorMessage, toApiError } from "@/api/errors";
+import { P } from "@/app/permissions/codes";
+import { usePermissions } from "@/app/permissions/usePermissions";
 import { CostRow } from "@/shared/components/Data/Money";
 import Pager from "@/shared/components/Data-Tables/Pager";
 import Empty from "@/shared/components/Feedback/Empty";
@@ -94,7 +96,16 @@ export default function MaterialsPanel({ project }: { project: Project }) {
         setPending((p) => ({ ...p, ...Object.fromEntries(held) }));
         return () => setPending((p) => { const next = { ...p }; held.forEach(([key]) => delete next[key]); return next; });
     }
-    const notSaved = (e: unknown) => toast({ text: "Not saved", sub: errorMessage(e), icon: "alert" });
+    const canForce = usePermissions().has(P.FINANCIAL_VIEW);
+    const notSaved = (e: unknown) => {
+        const failure = toApiError(e);
+        if (failure.code === "profit_floor" && failure.blockedChangeId != null && canForce) {
+            params.set("blocked", String(failure.blockedChangeId));
+            setParams(params);
+            return;
+        }
+        toast({ text: "Not saved", sub: failure.message, icon: "alert" });
+    };
 
     // A cell left with a new value saves the material. A change that would leave it without a type or a
     // cost is refused here, and the cell shows what is saved again.

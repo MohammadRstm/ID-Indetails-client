@@ -31,6 +31,16 @@ group("A notification's words", () => {
             .toMatchObject({ text: "Today's work: 3 entries logged · 2h 30m", sub: "Latest: Sarah Haddad on Villa Mounir interiors", route: "/design/activity" });
     });
 
+    it("tell whoever sees the money when a project nears zero profit, and open a stopped change to decide it", () => {
+        const stopped = note("change_blocked", { projectTitle: project.title, kind: "expense" }, { actor: nadia, project, subjectType: "blocked_change", subjectId: 9 });
+        expect(describe(stopped, admin)).toMatchObject({
+            text: "A change on Studio Nour brand space was stopped at zero profit", sub: "An expense by Nadia Karam · force it or dismiss it", route: "/design/projects/5?blocked=9",
+        });
+        expect(describe(note("profit_low", { projectTitle: project.title, marginPct: 8 }, { project }), admin))
+            .toMatchObject({ text: "Studio Nour brand space is close to zero profit", sub: "8% margin left", route: "/design/projects/5" });
+        expect(describe(note("profit_at_zero", { projectTitle: project.title, marginPct: -3 }, { project }), admin).text).toBe("Studio Nour brand space is at zero profit or below");
+    });
+
     it("speak to the reader: requirements open the project's tab, and those who log work hear about logging", () => {
         const assigned = note("requirement_assigned", { text: "Mood board", deadline: "2026-10-02", projectTitle: project.title }, { actor: nadia, project });
         expect(describe(assigned, designer)).toMatchObject({ text: "Nadia Karam assigned you a requirement on Studio Nour brand space", sub: "Mood board · due Oct 2", route: "/design/projects/5?tab=requirements" });

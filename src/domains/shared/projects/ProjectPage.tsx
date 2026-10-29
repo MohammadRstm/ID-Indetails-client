@@ -38,6 +38,7 @@ import { useMaterials } from "../../execution/materials/materialsApi";
 import PricingModal from "../../execution/projects/PricingModal";
 import PaymentHistoryModal from "./PaymentHistoryModal";
 import SendQuoteModal from "../billing/SendQuoteModal";
+import BlockedChangeModal from "./BlockedChangeModal";
 import { AskPocketModal, MoveToPocketModal } from "../../execution/pocket/PocketActions";
 import StatementHost from "../../execution/statements/StatementHost";
 import { useStatementLinks } from "../../execution/statements/statementLinks";
@@ -180,6 +181,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const canQuote = !!m && project.billingType === "client" && permissions.has(P.INVOICE_SEND);
     const askQuote = () => { params.delete("money"); if (canQuote) params.set("quote", "new"); setParams(params, { replace: true }); };
     const closeQuote = () => { params.delete("quote"); setParams(params, { replace: true }); };
+    // a change the profit floor refused, opened from its notification, for whoever sees the money to decide
+    const blocked = permissions.has(P.FINANCIAL_VIEW) ? Number(params.get("blocked")) || null : null;
+    const closeBlocked = () => { params.delete("blocked"); setParams(params, { replace: true }); };
     const billing = useBillingLinks();
     const bill = m?.billing;
     const client = !!m && !!project.client && project.billingType === "client";
@@ -366,6 +370,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                 <CompleteProjectModal project={project} openRequirements={openRequirements} onClose={closeComplete} />
             )}
             {params.get("quote") === "new" && canQuote && <SendQuoteModal project={project} onClose={closeQuote} />}
+            {blocked != null && <BlockedChangeModal id={blocked} onClose={closeBlocked} />}
             {moneyAction === "payment" && canEditPayment && <PaymentModal project={project} onClose={closeMoney} onSaved={askQuote} />}
             {moneyAction === "client" && canEditBilling && <ClientTypeModal project={project} onClose={closeMoney} />}
             {moneyAction === "history" && hasPaymentHistory && <PaymentHistoryModal project={project} onClose={closeMoney} />}

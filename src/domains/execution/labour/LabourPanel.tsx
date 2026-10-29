@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { useProtonForm } from "@/domains/shared/proton/formFill";
 import { errorMessage } from "@/api/errors";
+import FormFailure from "@/domains/shared/projects/FormFailure";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
@@ -283,7 +284,7 @@ function WeekEditor({ projectId, week, defaults, onNav }: { projectId: number; w
             )}
             {editable ? (
                 <div className="row" style={{ justifyContent: "flex-end", marginTop: 10, gap: 10 }}>
-                    {submit.error && <span className="err" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(submit.error)}</span>}
+                    {submit.error && <FormFailure error={submit.error} onForced={() => submit.reset()} />}
                     <button className="btn btn-primary" data-r={days.length} data-c={0} disabled={submit.isPending} onClick={save}
                         onKeyDown={(e) => { if (isEnter(e) && e.shiftKey) { e.preventDefault(); onNav(days.length, 0, "prev"); } }}>
                         <Icon name="checkCircle" />{week.isReported ? "Save changes" : "Submit week"}

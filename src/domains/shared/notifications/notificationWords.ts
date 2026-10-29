@@ -31,6 +31,10 @@ const s = (v: unknown) => (typeof v === "string" ? v : "");
 const n = (v: unknown) => (typeof v === "number" ? v : 0);
 const plural = (count: number, one: string, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 const ROLE: Record<string, string> = { super_admin: "super admin", admin: "admin", employee: "employee" };
+const BLOCKED_KIND: Record<string, string> = {
+    expense: "An expense", material_add: "New materials", material_update: "A material change", labour_week: "A labour week",
+    work_entry_create: "Logged hours", work_entry_update: "Changed hours", payment: "A lower payment", pricing: "A lower fee or material profit",
+};
 const areaLabel = (d: unknown) => AREAS[d as "design" | "execution"]?.label ?? "";
 
 /**
@@ -122,6 +126,16 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             return { text: `${title} reached ${n(p.progressPct)}% progress`, sub: "Ready to close out?", icon: "trendUp", route: project };
         case "project_idle":
             return { text: `${title} has had no work logged for ${n(p.days)} days`, sub: p.lastWorkOn ? `Last entry: ${fmtDate(s(p.lastWorkOn))}` : "Nothing logged on it yet", icon: "trendUp", route: project };
+        case "change_blocked":
+            return {
+                text: `A change on ${title} was stopped at zero profit`,
+                sub: `${BLOCKED_KIND[s(p.kind)] ?? "A change"}${note.actor ? ` by ${who}` : ""} · force it or dismiss it`,
+                icon: "alert", route: project && note.subjectId ? `${project}?blocked=${note.subjectId}` : project,
+            };
+        case "profit_low":
+            return { text: `${title} is close to zero profit`, sub: `${n(p.marginPct)}% margin left`, icon: "trendUp", route: project };
+        case "profit_at_zero":
+            return { text: `${title} is at zero profit or below`, sub: `${n(p.marginPct)}% margin`, icon: "alert", route: project };
         case "project_cost_high":
             return { text: `${title} has used ${n(p.usedPct)}% of its payment in cost`, sub: "Worth a look before it runs over", icon: "trendUp", route: project };
         case "project_closed":

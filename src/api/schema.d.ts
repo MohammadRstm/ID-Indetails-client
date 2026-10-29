@@ -468,6 +468,123 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/blocked-changes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BlockedChangeResponse"];
+                        "text/json": components["schemas"]["BlockedChangeResponse"];
+                        "text/plain": components["schemas"]["BlockedChangeResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/blocked-changes/{id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BlockedChangeResponse"];
+                        "text/json": components["schemas"]["BlockedChangeResponse"];
+                        "text/plain": components["schemas"]["BlockedChangeResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/blocked-changes/{id}/force": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BlockedChangeResponse"];
+                        "text/json": components["schemas"]["BlockedChangeResponse"];
+                        "text/plain": components["schemas"]["BlockedChangeResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bug-reports": {
         parameters: {
             query?: never;
@@ -14696,6 +14813,29 @@ export interface components {
         };
         /** @enum {unknown} */
         BillingType: "client" | "internal";
+        /** @enum {unknown} */
+        BlockedChangeKind: "expense" | "material_add" | "material_update" | "labour_week" | "work_entry_create" | "work_entry_update" | "payment" | "pricing";
+        BlockedChangeResponse: {
+            /** Format: date-time */
+            decidedAt: null | string;
+            decidedBy: null | components["schemas"]["PersonRefResponse"];
+            domain: string;
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["BlockedChangeKind"];
+            /** Format: double */
+            profitNow: number;
+            /** Format: int64 */
+            projectId: number;
+            projectTitle: string;
+            /** Format: date-time */
+            requestedAt: string;
+            requestedBy: components["schemas"]["PersonRefResponse"];
+            status: components["schemas"]["BlockedChangeStatus"];
+            summary: string;
+        };
+        /** @enum {unknown} */
+        BlockedChangeStatus: "pending" | "forced" | "dismissed";
         BoardLayoutResponse: {
             key: string;
             order: null | string[];
