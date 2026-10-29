@@ -18,7 +18,7 @@ import NewBoqModal from "./NewBoqModal";
 const cents = (n: number) => money.exact(n, "USD", { cents: true });
 
 /**
- * A client site's bills of quantities, on its Financials tab: the price they add up to, the client BOQs (once one is
+ * A client site's bills of quantities, on its own BOQs tab: the price they add up to, the client BOQs (once one is
  * agreed the others read "Not chosen"), the VOs that change it afterwards, and the internal drafts the client BOQ is
  * built from. Each person sees what their permissions give: their own drafts (everyone's for whoever manages the
  * site's pricing), and the client's BOQs, VOs and price for whoever sees money.

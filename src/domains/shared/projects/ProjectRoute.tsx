@@ -7,6 +7,7 @@ import ClientPortalTab from "../../design/projects/portal/ClientPortalTab";
 import ProjectFilesTab from "../../design/projects/portal/ProjectFilesTab";
 import ProjectHistoryTab from "../../design/projects/history/ProjectHistoryTab";
 import { LogWorkAction, MyProjectWork, MyTeamLine } from "../../design/work/MyProjectWork";
+import BoqPanel from "../../execution/boqs/BoqPanel";
 import ExecutionOverview, { ExecutionFinancials, SiteTeamLine } from "../../execution/projects/ExecutionOverview";
 import ProjectPage, { type ProjectPanels } from "./ProjectPage";
 import type { Project } from "./projectsApi";
@@ -29,6 +30,7 @@ const PANELS: Record<Domain, ProjectPanels> = {
     execution: {
         overview: (project) => <ExecutionOverview project={project} />,
         financials: (project) => <ExecutionFinancials project={project} />,
+        boqs: (project) => <BoqPanel project={project} />,
         meta: (project) => <SiteTeamLine project={project} />,
     },
 };

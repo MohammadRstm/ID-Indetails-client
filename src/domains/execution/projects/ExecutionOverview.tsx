@@ -10,7 +10,6 @@ import { useBillingLinks } from "../../shared/billing/billingLinks";
 import type { Project } from "../../shared/projects/projectsApi";
 import { useRequirements } from "../../shared/requirements/requirementsApi";
 import { useLabourWeeks } from "../labour/labourApi";
-import BoqPanel from "../boqs/BoqPanel";
 import LabourPanel from "../labour/LabourPanel";
 import { useMaterials } from "../materials/materialsApi";
 import MaterialsPanel from "../materials/MaterialsPanel";
@@ -39,8 +38,8 @@ export default function ExecutionOverview({ project }: { project: Project }) {
 }
 
 /**
- * An Execution site's Financials tab, for those who see money: its work price first, the BOQs and VOs that make it,
- * then what the client has paid against what the site has cost, its invoices, what each material earns and how long
+ * An Execution site's Financials tab, for those who see money: its work price first (its BOQs and VOs have their own
+ * tab), then what the client has paid against what the site has cost, its invoices, what each material earns and how long
  * labour lasts.
  */
 export function ExecutionFinancials({ project }: { project: Project }) {
@@ -56,7 +55,6 @@ export function ExecutionFinancials({ project }: { project: Project }) {
     return (
         <>
             <WorkPriceSection project={project} onEdit={canPrice ? open("pricing") : undefined} onHistory={open("history")} />
-            {client && <BoqPanel project={project} />}
             <SiteMoneyPanel project={project}
                 onRecordPayment={client && permissions.has(P.PAYMENT_RECORD) ? () => links.recordPayment() : undefined}
                 onEditPricing={canPrice ? open("pricing") : undefined} />

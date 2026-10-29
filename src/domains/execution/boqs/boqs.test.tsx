@@ -16,6 +16,7 @@ const reader = withPermissions(personas.executionAdmin, { grant: [P.FINANCIAL_VI
 // One who writes internal drafts of his own
 const author = withPermissions(personas.executionAdmin, { grant: [P.FINANCIAL_VIEW, P.BOQ_CREATE] });
 const path = `/execution/projects/${site.project.id}`;
+const boqsTab = `${path}?tab=boqs`;
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -52,7 +53,7 @@ function saving(id: number, start: unknown, returns: unknown = start) {
 
 describe("a site's bills of quantities", () => {
     it("add up the price, and list the client BOQs, the VOs and everyone's drafts for whoever manages the site's pricing", async () => {
-        renderApp(path, karim, ...siteHandlers);
+        renderApp(boqsTab, karim, ...siteHandlers);
         const p = await panel();
         const price = await within(p).findByRole("group", { name: "Price" });
         expect(within(price).getByText("Agreed BOQ").closest("div")).toHaveTextContent("$17,000");
@@ -76,7 +77,7 @@ describe("a site's bills of quantities", () => {
     });
 
     it("read Not chosen on the other client drafts once one is agreed", async () => {
-        renderApp(path, karim, ...siteHandlers);
+        renderApp(boqsTab, karim, ...siteHandlers);
         const p = await panel();
         const other = await within(p).findByRole("button", { name: "Open BQ-2026-002" });
         expect(other).toHaveTextContent("Not chosen");
@@ -84,7 +85,7 @@ describe("a site's bills of quantities", () => {
     });
 
     it("offer a new VO only once a client BOQ is agreed", async () => {
-        renderApp(path, karim, listOf(boqs.unagreed), ...siteHandlers);
+        renderApp(boqsTab, karim, listOf(boqs.unagreed), ...siteHandlers);
         const p = await panel();
         const other = await within(p).findByRole("button", { name: "Open BQ-2026-002" });
         expect(other).toHaveTextContent("Draft");
@@ -96,7 +97,7 @@ describe("a site's bills of quantities", () => {
     });
 
     it("show someone who only sees money the BOQs and the price, to read", async () => {
-        renderApp(path, reader, listOf({ ...boqs.list, internal: [] }), ...siteHandlers);
+        renderApp(boqsTab, reader, listOf({ ...boqs.list, internal: [] }), ...siteHandlers);
         const p = await panel();
         expect(await within(p).findByRole("group", { name: "Price" })).toBeInTheDocument();
         expect(within(p).getByRole("button", { name: "Open BQ-2026-001" })).toBeInTheDocument();
@@ -113,7 +114,7 @@ describe("a site's bills of quantities", () => {
 
     it("show someone who writes drafts their own, and nothing else to write", async () => {
         const mine = { client: boqs.list.client, vos: [], internal: [summaryOf(boqs.draftMine)], price: boqs.list.price };
-        renderApp(path, author, listOf(mine), ...siteHandlers);
+        renderApp(boqsTab, author, listOf(mine), ...siteHandlers);
         const p = await panel();
         const row = await within(p).findByRole("button", { name: "Open Karim's quantities" });
         expect(within(p).getByText("My drafts")).toBeInTheDocument();
@@ -134,18 +135,31 @@ describe("a site's bills of quantities", () => {
         expect(await within(client).findByLabelText("Description 1")).toBeDisabled();
     });
 
-    it("are not on the page, or asked for, without financial:view", async () => {
+    it("are not on the page, or asked for, without boq:create, financial:view or project:pricing_manage", async () => {
         const asked: string[] = [];
-        renderApp(path, personas.executionAdmin, http.get("/api/projects/:id/boqs", () => { asked.push("list"); return HttpResponse.json(boqs.list); }), ...siteHandlers);
+        renderApp(boqsTab, personas.executionAdmin, http.get("/api/projects/:id/boqs", () => { asked.push("list"); return HttpResponse.json(boqs.list); }), ...siteHandlers);
         expect(await screen.findByRole("tab", { name: "Overview" })).toBeInTheDocument();
-        expect(screen.queryByRole("tab", { name: "Financials" })).not.toBeInTheDocument();
+        for (const name of ["Financials", "BOQs"]) expect(screen.queryByRole("tab", { name })).not.toBeInTheDocument();
         expect(screen.queryByRole("region", { name: "Bills of quantities" })).not.toBeInTheDocument();
         expect(asked).toEqual([]);
     });
 
+    it("have their own tab, so an author who sees no money still finds their drafts", async () => {
+        const drafter = withPermissions(personas.executionAdmin, { grant: [P.BOQ_CREATE] });
+        // without financial:view the API sends only the author's own drafts, and no price
+        renderApp(boqsTab, drafter, listOf({ internal: [summaryOf(boqs.draftMine)], client: [], vos: [], price: null }), ...siteHandlers);
+        const p = await panel();
+        expect(screen.getByRole("tab", { name: "BOQs", selected: true })).toBeInTheDocument();
+        expect(screen.queryByRole("tab", { name: "Financials" })).not.toBeInTheDocument();
+        expect(await within(p).findByRole("button", { name: "Open Karim's quantities" })).toBeInTheDocument();
+        expect(within(p).getByText("My drafts")).toBeInTheDocument();
+        expect(within(p).getByRole("button", { name: "New draft" })).toBeEnabled();
+        for (const text of ["Client BOQs", "VOs", "Client total"]) expect(within(p).queryByText(text)).not.toBeInTheDocument();
+    });
+
     it("can't be started on a closed site", async () => {
         const closed = { ...site.project, status: "completed", completedAt: "2026-10-01T09:00:00Z" };
-        renderApp(path, karim, http.get("/api/projects/:id", () => HttpResponse.json(closed)), ...siteHandlers);
+        renderApp(boqsTab, karim, http.get("/api/projects/:id", () => HttpResponse.json(closed)), ...siteHandlers);
         const p = await panel();
         expect(await within(p).findByText("Closed to changes")).toBeInTheDocument();
         for (const name of ["New draft", "New client BOQ", "New VO"]) expect(within(p).queryByRole("button", { name })).not.toBeInTheDocument();
@@ -159,7 +173,7 @@ describe("a site's bills of quantities", () => {
 describe("starting a BOQ", () => {
     it("makes a client BOQ, from a draft if asked, and opens it", async () => {
         const created: unknown[] = [];
-        renderApp(path, karim, http.post("/api/projects/:id/boqs", async ({ request }) => { created.push(await request.json()); return HttpResponse.json(boqs.draftB); }), ...siteHandlers);
+        renderApp(boqsTab, karim, http.post("/api/projects/:id/boqs", async ({ request }) => { created.push(await request.json()); return HttpResponse.json(boqs.draftB); }), ...siteHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "New client BOQ" }));
         const dialog = await screen.findByRole("dialog", { name: "New client BOQ" });
         await userEvent.type(within(dialog).getByLabelText(/^Title/), "Option C");
@@ -174,7 +188,7 @@ describe("starting a BOQ", () => {
 
     it("makes an internal draft with its default title", async () => {
         const created: unknown[] = [];
-        renderApp(path, karim, http.post("/api/projects/:id/boqs", async ({ request }) => { created.push(await request.json()); return HttpResponse.json(boqs.draftMine); }), ...siteHandlers);
+        renderApp(boqsTab, karim, http.post("/api/projects/:id/boqs", async ({ request }) => { created.push(await request.json()); return HttpResponse.json(boqs.draftMine); }), ...siteHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "New draft" }));
         const dialog = await screen.findByRole("dialog", { name: "New draft" });
         expect(within(dialog).getByLabelText(/^Title/)).toHaveAttribute("placeholder", "Internal draft");
@@ -185,7 +199,7 @@ describe("starting a BOQ", () => {
 
     it("asks a VO for its reason, live, before making it", async () => {
         const created: unknown[] = [];
-        renderApp(path, karim, http.post("/api/projects/:id/boqs", async ({ request }) => { created.push(await request.json()); return HttpResponse.json(boqs.vo); }), ...siteHandlers);
+        renderApp(boqsTab, karim, http.post("/api/projects/:id/boqs", async ({ request }) => { created.push(await request.json()); return HttpResponse.json(boqs.vo); }), ...siteHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "New VO" }));
         const dialog = await screen.findByRole("dialog", { name: "New VO" });
         await userEvent.click(within(dialog).getByRole("button", { name: "Create" }));
@@ -202,7 +216,7 @@ describe("starting a BOQ", () => {
 
     it("limits the title to what the API keeps", async () => {
         const created: unknown[] = [];
-        renderApp(path, karim, http.post("/api/projects/:id/boqs", async ({ request }) => { created.push(await request.json()); return HttpResponse.json(boqs.draftB); }), ...siteHandlers);
+        renderApp(boqsTab, karim, http.post("/api/projects/:id/boqs", async ({ request }) => { created.push(await request.json()); return HttpResponse.json(boqs.draftB); }), ...siteHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "New client BOQ" }));
         const dialog = await screen.findByRole("dialog", { name: "New client BOQ" });
         await userEvent.click(within(dialog).getByLabelText(/^Title/));
@@ -213,7 +227,7 @@ describe("starting a BOQ", () => {
     });
 
     it("says in words when the API refuses", async () => {
-        renderApp(path, karim, http.post("/api/projects/:id/boqs", () => refusal(422, "boq_not_agreed_yet")), ...siteHandlers);
+        renderApp(boqsTab, karim, http.post("/api/projects/:id/boqs", () => refusal(422, "boq_not_agreed_yet")), ...siteHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "New VO" }));
         const dialog = await screen.findByRole("dialog", { name: "New VO" });
         await userEvent.type(within(dialog).getByLabelText("Why is it needed?"), "A fence");
