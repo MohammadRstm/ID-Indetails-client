@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { fixtures, projectHandlers } from "@/test/fixtures";
 import { overview } from "@/test/fixtures/overview";
-import { siteHandlers } from "@/test/fixtures/site";
+import { site, siteHandlers } from "@/test/fixtures/site";
 import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
@@ -263,11 +263,12 @@ describe("a new Execution project", () => {
     const karim = withPermissions(personas.executionAdmin, { grant: MONEY_AND_HIRING });
     const newProject = () => screen.findByRole("dialog", { name: "New project" });
 
-    it("asks for the agreed payment and its TVA, and leaves the down payment to a payment after", async () => {
+    it("asks for the supervision and the TVA, with no agreed amount to type in", async () => {
         renderApp("/execution/projects?new=1", karim, ...siteHandlers, ...projectHandlers);
         const dialog = await newProject();
-        expect(within(dialog).getByLabelText("Customer payment")).toBeInTheDocument();
-        expect(within(dialog).getByLabelText("TVA")).toHaveValue("15");
+        expect(within(dialog).queryByLabelText("Customer payment")).toBeNull();
+        expect(within(dialog).getByLabelText("Supervision")).toHaveValue("10");
+        expect(within(dialog).getByLabelText("TVA")).toHaveValue("11");
         expect(within(dialog).queryByLabelText("Initial payment received")).toBeNull();
         expect(within(dialog).queryByLabelText(/Material profit/i)).toBeNull();
     });
@@ -277,12 +278,12 @@ describe("a new Execution project", () => {
         const dialog = await newProject();
         const label = (name: string) => within(dialog).getByText(name, { selector: "label" });
         expect(label("Project name")).toHaveClass("required");
-        expect(label("Customer payment")).toHaveClass("optional");
+        expect(label("Supervision")).toHaveClass("required");
         expect(label("TVA")).toHaveClass("required");
         expect(within(dialog).getByLabelText("Location")).toHaveAttribute("placeholder", expect.stringMatching(/^Optional/));
     });
 
-    it("sends the agreed payment and the TVA a super admin gives it", async () => {
+    it("sends the supervision and the TVA a super admin gives it, and no agreed amount", async () => {
         const bodies: Record<string, unknown>[] = [];
         renderApp(`/execution/projects?new=1&client=${fixtures.client.id}`, personas.superAdmin,
             http.post("/api/projects", async ({ request }) => {
@@ -292,17 +293,23 @@ describe("a new Execution project", () => {
             ...siteHandlers, ...projectHandlers);
         const dialog = await newProject();
         await userEvent.type(within(dialog).getByLabelText("Project name"), "Harbour offices");
-        await userEvent.type(within(dialog).getByLabelText("Customer payment"), "2000");
+        const supervision = within(dialog).getByLabelText("Supervision");
+        await userEvent.clear(supervision);
+        await userEvent.type(supervision, "8");
         const tva = within(dialog).getByLabelText("TVA");
         await userEvent.clear(tva);
-        await userEvent.type(tva, "11");
+        await userEvent.type(tva, "5");
         await userEvent.click(await within(dialog).findByRole("button", { name: /Tarek Nasser/ }));
         await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
-        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ projectFee: 2000, tvaRate: 0.11, staffIds: [5] })]));
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ supervisionRate: 0.08, tvaRate: 0.05, staffIds: [5] })]));
+        expect(bodies[0]).not.toHaveProperty("projectFee");
         expect(bodies[0]).not.toHaveProperty("initialPayment");
+        // an Execution site has no quote to offer afterwards
+        await screen.findByRole("heading", { name: site.project.title });
+        expect(screen.queryByRole("dialog", { name: "Send the quote?" })).toBeNull();
     });
 
-    it("leaves the payment and its TVA to a super admin for a plain Execution admin", async () => {
+    it("leaves the supervision and the TVA to a super admin for a plain Execution admin", async () => {
         const bodies: Record<string, unknown>[] = [];
         renderApp(`/execution/projects?new=1&client=${fixtures.client.id}`, personas.executionAdmin,
             http.post("/api/projects", async ({ request }) => {
@@ -311,7 +318,7 @@ describe("a new Execution project", () => {
             }),
             ...siteHandlers, ...projectHandlers);
         const dialog = await newProject();
-        expect(within(dialog).queryByLabelText("Customer payment")).toBeNull();
+        expect(within(dialog).queryByLabelText("Supervision")).toBeNull();
         expect(within(dialog).queryByLabelText("TVA")).toBeNull();
         expect(within(dialog).queryByText("Money")).toBeNull();
         await userEvent.type(within(dialog).getByLabelText("Project name"), "Lobby works");
@@ -321,7 +328,7 @@ describe("a new Execution project", () => {
         expect(bodies).toEqual([]);
         await userEvent.click(await within(dialog).findByRole("button", { name: /Tarek Nasser/ }));
         await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
-        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ projectFee: null, tvaRate: null, staffIds: [5] })]));
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ supervisionRate: null, tvaRate: null, staffIds: [5] })]));
     });
 });
 

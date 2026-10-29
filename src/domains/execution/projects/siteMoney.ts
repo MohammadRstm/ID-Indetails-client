@@ -28,7 +28,10 @@ export type SiteMoney = {
     credit: number;
     /** Agreed − spent: once the client has paid it all. */
     expectedProfit: number;
+    /** The work price: the agreed BOQs' total. */
     fee: number;
+    /** The supervision fee on top of it. */
+    supervision: number;
     markup: number;
     /** The materials sent to the client, at client prices. */
     materialCharge: number;
@@ -58,6 +61,7 @@ export function siteMoneyOf(m: ProjectMoney): SiteMoney {
         credit: m.billing.paidAhead,
         expectedProfit: m.profit,
         fee: m.projectFee ?? 0,
+        supervision: m.supervisionUsd ?? 0,
         markup: m.materialMarkup ?? 0,
         materialCharge: m.materialCharge ?? 0,
         materialProfit: m.materialProfit ?? 0,
@@ -70,7 +74,7 @@ export function siteMoneyOf(m: ProjectMoney): SiteMoney {
 }
 
 /** The colours the site's charts and cost rows share. */
-export const SITE_COLORS = { received: "var(--heat-3)", materials: "var(--heat-2)", labour: "var(--warn-mark)", other: "var(--heat-1)", fee: "var(--accent)" };
+export const SITE_COLORS = { received: "var(--heat-3)", materials: "var(--heat-2)", labour: "var(--warn-mark)", other: "var(--heat-1)", fee: "var(--accent)", supervision: "var(--heat-4)" };
 
 /** 0.163 → "16.3%". */
 export const pctOf = (ratio: number) => `${Math.round(ratio * 1000) / 10}%`;

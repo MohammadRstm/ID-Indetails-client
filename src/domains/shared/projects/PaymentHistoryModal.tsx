@@ -16,7 +16,9 @@ const pct = (fraction: number) => `${Math.round(fraction * 1000) / 10}%`;
 export default function PaymentHistoryModal({ project, onClose }: { project: Project; onClose: () => void }) {
     const changes = usePaymentChanges(project.id, true);
     const site = project.domain === "execution";
-    const quotes = useQuotes(project.id, usePermissions().has(P.INVOICE_SEND) && project.billingType === "client").data ?? [];
+    const sendsQuotes = usePermissions().has(P.INVOICE_SEND);
+    // an Execution site has no quotes
+    const quotes = useQuotes(project.id, !site && sendsQuotes && project.billingType === "client").data ?? [];
 
     return (
         <Modal title="Payment history" sub={project.title} onClose={onClose}

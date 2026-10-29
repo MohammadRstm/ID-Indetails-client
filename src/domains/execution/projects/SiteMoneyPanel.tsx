@@ -74,7 +74,7 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onStatement, 
                     {onStatement && (
                         <button className="btn btn-sm" onClick={onStatement} disabled={!materials?.all.count}><Icon name="file" />Client statement</button>
                     )}
-                    {editPricing && <button className="btn btn-sm" onClick={editPricing}><Icon name="edit" />Payment & material profit</button>}
+                    {editPricing && <button className="btn btn-sm" onClick={editPricing}><Icon name="edit" />Pricing</button>}
                 </div>
             </div>
             <div className="panel-body">
@@ -100,12 +100,13 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onStatement, 
                         <div className="u" style={{ marginBottom: 6 }}>Where the profit comes from</div>
                         <CostRow label="Material profit" swatch={SITE_COLORS.materials} value={`+${money.exact(x.materialProfit)}`}
                             meta={`${money.exact(x.materialCharge)} sent at client prices, on ${money.exact(x.sentCost)}${x.sentCost ? ` · ${pctOf(markupAvg)}` : ""}`} />
-                        <CostRow label="Project fee" swatch={SITE_COLORS.fee} value={`+${money.exact(x.fee)}`} meta={x.fee ? "fixed" : "none set"} onClick={editPricing} />
+                        <CostRow label="Work price" swatch={SITE_COLORS.fee} value={`+${money.exact(x.fee)}`} meta={x.fee ? "from the agreed BOQs" : "none agreed yet"} />
+                        <CostRow label="Supervision" swatch={SITE_COLORS.supervision} value={`+${money.exact(x.supervision)}`} meta="on top of the work price" />
                         <CostRow label="Ground labour" swatch={SITE_COLORS.labour} value={`−${money.exact(x.labour)}`} tone={x.labour ? "down" : ""} meta="not billed to the client" />
                         {x.other > 0 && <CostRow label="Other expenses" swatch={SITE_COLORS.other} value={`−${money.exact(x.other)}`} tone="down" />}
                         <CostRow strong label="Expected profit" value={money.exact(x.expectedProfit)} tone={x.expectedProfit < 0 ? "down" : ""} />
                         <div className="xm-owed mt">
-                            <div><span>Agreed so far</span><b className="mono">{money.exact(x.agreed)}</b><em>the fee + materials sent to the client</em></div>
+                            <div><span>Agreed so far</span><b className="mono">{money.exact(x.agreed)}</b><em>the work price and supervision, with the materials sent to the client</em></div>
                             {x.unsent > 0 && (
                                 <div>
                                     <span>Not sent yet</span><b className="mono">{money.exact(x.unsentCharge)}</b>

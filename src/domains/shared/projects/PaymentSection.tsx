@@ -7,7 +7,7 @@ type PaymentSectionProps = {
     label: string;
     /** Null for internal work, which has no payment. */
     amount: number | null;
-    /** The project's TVA rate (0.15 = 15%), and the payment with it, as the API works it out. */
+    /** The project's TVA rate (0.11 = 11%), and the payment with it, as the API works it out. */
     tva?: { rate: number; withTva: number };
     sub?: ReactNode;
     locked?: boolean;

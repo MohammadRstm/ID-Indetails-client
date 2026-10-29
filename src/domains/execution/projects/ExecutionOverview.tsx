@@ -19,8 +19,7 @@ import LabourHealth from "./LabourHealth";
 import MaterialMargins from "../materials/MaterialMargins";
 import SiteMoneyPanel from "./SiteMoneyPanel";
 import { SiteStaffPanels } from "../staff/StaffPages";
-import PaymentSection from "../../shared/projects/PaymentSection";
-import { pctOf } from "./siteMoney";
+import WorkPriceSection from "./WorkPriceSection";
 
 /**
  * An Execution site's Overview tab (the Execution side of the prototype's AdminProject and P.EmpProject):
@@ -41,7 +40,7 @@ export default function ExecutionOverview({ project }: { project: Project }) {
 }
 
 /**
- * An Execution site's Financials tab, for those who see money: its project fee first, then what the client has paid
+ * An Execution site's Financials tab, for those who see money: its work price first, then what the client has paid
  * against what the site has cost, its invoices and statements, what each material earns and how long labour lasts.
  */
 export function ExecutionFinancials({ project }: { project: Project }) {
@@ -57,10 +56,7 @@ export function ExecutionFinancials({ project }: { project: Project }) {
 
     return (
         <>
-            <PaymentSection label="Customer payment" amount={m.projectFee ?? 0} locked={m.isLocked}
-                tva={{ rate: m.tvaRate, withTva: m.paymentWithTva }}
-                sub={<>The agreed amount, before TVA. Materials come on top at their client prices, with a default material profit of <b>{pctOf(m.materialMarkup ?? 0)}</b>. Each change is kept with why it changed.</>}
-                onEdit={canPrice ? open("pricing") : undefined} onHistory={open("history")} />
+            <WorkPriceSection project={project} onEdit={canPrice ? open("pricing") : undefined} onHistory={open("history")} />
             <SiteMoneyPanel project={project}
                 onRecordPayment={client && permissions.has(P.PAYMENT_RECORD) ? () => links.recordPayment() : undefined}
                 onStatement={client && permissions.has(P.STATEMENT_CREATE) ? statements.newStatement : undefined}

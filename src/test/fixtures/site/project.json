@@ -42,6 +42,8 @@
     "tvaRate": 0,
     "paymentWithTva": 12000,
     "revenueWithTva": 18941.4,
+    "supervisionRate": 0.1,
+    "supervisionUsd": 1200,
     "projectFee": 12000,
     "materialMarkup": 0.15,
     "materialCharge": 6941.4,
