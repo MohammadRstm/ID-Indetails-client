@@ -1,5 +1,7 @@
 import { http, HttpResponse } from "msw";
 import type { Paged, Schemas } from "@/api/types";
+import { accountLabels, accountLabelsHandler } from "./accountLabels";
+import { accountFigures, accountHandlers } from "./account";
 import { billing } from "./billing";
 import { boqHandlers } from "./boqs";
 import invoicesJson from "./site/invoices.json";
@@ -41,11 +43,9 @@ export const site = {
     losingTimeline: losingTimelineJson as unknown as Schemas["SiteMoneyTimelineResponse"],
     openExpenses: openExpensesJson as unknown as Schemas["SiteExpenseListResponse"],
     /** The company's account labels a payment or an expense is filed under (the seeded three). */
-    accountLabels: [
-        { id: 1, name: "Concrete", position: 1, archived: false },
-        { id: 2, name: "Finishing", position: 2, archived: false },
-        { id: 3, name: "Permits", position: 3, archived: false },
-    ] as Schemas["AccountLabelResponse"][],
+    accountLabels,
+    /** The lobby's account, as the API works it out. */
+    accountFigures,
 };
 
 const losing = (id: unknown) => String(id) === String(site.losingProject.id);
@@ -63,7 +63,9 @@ export const siteHandlers = [
     http.get("/api/projects/totals", () => HttpResponse.json({})),
     http.get("/api/projects/:id", ({ params }) => HttpResponse.json(losing(params.id) ? site.losingProject : site.project)),
     http.get("/api/projects/:id/site-expenses", ({ params }) => HttpResponse.json(losing(params.id) ? site.openExpenses : site.expenses)),
-    http.get("/api/account-labels", () => HttpResponse.json(site.accountLabels)),
+    accountLabelsHandler,
+    // the lobby's account and the supervision taken out of it
+    ...accountHandlers,
     http.get("/api/projects/:id/labour-weeks", () => HttpResponse.json(site.labourWeeks)),
     http.get("/api/projects/:id/labour-weeks/:weekStart", ({ params }) =>
         HttpResponse.json(params.weekStart === site.labourWeek.weekStart ? site.labourWeek : site.labourWeekOpen)),

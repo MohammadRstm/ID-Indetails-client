@@ -13,6 +13,9 @@ import { useLabourWeeks } from "../labour/labourApi";
 import LabourPanel from "../labour/LabourPanel";
 import { useExpenses } from "../expenses/expensesApi";
 import ExpensesPanel from "../expenses/ExpensesPanel";
+import AccountSection from "../account/AccountSection";
+import SitePayments from "../account/SitePayments";
+import SupervisionPanel from "../account/SupervisionPanel";
 import LabourHealth from "./LabourHealth";
 import SiteMoneyPanel from "./SiteMoneyPanel";
 import { SiteStaffPanels } from "../staff/StaffPages";
@@ -38,7 +41,8 @@ export default function ExecutionOverview({ project }: { project: Project }) {
 
 /**
  * An Execution site's Financials tab, for those who see money: its work price first (its BOQs and VOs have their own
- * tab), then what the client has paid against what the site has cost, its invoices and how long labour lasts.
+ * tab), then what the client has paid against what the site has cost, and for a client site its account, the supervision
+ * taken, its invoices, its payments by label and how long labour lasts.
  */
 export function ExecutionFinancials({ project }: { project: Project }) {
     const permissions = usePermissions();
@@ -52,11 +56,15 @@ export function ExecutionFinancials({ project }: { project: Project }) {
 
     return (
         <>
-            <WorkPriceSection project={project} onEdit={canPrice ? open("pricing") : undefined} onHistory={open("history")} />
+            {/* the account carries the supervision, TVA and client total, so the price section doesn't repeat them */}
+            <WorkPriceSection project={project} breakdown={!client} onEdit={canPrice ? open("pricing") : undefined} onHistory={open("history")} />
             <SiteMoneyPanel project={project}
                 onRecordPayment={client && permissions.has(P.PAYMENT_RECORD) ? () => links.recordPayment() : undefined}
                 onEditPricing={canPrice ? open("pricing") : undefined} />
+            {client && <AccountSection project={project} />}
+            {client && <SupervisionPanel project={project} />}
             {client && <BillingBand project={project} />}
+            {client && <SitePayments project={project} />}
             {client && <LabourHealth project={project} />}
         </>
     );

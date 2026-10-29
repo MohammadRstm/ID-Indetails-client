@@ -7,6 +7,8 @@ type WorkPriceSectionProps = {
     /** Left out when the viewer may not change the supervision and TVA. */
     onEdit?: () => void;
     onHistory?: () => void;
+    /** The supervision, the TVA and the client total under the price; left out where the site's account shows them. */
+    breakdown?: boolean;
 };
 
 /**
@@ -14,7 +16,7 @@ type WorkPriceSectionProps = {
  * the client pays in all. The work price is not typed in: it comes from the bills of quantities agreed with the client,
  * so only the supervision and the TVA are edited here.
  */
-export default function WorkPriceSection({ project, onEdit, onHistory }: WorkPriceSectionProps) {
+export default function WorkPriceSection({ project, onEdit, onHistory, breakdown = true }: WorkPriceSectionProps) {
     const m = project.money!;
     const price = m.projectFee ?? 0;
     return (
@@ -32,7 +34,7 @@ export default function WorkPriceSection({ project, onEdit, onHistory }: WorkPri
                             )}
                     </div>
                     <div className="hint">The agreed price of the work, before supervision and TVA. Each change is kept with why it changed.</div>
-                    {price > 0 && (
+                    {breakdown && price > 0 && (
                         <div className="xm-owed mt">
                             <div><span>Supervision</span><b className="mono">{money.exact(m.supervisionUsd ?? 0)}</b><em>{money.pct(m.supervisionRate ?? 0)} of the work price</em></div>
                             <div><span>TVA</span><b className="mono">{money.pct(m.tvaRate)}</b><em>on the work price only, never on supervision</em></div>
