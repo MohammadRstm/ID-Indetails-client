@@ -10,6 +10,7 @@ export const SENT: Record<BoqDeliveryChannel, string> = { whatsapp: "WhatsApp", 
 /** The API's refusals about BOQs, in words for the person who pressed the button. */
 const REFUSALS: Record<string, string> = {
     boq_locked: "An agreed BOQ can't be changed or deleted. Withdraw its agreement first.",
+    boq_changed: "Someone saved this BOQ after you opened it. Reload it to see their changes: what you typed here will be lost.",
     boq_already_agreed: "Another client BOQ is already agreed on this site. Withdraw its agreement first to agree this one.",
     boq_not_agreed_yet: "A VO can only be made or agreed once the client BOQ is agreed.",
     boq_not_agreed: "Only an agreed BOQ has an agreement to withdraw.",

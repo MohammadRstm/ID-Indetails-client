@@ -19668,6 +19668,8 @@ export interface components {
             lines?: components["schemas"]["SaveBoqLineRequest"][];
             reason?: null | string;
             title?: string;
+            /** Format: date-time */
+            updatedAt?: null | string;
         };
         SaveDomainSettingsRequest: {
             allowFutureEntries?: boolean;

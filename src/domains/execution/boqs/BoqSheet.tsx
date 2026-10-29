@@ -20,7 +20,7 @@ import { BoqDeliveries, BoqTotals } from "./BoqFigures";
 import BoqLinesTable from "./BoqLinesTable";
 import { useBoqLinks } from "./boqLinks";
 import { agreeBlock, agreedClient, boqErrorMessage, emptyBlock, isNotChosen, KIND_LABEL, withdrawBlock } from "./boqRules";
-import { BOQ_MAX_LINES, BOQ_REASON_MAX, BOQ_TITLE_MAX, downloadBoqPdf, useBoqs, useDeleteBoq, useDuplicateBoq, useSaveBoq, type Boq, type BoqAdjustmentType } from "./boqsApi";
+import { BOQ_MAX_LINES, BOQ_REASON_MAX, BOQ_TITLE_MAX, downloadBoqPdf, useBoq, useBoqs, useDeleteBoq, useDuplicateBoq, useSaveBoq, type Boq, type BoqAdjustmentType } from "./boqsApi";
 import CopyLinesModal from "./CopyLinesModal";
 import SendBoqModal from "./SendBoqModal";
 
@@ -42,7 +42,10 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
     const remove = useDeleteBoq(project.id);
     const errors = useFormErrors();
     const [draft, setDraft] = useState(() => draftOf(boq));
+    // the save the draft started from: sent with the next save, so it can't undo one made since by someone else
+    const [startedFrom, setStartedFrom] = useState(boq.updatedAt);
     const [dialog, setDialog] = useState<Dialog>(null);
+    const reload = useBoq(project.id, boq.id);
 
     const name = boq.number ?? boq.title;
     const editable = access.canEdit(boq);
@@ -56,7 +59,10 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
     const notChosen = isNotChosen(boq, list);
     const decides = access.canDecide(boq);
     const blocked = emptyBlock(boq);
+    const changedMeanwhile = toApiError(save.error).code === "boq_changed";
     const edited = () => { if (save.error) save.reset(); };
+    /** Starts over from a save: the draft, the figures and the save the next one checks against. */
+    const startFrom = (saved: Boq) => { setDraft(draftOf(saved)); setStartedFrom(saved.updatedAt); };
     const change = (patch: Partial<Draft>) => { edited(); setDraft((d) => ({ ...d, ...patch })); };
     const changeLine = (key: string, field: keyof LineDraft, value: string) => {
         edited();
@@ -71,9 +77,9 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
         if (save.isPending || !editable) return;
         errors.tried();
         if (hasProblems(problems)) return;
-        save.mutate(requestOf(draft, boq.kind), {
+        save.mutate(requestOf(draft, boq.kind, startedFrom), {
             onSuccess: (saved) => {
-                setDraft(draftOf(saved));
+                startFrom(saved);
                 toast({ text: `${saved.number ?? saved.title} saved`, sub: money.exact(saved.totalUsd, "USD", { cents: true }), icon: "checkCircle" });
             },
         });
@@ -93,6 +99,13 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
                 links.open(made.id);
             },
             onError: (e) => toast({ text: "It wasn't duplicated", sub: boqErrorMessage(e), icon: "alert" }),
+        });
+    }
+    function reloadLatest() {
+        void reload.refetch().then(({ data }) => {
+            if (!data) return;
+            save.reset();
+            startFrom(data);
         });
     }
     function pdf() {
@@ -124,6 +137,7 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
                 <>
                     <div className="grow muted" style={{ fontSize: 12 }}>
                         {save.error ? <span className="err"><Icon name="alert" />{boqErrorMessage(save.error)}</span> : dirty ? "Unsaved changes" : null}
+                        {changedMeanwhile && <button className="btn btn-sm" style={{ marginLeft: 8 }} disabled={reload.isFetching} onClick={reloadLatest}><Icon name="refresh" />Reload</button>}
                     </div>
                     <button className="btn" onClick={close}>{editable ? "Cancel" : "Close"}</button>
                     {decides && (
@@ -221,7 +235,7 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
             {dialog === "send" && <SendBoqModal project={project} boq={boq} onClose={() => setDialog(null)} />}
             {dialog === "copy" && (
                 <CopyLinesModal project={project} boq={boq} list={list}
-                    onCopied={(saved) => { setDraft(draftOf(saved)); setDialog(null); }} onClose={() => setDialog(null)} />
+                    onCopied={(saved) => { startFrom(saved); setDialog(null); }} onClose={() => setDialog(null)} />
             )}
             {dialog === "delete" && (
                 <DeleteBoqModal name={name} pending={remove.isPending} error={remove.error}

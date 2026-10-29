@@ -447,6 +447,26 @@ describe("the BOQ editor", () => {
         expect(await within(dialog).findByText("An agreed BOQ can't be changed or deleted. Withdraw its agreement first.")).toBeInTheDocument();
     });
 
+    it("won't undo a save someone made meanwhile, and reloads theirs when asked", async () => {
+        const theirs = { ...boqs.draftB, title: "Lobby works, their option", updatedAt: "2026-10-29T12:00:00.500Z" };
+        let reads = 0;
+        const sent: Record<string, unknown>[] = [];
+        const dialog = await open(32, "BQ-2026-002", karim,
+            http.get("/api/boqs/32", () => HttpResponse.json(reads++ === 0 ? boqs.draftB : theirs)),
+            http.put("/api/boqs/:id", async ({ request }) => { sent.push(await request.json() as Record<string, unknown>); return refusal(409, "boq_changed"); }));
+        const title = within(dialog).getByLabelText("Title");
+        await userEvent.clear(title);
+        await userEvent.type(title, "Mine");
+        await userEvent.click(save(dialog));
+        expect(await within(dialog).findByText(/Someone saved this BOQ after you opened it/)).toBeInTheDocument();
+        // the save names the one it started from, which is what the API checks
+        expect(sent[0].updatedAt).toBe(boqs.draftB.updatedAt);
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Reload" }));
+        expect(await within(dialog).findByDisplayValue("Lobby works, their option")).toBeInTheDocument();
+        expect(within(dialog).queryByText(/Someone saved this BOQ/)).not.toBeInTheDocument();
+    });
+
     it("shows what the API refused beside the line or field it was about, until something is changed", async () => {
         const errors = {
             title: ["The title is already used."], "lines[0].description": ["The API wants a better description."],
