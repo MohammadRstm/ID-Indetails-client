@@ -70,6 +70,11 @@ export const keys = {
     settings: {
         domain: (domain: string) => ["settings", "domain", domain] as const,
     },
+    /** The company's account labels, with or without the archived ones. */
+    accountLabels: {
+        all: ["account-labels"] as const,
+        list: (includeArchived: boolean) => ["account-labels", includeArchived] as const,
+    },
     activity: { all: ["activity"] as const },
     dashboard: {
         all: ["dashboard"] as const,

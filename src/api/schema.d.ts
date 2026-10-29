@@ -14609,6 +14609,20 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AccountLabelOrderRequest: {
+            ids?: number[];
+        };
+        AccountLabelRequest: {
+            name?: string;
+        };
+        AccountLabelResponse: {
+            archived: boolean;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: int32 */
+            position: number;
+        };
         AcceptInvitationRequest: {
             firstName?: string;
             lastName?: string;
@@ -15351,6 +15365,8 @@ export interface components {
             /** Format: double */
             revenue?: null | number;
             staffIds?: null | number[];
+            /** Format: double */
+            supervisionRate?: null | number;
             /** Format: date */
             targetDate?: null | string;
             tint?: null | string;
@@ -17913,6 +17929,10 @@ export interface components {
             /** Format: double */
             revenueWithTva: number;
             /** Format: double */
+            supervisionRate: null | number;
+            /** Format: double */
+            supervisionUsd: null | number;
+            /** Format: double */
             toPocket: null | number;
             /** Format: double */
             tvaRate: number;
@@ -19697,7 +19717,9 @@ export interface components {
             /** Format: double */
             materialMarkup?: number;
             /** Format: double */
-            projectFee?: number;
+            projectFee?: null | number;
+            /** Format: double */
+            supervisionRate?: null | number;
             /** Format: double */
             tvaRate?: null | number;
         };
