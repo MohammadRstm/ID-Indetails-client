@@ -10,28 +10,33 @@ import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { PAYMENT_DESCRIPTION_MAX, useSetPayment } from "../../../shared/projects/paymentApi";
 import type { Project } from "../../../shared/projects/projectsApi";
+import TvaField from "../../../shared/projects/TvaField";
 
 /**
  * A client project's customer payment and why it changes (the prototype's PF.PaymentModal, with the reason the
  * project report needs). Both are required; the change joins the payment history.
  */
-export default function PaymentModal({ project, onClose }: { project: Project; onClose: () => void }) {
+/** <paramref name="onSaved"/> follows a save, instead of closing: the page offers to send the quote. */
+export default function PaymentModal({ project, onClose, onSaved }: { project: Project; onClose: () => void; onSaved?: () => void }) {
     const save = useSetPayment(project.id);
     const current = project.money?.revenue ?? 0;
+    const currentTva = project.money?.tvaRate ?? 0;
     const [amount, setAmount] = useState(current);
+    const [tvaPct, setTvaPct] = useState<number | "">(Math.round(currentTva * 10000) / 100);
+    const tva = Math.round((+tvaPct || 0) * 100) / 10000;
     const [description, setDescription] = useState("");
     const errors = useFormErrors();
-    const amountError = amount === current && `The payment is already ${money.exact(current)}: enter the new amount.`;
+    const amountError = amount === current && tva === currentTva && `The payment is already ${money.exact(current)} with ${money.pct(currentTva)} TVA: change one of them.`;
     const descriptionError = !description.trim() ? "Say why the payment changes."
         : description.trim().length > PAYMENT_DESCRIPTION_MAX && `At most ${PAYMENT_DESCRIPTION_MAX} characters.`;
 
     function submit() {
         if (save.isPending) return;
         if (amountError || descriptionError) return errors.tried();
-        save.mutate({ revenue: amount, description: description.trim() }, {
+        save.mutate({ revenue: amount, tvaRate: tva, description: description.trim() }, {
             onSuccess: () => {
                 toast({ text: `Payment set to ${money.fmt(amount)}`, sub: project.title, icon: "checkCircle" });
-                onClose();
+                (onSaved ?? onClose)();
             },
         });
     }
@@ -50,6 +55,10 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
                 <AmountField id="pay-amount" value={amount} currency="USD" currencies={false} onChange={setAmount} />
                 <div className="hint">Total amount the company is paid for this project. Now {money.exact(current)}.</div>
                 <FieldError message={errors.show("amount", amountError)} />
+            </div>
+            <div className="mt">
+                <TvaField id="pay-tva" value={tvaPct} onChange={setTvaPct} />
+                <div className="hint">On everything the client pays. They only see totals with it included. Now {money.pct(currentTva)}.</div>
             </div>
             <div className="field mt">
                 <label className="label required" htmlFor="pay-why">Why it changes</label>

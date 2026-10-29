@@ -10137,6 +10137,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{projectId}/quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuoteResponse"][];
+                        "text/json": components["schemas"]["QuoteResponse"][];
+                        "text/plain": components["schemas"]["QuoteResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuoteResponse"];
+                        "text/json": components["schemas"]["QuoteResponse"];
+                        "text/plain": components["schemas"]["QuoteResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{projectId}/reopen": {
         parameters: {
             query?: never;
@@ -12046,6 +12108,170 @@ export interface paths {
                         "text/json": components["schemas"]["PublicWebsiteSocialLink"][];
                         "text/plain": components["schemas"]["PublicWebsiteSocialLink"][];
                     };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quotes/{quoteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    quoteId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuoteResponse"];
+                        "text/json": components["schemas"]["QuoteResponse"];
+                        "text/plain": components["schemas"]["QuoteResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quotes/{quoteId}/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    quoteId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["RecordDeliveryRequest"];
+                    "application/json": components["schemas"]["RecordDeliveryRequest"];
+                    "text/json": components["schemas"]["RecordDeliveryRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuoteResponse"];
+                        "text/json": components["schemas"]["QuoteResponse"];
+                        "text/plain": components["schemas"]["QuoteResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quotes/{quoteId}/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    quoteId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["EmailDocumentRequest"];
+                    "application/json": components["schemas"]["EmailDocumentRequest"];
+                    "text/json": components["schemas"]["EmailDocumentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuoteResponse"];
+                        "text/json": components["schemas"]["QuoteResponse"];
+                        "text/plain": components["schemas"]["QuoteResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quotes/{quoteId}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    quoteId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };
@@ -14974,7 +15200,6 @@ export interface components {
             description?: null | string;
             domainCode?: null | string;
             icon?: null | string;
-            initialPayment?: null | components["schemas"]["InitialPaymentRequest"];
             labourDefaults?: null | components["schemas"]["SetLabourDefaultsRequest"];
             location?: null | string;
             /** Format: double */
@@ -14990,6 +15215,8 @@ export interface components {
             targetDate?: null | string;
             tint?: null | string;
             title?: string;
+            /** Format: double */
+            tvaRate?: null | number;
         };
         CreateStatementRequest: {
             excludedMaterialIds?: number[];
@@ -15438,6 +15665,11 @@ export interface components {
             stillToEarn: number;
             /** Format: date */
             to: string;
+            /**
+             * Format: double
+             * @default 0
+             */
+            tvaCollected: number;
             unconverted: components["schemas"]["UnconvertedCostResponse"][];
             /** Format: int32 */
             unpricedLabourMinutes: number;
@@ -15486,18 +15718,6 @@ export interface components {
         };
         /** Format: binary */
         IFormFile: string;
-        InitialPaymentRequest: {
-            /** Format: double */
-            amount?: number;
-            currency?: string;
-            /** Format: double */
-            fxRate?: null | number;
-            method?: components["schemas"]["PaymentMethod"];
-            note?: null | string;
-            /** Format: date */
-            receivedOn?: null | string;
-            reference?: null | string;
-        };
         InvitationPayRequest: {
             /** Format: double */
             amount?: number;
@@ -17540,6 +17760,8 @@ export interface components {
             /** Format: double */
             materialProfit: null | number;
             /** Format: double */
+            paymentWithTva: number;
+            /** Format: double */
             profit: number;
             projected: null | components["schemas"]["ProjectProjectionResponse"];
             /** Format: double */
@@ -17549,7 +17771,11 @@ export interface components {
             /** Format: double */
             revenue: number;
             /** Format: double */
+            revenueWithTva: number;
+            /** Format: double */
             toPocket: null | number;
+            /** Format: double */
+            tvaRate: number;
             /** Format: int32 */
             unconvertedMaterials: number;
             /** Format: double */
@@ -17577,6 +17803,10 @@ export interface components {
             previousAmount: null | number;
             /** Format: double */
             previousMaterialMarkup: null | number;
+            /** Format: double */
+            previousTvaRate: null | number;
+            /** Format: double */
+            tvaRate: null | number;
         };
         ProjectPayPersonResponse: {
             basis: null | components["schemas"]["PayBasis"];
@@ -18323,6 +18553,38 @@ export interface components {
             minutes: number;
             /** Format: date */
             quarterStart: string;
+        };
+        QuoteDeliveryResponse: {
+            channel: components["schemas"]["DeliveryChannel"];
+            /** Format: int64 */
+            id: number;
+            note: null | string;
+            recipient: null | string;
+            /** Format: date-time */
+            sentAt: string;
+            sentBy: null | components["schemas"]["PersonRefResponse"];
+        };
+        QuoteResponse: {
+            client: components["schemas"]["InvoiceClientResponse"];
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: components["schemas"]["PersonRefResponse"];
+            deliveries: components["schemas"]["QuoteDeliveryResponse"][];
+            domain: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            netUsd: number;
+            number: string;
+            /** Format: int64 */
+            projectId: number;
+            projectLocation: null | string;
+            projectTitle: string;
+            scope: null | string;
+            /** Format: double */
+            totalUsd: number;
+            /** Format: double */
+            tvaRate: number;
         };
         ReactivateEmployeeRequest: {
             payGap?: null | boolean;
@@ -19287,6 +19549,8 @@ export interface components {
             description?: string;
             /** Format: double */
             revenue?: number;
+            /** Format: double */
+            tvaRate?: null | number;
         };
         UpdateProjectPricingRequest: {
             description?: string;
@@ -19294,6 +19558,8 @@ export interface components {
             materialMarkup?: number;
             /** Format: double */
             projectFee?: number;
+            /** Format: double */
+            tvaRate?: null | number;
         };
         UpdateProjectRequest: {
             description?: null | string;

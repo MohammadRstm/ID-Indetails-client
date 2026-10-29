@@ -37,6 +37,7 @@ import ReportModal from "../../design/projects/report/ReportModal";
 import { useMaterials } from "../../execution/materials/materialsApi";
 import PricingModal from "../../execution/projects/PricingModal";
 import PaymentHistoryModal from "./PaymentHistoryModal";
+import SendQuoteModal from "../billing/SendQuoteModal";
 import { AskPocketModal, MoveToPocketModal } from "../../execution/pocket/PocketActions";
 import StatementHost from "../../execution/statements/StatementHost";
 import { useStatementLinks } from "../../execution/statements/statementLinks";
@@ -175,6 +176,10 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const canUsePocket = site && !!m && project.billingType === "client";
     const openMoney = (action: "payment" | "client" | "expense" | "pricing" | "to-pocket" | "ask-pocket") => { params.set("money", action); setParams(params); };
     const closeMoney = () => { params.delete("money"); setParams(params, { replace: true }); };
+    // a quote is offered after a project is made or its payment or TVA changes (?quote=new), to whoever sends them
+    const canQuote = !!m && project.billingType === "client" && permissions.has(P.INVOICE_SEND);
+    const askQuote = () => { params.delete("money"); if (canQuote) params.set("quote", "new"); setParams(params, { replace: true }); };
+    const closeQuote = () => { params.delete("quote"); setParams(params, { replace: true }); };
     const billing = useBillingLinks();
     const bill = m?.billing;
     const client = !!m && !!project.client && project.billingType === "client";
@@ -292,7 +297,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                     {canAddExpense && <button className="pop-item" onClick={() => { close(); openMoney("expense"); }}><Icon name="plus" />Add project expense</button>}
                                     {canEditPayment && <button className="pop-item" onClick={() => { close(); openMoney("payment"); }}><Icon name="card" />Edit customer payment</button>}
                                     {canEditBilling && <button className="pop-item" onClick={() => { close(); openMoney("client"); }}><Icon name="user" />Client & type</button>}
-                                    {canEditPricing && <button className="pop-item" onClick={() => { close(); openMoney("pricing"); }}><Icon name="card" />Fee & material profit</button>}
+                                    {canEditPricing && <button className="pop-item" onClick={() => { close(); openMoney("pricing"); }}><Icon name="card" />Payment & material profit</button>}
                                     {canStatement && <button className="pop-item" onClick={() => { close(); statements.newStatement(); }}><Icon name="file" />Client statement</button>}
                                     {canNewInvoice && <button className="pop-item" onClick={() => { close(); billing.newInvoice(); }}><Icon name="file" />New invoice</button>}
                                     {canRecordPayment && <button className="pop-item" onClick={() => { close(); billing.recordPayment(); }}><Icon name="card" />Record a client payment</button>}
@@ -360,10 +365,11 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {(showDone || completeFromList) && canChangeStatus && !closed && (
                 <CompleteProjectModal project={project} openRequirements={openRequirements} onClose={closeComplete} />
             )}
-            {moneyAction === "payment" && canEditPayment && <PaymentModal project={project} onClose={closeMoney} />}
+            {params.get("quote") === "new" && canQuote && <SendQuoteModal project={project} onClose={closeQuote} />}
+            {moneyAction === "payment" && canEditPayment && <PaymentModal project={project} onClose={closeMoney} onSaved={askQuote} />}
             {moneyAction === "client" && canEditBilling && <ClientTypeModal project={project} onClose={closeMoney} />}
             {moneyAction === "history" && hasPaymentHistory && <PaymentHistoryModal project={project} onClose={closeMoney} />}
-            {moneyAction === "pricing" && canEditPricing && <PricingModal project={project} onClose={closeMoney} />}
+            {moneyAction === "pricing" && canEditPricing && <PricingModal project={project} onClose={closeMoney} onSaved={askQuote} />}
             {moneyAction === "expense" && canAddExpense && <ExpenseModal project={project} onClose={closeMoney} />}
             {moneyAction === "to-pocket" && canUsePocket && <MoveToPocketModal project={project} onClose={closeMoney} />}
             {moneyAction === "ask-pocket" && canUsePocket && <AskPocketModal project={project} onClose={closeMoney} />}

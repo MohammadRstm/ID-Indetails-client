@@ -19,6 +19,8 @@ export const RATE: NumberShape = { digits: 12, decimals: 6 };
 export const WORKERS: NumberShape = { digits: 5, decimals: 0, max: 10_000 };
 /** A material profit, in percent: up to 500%, as the API allows. */
 export const MARKUP_PERCENT: NumberShape = { digits: 3, decimals: 2, max: 500 };
+/** A project's TVA, as a percentage: 0 to 100. */
+export const TVA_PERCENT: NumberShape = { digits: 3, decimals: 2, max: 100 };
 /** Hours excused in a month: at most the month itself. */
 export const MONTH_HOURS: NumberShape = { digits: 3, decimals: 2, max: 744 };
 

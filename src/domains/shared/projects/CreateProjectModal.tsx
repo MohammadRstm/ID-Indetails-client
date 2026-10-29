@@ -10,10 +10,8 @@ import DateInput from "@/shared/components/Forms/DateInput";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Select from "@/shared/components/Forms/Select";
 import NumberField from "@/shared/components/Forms/NumberField";
-import { MARKUP_PERCENT, WORKERS } from "@/shared/format/limits";
+import { WORKERS } from "@/shared/format/limits";
 import Modal from "@/shared/components/Overlays/Modal";
-import { money } from "@/shared/format/money";
-import { PAYMENT_METHODS } from "@/shared/format/labels";
 import { companyToday } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
@@ -24,6 +22,7 @@ import { useClient } from "../clients/clientsApi";
 import { personName, useProjectOwners } from "../people/peopleApi";
 import { StaffPicker } from "../../execution/staff/StaffPages";
 import { useCreateProject } from "./projectsApi";
+import TvaField from "./TvaField";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 
@@ -56,12 +55,10 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const [newClient, setNewClient] = useState<string | null>(null);
     const [workers, setWorkers] = useState("");
     const [dailyPay, setDailyPay] = useState(0);
-    const [initialPay, setInitialPay] = useState(0);
-    const [payDate, setPayDate] = useState(companyToday());
-    const [payMethod, setPayMethod] = useState("bank");
+    // an Execution site's agreed amount; materials come on top, at their client prices
     const [fee, setFee] = useState(0);
-    // materials are charged as they cost unless a profit is chosen: not every material earns one
-    const [markupPct, setMarkupPct] = useState<number | "">(0);
+    // TVA on what the client pays, as a percentage: 15% unless told otherwise
+    const [tvaPct, setTvaPct] = useState<number | "">(15);
     // who oversees a site: chosen when it is created
     const [staffIds, setStaffIds] = useState<number[]>([]);
     // Proton fills the project's details, never its money: the "more details" section opens to show what it filled
@@ -79,11 +76,10 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     });
     const client = useClient(clientId);
     const execMoney = execution && billing === "client";
-    // the API refuses the whole project if the payment comes from someone who can't record payments
-    const takesPayment = execMoney && permissions.has(P.PAYMENT_RECORD);
     // the money is set by whoever may see it; anyone else creates the project and leaves it to them
     const setsPayment = !execution && billing === "client" && permissions.has(P.FINANCIAL_VIEW);
     const setsPricing = execMoney && permissions.has(P.PROJECT_PRICING_MANAGE);
+    const setsTva = billing === "client" && permissions.has(P.FINANCIAL_VIEW);
     const errors = useFormErrors();
     const titleError = title.trim() === "" && "Give the project a name.";
     const clientError = billing === "client" && clientId == null && "Choose who the project is for, or make it internal.";
@@ -119,24 +115,22 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                 targetDate: target || null,
                 revenue: setsPayment && revenue ? revenue : null,
                 projectFee: setsPricing ? fee || 0 : null,
-                materialMarkup: setsPricing ? (+markupPct || 0) / 100 : null,
-                initialPayment: takesPayment && initialPay > 0
-                    ? { amount: initialPay, currency: "USD", method: payMethod as "bank", receivedOn: payDate, note: "Initial payment", reference: null }
-                    : null,
+                tvaRate: setsTva ? (+tvaPct || 0) / 100 : null,
                 labourDefaults: execution && (workers !== "" || dailyPay) ? { workers: +workers || 0, dailyPay: dailyPay || 0 } : null,
                 staffIds: execution ? staffIds : null,
             });
             toast({
                 text: `"${project.title}" created · active from today`,
-                sub: takesPayment && initialPay > 0 ? `${money.exact(initialPay)} received · it is on everyone's active project list`
-                    : "It is on everyone's active project list",
+                sub: "It is on everyone's active project list",
                 icon: "checkCircle",
                 actionLabel: "Open project",
                 action: () => navigate(`/${domain}/projects/${project.id}`),
             });
             onClose();
-            // Straight to Requirements: a new project's progress means nothing until it has some.
-            navigate(`/${domain}/projects/${project.id}?tab=requirements`);
+            // Straight to Requirements: a new project's progress means nothing until it has some. Whoever sends quotes
+            // is asked there whether this one gets one.
+            const quote = billing === "client" && permissions.has(P.INVOICE_SEND) ? "&quote=new" : "";
+            navigate(`/${domain}/projects/${project.id}?tab=requirements${quote}`);
         } catch {
             // Shown in the foot.
         }
@@ -180,7 +174,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                     )}
 
                     {execution ? (
-                        <div className="hint mt">Every Execution project is for a client. What the client owes builds up from the materials (at client prices) and the project fee.</div>
+                        <div className="hint mt">Every Execution project is for a client. They pay the agreed amount, and the materials on top at their client prices.</div>
                     ) : (
                         <div className="grid g-2 mt">
                             <div className="field">
@@ -200,7 +194,12 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                         </div>
                     )}
                     {setsPayment && (
-                        <div className="hint" style={{ marginTop: 5 }}>The payment is optional now - you can add or change it until the project is completed.</div>
+                        <div className="grid g-2 mt-s">
+                            <TvaField id="np-tva" value={tvaPct} onChange={setTvaPct} />
+                            <div className="hint" style={{ paddingTop: 26 }}>
+                                The payment is optional now - you can add or change it, and its TVA, until the project is completed.
+                            </div>
+                        </div>
                     )}
 
                     {billing === "client" ? (
@@ -225,47 +224,18 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                             value={location} onChange={(e) => setLocation(e.target.value)} />
                     </div>
 
-                    {(takesPayment || setsPricing) && (
+                    {setsPricing && (
                         <div className="np-money mt">
                             <div className="u" style={{ marginBottom: 8 }}>Money</div>
-                            {takesPayment && <div className="grid g-2">
+                            <div className="grid g-2">
                                 <div className="field">
-                                    <label className="label optional" htmlFor="np-init">Initial payment received</label>
-                                    <AmountField id="np-init" value={initialPay} currencies={false} onChange={setInitialPay} />
-                                </div>
-                                <div className="grid g-2" style={{ gap: 8 }}>
-                                    <div className="field">
-                                        <label className="label required" htmlFor="np-paydate">Received on</label>
-                                        <DateInput id="np-paydate" className="input mono" value={payDate} max={companyToday()} required onChange={setPayDate} />
-                                    </div>
-                                    <div className="field">
-                                        <label className="label required" htmlFor="np-paymethod">Method</label>
-                                        <Select id="np-paymethod" value={payMethod} onChange={setPayMethod}
-                                            options={Object.entries(PAYMENT_METHODS).map(([value, label]) => ({ value, label }))} />
-                                    </div>
-                                </div>
-                            </div>}
-                            {setsPricing && <div className={takesPayment ? "grid g-2 mt-s" : "grid g-2"}>
-                                <div className="field">
-                                    <label className="label optional" htmlFor="np-fee">Project fee</label>
+                                    <label className="label optional" htmlFor="np-fee">Customer payment</label>
                                     <AmountField id="np-fee" value={fee} currencies={false} onChange={setFee} />
                                 </div>
-                                <div className="field">
-                                    <label className="label required">Default material profit</label>
-                                    <div className="row wrap" style={{ gap: 5, alignItems: "center" }}>
-                                        {[0, 5, 10, 25].map((v) => (
-                                            <button key={v} type="button" className={cx("chip", +markupPct === v && "on")} onClick={() => setMarkupPct(v)}>{v ? `${v}%` : "As is"}</button>
-                                        ))}
-                                        <NumberField shape={MARKUP_PERCENT} style={{ width: 70 }} aria-label="Material profit percent"
-                                            value={markupPct} onChange={(text) => setMarkupPct(text === "" ? "" : +text)} />
-                                        <span className="muted">%</span>
-                                    </div>
-                                </div>
-                            </div>}
+                                {setsTva && <TvaField id="np-tva" value={tvaPct} onChange={setTvaPct} />}
+                            </div>
                             <div className="hint" style={{ marginTop: 6 }}>
-                                {!takesPayment ? "" : initialPay > 0
-                                    ? `Recorded as a client payment. With nothing spent yet, the project starts ${money.exact(initialPay)} in profit. `
-                                    : "Leave the payment at $0 if nothing has been received yet - it can be recorded later. "}{setsPricing && "Fee and material profit can be changed at any time."}
+                                The agreed amount, before materials. A down payment is recorded as a client payment once the site exists; material profit is set on its Financials tab.
                             </div>
                         </div>
                     )}

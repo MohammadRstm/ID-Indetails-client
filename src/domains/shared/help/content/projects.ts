@@ -234,10 +234,10 @@ export const projects: Article[] = [
         title: "Setting a site's fee and material profit",
         category: "projects",
         who: and(sees("execution"), has(P.PROJECT_PRICING_MANAGE)),
-        summary: "On the site, More → Fee & material profit sets the project fee and the markup on materials. Each material's client price can also be set on the client statement.",
+        summary: "On the site, More → Payment & material profit sets the agreed payment, its TVA and the markup on materials. Each material's client price can also be set on the client statement.",
         ask: ["project fee", "markup", "material profit", "client price", "pricing", "fee", "set price"],
         blocks: [
-            steps(step("Open the site, then **More → Fee & material profit**.", "Projects", "the site", "More")),
+            steps(step("Open the site, then **More → Payment & material profit**.", "Projects", "the site", "More")),
             list(
                 "The **Project fee** is part of what the client pays.",
                 "The **Default material profit** is the markup: 10% charges a $100 material as $110. **As is** (0%, where new sites start) charges materials at what they cost.",

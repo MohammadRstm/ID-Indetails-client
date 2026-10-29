@@ -170,6 +170,12 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 sub: note.actor ? `Asked by ${who} · approve or deny it` : "Raised by the system · approve or deny it",
                 icon: "card", route: "/execution/pocket",
             };
+        case "quote_due":
+            return {
+                text: `${title} may need a quote`,
+                sub: note.actor ? `Created by ${who} · send it or not` : "Send it or not",
+                icon: "file", route: project ? `${project}?quote=new` : project,
+            };
         case "statement_sent":
             return { text: `${s(p.number) || "A statement"} was sent to the client`, sub: `${title}${note.actor ? ` · by ${who}` : ""}`, icon: "file", route: project && note.subjectId ? `${project}?statement=${note.subjectId}` : project };
         case "client_added":
