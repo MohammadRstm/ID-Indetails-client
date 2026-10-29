@@ -3,7 +3,6 @@ import { AMOUNT, largest, QUANTITY, UNIT_COST, upTo } from "@/shared/format/limi
 import { money } from "@/shared/format/money";
 import { parseDateText } from "@/shared/format/parseDate";
 import { companyToday } from "@/shared/format/time";
-import type { AccountLabel } from "@/domains/shared/accountLabels/accountLabelsApi";
 import type { SiteExpense, SiteExpenseCategory } from "./expensesApi";
 
 /*
@@ -206,17 +205,7 @@ export function entryOf(r: Row): Schemas["SiteExpenseEntryRequest"] {
     };
 }
 
-/**
- * What a row's label cell can be: no label, the labels that can still be picked, and the row's own label when it has
- * since been archived (it keeps it, but nobody can pick it for another row).
- */
-export function labelChoices(labels: AccountLabel[] | undefined, own?: SiteExpense["accountLabel"]): Choice[] {
-    const open = (labels ?? []).filter((l) => !l.archived).map((l) => ({ value: String(l.id), label: l.name }));
-    const kept = own && !open.some((o) => o.value === String(own.id))
-        ? [{ value: String(own.id), label: labels ? `${own.name} (archived)` : own.name }]
-        : [];
-    return [{ value: "", label: "No label" }, ...open, ...kept];
-}
+export { labelChoices } from "@/domains/shared/accountLabels/labelChoices";
 
 export type CurrencyTotal = { currency: string; total: number };
 const dollarsFirst = (a: CurrencyTotal, b: CurrencyTotal) => (a.currency === "USD" ? -1 : b.currency === "USD" ? 1 : a.currency.localeCompare(b.currency));

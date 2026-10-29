@@ -144,6 +144,19 @@ export function useApplyPayment() {
     });
 }
 
+/**
+ * Files a live payment under an account label, changes it or clears it (payment:record and financial:view): the one thing
+ * about a payment that can change after it is recorded. A voided payment or an archived label is refused.
+ */
+export function useSetPaymentLabel() {
+    const refresh = useInvalidateBilling();
+    return useMutation({
+        mutationFn: async ({ id, accountLabelId }: { id: number; accountLabelId: number | null }) =>
+            (await http.put<Payment>(`/payments/${id}/label`, { accountLabelId })).data,
+        onSuccess: refresh,
+    });
+}
+
 /** Voids a payment that was recorded in error; it stays in the register with its reason (payment:void). */
 export function useVoidPayment() {
     const refresh = useInvalidateBilling();

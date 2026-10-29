@@ -46,6 +46,17 @@ const excused = (p: Payload) => {
 };
 /** A BOQ or VO by its number (BQ-2026-001), or by its kind when the event carries none. */
 const boq = (p: Payload) => str(p.number) ?? (p.kind === "vo" ? "a VO" : "a client BOQ");
+/** What a payment's account label changed from and to, as the event carries them (names, or null for none). */
+const relabelled = (p: Payload, amount: number | null) => {
+    const payment = amount == null ? "a payment" : `a ${money.fmt(amount)} payment`;
+    const to = str(p.label), was = str(p.previousLabel);
+    return to && was ? `moved ${payment} from ${was} to ${to}`
+        : to ? `filed ${payment} under ${to}`
+            : was ? `cleared the ${was} label from ${payment}`
+                : `changed the label of ${payment}`;
+};
+/** " on Sep 20" for the day supervision was taken, when the event carries it (not without financial:view). */
+const takenOn = (p: Payload) => (str(p.takenOn) ? ` on ${fmtDate(str(p.takenOn)!)}` : "");
 /** A company expense's name, and the details its event carries. */
 const overhead = (p: Payload) => ({ name: str(p.name) ?? "a company expense", currency: str(p.currency) ?? "USD", d: (p.details ?? {}) as Payload });
 
@@ -159,7 +170,16 @@ const WORDS: Record<string, Words> = {
         text: (e, p) => `recorded ${e.amount == null ? "a payment" : money.fmt(e.amount)} received from ${client(e)}${str(p.invoiceNumber) ? ` against ${str(p.invoiceNumber)}` : " on account"}`,
     },
     payment_applied: { icon: "card", text: (_e, p) => `applied a payment to ${str(p.invoiceNumber) ?? "an invoice"}` },
+    payment_label_set: { icon: "edit", text: (e, p) => relabelled(p, e.amount) },
     payment_voided: { icon: "x", text: (e, p) => `voided ${e.amount == null ? "a" : `a ${money.fmt(e.amount)}`} payment${str(p.reason) ? ` - ${str(p.reason)}` : ""}` },
+    supervision_taken: {
+        icon: "card",
+        text: (e, p) => `recorded ${e.amount == null ? "supervision" : `${money.fmt(e.amount)} of supervision`} taken from ${project(e)}${takenOn(p)}${str(p.note) ? ` - ${str(p.note)}` : ""}`,
+    },
+    supervision_withdrawal_removed: {
+        icon: "trash",
+        text: (e, p) => `removed ${e.amount == null ? "a record of" : `${money.fmt(e.amount)} of`} supervision taken${takenOn(p)} from ${project(e)}`,
+    },
     boq_created: { icon: "file", text: (e, p) => `drafted ${boq(p)} for ${project(e)}${dash(e.amount)}` },
     boq_sent: {
         icon: "send",

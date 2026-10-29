@@ -109,7 +109,7 @@ export default function InvoiceModal({ invoiceId, onClose, onSend, onEdit, onPay
                     <div className="mt-s">
                         {live.length ? live.map((p) => (
                             <div key={p.id} className="row" style={{ gap: 4 }}>
-                                <div className="grow"><CostRow label={PAYMENT_METHODS[p.method] ?? p.method} meta={`${fmtDate(p.receivedOn)}${p.reference ? ` · ${p.reference}` : ""}`} value={money.fmt(p.amountUsd)} /></div>
+                                <div className="grow"><CostRow label={PAYMENT_METHODS[p.method] ?? p.method} meta={`${fmtDate(p.receivedOn)}${p.reference ? ` · ${p.reference}` : ""}${p.accountLabel ? ` · ${p.accountLabel.name}` : ""}`} value={money.fmt(p.amountUsd)} /></div>
                                 <PaymentActions payment={p} />
                             </div>
                         )) : loadFailed(paymentQuery) ? <LoadError error={paymentQuery.error} retry={() => paymentQuery.refetch()} what="the payments" />

@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 import type { Paged, Schemas } from "@/api/types";
+import { accountLabelsHandler } from "./accountLabels";
 import clientJson from "./billing/client.json";
 import domainInvoicesJson from "./billing/domainInvoices.json";
 import domainPaymentsJson from "./billing/domainPayments.json";
@@ -46,4 +47,5 @@ export const billingHandlers = [
     http.get("/api/exchange-rates", () => HttpResponse.json(billing.rates)),
     http.get("/api/finance/design/billing", () => HttpResponse.json(billing.financeBilling)),
     http.get("/api/clients/:id", () => HttpResponse.json(billing.client)),
+    accountLabelsHandler,
 ];

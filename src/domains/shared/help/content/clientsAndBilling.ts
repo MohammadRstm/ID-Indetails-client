@@ -163,7 +163,7 @@ export const billing: Article[] = [
         blocks: [
             steps(
                 step("Open the project, then **More → Record a client payment** (or **Record payment** on an invoice).", "Projects", "the project", "More"),
-                step("Enter the **Amount received**, its currency and **Date received**, **How it arrived**, and **Against which invoice?** (or none)."),
+                step("Enter the **Amount received**, its currency and **Date received**, **How it arrived**, and **Against which invoice?** (or none). If you like, file it under an **Account label**."),
             ),
             list(
                 "Payments are in USD or LBP. LBP is converted at the rate you type, or the company rate for the day it was received.",
@@ -173,7 +173,29 @@ export const billing: Article[] = [
             ),
             only(sees("execution"), note("An Execution site can have one initial payment, recorded when the site is created or later.")),
         ],
-        related: ["apply-payment", "billing-terms", "exchange-rates"],
+        related: ["apply-payment", "payment-labels", "billing-terms", "exchange-rates"],
+    },
+    {
+        id: "payment-labels",
+        title: "Filing a payment under an account label",
+        category: "billing",
+        who: hasAny(P.PAYMENT_RECORD, P.FINANCIAL_VIEW),
+        summary: "A payment can be filed under one of the company's account labels (Concrete, Finishing…), when it is recorded or afterwards. The label only decides where it counts in the site's account.",
+        ask: ["account label", "payment label", "label a payment", "file payment under", "concrete", "finishing", "permits", "change label", "clear label", "no label"],
+        blocks: [
+            list(
+                "Labels are the company's own short list, kept in Settings by a super admin. The same labels file site expenses.",
+                "Pick one in **Account label** when you record a payment, Design or Execution. It is optional.",
+                "A label that has been archived can't be picked any more. A payment keeps the one it already has, shown as archived, and can be cleared.",
+                "A label changes no amount, invoice, TVA or profit. On an Execution site it decides the row a payment counts in under **Rest in account by label**.",
+            ),
+            only(has(P.PAYMENT_RECORD, P.FINANCIAL_VIEW), steps(
+                step("Open the payment's menu (the dots at the end of its row) and choose **Label…**.", "Projects", "the site", "Financials"),
+                step("Choose a label, or **No label** to clear it, and **Save**."),
+            )),
+            note("A voided payment can't be relabelled. Everything else about a payment stays as it was recorded."),
+        ],
+        related: ["record-payment", "account-figures"],
     },
     {
         id: "apply-payment",

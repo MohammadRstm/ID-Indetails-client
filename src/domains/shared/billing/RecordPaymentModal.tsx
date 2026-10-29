@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { errorMessage, toApiError } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
@@ -19,6 +19,7 @@ import { useInvoices, useRateOn, useRecordPayment } from "./billingApi";
 import { invoiceStateOf } from "./invoiceStatus";
 import { loadFailed } from "@/api/queryState";
 import LoadError from "@/shared/components/Feedback/LoadError";
+import AccountLabelSelect from "@/domains/shared/accountLabels/AccountLabelSelect";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 
@@ -49,6 +50,7 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
     const rateOfDay = useRateOn("LBP", date)?.ratePerUsd;
     const [method, setMethod] = useState<Method>("bank");
     const [reference, setReference] = useState("");
+    const [labelId, setLabelId] = useState("");
     const fx = rate ?? rateOfDay ?? 0;
     // until it is typed, the amount is what the chosen invoice still owes
     const value = amount ?? (currency === "USD" ? cents(balance) / 100 : Math.round(balance * fx));
@@ -71,6 +73,9 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
         fillEmpty(reference, v.reference, setReference, "reference", done);
         return done;
     });
+    // what the API refused about the label, beside the label; it goes as soon as another is picked
+    const refused = toApiError(record.error);
+    const labelError = refused.fieldErrors.accountLabelId ?? (refused.code === "account_label_archived" ? refused.message : undefined);
     const amountError = !(value > 0) && "Enter the amount received.";
     const rateError = currency !== "USD" && !(fx > 0) && "Enter the exchange rate of the day.";
 
@@ -85,6 +90,7 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
         record.mutate({
             amount: value, currency, fxRate: currency === "USD" ? null : fx, invoiceId: target?.id ?? null,
             method, receivedOn: date, reference: reference.trim() || null,
+            ...(labelId ? { accountLabelId: Number(labelId) } : {}),
         }, {
             onSuccess: (pay) => {
                 const left = balance - pay.amountUsd;
@@ -103,7 +109,7 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
             foot={
                 <>
                     <div className="grow mono" style={{ fontSize: "12.5px" }}>
-                        {record.error ? <span className="err"><Icon name="alert" />{errorMessage(record.error)}</span>
+                        {record.error && !labelError ? <span className="err"><Icon name="alert" />{errorMessage(record.error)}</span>
                             : currency === "USD" ? money.exact(usd) : `${money.exact(value, "LBP")} = ${money.exact(usd)}`}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
@@ -161,6 +167,13 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
                     <input id="pay-ref" className="input" value={reference} onChange={(e) => setReference(e.target.value)}
                         placeholder={`Optional - ${method === "cheque" ? "cheque number" : method === "bank" ? "transfer reference" : "receipt number"}`} />
                 </div>
+            </div>
+
+            <div className="field mt">
+                <label className="label" htmlFor="pay-label">Account label</label>
+                <AccountLabelSelect id="pay-label" value={labelId} onChange={(v) => { if (record.error) record.reset(); setLabelId(v); }} />
+                <FieldError message={labelError} />
+                <div className="hint">Optional - the account this money belongs to (Concrete, Finishing…). It can be changed later and changes no amount.</div>
             </div>
 
             {overInvoice && target && (

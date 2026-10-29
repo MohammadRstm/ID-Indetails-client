@@ -209,7 +209,7 @@ describe("the supervision and TVA", () => {
         await waitFor(() => expect(saved).toEqual([{ supervisionRate: 0.1, tvaRate: 0.11, description: "Imported tiles" }]));
     });
 
-    it("show the work price first on the Financials tab, in bold, with the supervision, the TVA and the client total", async () => {
+    it("show the work price first on the Financials tab, in bold, and the supervision, the TVA and the client total in the account", async () => {
         const changes = [
             { id: 5, amount: 9000, previousAmount: 9000, materialMarkup: null, previousMaterialMarkup: null, supervisionRate: 0.12, previousSupervisionRate: 0.12, description: "Same supervision, new TVA", changedAt: "2026-09-12T09:00:00Z", changedBy: null },
             { id: 4, amount: 9000, previousAmount: 8000, materialMarkup: 0.15, previousMaterialMarkup: 0.1, supervisionRate: 0.12, previousSupervisionRate: 0.1, description: "A second floor", changedAt: "2026-09-10T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
@@ -219,9 +219,13 @@ describe("the supervision and TVA", () => {
         expect(await screen.findByRole("tab", { name: "Financials", selected: true })).toBeInTheDocument();
         const section = await screen.findByRole("region", { name: "Work price" });
         expect(within(section).getByText(money.exact(m.projectFee!))).toHaveClass("pay-amount");
-        expect(within(section).getByText("Supervision").closest("div")).toHaveTextContent(`${money.exact(m.supervisionUsd!)}${money.pct(0.1)} of the work price`);
-        expect(within(section).getByText("TVA").closest("div")).toHaveTextContent("never on supervision");
-        expect(within(section).getByText("Client total").closest("div")).toHaveTextContent(money.exact(m.revenueWithTva));
+        // the account below carries the supervision, the TVA and the client total, so the price section doesn't repeat them
+        expect(within(section).queryByText("Client total")).not.toBeInTheDocument();
+        const account = await screen.findByRole("region", { name: "Account" });
+        expect(await within(account).findByText("Supervision")).toBeInTheDocument();
+        expect(within(account).getByText("Supervision").closest("div")).toHaveTextContent(`10% of the work price+${money.exact(m.supervisionUsd!)}`);
+        expect(within(account).getByText("TVA").closest("div")).toHaveTextContent("never on supervision");
+        expect(within(account).getByText("Client total").closest("div")).toHaveTextContent(money.exact(m.revenueWithTva));
         expect(section.compareDocumentPosition(await moneyPanel()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
         await userEvent.click(within(section).getByRole("button", { name: "Edit pricing" }));

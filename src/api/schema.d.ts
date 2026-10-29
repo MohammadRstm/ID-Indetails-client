@@ -7104,6 +7104,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payments/{paymentId}/label": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    paymentId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SetPaymentLabelRequest"];
+                    "application/json": components["schemas"]["SetPaymentLabelRequest"];
+                    "text/json": components["schemas"]["SetPaymentLabelRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PaymentResponse"];
+                        "text/json": components["schemas"]["PaymentResponse"];
+                        "text/plain": components["schemas"]["PaymentResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payments/{paymentId}/void": {
         parameters: {
             query?: never;
@@ -8255,6 +8300,45 @@ export interface paths {
                 };
             };
         };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/account-figures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AccountFiguresResponse"];
+                        "text/json": components["schemas"]["AccountFiguresResponse"];
+                        "text/plain": components["schemas"]["AccountFiguresResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -11558,6 +11642,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{projectId}/supervision-withdrawals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SupervisionWithdrawalResponse"][];
+                        "text/json": components["schemas"]["SupervisionWithdrawalResponse"][];
+                        "text/plain": components["schemas"]["SupervisionWithdrawalResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["TakeSupervisionRequest"];
+                    "application/json": components["schemas"]["TakeSupervisionRequest"];
+                    "text/json": components["schemas"]["TakeSupervisionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SupervisionWithdrawalResponse"];
+                        "text/json": components["schemas"]["SupervisionWithdrawalResponse"];
+                        "text/plain": components["schemas"]["SupervisionWithdrawalResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{projectId}/timeline": {
         parameters: {
             query?: never;
@@ -13274,6 +13426,41 @@ export interface paths {
         };
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supervision-withdrawals/{withdrawalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    withdrawalId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -15123,6 +15310,52 @@ export interface components {
             password?: string;
             token?: string;
         };
+        AccountCategoryRowResponse: {
+            category: components["schemas"]["SiteExpenseCategory"];
+            /** Format: double */
+            spentUsd: number;
+        };
+        AccountCostsResponse: {
+            /** Format: double */
+            groundLabourUsd: number;
+            /** Format: double */
+            otherUsd: number;
+            /** Format: double */
+            siteExpensesUsd: number;
+            /** Format: double */
+            staffUsd: number;
+            /** Format: double */
+            totalUsd: number;
+        };
+        AccountFiguresResponse: {
+            byCategory: components["schemas"]["AccountCategoryRowResponse"][];
+            byLabel: components["schemas"]["AccountLabelRowResponse"][];
+            byPayee: components["schemas"]["AccountPayeeRowResponse"][];
+            /** Format: double */
+            cashInAccountUsd: number;
+            /** Format: double */
+            clientTotalUsd: number;
+            costs: components["schemas"]["AccountCostsResponse"];
+            pocket: components["schemas"]["AccountPocketResponse"];
+            /** Format: double */
+            profitUsd: number;
+            /** Format: double */
+            receivedUsd: number;
+            /** Format: double */
+            restToPayUsd: number;
+            supervision: components["schemas"]["AccountSupervisionResponse"];
+            /** Format: double */
+            supervisionRate: number;
+            /** Format: double */
+            supervisionUsd: number;
+            /** Format: double */
+            tvaRate: number;
+            /** Format: double */
+            tvaUsd: number;
+            unconverted: components["schemas"]["UnconvertedCostResponse"][];
+            /** Format: double */
+            workUsd: number;
+        };
         AccountLabelOrderRequest: {
             ids?: number[];
         };
@@ -15141,6 +15374,36 @@ export interface components {
             name: string;
             /** Format: int32 */
             position: number;
+        };
+        AccountLabelRowResponse: {
+            accountLabel: null | components["schemas"]["AccountLabelRefResponse"];
+            /** Format: double */
+            otherUsd: number;
+            /** Format: double */
+            receivedUsd: number;
+            /** Format: double */
+            restUsd: number;
+            /** Format: double */
+            spentUsd: number;
+        };
+        AccountPayeeRowResponse: {
+            payee: null | string;
+            /** Format: double */
+            spentUsd: number;
+        };
+        AccountPocketResponse: {
+            /** Format: double */
+            movedToPocketUsd: number;
+            /** Format: double */
+            paidByPocketUsd: number;
+        };
+        AccountSupervisionResponse: {
+            /** Format: double */
+            dueUsd: number;
+            /** Format: double */
+            leftUsd: number;
+            /** Format: double */
+            takenUsd: number;
         };
         /** @enum {unknown} */
         ActivityGroup: "work" | "money" | "billing" | "projects" | "people" | "company" | "other";
@@ -17608,6 +17871,7 @@ export interface components {
         /** @enum {unknown} */
         PaymentMethod: "bank" | "cheque" | "cash" | "other";
         PaymentResponse: {
+            accountLabel: null | components["schemas"]["AccountLabelRefResponse"];
             /** Format: double */
             amount: number;
             /** Format: double */
@@ -19310,6 +19574,8 @@ export interface components {
             recipient?: null | string;
         };
         RecordPaymentRequest: {
+            /** Format: int64 */
+            accountLabelId?: null | number;
             /** Format: double */
             amount?: number;
             currency?: string;
@@ -19846,6 +20112,10 @@ export interface components {
             /** Format: int32 */
             workers?: number;
         };
+        SetPaymentLabelRequest: {
+            /** Format: int64 */
+            accountLabelId?: null | number;
+        };
         SetScheduleRequest: {
             days?: components["schemas"]["ScheduleDayRequest"][];
             /** Format: date */
@@ -20106,6 +20376,25 @@ export interface components {
         SuggestReplyRequest: {
             /** Format: int64 */
             projectId?: number;
+        };
+        SupervisionWithdrawalResponse: {
+            /** Format: double */
+            amountUsd: number;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: null | components["schemas"]["PersonRefResponse"];
+            /** Format: int64 */
+            id: number;
+            note: null | string;
+            /** Format: date */
+            takenOn: string;
+        };
+        TakeSupervisionRequest: {
+            /** Format: double */
+            amountUsd?: number;
+            note?: null | string;
+            /** Format: date */
+            takenOn?: string;
         };
         TaskCommentResponse: {
             attachment: null | components["schemas"]["FileResponse"];
