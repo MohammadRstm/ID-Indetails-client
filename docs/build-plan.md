@@ -165,6 +165,7 @@ Nothing at the moment.
 ### Decided
 
 - **Colleagues' hours stay private** (the user, 30 Sep 2026). An employee's project cards say "Sarah logged work · 3 hours ago", not the prototype's "Sarah logged 2h": employees never see how long a colleague worked.
+- **The whole working day is logged from 1 December 2026** (the user, 28 Oct 2026). The company's break is set to 0 from that day, so 9 to 5 asks for 8h of work and none of it is overtime. The prototype's day of 7h with a paid 1h break still holds for November and earlier. Copy that explains the break (Settings, My pay, Salaries, Help) reads both ways: it speaks of a paid break only where there is one.
 - **No Activity page for Execution** (the user, 30 Sep 2026). The prototype has none, and it stays that way, although the API records site events and the client words them.
 - **The company's own events are worded.** Schedules, working time, excused hours and company expenses read like the rest of the feed ("excused Sarah Haddad for 3 days off in September 2026", "changed the company's working hours from Oct 1"). The client always asks for one domain's feed, so only the schedule and excuse events, which carry the person's domain, reach a page today (Design's Activity page). The company ones would show on a company-wide feed, if one is ever wanted.
 

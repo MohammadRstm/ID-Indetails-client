@@ -16,6 +16,8 @@ export type HelpFacts = {
     days: string | null;
     /** The paid break, "1h" */
     breakTime: string | null;
+    /** Whether a working day has a paid break left out of its required hours; false when the whole day is logged */
+    hasBreak: boolean | null;
     /** What a working day requires, "7h" */
     required: string | null;
     /** What a working day pays, break included, "8h" */
@@ -34,7 +36,7 @@ const EDIT_WINDOW: Record<string, string> = {
     unlimited: "with no time limit",
 };
 
-export const NO_FACTS: HelpFacts = { day: null, days: null, breakTime: null, required: null, paid: null, multiplier: null, editWindow: null, timerOn: null };
+export const NO_FACTS: HelpFacts = { day: null, days: null, breakTime: null, hasBreak: null, required: null, paid: null, multiplier: null, editWindow: null, timerOn: null };
 
 export function useHelpFacts(domain: Domain | null): HelpFacts {
     const wt = useWorkingTime();
@@ -45,6 +47,7 @@ export function useHelpFacts(domain: Domain | null): HelpFacts {
         day: policy ? `${fmtMinutes(policy.startMinute)} to ${fmtMinutes(policy.endMinute)}` : null,
         days: policy ? daysText(policy.workDays, formatSettings().weekStart) : null,
         breakTime: policy ? fmtDurShort(policy.breakMinutes) : null,
+        hasBreak: policy ? policy.requiredMinutesPerDay < policy.endMinute - policy.startMinute : null,
         required: policy ? fmtDurShort(policy.requiredMinutesPerDay) : null,
         paid: policy ? fmtDurShort(policy.endMinute - policy.startMinute) : null,
         multiplier: policy ? `${policy.overtimeMultiplier}×` : null,

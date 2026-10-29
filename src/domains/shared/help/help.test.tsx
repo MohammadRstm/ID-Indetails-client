@@ -161,6 +161,14 @@ describe("the Help page", () => {
         expect(await within(article).findByText(/9:00 AM to 5:00 PM is 8h; minus the 1h break, 7h of work is required/)).toBeInTheDocument();
     });
 
+    it("says the whole day is logged when the company has no break", async () => {
+        const noBreak = { ...settings.workingTime.current, breakMinutes: 0, requiredMinutesPerDay: 480, requiredMinutesPerWeek: 2400 };
+        renderApp("/design/help?article=working-day", personas.designEmployee,
+            http.get("/api/company/working-time", () => HttpResponse.json({ current: noBreak, policies: [noBreak] })), ...facts);
+        const article = await screen.findByRole("article", { name: "The working day, required hours and the paid break" });
+        expect(await within(article).findByText(/Your company has no break: 9:00 AM to 5:00 PM is 8h, and all 8h of work are required and paid\./)).toBeInTheDocument();
+    });
+
     it("lists only the topics a person has something in", async () => {
         renderApp("/execution/help", personas.executionEmployee, ...facts);
         const topics = await screen.findByRole("navigation", { name: "Help topics" });

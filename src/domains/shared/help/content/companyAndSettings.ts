@@ -33,10 +33,13 @@ export const company: Article[] = [
         summary: "Settings → Time tracking sets the company's working days, start and end time, and the paid break. Changes apply from today or a later day.",
         ask: ["working hours", "office hours", "work week", "working days", "break", "lunch break", "change hours", "9 to 5"],
         blocks: [
-            para((f) => `Now: ${orFact(f.days, "the working days")}, ${orFact(f.day, "the working hours")}, with ${orFact(f.breakTime, "the")} break. That's ${orFact(f.required, "the required hours")} of work required and ${orFact(f.paid, "the whole day")} paid a day.`),
+            para((f) => (f.hasBreak === false
+                ? `Now: ${orFact(f.days, "the working days")}, ${orFact(f.day, "the working hours")}, with no break. The whole day is logged: ${orFact(f.paid, "all of it")} of work required and paid a day.`
+                : `Now: ${orFact(f.days, "the working days")}, ${orFact(f.day, "the working hours")}, with ${orFact(f.breakTime, "the")} break. That's ${orFact(f.required, "the required hours")} of work required and ${orFact(f.paid, "the whole day")} paid a day.`)),
             steps(step("Open **Settings → Time tracking** and change the default working hours, days or break.", "Settings", "Time tracking")),
             list(
                 "A change applies from today or a later day. Past days keep the hours they had, so past pay and hours don't move.",
+                "With no break, the whole day is logged and required, and nothing is paid on top of the hours logged.",
                 "A change set for a later day can be replaced before it starts.",
                 "Hours, overtime, pay, salaries and schedules all follow it.",
                 "People with their own schedule keep it; the break and the overtime rate still come from here.",

@@ -15,15 +15,20 @@ export const explainedPay: Article[] = [
         title: "The working day, required hours and the paid break",
         category: "pay",
         who: or(logs, seesSalaries, has(P.WORKING_TIME_MANAGE), has(P.SCHEDULE_MANAGE)),
-        summary: (f) => `A working day asks for its hours minus the break, but the break is paid. ${f.day && f.required && f.paid ? `Your company's day, ${f.day}, asks for ${f.required} of work and pays ${f.paid}.` : ""}`.trim(),
+        summary: (f) => (f.hasBreak === false && f.day && f.paid
+            ? `Your company's day, ${f.day}, has no separate break: all ${f.paid} of it are logged, required and paid.`
+            : `A working day asks for its hours minus the break, but the break is paid. ${f.day && f.required && f.paid ? `Your company's day, ${f.day}, asks for ${f.required} of work and pays ${f.paid}.` : ""}`.trim()),
         ask: ["required hours", "working day", "break", "paid break", "lunch", "7 hours", "8 hours", "how many hours a day"],
         blocks: [
             formula("Required hours = the day's span − the break (for a day longer than 6 hours)",
-                (f) => (f.day && f.breakTime && f.required && f.paid
-                    ? `Your company: ${f.day} is ${f.paid}; minus the ${f.breakTime} break, ${f.required} of work is required. All ${f.paid} are paid.`
-                    : "9:00 AM to 5:00 PM is 8 hours; minus a 1-hour break, 7 hours of work are required, and all 8 are paid.")),
+                (f) => (f.hasBreak === false && f.day && f.paid
+                    ? `Your company has no break: ${f.day} is ${f.paid}, and all ${f.paid} of work are required and paid.`
+                    : f.day && f.breakTime && f.required && f.paid
+                        ? `Your company: ${f.day} is ${f.paid}; minus the ${f.breakTime} break, ${f.required} of work is required. All ${f.paid} are paid.`
+                        : "9:00 AM to 5:00 PM is 8 hours; minus a 1-hour break, 7 hours of work are required, and all 8 are paid.")),
             list(
-                "The break is taken whenever you like, and is always paid. It is never taken off pay.",
+                "The break is taken whenever you like, and is always paid without being logged. It is never taken off pay.",
+                "With no break set, the whole day is logged and required.",
                 "A day of 6 hours or less has no break: all of it is required.",
                 (f) => `Working days: ${orFact(f.days, "set by the company")}. Other days are days off.`,
                 "Someone can have their own schedule (other days or hours); the break and the overtime rate still come from the company.",
@@ -46,9 +51,11 @@ export const explainedPay: Article[] = [
                 "And if the minutes inside the hours add up to more than the day requires, the extra is overtime too (taken from the latest entries).",
             ),
             formula("Overtime = the time outside your hours + the time inside them beyond what the day requires",
-                (f) => (f.day && f.required
-                    ? `Logging all of ${f.day} on a working day puts ${f.paid ?? "the whole day"} inside your hours against ${f.required} required, so the difference is overtime, paid on top of the paid break.`
-                    : "Logging all of 9:00 AM to 5:00 PM on a 9-to-5 day puts 8 hours inside your hours against 7 required: 1 hour is overtime, paid on top of the paid break.")),
+                (f) => (f.hasBreak === false && f.day
+                    ? `Logging all of ${f.day} on a working day is exactly what the day requires: none of it is overtime, only time before or after it.`
+                    : f.day && f.required
+                        ? `Logging all of ${f.day} on a working day puts ${f.paid ?? "the whole day"} inside your hours against ${f.required} required, so the difference is overtime, paid on top of the paid break.`
+                        : "Logging all of 9:00 AM to 5:00 PM on a 9-to-5 day puts 8 hours inside your hours against 7 required: 1 hour is overtime, paid on top of the paid break.")),
             list(
                 "Work past midnight counts on the day it started; the minutes after midnight are outside your hours, so they're overtime.",
                 "Overtime depends on your whole day across all projects, not one entry.",
@@ -102,7 +109,7 @@ export const explainedPay: Article[] = [
                 "173.33 hours is a standard month: a 40-hour paid week × 52 weeks ÷ 12 months (a part-time week scales it). Overtime is paid from it, whatever the month: a $1,733.30 salary's overtime starts from $10 an hour."),
             para("**An hourly rate**"),
             formula("Pay = (hours inside your hours + hours made up) × rate + the paid break of each working day you worked + overtime pay",
-                "The break is paid on top, for every working day with some work inside your hours."),
+                "The break is paid on top, for every working day with some work inside your hours. With no break set, the whole day is logged instead, so nothing is added."),
             formula("Overtime pay = overtime hours (after any making up) × true hourly rate × overtime rate"),
             list(
                 "The pay in force at the month's end prices a salaried month, even after a mid-month raise; hourly work is priced at each day's rate.",

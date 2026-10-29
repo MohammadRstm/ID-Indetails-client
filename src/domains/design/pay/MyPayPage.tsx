@@ -97,7 +97,7 @@ function PayMonth({ pay: r, month, breakMinutes, typical, allDays, setAllDays }:
                 ...(s ? [{
                     key: "earned", value: cash(earned, cur),
                     label: <>{r.inProgress ? "Earned so far" : "Pay for the month"}<HelpHint article="pay" label="this pay">Your base pay for the part of the month so far, plus overtime pay. A month that is over shows its final pay.</HelpHint></>,
-                    sub: <span>{r.inProgress ? (monthly ? "salary to date + overtime" : "hours logged + paid breaks") : "final"}</span>,
+                    sub: <span>{r.inProgress ? (monthly ? "salary to date + overtime" : s.paidBreakPay > 0 ? "hours logged + paid breaks" : "hours logged + overtime") : "final"}</span>,
                 }] : []),
                 { key: "logged", label: "Hours logged", value: fmtH(logged), sub: <span>{fmtH(inside)} normal · <span className="ot-text">{fmtH(overtime)} overtime</span></span> },
                 {
@@ -232,7 +232,7 @@ function HowItAddsUp({ pay: r, salary: s, ledger: lg, breakMinutes, typical }: A
                             <div><span>Hours worked · {fmtH(s.normalMinutes)}{s.madeUpMinutes ? ` + ${fmtH(s.madeUpMinutes)} made up from overtime` : ""} at {cash(s.hourlyRate, cur, true)}/h</span>
                                 <span className="mono">{cash(s.basePay - s.paidBreakPay, cur)}</span></div>
                             {s.paidBreakPay > 0 && (
-                                <div><span>Paid breaks · {s.paidBreakDays} working day{s.paidBreakDays === 1 ? "" : "s"} × {fmtH(breakMinutes)}</span>
+                                <div><span>Paid breaks · {s.paidBreakDays} working day{s.paidBreakDays === 1 ? "" : "s"}{breakMinutes ? ` × ${fmtH(breakMinutes)}` : ""}</span>
                                     <span className="mono">{cash(s.paidBreakPay, cur)}</span></div>
                             )}
                         </>
@@ -250,7 +250,7 @@ function HowItAddsUp({ pay: r, salary: s, ledger: lg, breakMinutes, typical }: A
                 </div>
                 <div className="hint mt-s">
                     {r.inProgress ? "An estimate that grows as you log work - the final figure is worked out when the month closes. " : ""}
-                    {breakMinutes ? (monthly ? `Your break is paid - your salary covers the full ${day}. ` : `Your break is paid - each day you work gets its ${fmtH(breakMinutes)} break on top of the hours you log. `) : ""}
+                    {breakMinutes ? (monthly ? `Your break is paid - your salary covers the full ${day}. ` : `Your break is paid - each day you work gets its ${fmtH(breakMinutes)} break on top of the hours you log. `) : `There's no separate paid break: log the whole ${day}. `}
                     Overtime first makes up any hours you're short, at your normal rate; only the rest is paid as overtime.
                     {monthly ? ` Your salary is the same every month; overtime is paid from your true hourly rate (the salary ÷ ${HOURS_PER_MONTH.toFixed(1)} h, a standard month), whatever the month.` : ""}
                 </div>
