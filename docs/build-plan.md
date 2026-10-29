@@ -168,6 +168,9 @@ Nothing at the moment.
 - **No Activity page for Execution** (the user, 30 Sep 2026). The prototype has none, and it stays that way, although the API records site events and the client words them.
 - **The company's own events are worded.** Schedules, working time, excused hours and company expenses read like the rest of the feed ("excused Sarah Haddad for 3 days off in September 2026", "changed the company's working hours from Oct 1"). The client always asks for one domain's feed, so only the schedule and excuse events, which carry the person's domain, reach a page today (Design's Activity page). The company ones would show on a company-wide feed, if one is ever wanted.
 
+- **An Execution site's price comes from BOQs** (the user, 29 Oct 2026). Its work price is not typed in anywhere: the Financials tab shows it read-only ("Set when a BOQ is agreed" while there is none), and More → Pricing edits only the supervision rate, the TVA and the material profit. Supervision is its own line next to the work price and TVA. A new client project's TVA starts at 11% everywhere. Execution sites have no quotes: no "Send the quote?" prompt after creating or pricing a site, and none from a `?quote=new` link. Design keeps them.
+- **Account labels** are one company-wide list that a super admin keeps in Settings → Account labels (add, rename, archive and restore, reorder with the arrows). The `useAccountLabels` hook (`domains/shared/accountLabels`) is what payments and expenses pick from.
+
 ### API follow-ups
 
 None open. Done since:

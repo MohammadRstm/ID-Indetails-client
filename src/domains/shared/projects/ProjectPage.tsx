@@ -177,8 +177,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const canUsePocket = site && !!m && project.billingType === "client";
     const openMoney = (action: "payment" | "client" | "expense" | "pricing" | "to-pocket" | "ask-pocket") => { params.set("money", action); setParams(params); };
     const closeMoney = () => { params.delete("money"); setParams(params, { replace: true }); };
-    // a quote is offered after a project is made or its payment or TVA changes (?quote=new), to whoever sends them
-    const canQuote = !!m && project.billingType === "client" && permissions.has(P.INVOICE_SEND);
+    // a quote is offered after a project is made or its payment or TVA changes (?quote=new), to whoever sends them;
+    // an Execution site has none, its price comes from agreed bills of quantities
+    const canQuote = !!m && !site && project.billingType === "client" && permissions.has(P.INVOICE_SEND);
     const askQuote = () => { params.delete("money"); if (canQuote) params.set("quote", "new"); setParams(params, { replace: true }); };
     const closeQuote = () => { params.delete("quote"); setParams(params, { replace: true }); };
     // a change the profit floor refused, opened from its notification, for whoever sees the money to decide
@@ -301,7 +302,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                     {canAddExpense && <button className="pop-item" onClick={() => { close(); openMoney("expense"); }}><Icon name="plus" />Add project expense</button>}
                                     {canEditPayment && <button className="pop-item" onClick={() => { close(); openMoney("payment"); }}><Icon name="card" />Edit customer payment</button>}
                                     {canEditBilling && <button className="pop-item" onClick={() => { close(); openMoney("client"); }}><Icon name="user" />Client & type</button>}
-                                    {canEditPricing && <button className="pop-item" onClick={() => { close(); openMoney("pricing"); }}><Icon name="card" />Payment & material profit</button>}
+                                    {canEditPricing && <button className="pop-item" onClick={() => { close(); openMoney("pricing"); }}><Icon name="card" />Pricing</button>}
                                     {canStatement && <button className="pop-item" onClick={() => { close(); statements.newStatement(); }}><Icon name="file" />Client statement</button>}
                                     {canNewInvoice && <button className="pop-item" onClick={() => { close(); billing.newInvoice(); }}><Icon name="file" />New invoice</button>}
                                     {canRecordPayment && <button className="pop-item" onClick={() => { close(); billing.recordPayment(); }}><Icon name="card" />Record a client payment</button>}
