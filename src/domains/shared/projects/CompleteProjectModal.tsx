@@ -57,10 +57,10 @@ export default function CompleteProjectModal({ project, openRequirements, contri
             : execution ? `${m ? `${money.fmt(m.revenue)}, the work price and supervision, ` : "The work price "}can no longer change while the project stays closed: no BOQ or VO can be agreed or withdrawn.`
                 : m ? `${money.fmt(m.revenue)} can no longer be changed while the project stays closed.` : "The agreed amount can no longer be changed while the project stays closed."],
         ["eye", "Leaves every employee's active list", "Employees stop seeing it among their active projects; their own entries stay in My work."],
-        execution ? ["clock", "No new materials or labour", "Every material and weekly labour report - and therefore direct cost - is final."]
+        execution ? ["clock", "No new expenses or labour", "Every expense and weekly labour report - and therefore direct cost - is final."]
             : ["clock", "No new work entries", "Logged hours - and therefore labour cost - are final."],
         ["card", "Company expenses are untouched", "Subscriptions and running costs are charged to the company's month, never to this project."],
-        ["refresh", "Reversible", execution ? "Reopening the project unlocks its BOQs and pricing and reopens it for materials and labour."
+        ["refresh", "Reversible", execution ? "Reopening the project unlocks its BOQs and pricing and reopens it for expenses and labour."
             : "Reopening the project unlocks the payment and reopens it for work."],
     ];
 
@@ -104,9 +104,9 @@ export default function CompleteProjectModal({ project, openRequirements, contri
                     <Money value={m.cost.total} size="xl" />
                     <div className="mt">
                         <CompositionBar height={18} parts={[
-                            { label: execution ? "Materials" : "Employee labour", value: execution ? m.cost.materials : m.cost.labour, color: "var(--heat-3)" },
+                            { label: execution ? "Site expenses" : "Employee labour", value: execution ? m.cost.siteExpenses : m.cost.labour, color: "var(--heat-3)" },
                             { label: execution ? "Ground labour" : "Project expenses", value: execution ? m.cost.groundLabour : m.cost.expenses, color: "var(--heat-1)" },
-                            ...(execution ? [{ label: "Project expenses", value: m.cost.expenses, color: "var(--ghost)" }] : []),
+                            ...(execution ? [{ label: "Other costs", value: m.cost.expenses, color: "var(--ghost)" }] : []),
                         ]} />
                     </div>
                 </div>
@@ -121,9 +121,9 @@ export default function CompleteProjectModal({ project, openRequirements, contri
                     </div>
                     <Waterfall height={200} steps={execution ? [
                         { label: "Agreed", value: m.revenue, kind: "start" },
-                        { label: "Materials", value: m.cost.materials, kind: "cost" },
+                        { label: "Site expenses", value: m.cost.siteExpenses, kind: "cost" },
                         { label: "Ground labour", value: m.cost.groundLabour, kind: "cost" },
-                        { label: "Expenses", value: m.cost.expenses, kind: "cost" },
+                        { label: "Other costs", value: m.cost.expenses, kind: "cost" },
                         { label: "Profit", value: 0, kind: "result" },
                     ] : [
                         { label: "Payment", value: m.revenue, kind: "start" },
@@ -136,9 +136,9 @@ export default function CompleteProjectModal({ project, openRequirements, contri
 
             {m && (
                 <div className="kpis mt">
-                    {execution ? <Kpi label="Materials" value={<Money short value={m.cost.materials} />} /> : <Kpi label="Hours logged" value={fmtH(Math.round(m.labourHours * 60))} />}
+                    {execution ? <Kpi label="Site expenses" value={<Money short value={m.cost.siteExpenses} />} /> : <Kpi label="Hours logged" value={fmtH(Math.round(m.labourHours * 60))} />}
                     {execution ? <Kpi label="Ground labour" value={<Money short value={m.cost.groundLabour} />} /> : <Kpi label="Contributors" value={contributors ?? "-"} />}
-                    <Kpi label="Project expenses" value={<Money short value={m.cost.expenses} />} />
+                    <Kpi label={execution ? "Other costs" : "Project expenses"} value={<Money short value={m.cost.expenses} />} />
                     {execution ? <Kpi label="Total direct cost" value={<Money short value={m.cost.total} />} /> : <Kpi label="Cost per hour" value={money.fmt(m.costPerHour)} />}
                 </div>
             )}

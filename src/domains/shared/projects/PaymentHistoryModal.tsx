@@ -54,6 +54,7 @@ export default function PaymentHistoryModal({ project, onClose }: { project: Pro
 }
 
 function ChangeRow({ change: c, site }: { change: PaymentChange; site: boolean }) {
+    // changes from before site expenses lost their markup still show it; newer ones carry none
     const markupChanged = site && c.materialMarkup != null && c.previousMaterialMarkup != null && c.materialMarkup !== c.previousMaterialMarkup;
     return (
         <li className="pay-hist-row">
