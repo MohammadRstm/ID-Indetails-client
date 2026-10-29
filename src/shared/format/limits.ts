@@ -9,16 +9,14 @@ export type NumberShape = { digits: number; decimals: number; max?: number };
 
 /** An amount of money: 13 digits and 2 decimals. */
 export const AMOUNT: NumberShape = { digits: 13, decimals: 2 };
-/** A material's quantity: 11 digits and 3 decimals, as the API keeps it. */
+/** A site expense's quantity: 11 digits and 3 decimals, as the API keeps it. */
 export const QUANTITY: NumberShape = { digits: 11, decimals: 3 };
-/** A material's unit cost: 11 digits and 4 decimals (15 digits, as exact as the browser's numbers go). */
+/** A site expense's unit cost: 11 digits and 4 decimals (15 digits, as exact as the browser's numbers go). */
 export const UNIT_COST: NumberShape = { digits: 11, decimals: 4 };
 /** Lebanese pounds to the dollar: under a trillion, as the API keeps a rate. */
 export const RATE: NumberShape = { digits: 12, decimals: 6 };
 /** Ground workers on a site in a day, as the API allows. */
 export const WORKERS: NumberShape = { digits: 5, decimals: 0, max: 10_000 };
-/** A material profit, in percent: up to 500%, as the API allows. */
-export const MARKUP_PERCENT: NumberShape = { digits: 3, decimals: 2, max: 500 };
 /** A project's TVA, as a percentage: 0 to 100. */
 export const TVA_PERCENT: NumberShape = { digits: 3, decimals: 2, max: 100 };
 /** A BOQ line's quantity or rate: 10 digits and 4 decimals, as the API keeps them. */
