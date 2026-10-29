@@ -65,7 +65,8 @@ export default function SendBoqModal({ project, boq, onClose }: { project: Proje
                 await email.mutateAsync({ id: boq.id, to: address.trim(), note: text });
             } else if (way === "whatsapp") {
                 await record.mutateAsync({ id: boq.id, body: { channel: "whatsapp", recipient: chosenNumber!.value, note: text } });
-                const message = `Hello ${firstName} - here is ${name} for ${project.title}: ${money.exact(boq.clientTotalUsd, "USD", { cents: true })} to pay, TVA included. ${company?.name ?? ""}`;
+                const toPay = boq.clientTotalUsd == null ? "" : `: ${money.exact(boq.clientTotalUsd, "USD", { cents: true })} to pay, TVA included`;
+                const message = `Hello ${firstName} - here is ${name} for ${project.title}${toPay}. ${company?.name ?? ""}`;
                 if (tab) tab.location.href = waLink(chosenNumber!.value, message.trim());
             } else {
                 await record.mutateAsync({ id: boq.id, body: { channel: "download", note: text } });

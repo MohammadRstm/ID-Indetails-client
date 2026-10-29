@@ -6,6 +6,14 @@ import type { Boq } from "./boqsApi";
 
 const cents = (n: number) => money.exact(n, "USD", { cents: true });
 
+/** Supervision, TVA and what the client pays: the API leaves them out for whoever doesn't see the site's pricing. */
+function clientFiguresOf(boq: Boq) {
+    const { supervisionRate, supervisionUsd, tvaRate, tvaUsd, clientTotalUsd } = boq;
+    return supervisionRate != null && supervisionUsd != null && tvaRate != null && tvaUsd != null && clientTotalUsd != null
+        ? { supervisionRate, supervisionUsd, tvaRate, tvaUsd, clientTotalUsd }
+        : null;
+}
+
 /**
  * What the API worked out when the BOQ was last saved: the subtotal, the adjustment, the total and, for what the
  * client receives, supervision, TVA and what the client pays. None of it is worked out here, so while there are
@@ -13,6 +21,7 @@ const cents = (n: number) => money.exact(n, "USD", { cents: true });
  */
 export function BoqTotals({ boq, stale }: { boq: Boq; stale: boolean }) {
     const adjusted = boq.adjustmentType !== "none";
+    const client = boq.kind !== "internal" ? clientFiguresOf(boq) : null;
     return (
         <div className="mt">
             <div className="xm-owed" role="group" aria-label="Totals">
@@ -24,11 +33,11 @@ export function BoqTotals({ boq, stale }: { boq: Boq; stale: boolean }) {
                     </div>
                 )}
                 <div><span>Total</span><b className="mono">{cents(boq.totalUsd)}</b><em>the work this {boq.kind === "vo" ? "VO adds" : "BOQ prices"}</em></div>
-                {boq.kind !== "internal" && (
+                {client && (
                     <>
-                        <div><span>Supervision</span><b className="mono">{cents(boq.supervisionUsd)}</b><em>{pctOf(boq.supervisionRate)} of the total</em></div>
-                        <div><span>TVA</span><b className="mono">{cents(boq.tvaUsd)}</b><em>{pctOf(boq.tvaRate)} of the total, never on supervision</em></div>
-                        <div><span>Client pays</span><b className="mono">{cents(boq.clientTotalUsd)}</b><em>total + supervision + TVA</em></div>
+                        <div><span>Supervision</span><b className="mono">{cents(client.supervisionUsd)}</b><em>{pctOf(client.supervisionRate)} of the total</em></div>
+                        <div><span>TVA</span><b className="mono">{cents(client.tvaUsd)}</b><em>{pctOf(client.tvaRate)} of the total, never on supervision</em></div>
+                        <div><span>Client pays</span><b className="mono">{cents(client.clientTotalUsd)}</b><em>total + supervision + TVA</em></div>
                     </>
                 )}
             </div>

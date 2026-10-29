@@ -45,7 +45,7 @@ export function AgreeBoqModal({ project, boq, onClose }: { project: Project; boq
             </p>
             <p className="hint mt-s">
                 {!vo ? "Its total becomes the site's work price" : boq.totalUsd < 0 ? "Its total comes off the site's work price" : "Its total is added to the site's work price"}, and it can no longer be changed or deleted.
-                With supervision and TVA the client pays <span className="mono">{cents(boq.clientTotalUsd)}</span> for it.
+                {boq.clientTotalUsd != null && <>With supervision and TVA the client pays <span className="mono">{cents(boq.clientTotalUsd)}</span> for it. </>}
                 You can withdraw the agreement later, with a reason.
             </p>
         </Modal>

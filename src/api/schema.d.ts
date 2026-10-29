@@ -15281,7 +15281,7 @@ export interface components {
             agreedBy: null | components["schemas"]["PersonRefResponse"];
             author: components["schemas"]["PersonRefResponse"];
             /** Format: double */
-            clientTotalUsd: number;
+            clientTotalUsd: null | number;
             /** Format: date-time */
             createdAt: string;
             deliveries: components["schemas"]["BoqDeliveryResponse"][];
@@ -15300,16 +15300,16 @@ export interface components {
             /** Format: double */
             subtotalUsd: number;
             /** Format: double */
-            supervisionRate: number;
+            supervisionRate: null | number;
             /** Format: double */
-            supervisionUsd: number;
+            supervisionUsd: null | number;
             title: string;
             /** Format: double */
             totalUsd: number;
             /** Format: double */
-            tvaRate: number;
+            tvaRate: null | number;
             /** Format: double */
-            tvaUsd: number;
+            tvaUsd: null | number;
             /** Format: date-time */
             updatedAt: string;
         };
