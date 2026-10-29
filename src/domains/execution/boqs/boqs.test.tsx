@@ -305,6 +305,8 @@ describe("the BOQ editor", () => {
                 { id: 202, code: "2.1", description: "Porcelain tiles", quantity: 180, wasteRate: 0.1, unit: "m²", rate: 30 },
                 { id: 203, code: "3.1", description: "Electrical first fix", quantity: 1, wasteRate: 0, unit: "lot", rate: 8960 },
             ],
+            // the save it started from, which the API checks so it can't undo a newer one
+            updatedAt: boqs.draftB.updatedAt,
         });
         // the API's figures are shown once it is saved
         await waitFor(() => expect(row(1)).toHaveTextContent("$4,200"));
