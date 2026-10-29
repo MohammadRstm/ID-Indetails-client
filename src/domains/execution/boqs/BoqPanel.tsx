@@ -115,7 +115,7 @@ function Row({ boq, list, showAuthor, onOpen }: { boq: BoqSummary; list: BoqList
 
     return (
         <div className="cost-row click" {...clickable(onOpen, "button")} aria-label={`Open ${boq.number ?? boq.title}`}>
-            <span className="mono nowrap" style={{ fontWeight: 600, fontSize: 12, minWidth: 92 }}>{boq.number ?? "Draft"}</span>
+            <span className="mono nowrap" style={{ fontWeight: 600, fontSize: 12, minWidth: 92 }}>{boq.number ?? "-"}</span>
             <div className="grow" style={{ minWidth: 0 }}>
                 <div className="trunc"><b>{boq.title}</b></div>
                 <div className="muted trunc" style={{ fontSize: "11.5px" }}>{detail.join(" · ")}</div>
