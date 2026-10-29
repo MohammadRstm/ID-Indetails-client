@@ -50,7 +50,7 @@ type TabKey = "financials" | "overview" | "boqs" | "analytics" | "contributors" 
 
 /**
  * What goes on a project's Overview tab and Timeline tab, and the domain's own bits of its head. Each domain
- * supplies its own (Design: work, money and analytics; Execution: the site's money, materials and labour),
+ * supplies its own (Design: work, money and analytics; Execution: the site's money, expenses and labour),
  * registered where the routes are built.
  */
 export type ProjectPanels = {
@@ -168,14 +168,15 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const m = seesMoney ? project.money : null;
     const openRequirements = requirements.data ? requirements.data.total - requirements.data.done : 0;
     // The money windows, opened from the Financials tab or the menu (?money=payment|client|history|expense|pricing):
-    // Design's customer payment and its client and type, an Execution site's fee and material profit, the payment's
-    // history, and either one's expenses
+    // Design's customer payment and its client and type, an Execution site's supervision and TVA, the payment's
+    // history, and a Design project's expenses (a site's are its Expenses list)
     const moneyAction = m ? params.get("money") : null;
     const canEditBilling = !site && !!m && !m.isLocked && permissions.has(P.PROJECT_EDIT);
     const canEditPayment = canEditBilling && project.billingType === "client";
     const hasPaymentHistory = !!m && (site || project.billingType === "client");
     const canEditPricing = site && !!m && !m.isLocked && permissions.has(P.PROJECT_PRICING_MANAGE);
-    const canAddExpense = !!m && !m.isLocked && permissions.has(P.EXPENSE_MANAGE);
+    // a site's costs are recorded in its Expenses list, so it has no project expense window
+    const canAddExpense = !site && !!m && !m.isLocked && permissions.has(P.EXPENSE_MANAGE);
     // an Execution client site moves money with the pocket money: part of its profit in, or a request for some back
     const canUsePocket = site && !!m && project.billingType === "client";
     const openMoney = (action: "payment" | "client" | "expense" | "pricing" | "to-pocket" | "ask-pocket") => { params.set("money", action); setParams(params); };
@@ -320,7 +321,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     <div className="grow">
                         <b>Completed {fmtDateY(project.completedAt)}.</b>{" "}
                         {canChangeStatus ? "It has left every employee's active project list and no new work can be logged against it. Everything recorded stays available here and in reports."
-                            : site ? "No new materials can be added; everything recorded stays here." : "New work can't be logged against it; everything recorded stays here."}
+                            : site ? "No new expenses can be added; everything recorded stays here." : "New work can't be logged against it; everything recorded stays here."}
                     </div>
                     {canChangeStatus && <button className="btn btn-sm" onClick={() => run("reopen", `${project.title} is active again`)}>Reopen</button>}
                 </div>
@@ -331,7 +332,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     <div className="grow">
                         <b>On hold{project.heldSince ? ` since ${fmtDateY(project.heldSince)}` : ""}.</b>{" "}
                         {canChangeStatus ? "Employees can still see it, but work entries are paused."
-                            : site ? "Materials can still be recorded; nothing new is scheduled until it resumes." : "You can still see it, but new work entries are paused until it resumes."}
+                            : site ? "Expenses can still be recorded; nothing new is scheduled until it resumes." : "You can still see it, but new work entries are paused until it resumes."}
                     </div>
                     {canChangeStatus && <button className="btn btn-sm" onClick={() => run("resume", `${project.title} is active again`)}>Resume</button>}
                 </div>

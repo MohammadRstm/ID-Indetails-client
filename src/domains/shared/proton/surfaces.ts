@@ -42,7 +42,8 @@ export const SURFACES: Record<ProtonSurface, (a: Ask) => SurfaceTarget | null> =
     edit_client: (a) => onRecord(a, "clients", "details=1", a.p.has(P.CLIENT_MANAGE)),
     project_report: (a) => onRecord(a, "projects", "report=1", a.domain === "design" && a.p.hasAll(P.FINANCIAL_VIEW, P.WORK_ENTRY_VIEW_ALL)),
     project_payment_terms: (a) => onRecord(a, "projects", "money=payment", a.domain === "design" && a.p.hasAll(P.FINANCIAL_VIEW, P.PROJECT_EDIT)),
-    add_project_expense: (a) => onRecord(a, "projects", "money=expense", a.p.hasAll(P.FINANCIAL_VIEW, P.EXPENSE_MANAGE)),
+    // a site records its costs in its Expenses list, so only a Design project has this window
+    add_project_expense: (a) => onRecord(a, "projects", "money=expense", a.domain === "design" && a.p.hasAll(P.FINANCIAL_VIEW, P.EXPENSE_MANAGE)),
     site_pricing: (a) => onRecord(a, "projects", "money=pricing", a.domain === "execution" && a.p.hasAll(P.FINANCIAL_VIEW, P.PROJECT_PRICING_MANAGE)),
     new_invoice: (a) => onRecord(a, "projects", "invoice=new", a.p.hasAll(P.FINANCIAL_VIEW, P.INVOICE_CREATE)),
     record_payment: (a) => onRecord(a, "projects", "pay=1", a.p.hasAll(P.FINANCIAL_VIEW, P.PAYMENT_RECORD)),

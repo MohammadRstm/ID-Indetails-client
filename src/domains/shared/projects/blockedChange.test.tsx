@@ -2,8 +2,9 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
+import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
 import { site, siteHandlers } from "@/test/fixtures/site";
-import { personas } from "@/test/personas";
+import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
 const change = (over: object = {}) => ({
@@ -36,7 +37,9 @@ async function addExpense() {
 describe("the profit floor", () => {
     it("lets whoever sees the money force a refused expense, after asking", async () => {
         const calls: string[] = [];
-        renderApp(`/execution/projects/${site.project.id}?money=expense`, personas.superAdmin, ...floorHandlers(calls), ...siteHandlers);
+        // a Design project's: an Execution site records its costs in its Expenses list
+        const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
+        renderApp(`/design/projects/${projectWork.project.id}?money=expense`, admin, ...floorHandlers(calls), ...projectWorkHandlers);
         const dialog = await addExpense();
 
         await userEvent.click(await within(dialog).findByRole("button", { name: "Force it" }));
