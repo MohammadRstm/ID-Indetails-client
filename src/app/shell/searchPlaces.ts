@@ -176,7 +176,7 @@ export const PLACES: Place[] = [
     {
         key: "costs", icon: "card", label: "Costs and expenses",
         words: ["costs", "cost", "project expenses", "expenses", "spending", "spend", "expenses by category", "labour cost", "labor cost",
-            "materials cost", "material costs", "ground labour", "where the money goes", "cost breakdown", "biggest expenses"],
+            "materials cost", "material costs", "site expenses", "ground labour", "where the money goes", "cost breakdown", "biggest expenses"],
         targets: (ctx) => inBusinesses(ctx, "financials?tab=costs"),
     },
     {
@@ -209,9 +209,9 @@ export const PLACES: Place[] = [
         targets: (ctx) => (ctx.p.isAdmin ? inBusinesses(ctx, "overview") : inBusinesses(ctx, "my-work")),
     },
     {
-        key: "site-records", icon: "projects", label: "Site materials and labour",
-        words: ["materials", "material", "supplies", "deliveries", "suppliers", "supplier", "ground labour", "ground labor", "labour weeks",
-            "site workers", "site labour", "workers on site", "markup"],
+        key: "site-records", icon: "projects", label: "Site expenses and labour",
+        words: ["expenses", "expense", "site expenses", "materials", "material", "supplies", "deliveries", "suppliers", "supplier", "payee", "contractor", "ground labour", "ground labor", "labour weeks",
+            "site workers", "site labour", "workers on site"],
         targets: (ctx) => inBusinesses(ctx, "projects", "execution").map((t) => ({ ...t, sub: "on each site" })),
     },
     {
