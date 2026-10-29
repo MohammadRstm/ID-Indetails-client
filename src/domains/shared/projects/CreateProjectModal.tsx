@@ -22,6 +22,7 @@ import { useClient } from "../clients/clientsApi";
 import { personName, useProjectOwners } from "../people/peopleApi";
 import { StaffPicker } from "../../execution/staff/StaffPages";
 import { useCreateProject } from "./projectsApi";
+import PercentField from "./PercentField";
 import TvaField from "./TvaField";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
@@ -55,10 +56,10 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const [newClient, setNewClient] = useState<string | null>(null);
     const [workers, setWorkers] = useState("");
     const [dailyPay, setDailyPay] = useState(0);
-    // an Execution site's agreed amount; materials come on top, at their client prices
-    const [fee, setFee] = useState(0);
-    // TVA on what the client pays, as a percentage: 15% unless told otherwise
-    const [tvaPct, setTvaPct] = useState<number | "">(15);
+    // TVA on what the client pays, as a percentage: 11% unless told otherwise
+    const [tvaPct, setTvaPct] = useState<number | "">(11);
+    // an Execution site's supervision fee, as a percentage of its work price: 10% unless told otherwise
+    const [supervisionPct, setSupervisionPct] = useState<number | "">(10);
     // who oversees a site: chosen when it is created
     const [staffIds, setStaffIds] = useState<number[]>([]);
     // Proton fills the project's details, never its money: the "more details" section opens to show what it filled
@@ -114,8 +115,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                 ownerId: +ownerId,
                 targetDate: target || null,
                 revenue: setsPayment && revenue ? revenue : null,
-                projectFee: setsPricing ? fee || 0 : null,
                 tvaRate: setsTva ? (+tvaPct || 0) / 100 : null,
+                supervisionRate: setsPricing ? (+supervisionPct || 0) / 100 : null,
                 labourDefaults: execution && (workers !== "" || dailyPay) ? { workers: +workers || 0, dailyPay: dailyPay || 0 } : null,
                 staffIds: execution ? staffIds : null,
             });
@@ -128,8 +129,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
             });
             onClose();
             // Straight to Requirements: a new project's progress means nothing until it has some. Whoever sends quotes
-            // is asked there whether this one gets one.
-            const quote = billing === "client" && permissions.has(P.INVOICE_SEND) ? "&quote=new" : "";
+            // is asked there whether this one gets one, except on an Execution site, which has none.
+            const quote = billing === "client" && !execution && permissions.has(P.INVOICE_SEND) ? "&quote=new" : "";
             navigate(`/${domain}/projects/${project.id}?tab=requirements${quote}`);
         } catch {
             // Shown in the foot.
@@ -174,7 +175,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                     )}
 
                     {execution ? (
-                        <div className="hint mt">Every Execution project is for a client. They pay the agreed amount, and the materials on top at their client prices.</div>
+                        <div className="hint mt">Every Execution project is for a client. Its price is set when a bill of quantities is agreed with them.</div>
                     ) : (
                         <div className="grid g-2 mt">
                             <div className="field">
@@ -228,14 +229,11 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                         <div className="np-money mt">
                             <div className="u" style={{ marginBottom: 8 }}>Money</div>
                             <div className="grid g-2">
-                                <div className="field">
-                                    <label className="label optional" htmlFor="np-fee">Customer payment</label>
-                                    <AmountField id="np-fee" value={fee} currencies={false} onChange={setFee} />
-                                </div>
+                                <PercentField id="np-supervision" label="Supervision" value={supervisionPct} onChange={setSupervisionPct} />
                                 {setsTva && <TvaField id="np-tva" value={tvaPct} onChange={setTvaPct} />}
                             </div>
                             <div className="hint" style={{ marginTop: 6 }}>
-                                The agreed amount, before materials. A down payment is recorded as a client payment once the site exists; material profit is set on its Financials tab.
+                                Supervision is a percentage of the work price, and TVA is charged on the work price only. The price itself is set when a bill of quantities is agreed.
                             </div>
                         </div>
                     )}
