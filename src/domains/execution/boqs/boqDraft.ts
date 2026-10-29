@@ -58,10 +58,14 @@ export function draftOf(boq: Boq): Draft {
 /** A typed number, or NaN when there is none. */
 const numberOf = (text: string) => (text.trim() === "" ? NaN : Number(text));
 
-/** What is sent to save: only fractions and numbers, never a figure the API works out. */
-export function requestOf(draft: Draft, kind: BoqKind): Schemas["SaveBoqRequest"] {
+/**
+ * What is sent to save: only fractions and numbers, never a figure the API works out, and the save the draft started
+ * from, so the API refuses it if someone saved since (boq_changed) rather than undo their changes.
+ */
+export function requestOf(draft: Draft, kind: BoqKind, startedFrom: string): Schemas["SaveBoqRequest"] {
     const value = numberOf(draft.adjustmentValue);
     return {
+        updatedAt: startedFrom,
         title: draft.title.trim(),
         reason: kind === "vo" ? draft.reason.trim() : null,
         adjustmentType: draft.adjustment,

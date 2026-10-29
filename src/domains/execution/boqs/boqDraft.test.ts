@@ -4,6 +4,8 @@ import { boqs } from "@/test/fixtures/boqs";
 import { blankLine, draftOf, fitSigned, hasProblems, isDirty, lineChanged, percentText, problemsOf, requestOf, withServerProblems, type Draft } from "./boqDraft";
 
 const saved = boqs.draftB;
+/** The save a draft started from, which goes with the next save. */
+const STARTED = saved.updatedAt;
 const good = (): Draft => draftOf(saved);
 const line = (draft: Draft, over: Partial<Draft["lines"][number]>): Draft => ({ ...draft, lines: [{ ...draft.lines[0], ...over }, ...draft.lines.slice(1)] });
 
@@ -18,25 +20,27 @@ describe("a BOQ being typed", () => {
 
     it("sends the percents as fractions and nothing the API works out", () => {
         const draft = { ...line(good(), { waste: "12.5" }), adjustment: "percent" as const, adjustmentValue: "-5" };
-        const request = requestOf(draft, "client");
+        const request = requestOf(draft, "client", STARTED);
         expect(request).toMatchObject({ title: "Lobby works, option B", reason: null, adjustmentType: "percent", adjustmentValue: -0.05 });
         expect(request.lines![0]).toEqual({ id: 201, code: "1.1", description: "Demolition", quantity: 100, wasteRate: 0.125, unit: "m²", rate: 20 });
         // no final quantity, line total, subtotal or total is ever sent
         expect(Object.keys(request.lines![0]).sort()).toEqual(["code", "description", "id", "quantity", "rate", "unit", "wasteRate"]);
-        expect(Object.keys(request).sort()).toEqual(["adjustmentType", "adjustmentValue", "lines", "reason", "title"]);
+        expect(Object.keys(request).sort()).toEqual(["adjustmentType", "adjustmentValue", "lines", "reason", "title", "updatedAt"]);
+        // and the save it started from, so the API refuses it if someone saved since
+        expect(request.updatedAt).toBe(STARTED);
 
-        expect(requestOf({ ...good(), adjustment: "total", adjustmentValue: "16000" }, "client")).toMatchObject({ adjustmentType: "total", adjustmentValue: 16000 });
-        expect(requestOf(good(), "client")).toMatchObject({ adjustmentType: "none", adjustmentValue: null });
+        expect(requestOf({ ...good(), adjustment: "total", adjustmentValue: "16000" }, "client", STARTED)).toMatchObject({ adjustmentType: "total", adjustmentValue: 16000 });
+        expect(requestOf(good(), "client", STARTED)).toMatchObject({ adjustmentType: "none", adjustmentValue: null });
     });
 
     it("keeps the reason of a VO, and sends none for the others", () => {
-        expect(requestOf(draftOf(boqs.vo), "vo").reason).toBe("Fence along the north side");
-        expect(requestOf({ ...good(), reason: "left over" }, "client").reason).toBeNull();
+        expect(requestOf(draftOf(boqs.vo), "vo", STARTED).reason).toBe("Fence along the north side");
+        expect(requestOf({ ...good(), reason: "left over" }, "client", STARTED).reason).toBeNull();
     });
 
     it("sends a blank code or unit as none, a blank waste as 0 and a new line without an id", () => {
         const blank = { ...blankLine(), description: " Paint ", quantity: "3", rate: "4.5", waste: "" };
-        const [sent] = requestOf({ ...good(), lines: [blank] }, "client").lines!;
+        const [sent] = requestOf({ ...good(), lines: [blank] }, "client", STARTED).lines!;
         expect(sent).toEqual({ id: null, code: null, description: "Paint", quantity: 3, wasteRate: 0, unit: null, rate: 4.5 });
     });
 
