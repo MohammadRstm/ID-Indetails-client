@@ -84,6 +84,9 @@ describe("Correcting a payment", () => {
         renderApp(path, withPermissions(admin, { revoke: [P.PAYMENT_VOID] }), ...billingHandlers, ...financialsHandlers);
         const panel = await received();
         await within(panel).findByText("ID-2026-002");
-        expect(within(panel).queryByRole("button", { name: /actions$/ })).not.toBeInTheDocument();
+        // its menu only files it under an account label: there is nothing to apply
+        await userEvent.click(within(panel).getAllByRole("button", { name: /^Payment of .* actions$/ })[0]);
+        expect(screen.getByRole("button", { name: "Label…" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Apply to an invoice…" })).not.toBeInTheDocument();
     });
 });
