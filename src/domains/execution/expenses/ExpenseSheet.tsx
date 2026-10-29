@@ -1,7 +1,12 @@
 import { useEffect, useState, type ReactNode } from "react";
-import FormFailure from "@/domains/shared/projects/FormFailure";
+import { loadFailed } from "@/api/queryState";
+import { toApiError } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
+import { useAccountLabels } from "@/domains/shared/accountLabels/accountLabelsApi";
+import FormFailure from "@/domains/shared/projects/FormFailure";
+import FilledNote from "@/domains/shared/proton/FilledNote";
+import { useProtonForm } from "@/domains/shared/proton/formFill";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
@@ -12,12 +17,12 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../shared/projects/projectsApi";
 import { siteMoneyOf } from "../projects/siteMoney";
-import MaterialGrid, { type GridRow } from "./MaterialGrid";
-import { BLOCK, blankRows, COLS, costOf, entryOf, link, pasteInto, rowOf, rowProblems, rowUsed, type ColKey, type Row } from "./materialRules";
-import { useAddMaterials, useAllMaterials } from "./materialsApi";
-import { loadFailed } from "@/api/queryState";
-import FilledNote from "@/domains/shared/proton/FilledNote";
-import { useProtonForm } from "@/domains/shared/proton/formFill";
+import ExpenseGrid, { type GridRow } from "./ExpenseGrid";
+import {
+    BLOCK, blankRow, blankRows, CATEGORIES, COLS, costOf, CURRENCIES, entryOf, joinTotals, labelChoices, link, listTotals, pasteInto, rowOf, rowProblems, rowUsed,
+    serverProblems, totalsOf, withServerProblems, writeTotals, type Choices, type ColKey, type Row,
+} from "./expenseRules";
+import { useAddExpenses, useAllExpenses } from "./expensesApi";
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 /** Every row in use: ten more. */
@@ -30,18 +35,20 @@ function dropSaved(list: Row[], count: number) {
 }
 
 /**
- * The Add materials sheet (the prototype's EX.MaterialSheet): rows typed like a spreadsheet, or pasted straight
+ * The Add expenses sheet (the prototype's EX.MaterialSheet): rows typed like a spreadsheet, or pasted straight
  * from Excel, and added together. What is already recorded sits above, read-only, so nothing is typed twice.
+ * Amounts in dollars and in pounds are totalled apart.
  */
-export default function MaterialSheet({ project, onClose }: { project: Project; onClose: () => void }) {
-    const saved = useAllMaterials(project.id);
+export default function ExpenseSheet({ project, onClose }: { project: Project; onClose: () => void }) {
+    const saved = useAllExpenses(project.id);
+    const labels = useAccountLabels();
     const permissions = usePermissions();
     const client = project.billingType === "client" && !!project.client;
     const x = client && permissions.has(P.FINANCIAL_VIEW) && project.money ? siteMoneyOf(project.money) : null;
     const cols = COLS;
     const [rows, setRows] = useState(() => blankRows(BLOCK));
     // a saved batch leaves the sheet at once, so a failure further on never sends it twice
-    const add = useAddMaterials(project.id, (count) => setRows((current) => dropSaved(current, count)));
+    const add = useAddExpenses(project.id, (count) => setRows((current) => dropSaved(current, count)));
     const [tried, setTried] = useState(false);
     // Proton types rows into the empty ones below what the person typed; a unit cost only when money actions are on and it was typed
     const proton = useProtonForm("materials", project.id, (fill) => {
@@ -51,26 +58,32 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
         setRows((current) => {
             let next = current.filter(rowUsed);
             next = next.concat(given.map((g) => link({
-                ...blankRows(1)[0], name: g.type ?? "", quantity: text(g.quantity), unit: g.unit ?? "", unitCost: text(g.unitCost), supplier: g.supplier ?? "", note: g.note ?? "",
+                ...blankRow(), name: g.type ?? "", quantity: text(g.quantity), unit: g.unit ?? "", unitCost: text(g.unitCost), supplier: g.supplier ?? "", note: g.note ?? "",
             }, "unitCost")));
             return next.length < BLOCK ? next.concat(blankRows(BLOCK - next.length)) : grow(next);
         });
-        return [plural(given.length, "material")];
+        return [plural(given.length, "expense")];
     });
 
-    // the recorded materials, oldest first
-    const recorded: GridRow[] = (saved.data?.items ?? []).slice().reverse().map((m) => ({ ...rowOf(m), id: m.id, by: m.addedBy.name }));
+    // the recorded expenses, oldest first
+    const items = (saved.data?.items ?? []).slice().reverse();
+    const recorded: GridRow[] = items.map((e) => ({ ...rowOf(e), id: e.id, by: e.addedBy.name }));
     const N = recorded.length;
-    const recordedTotal = r2(recorded.reduce((t, r) => t + costOf(r), 0));
     const used = rows.filter(rowUsed);
-    const problems = rows.map(rowProblems);
+    // what the API refused on the last try, beside what it was about; it goes as soon as something is changed
+    const refused = serverProblems(rows, toApiError(add.error).fieldErrors);
+    const problems = withServerProblems(rows.map(rowProblems), refused);
     const nBad = problems.filter(Boolean).length;
-    // the prototype's words are about a missing type or cost; anything else is explained on its red cell
-    const otherBad = problems.some((p) => p && Object.values(p).some((m) => m?.startsWith("At most")));
-    const total = r2(used.reduce((t, r) => t + costOf(r), 0));
+    const newTotals = totalsOf(used.map((r) => ({ currency: r.currency, cost: costOf(r) })));
+    const dollars = newTotals.find((t) => t.currency === "USD")?.total ?? 0;
+    const pounds = newTotals.filter((t) => t.currency !== "USD");
+    const recordedTotals = saved.data ? listTotals(saved.data.all) : [];
+    const choices: Choices = { currency: CURRENCIES, category: CATEGORIES, accountLabelId: labelChoices(labels.data) };
 
-    // live, on every keystroke: quantity or unit cost typed → the total follows; a total over both → the unit cost
+    const edited = () => { if (add.error) add.reset(); };
+    // live, on every keystroke: quantity or unit cost typed → the amount follows; an amount over both → the unit cost
     function setCell(r: number, k: ColKey, v: string) {
+        edited();
         setRows((current) => {
             const next = current.slice();
             let row = { ...next[r] };
@@ -81,6 +94,7 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
         });
     }
     function removeRow(r: number) {
+        edited();
         setRows((current) => {
             const next = current.filter((_, i) => i !== r);
             return next.length < BLOCK ? next.concat(blankRows(BLOCK - next.length)) : next;
@@ -89,43 +103,44 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
     function submit() {
         setTried(true);
         if (nBad || !used.length) return;
-        add.mutate(used.map((r) => ({ ...entryOf(r), clientPrice: null })), {
+        add.mutate(used.map(entryOf), {
             onSuccess: () => {
-                toast({ text: `Added ${plural(used.length, "material")}`, sub: `${money.exact(total)} in total · ${project.title}`, icon: "checkCircle" });
+                toast({ text: `Added ${plural(used.length, "expense")}`, sub: `${writeTotals(newTotals)} in total · ${project.title}`, icon: "checkCircle" });
                 onClose();
             },
         });
     }
     function close() {
-        if (used.length && !window.confirm(`Discard the ${plural(used.length, "material")} typed so far?`)) return;
+        if (used.length && !window.confirm(`Discard the ${plural(used.length, "expense")} typed so far?`)) return;
         onClose();
     }
 
     const shown: GridRow[] = recorded.concat(rows.map((r, i) => ({ ...r, cls: i === 0 && N ? "sh-first-new" : undefined })));
 
     return (
-        <Modal size="xl mat-sheet" flush title="Add materials" sub={project.title} onClose={close}
+        <Modal size="xl mat-sheet" flush title="Add expenses" sub={project.title} onClose={close}
             foot={
                 <>
                     <div className="grow">
-                        {used.length ? <><b className="mono" style={{ color: "var(--ink)" }}>{money.exact(total)}</b> · {used.length} new material{used.length === 1 ? "" : "s"}</> : "Nothing new typed yet"}
-                        {N > 0 && <span className="muted"> · {used.length ? `${money.exact(recordedTotal + total)} for the project with them` : `${money.exact(recordedTotal)} recorded so far`}</span>}
-                        {tried && nBad > 0 && <span className="sh-warn"> · {nBad} row{nBad === 1 ? " needs" : "s need"} {otherBad ? "fixing - point at a red cell to see why" : "a type and a cost - quantity × unit cost, or a total"}</span>}
+                        {used.length ? <><b className="mono" style={{ color: "var(--ink)" }}>{writeTotals(newTotals)}</b> · {plural(used.length, "new expense")}</> : "Nothing new typed yet"}
+                        {N > 0 && <span className="muted"> · {used.length ? `${writeTotals(joinTotals(recordedTotals, newTotals))} for the site with them` : `${writeTotals(recordedTotals)} recorded so far`}</span>}
+                        {tried && nBad > 0 && <span className="sh-warn"> · {nBad} row{nBad === 1 ? " needs" : "s need"} fixing - the messages under them say what</span>}
                         {add.error && <> · <FormFailure error={add.error} onForced={onClose} /></>}
                     </div>
                     <button className="btn" onClick={close}>Cancel</button>
                     <button className="btn btn-primary" disabled={!used.length || add.isPending} onClick={submit}>
-                        <Icon name="checkCircle" />{add.isPending ? "Adding…" : `Add ${used.length || ""} material${used.length === 1 ? "" : "s"}`}
+                        <Icon name="checkCircle" />{add.isPending ? "Adding…" : `Add ${used.length || ""} expense${used.length === 1 ? "" : "s"}`}
                     </button>
                 </>
             }>
             {x && (
-                <div className={cx("xm-strip", x.received - (x.spent + total) < 0 && "neg")} role="status">
+                <div className={cx("xm-strip", r2(x.received - (x.spent + dollars)) < 0 && "neg")} role="status">
                     <span>Received <b className="mono">{money.exact(x.received)}</b></span>
                     <span className="muted">·</span>
-                    <span>Spent <b className="mono">{money.exact(r2(x.spent + total))}</b>{total > 0 && <> <em className="mono">(+{money.exact(total)} here)</em></>}</span>
+                    <span>Spent <b className="mono">{money.exact(r2(x.spent + dollars))}</b>{dollars > 0 && <> <em className="mono">(+{money.exact(dollars)} here)</em></>}</span>
                     <span className="muted">→</span>
-                    <span>Profit <b className="mono xm-profit">{money.exact(r2(x.received - x.spent - total))}</b>{total > 0 && <> <em className="mono">(−{money.exact(total)})</em></>}</span>
+                    <span>Profit <b className="mono xm-profit">{money.exact(r2(x.received - x.spent - dollars))}</b>{dollars > 0 && <> <em className="mono">(−{money.exact(dollars)})</em></>}</span>
+                    {pounds.length > 0 && <span className="muted">· plus {writeTotals(pounds)}, counted at the day's rate once added</span>}
                 </div>
             )}
             <FilledNote fields={proton.filled} />
@@ -137,19 +152,21 @@ export default function MaterialSheet({ project, onClose }: { project: Project; 
             </div>
             <div className="sh-help">
                 <span className="muted">
-                    Qty and unit cost are optional. With both, Total is worked out for you - type a Total over them and the unit cost is adjusted to match. Without them, type the Total.
+                    Qty and unit cost are optional. With both, Amount is worked out for you - type an Amount over them and the unit cost is adjusted to match. Without them, type the Amount.
+                    A new row is in dollars, spent today, under Materials; change them where they differ. Dollars and pounds are totalled apart.
                 </span>
             </div>
-            {loadFailed(saved) ? <div className="panel-body"><LoadError error={saved.error} retry={() => saved.refetch()} what="the materials" /></div>
+            {loadFailed(saved) ? <div className="panel-body"><LoadError error={saved.error} retry={() => saved.refetch()} what="the expenses" /></div>
                 : !saved.data ? <div className="panel-body"><SkeletonLines lines={8} /></div> : (
                 <SheetGrid first={N}>
-                    <MaterialGrid cols={cols} rows={shown} eager showBy={N > 0}
-                        problems={tried ? [...recorded.map(() => null), ...problems] : null}
+                    <ExpenseGrid cols={cols} rows={shown} eager showBy={N > 0} minWidth={1240}
+                        problems={[...recorded.map(() => null), ...problems]} tried={tried}
+                        choices={(r, k) => (k === "accountLabelId" ? labelChoices(labels.data, r < N ? items[r].accountLabel : null) : choices[k] ?? [])}
                         locked={(r) => r < N}
                         canDelete={(r) => r >= N}
                         onCell={(r, k, v) => { if (r >= N) setCell(r - N, k, v); }}
                         onGrow={() => setRows((current) => current.concat(blankRows(BLOCK)))}
-                        onPaste={(r, c, t) => { if (r >= N) setRows((current) => grow(pasteInto(current, r - N, c, t, cols))); }}
+                        onPaste={(r, c, t) => { if (r >= N) { edited(); setRows((current) => grow(pasteInto(current, r - N, c, t, cols, choices))); } }}
                         onDelete={(r) => { if (r >= N) removeRow(r - N); }} />
                 </SheetGrid>
             )}

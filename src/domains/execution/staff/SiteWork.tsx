@@ -22,7 +22,7 @@ const RECENT_PAGE = 10;
 
 /**
  * What an Execution person recorded (the Execution side of the prototype's Profile): they log no hours, so their
- * trail is the materials they added and the weekly labour they reported, in dollars.
+ * trail is the expenses they added and the weekly labour they reported, in dollars.
  */
 export default function SiteWork({ userId, joinedOn }: { userId: number | null; joinedOn: string | null }) {
     const [page, setPage] = useState(1);
@@ -41,7 +41,7 @@ export default function SiteWork({ userId, joinedOn }: { userId: number | null; 
         <>
             <KpiStrip loading={!r} items={[
                 { key: "total", label: "Total recorded", value: money.fmt(r?.total ?? 0), sub: joinedOn ? <span>since {fmtDateY(joinedOn)}</span> : undefined },
-                { key: "entries", label: "Entries", value: fmtNumber((r?.materialCount ?? 0) + (r?.labourWeeks ?? 0)), sub: <span>materials + labour weeks</span> },
+                { key: "entries", label: "Entries", value: fmtNumber((r?.materialCount ?? 0) + (r?.labourWeeks ?? 0)), sub: <span>expenses + labour weeks</span> },
                 { key: "quarter", label: "This quarter", value: money.fmt(r?.thisQuarter ?? 0) },
                 { key: "week", label: "Average week", value: money.fmt(avgWeek), sub: <span>last 12 weeks</span> },
                 { key: "projects", label: "Projects", value: projects.length },
@@ -49,7 +49,7 @@ export default function SiteWork({ userId, joinedOn }: { userId: number | null; 
             ]} />
 
             <div className="grid g-7-5 mt">
-                <Figure title="Value per week" sub="Last 16 weeks - materials + labour recorded.">
+                <Figure title="Value per week" sub="Last 16 weeks - expenses + labour recorded.">
                     {r ? (
                         <Columns height={180} labelEvery={3} format={(v) => money.short(v)} seriesLabel="Value"
                             data={r.weeks.map((w) => ({ label: fmtDate(w.weekStart), tip: `Week of ${fmtDateY(w.weekStart)}`, value: w.value }))} />

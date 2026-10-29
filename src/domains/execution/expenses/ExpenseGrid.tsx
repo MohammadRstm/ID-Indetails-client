@@ -1,36 +1,47 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { FieldError } from "@/shared/components/Forms/Field";
 import { groupedNumber } from "@/shared/components/Forms/groupedNumber";
+import { fmtDateY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import { COLS, resolveUnit, rowUsed, UNITS, type Col, type ColKey, type Row, type RowProblems } from "./materialRules";
+import { COLS, isDay, resolveDay, resolveUnit, rowUsed, UNITS, type Choice, type Col, type ColKey, type Row, type RowProblems } from "./expenseRules";
 
 type Dir = "next" | "prev" | "up" | "down" | "left" | "right";
 export type GridRow = Row & { id?: number; by?: string; cls?: string; title?: string };
 
 type CellProps = {
     col: Col;
-    /** The row's number as shown, for the cell's name ("Type 3"). */
+    /** The row's number as shown, for the cell's name ("Item 3"). */
     n: number;
     r: number;
     c: number;
     value: string;
     readOnly: boolean;
+    /** What is wrong with the cell, once that is to be shown. */
     bad?: string;
     dash?: boolean;
     /** A draft sheet hands every keystroke up; a saved grid only what is left in the cell. */
     eager?: boolean;
+    /** What a cell picked from a list can be. */
+    options?: Choice[];
     onCommit: (value: string, typing?: boolean) => void;
+    /** The cell was left: its error shows from then on. */
+    onLeave: () => void;
     onNav: (dir: Dir) => void;
     onPaste?: (text: string) => void;
 };
 
 /**
  * One cell: its own text while it is typed in, handed up on Enter, Tab or leaving it. The unit is typed too,
- * with a short list under the cell; the first match is taken.
+ * with a short list under the cell, and the first match is taken; so is a day, read the way people write it
+ * (23/9/2026, Sep 23). A currency, category or label is picked from a list.
  */
-function Cell({ col, n, r, c, value, readOnly, bad, dash, eager, onCommit, onNav, onPaste }: CellProps) {
+function Cell({ col, n, r, c, value, readOnly, bad, dash, eager, options, onCommit, onLeave, onNav, onPaste }: CellProps) {
     const combo = col.type === "combo";
-    const [text, setText] = useState(value);
+    const date = col.type === "date";
+    // a day is shown the way the rest of the app writes dates; text that isn't a day as it was typed
+    const written = date && isDay(value) ? fmtDateY(value) : value;
+    const [text, setText] = useState(written);
     // typed in since it was focused: until then the cell shows what is saved, even as that changes under it
     const [dirty, setDirty] = useState(false);
     const [open, setOpen] = useState(false);
@@ -50,6 +61,7 @@ function Cell({ col, n, r, c, value, readOnly, bad, dash, eager, onCommit, onNav
             if (saved && t.trim().toLowerCase() === saved) return saved;
             return open && opts[hi] ? opts[hi] : resolveUnit(t);
         }
+        if (date) return resolveDay(t);
         return col.type === "num" ? t.replace(/[^0-9.]/g, "") : t;
     }
     function change(t: string) {
@@ -61,12 +73,13 @@ function Cell({ col, n, r, c, value, readOnly, bad, dash, eager, onCommit, onNav
         if (eager) onCommit(combo ? t : valueOf(t), true);
     }
     // a money cell shows its commas while it is typed in; what is kept and handed up has none
-    const shown = dirty ? text : value;
+    const shown = dirty ? text : written;
     const amount = col.money ? groupedNumber(shown, null) : null;
     function commit(t: string) {
         editing.current = false;
         setDirty(false);
         setOpen(false);
+        onLeave();
         if (dirty || moved.current) onCommit(valueOf(t));
     }
     function onKey(e: KeyboardEvent<HTMLInputElement>) {
@@ -92,16 +105,35 @@ function Cell({ col, n, r, c, value, readOnly, bad, dash, eager, onCommit, onNav
         } else if (k === "Escape" && open) { e.preventDefault(); e.stopPropagation(); setOpen(false); }
     }
 
+    if (col.type === "choice") {
+        const list = options ?? [];
+        // a value the list no longer offers is still shown, so the cell never says something else
+        const offered = list.some((o) => o.value === value);
+        return (
+            <td className={cx("sh-cell", bad && "bad")} title={bad}>
+                <select className="sh-in" data-r={r} data-c={c} aria-label={`${col.label} ${n}`} aria-invalid={bad ? true : undefined}
+                    value={value} disabled={readOnly}
+                    onChange={(e) => onCommit(e.target.value)}
+                    onBlur={onLeave}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onNav(e.shiftKey ? "prev" : "next"); } }}>
+                    {!offered && <option value={value}>{value}</option>}
+                    {list.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+            </td>
+        );
+    }
+
     return (
         <td className={cx("sh-cell", col.type === "num" && "r", bad && "bad", open && "open")} title={bad}>
             <input className={cx("sh-in", col.type !== "text" && "mono")} data-r={r} data-c={c} value={amount ? amount.value : shown}
-                aria-label={`${col.label} ${n}`} placeholder={dash && col.dash ? "-" : ""} inputMode={col.type === "num" ? "decimal" : undefined}
+                aria-label={`${col.label} ${n}`} aria-invalid={bad ? true : undefined} placeholder={dash && col.dash ? "-" : ""}
+                inputMode={col.type === "num" ? "decimal" : undefined}
                 autoComplete="off" spellCheck={false} style={col.strong ? { fontWeight: 600 } : undefined} disabled={readOnly}
                 onFocus={() => {
                     editing.current = true;
                     moved.current = false;
                     setDirty(false);
-                    setText(value);
+                    setText(written);
                     if (combo) { setOpen(true); setHi(Math.max(0, UNITS.indexOf(value))); }
                 }}
                 onBlur={() => { if (editing.current) commit(text); }}
@@ -144,10 +176,10 @@ function DeleteButton({ onDelete }: { onDelete: () => void }) {
 }
 
 function focusCell(root: HTMLElement | null, r: number, c: number): boolean {
-    const el = root?.querySelector<HTMLInputElement>(`[data-r="${r}"][data-c="${c}"]`);
+    const el = root?.querySelector<HTMLInputElement | HTMLSelectElement>(`[data-r="${r}"][data-c="${c}"]`);
     if (!el || el.disabled) return false;
     el.focus();
-    el.select();
+    if (el instanceof HTMLInputElement) el.select();
     return true;
 }
 
@@ -163,23 +195,29 @@ type GridProps = {
     /** Whether a cell may be changed, and whether a row may be deleted. */
     locked?: (r: number, k: ColKey) => boolean;
     canDelete?: (r: number) => boolean;
+    /** What is wrong with each row: a cell shows it, with the message under its row, once it was left or when `tried`. */
     problems?: RowProblems[] | null;
+    tried?: boolean;
+    /** The options of a cell picked from a list. */
+    choices?: (r: number, k: ColKey) => Choice[];
+    /** The narrowest the table may get before it scrolls inside its panel. */
+    minWidth?: number;
     onCell: (r: number, k: ColKey, value: string, typing?: boolean) => void;
     onGrow?: () => void;
     onPaste?: (r: number, c: number, text: string) => void;
     onDelete?: (r: number) => void;
-    /** A column after the cells (the material profit), and its heading. */
-    after?: (row: GridRow, r: number) => ReactNode;
-    afterLabel?: string;
     foot?: ReactNode;
 };
 
 /**
- * Materials in rows, as site staff keep them (the prototype's sheet): Enter goes to the next cell and on to
+ * Expenses in rows, as site staff keep them (the prototype's sheet): Enter goes to the next cell and on to
  * the next row, Shift+Enter back, the arrows between cells. The grid knows nothing about saving.
  */
-export default function MaterialGrid({ rows, cols = COLS, offset = 0, showBy, dash, eager, locked, canDelete, problems, onCell, onGrow, onPaste, onDelete, after, afterLabel, foot }: GridProps) {
+export default function ExpenseGrid({ rows, cols = COLS, offset = 0, showBy, dash, eager, locked, canDelete, problems, tried, choices, minWidth, onCell, onGrow, onPaste, onDelete, foot }: GridProps) {
     const ref = useRef<HTMLDivElement>(null);
+    // the cells that were left, by row and column: their errors show from then on
+    const [left, setLeft] = useState<ReadonlySet<string>>(new Set());
+    const leave = (row: GridRow, k: ColKey) => setLeft((seen) => (seen.has(`${row.key}:${k}`) ? seen : new Set(seen).add(`${row.key}:${k}`)));
     function nav(r: number, c: number, dir: Dir) {
         let R = r, C = c;
         const last = cols.length - 1;
@@ -201,19 +239,17 @@ export default function MaterialGrid({ rows, cols = COLS, offset = 0, showBy, da
 
     return (
         <div className="sh-wrap" ref={ref}>
-            <table className="sh">
+            <table className="sh" style={minWidth ? { minWidth } : undefined}>
                 <colgroup>
                     <col style={{ width: 36 }} />
                     {cols.map((c) => <col key={c.k} style={{ width: c.w }} />)}
-                    {after && <col style={{ width: "7%" }} />}
-                    {showBy && <col style={{ width: "9%" }} />}
+                    {showBy && <col style={{ width: "8%" }} />}
                     <col style={{ width: 40 }} />
                 </colgroup>
                 <thead>
                     <tr>
                         <th className="sh-n">#</th>
                         {cols.map((c) => <th key={c.k} className={c.type === "num" ? "r" : undefined}>{c.label}</th>)}
-                        {after && <th className="r">{afterLabel}</th>}
                         {showBy && <th>Added by</th>}
                         <th />
                     </tr>
@@ -221,21 +257,32 @@ export default function MaterialGrid({ rows, cols = COLS, offset = 0, showBy, da
                 <tbody>
                     {rows.map((row, r) => {
                         const isLocked = (k: ColKey) => locked?.(r, k) ?? false;
-                        const bad = problems?.[r];
+                        const bad = (k: ColKey) => (tried || left.has(`${row.key}:${k}`) ? problems?.[r]?.[k] : undefined);
+                        // each message once, even when two cells share it
+                        const said = [...new Set(cols.map((c) => bad(c.k)).filter((m): m is string => !!m))];
                         return (
-                            <tr key={row.id ?? `new-${r}`} className={cx("sh-row", cols.every((c) => isLocked(c.k)) && "sh-ro", !rowUsed(row) && "sh-blank", row.cls)} title={row.title}>
-                                <td className="sh-n">{offset + r + 1}</td>
-                                {cols.map((col, c) => (
-                                    <Cell key={col.k} col={col} n={offset + r + 1} r={r} c={c} value={row[col.k]} readOnly={isLocked(col.k)} bad={bad?.[col.k]} dash={dash} eager={eager}
-                                        onCommit={(v, typing) => onCell(r, col.k, v, typing)} onNav={(dir) => nav(r, c, dir)}
-                                        onPaste={onPaste ? (t) => onPaste(r, c, t) : undefined} />
-                                ))}
-                                {after && <td className="r sh-after">{after(row, r)}</td>}
-                                {showBy && <td className="muted sh-by trunc">{row.by ?? ""}</td>}
-                                <td className="sh-act">
-                                    {onDelete && (canDelete?.(r) ?? true) && (rowUsed(row) || row.id != null) && <DeleteButton onDelete={() => onDelete(r)} />}
-                                </td>
-                            </tr>
+                            <Fragment key={row.id ?? row.key}>
+                                <tr className={cx("sh-row", cols.every((c) => isLocked(c.k)) && "sh-ro", !rowUsed(row) && "sh-blank", row.cls)} title={row.title}>
+                                    <td className="sh-n">{offset + r + 1}</td>
+                                    {cols.map((col, c) => (
+                                        <Cell key={col.k} col={col} n={offset + r + 1} r={r} c={c} value={row[col.k]} readOnly={isLocked(col.k)} bad={bad(col.k)} dash={dash} eager={eager}
+                                            options={choices?.(r, col.k)}
+                                            onCommit={(v, typing) => onCell(r, col.k, v, typing)} onLeave={() => leave(row, col.k)} onNav={(dir) => nav(r, c, dir)}
+                                            onPaste={onPaste ? (t) => onPaste(r, c, t) : undefined} />
+                                    ))}
+                                    {showBy && <td className="muted sh-by trunc">{row.by ?? ""}</td>}
+                                    <td className="sh-act">
+                                        {onDelete && (canDelete?.(r) ?? true) && (rowUsed(row) || row.id != null) && <DeleteButton onDelete={() => onDelete(r)} />}
+                                    </td>
+                                </tr>
+                                {said.length > 0 && (
+                                    <tr className="sh-err">
+                                        <td colSpan={cols.length + 2 + (showBy ? 1 : 0)} style={{ padding: "4px 12px", height: "auto" }}>
+                                            {said.map((m, i) => <FieldError key={i} message={`Row ${offset + r + 1}: ${m}`} />)}
+                                        </td>
+                                    </tr>
+                                )}
+                            </Fragment>
                         );
                     })}
                 </tbody>

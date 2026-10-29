@@ -10,6 +10,9 @@
       "currency": "USD",
       "supplier": "Sipes",
       "note": null,
+      "spentOn": "2026-09-30",
+      "category": "materials",
+      "accountLabel": null,
       "addedAt": "2026-09-30T04:52:52.845Z",
       "addedOn": "2026-09-30",
       "addedBy": {
@@ -17,10 +20,7 @@
         "name": "Tarek Salem"
       },
       "updatedAt": null,
-      "canEdit": true,
-      "clientPrice": 966,
-      "priceSource": "auto",
-      "markup": 0.15
+      "canEdit": true
     },
     {
       "id": 3,
@@ -32,6 +32,9 @@
       "currency": "USD",
       "supplier": "Tile House",
       "note": null,
+      "spentOn": "2026-09-30",
+      "category": "materials",
+      "accountLabel": null,
       "addedAt": "2026-09-30T04:52:52.845Z",
       "addedOn": "2026-09-30",
       "addedBy": {
@@ -39,10 +42,7 @@
         "name": "Tarek Salem"
       },
       "updatedAt": null,
-      "canEdit": true,
-      "clientPrice": 4554,
-      "priceSource": "auto",
-      "markup": 0.15
+      "canEdit": true
     },
     {
       "id": 2,
@@ -54,6 +54,9 @@
       "currency": "USD",
       "supplier": "Steel Co",
       "note": null,
+      "spentOn": "2026-09-30",
+      "category": "materials",
+      "accountLabel": null,
       "addedAt": "2026-09-30T04:52:52.845Z",
       "addedOn": "2026-09-30",
       "addedBy": {
@@ -61,10 +64,7 @@
         "name": "Tarek Salem"
       },
       "updatedAt": null,
-      "canEdit": true,
-      "clientPrice": 1076.4,
-      "priceSource": "auto",
-      "markup": 0.15
+      "canEdit": true
     },
     {
       "id": 1,
@@ -76,6 +76,9 @@
       "currency": "USD",
       "supplier": "Holcim",
       "note": null,
+      "spentOn": "2026-09-30",
+      "category": "materials",
+      "accountLabel": null,
       "addedAt": "2026-09-30T04:52:52.81Z",
       "addedOn": "2026-09-30",
       "addedBy": {
@@ -83,10 +86,7 @@
         "name": "Tarek Salem"
       },
       "updatedAt": null,
-      "canEdit": true,
-      "clientPrice": 345,
-      "priceSource": "auto",
-      "markup": 0.15
+      "canEdit": true
     }
   ],
   "page": 1,
@@ -95,12 +95,22 @@
   "matching": {
     "count": 4,
     "cost": 6036,
-    "charge": 6941.4
+    "byCurrency": [
+      {
+        "currency": "USD",
+        "total": 6036
+      }
+    ]
   },
   "all": {
     "count": 4,
     "cost": 6036,
-    "charge": 6941.4
+    "byCurrency": [
+      {
+        "currency": "USD",
+        "total": 6036
+      }
+    ]
   },
   "types": [
     {
@@ -152,6 +162,5 @@
       "name": "Tarek Salem"
     }
   ],
-  "canAdd": true,
-  "defaultMarkup": 0.15
+  "canAdd": true
 }
