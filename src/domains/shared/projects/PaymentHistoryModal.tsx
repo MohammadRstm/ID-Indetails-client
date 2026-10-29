@@ -68,6 +68,11 @@ function ChangeRow({ change: c, site }: { change: PaymentChange; site: boolean }
                     Material profit {markupChanged ? <>{pct(c.previousMaterialMarkup!)} → {pct(c.materialMarkup)}</> : pct(c.materialMarkup)}
                 </div>
             )}
+            {c.supervisionRate != null && c.previousSupervisionRate != null && c.supervisionRate !== c.previousSupervisionRate && (
+                <div className="muted" style={{ fontSize: 12 }}>
+                    Supervision {pct(c.previousSupervisionRate)} → {pct(c.supervisionRate)}
+                </div>
+            )}
             {c.tvaRate != null && (
                 <div className="muted" style={{ fontSize: 12 }}>
                     TVA {c.previousTvaRate != null && c.previousTvaRate !== c.tvaRate ? <>{pct(c.previousTvaRate)} → {pct(c.tvaRate)}</> : pct(c.tvaRate)}

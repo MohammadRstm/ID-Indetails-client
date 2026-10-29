@@ -216,8 +216,9 @@ describe("the supervision, TVA and material profit", () => {
 
     it("show the work price first on the Financials tab, in bold, with the supervision, the TVA and the client total", async () => {
         const changes = [
-            { id: 4, amount: 9000, previousAmount: 8000, materialMarkup: 0.15, previousMaterialMarkup: 0.1, description: "A second floor", changedAt: "2026-09-10T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
-            { id: 3, amount: 8000, previousAmount: null, materialMarkup: 0.1, previousMaterialMarkup: null, description: "Agreed at the start", changedAt: "2026-05-01T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
+            { id: 5, amount: 9000, previousAmount: 9000, materialMarkup: 0.15, previousMaterialMarkup: 0.15, supervisionRate: 0.12, previousSupervisionRate: 0.12, description: "Same supervision, new TVA", changedAt: "2026-09-12T09:00:00Z", changedBy: null },
+            { id: 4, amount: 9000, previousAmount: 8000, materialMarkup: 0.15, previousMaterialMarkup: 0.1, supervisionRate: 0.12, previousSupervisionRate: 0.1, description: "A second floor", changedAt: "2026-09-10T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
+            { id: 3, amount: 8000, previousAmount: null, materialMarkup: 0.1, previousMaterialMarkup: null, supervisionRate: 0.1, previousSupervisionRate: null, description: "Agreed at the start", changedAt: "2026-05-01T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
         ];
         renderApp(path, karim, http.get(`/api/projects/${project.id}/payment-changes`, () => HttpResponse.json(changes)), ...siteHandlers);
         expect(await screen.findByRole("tab", { name: "Financials", selected: true })).toBeInTheDocument();
@@ -235,11 +236,16 @@ describe("the supervision, TVA and material profit", () => {
         await userEvent.click(within(section).getByRole("button", { name: "History" }));
         const dialog = await screen.findByRole("dialog", { name: "Payment history" });
         const rows = await within(dialog).findAllByRole("listitem");
-        expect(rows[0]).toHaveTextContent(`${money.exact(8000)} → ${money.exact(9000)}`);
-        expect(rows[0]).toHaveTextContent("Material profit 10% → 15%");
-        expect(rows[0]).toHaveTextContent("A second floor");
-        expect(rows[1]).toHaveTextContent("Material profit 10%");
-        expect(rows[1]).toHaveTextContent("Agreed at the start");
+        // the supervision is shown like the TVA, only when it changed
+        expect(rows[0]).toHaveTextContent("Same supervision, new TVA");
+        expect(rows[0]).not.toHaveTextContent("Supervision 12%");
+        expect(rows[1]).toHaveTextContent(`${money.exact(8000)} → ${money.exact(9000)}`);
+        expect(rows[1]).toHaveTextContent("Material profit 10% → 15%");
+        expect(rows[1]).toHaveTextContent("Supervision 10% → 12%");
+        expect(rows[1]).toHaveTextContent("A second floor");
+        expect(rows[2]).toHaveTextContent("Material profit 10%");
+        expect(rows[2]).not.toHaveTextContent("Supervision");
+        expect(rows[2]).toHaveTextContent("Agreed at the start");
     });
 
     it("say which materials keep their price", async () => {

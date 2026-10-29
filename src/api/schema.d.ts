@@ -18196,7 +18196,11 @@ export interface components {
             /** Format: double */
             previousMaterialMarkup: null | number;
             /** Format: double */
+            previousSupervisionRate: null | number;
+            /** Format: double */
             previousTvaRate: null | number;
+            /** Format: double */
+            supervisionRate: null | number;
             /** Format: double */
             tvaRate: null | number;
         };
