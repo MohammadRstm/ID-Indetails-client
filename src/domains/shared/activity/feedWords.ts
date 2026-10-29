@@ -118,12 +118,14 @@ const WORDS: Record<string, Words> = {
             : `changed the payment for ${project(e)} from ${money.fmt(e.prevAmount ?? 0)} to ${money.fmt(e.amount)}`),
     },
     project_fee_set: { icon: "card", text: (e) => `set ${project(e)}'s fee${e.amount == null ? "" : ` to ${money.fmt(e.amount)}`}` },
+    // material_markup_set and material_priced are no longer recorded (client prices and the markup are gone); older events stay in the feed
     material_markup_set: { icon: "card", text: (e, p) => `changed the material markup on ${project(e)}${num(p.markup) != null ? ` to ${money.pct(num(p.markup)!)}` : ""}` },
     expense_added: { icon: "plus", text: (e, p) => `added ${e.amount == null ? "an" : `a ${money.fmt(e.amount, str(p.currency) ?? "USD")}`} expense to ${project(e)}${str(p.label) ? ` - ${str(p.label)}` : ""}` },
     expense_removed: { icon: "trash", text: (e, p) => `removed ${e.amount == null ? "an" : `a ${money.fmt(e.amount, str(p.currency) ?? "USD")}`} expense from ${project(e)}` },
-    material_added: { icon: "plus", text: (e, p) => `added ${str(p.name) ?? "a material"} to ${project(e)}${dash(e.amount)}` },
-    material_updated: { icon: "edit", text: (e, p) => `updated ${str(p.name) ?? "a material"} on ${project(e)}${dash(e.amount)}` },
-    material_removed: { icon: "trash", text: (e, p) => `removed ${str(p.name) ?? "a material"} from ${project(e)}` },
+    // a site expense's amount is in its own currency, which its event carries (older events have none: dollars)
+    material_added: { icon: "plus", text: (e, p) => `added ${str(p.name) ?? "an expense"} to ${project(e)}${dash(e.amount, str(p.currency))}` },
+    material_updated: { icon: "edit", text: (e, p) => `updated ${str(p.name) ?? "an expense"} on ${project(e)}${dash(e.amount, str(p.currency))}` },
+    material_removed: { icon: "trash", text: (e, p) => `removed ${str(p.name) ?? "an expense"} from ${project(e)}` },
     material_priced: { icon: "card", text: (e, p) => `priced ${str(p.name) ?? "a material"} on ${project(e)}${e.amount == null ? "" : ` at ${money.fmt(e.amount)}`}` },
     labour_week_submitted: { icon: "userPlus", text: (e, p) => `reported labour for ${project(e)}${str(p.weekStart) ? ` - week of ${fmtDate(str(p.weekStart)!)}` : ""}${dash(e.amount)}` },
     labour_week_updated: { icon: "edit", text: (e, p) => `updated the labour for ${project(e)}${str(p.weekStart) ? ` - week of ${fmtDate(str(p.weekStart)!)}` : ""}${dash(e.amount)}` },
