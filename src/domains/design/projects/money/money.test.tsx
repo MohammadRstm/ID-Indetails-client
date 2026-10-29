@@ -46,7 +46,7 @@ describe("a project's money", () => {
     it("puts the customer payment first on the Financials tab, in bold, with no pencil left in the header", async () => {
         renderApp(path, admin, ...projectWorkHandlers);
         const section = await screen.findByRole("region", { name: "Customer payment" });
-        expect(within(section).getByText(money.exact(m.revenue))).toHaveClass("pay-amount");
+        expect(within(section).getAllByText(money.exact(m.revenue))[0]).toHaveClass("pay-amount");
         // before everything else on the tab
         expect(section.compareDocumentPosition(await band()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
         expect(screen.getAllByRole("button", { name: "Edit customer payment" })).toHaveLength(1);
@@ -64,7 +64,7 @@ describe("a project's money", () => {
 
         // the same amount, and no reason: both are said, nothing is sent
         await userEvent.click(save);
-        expect(within(dialog).getByText(`The payment is already ${money.exact(m.revenue)}: enter the new amount.`)).toBeInTheDocument();
+        expect(within(dialog).getByText(`The payment is already ${money.exact(m.revenue)} with ${money.pct(m.tvaRate ?? 0)} TVA: change one of them.`)).toBeInTheDocument();
         expect(within(dialog).getByText("Say why the payment changes.")).toBeInTheDocument();
         expect(saved).toEqual([]);
 
@@ -75,8 +75,9 @@ describe("a project's money", () => {
         await userEvent.type(within(dialog).getByLabelText("Why it changes"), "  The client added a guest house  ");
         expect(within(dialog).queryByText("Say why the payment changes.")).not.toBeInTheDocument();
         await userEvent.click(save);
-        await waitFor(() => expect(saved).toEqual([{ revenue: 30000, description: "The client added a guest house" }]));
-        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+        await waitFor(() => expect(saved).toEqual([{ revenue: 30000, tvaRate: m.tvaRate ?? 0, description: "The client added a guest house" }]));
+        // whoever sends quotes is asked whether to send the new price
+        expect(await screen.findByRole("dialog", { name: "Send the quote?" })).toBeInTheDocument();
     });
 
     it("says why the API refused a payment change, keeping the form", async () => {

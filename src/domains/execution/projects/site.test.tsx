@@ -171,8 +171,9 @@ describe("the fee and material profit", () => {
         expect(fee).toHaveValue("8,500.50");
         await userEvent.type(within(dialog).getByLabelText("Why it changes"), "The client asked for a second floor");
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-        await waitFor(() => expect(saved).toEqual([{ projectFee: 8500.5, materialMarkup: 0.25, description: "The client asked for a second floor" }]));
-        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+        await waitFor(() => expect(saved).toEqual([{ projectFee: 8500.5, materialMarkup: 0.25, tvaRate: 0, description: "The client asked for a second floor" }]));
+        // whoever sends quotes is asked whether to send the new price
+        expect(await screen.findByRole("dialog", { name: "Send the quote?" })).toBeInTheDocument();
     });
 
     it("need why they change, and a change", async () => {
@@ -183,18 +184,18 @@ describe("the fee and material profit", () => {
         const dialog = await screen.findByRole("dialog", { name: "Payment & material profit" });
         const save = within(dialog).getByRole("button", { name: "Save" });
         await userEvent.click(save);
-        expect(within(dialog).getByText("Change the fee or the material profit, or cancel.")).toBeInTheDocument();
-        expect(within(dialog).getByText("Say why the fee or the material profit changes.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Change the payment, the material profit or the TVA, or cancel.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Say why the payment, the material profit or the TVA changes.")).toBeInTheDocument();
         expect(saved).toEqual([]);
 
         // the material profit alone is a change
         await userEvent.click(within(dialog).getByRole("button", { name: "25%" }));
-        expect(within(dialog).queryByText("Change the fee or the material profit, or cancel.")).not.toBeInTheDocument();
+        expect(within(dialog).queryByText("Change the payment, the material profit or the TVA, or cancel.")).not.toBeInTheDocument();
         await userEvent.click(save);
         expect(saved).toEqual([]);
         await userEvent.type(within(dialog).getByLabelText("Why it changes"), "Imported tiles");
         await userEvent.click(save);
-        await waitFor(() => expect(saved).toEqual([{ projectFee: m.projectFee, materialMarkup: 0.25, description: "Imported tiles" }]));
+        await waitFor(() => expect(saved).toEqual([{ projectFee: m.projectFee, materialMarkup: 0.25, tvaRate: 0, description: "Imported tiles" }]));
     });
 
     it("come first on the Financials tab, in bold, with their history", async () => {
@@ -205,11 +206,11 @@ describe("the fee and material profit", () => {
         renderApp(path, karim, http.get(`/api/projects/${project.id}/payment-changes`, () => HttpResponse.json(changes)), ...siteHandlers);
         expect(await screen.findByRole("tab", { name: "Financials", selected: true })).toBeInTheDocument();
         const section = await screen.findByRole("region", { name: "Customer payment" });
-        expect(within(section).getByText(money.exact(m.projectFee!))).toHaveClass("pay-amount");
+        expect(within(section).getAllByText(money.exact(m.projectFee!))[0]).toHaveClass("pay-amount");
         expect(section).toHaveTextContent("default material profit of 15%");
         expect(section.compareDocumentPosition(await moneyPanel()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
-        await userEvent.click(within(section).getByRole("button", { name: "Edit project fee" }));
+        await userEvent.click(within(section).getByRole("button", { name: "Edit customer payment" }));
         expect(await screen.findByRole("dialog", { name: "Payment & material profit" })).toBeInTheDocument();
         await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
 
@@ -234,7 +235,7 @@ describe("the fee and material profit", () => {
         renderApp(`${path}?money=pricing`, withPermissions(karim, { revoke: [P.PROJECT_PRICING_MANAGE] }), ...siteHandlers);
         const panel = await moneyPanel();
         expect(within(panel).queryByRole("button", { name: "Payment & material profit" })).not.toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Edit project fee" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Edit customer payment" })).not.toBeInTheDocument();
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
         await userEvent.click(screen.getByRole("button", { name: "More actions" }));
         const menu = screen.getByRole("button", { name: "Put on hold" }).closest(".pop") as HTMLElement;
@@ -248,6 +249,6 @@ describe("the fee and material profit", () => {
         expect(within(panel).queryByRole("button", { name: "Payment & material profit" })).not.toBeInTheDocument();
         const section = screen.getByRole("region", { name: "Customer payment" });
         expect(within(section).getByText("locked")).toBeInTheDocument();
-        expect(within(section).queryByRole("button", { name: "Edit project fee" })).not.toBeInTheDocument();
+        expect(within(section).queryByRole("button", { name: "Edit customer payment" })).not.toBeInTheDocument();
     });
 });
