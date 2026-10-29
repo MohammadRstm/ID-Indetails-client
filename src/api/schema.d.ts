@@ -18461,8 +18461,6 @@ export interface components {
             toPocket: null | number;
             /** Format: double */
             tvaRate: number;
-            /** Format: int32 */
-            unconvertedMaterials: number;
         };
         ProjectOwnerResponse: {
             /** Format: int64 */
