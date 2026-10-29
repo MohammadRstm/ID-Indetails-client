@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BOQ_NUMBER } from "@/shared/format/limits";
 import { boqs } from "@/test/fixtures/boqs";
-import { blankLine, draftOf, fitSigned, hasProblems, isDirty, lineChanged, percentText, problemsOf, requestOf, type Draft } from "./boqDraft";
+import { blankLine, draftOf, fitSigned, hasProblems, isDirty, lineChanged, percentText, problemsOf, requestOf, withServerProblems, type Draft } from "./boqDraft";
 
 const saved = boqs.draftB;
 const good = (): Draft => draftOf(saved);
@@ -133,6 +133,24 @@ describe("what is wrong with a BOQ, as the API would refuse it", () => {
         const lines = (n: number) => Array.from({ length: n }, () => ({ ...blankLine(), description: "x", quantity: "1", rate: "1" }));
         expect(problemsOf({ ...good(), lines: lines(1000) }, "client").lines).toBeUndefined();
         expect(problemsOf({ ...good(), lines: lines(1001) }, "client").lines).toBe("At most 1,000 lines.");
+    });
+});
+
+describe("what the API refused", () => {
+    it("is placed on the line it was about, in the table's own cells, after what the form found", () => {
+        const draft = good();
+        const [first, second] = draft.lines;
+        const own = problemsOf(line(draft, { description: "" }), "client");
+        const shown = withServerProblems(own, line(draft, { description: "" }), {
+            "lines[0].description": "The API's words.", "lines[0].rate": "Too high.", "lines[1].wasteRate": "Not a percent.", lines: "Too many lines.", title: "Taken.", "lines[9].rate": "No such line.",
+        });
+        // the form's own words win over the API's for the same cell
+        expect(shown.line[first.key]).toEqual({ description: "Describe the work.", rate: "Too high." });
+        expect(shown.line[second.key]).toEqual({ waste: "Not a percent." });
+        expect(shown.lines).toBe("Too many lines.");
+        // what is shown never changes what blocks a save
+        expect(hasProblems(withServerProblems(problemsOf(draft, "client"), draft, { title: "Taken." }))).toBe(false);
+        expect(hasProblems(problemsOf(draft, "client"))).toBe(false);
     });
 });
 

@@ -433,6 +433,27 @@ describe("the BOQ editor", () => {
         expect(await within(dialog).findByText("An agreed BOQ can't be changed or deleted. Withdraw its agreement first.")).toBeInTheDocument();
     });
 
+    it("shows what the API refused beside the line or field it was about, until something is changed", async () => {
+        const errors = {
+            title: ["The title is already used."], "lines[0].description": ["The API wants a better description."],
+            "lines[1].wasteRate": ["The API says the waste is wrong."], "lines[1].rate": ["The API says the rate is wrong."], adjustmentValue: ["The API says the adjustment is wrong."],
+        };
+        const dialog = await open(32, "BQ-2026-002", karim,
+            http.put("/api/boqs/:id", () => HttpResponse.json({ type: "validation", code: "validation_failed", message: "Some fields need attention.", errors, traceId: "t" }, { status: 400 })));
+        await userEvent.click(save(dialog));
+        expect(await within(dialog).findByText("The title is already used.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Line 1: The API wants a better description.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Line 2: The API says the waste is wrong.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Line 2: The API says the rate is wrong.")).toBeInTheDocument();
+        // the lines' own cells are marked
+        expect(within(dialog).getByLabelText("Description 1")).toHaveAttribute("aria-invalid", "true");
+        expect(within(dialog).getByLabelText("Waste % 2")).toHaveAttribute("aria-invalid", "true");
+
+        await userEvent.type(within(dialog).getByLabelText("Code 1"), "x");
+        expect(within(dialog).queryByText("Line 1: The API wants a better description.")).not.toBeInTheDocument();
+        expect(within(dialog).queryByText("The title is already used.")).not.toBeInTheDocument();
+    });
+
     it("asks before dropping what was typed", async () => {
         const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
         const dialog = await open(32, "BQ-2026-002");
@@ -619,6 +640,8 @@ describe("sending a BOQ to the client", () => {
 });
 
 describe("agreeing a BOQ", () => {
+    // only a lower price is held to the profit floor: a VO that takes money off, or an agreement withdrawn
+    const lowering = { ...boqs.vo, totalUsd: -2000, subtotalUsd: -2000, supervisionUsd: -200, clientTotalUsd: -2200 };
     const nowAgreed = { ...boqs.draftB, status: "agreed" as const, agreedAt: "2026-10-06T09:00:00Z", agreedBy: { id: 1, name: "Rana Test" } };
 
     it("asks first, naming the BOQ and its total, and then agrees it", async () => {
@@ -657,7 +680,7 @@ describe("agreeing a BOQ", () => {
 
     const change = (over: object = {}) => ({
         id: 9, projectId: site.project.id, projectTitle: site.project.title, domain: "execution", kind: "boq_agree",
-        summary: "Agree BQ-2026-002, $17,000", status: "pending", requestedBy: { id: 3, name: "Karim Test" },
+        summary: "Agreeing VO-2026-001", status: "pending", requestedBy: { id: 3, name: "Karim Test" },
         requestedAt: "2026-10-28T09:00:00Z", decidedBy: null, decidedAt: null, profitNow: 600, ...over,
     });
     const floor = (calls: string[]) => [
@@ -669,25 +692,42 @@ describe("agreeing a BOQ", () => {
         message: "This would take the project's profit to zero or below, so it wasn't saved. Whoever sees the project's money was asked to look.",
     }, { status: 422 });
 
-    it("opens the usual force-it flow when the profit floor refuses it", async () => {
+    it("says a VO that lowers the price comes off the work price", async () => {
+        const dialog = await open(41, "VO-2026-001", karim, http.get("/api/boqs/41", () => HttpResponse.json(lowering)));
+        await userEvent.click(await within(dialog).findByRole("button", { name: "Agree" }));
+        const confirm = await screen.findByRole("dialog", { name: "Agree VO-2026-001" });
+        expect(confirm).toHaveTextContent("Its total comes off the site's work price");
+        expect(confirm).toHaveTextContent(money.exact(-2000, "USD", { cents: true }));
+    });
+
+    it("opens the usual force-it flow when the profit floor refuses a VO that lowers the price", async () => {
         const calls: string[] = [];
-        const dialog = await open(32, "BQ-2026-002", karim, listOf(boqs.unagreed), http.post("/api/boqs/:id/agree", () => { calls.push("agree"); return floorRefusal(); }), ...floor(calls));
-        await userEvent.click(within(dialog).getByRole("button", { name: "Agree" }));
-        const confirm = await screen.findByRole("dialog", { name: "Agree BQ-2026-002" });
+        const dialog = await open(41, "VO-2026-001", karim, http.get("/api/boqs/41", () => HttpResponse.json(lowering)),
+            http.post("/api/boqs/:id/agree", () => { calls.push("agree"); return floorRefusal(); }), ...floor(calls));
+        await userEvent.click(await within(dialog).findByRole("button", { name: "Agree" }));
+        const confirm = await screen.findByRole("dialog", { name: "Agree VO-2026-001" });
         await userEvent.click(within(confirm).getByRole("button", { name: "Agree" }));
         await userEvent.click(await within(confirm).findByRole("button", { name: "Force it" }));
         expect(within(confirm).getByText("Save it anyway, at zero profit or below?")).toBeInTheDocument();
         await userEvent.click(within(confirm).getByRole("button", { name: "Force" }));
         await waitFor(() => expect(calls).toEqual(["agree", "force 9"]));
-        await waitFor(() => expect(screen.queryByRole("dialog", { name: "Agree BQ-2026-002" })).not.toBeInTheDocument());
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: "Agree VO-2026-001" })).not.toBeInTheDocument());
+    });
+
+    it("says in words when a VO would take the work price below zero", async () => {
+        const dialog = await open(41, "VO-2026-001", karim, http.post("/api/boqs/:id/agree", () => refusal(422, "boq_price_below_zero")));
+        await userEvent.click(await within(dialog).findByRole("button", { name: "Agree" }));
+        const confirm = await screen.findByRole("dialog", { name: "Agree VO-2026-001" });
+        await userEvent.click(within(confirm).getByRole("button", { name: "Agree" }));
+        expect(await within(confirm).findByText("Agreeing or withdrawing this VO would take the site's work price below zero.")).toBeInTheDocument();
     });
 
     it("tells someone who can't see the money only that it was refused", async () => {
         // pricing without money: they reach a BOQ by its link, and may not see what it would do to the profit
         const pricer = withPermissions(personas.executionAdmin, { grant: [P.PROJECT_PRICING_MANAGE] });
-        const dialog = await open(32, "BQ-2026-002", pricer, listOf(boqs.unagreed), http.post("/api/boqs/:id/agree", () => floorRefusal()));
-        await userEvent.click(within(dialog).getByRole("button", { name: "Agree" }));
-        const confirm = await screen.findByRole("dialog", { name: "Agree BQ-2026-002" });
+        const dialog = await open(41, "VO-2026-001", pricer, http.get("/api/boqs/41", () => HttpResponse.json(lowering)), http.post("/api/boqs/:id/agree", () => floorRefusal()));
+        await userEvent.click(await within(dialog).findByRole("button", { name: "Agree" }));
+        const confirm = await screen.findByRole("dialog", { name: "Agree VO-2026-001" });
         await userEvent.click(within(confirm).getByRole("button", { name: "Agree" }));
         expect(await within(confirm).findByText(/This would take the project's profit to zero or below, so it wasn't saved\./)).toBeInTheDocument();
         expect(within(confirm).queryByRole("button", { name: "Force it" })).not.toBeInTheDocument();
@@ -696,11 +736,11 @@ describe("agreeing a BOQ", () => {
     it("opens a change the profit floor stopped, from its notification, to dismiss it or force it through", async () => {
         const calls: string[] = [];
         renderApp(`${path}?blocked=9`, karim,
-            http.get("/api/blocked-changes/:id", () => HttpResponse.json(change({ kind: "boq_withdraw", summary: "Withdraw the agreement of BQ-2026-001: the client changed the scope" }))),
+            http.get("/api/blocked-changes/:id", () => HttpResponse.json(change({ kind: "boq_withdraw", summary: "Withdrawing the agreement of BQ-2026-001: The client changed the scope" }))),
             http.post("/api/blocked-changes/:id/dismiss", ({ params }) => { calls.push(`dismiss ${String(params.id)}`); return HttpResponse.json(change({ status: "dismissed" })); }),
             ...siteHandlers);
         const dialog = await screen.findByRole("dialog", { name: "A change was stopped" });
-        expect(await within(dialog).findByText("Withdraw the agreement of BQ-2026-001: the client changed the scope")).toBeInTheDocument();
+        expect(await within(dialog).findByText("Withdrawing the agreement of BQ-2026-001: The client changed the scope")).toBeInTheDocument();
         await userEvent.click(within(dialog).getByRole("button", { name: "Dismiss" }));
         await waitFor(() => expect(calls).toEqual(["dismiss 9"]));
     });

@@ -12,6 +12,8 @@ describe("the API's refusals about BOQs", () => {
         expect(refusal("boq_locked")).toBe("An agreed BOQ can't be changed or deleted. Withdraw its agreement first.");
         expect(refusal("boq_already_agreed")).toBe("Another client BOQ is already agreed on this site. Withdraw its agreement first to agree this one.");
         expect(refusal("boq_not_agreed_yet")).toBe("A VO can only be made or agreed once the client BOQ is agreed.");
+        expect(refusal("boq_not_agreed")).toBe("Only an agreed BOQ has an agreement to withdraw.");
+        expect(refusal("boq_price_below_zero")).toBe("Agreeing or withdrawing this VO would take the site's work price below zero.");
         expect(refusal("boq_has_agreed_vos")).toBe("This client BOQ can't be withdrawn while a VO is agreed. Withdraw the agreed VOs first.");
         expect(refusal("boq_empty")).toBe("This BOQ has no lines. Add some and save before sending or agreeing it.");
         expect(refusal("boq_internal")).toBe("An internal draft is never sent or agreed. Make a client BOQ from it instead.");
