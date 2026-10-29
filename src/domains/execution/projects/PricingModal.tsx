@@ -10,7 +10,6 @@ import Modal from "@/shared/components/Overlays/Modal";
 import { plural } from "@/shared/format/labels";
 import { money } from "@/shared/format/money";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
-import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { PAYMENT_DESCRIPTION_MAX } from "../../shared/projects/paymentApi";
 import type { Project } from "../../shared/projects/projectsApi";

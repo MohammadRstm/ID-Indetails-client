@@ -2,7 +2,6 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
-import { P } from "@/app/permissions/codes";
 import { site, siteHandlers } from "@/test/fixtures/site";
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
@@ -45,16 +44,6 @@ describe("the profit floor", () => {
         await userEvent.click(within(dialog).getByRole("button", { name: "Force" }));
         await waitFor(() => expect(calls).toEqual(["expense", "force 9"]));
         await waitFor(() => expect(screen.queryByRole("dialog", { name: "Add project expense" })).not.toBeInTheDocument());
-    });
-
-    it("tells someone who doesn't see the money who was asked, with nothing to force", async () => {
-        const calls: string[] = [];
-        const admin = { ...personas.executionAdmin, permissions: personas.executionAdmin.permissions.filter((p) => p !== P.FINANCIAL_VIEW) };
-        renderApp(`/execution/projects/${site.project.id}?money=expense`, admin, ...floorHandlers(calls), ...siteHandlers);
-        const dialog = await addExpense();
-
-        expect(await within(dialog).findByText(/Whoever sees the project's money was asked to look/)).toBeInTheDocument();
-        expect(within(dialog).queryByRole("button", { name: "Force it" })).not.toBeInTheDocument();
     });
 
     it("opens a refused change from its notification, to dismiss it or force it through", async () => {

@@ -8,7 +8,6 @@ import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { companyToday } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
-import Icon from "@/shared/icons/Icon";
 import type { Project } from "../../../shared/projects/projectsApi";
 import { useAddExpense } from "./moneyApi";
 import FilledNote from "@/domains/shared/proton/FilledNote";

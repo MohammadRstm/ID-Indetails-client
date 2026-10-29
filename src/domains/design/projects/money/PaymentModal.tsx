@@ -7,7 +7,6 @@ import { FieldError } from "@/shared/components/Forms/Field";
 import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
-import Icon from "@/shared/icons/Icon";
 import { PAYMENT_DESCRIPTION_MAX, useSetPayment } from "../../../shared/projects/paymentApi";
 import type { Project } from "../../../shared/projects/projectsApi";
 import TvaField from "../../../shared/projects/TvaField";
