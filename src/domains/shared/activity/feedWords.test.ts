@@ -105,6 +105,27 @@ describe("what the activity feed says", () => {
         expect(expense("material_added", null)).toBe("added an expense to Achrafieh Towers lobby");
     });
 
+    it("words a payment's label: filed, moved or cleared", () => {
+        const label = (payload: Record<string, unknown> | null, extra: Partial<FeedEvent> = {}) => say(event("payment_label_set", { subjectType: "payment", subjectId: 5, payload, ...extra }));
+        expect(label({ label: "Concrete", previousLabel: null }, { amount: 4000 })).toBe("filed a $4k payment under Concrete");
+        expect(label({ label: "Finishing", previousLabel: "Concrete" }, { amount: 4000 })).toBe("moved a $4k payment from Concrete to Finishing");
+        expect(label({ label: null, previousLabel: "Concrete" }, { amount: 4000 })).toBe("cleared the Concrete label from a $4k payment");
+        // without financial:view there is no amount; an event with no names still reads
+        expect(label({ label: "Concrete", previousLabel: null })).toBe("filed a payment under Concrete");
+        expect(label(null)).toBe("changed the label of a payment");
+    });
+
+    it("words supervision taken and its removal, without the amount or the day for those who don't see money", () => {
+        const site = { domain: "execution", project: { id: 7, name: "Achrafieh Towers lobby" }, subjectType: "supervision_withdrawal", subjectId: 2 };
+        const taken = (kind: string, payload: Record<string, unknown> | null, extra: Partial<FeedEvent> = {}) => say(event(kind, { ...site, payload, ...extra }));
+        expect(taken("supervision_taken", { takenOn: "2026-09-20", note: "First instalment" }, { amount: 300 }))
+            .toBe("recorded $300 of supervision taken from Achrafieh Towers lobby on Sep 20 - First instalment");
+        expect(taken("supervision_taken", { takenOn: "2026-09-20", note: null }, { amount: 300 })).toBe("recorded $300 of supervision taken from Achrafieh Towers lobby on Sep 20");
+        expect(taken("supervision_taken", null)).toBe("recorded supervision taken from Achrafieh Towers lobby");
+        expect(taken("supervision_withdrawal_removed", { takenOn: "2026-09-20" }, { amount: 300 })).toBe("removed $300 of supervision taken on Sep 20 from Achrafieh Towers lobby");
+        expect(taken("supervision_withdrawal_removed", null)).toBe("removed a record of supervision taken from Achrafieh Towers lobby");
+    });
+
     it("words a client portal publish with what it changed, when the event says", () => {
         const published = (payload: Record<string, unknown> | null) => feedWords(event("portal_published", { payload }), names);
         expect(published({ added: 2, updated: 1, removed: 1 })).toEqual({ icon: "send", text: "published the client portal of Beit Misk show apartment (2 new, 1 updated, 1 removed)" });

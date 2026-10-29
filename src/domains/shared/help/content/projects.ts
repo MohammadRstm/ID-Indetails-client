@@ -248,6 +248,28 @@ export const projects: Article[] = [
         related: ["execution-pricing", "boqs"],
     },
     {
+        id: "supervision-taken",
+        title: "Recording the supervision the company has taken",
+        category: "projects",
+        who: and(sees("execution"), has(P.FINANCIAL_VIEW)),
+        summary: "On a site's Financials tab, Supervision taken lists what the company has taken of its supervision fee out of the project account. It is not a cost.",
+        ask: ["supervision taken", "take supervision", "supervision withdrawal", "withdraw supervision", "supervision left", "supervision over", "company fee taken", "remove supervision taken"],
+        blocks: [
+            only(has(P.PAYMENT_RECORD), steps(
+                step("Open the site's **Financials** tab and find **Supervision taken**.", "Projects", "the site", "Financials"),
+                step("Choose **Record supervision taken**, enter the amount and the day it was taken (today by default, never later), and a note if you like."),
+                step("**Record**. The Account section updates: the supervision taken goes up, what is left goes down and so does the cash in the account."),
+            )),
+            list(
+                "The supervision due is the work price × the site's supervision rate. **Left** is what is due less what was taken; if more was taken than is due it reads **Over by**, and that is allowed.",
+                "It is **not a cost**: the site's profit and margin don't change.",
+                "It can be recorded on a finished site too.",
+            ),
+            only(has(P.PAYMENT_RECORD), para("A wrong entry is removed with the bin beside it, after a question. It leaves the list and the figures, and stays in the activity history.")),
+        ],
+        related: ["account-figures", "execution-pricing"],
+    },
+    {
         id: "labour-defaults",
         title: "Setting a site's labour defaults",
         category: "projects",
