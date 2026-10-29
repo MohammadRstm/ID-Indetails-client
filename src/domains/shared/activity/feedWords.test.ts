@@ -72,6 +72,25 @@ describe("what the activity feed says", () => {
         expect(line("overhead_removed")).toBe("removed Figma from the company expenses");
     });
 
+    it("words BOQs and VOs by their number, with the total for people who see money", () => {
+        const site = { domain: "execution", project: { id: 7, name: "Achrafieh Towers lobby" }, client: { id: 6, name: "Achrafieh Towers SAL" } };
+        const boq = (kind: string, payload: Record<string, unknown> | null, extra: Partial<FeedEvent> = {}) => say(event(kind, { ...site, payload, ...extra }));
+        expect(boq("boq_created", { kind: "client", number: "BQ-2026-001" }, { amount: 17000 })).toBe("drafted BQ-2026-001 for Achrafieh Towers lobby - $17k");
+        expect(boq("boq_created", { kind: "client", number: "BQ-2026-001" })).toBe("drafted BQ-2026-001 for Achrafieh Towers lobby");
+        expect(boq("boq_created", { kind: "vo", number: "VO-2026-001" }, { amount: 6500 })).toBe("drafted VO-2026-001 for Achrafieh Towers lobby - $6.5k");
+        // an event that doesn't name its number still says which kind it was
+        expect(boq("boq_created", { kind: "vo" })).toBe("drafted a VO for Achrafieh Towers lobby");
+        expect(boq("boq_created", null)).toBe("drafted a client BOQ for Achrafieh Towers lobby");
+        expect(boq("boq_sent", { kind: "client", number: "BQ-2026-001", channel: "email" })).toBe("sent BQ-2026-001 to Achrafieh Towers SAL by email");
+        expect(boq("boq_sent", { kind: "client", number: "BQ-2026-001", channel: "whatsapp" })).toBe("sent BQ-2026-001 to Achrafieh Towers SAL on WhatsApp");
+        expect(boq("boq_sent", { kind: "vo", number: "VO-2026-001", channel: "download" })).toBe("sent VO-2026-001 to Achrafieh Towers SAL");
+        expect(boq("boq_agreed", { kind: "client", number: "BQ-2026-001" }, { amount: 17000 })).toBe("agreed BQ-2026-001 on Achrafieh Towers lobby - $17k");
+        expect(boq("boq_agreed", { kind: "client", number: "BQ-2026-001" })).toBe("agreed BQ-2026-001 on Achrafieh Towers lobby");
+        expect(boq("boq_agreement_withdrawn", { kind: "client", number: "BQ-2026-001", reason: "The client changed the scope" }))
+            .toBe("withdrew the agreement of BQ-2026-001 on Achrafieh Towers lobby - The client changed the scope");
+        expect(boq("boq_agreement_withdrawn", { kind: "vo", number: "VO-2026-001" })).toBe("withdrew the agreement of VO-2026-001 on Achrafieh Towers lobby");
+    });
+
     it("words a client portal publish with what it changed, when the event says", () => {
         const published = (payload: Record<string, unknown> | null) => feedWords(event("portal_published", { payload }), names);
         expect(published({ added: 2, updated: 1, removed: 1 })).toEqual({ icon: "send", text: "published the client portal of Beit Misk show apartment (2 new, 1 updated, 1 removed)" });

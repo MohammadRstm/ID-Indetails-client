@@ -119,6 +119,11 @@ describe("Help's content", () => {
         expect(top(ctxOf("designAdmin"), "outstanding")).not.toContain("billing-terms");
         expect(top(ctxOf("designEmployee"), "outstanding")).not.toContain("billing-terms");
         expect(top(ctxOf("designEmployee"), "how is my salary calculated")).toContain("pay");
+        // an Execution site's price comes from its BOQs
+        const pricing = ctxOf("executionAdmin", withPermissions(personas.executionAdmin, { grant: MONEY_AND_HIRING }));
+        expect(top(pricing, "agree boq")).toContain("agree-boq");
+        expect(top(pricing, "variation order")).toContain("boqs");
+        expect(top(ctxOf("executionAdmin"), "agree boq")).not.toContain("agree-boq");
     });
 
     it("resolves links for the reader: a super admin's business links name the business", () => {

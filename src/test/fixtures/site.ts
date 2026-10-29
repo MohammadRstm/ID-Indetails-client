@@ -1,6 +1,7 @@
 import { http, HttpResponse } from "msw";
 import type { Paged, Schemas } from "@/api/types";
 import { billing } from "./billing";
+import { boqHandlers } from "./boqs";
 import invoicesJson from "./site/invoices.json";
 import labourDefaultsJson from "./site/labourDefaults.json";
 import labourWeekJson from "./site/labourWeek.json";
@@ -74,4 +75,6 @@ export const siteHandlers = [
     http.get("/api/site-logs", () => HttpResponse.json({ items: [], page: 1, pageSize: 25, totalCount: 0 })),
     // a client with an email and a WhatsApp number, to send to
     http.get("/api/clients/:id", () => HttpResponse.json(billing.client)),
+    // the lobby's BOQs: the client BOQ agreed, a draft not chosen, a VO and two internal drafts
+    ...boqHandlers,
 ];

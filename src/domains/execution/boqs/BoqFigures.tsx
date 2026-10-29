@@ -15,7 +15,7 @@ export function BoqTotals({ boq, stale }: { boq: Boq; stale: boolean }) {
     const adjusted = boq.adjustmentType !== "none";
     return (
         <div className="mt">
-            <div className="xm-owed" aria-label="Totals">
+            <div className="xm-owed" role="group" aria-label="Totals">
                 <div><span>Subtotal</span><b className="mono">{cents(boq.subtotalUsd)}</b><em>{boq.lines.length === 1 ? "1 line" : `${boq.lines.length} lines`}, as last saved</em></div>
                 {adjusted && (
                     <div>

@@ -36,9 +36,22 @@ group("A notification's words", () => {
         expect(describe(stopped, admin)).toMatchObject({
             text: "A change on Studio Nour brand space was stopped at zero profit", sub: "An expense by Nadia Karam · force it or dismiss it", route: "/design/projects/5?blocked=9",
         });
+        const site = { ...project, id: 7, title: "Achrafieh Towers lobby", domain: "execution" };
+        const agreeing = note("change_blocked", { projectTitle: site.title, kind: "boq_agree" }, { actor: nadia, project: site, subjectType: "blocked_change", subjectId: 9 });
+        expect(describe(agreeing, admin)).toMatchObject({ sub: "Agreeing a BOQ or VO by Nadia Karam · force it or dismiss it", route: "/execution/projects/7?blocked=9" });
+        const withdrawing = note("change_blocked", { projectTitle: site.title, kind: "boq_withdraw" }, { actor: nadia, project: site, subjectType: "blocked_change", subjectId: 9 });
+        expect(describe(withdrawing, admin).sub).toBe("Withdrawing the agreement of a BOQ or VO by Nadia Karam · force it or dismiss it");
         expect(describe(note("profit_low", { projectTitle: project.title, marginPct: 8 }, { project }), admin))
             .toMatchObject({ text: "Studio Nour brand space is close to zero profit", sub: "8% margin left", route: "/design/projects/5" });
         expect(describe(note("profit_at_zero", { projectTitle: project.title, marginPct: -3 }, { project }), admin).text).toBe("Studio Nour brand space is at zero profit or below");
+    });
+
+    it("offer a quote only for a Design project: an Execution site is priced by its BOQs", () => {
+        const design = note("quote_due", { projectTitle: project.title }, { actor: nadia, project });
+        expect(describe(design, admin)).toMatchObject({ text: "Studio Nour brand space may need a quote", route: "/design/projects/5?quote=new" });
+        const site = { ...project, id: 7, title: "Achrafieh Towers lobby", domain: "execution" };
+        const execution = note("quote_due", { projectTitle: site.title }, { actor: nadia, project: site });
+        expect(describe(execution, admin).route).toBe("/execution/projects/7");
     });
 
     it("speak to the reader: requirements open the project's tab, and those who log work hear about logging", () => {
