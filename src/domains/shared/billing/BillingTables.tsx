@@ -66,7 +66,7 @@ type PaymentTableProps = {
     tiles?: Map<number, Tile>;
     /** Opens the invoice a payment was against. */
     onOpen?: (invoiceId: number) => void;
-    /** A menu on each row to apply or void it, for those who may. */
+    /** A menu on each row to apply, label or void it, for those who may. */
     actions?: boolean;
 };
 
@@ -79,7 +79,7 @@ export function PaymentTable({ payments, showProject, tiles, onOpen, actions }: 
                     <tr>
                         <th className="nowrap">Received</th>
                         {showProject && <th>Project</th>}
-                        <th>Invoice</th><th>Method</th><th>Reference</th><th className="r">Amount</th>
+                        <th>Invoice</th><th>Method</th><th>Reference</th><th>Account label</th><th className="r">Amount</th>
                         {actions && <th />}
                     </tr>
                 </thead>
@@ -100,6 +100,7 @@ export function PaymentTable({ payments, showProject, tiles, onOpen, actions }: 
                                         <span className="badge cur-chip" style={{ marginLeft: 6 }} title={`Received as ${money.fmt(p.amount, p.currency)} at ${fmtNumber(p.fxRate)}/$`}>{p.currency}</span>
                                     )}
                                 </td>
+                                <td className="muted trunc">{p.accountLabel?.name ?? "-"}</td>
                                 <td className="r mono">{money.fmt(p.amountUsd)}</td>
                                 {actions && <td className="r"><PaymentActions payment={p} /></td>}
                             </tr>
