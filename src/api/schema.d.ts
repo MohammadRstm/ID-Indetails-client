@@ -3143,7 +3143,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/execution/box": {
+    "/api/execution/pocket": {
         parameters: {
             query?: never;
             header?: never;
@@ -3165,9 +3165,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["BoxResponse"];
-                        "text/json": components["schemas"]["BoxResponse"];
-                        "text/plain": components["schemas"]["BoxResponse"];
+                        "application/json": components["schemas"]["PocketResponse"];
+                        "text/json": components["schemas"]["PocketResponse"];
+                        "text/plain": components["schemas"]["PocketResponse"];
                     };
                 };
             };
@@ -3180,7 +3180,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/execution/box/entries": {
+    "/api/execution/pocket/contributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["PocketContributionRequest"];
+                    "application/json": components["schemas"]["PocketContributionRequest"];
+                    "text/json": components["schemas"]["PocketContributionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PocketResponse"];
+                        "text/json": components["schemas"]["PocketResponse"];
+                        "text/plain": components["schemas"]["PocketResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/execution/pocket/entries": {
         parameters: {
             query?: never;
             header?: never;
@@ -3191,7 +3234,7 @@ export interface paths {
             parameters: {
                 query?: {
                     From?: string;
-                    Kind?: components["schemas"]["BoxEntryKind"];
+                    Kind?: components["schemas"]["PocketEntryKind"];
                     Page?: number;
                     PageSize?: number;
                     ProjectId?: number;
@@ -3210,9 +3253,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["PagedResponseOfBoxEntryResponse"];
-                        "text/json": components["schemas"]["PagedResponseOfBoxEntryResponse"];
-                        "text/plain": components["schemas"]["PagedResponseOfBoxEntryResponse"];
+                        "application/json": components["schemas"]["PagedResponseOfPocketEntryResponse"];
+                        "text/json": components["schemas"]["PagedResponseOfPocketEntryResponse"];
+                        "text/plain": components["schemas"]["PagedResponseOfPocketEntryResponse"];
                     };
                 };
             };
@@ -3225,52 +3268,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/execution/box/projects/{projectId}/decision": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    projectId: number;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/*+json": components["schemas"]["BoxDecisionRequest"];
-                    "application/json": components["schemas"]["BoxDecisionRequest"];
-                    "text/json": components["schemas"]["BoxDecisionRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["BoxResponse"];
-                        "text/json": components["schemas"]["BoxResponse"];
-                        "text/plain": components["schemas"]["BoxResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/execution/box/transfers": {
+    "/api/execution/pocket/requests": {
         parameters: {
             query?: never;
             header?: never;
@@ -3288,9 +3286,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/*+json": components["schemas"]["BoxTransferRequest"];
-                    "application/json": components["schemas"]["BoxTransferRequest"];
-                    "text/json": components["schemas"]["BoxTransferRequest"];
+                    "application/*+json": components["schemas"]["CreatePocketRequestRequest"];
+                    "application/json": components["schemas"]["CreatePocketRequestRequest"];
+                    "text/json": components["schemas"]["CreatePocketRequestRequest"];
                 };
             };
             responses: {
@@ -3300,9 +3298,99 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["BoxResponse"];
-                        "text/json": components["schemas"]["BoxResponse"];
-                        "text/plain": components["schemas"]["BoxResponse"];
+                        "application/json": components["schemas"]["PocketRequestResponse"];
+                        "text/json": components["schemas"]["PocketRequestResponse"];
+                        "text/plain": components["schemas"]["PocketRequestResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/execution/pocket/requests/{requestId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ApprovePocketRequestRequest"];
+                    "application/json": components["schemas"]["ApprovePocketRequestRequest"];
+                    "text/json": components["schemas"]["ApprovePocketRequestRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PocketRequestResponse"];
+                        "text/json": components["schemas"]["PocketRequestResponse"];
+                        "text/plain": components["schemas"]["PocketRequestResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/execution/pocket/requests/{requestId}/deny": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["DenyPocketRequestRequest"];
+                    "application/json": components["schemas"]["DenyPocketRequestRequest"];
+                    "text/json": components["schemas"]["DenyPocketRequestRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PocketRequestResponse"];
+                        "text/json": components["schemas"]["PocketRequestResponse"];
+                        "text/plain": components["schemas"]["PocketRequestResponse"];
                     };
                 };
             };
@@ -3923,6 +4011,8 @@ export interface paths {
                 query?: {
                     ClientId?: number;
                     Domain?: string;
+                    IssuedFrom?: string;
+                    IssuedTo?: string;
                     Overdue?: boolean;
                     Page?: number;
                     PageSize?: number;
@@ -6171,6 +6261,8 @@ export interface paths {
                     Page?: number;
                     PageSize?: number;
                     ProjectId?: number;
+                    ReceivedFrom?: string;
+                    ReceivedTo?: string;
                 };
                 header?: never;
                 path?: never;
@@ -7452,9 +7544,7 @@ export interface paths {
         put?: never;
         post: {
             parameters: {
-                query?: {
-                    box?: components["schemas"]["BoxChoice"];
-                };
+                query?: never;
                 header?: never;
                 path: {
                     projectId: number;
@@ -7538,9 +7628,7 @@ export interface paths {
         put?: never;
         post: {
             parameters: {
-                query?: {
-                    box?: components["schemas"]["BoxChoice"];
-                };
+                query?: never;
                 header?: never;
                 path: {
                     projectId: number;
@@ -10060,9 +10148,7 @@ export interface paths {
         put?: never;
         post: {
             parameters: {
-                query?: {
-                    box?: components["schemas"]["BoxChoice"];
-                };
+                query?: never;
                 header?: never;
                 path: {
                     projectId: number;
@@ -14272,6 +14358,11 @@ export interface components {
             /** Format: int64 */
             invoiceId?: number;
         };
+        ApprovePocketRequestRequest: {
+            /** Format: double */
+            amount?: number;
+            note?: null | string;
+        };
         AskProtonRequest: {
             choice?: null | components["schemas"]["ProtonChoiceRequest"];
             /** Format: uuid */
@@ -14384,63 +14475,6 @@ export interface components {
             order: null | string[];
             /** Format: date-time */
             savedAt: null | string;
-        };
-        /** @enum {unknown} */
-        BoxChoice: "remove" | "keep" | "readd" | "fresh";
-        BoxDecisionRequest: {
-            decision?: components["schemas"]["BoxChoice"];
-        };
-        /** @enum {unknown} */
-        BoxEntryKind: "payment_in" | "payment_voided" | "transfer" | "removed" | "readded";
-        BoxEntryProjectResponse: {
-            /** Format: int64 */
-            id: number;
-            title: string;
-        };
-        BoxEntryResponse: {
-            /** Format: double */
-            amount: number;
-            by: null | components["schemas"]["PersonRefResponse"];
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: int64 */
-            id: number;
-            kind: components["schemas"]["BoxEntryKind"];
-            note: null | string;
-            project: components["schemas"]["BoxEntryProjectResponse"];
-        };
-        BoxProjectResponse: {
-            boxState: components["schemas"]["BoxState"];
-            /** Format: double */
-            cashProfit: number;
-            clientName: null | string;
-            /** Format: double */
-            contributed: number;
-            /** Format: double */
-            fromBox: number;
-            /** Format: int64 */
-            id: number;
-            status: components["schemas"]["ProjectStatus"];
-            title: string;
-        };
-        BoxResponse: {
-            /** Format: double */
-            balance: number;
-            /** Format: double */
-            contributedTotal: number;
-            contributing: components["schemas"]["BoxProjectResponse"][];
-            currency: string;
-            inTheRed: components["schemas"]["BoxProjectResponse"][];
-            pending: components["schemas"]["BoxProjectResponse"][];
-        };
-        /** @enum {unknown} */
-        BoxState: "in" | "pending" | "removed";
-        BoxTransferRequest: {
-            /** Format: double */
-            amount?: number;
-            note?: null | string;
-            /** Format: int64 */
-            projectId?: number;
         };
         BrandingResponse: {
             hasLogo: boolean;
@@ -14928,6 +14962,11 @@ export interface components {
             /** Format: date */
             startMonth?: null | string;
         };
+        CreatePocketRequestRequest: {
+            note?: null | string;
+            /** Format: int64 */
+            projectId?: number;
+        };
         CreateProjectRequest: {
             billingType?: components["schemas"]["BillingType"];
             /** Format: int64 */
@@ -15040,6 +15079,9 @@ export interface components {
         };
         /** @enum {unknown} */
         DeliveryChannel: "email" | "whatsapp" | "download";
+        DenyPocketRequestRequest: {
+            note?: null | string;
+        };
         /** @enum {unknown} */
         DevicePlatform: "ios" | "android";
         DeviceResponse: {
@@ -16502,15 +16544,6 @@ export interface components {
             /** Format: int32 */
             totalCount: number;
         };
-        PagedResponseOfBoxEntryResponse: {
-            items: components["schemas"]["BoxEntryResponse"][];
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            pageSize: number;
-            /** Format: int32 */
-            totalCount: number;
-        };
         PagedResponseOfClientSummaryResponse: {
             items: components["schemas"]["ClientSummaryResponse"][];
             /** Format: int32 */
@@ -16549,6 +16582,15 @@ export interface components {
         };
         PagedResponseOfPaymentResponse: {
             items: components["schemas"]["PaymentResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfPocketEntryResponse: {
+            items: components["schemas"]["PocketEntryResponse"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -16799,6 +16841,68 @@ export interface components {
             description?: string;
             /** Format: date */
             sendOn?: string;
+        };
+        PocketContributionRequest: {
+            /** Format: double */
+            amount?: number;
+            note?: null | string;
+            /** Format: int64 */
+            projectId?: number;
+        };
+        /** @enum {unknown} */
+        PocketEntryKind: "contribution" | "payout";
+        PocketEntryResponse: {
+            /** Format: double */
+            amount: number;
+            by: components["schemas"]["PersonRefResponse"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["PocketEntryKind"];
+            note: null | string;
+            project: components["schemas"]["PocketProjectResponse"];
+            /** Format: int64 */
+            requestId: null | number;
+        };
+        PocketProjectResponse: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+        };
+        PocketRequestResponse: {
+            /** Format: double */
+            approvedAmount: null | number;
+            /** Format: double */
+            cashProfit: null | number;
+            /** Format: date-time */
+            decidedAt: null | string;
+            decidedBy: null | components["schemas"]["PersonRefResponse"];
+            decisionNote: null | string;
+            /** Format: int64 */
+            id: number;
+            note: null | string;
+            project: components["schemas"]["PocketProjectResponse"];
+            /** Format: date-time */
+            requestedAt: string;
+            requestedBy: null | components["schemas"]["PersonRefResponse"];
+            status: components["schemas"]["PocketRequestStatus"];
+            /** Format: double */
+            suggestedAmount: number;
+            /** Format: double */
+            suggestedNow: null | number;
+        };
+        /** @enum {unknown} */
+        PocketRequestStatus: "pending" | "approved" | "denied";
+        PocketResponse: {
+            /** Format: double */
+            balance: number;
+            /** Format: double */
+            contributedTotal: number;
+            currency: string;
+            /** Format: double */
+            paidOutTotal: number;
+            pending: components["schemas"]["PocketRequestResponse"][];
         };
         PortalAccountResponse: {
             email: string;
@@ -17415,7 +17519,6 @@ export interface components {
         };
         ProjectMoneyResponse: {
             billing: components["schemas"]["ProjectBillingResponse"];
-            boxState: null | components["schemas"]["BoxState"];
             /** Format: double */
             cashProfit: null | number;
             cost: components["schemas"]["ProjectCostResponse"];
@@ -17424,7 +17527,7 @@ export interface components {
             currency: string;
             expenseTotals: components["schemas"]["CurrencyTotalResponse"][];
             /** Format: double */
-            fromBox: null | number;
+            fromPocket: null | number;
             isLocked: boolean;
             /** Format: double */
             labourHours: number;
@@ -17445,6 +17548,8 @@ export interface components {
             recognisedToDate: number;
             /** Format: double */
             revenue: number;
+            /** Format: double */
+            toPocket: null | number;
             /** Format: int32 */
             unconvertedMaterials: number;
             /** Format: double */

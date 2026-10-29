@@ -1703,13 +1703,9 @@ tr.voided .mono, .cost-row.voided .mono { text-decoration: line-through; }
 .stmt-ch { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
 .stmt-ch.on { border-color: var(--accent); background: var(--accent-soft); }
 .stmt-ch .ic { width: 16px; height: 16px; }
-/* the Execution box: its vault and the choices for a closing site's money */
-.box-vault { display: flex; align-items: center; gap: 18px; padding: 18px 20px; }
-.box-vault-art { flex: none; }
-@media (max-width: 640px) { .box-vault { flex-direction: column; align-items: flex-start; } }
-.choice-card { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
-.choice-card.on { border-color: var(--accent); background: var(--accent-soft); }
-.choice-card input { margin-top: 3px; }
+/* the pocket money: its pocket in the middle, the balance under it */
+.pocket-hero { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 22px 20px; text-align: center; }
+.pocket-art { margin-bottom: 4px; }
 @media (max-width: 640px) { .stmt-quick { display: none; } }
 @media screen { .stmt-print { display: none; } }
 @media print {

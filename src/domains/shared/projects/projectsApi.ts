@@ -113,32 +113,13 @@ export function actionFor(from: ProjectStatus, to: ProjectStatus): StatusAction 
     return STATUS_ACTIONS[from].find((a) => wanted[to].includes(a)) ?? null;
 }
 
-export type BoxChoice = Schemas["BoxChoice"];
-
-/**
- * Whether changing an Execution project's status asks what happens to its money in the box: when it closes (completes,
- * or is archived while open), and when a removed one reopens. Only someone who sees money is asked; for anyone else the
- * API leaves a closing project waiting on the Box page and counts a reopened one afresh.
- */
-export function asksBox(project: Project, action: StatusAction, seesMoney: boolean): boolean {
-    if (project.domain !== "execution" || !seesMoney) return false;
-    if (action === "complete") return true;
-    if (action === "archive") return project.status === "active" || project.status === "hold";
-    return action === "reopen" && project.money?.boxState === "removed";
-}
-
-export type StatusChange = StatusAction | { action: StatusAction; box?: BoxChoice };
-
 export function useChangeProjectStatus(id: number) {
     const invalidate = useInvalidate();
     return useMutation({
-        mutationFn: async (change: StatusChange) => {
-            const { action, box } = typeof change === "string" ? { action: change, box: undefined } : change;
-            return (await http.post<Project>(`/projects/${id}/${action}`, undefined, box ? { params: { box } } : undefined)).data;
-        },
+        mutationFn: async (action: StatusAction) => (await http.post<Project>(`/projects/${id}/${action}`)).data,
         // Completing ticks every open requirement; reopening unticks those again.
         // not awaited: the close-out window's own onSuccess (its toast with Undo) has to run before the project
         // comes back completed and the window goes
-        onSuccess: () => { void invalidate(keys.projects.all, keys.requirements.all, keys.activity.all, keys.dashboard.all, keys.clients.all, keys.finance.all, keys.box.all); },
+        onSuccess: () => { void invalidate(keys.projects.all, keys.requirements.all, keys.activity.all, keys.dashboard.all, keys.clients.all, keys.finance.all); },
     });
 }

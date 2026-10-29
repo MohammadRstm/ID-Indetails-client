@@ -34,10 +34,10 @@ export const keys = {
         all: ["employees"] as const,
         list: (params: object) => ["employees", "list", params] as const,
     },
-    box: {
-        all: ["box"] as const,
-        summary: () => ["box", "summary"] as const,
-        entries: (params: object) => ["box", "entries", params] as const,
+    pocket: {
+        all: ["pocket"] as const,
+        summary: () => ["pocket", "summary"] as const,
+        entries: (params: object) => ["pocket", "entries", params] as const,
     },
     finance: {
         all: ["finance"] as const,
