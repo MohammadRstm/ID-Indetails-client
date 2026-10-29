@@ -38,6 +38,7 @@ import PricingModal from "../../execution/projects/PricingModal";
 import PaymentHistoryModal from "./PaymentHistoryModal";
 import SendQuoteModal from "../billing/SendQuoteModal";
 import BlockedChangeModal from "./BlockedChangeModal";
+import BoqHost from "../../execution/boqs/BoqHost";
 import { AskPocketModal, MoveToPocketModal } from "../../execution/pocket/PocketActions";
 import CompleteProjectModal from "./CompleteProjectModal";
 import { useUrlFlag } from "@/shared/hooks/useUrlFlag";
@@ -373,6 +374,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {moneyAction === "to-pocket" && canUsePocket && <MoveToPocketModal project={project} onClose={closeMoney} />}
             {moneyAction === "ask-pocket" && canUsePocket && <AskPocketModal project={project} onClose={closeMoney} />}
             <BillingModalHost project={project} />
+            {site && <BoqHost project={project} />}
             {showReport && canReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}
             {editing && canEditDetails && <EditProjectModal project={project} onClose={() => setEditing(false)} />}
         </div>
