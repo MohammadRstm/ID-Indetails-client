@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { toApiError } from "@/api/errors";
 import { loadFailed } from "@/api/queryState";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
+import { FieldError } from "@/shared/components/Forms/Field";
 import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import { plural } from "@/shared/format/labels";
@@ -26,6 +28,8 @@ export default function CopyLinesModal({ project, boq, list, onCopied, onClose }
     const source = useBoq(project.id, from ? Number(from) : null);
     const lines = source.data?.lines ?? [];
     const chosen = lines.filter((l) => !off[l.id]);
+    const fields = toApiError(copy.error).fieldErrors;
+    const failed = copy.error && Object.keys(fields).length === 0;
 
     function submit() {
         if (copy.isPending || !from || chosen.length === 0) return;
@@ -41,7 +45,7 @@ export default function CopyLinesModal({ project, boq, list, onCopied, onClose }
         <Modal size="md" title="Copy lines" sub={boq.number ?? boq.title} onClose={copy.isPending ? undefined : onClose}
             foot={
                 <>
-                    <div className="grow muted" style={{ fontSize: 12 }}>{copy.error && <span className="err"><Icon name="alert" />{boqErrorMessage(copy.error)}</span>}</div>
+                    <div className="grow muted" style={{ fontSize: 12 }}>{failed && <span className="err"><Icon name="alert" />{boqErrorMessage(copy.error)}</span>}</div>
                     <button className="btn" disabled={copy.isPending} onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={copy.isPending || chosen.length === 0} onClick={submit}>
                         {copy.isPending ? "Copying…" : chosen.length ? `Copy ${plural(chosen.length, "line")}` : "Copy lines"}
@@ -54,6 +58,7 @@ export default function CopyLinesModal({ project, boq, list, onCopied, onClose }
                         <label className="label required" htmlFor="copy-from">Copy from</label>
                         <Select id="copy-from" value={from} onChange={(v) => { setFrom(v); setOff({}); }}
                             options={sources.map((b) => ({ value: String(b.id), label: sourceLabel(b) }))} />
+                        <FieldError message={fields.fromBoqId} />
                     </div>
                     {from && (loadFailed(source) ? <LoadError error={source.error} retry={() => source.refetch()} what="its lines" />
                         : !source.data ? <SkeletonLines lines={4} /> : (
@@ -76,6 +81,7 @@ export default function CopyLinesModal({ project, boq, list, onCopied, onClose }
                                         </label>
                                     ))}
                                 </div>
+                                <FieldError message={fields.lineIds} />
                             </div>
                         ))}
                 </>

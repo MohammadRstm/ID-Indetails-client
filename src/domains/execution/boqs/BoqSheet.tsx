@@ -15,7 +15,7 @@ import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../shared/projects/projectsApi";
 import { useBoqAccess } from "./boqAccess";
 import { AgreeBoqModal, WithdrawBoqModal } from "./BoqAgreementModals";
-import { blankLine, draftOf, fitSigned, hasProblems, isDirty, problemsOf, requestOf, type Draft, type LineDraft } from "./boqDraft";
+import { blankLine, draftOf, fitSigned, hasProblems, isDirty, problemsOf, requestOf, withServerProblems, type Draft, type LineDraft } from "./boqDraft";
 import { BoqDeliveries, BoqTotals } from "./BoqFigures";
 import BoqLinesTable from "./BoqLinesTable";
 import { useBoqLinks } from "./boqLinks";
@@ -48,15 +48,20 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
     const editable = access.canEdit(boq);
     const dirty = editable && isDirty(draft, boq);
     const problems = problemsOf(draft, boq.kind);
+    // what the API refused on the last save, beside what it was about; it goes as soon as something is changed
     const fields = toApiError(save.error).fieldErrors;
+    const shown = withServerProblems(problems, draft, fields);
     const agreed = boq.status === "agreed";
     const chosen = agreedClient(list);
     const notChosen = isNotChosen(boq, list);
     const decides = access.canDecide(boq);
     const blocked = emptyBlock(boq);
-    const change = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
-    const changeLine = (key: string, field: keyof LineDraft, value: string) =>
+    const edited = () => { if (save.error) save.reset(); };
+    const change = (patch: Partial<Draft>) => { edited(); setDraft((d) => ({ ...d, ...patch })); };
+    const changeLine = (key: string, field: keyof LineDraft, value: string) => {
+        edited();
         setDraft((d) => ({ ...d, lines: d.lines.map((l) => (l.key === key ? { ...l, [field]: value } : l)) }));
+    };
 
     function close() {
         if (dirty && !window.confirm("Discard the changes made since the last save?")) return;
@@ -74,6 +79,7 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
         });
     }
     function move(index: number, by: -1 | 1) {
+        edited();
         setDraft((d) => {
             const lines = d.lines.slice();
             [lines[index], lines[index + by]] = [lines[index + by], lines[index]];
@@ -180,10 +186,10 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
             </div>
             {draft.lines.length === 0 && <p className="muted" style={{ margin: "0 0 8px" }}>No lines yet.{editable ? " Add the first one." : ""}</p>}
             {draft.lines.length > 0 && (
-                <BoqLinesTable lines={draft.lines} saved={boq.lines} readOnly={!editable} problems={problems} errors={errors}
+                <BoqLinesTable lines={draft.lines} saved={boq.lines} readOnly={!editable} problems={shown} errors={errors}
                     onChange={changeLine} onMove={move} onRemove={(i) => change({ lines: draft.lines.filter((_, at) => at !== i) })} />
             )}
-            <FieldError message={problems.lines} />
+            <FieldError message={shown.lines} />
             {boq.kind !== "vo" && editable && <div className="hint mt-s">A negative rate is only allowed on a VO.</div>}
 
             <div className="field mt">

@@ -148,6 +148,24 @@ export function problemsOf(draft: Draft, kind: BoqKind): DraftProblems {
     return problems;
 }
 
+/** The cells a line's server error names (lines[2].wasteRate) in the table's own words. */
+const CELL: Record<string, keyof LineProblems> = { code: "code", description: "description", quantity: "quantity", wasteRate: "waste", unit: "unit", rate: "rate" };
+
+/**
+ * What the API refused, placed beside what it was about: a line's field error (lines[2].description) goes on the
+ * third line as it was sent, and an error about the lines as a whole under them. What the form found itself comes first.
+ */
+export function withServerProblems(problems: DraftProblems, draft: Draft, fields: Record<string, string>): DraftProblems {
+    const line = { ...problems.line };
+    for (const [key, message] of Object.entries(fields)) {
+        const named = /^lines\[(\d+)\]\.(\w+)$/.exec(key);
+        const target = named && draft.lines[Number(named[1])];
+        const cell = named && CELL[named[2]];
+        if (target && cell) line[target.key] = { ...line[target.key], [cell]: line[target.key]?.[cell] ?? message };
+    }
+    return { ...problems, lines: problems.lines ?? fields.lines, line };
+}
+
 /** Whether anything is wrong with the draft. */
 export const hasProblems = (p: DraftProblems) => !!(p.title || p.reason || p.adjustmentValue || p.lines || Object.keys(p.line).length);
 

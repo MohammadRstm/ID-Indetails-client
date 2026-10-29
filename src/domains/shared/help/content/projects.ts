@@ -56,7 +56,7 @@ export const projects: Article[] = [
                 "**Reopen**: back to active.",
             ),
             para("**Finishing** a project (completing it, or archiving one that wasn't completed) locks it: its revenue, fee, markup, billing, materials, labour, expenses, requirements and work logging can't change, and its open requirements are ticked. Reopening unlocks it all again."),
-            only(sees("execution"), note("An Execution site can't be finished while one of its materials has no exchange rate for its day. Once it is finished no BOQ or VO can be agreed or withdrawn, and reopening it unlocks them.")),
+            only(sees("execution"), note("Once an Execution site is finished no BOQ or VO can be agreed or withdrawn, and reopening it unlocks them.")),
             para("A completed project is archived automatically once it has been finished for 90 days with nothing new on it, if the business has auto-archive on. It doesn't wait for the client to pay."),
         ],
         related: ["progress", "boqs"],
