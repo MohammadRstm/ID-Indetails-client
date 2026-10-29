@@ -17,12 +17,10 @@
         "name": "Nour Aziz"
       },
       "updatedAt": null,
-      "isStated": false,
       "canEdit": true,
       "clientPrice": 1188,
       "priceSource": "auto",
-      "markup": 0.2,
-      "sentOn": null
+      "markup": 0.2
     },
     {
       "id": 7,
@@ -41,12 +39,10 @@
         "name": "Nour Aziz"
       },
       "updatedAt": null,
-      "isStated": false,
       "canEdit": true,
       "clientPrice": 1008,
       "priceSource": "auto",
-      "markup": 0.2,
-      "sentOn": null
+      "markup": 0.2
     },
     {
       "id": 6,
@@ -65,12 +61,10 @@
         "name": "Nour Aziz"
       },
       "updatedAt": null,
-      "isStated": false,
       "canEdit": true,
       "clientPrice": 4752,
       "priceSource": "auto",
-      "markup": 0.2,
-      "sentOn": null
+      "markup": 0.2
     },
     {
       "id": 5,
@@ -89,12 +83,10 @@
         "name": "Nour Aziz"
       },
       "updatedAt": null,
-      "isStated": false,
       "canEdit": true,
       "clientPrice": 1123.2,
       "priceSource": "auto",
-      "markup": 0.2,
-      "sentOn": null
+      "markup": 0.2
     }
   ],
   "page": 1,

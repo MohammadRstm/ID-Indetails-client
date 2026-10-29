@@ -3,9 +3,9 @@ import type { Project } from "../../shared/projects/projectsApi";
 type ProjectMoney = NonNullable<Project["money"]>;
 
 /**
- * An Execution site's money as the prototype reads it (XM.money). The client pays the agreed amount: the project fee
- * plus the materials sent to them on a statement, at client prices. Ground labour is never billed: it comes out of
- * the profit.
+ * An Execution site's money as the prototype reads it (XM.money). The client pays the agreed amount: the work price
+ * from the agreed BOQs and VOs, plus supervision. Materials and ground labour are never billed: they come out of the
+ * profit.
  */
 export type SiteMoney = {
     received: number;
@@ -21,27 +21,18 @@ export type SiteMoney = {
     fromPocket: number;
     /** Received − spent − to the pocket + from it: the headline. */
     cashProfit: number;
-    /** The project fee + the materials sent to the client, at client prices. */
+    /** The work price + supervision. */
     agreed: number;
     owed: number;
     /** Paid beyond the agreed amount so far. */
     credit: number;
     /** Agreed − spent: once the client has paid it all. */
     expectedProfit: number;
-    /** The work price: the agreed BOQs' total. */
+    /** The work price: the agreed BOQ and VOs' total. */
     fee: number;
     /** The supervision fee on top of it. */
     supervision: number;
     markup: number;
-    /** The materials sent to the client, at client prices. */
-    materialCharge: number;
-    /** What the materials sent earn: their charge − their cost. */
-    materialProfit: number;
-    /** What the materials sent cost. */
-    sentCost: number;
-    /** The materials not sent yet, at client prices: a statement adds them to what is owed. */
-    unsentCharge: number;
-    unsent: number;
     payments: number;
     locked: boolean;
 };
@@ -63,11 +54,6 @@ export function siteMoneyOf(m: ProjectMoney): SiteMoney {
         fee: m.projectFee ?? 0,
         supervision: m.supervisionUsd ?? 0,
         markup: m.materialMarkup ?? 0,
-        materialCharge: m.materialCharge ?? 0,
-        materialProfit: m.materialProfit ?? 0,
-        sentCost: (m.materialCharge ?? 0) - (m.materialProfit ?? 0),
-        unsentCharge: m.unsentMaterialCharge ?? 0,
-        unsent: m.unsentMaterials,
         payments: m.billing.paymentCount,
         locked: m.isLocked,
     };
@@ -78,9 +64,6 @@ export const SITE_COLORS = { received: "var(--heat-3)", materials: "var(--heat-2
 
 /** 0.163 → "16.3%". */
 export const pctOf = (ratio: number) => `${Math.round(ratio * 1000) / 10}%`;
-
-/** A markup as a signed percentage: 0.15 → "+15%", -0.05 → "−5%". */
-export const markupText = (ratio: number) => `${ratio >= 0 ? "+" : "−"}${Math.abs(Math.round(ratio * 1000) / 10)}%`;
 
 /** Open for site records (materials and labour): not closed, and not finalised, as the API's SiteRules has it. */
 export const isSiteOpen = (project: Project) =>

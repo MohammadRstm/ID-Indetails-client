@@ -44,6 +44,8 @@ const excused = (p: Payload) => {
             : `${minutes != null ? fmtH(minutes) : "some hours"} in ${month}`;
     return `${amount}${p.isPaid === false ? ", unpaid" : ""}`;
 };
+/** A BOQ or VO by its number (BQ-2026-001), or by its kind when the event carries none. */
+const boq = (p: Payload) => str(p.number) ?? (p.kind === "vo" ? "a VO" : "a client BOQ");
 /** A company expense's name, and the details its event carries. */
 const overhead = (p: Payload) => ({ name: str(p.name) ?? "a company expense", currency: str(p.currency) ?? "USD", d: (p.details ?? {}) as Payload });
 
@@ -156,11 +158,13 @@ const WORDS: Record<string, Words> = {
     },
     payment_applied: { icon: "card", text: (_e, p) => `applied a payment to ${str(p.invoiceNumber) ?? "an invoice"}` },
     payment_voided: { icon: "x", text: (e, p) => `voided ${e.amount == null ? "a" : `a ${money.fmt(e.amount)}`} payment${str(p.reason) ? ` - ${str(p.reason)}` : ""}` },
-    statement_created: { icon: "file", text: (e, p) => `drafted ${str(p.number) ? `statement ${str(p.number)}` : "a statement"} for ${project(e)}${dash(e.amount)}` },
-    statement_sent: {
+    boq_created: { icon: "file", text: (e, p) => `drafted ${boq(p)} for ${project(e)}${dash(e.amount)}` },
+    boq_sent: {
         icon: "send",
-        text: (e, p) => `sent ${str(p.number) ? `statement ${str(p.number)}` : "a statement"} to ${client(e)}${p.channel === "whatsapp" ? " on WhatsApp" : p.channel === "email" ? " by email" : ""}`,
+        text: (e, p) => `sent ${boq(p)} to ${client(e)}${p.channel === "whatsapp" ? " on WhatsApp" : p.channel === "email" ? " by email" : ""}`,
     },
+    boq_agreed: { icon: "checkCircle", text: (e, p) => `agreed ${boq(p)} on ${project(e)}${dash(e.amount)}` },
+    boq_agreement_withdrawn: { icon: "x", text: (e, p) => `withdrew the agreement of ${boq(p)} on ${project(e)}${str(p.reason) ? ` - ${str(p.reason)}` : ""}` },
     billing_settings_updated: { icon: "settings", text: () => "updated the billing settings" },
     exchange_rate_set: { icon: "card", text: (e, p) => `set the ${str(p.currency) ?? "exchange"} rate${e.amount == null ? "" : ` to ${e.amount.toLocaleString("en-US")} per USD`}` },
 

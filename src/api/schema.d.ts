@@ -11009,122 +11009,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/projects/{projectId}/statements": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    Page?: number;
-                    PageSize?: number;
-                };
-                header?: never;
-                path: {
-                    projectId: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PagedResponseOfStatementSummaryResponse"];
-                        "text/json": components["schemas"]["PagedResponseOfStatementSummaryResponse"];
-                        "text/plain": components["schemas"]["PagedResponseOfStatementSummaryResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    projectId: number;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/*+json": components["schemas"]["CreateStatementRequest"];
-                    "application/json": components["schemas"]["CreateStatementRequest"];
-                    "text/json": components["schemas"]["CreateStatementRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["StatementResponse"];
-                        "text/json": components["schemas"]["StatementResponse"];
-                        "text/plain": components["schemas"]["StatementResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{projectId}/statements/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    projectId: number;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/*+json": components["schemas"]["CreateStatementRequest"];
-                    "application/json": components["schemas"]["CreateStatementRequest"];
-                    "text/json": components["schemas"]["CreateStatementRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["StatementResponse"];
-                        "text/json": components["schemas"]["StatementResponse"];
-                        "text/plain": components["schemas"]["StatementResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/projects/{projectId}/timeline": {
         parameters: {
             query?: never;
@@ -12839,170 +12723,6 @@ export interface paths {
                 };
             };
         };
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/statements/{statementId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    statementId: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["StatementResponse"];
-                        "text/json": components["schemas"]["StatementResponse"];
-                        "text/plain": components["schemas"]["StatementResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/statements/{statementId}/deliveries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    statementId: number;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/*+json": components["schemas"]["RecordDeliveryRequest"];
-                    "application/json": components["schemas"]["RecordDeliveryRequest"];
-                    "text/json": components["schemas"]["RecordDeliveryRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["StatementResponse"];
-                        "text/json": components["schemas"]["StatementResponse"];
-                        "text/plain": components["schemas"]["StatementResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/statements/{statementId}/email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    statementId: number;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/*+json": components["schemas"]["EmailDocumentRequest"];
-                    "application/json": components["schemas"]["EmailDocumentRequest"];
-                    "text/json": components["schemas"]["EmailDocumentRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["StatementResponse"];
-                        "text/json": components["schemas"]["StatementResponse"];
-                        "text/plain": components["schemas"]["StatementResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/statements/{statementId}/pdf": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    statementId: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -15606,12 +15326,6 @@ export interface components {
             /** Format: double */
             tvaRate?: null | number;
         };
-        CreateStatementRequest: {
-            excludedMaterialIds?: number[];
-            includeEarlier?: boolean;
-            mode?: components["schemas"]["StatementMode"];
-            unlistedTypeKeys?: string[];
-        };
         CreateTeamRequest: {
             domainCode?: null | string;
             name?: string;
@@ -16454,7 +16168,6 @@ export interface components {
             currency: string;
             /** Format: int64 */
             id: number;
-            isStated: boolean;
             /** Format: double */
             markup: null | number;
             name: string;
@@ -16462,8 +16175,6 @@ export interface components {
             priceSource: null | components["schemas"]["PriceSource"];
             /** Format: double */
             quantity: null | number;
-            /** Format: date */
-            sentOn: null | string;
             supplier: null | string;
             unit: null | string;
             /** Format: double */
@@ -17242,15 +16953,6 @@ export interface components {
             /** Format: int32 */
             totalCount: number;
         };
-        PagedResponseOfStatementSummaryResponse: {
-            items: components["schemas"]["StatementSummaryResponse"][];
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            pageSize: number;
-            /** Format: int32 */
-            totalCount: number;
-        };
         PagedResponseOfWorkEntryResponse: {
             items: components["schemas"]["WorkEntryResponse"][];
             /** Format: int32 */
@@ -17874,7 +17576,7 @@ export interface components {
             section: components["schemas"]["PortalSection"];
         };
         /** @enum {unknown} */
-        PriceSource: "auto" | "manual" | "stated" | null;
+        PriceSource: "auto" | "manual" | null;
         ProfileFill: {
             firstName: null | string;
             lastName: null | string;
@@ -18142,11 +17844,7 @@ export interface components {
             /** Format: double */
             margin: null | number;
             /** Format: double */
-            materialCharge: null | number;
-            /** Format: double */
             materialMarkup: null | number;
-            /** Format: double */
-            materialProfit: null | number;
             /** Format: double */
             paymentWithTva: number;
             /** Format: double */
@@ -18170,10 +17868,6 @@ export interface components {
             tvaRate: number;
             /** Format: int32 */
             unconvertedMaterials: number;
-            /** Format: double */
-            unsentMaterialCharge: null | number;
-            /** Format: int32 */
-            unsentMaterials: number;
         };
         ProjectOwnerResponse: {
             /** Format: int64 */
@@ -18766,7 +18460,7 @@ export interface components {
             text: string;
         };
         /** @enum {unknown} */
-        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_statement" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | "new_website_project" | "edit_website_project" | "file_comments" | "portal_discussion" | "portal_preview" | "invite_website_staff" | "view_project_file" | null;
+        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | "new_website_project" | "edit_website_project" | "file_comments" | "portal_discussion" | "portal_preview" | "invite_website_staff" | "view_project_file" | null;
         ProtonTableBlock: {
             columns: components["schemas"]["ProtonColumn"][];
             rows: components["schemas"]["ProtonDataRow"][];
@@ -19668,92 +19362,6 @@ export interface components {
             /** Format: uuid */
             conversationId?: null | string;
             sdp?: string;
-        };
-        StatementDeliveryResponse: {
-            channel: components["schemas"]["DeliveryChannel"];
-            /** Format: int64 */
-            id: number;
-            note: null | string;
-            recipient: null | string;
-            /** Format: date-time */
-            sentAt: string;
-            sentBy: null | components["schemas"]["PersonRefResponse"];
-        };
-        StatementHiddenTypesResponse: {
-            /** Format: int32 */
-            count: number;
-            /** Format: double */
-            total: number;
-        };
-        /** @enum {unknown} */
-        StatementMode: "detail" | "total";
-        StatementResponse: {
-            /** Format: double */
-            agreed: number;
-            client: components["schemas"]["ProjectClientResponse"];
-            /** Format: int32 */
-            count: number;
-            /** Format: date-time */
-            createdAt: string;
-            createdBy: null | components["schemas"]["PersonRefResponse"];
-            currency: string;
-            /** Format: date */
-            date: string;
-            deliveries: components["schemas"]["StatementDeliveryResponse"][];
-            /** Format: double */
-            earlierTotal: number;
-            hiddenTypes: null | components["schemas"]["StatementHiddenTypesResponse"];
-            /** Format: int64 */
-            id: null | number;
-            includesEarlier: boolean;
-            isPreview: boolean;
-            mode: components["schemas"]["StatementMode"];
-            /** Format: double */
-            newTotal: number;
-            number: string;
-            /** Format: double */
-            paidAhead: number;
-            /** Format: int64 */
-            projectId: number;
-            projectLocation: null | string;
-            projectTitle: string;
-            /** Format: double */
-            received: number;
-            /** Format: double */
-            remaining: number;
-            /** Format: date */
-            since: null | string;
-            /** Format: double */
-            total: number;
-            types: components["schemas"]["StatementTypeResponse"][];
-        };
-        StatementSummaryResponse: {
-            /** Format: int32 */
-            count: number;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: int32 */
-            deliveryCount: number;
-            /** Format: int64 */
-            id: number;
-            lastDelivery: null | components["schemas"]["StatementDeliveryResponse"];
-            mode: components["schemas"]["StatementMode"];
-            number: string;
-            /** Format: double */
-            total: number;
-        };
-        StatementTypeResponse: {
-            /** Format: int32 */
-            deliveries: number;
-            /** Format: double */
-            earlier: number;
-            key: string;
-            label: string;
-            /** Format: double */
-            new: number;
-            quantity: null | string;
-            /** Format: double */
-            total: number;
         };
         StatusCountResponse: {
             /** Format: int32 */

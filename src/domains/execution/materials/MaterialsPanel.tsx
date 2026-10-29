@@ -20,7 +20,7 @@ import type { Project } from "../../shared/projects/projectsApi";
 import { isSiteOpen } from "../projects/siteMoney";
 import MaterialGrid, { type GridRow } from "./MaterialGrid";
 import MaterialSheet from "./MaterialSheet";
-import { COLS, entryOf, link, problems, rowOf, STATED_KEYS, TOTAL_AT, type ColKey, type Row } from "./materialRules";
+import { COLS, entryOf, link, problems, rowOf, TOTAL_AT, type ColKey, type Row } from "./materialRules";
 import { useDeleteMaterial, useMaterials, useUpdateMaterial, type Material, type MaterialQuery } from "./materialsApi";
 import { loadFailed } from "@/api/queryState";
 
@@ -64,7 +64,7 @@ export default function MaterialsPanel({ project }: { project: Project }) {
     const remove = useDeleteMaterial(project.id);
 
     const open = isSiteOpen(project);
-    // what the client is charged, and the profit on it, are in Material margins under this table and on statements
+    // what the client is charged, and the profit on it, are in Material margins under this table
     const cols = COLS;
     const d = list.data;
     const filtering = !!(type || supplier || by || period || q.trim());
@@ -140,12 +140,9 @@ export default function MaterialsPanel({ project }: { project: Project }) {
         return row;
     }
     const rows: GridRow[] = items.map((m) => ({
-        ...shownRow(m), id: m.id, by: m.addedBy.name, title: m.isStated ? "On a client statement: its type, cost and price are fixed" : undefined,
+        ...shownRow(m), id: m.id, by: m.addedBy.name,
     }));
-    const locked = (r: number, k: ColKey) => {
-        const m = items[r];
-        return !m.canEdit || (m.isStated && STATED_KEYS.includes(k));
-    };
+    const locked = (r: number) => !items[r].canEdit;
 
     return (
         <div className="panel mt">
@@ -203,7 +200,7 @@ export default function MaterialsPanel({ project }: { project: Project }) {
                                 )}
                                 <div ref={topRef} className={cx("mt-s pg-anchor", filtering && d.matching.count === 0 && "hide")}>
                                     <MaterialGrid cols={cols} rows={rows} offset={(page - 1) * PER_PAGE} showBy dash locked={locked}
-                                        canDelete={(r) => items[r].canEdit && !items[r].isStated}
+                                        canDelete={(r) => items[r].canEdit}
                                         onCell={(r, k, v, typing) => { if (!typing) save(r, k, v); }}
                                         onDelete={(r) => del(items[r])}
                                         foot={

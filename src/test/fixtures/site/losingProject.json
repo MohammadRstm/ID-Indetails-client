@@ -37,24 +37,23 @@
   "createdAt": "2026-06-18T08:00:00Z",
   "money": {
     "currency": "USD",
-    "revenue": 8000,
+    "revenue": 8800,
     "isLocked": false,
     "tvaRate": 0,
-    "paymentWithTva": 8000,
-    "revenueWithTva": 8000,
+    "paymentWithTva": 8800,
+    "revenueWithTva": 8800,
     "supervisionRate": 0.1,
     "supervisionUsd": 800,
     "projectFee": 8000,
     "materialMarkup": 0.2,
-    "materialCharge": 0,
     "expenseTotals": [],
     "billing": {
       "invoiced": 0,
       "outstanding": 0,
       "received": 5000,
       "onAccount": 5000,
-      "notYetInvoiced": 8000,
-      "owed": 3000,
+      "notYetInvoiced": 3800,
+      "owed": 3800,
       "paidAhead": 0,
       "issuedCount": 0,
       "paymentCount": 1,
@@ -63,7 +62,7 @@
       "oldestOverdueDays": null,
       "drafts": 0,
       "unconvertedInvoices": [],
-      "leftToInvoice": 16071.2
+      "leftToInvoice": 8800
     },
     "cost": {
       "labour": 0,
@@ -74,20 +73,17 @@
       "unconverted": [],
       "unpricedLabourMinutes": 0
     },
-    "profit": -1851,
-    "margin": -0.2314,
+    "profit": -1051,
+    "margin": -0.1194,
     "recognisedToDate": 5303.5,
     "projected": {
       "cost": 29851.52,
-      "profit": -13780.32,
-      "margin": -0.8575
+      "profit": -21051.52,
+      "margin": -2.3922
     },
     "labourHours": 0,
     "costPerHour": 0,
     "cashProfit": -4851,
-    "materialProfit": 0,
-    "unconvertedMaterials": 0,
-    "unsentMaterialCharge": 8071.2,
-    "unsentMaterials": 4
+    "unconvertedMaterials": 0
   }
 }

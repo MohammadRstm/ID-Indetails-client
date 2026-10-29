@@ -2,7 +2,6 @@ import { useState } from "react";
 import { loadFailed } from "@/api/queryState";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
-import { ChipGroup } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import Icon from "@/shared/icons/Icon";
 import { money } from "@/shared/format/money";
@@ -28,8 +27,7 @@ const PROFITS: Record<string, [string, (profit: number) => boolean]> = {
 };
 
 /**
- * What each material earns or loses: its supplier cost against the price the client is charged, and whether it has
- * been sent to the client yet (only then is its price revenue). For people who see money.
+ * What each material earns or loses: its supplier cost against the price the client is charged. For people who see money.
  */
 export default function MaterialMargins({ project }: { project: Project }) {
     const query = useAllMaterials(project.id);
@@ -37,26 +35,23 @@ export default function MaterialMargins({ project }: { project: Project }) {
     const [q, setQ] = useState("");
     const [supplier, setSupplier] = useState("");
     const [profit, setProfit] = useState("");
-    const [sentTo, setSentTo] = useState<"all" | "sent" | "unsent">("all");
     const suppliers = [...new Set(priced.map((m) => m.supplier).filter((s): s is string => !!s))].sort((a, b) => a.localeCompare(b));
     const words = q.trim().toLowerCase();
-    const filtering = !!words || !!supplier || !!profit || sentTo !== "all";
+    const filtering = !!words || !!supplier || !!profit;
     const items = priced.filter((m) =>
         (!words || [m.name, m.supplier, m.note].some((t) => t?.toLowerCase().includes(words)))
         && (!supplier || m.supplier === supplier)
-        && (!profit || PROFITS[profit][1](marginOf(m).amount))
-        && (sentTo === "all" || (sentTo === "sent") === !!m.sentOn));
-    const sent = items.filter((m) => m.sentOn);
-    const clear = () => { setQ(""); setSupplier(""); setProfit(""); setSentTo("all"); };
+        && (!profit || PROFITS[profit][1](marginOf(m).amount)));
+    const clear = () => { setQ(""); setSupplier(""); setProfit(""); };
     const total = (list: Material[]) => list.reduce((t, m) => ({ cost: t.cost + m.cost, price: t.price + (m.clientPrice ?? 0) }), { cost: 0, price: 0 });
-    const all = total(items), sentTotal = total(sent);
+    const all = total(items);
 
     return (
         <div className="panel mt">
             <div className="panel-head">
                 <div>
                     <div className="panel-title">Material margins</div>
-                    <div className="panel-sub">What the supplier charged against what the client is charged, material by material. A price becomes revenue once a statement sends it to the client.</div>
+                    <div className="panel-sub">What the supplier charged against what the client is charged, material by material.</div>
                 </div>
             </div>
             {loadFailed(query) ? <div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the materials" /></div>
@@ -75,9 +70,6 @@ export default function MaterialMargins({ project }: { project: Project }) {
                             )}
                             <Select className="select sm" aria-label="Margins by profit" value={profit} onChange={setProfit}
                                 options={[{ value: "", label: "Any profit or none" }, ...Object.entries(PROFITS).map(([k, [label]]) => ({ value: k, label }))]} />
-                            <ChipGroup aria-label="Sent to the client" value={sentTo} onChange={setSentTo} options={[
-                                { value: "all", label: "All" }, { value: "sent", label: "Sent" }, { value: "unsent", label: "Not sent" },
-                            ]} />
                             {filtering && <button className="btn btn-sm btn-quiet" onClick={clear}><Icon name="x" />Clear</button>}
                             <span className="grow" />
                             {filtering && <span className="muted" style={{ fontSize: 12 }}>{items.length} of {priced.length} shown</span>}
@@ -88,7 +80,7 @@ export default function MaterialMargins({ project }: { project: Project }) {
                                 <thead>
                                     <tr>
                                         <th>Material</th><th>Supplier</th><th className="r">Supplier cost</th><th className="r">Client price</th>
-                                        <th className="r">Profit</th><th className="r">%</th><th>Sent to client</th>
+                                        <th className="r">Profit</th><th className="r">%</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -107,27 +99,17 @@ export default function MaterialMargins({ project }: { project: Project }) {
                                                 <td className="r mono">{money.exact(m.clientPrice ?? 0)}</td>
                                                 <td className={cx("r mono", margin.amount < 0 ? "down" : margin.amount > 0 && "up")}>{margin.amount >= 0 ? "+" : "−"}{money.exact(Math.abs(margin.amount))}</td>
                                                 <td className={cx("r mono", margin.amount < 0 && "down")}>{margin.share == null ? "-" : pctOf(margin.share)}</td>
-                                                <td>{m.sentOn ? <span className="badge badge-active">Sent {fmtDate(m.sentOn)}</span> : <span className="badge badge-hold">Not yet</span>}</td>
                                             </tr>
                                         );
                                     })}
                                 </tbody>
                                 <tfoot>
                                     <tr className="tfoot-row">
-                                        <td colSpan={2}><b>Sent to the client</b><div className="muted" style={{ fontSize: 11, fontWeight: 400 }}>{sent.length} of {items.length}{filtering ? " shown" : ""} · counted in revenue</div></td>
-                                        <td className="r mono">{money.exact(sentTotal.cost)}</td>
-                                        <td className="r mono">{money.exact(sentTotal.price)}</td>
-                                        <td className={cx("r mono", sentTotal.price < sentTotal.cost && "down")}>{money.exact(sentTotal.price - sentTotal.cost)}</td>
-                                        <td className="r mono">{sentTotal.cost > 0 ? pctOf((sentTotal.price - sentTotal.cost) / sentTotal.cost) : "-"}</td>
-                                        <td />
-                                    </tr>
-                                    <tr className="tfoot-row">
                                         <td colSpan={2}><b>{filtering ? "The materials shown" : "Every material"}</b></td>
                                         <td className="r mono">{money.exact(all.cost)}</td>
                                         <td className="r mono">{money.exact(all.price)}</td>
                                         <td className={cx("r mono", all.price < all.cost && "down")} style={{ fontWeight: 700 }}>{money.exact(all.price - all.cost)}</td>
                                         <td className="r mono">{all.cost > 0 ? pctOf((all.price - all.cost) / all.cost) : "-"}</td>
-                                        <td />
                                     </tr>
                                 </tfoot>
                             </table>

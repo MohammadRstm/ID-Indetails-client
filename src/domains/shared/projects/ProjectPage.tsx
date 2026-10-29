@@ -34,14 +34,11 @@ import ClientTypeModal from "../../design/projects/money/ClientTypeModal";
 import PaymentModal from "../../design/projects/money/PaymentModal";
 import { staffDiscussion } from "../../design/projects/portal/staffDiscussion";
 import ReportModal from "../../design/projects/report/ReportModal";
-import { useMaterials } from "../../execution/materials/materialsApi";
 import PricingModal from "../../execution/projects/PricingModal";
 import PaymentHistoryModal from "./PaymentHistoryModal";
 import SendQuoteModal from "../billing/SendQuoteModal";
 import BlockedChangeModal from "./BlockedChangeModal";
 import { AskPocketModal, MoveToPocketModal } from "../../execution/pocket/PocketActions";
-import StatementHost from "../../execution/statements/StatementHost";
-import { useStatementLinks } from "../../execution/statements/statementLinks";
 import CompleteProjectModal from "./CompleteProjectModal";
 import { useUrlFlag } from "@/shared/hooks/useUrlFlag";
 import EditProjectModal from "./EditProjectModal";
@@ -191,10 +188,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const canNewInvoice = client && permissions.has(P.INVOICE_CREATE) && (bill?.notYetInvoiced ?? 0) - (bill?.drafts ?? 0) > 0.5;
     // a payment needs no invoice: it is held on account until an invoice is issued
     const canRecordPayment = client && permissions.has(P.PAYMENT_RECORD);
-    const materialCount = useMaterials(project.id, {}, site && client && permissions.has(P.STATEMENT_CREATE)).data?.all.count ?? 0;
-    const canStatement = site && client && permissions.has(P.STATEMENT_CREATE) && materialCount > 0;
-    const statements = useStatementLinks();
-    const moneyItems = canAddExpense || canEditBilling || canEditPricing || canStatement || canNewInvoice || canRecordPayment || canUsePocket;
+    const moneyItems = canAddExpense || canEditBilling || canEditPricing || canNewInvoice || canRecordPayment || canUsePocket;
     // name, description, location and target date, while the project is open
     const canEditDetails = permissions.has(P.PROJECT_EDIT) && project.status !== "completed" && project.status !== "archived";
 
@@ -303,7 +297,6 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                     {canEditPayment && <button className="pop-item" onClick={() => { close(); openMoney("payment"); }}><Icon name="card" />Edit customer payment</button>}
                                     {canEditBilling && <button className="pop-item" onClick={() => { close(); openMoney("client"); }}><Icon name="user" />Client & type</button>}
                                     {canEditPricing && <button className="pop-item" onClick={() => { close(); openMoney("pricing"); }}><Icon name="card" />Pricing</button>}
-                                    {canStatement && <button className="pop-item" onClick={() => { close(); statements.newStatement(); }}><Icon name="file" />Client statement</button>}
                                     {canNewInvoice && <button className="pop-item" onClick={() => { close(); billing.newInvoice(); }}><Icon name="file" />New invoice</button>}
                                     {canRecordPayment && <button className="pop-item" onClick={() => { close(); billing.recordPayment(); }}><Icon name="card" />Record a client payment</button>}
                                     {canUsePocket && <button className="pop-item" onClick={() => { close(); openMoney("to-pocket"); }}><Icon name="arrowRight" />Move to pocket money</button>}
@@ -380,7 +373,6 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {moneyAction === "to-pocket" && canUsePocket && <MoveToPocketModal project={project} onClose={closeMoney} />}
             {moneyAction === "ask-pocket" && canUsePocket && <AskPocketModal project={project} onClose={closeMoney} />}
             <BillingModalHost project={project} />
-            {site && <StatementHost project={project} />}
             {showReport && canReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}
             {editing && canEditDetails && <EditProjectModal project={project} onClose={() => setEditing(false)} />}
         </div>

@@ -10,12 +10,12 @@ import { renderApp } from "@/test/renderApp";
 
 // An Execution admin a super admin has handed the money to: admins don't hold it by default
 const karim = withPermissions(personas.executionAdmin, { grant: MONEY_AND_HIRING });
-// Mar Mikhael loft renovation: four materials, none on a statement yet
+// Mar Mikhael loft renovation: four materials
 const open = site.losingProject;
 // the materials are on the Overview; someone who sees money opens on the Financials tab
 const openPath = `/execution/projects/${open.id}?tab=overview`;
-// Achrafieh Towers lobby: every material is on its client statement
-const statedPath = `/execution/projects/${site.project.id}?tab=overview`;
+// Achrafieh Towers lobby: four materials on a site with an agreed work price
+const pricedPath = `/execution/projects/${site.project.id}?tab=overview`;
 const plasterboard = site.openMaterials.items[0];
 
 beforeEach(() => {
@@ -132,15 +132,13 @@ describe("the materials on a site", () => {
         expect(saved).toEqual([]);
     });
 
-    it("keep the type, cost and price of what is on a client statement, and can't be removed", async () => {
-        renderApp(statedPath, karim, ...siteHandlers);
+    it("stay open to change and removal on a site with an agreed price", async () => {
+        renderApp(pricedPath, karim, ...siteHandlers);
         const p = await panel();
-        for (const cell of ["Type 1", "Qty 1", "Unit 1", "Unit cost 1", "Total 1"]) {
-            expect(await within(p).findByLabelText(cell)).toBeDisabled();
+        for (const cell of ["Type 1", "Qty 1", "Unit 1", "Unit cost 1", "Total 1", "Supplier 1", "Note 1"]) {
+            expect(await within(p).findByLabelText(cell)).toBeEnabled();
         }
-        expect(within(p).getByLabelText("Supplier 1")).toBeEnabled();
-        expect(within(p).getByLabelText("Note 1")).toBeEnabled();
-        expect(within(p).queryByRole("button", { name: "Delete row" })).not.toBeInTheDocument();
+        expect(within(p).getAllByRole("button", { name: "Delete row" })).toHaveLength(4);
     });
 
     it("lock what someone else added for people who may only change their own", async () => {
@@ -294,7 +292,7 @@ describe("the Add materials sheet", () => {
         expect(within(sheet).getByRole("button", { name: "Add 2 materials" })).toBeEnabled();
     });
 
-    it("takes no client price: the client is priced on the statement", async () => {
+    it("takes no client price", async () => {
         const added: { items: Record<string, unknown>[] }[] = [];
         renderApp(openPath, karim,
             http.post("/api/projects/:id/materials", async ({ request }) => { added.push(await request.json() as never); return HttpResponse.json([], { status: 201 }); }),

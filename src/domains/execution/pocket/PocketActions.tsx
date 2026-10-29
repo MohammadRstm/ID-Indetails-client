@@ -11,10 +11,9 @@ import Icon from "@/shared/icons/Icon";
 import type { Project } from "../../shared/projects/projectsApi";
 import { POCKET_NOTE_MAX, useAskPocket, useContributeToPocket } from "./pocketApi";
 
-/** The site's profit counting the materials not sent to the client yet, as the API checks it. */
+/** The site's profit, as the API checks it. */
 function profitOf(project: Project) {
-    const m = project.money;
-    return m ? m.profit + (m.unsentMaterialCharge ?? 0) : 0;
+    return project.money?.profit ?? 0;
 }
 
 /** Part of a site's money moved into the pocket money: less than its profit, so it stays above zero. */

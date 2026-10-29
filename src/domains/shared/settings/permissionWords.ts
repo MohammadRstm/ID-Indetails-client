@@ -34,7 +34,7 @@ export const PERMISSION_SECTIONS: PermissionSection[] = [
                 title: "Money & billing",
                 codes: [P.FINANCIAL_VIEW, P.INVOICE_CREATE, P.INVOICE_SEND, P.INVOICE_VOID, P.PAYMENT_RECORD, P.PAYMENT_VOID, P.EXPENSE_MANAGE, P.BILLING_SETTINGS_MANAGE],
             },
-            { title: "Site pricing & statements", codes: [P.PROJECT_PRICING_MANAGE, P.STATEMENT_CREATE, P.STATEMENT_SEND] },
+            { title: "Site pricing & BOQs", codes: [P.PROJECT_PRICING_MANAGE, P.BOQ_CREATE] },
         ],
     },
     {
