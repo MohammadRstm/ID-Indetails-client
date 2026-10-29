@@ -11,7 +11,7 @@ import summaryJson from "./executionMoney/summary.json";
 
 /*
  * Execution's money for 2026 to 30 September, captured from the seeded development API as Karim: three
- * sites, whose cost is materials and ground labour; nobody logs hours on them.
+ * sites, whose cost is site expenses and ground labour; nobody logs hours on them.
  */
 
 export const executionMoney = {

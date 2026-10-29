@@ -58,7 +58,7 @@ function Health({ x, timeline: { weeks, projection: pr } }: { x: SiteMoney; time
                     </div>
                     <div className={cx("xm-meter", tone)}><i style={{ width: `${used}%` }} /></div>
                     <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-                        {x.cashProfit < 0 ? "Ground labour and materials have cost more than the client has paid."
+                        {x.cashProfit < 0 ? "Ground labour and expenses have cost more than the client has paid."
                             : `Ground labour has used ${Math.round(used)}% of what the project could absorb before profit hits zero.`}
                     </div>
                     <div className="xm-owed mt">
@@ -90,7 +90,7 @@ function Health({ x, timeline: { weeks, projection: pr } }: { x: SiteMoney; time
                                 ≈ {plural(pr.workingDays ?? 0, "working day")} of ground labour at {plural(pr.workers, "worker")} × {money.exact(pr.dailyPay)} a day ({money.exact(pr.dailyCost)}/day)
                             </div>
                             {pr.zeroOnOncePaid && <div className="muted">Once the client pays everything agreed so far, the cushion lasts to about {fmtDayDate(pr.zeroOnOncePaid)}.</div>}
-                            <div className="hint">A projection, not a promise: it assumes the crew size, their pay and the money received stay as they are today, and no new materials.</div>
+                            <div className="hint">A projection, not a promise: it assumes the crew size, their pay and the money received stay as they are today, and no new expenses.</div>
                         </div>
                     )}
                 </div>

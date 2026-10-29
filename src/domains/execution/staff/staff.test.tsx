@@ -129,15 +129,15 @@ describe("a site staff member's daily log", () => {
 });
 
 describe("a site, for an Execution employee", () => {
-    it("is their labour and their logs, without materials or money", async () => {
+    it("is their labour and their logs, without expenses or money", async () => {
         const noMoney = { ...site.losingProject, money: null, staff: [{ id: tarek.id, name: "Tarek Nasser" }] };
         renderApp(`/execution/projects/${noMoney.id}`, tarek, http.get("/api/projects/:id", () => HttpResponse.json(noMoney)), ...siteHandlers);
         expect(await screen.findByText("Weekly labour")).toBeInTheDocument();
         expect(await screen.findByRole("form", { name: "Write a log" })).toBeInTheDocument();
         expect(within(screen.getByRole("form", { name: "Write a log" })).queryByLabelText("Site")).not.toBeInTheDocument();
-        expect(screen.queryByText("Materials", { selector: ".kpi-label" })).not.toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Add materials" })).not.toBeInTheDocument();
-        for (const text of ["Project money", "Client payments", "Charged to the client", "Client price", "Material profit", "Ground labour and profit"]) {
+        expect(screen.queryByText("Expenses", { selector: ".kpi-label" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Add expenses" })).not.toBeInTheDocument();
+        for (const text of ["Project money", "Client payments", "Charged to the client", "Client price", "Material profit", "Site expenses", "Ground labour and profit"]) {
             expect(screen.queryByText(text)).not.toBeInTheDocument();
         }
         expect(screen.queryByRole("button", { name: "More actions" })).not.toBeInTheDocument();
@@ -190,7 +190,7 @@ describe("an Execution person's profile", () => {
     it("shows what they recorded, and where", async () => {
         renderApp("/execution/profile", tarek, http.get("/api/me/site-records", () => HttpResponse.json(records)), ...siteHandlers);
         expect(await screen.findByText("Total recorded")).toBeInTheDocument();
-        expect(await screen.findByText("materials + labour weeks")).toBeInTheDocument();
+        expect(await screen.findByText("expenses + labour weeks")).toBeInTheDocument();
         const recent = (screen.getByText("Recent activity")).closest(".panel") as HTMLElement;
         expect(within(recent).getByText("Plasterboard · Mar Mikhael loft renovation")).toBeInTheDocument();
         const projects = (screen.getAllByText("Projects").find((e) => e.classList.contains("panel-title")))!.closest(".panel") as HTMLElement;

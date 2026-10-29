@@ -115,7 +115,7 @@ group("The bell", () => {
         const bell = await screen.findByRole("button", { name: "Notifications" });
         await waitFor(() => expect(bell.querySelector(".pip")).not.toBeNull());
         await userEvent.click(bell);
-        expect(await screen.findByText("Karim Jaber added 1 material to Mar Mikhael loft renovation")).toBeInTheDocument();
+        expect(await screen.findByText("Karim Jaber added 1 expense to Mar Mikhael loft renovation")).toBeInTheDocument();
         expect(screen.getByText(/· 30 unread/)).toBeInTheDocument();
         // the panel's two ways on stand out, in the primary colour
         expect(screen.getByRole("button", { name: "Mark all read" })).toHaveClass("btn", "btn-primary", "btn-sm");

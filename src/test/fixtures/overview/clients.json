@@ -14,7 +14,7 @@
       "cost": {
         "labour": 3072.92,
         "expenses": 600,
-        "materials": 0,
+        "siteExpenses": 0,
         "groundLabour": 0,
         "total": 3672.92,
         "unconverted": [],
@@ -52,7 +52,7 @@
       "cost": {
         "labour": 2659.72,
         "expenses": 250,
-        "materials": 0,
+        "siteExpenses": 0,
         "groundLabour": 0,
         "total": 2909.72,
         "unconverted": [],
@@ -90,7 +90,7 @@
       "cost": {
         "labour": 1915.48,
         "expenses": 155,
-        "materials": 0,
+        "siteExpenses": 0,
         "groundLabour": 0,
         "total": 2070.48,
         "unconverted": [],
@@ -128,7 +128,7 @@
       "cost": {
         "labour": 1560.67,
         "expenses": 640,
-        "materials": 0,
+        "siteExpenses": 0,
         "groundLabour": 0,
         "total": 2200.67,
         "unconverted": [],
@@ -166,7 +166,7 @@
       "cost": {
         "labour": 1387.75,
         "expenses": 0,
-        "materials": 0,
+        "siteExpenses": 0,
         "groundLabour": 0,
         "total": 1387.75,
         "unconverted": [],

@@ -186,7 +186,7 @@ export const people: Article[] = [
             list(
                 "**Super admin**: everything, in both businesses and the company pages (salaries, company expenses, schedules, company settings, permissions).",
                 "**Admin**: runs one business: projects, clients, money, invoices, people and its settings. Not the company pages.",
-                "**Employee**: their own work: their projects and requirements, meetings, and in Design their hours and pay, in Execution the site's materials and labour. Never money.",
+                "**Employee**: their own work: their projects and requirements, meetings, and in Design their hours and pay, in Execution the site's expenses and labour. Never money.",
             ),
             para("Design and Execution are run separately; people of one never see the other, unless they're given a permission there."),
             links(link("My permissions", { profile: true })),

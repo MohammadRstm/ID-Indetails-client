@@ -9544,7 +9544,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    AccountLabelId?: number;
                     AddedById?: number;
+                    Category?: components["schemas"]["SiteExpenseCategory"];
                     From?: string;
                     Page?: number;
                     PageSize?: number;
@@ -9567,9 +9569,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["MaterialListResponse"];
-                        "text/json": components["schemas"]["MaterialListResponse"];
-                        "text/plain": components["schemas"]["MaterialListResponse"];
+                        "application/json": components["schemas"]["SiteExpenseListResponse"];
+                        "text/json": components["schemas"]["SiteExpenseListResponse"];
+                        "text/plain": components["schemas"]["SiteExpenseListResponse"];
                     };
                 };
             };
@@ -9586,9 +9588,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/*+json": components["schemas"]["AddMaterialsRequest"];
-                    "application/json": components["schemas"]["AddMaterialsRequest"];
-                    "text/json": components["schemas"]["AddMaterialsRequest"];
+                    "application/*+json": components["schemas"]["AddSiteExpensesRequest"];
+                    "application/json": components["schemas"]["AddSiteExpensesRequest"];
+                    "text/json": components["schemas"]["AddSiteExpensesRequest"];
                 };
             };
             responses: {
@@ -9598,9 +9600,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["MaterialResponse"][];
-                        "text/json": components["schemas"]["MaterialResponse"][];
-                        "text/plain": components["schemas"]["MaterialResponse"][];
+                        "application/json": components["schemas"]["SiteExpenseResponse"][];
+                        "text/json": components["schemas"]["SiteExpenseResponse"][];
+                        "text/plain": components["schemas"]["SiteExpenseResponse"][];
                     };
                 };
             };
@@ -9611,7 +9613,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/projects/{projectId}/materials/{materialId}": {
+    "/api/projects/{projectId}/materials/{expenseId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -9624,16 +9626,16 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    materialId: number;
+                    expenseId: number;
                     projectId: number;
                 };
                 cookie?: never;
             };
             requestBody: {
                 content: {
-                    "application/*+json": components["schemas"]["MaterialEntryRequest"];
-                    "application/json": components["schemas"]["MaterialEntryRequest"];
-                    "text/json": components["schemas"]["MaterialEntryRequest"];
+                    "application/*+json": components["schemas"]["SiteExpenseEntryRequest"];
+                    "application/json": components["schemas"]["SiteExpenseEntryRequest"];
+                    "text/json": components["schemas"]["SiteExpenseEntryRequest"];
                 };
             };
             responses: {
@@ -9643,9 +9645,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["MaterialResponse"];
-                        "text/json": components["schemas"]["MaterialResponse"];
-                        "text/plain": components["schemas"]["MaterialResponse"];
+                        "application/json": components["schemas"]["SiteExpenseResponse"];
+                        "text/json": components["schemas"]["SiteExpenseResponse"];
+                        "text/plain": components["schemas"]["SiteExpenseResponse"];
                     };
                 };
             };
@@ -9656,7 +9658,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    materialId: number;
+                    expenseId: number;
                     projectId: number;
                 };
                 cookie?: never;
@@ -9672,52 +9674,6 @@ export interface paths {
                 };
             };
         };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{projectId}/materials/{materialId}/client-price": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    materialId: number;
-                    projectId: number;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/*+json": components["schemas"]["SetMaterialPriceRequest"];
-                    "application/json": components["schemas"]["SetMaterialPriceRequest"];
-                    "text/json": components["schemas"]["SetMaterialPriceRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["MaterialResponse"];
-                        "text/json": components["schemas"]["MaterialResponse"];
-                        "text/plain": components["schemas"]["MaterialResponse"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -11323,6 +11279,151 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/site-expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    AccountLabelId?: number;
+                    AddedById?: number;
+                    Category?: components["schemas"]["SiteExpenseCategory"];
+                    From?: string;
+                    Page?: number;
+                    PageSize?: number;
+                    Search?: string;
+                    Supplier?: string;
+                    To?: string;
+                    Type?: string;
+                };
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SiteExpenseListResponse"];
+                        "text/json": components["schemas"]["SiteExpenseListResponse"];
+                        "text/plain": components["schemas"]["SiteExpenseListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["AddSiteExpensesRequest"];
+                    "application/json": components["schemas"]["AddSiteExpensesRequest"];
+                    "text/json": components["schemas"]["AddSiteExpensesRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SiteExpenseResponse"][];
+                        "text/json": components["schemas"]["SiteExpenseResponse"][];
+                        "text/plain": components["schemas"]["SiteExpenseResponse"][];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/site-expenses/{expenseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    expenseId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SiteExpenseEntryRequest"];
+                    "application/json": components["schemas"]["SiteExpenseEntryRequest"];
+                    "text/json": components["schemas"]["SiteExpenseEntryRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SiteExpenseResponse"];
+                        "text/json": components["schemas"]["SiteExpenseResponse"];
+                        "text/plain": components["schemas"]["SiteExpenseResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    expenseId: number;
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -15025,6 +15126,11 @@ export interface components {
         AccountLabelOrderRequest: {
             ids?: number[];
         };
+        AccountLabelRefResponse: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+        };
         AccountLabelRequest: {
             name?: string;
         };
@@ -15094,8 +15200,8 @@ export interface components {
             month?: string;
             note?: null | string;
         };
-        AddMaterialsRequest: {
-            items?: components["schemas"]["NewMaterialRequest"][];
+        AddSiteExpensesRequest: {
+            items?: components["schemas"]["NewSiteExpenseRequest"][];
         };
         AddWorkEntryCommentRequest: {
             body?: string;
@@ -15826,7 +15932,7 @@ export interface components {
             lineIds?: null | number[];
         };
         /** @enum {unknown} */
-        CostSource: "labour" | "expenses" | "materials" | "ground_labour";
+        CostSource: "labour" | "expenses" | "site_expense" | "ground_labour";
         CostWeekResponse: {
             /** Format: double */
             collectedToDate: number;
@@ -15899,8 +16005,6 @@ export interface components {
             icon?: null | string;
             labourDefaults?: null | components["schemas"]["SetLabourDefaultsRequest"];
             location?: null | string;
-            /** Format: double */
-            materialMarkup?: null | number;
             /** Format: int64 */
             ownerId?: null | number;
             /** Format: double */
@@ -16720,63 +16824,6 @@ export interface components {
              */
             startMinute: null | number;
         };
-        MaterialEntryRequest: {
-            /** Format: double */
-            amount?: null | number;
-            name?: string;
-            note?: null | string;
-            /** Format: double */
-            quantity?: null | number;
-            supplier?: null | string;
-            unit?: null | string;
-            /** Format: double */
-            unitCost?: null | number;
-        };
-        MaterialListResponse: {
-            addedBy: components["schemas"]["PersonRefResponse"][];
-            all: components["schemas"]["MaterialTotalsResponse"];
-            canAdd: boolean;
-            /** Format: double */
-            defaultMarkup: null | number;
-            items: components["schemas"]["MaterialResponse"][];
-            matching: components["schemas"]["MaterialTotalsResponse"];
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            pageSize: number;
-            suppliers: components["schemas"]["MaterialSupplierResponse"][];
-            /** Format: int32 */
-            totalCount: number;
-            types: components["schemas"]["MaterialTypeResponse"][];
-        };
-        MaterialResponse: {
-            /** Format: date-time */
-            addedAt: string;
-            addedBy: components["schemas"]["PersonRefResponse"];
-            /** Format: date */
-            addedOn: string;
-            canEdit: boolean;
-            /** Format: double */
-            clientPrice: null | number;
-            /** Format: double */
-            cost: number;
-            currency: string;
-            /** Format: int64 */
-            id: number;
-            /** Format: double */
-            markup: null | number;
-            name: string;
-            note: null | string;
-            priceSource: null | components["schemas"]["PriceSource"];
-            /** Format: double */
-            quantity: null | number;
-            supplier: null | string;
-            unit: null | string;
-            /** Format: double */
-            unitCost: null | number;
-            /** Format: date-time */
-            updatedAt: null | string;
-        };
         MaterialRowFill: {
             note: null | string;
             /** Format: double */
@@ -16789,26 +16836,6 @@ export interface components {
         };
         MaterialsFill: {
             rows: null | components["schemas"]["MaterialRowFill"][];
-        };
-        MaterialSupplierResponse: {
-            key: string;
-            label: string;
-        };
-        MaterialTotalsResponse: {
-            /** Format: double */
-            charge: null | number;
-            /** Format: double */
-            cost: number;
-            /** Format: int32 */
-            count: number;
-        };
-        MaterialTypeResponse: {
-            /** Format: double */
-            cost: number;
-            /** Format: int32 */
-            count: number;
-            key: string;
-            label: string;
         };
         MeetingFill: {
             /** Format: date */
@@ -17225,22 +17252,6 @@ export interface components {
             status: components["schemas"]["ProjectStatus"];
             title: string;
         };
-        NewMaterialRequest: {
-            /** Format: double */
-            amount?: null | number;
-            /** Format: double */
-            clientPrice?: null | number;
-            /** Format: uuid */
-            clientRef?: null | string;
-            name?: string;
-            note?: null | string;
-            /** Format: double */
-            quantity?: null | number;
-            supplier?: null | string;
-            unit?: null | string;
-            /** Format: double */
-            unitCost?: null | number;
-        };
         NewProjectFill: {
             /**
              * Format: int64
@@ -17252,6 +17263,26 @@ export interface components {
             /** Format: date */
             targetDate: null | string;
             title: null | string;
+        };
+        NewSiteExpenseRequest: {
+            /** Format: int64 */
+            accountLabelId?: null | number;
+            /** Format: double */
+            amount?: null | number;
+            category?: null | components["schemas"]["SiteExpenseCategory"];
+            /** Format: uuid */
+            clientRef?: null | string;
+            currency?: null | string;
+            name?: string;
+            note?: null | string;
+            /** Format: double */
+            quantity?: null | number;
+            /** Format: date */
+            spentOn?: null | string;
+            supplier?: null | string;
+            unit?: null | string;
+            /** Format: double */
+            unitCost?: null | number;
         };
         /** @enum {unknown} */
         NotificationCategory: "work" | "requirements" | "projects" | "meetings" | "sites" | "money" | "people" | "messages";
@@ -18170,8 +18201,6 @@ export interface components {
             items: components["schemas"]["PresentationItemResponse"][];
             section: components["schemas"]["PortalSection"];
         };
-        /** @enum {unknown} */
-        PriceSource: "auto" | "manual" | null;
         ProfileFill: {
             firstName: null | string;
             lastName: null | string;
@@ -18258,7 +18287,7 @@ export interface components {
             /** Format: double */
             labour: number;
             /** Format: double */
-            materials: number;
+            siteExpenses: number;
             /** Format: double */
             total: number;
             unconverted: components["schemas"]["UnconvertedCostResponse"][];
@@ -18438,8 +18467,6 @@ export interface components {
             labourHours: number;
             /** Format: double */
             margin: null | number;
-            /** Format: double */
-            materialMarkup: null | number;
             /** Format: double */
             paymentWithTva: number;
             /** Format: double */
@@ -19819,10 +19846,6 @@ export interface components {
             /** Format: int32 */
             workers?: number;
         };
-        SetMaterialPriceRequest: {
-            /** Format: double */
-            clientPrice?: null | number;
-        };
         SetScheduleRequest: {
             days?: components["schemas"]["ScheduleDayRequest"][];
             /** Format: date */
@@ -19844,6 +19867,87 @@ export interface components {
             /** Format: int32 */
             startMinute?: number;
             workDays?: number[];
+        };
+        /** @enum {unknown} */
+        SiteExpenseCategory: "materials" | "contractor" | "equipment" | "fees" | "other";
+        SiteExpenseEntryRequest: {
+            /** Format: int64 */
+            accountLabelId?: null | number;
+            /** Format: double */
+            amount?: null | number;
+            category?: null | components["schemas"]["SiteExpenseCategory"];
+            currency?: null | string;
+            name?: string;
+            note?: null | string;
+            /** Format: double */
+            quantity?: null | number;
+            /** Format: date */
+            spentOn?: null | string;
+            supplier?: null | string;
+            unit?: null | string;
+            /** Format: double */
+            unitCost?: null | number;
+        };
+        SiteExpenseListResponse: {
+            addedBy: components["schemas"]["PersonRefResponse"][];
+            all: components["schemas"]["SiteExpenseTotalsResponse"];
+            canAdd: boolean;
+            items: components["schemas"]["SiteExpenseResponse"][];
+            matching: components["schemas"]["SiteExpenseTotalsResponse"];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            suppliers: components["schemas"]["SiteExpenseSupplierResponse"][];
+            /** Format: int32 */
+            totalCount: number;
+            types: components["schemas"]["SiteExpenseTypeResponse"][];
+        };
+        SiteExpenseResponse: {
+            accountLabel: null | components["schemas"]["AccountLabelRefResponse"];
+            /** Format: date-time */
+            addedAt: string;
+            addedBy: components["schemas"]["PersonRefResponse"];
+            /** Format: date */
+            addedOn: string;
+            canEdit: boolean;
+            category: components["schemas"]["SiteExpenseCategory"];
+            /** Format: double */
+            cost: number;
+            currency: string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            note: null | string;
+            /** Format: double */
+            quantity: null | number;
+            /** Format: date */
+            spentOn: string;
+            supplier: null | string;
+            unit: null | string;
+            /** Format: double */
+            unitCost: null | number;
+            /** Format: date-time */
+            updatedAt: null | string;
+        };
+        SiteExpenseSupplierResponse: {
+            key: string;
+            label: string;
+        };
+        SiteExpenseTotalsResponse: {
+            byCurrency: components["schemas"]["CurrencyTotalResponse"][];
+            /** Format: double */
+            cost: number;
+            /** Format: int32 */
+            count: number;
+        };
+        SiteExpenseTypeResponse: {
+            /** Format: double */
+            cost: number;
+            /** Format: int32 */
+            count: number;
+            key: string;
+            label: string;
         };
         SiteLogProjectResponse: {
             /** Format: int64 */
@@ -20179,8 +20283,6 @@ export interface components {
         };
         UpdateProjectPricingRequest: {
             description?: string;
-            /** Format: double */
-            materialMarkup?: number;
             /** Format: double */
             projectFee?: null | number;
             /** Format: double */

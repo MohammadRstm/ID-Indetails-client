@@ -10,6 +10,9 @@
       "currency": "USD",
       "supplier": "Gypsum Lb",
       "note": null,
+      "spentOn": "2026-09-30",
+      "category": "materials",
+      "accountLabel": null,
       "addedAt": "2026-09-30T04:52:53.253Z",
       "addedOn": "2026-09-30",
       "addedBy": {
@@ -17,10 +20,7 @@
         "name": "Nour Aziz"
       },
       "updatedAt": null,
-      "canEdit": true,
-      "clientPrice": 1188,
-      "priceSource": "auto",
-      "markup": 0.2
+      "canEdit": true
     },
     {
       "id": 7,
@@ -32,6 +32,9 @@
       "currency": "USD",
       "supplier": "Sipes",
       "note": null,
+      "spentOn": "2026-09-30",
+      "category": "materials",
+      "accountLabel": null,
       "addedAt": "2026-09-30T04:52:53.253Z",
       "addedOn": "2026-09-30",
       "addedBy": {
@@ -39,10 +42,7 @@
         "name": "Nour Aziz"
       },
       "updatedAt": null,
-      "canEdit": true,
-      "clientPrice": 1008,
-      "priceSource": "auto",
-      "markup": 0.2
+      "canEdit": true
     },
     {
       "id": 6,
@@ -54,6 +54,9 @@
       "currency": "USD",
       "supplier": "Tile House",
       "note": null,
+      "spentOn": "2026-09-30",
+      "category": "materials",
+      "accountLabel": null,
       "addedAt": "2026-09-30T04:52:53.253Z",
       "addedOn": "2026-09-30",
       "addedBy": {
@@ -61,10 +64,7 @@
         "name": "Nour Aziz"
       },
       "updatedAt": null,
-      "canEdit": true,
-      "clientPrice": 4752,
-      "priceSource": "auto",
-      "markup": 0.2
+      "canEdit": true
     },
     {
       "id": 5,
@@ -76,6 +76,9 @@
       "currency": "USD",
       "supplier": "Steel Co",
       "note": null,
+      "spentOn": "2026-09-30",
+      "category": "materials",
+      "accountLabel": null,
       "addedAt": "2026-09-30T04:52:53.253Z",
       "addedOn": "2026-09-30",
       "addedBy": {
@@ -83,10 +86,7 @@
         "name": "Nour Aziz"
       },
       "updatedAt": null,
-      "canEdit": true,
-      "clientPrice": 1123.2,
-      "priceSource": "auto",
-      "markup": 0.2
+      "canEdit": true
     }
   ],
   "page": 1,
@@ -95,12 +95,22 @@
   "matching": {
     "count": 4,
     "cost": 6726,
-    "charge": 8071.2
+    "byCurrency": [
+      {
+        "currency": "USD",
+        "total": 6726
+      }
+    ]
   },
   "all": {
     "count": 4,
     "cost": 6726,
-    "charge": 8071.2
+    "byCurrency": [
+      {
+        "currency": "USD",
+        "total": 6726
+      }
+    ]
   },
   "types": [
     {
@@ -152,6 +162,5 @@
       "name": "Nour Aziz"
     }
   ],
-  "canAdd": true,
-  "defaultMarkup": 0.2
+  "canAdd": true
 }

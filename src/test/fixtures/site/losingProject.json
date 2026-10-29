@@ -45,7 +45,6 @@
     "supervisionRate": 0.1,
     "supervisionUsd": 800,
     "projectFee": 8000,
-    "materialMarkup": 0.2,
     "expenseTotals": [],
     "billing": {
       "invoiced": 0,
@@ -67,7 +66,7 @@
     "cost": {
       "labour": 0,
       "expenses": 0,
-      "materials": 6726,
+      "siteExpenses": 6726,
       "groundLabour": 3125,
       "total": 9851,
       "unconverted": [],

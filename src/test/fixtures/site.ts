@@ -8,9 +8,9 @@ import labourWeekJson from "./site/labourWeek.json";
 import labourWeekOpenJson from "./site/labourWeekOpen.json";
 import labourWeeksJson from "./site/labourWeeks.json";
 import losingProjectJson from "./site/losingProject.json";
+import expensesJson from "./site/expenses.json";
 import losingTimelineJson from "./site/losingTimeline.json";
-import materialsJson from "./site/materials.json";
-import openMaterialsJson from "./site/openMaterials.json";
+import openExpensesJson from "./site/openExpenses.json";
 import paymentsJson from "./site/payments.json";
 import projectJson from "./site/project.json";
 import requirementsJson from "./site/requirements.json";
@@ -19,13 +19,14 @@ import timelineJson from "./site/timeline.json";
 /*
  * Execution sites as Karim sees them, captured from the seeded development API on 30 September 2026.
  * Achrafieh Towers lobby (project 7): $10,000 received up front against $9,036 spent, one invoice sent,
- * four materials and four weeks of ground labour; its profit reaches zero
+ * four expenses and four weeks of ground labour; its profit reaches zero
  * on 8 October at six workers × $25. Mar Mikhael loft renovation (project 8) is losing money.
+ * The expenses were captured as materials and carry no client price any more.
  */
 
 export const site = {
     project: projectJson as unknown as Schemas["ProjectResponse"],
-    materials: materialsJson as unknown as Schemas["MaterialListResponse"],
+    expenses: expensesJson as unknown as Schemas["SiteExpenseListResponse"],
     labourWeeks: labourWeeksJson as unknown as Schemas["LabourWeekListResponse"],
     /** The week of 21 September, reported. */
     labourWeek: labourWeekJson as unknown as Schemas["LabourWeekResponse"],
@@ -38,7 +39,13 @@ export const site = {
     requirements: requirementsJson as unknown as Schemas["RequirementListResponse"],
     losingProject: losingProjectJson as unknown as Schemas["ProjectResponse"],
     losingTimeline: losingTimelineJson as unknown as Schemas["SiteMoneyTimelineResponse"],
-    openMaterials: openMaterialsJson as unknown as Schemas["MaterialListResponse"],
+    openExpenses: openExpensesJson as unknown as Schemas["SiteExpenseListResponse"],
+    /** The company's account labels a payment or an expense is filed under (the seeded three). */
+    accountLabels: [
+        { id: 1, name: "Concrete", position: 1, archived: false },
+        { id: 2, name: "Finishing", position: 2, archived: false },
+        { id: 3, name: "Permits", position: 3, archived: false },
+    ] as Schemas["AccountLabelResponse"][],
 };
 
 const losing = (id: unknown) => String(id) === String(site.losingProject.id);
@@ -55,7 +62,8 @@ export const siteStaff = [
 export const siteHandlers = [
     http.get("/api/projects/totals", () => HttpResponse.json({})),
     http.get("/api/projects/:id", ({ params }) => HttpResponse.json(losing(params.id) ? site.losingProject : site.project)),
-    http.get("/api/projects/:id/materials", ({ params }) => HttpResponse.json(losing(params.id) ? site.openMaterials : site.materials)),
+    http.get("/api/projects/:id/site-expenses", ({ params }) => HttpResponse.json(losing(params.id) ? site.openExpenses : site.expenses)),
+    http.get("/api/account-labels", () => HttpResponse.json(site.accountLabels)),
     http.get("/api/projects/:id/labour-weeks", () => HttpResponse.json(site.labourWeeks)),
     http.get("/api/projects/:id/labour-weeks/:weekStart", ({ params }) =>
         HttpResponse.json(params.weekStart === site.labourWeek.weekStart ? site.labourWeek : site.labourWeekOpen)),

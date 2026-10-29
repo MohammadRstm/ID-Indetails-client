@@ -26,7 +26,7 @@ export default function WorkPriceSection({ project, onEdit, onHistory }: WorkPri
                         {price > 0 ? <b className="mono pay-amount">{money.exact(price)}</b> : <span className="muted">Set when a BOQ is agreed</span>}
                         {m.isLocked ? <span className="locked-field"><Icon name="lock" style={{ width: 12, height: 12 }} />locked</span>
                             : onEdit && (
-                                <button className="icon-btn" aria-label="Edit pricing" title="Change the supervision, TVA and material profit" onClick={onEdit}>
+                                <button className="icon-btn" aria-label="Edit pricing" title="Change the supervision and TVA" onClick={onEdit}>
                                     <Icon name="edit" />
                                 </button>
                             )}

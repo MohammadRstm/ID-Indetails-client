@@ -14,7 +14,7 @@ export function useSiteTimeline(projectId: number, enabled: boolean) {
     });
 }
 
-/** The project fee and the default material markup, which re-prices the materials still on it (project:pricing_manage). */
+/** The supervision rate and the TVA, with why they change (project:pricing_manage). The work price comes from agreed BOQs. */
 export function useSetPricing(projectId: number) {
     const invalidate = useInvalidate();
     return useMutation({

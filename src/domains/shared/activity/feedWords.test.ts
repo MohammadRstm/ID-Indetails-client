@@ -91,6 +91,20 @@ describe("what the activity feed says", () => {
         expect(boq("boq_agreement_withdrawn", { kind: "vo", number: "VO-2026-001" })).toBe("withdrew the agreement of VO-2026-001 on Achrafieh Towers lobby");
     });
 
+    it("words a site expense in its own currency, dollars when the event carries none", () => {
+        const site = { domain: "execution", project: { id: 7, name: "Achrafieh Towers lobby" } };
+        const expense = (kind: string, payload: Record<string, unknown> | null, extra: Partial<FeedEvent> = {}) =>
+            say(event(kind, { ...site, subjectType: "material", subjectId: 3, payload, ...extra }));
+        expect(expense("material_added", { name: "Crane hire" }, { amount: 1200 })).toBe("added Crane hire to Achrafieh Towers lobby - $1.2k");
+        expect(expense("material_added", { name: "Crane hire", currency: "USD" }, { amount: 1200 })).toBe("added Crane hire to Achrafieh Towers lobby - $1.2k");
+        expect(expense("material_added", { name: "Scaffolding", currency: "LBP" }, { amount: 895000 })).toBe("added Scaffolding to Achrafieh Towers lobby - 895k LBP");
+        expect(expense("material_updated", { name: "Scaffolding", currency: "LBP" }, { amount: 4500000 })).toBe("updated Scaffolding on Achrafieh Towers lobby - 4.5M LBP");
+        // without financial:view there is no amount, whatever the currency
+        expect(expense("material_updated", { name: "Scaffolding", currency: "LBP" })).toBe("updated Scaffolding on Achrafieh Towers lobby");
+        expect(expense("material_removed", { name: "Crane hire", currency: "LBP" }, { amount: 5 })).toBe("removed Crane hire from Achrafieh Towers lobby");
+        expect(expense("material_added", null)).toBe("added an expense to Achrafieh Towers lobby");
+    });
+
     it("words a client portal publish with what it changed, when the event says", () => {
         const published = (payload: Record<string, unknown> | null) => feedWords(event("portal_published", { payload }), names);
         expect(published({ added: 2, updated: 1, removed: 1 })).toEqual({ icon: "send", text: "published the client portal of Beit Misk show apartment (2 new, 1 updated, 1 removed)" });

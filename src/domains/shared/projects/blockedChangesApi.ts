@@ -14,7 +14,7 @@ export function useBlockedChange(id: number | null) {
 }
 
 /**
- * Forcing or dismissing it. Forcing makes the change itself (an expense, materials, a labour week, hours, a payment),
+ * Forcing or dismissing it. Forcing makes the change itself (an expense, site expenses, a labour week, hours, a payment),
  * so whatever the project shows may change: everything is read again.
  */
 function useDecide(action: "force" | "dismiss") {

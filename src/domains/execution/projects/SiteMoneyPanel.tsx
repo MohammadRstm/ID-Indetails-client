@@ -7,8 +7,7 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { usePayments } from "../../shared/billing/billingApi";
 import type { Project } from "../../shared/projects/projectsApi";
-import { useAllMaterials } from "../materials/materialsApi";
-import { pctOf, SITE_COLORS, siteMoneyOf } from "./siteMoney";
+import { SITE_COLORS, siteMoneyOf } from "./siteMoney";
 import HelpHint from "@/domains/shared/help/HelpHint";
 
 type SiteMoneyPanelProps = {
@@ -20,12 +19,11 @@ type SiteMoneyPanelProps = {
 
 /**
  * What the client has paid against everything spent on site, and where the profit comes from (the prototype's
- * EX.MoneyPanel). Materials and ground labour are paid as they happen, so the profit is what is left.
+ * EX.MoneyPanel). Site expenses and ground labour are paid as they happen, so the profit is what is left.
  */
 export default function SiteMoneyPanel({ project, onRecordPayment, onEditPricing }: SiteMoneyPanelProps) {
     const client = project.billingType === "client" && !!project.client;
     const payments = usePayments({ projectId: project.id, pageSize: 100 }, client).data?.items;
-    const materials = useAllMaterials(project.id).data;
     if (!project.money) return null;
     const x = siteMoneyOf(project.money);
 
@@ -40,7 +38,7 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onEditPricing
                 </div>
                 <div className="panel-body">
                     <div className="kpis">
-                        <Kpi label="Spent so far" value={money.exact(x.spent)} sub={<span>materials, ground labour and expenses</span>} />
+                        <Kpi label="Spent so far" value={money.exact(x.spent)} sub={<span>site expenses and ground labour</span>} />
                     </div>
                 </div>
             </div>
@@ -48,15 +46,14 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onEditPricing
     }
 
     const initial = payments?.find((p) => p.isInitial && !p.voidedAt);
-    const ownPrices = materials?.items.filter((m) => m.priceSource === "manual").length ?? 0;
     const paidAhead = x.credit > 0.5;
     const done = project.status === "completed" || project.status === "archived";
     const editPricing = x.locked ? undefined : onEditPricing;
     const steps: WaterfallStep[] = [
         { label: "Received", value: x.received, kind: "start", sub: plural(x.payments, "payment") },
-        ...(x.materialCost ? [{ label: "Materials", value: x.materialCost, kind: "cost" as const }] : []),
+        ...(x.siteExpenses ? [{ label: "Site expenses", value: x.siteExpenses, kind: "cost" as const }] : []),
         ...(x.labour ? [{ label: "Ground labour", value: x.labour, kind: "cost" as const }] : []),
-        ...(x.other ? [{ label: "Expenses", value: x.other, kind: "cost" as const }] : []),
+        ...(x.other ? [{ label: "Other costs", value: x.other, kind: "cost" as const }] : []),
         { label: "Profit so far", value: 0, kind: "result" },
     ];
 
@@ -65,7 +62,7 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onEditPricing
             <div className="panel-head">
                 <div className="grow">
                     <div className="panel-title">Project money</div>
-                    <div className="panel-sub">Cash in from the client against everything spent on site. Materials and labour are paid when they happen, so profit is what's left.</div>
+                    <div className="panel-sub">Cash in from the client against everything spent on site. Expenses and labour are paid when they happen, so profit is what's left.</div>
                 </div>
                 <div className="panel-tools">
                     {onRecordPayment && <button className="btn btn-sm" onClick={onRecordPayment}><Icon name="card" />Record payment</button>}
@@ -77,7 +74,7 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onEditPricing
                     <Kpi label="Received from client" value={money.exact(x.received)}
                         sub={<span>{plural(x.payments, "payment")}{initial ? ` · ${money.short(initial.amountUsd)} up front` : ""}</span>} />
                     <Kpi label="Spent so far" value={money.exact(x.spent)}
-                        sub={<span><Money short value={x.materialCost} /> materials · <Money short value={x.labour} /> labour{x.other ? ` · ${money.short(x.other)} other` : ""}</span>} />
+                        sub={<span><Money short value={x.siteExpenses} /> expenses · <Money short value={x.labour} /> labour{x.other ? ` · ${money.short(x.other)} other` : ""}</span>} />
                     <Kpi label={<>Profit so far<HelpHint article="site-money" label="profit so far">What the client has paid, minus what the site has cost.</HelpHint></>} value={<span className={x.cashProfit < 0 ? "down" : "up"}>{money.exact(x.cashProfit)}</span>}
                         sub={<span>{x.toPocket || x.fromPocket ? "received − spent ± pocket money" : "received − spent"}</span>} />
                     <Kpi label={paidAhead ? "Paid ahead" : "Client still owes"} value={money.exact(paidAhead ? x.credit : x.owed)}
@@ -95,9 +92,9 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onEditPricing
                         <div className="u" style={{ marginBottom: 6 }}>Where the profit comes from</div>
                         <CostRow label="Work price" swatch={SITE_COLORS.fee} value={`+${money.exact(x.fee)}`} meta={x.fee ? "from the agreed BOQs" : "none agreed yet"} />
                         <CostRow label="Supervision" swatch={SITE_COLORS.supervision} value={`+${money.exact(x.supervision)}`} meta="on top of the work price" />
-                        <CostRow label="Materials" swatch={SITE_COLORS.materials} value={`−${money.exact(x.materialCost)}`} tone={x.materialCost ? "down" : ""} meta="what the suppliers charged" />
+                        <CostRow label="Site expenses" swatch={SITE_COLORS.siteExpenses} value={`−${money.exact(x.siteExpenses)}`} tone={x.siteExpenses ? "down" : ""} meta="what was spent on site" />
                         <CostRow label="Ground labour" swatch={SITE_COLORS.labour} value={`−${money.exact(x.labour)}`} tone={x.labour ? "down" : ""} meta="not billed to the client" />
-                        {x.other > 0 && <CostRow label="Other expenses" swatch={SITE_COLORS.other} value={`−${money.exact(x.other)}`} tone="down" />}
+                        {x.other > 0 && <CostRow label="Other costs" swatch={SITE_COLORS.other} value={`−${money.exact(x.other)}`} tone="down" />}
                         <CostRow strong label="Expected profit" value={money.exact(x.expectedProfit)} tone={x.expectedProfit < 0 ? "down" : ""} />
                         <div className="xm-owed mt">
                             <div><span>Agreed so far</span><b className="mono">{money.exact(x.agreed)}</b><em>the work price and supervision</em></div>
@@ -114,10 +111,7 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onEditPricing
                                 <em>{paidAhead ? "paid beyond what is agreed so far" : "grows as a BOQ or VO is agreed"}</em>
                             </div>
                         </div>
-                        <div className="hint mt-s">
-                            Default material profit on new materials: <b>{pctOf(x.markup)}</b>
-                            {ownPrices > 0 ? ` · ${ownPrices} with a price of their own` : ""}.{done ? " Closed - the agreed amount is locked." : ""}
-                        </div>
+                        {done && <div className="hint mt-s">Closed - the agreed amount is locked.</div>}
                     </div>
                 </div>
             </div>

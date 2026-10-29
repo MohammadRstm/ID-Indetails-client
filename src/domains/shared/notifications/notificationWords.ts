@@ -32,8 +32,8 @@ const n = (v: unknown) => (typeof v === "number" ? v : 0);
 const plural = (count: number, one: string, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 const ROLE: Record<string, string> = { super_admin: "super admin", admin: "admin", employee: "employee" };
 const BLOCKED_KIND: Record<string, string> = {
-    expense: "An expense", material_add: "New materials", material_update: "A material change", labour_week: "A labour week",
-    work_entry_create: "Logged hours", work_entry_update: "Changed hours", payment: "A lower payment", pricing: "A lower fee or material profit",
+    expense: "An expense", material_add: "New expenses", material_update: "An expense change", labour_week: "A labour week",
+    work_entry_create: "Logged hours", work_entry_update: "Changed hours", payment: "A lower payment", pricing: "A lower supervision rate",
     boq_agree: "Agreeing a BOQ or VO", boq_withdraw: "Withdrawing the agreement of a BOQ or VO",
 };
 const areaLabel = (d: unknown) => AREAS[d as "design" | "execution"]?.label ?? "";
@@ -105,7 +105,7 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             };
         }
         case "materials_added":
-            return { text: `${who} added ${plural(n(p.count), "material")} to ${title}`, icon: "list", route: project };
+            return { text: `${who} added ${plural(n(p.count), "expense")} to ${title}`, icon: "list", route: project };
         case "labour_week_submitted":
             return { text: `${who} ${p.updated ? "updated" : "submitted"} a labour report for ${title}`, sub: p.weekStart ? `Week of ${fmtDate(s(p.weekStart))}` : undefined, icon: "projects", route: project };
 

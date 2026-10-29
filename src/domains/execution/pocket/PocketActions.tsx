@@ -51,7 +51,7 @@ export function MoveToPocketModal({ project, onClose }: { project: Project; onCl
                 <label className="label required" htmlFor="to-pocket-amount">Amount</label>
                 <AmountField id="to-pocket-amount" value={amount} currency="USD" currencies={false} onChange={setAmount} onBlur={errors.touch("amount")} />
                 <div className="hint">
-                    The site's profit is {money.exact(profit)}, counting materials not sent to the client yet. What you move lowers it; what the client owes doesn't change.
+                    The site's profit is {money.exact(profit)}. What you move lowers it; what the client owes doesn't change.
                 </div>
                 <FieldError message={errors.show("amount", amountError)} />
             </div>

@@ -40,7 +40,6 @@ export default function SendQuoteModal({ project, onClose }: { project: Project;
                 }>
                 <p style={{ margin: 0 }}>
                     The quote tells {project.client?.displayName ?? "the client"} what the whole project costs them{total ? <>: <b>{total}</b></> : ""}, TVA included and never shown apart.
-                    {project.domain === "execution" ? " Materials are billed separately, as they are delivered." : ""}
                 </p>
             </Modal>
         );
