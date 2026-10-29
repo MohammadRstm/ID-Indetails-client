@@ -817,6 +817,386 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/boqs/{boqId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boqId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqDetailResponse"];
+                        "text/json": components["schemas"]["BoqDetailResponse"];
+                        "text/plain": components["schemas"]["BoqDetailResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boqId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SaveBoqRequest"];
+                    "application/json": components["schemas"]["SaveBoqRequest"];
+                    "text/json": components["schemas"]["SaveBoqRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqDetailResponse"];
+                        "text/json": components["schemas"]["BoqDetailResponse"];
+                        "text/plain": components["schemas"]["BoqDetailResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boqId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/boqs/{boqId}/agree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boqId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqDetailResponse"];
+                        "text/json": components["schemas"]["BoqDetailResponse"];
+                        "text/plain": components["schemas"]["BoqDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/boqs/{boqId}/copy-lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boqId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["CopyBoqLinesRequest"];
+                    "application/json": components["schemas"]["CopyBoqLinesRequest"];
+                    "text/json": components["schemas"]["CopyBoqLinesRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqDetailResponse"];
+                        "text/json": components["schemas"]["BoqDetailResponse"];
+                        "text/plain": components["schemas"]["BoqDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/boqs/{boqId}/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boqId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["RecordBoqDeliveryRequest"];
+                    "application/json": components["schemas"]["RecordBoqDeliveryRequest"];
+                    "text/json": components["schemas"]["RecordBoqDeliveryRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqDetailResponse"];
+                        "text/json": components["schemas"]["BoqDetailResponse"];
+                        "text/plain": components["schemas"]["BoqDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/boqs/{boqId}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boqId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqDetailResponse"];
+                        "text/json": components["schemas"]["BoqDetailResponse"];
+                        "text/plain": components["schemas"]["BoqDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/boqs/{boqId}/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boqId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["EmailBoqRequest"];
+                    "application/json": components["schemas"]["EmailBoqRequest"];
+                    "text/json": components["schemas"]["EmailBoqRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqDetailResponse"];
+                        "text/json": components["schemas"]["BoqDetailResponse"];
+                        "text/plain": components["schemas"]["BoqDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/boqs/{boqId}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boqId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/boqs/{boqId}/withdraw-agreement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boqId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["WithdrawBoqAgreementRequest"];
+                    "application/json": components["schemas"]["WithdrawBoqAgreementRequest"];
+                    "text/json": components["schemas"]["WithdrawBoqAgreementRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqDetailResponse"];
+                        "text/json": components["schemas"]["BoqDetailResponse"];
+                        "text/plain": components["schemas"]["BoqDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bug-reports": {
         parameters: {
             query?: never;
@@ -7966,6 +8346,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{projectId}/boqs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqListResponse"];
+                        "text/json": components["schemas"]["BoqListResponse"];
+                        "text/plain": components["schemas"]["BoqListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["CreateBoqRequest"];
+                    "application/json": components["schemas"]["CreateBoqRequest"];
+                    "text/json": components["schemas"]["CreateBoqRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqDetailResponse"];
+                        "text/json": components["schemas"]["BoqDetailResponse"];
+                        "text/plain": components["schemas"]["BoqDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{projectId}/complete": {
         parameters: {
             query?: never;
@@ -14780,7 +15228,7 @@ export interface components {
         /** @enum {unknown} */
         BillingType: "client" | "internal";
         /** @enum {unknown} */
-        BlockedChangeKind: "expense" | "material_add" | "material_update" | "labour_week" | "work_entry_create" | "work_entry_update" | "payment" | "pricing";
+        BlockedChangeKind: "expense" | "material_add" | "material_update" | "labour_week" | "work_entry_create" | "work_entry_update" | "payment" | "pricing" | "boq_agree" | "boq_withdraw";
         BlockedChangeResponse: {
             /** Format: date-time */
             decidedAt: null | string;
@@ -14807,6 +15255,137 @@ export interface components {
             order: null | string[];
             /** Format: date-time */
             savedAt: null | string;
+        };
+        /** @enum {unknown} */
+        BoqAdjustmentType: "none" | "percent" | "total";
+        BoqDeliveryResponse: {
+            channel: components["schemas"]["DeliveryChannel"];
+            /** Format: int64 */
+            id: number;
+            note: null | string;
+            recipient: null | string;
+            /** Format: date-time */
+            sentAt: string;
+            sentBy: null | components["schemas"]["PersonRefResponse"];
+            /** Format: double */
+            totalUsd: number;
+        };
+        BoqDetailResponse: {
+            adjustmentType: components["schemas"]["BoqAdjustmentType"];
+            /** Format: double */
+            adjustmentUsd: number;
+            /** Format: double */
+            adjustmentValue: null | number;
+            /** Format: date-time */
+            agreedAt: null | string;
+            agreedBy: null | components["schemas"]["PersonRefResponse"];
+            author: components["schemas"]["PersonRefResponse"];
+            /** Format: double */
+            clientTotalUsd: number;
+            /** Format: date-time */
+            createdAt: string;
+            deliveries: components["schemas"]["BoqDeliveryResponse"][];
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["BoqKind"];
+            lastDelivery: null | components["schemas"]["BoqLastDeliveryResponse"];
+            /** Format: int32 */
+            lineCount: number;
+            lines: components["schemas"]["BoqLineResponse"][];
+            number: null | string;
+            /** Format: int64 */
+            projectId: number;
+            reason: null | string;
+            status: components["schemas"]["BoqStatus"];
+            /** Format: double */
+            subtotalUsd: number;
+            /** Format: double */
+            supervisionRate: number;
+            /** Format: double */
+            supervisionUsd: number;
+            title: string;
+            /** Format: double */
+            totalUsd: number;
+            /** Format: double */
+            tvaRate: number;
+            /** Format: double */
+            tvaUsd: number;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @enum {unknown} */
+        BoqKind: "internal" | "client" | "vo";
+        BoqLastDeliveryResponse: {
+            channel: components["schemas"]["DeliveryChannel"];
+            /** Format: date-time */
+            sentAt: string;
+        };
+        BoqLineResponse: {
+            code: null | string;
+            description: string;
+            /** Format: double */
+            finalQuantity: number;
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            position: number;
+            /** Format: double */
+            quantity: number;
+            /** Format: double */
+            rate: number;
+            /** Format: double */
+            totalUsd: number;
+            unit: null | string;
+            /** Format: double */
+            wasteRate: number;
+        };
+        BoqListResponse: {
+            client: components["schemas"]["BoqSummaryResponse"][];
+            internal: components["schemas"]["BoqSummaryResponse"][];
+            price: null | components["schemas"]["BoqPriceResponse"];
+            vos: components["schemas"]["BoqSummaryResponse"][];
+        };
+        BoqPriceResponse: {
+            /** Format: double */
+            agreedBoqUsd: number;
+            /** Format: double */
+            agreedVosUsd: number;
+            /** Format: double */
+            clientTotalUsd: number;
+            /** Format: double */
+            supervisionRate: number;
+            /** Format: double */
+            supervisionUsd: number;
+            /** Format: double */
+            tvaRate: number;
+            /** Format: double */
+            tvaUsd: number;
+            /** Format: double */
+            workUsd: number;
+        };
+        /** @enum {unknown} */
+        BoqStatus: "draft" | "agreed";
+        BoqSummaryResponse: {
+            /** Format: date-time */
+            agreedAt: null | string;
+            agreedBy: null | components["schemas"]["PersonRefResponse"];
+            author: components["schemas"]["PersonRefResponse"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["BoqKind"];
+            lastDelivery: null | components["schemas"]["BoqLastDeliveryResponse"];
+            /** Format: int32 */
+            lineCount: number;
+            number: null | string;
+            reason: null | string;
+            status: components["schemas"]["BoqStatus"];
+            title: string;
+            /** Format: double */
+            totalUsd: number;
+            /** Format: date-time */
+            updatedAt: string;
         };
         BrandingResponse: {
             hasLogo: boolean;
@@ -15241,6 +15820,11 @@ export interface components {
         };
         /** @enum {unknown} */
         ConversationType: "dm" | "group";
+        CopyBoqLinesRequest: {
+            /** Format: int64 */
+            fromBoqId?: number;
+            lineIds?: null | number[];
+        };
         /** @enum {unknown} */
         CostSource: "labour" | "expenses" | "materials" | "ground_labour";
         CostWeekResponse: {
@@ -15256,6 +15840,13 @@ export interface components {
             spent: number;
             /** Format: date */
             weekStart: string;
+        };
+        CreateBoqRequest: {
+            /** Format: int64 */
+            fromBoqId?: null | number;
+            kind?: components["schemas"]["BoqKind"];
+            reason?: null | string;
+            title?: null | string;
         };
         CreateClientRequest: {
             contacts?: components["schemas"]["ClientContactRequest"][];
@@ -15504,6 +16095,10 @@ export interface components {
         };
         /** @enum {unknown} */
         EditWindow: "none" | "one_day" | "seven_days" | "unlimited";
+        EmailBoqRequest: {
+            note?: null | string;
+            to?: string;
+        };
         EmailDocumentRequest: {
             note?: null | string;
             to?: string;
@@ -18679,6 +19274,11 @@ export interface components {
         ReactivateEmployeeRequest: {
             payGap?: null | boolean;
         };
+        RecordBoqDeliveryRequest: {
+            channel?: components["schemas"]["DeliveryChannel"];
+            note?: null | string;
+            recipient?: null | string;
+        };
         RecordDeliveryRequest: {
             channel?: components["schemas"]["DeliveryChannel"];
             note?: null | string;
@@ -19049,6 +19649,27 @@ export interface components {
         };
         SaveBoardLayoutRequest: {
             order?: string[];
+        };
+        SaveBoqLineRequest: {
+            code?: null | string;
+            description?: string;
+            /** Format: int64 */
+            id?: null | number;
+            /** Format: double */
+            quantity?: number;
+            /** Format: double */
+            rate?: number;
+            unit?: null | string;
+            /** Format: double */
+            wasteRate?: number;
+        };
+        SaveBoqRequest: {
+            adjustmentType?: components["schemas"]["BoqAdjustmentType"];
+            /** Format: double */
+            adjustmentValue?: null | number;
+            lines?: components["schemas"]["SaveBoqLineRequest"][];
+            reason?: null | string;
+            title?: string;
         };
         SaveDomainSettingsRequest: {
             allowFutureEntries?: boolean;
@@ -19999,6 +20620,9 @@ export interface components {
             minutes: number;
             /** Format: date */
             weekStart: string;
+        };
+        WithdrawBoqAgreementRequest: {
+            reason?: string;
         };
         WorkEntryCommentAuthorResponse: {
             /** Format: int64 */
