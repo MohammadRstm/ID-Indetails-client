@@ -29,6 +29,12 @@ const panel = async () => (await screen.findByText("What has been spent on site,
 const dollars = (total: number, count: number) => ({ count, cost: total, byCurrency: [{ currency: "USD", total }] });
 const listWith = (items: Schemas["SiteExpenseResponse"][], patch: Partial<Schemas["SiteExpenseListResponse"]> = {}) =>
     HttpResponse.json({ ...site.openExpenses, items, ...patch });
+/** The API refusing a pound expense on a day with no exchange rate. */
+const noRate = () => HttpResponse.json({
+    type: "business_rule", code: "exchange_rate_missing", errors: null, traceId: "t",
+    message: "There is no LBP exchange rate in force on 2026-09-30. Add one first, or record the expense in USD.",
+}, { status: 422 });
+const NO_RATE = "There is no LBP exchange rate in force on 2026-09-30. Add one first, or record the expense in USD.";
 /** Two expenses filed under an account label that has since been archived: it isn't on offer any more. */
 const filedUnderArchived = (index: number) => site.openExpenses.items.map((e, i) => (i === index ? { ...e, accountLabel: { id: 9, name: "Old permits" } } : e));
 
@@ -169,6 +175,17 @@ describe("the expenses on a site", () => {
         expect(within(within(p).getByLabelText("Account label 2")).queryByRole("option", { name: /Old permits/ })).not.toBeInTheDocument();
         await typeInto(within(p).getByLabelText("Item 1"), "Plasterboard 12mm");
         await waitFor(() => expect(saved[0]).toMatchObject({ name: "Plasterboard 12mm", accountLabelId: 9 }));
+    });
+
+    it("says why a pound expense wasn't saved when no exchange rate covers its day, and shows the old currency again", async () => {
+        renderApp(openPath, karim,
+            http.put("/api/projects/:id/site-expenses/:expenseId", () => noRate()),
+            ...siteHandlers);
+        const currency = await within(await panel()).findByLabelText("Currency 1");
+        await userEvent.selectOptions(currency, "LBP");
+        expect(await screen.findByText(NO_RATE)).toBeInTheDocument();
+        expect(screen.getByText("Not saved")).toBeInTheDocument();
+        await waitFor(() => expect(currency).toHaveValue("USD"));
     });
 
     it("start the next change on a row from what was just saved, before the list comes back", async () => {
@@ -524,6 +541,26 @@ describe("the Add expenses sheet", () => {
         await userEvent.click(within(sheet).getByLabelText("Note 6"));
         await userEvent.keyboard("x");
         await waitFor(() => expect(within(sheet).queryByText(`Row 6: ${refusal}`)).not.toBeInTheDocument());
+    });
+
+    it("says above the rows when a pound expense has no exchange rate for its day, and keeps the sheet", async () => {
+        renderApp(openPath, karim,
+            http.post("/api/projects/:id/site-expenses", () => noRate()),
+            ...siteHandlers);
+        const sheet = await openSheet();
+        await typePounds(sheet, "Scaffolding", "895000");
+        await userEvent.click(within(sheet).getByRole("button", { name: "Add 1 expense" }));
+        // about the sheet as a whole, not a cell: said once, as an alert, and not under a row
+        const alert = await within(sheet).findByRole("alert");
+        expect(alert).toHaveTextContent(NO_RATE);
+        expect(within(sheet).getAllByText(NO_RATE)).toHaveLength(1);
+        expect(within(sheet).queryByText(/^Row \d:/)).not.toBeInTheDocument();
+        // the row is still there to put right: change it to dollars and send it again
+        expect(screen.getByRole("dialog", { name: "Add expenses" })).toBeInTheDocument();
+        expect(within(sheet).getByLabelText("Item 5")).toHaveValue("Scaffolding");
+        await userEvent.selectOptions(within(sheet).getByLabelText("Currency 5"), "USD");
+        await waitFor(() => expect(within(sheet).queryByRole("alert")).not.toBeInTheDocument());
+        expect(within(sheet).getByRole("button", { name: "Add 1 expense" })).toBeEnabled();
     });
 
     it("takes a block pasted from Excel", async () => {

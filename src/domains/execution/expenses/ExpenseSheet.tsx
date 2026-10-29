@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { loadFailed } from "@/api/queryState";
-import { toApiError } from "@/api/errors";
+import { errorMessage, toApiError } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { useAccountLabels } from "@/domains/shared/accountLabels/accountLabelsApi";
@@ -80,6 +80,8 @@ export default function ExpenseSheet({ project, onClose }: { project: Project; o
     const recordedTotals = saved.data ? listTotals(saved.data.all) : [];
     const choices: Choices = { currency: CURRENCIES, category: CATEGORIES, accountLabelId: labelChoices(labels.data) };
 
+    // a pound expense on a day with no exchange rate: about the sheet as a whole, not a cell, so it is said above the rows
+    const noRate = toApiError(add.error).code === "exchange_rate_missing";
     const edited = () => { if (add.error) add.reset(); };
     // live, on every keystroke: quantity or unit cost typed → the amount follows; an amount over both → the unit cost
     function setCell(r: number, k: ColKey, v: string) {
@@ -125,7 +127,7 @@ export default function ExpenseSheet({ project, onClose }: { project: Project; o
                         {used.length ? <><b className="mono" style={{ color: "var(--ink)" }}>{writeTotals(newTotals)}</b> · {plural(used.length, "new expense")}</> : "Nothing new typed yet"}
                         {N > 0 && <span className="muted"> · {used.length ? `${writeTotals(joinTotals(recordedTotals, newTotals))} for the site with them` : `${writeTotals(recordedTotals)} recorded so far`}</span>}
                         {tried && nBad > 0 && <span className="sh-warn"> · {nBad} row{nBad === 1 ? " needs" : "s need"} fixing - the messages under them say what</span>}
-                        {add.error && <> · <FormFailure error={add.error} onForced={onClose} /></>}
+                        {add.error && !noRate && <> · <FormFailure error={add.error} onForced={onClose} /></>}
                     </div>
                     <button className="btn" onClick={close}>Cancel</button>
                     <button className="btn btn-primary" disabled={!used.length || add.isPending} onClick={submit}>
@@ -141,6 +143,12 @@ export default function ExpenseSheet({ project, onClose }: { project: Project; o
                     <span className="muted">→</span>
                     <span>Profit <b className="mono xm-profit">{money.exact(r2(x.received - x.spent - dollars))}</b>{dollars > 0 && <> <em className="mono">(−{money.exact(dollars)})</em></>}</span>
                     {pounds.length > 0 && <span className="muted">· plus {writeTotals(pounds)}, counted at the day's rate once added</span>}
+                </div>
+            )}
+            {noRate && (
+                <div className="banner attn" role="alert" style={{ margin: "10px 16px 0" }}>
+                    <Icon name="alert" />
+                    <div className="grow">{errorMessage(add.error)}</div>
                 </div>
             )}
             <FilledNote fields={proton.filled} />
