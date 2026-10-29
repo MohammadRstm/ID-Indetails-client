@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import FormFailure from "@/domains/shared/projects/FormFailure";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
@@ -7,7 +7,6 @@ import { FieldError } from "@/shared/components/Forms/Field";
 import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
-import Icon from "@/shared/icons/Icon";
 import { PAYMENT_DESCRIPTION_MAX, useSetPayment } from "../../../shared/projects/paymentApi";
 import type { Project } from "../../../shared/projects/projectsApi";
 import TvaField from "../../../shared/projects/TvaField";
@@ -45,7 +44,7 @@ export default function PaymentModal({ project, onClose, onSaved }: { project: P
         <Modal surfaceId="project_payment_terms" title="Customer payment" sub={project.title} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{save.error ? <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span> : "The payment can be changed until the project is completed."}</div>
+                    <div className="grow">{save.error ? <FormFailure error={save.error} onForced={onSaved ?? onClose} /> : "The payment can be changed until the project is completed."}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={save.isPending} onClick={submit}>{save.isPending ? "Saving…" : "Save"}</button>
                 </>

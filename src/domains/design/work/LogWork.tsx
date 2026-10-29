@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { errorMessage } from "@/api/errors";
+import FormFailure from "@/domains/shared/projects/FormFailure";
 import { useCurrentUser } from "@/app/session/useSession";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
@@ -186,7 +186,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
         });
     }
 
-    const failure = save.error ? errorMessage(save.error) : null;
+    const failure = save.error && !error ? <FormFailure error={save.error} onForced={closeLogWork} /> : null;
     const required = preview?.requiredMinutes ?? schedule.data?.day.requiredMinutes ?? 7 * 60;
 
     return (
@@ -195,7 +195,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
             foot={
                 <>
                     <div className="grow">
-                        {error || failure ? <span className="err"><Icon name="alert" />{error ?? failure}</span>
+                        {error ? <span className="err"><Icon name="alert" />{error}</span> : failure ? failure
                             : <span className="muted">{fmtDayDate(startAt)} · <span className="mono">{fmtRange(startAt, endAt)}</span>{nextDay ? " (ends next day)" : ""}</span>}
                     </div>
                     <button className="btn" onClick={closeLogWork}>Cancel</button>

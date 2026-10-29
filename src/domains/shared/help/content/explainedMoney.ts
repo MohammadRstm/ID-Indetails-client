@@ -281,7 +281,7 @@ export const explainedMoney: Article[] = [
             only(has(P.CLIENT_MANAGE), para("**Client added**.")),
             only(hasAny(P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN), para("**Invitation accepted**: someone you invited joined.")),
             only(hasAny(P.MATERIAL_MANAGE, P.LABOUR_REPORT_MANAGE), para("**Materials added** and **labour week submitted**: someone recorded site work.")),
-            only(money, para("**Invoice issued**, **payment recorded**, **statement sent**, **invoice overdue**, **draft waiting** (unsent 3 days after it was made), **project closed** (with its final margin) and **cost high** (a Design project past 85% of its payment).")),
+            only(money, para("**Invoice issued**, **payment recorded**, **statement sent**, **invoice overdue**, **draft waiting** (unsent 3 days after it was made), **project closed** (with its final margin), **close to zero profit** (10% of the agreed amount or less), **at zero profit** and **change stopped**: an expense, materials, labour, hours or a lower payment that would have taken a client project to zero profit or below wasn't saved, and you can force it through or dismiss it.")),
             only(has(P.INVOICE_SEND), para("**Reminder due**: an overdue invoice's client has no email address, so chase it yourself.")),
             only(has(P.INVOICE_CREATE, P.INVOICE_SEND), para("**Sent automatically**, **send due** and **send failed**: about invoices you scheduled.")),
             only(has(P.SALARY_VIEW), para("**Hours short**: on the 1st, who ended last month short of hours.")),

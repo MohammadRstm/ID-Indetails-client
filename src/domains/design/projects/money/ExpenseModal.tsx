@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
@@ -9,11 +8,11 @@ import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { companyToday } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
-import Icon from "@/shared/icons/Icon";
 import type { Project } from "../../../shared/projects/projectsApi";
 import { useAddExpense } from "./moneyApi";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
+import FormFailure from "@/domains/shared/projects/FormFailure";
 
 const EXPENSE_CATEGORIES = [
     { value: "assets", label: "Assets & licences" }, { value: "services", label: "Services" }, { value: "contractor", label: "Contractor" },
@@ -60,7 +59,7 @@ export default function ExpenseModal({ project, onClose }: { project: Project; o
         <Modal surfaceId="add_project_expense" title="Add project expense" sub={project.title} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{add.error ? <span className="err"><Icon name="alert" />{errorMessage(add.error)}</span> : "Belongs to this project only - never shared with other projects."}</div>
+                    <div className="grow">{add.error ? <FormFailure error={add.error} onForced={onClose} /> : "Belongs to this project only - never shared with other projects."}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={add.isPending} onClick={submit}>Add expense</button>
                 </>

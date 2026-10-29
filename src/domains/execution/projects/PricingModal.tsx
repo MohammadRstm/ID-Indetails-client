@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import FormFailure from "@/domains/shared/projects/FormFailure";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
@@ -10,7 +10,6 @@ import Modal from "@/shared/components/Overlays/Modal";
 import { plural } from "@/shared/format/labels";
 import { money } from "@/shared/format/money";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
-import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { PAYMENT_DESCRIPTION_MAX } from "../../shared/projects/paymentApi";
 import type { Project } from "../../shared/projects/projectsApi";
@@ -77,7 +76,7 @@ export default function PricingModal({ project, onClose, onSaved }: { project: P
             foot={
                 <>
                     <div className="grow muted" style={{ fontSize: 12 }}>
-                        {save.error ? <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span> : (
+                        {save.error ? <FormFailure error={save.error} onForced={onSaved ?? onClose} /> : (
                             <>Agreed so far {money.exact(x.agreed)} → <b className="mono" style={{ color: "var(--ink)" }}>{money.exact(agreed)}</b></>
                         )}
                     </div>
