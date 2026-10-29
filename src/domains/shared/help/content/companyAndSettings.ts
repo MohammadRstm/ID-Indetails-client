@@ -16,7 +16,7 @@ export const company: Article[] = [
                 step("Open **Settings** and choose **Company**.", "Settings", "Company"),
                 step("Change the **Company name**, **Website** or **Address**, and save. **Logo file** replaces the logo."),
             ),
-            para("The name, address and website are printed at the top of invoices and statements. The **Contact email** is the one the company website shows, and where its contact form sends."),
+            para("The name, address and website are printed at the top of invoices and BOQs. The **Contact email** is the one the company website shows, and where its contact form sends."),
             list(
                 "**Working week**: Monday to Friday, or **Custom days** with a box ticked for each working day. A week that works Sunday and rests Saturday starts on Sunday in calendars and weekly totals.",
                 "**Time format**: 12-hour (9:00 AM) or 24-hour (09:00), for everyone.",

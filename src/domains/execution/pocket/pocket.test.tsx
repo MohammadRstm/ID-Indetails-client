@@ -112,7 +112,7 @@ describe("the pocket money", () => {
 });
 
 describe("a site's pocket money", () => {
-    const profit = site.project.money!.profit + (site.project.money!.unsentMaterialCharge ?? 0);
+    const profit = site.project.money!.profit;
 
     it("moves part of the site's profit into the pocket, never all of it", async () => {
         const sent: unknown[] = [];

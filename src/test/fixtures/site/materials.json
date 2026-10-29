@@ -17,12 +17,10 @@
         "name": "Tarek Salem"
       },
       "updatedAt": null,
-      "isStated": true,
       "canEdit": true,
       "clientPrice": 966,
-      "priceSource": "stated",
-      "markup": 0.15,
-      "sentOn": "2026-09-30"
+      "priceSource": "auto",
+      "markup": 0.15
     },
     {
       "id": 3,
@@ -41,12 +39,10 @@
         "name": "Tarek Salem"
       },
       "updatedAt": null,
-      "isStated": true,
       "canEdit": true,
       "clientPrice": 4554,
-      "priceSource": "stated",
-      "markup": 0.15,
-      "sentOn": "2026-09-30"
+      "priceSource": "auto",
+      "markup": 0.15
     },
     {
       "id": 2,
@@ -65,12 +61,10 @@
         "name": "Tarek Salem"
       },
       "updatedAt": null,
-      "isStated": true,
       "canEdit": true,
       "clientPrice": 1076.4,
-      "priceSource": "stated",
-      "markup": 0.15,
-      "sentOn": "2026-09-30"
+      "priceSource": "auto",
+      "markup": 0.15
     },
     {
       "id": 1,
@@ -89,12 +83,10 @@
         "name": "Tarek Salem"
       },
       "updatedAt": null,
-      "isStated": true,
       "canEdit": true,
       "clientPrice": 345,
-      "priceSource": "stated",
-      "markup": 0.15,
-      "sentOn": "2026-09-30"
+      "priceSource": "auto",
+      "markup": 0.15
     }
   ],
   "page": 1,

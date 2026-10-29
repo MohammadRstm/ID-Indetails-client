@@ -34,8 +34,6 @@ export default function CompleteProjectModal({ project, openRequirements, contri
     const internal = project.billingType === "internal";
     const unpriced = execution && m != null && m.revenue === 0;
     const costOnly = internal || unpriced;
-    // what the client owes is frozen on completing, so every material must have been sent to them first
-    const unsent = execution && m ? m.unsentMaterials : 0;
 
     function confirm() {
         change.mutate("complete", {
@@ -55,13 +53,14 @@ export default function CompleteProjectModal({ project, openRequirements, contri
 
     const rows: [IconName, string, string][] = [
         ["checkCircle", "Status becomes Completed", `Completion date ${fmtDayDateY(companyToday())} · every requirement marked done, so progress is 100%.`],
-        ["lock", "Payment is locked", internal ? "Internal projects carry no payment." : unpriced ? "No price was ever set - there is nothing to lock."
-            : m ? `${money.fmt(m.revenue)} can no longer be changed while the project stays closed.` : "The agreed amount can no longer be changed while the project stays closed."],
+        ["lock", execution ? "Price is locked" : "Payment is locked", internal ? "Internal projects carry no payment." : unpriced ? `No ${execution ? "BOQ was ever agreed" : "price was ever set"} - there is nothing to lock.`
+            : execution ? `${m ? `${money.fmt(m.revenue)}, the work price and supervision, ` : "The work price "}can no longer change while the project stays closed: no BOQ or VO can be agreed or withdrawn.`
+                : m ? `${money.fmt(m.revenue)} can no longer be changed while the project stays closed.` : "The agreed amount can no longer be changed while the project stays closed."],
         ["eye", "Leaves every employee's active list", "Employees stop seeing it among their active projects; their own entries stay in My work."],
         execution ? ["clock", "No new materials or labour", "Every material and weekly labour report - and therefore direct cost - is final."]
             : ["clock", "No new work entries", "Logged hours - and therefore labour cost - are final."],
         ["card", "Company expenses are untouched", "Subscriptions and running costs are charged to the company's month, never to this project."],
-        ["refresh", "Reversible", execution ? "Reopening the project unlocks pricing and reopens it for materials and labour."
+        ["refresh", "Reversible", execution ? "Reopening the project unlocks its BOQs and pricing and reopens it for materials and labour."
             : "Reopening the project unlocks the payment and reopens it for work."],
     ];
 
@@ -78,7 +77,7 @@ export default function CompleteProjectModal({ project, openRequirements, contri
                             : m ? (costOnly ? `Final cost ${money.fmt(m.cost.total)}` : `Final profit ${money.fmt(m.profit)} · ${money.pct(m.margin)}`) : null}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" disabled={change.isPending || unsent > 0} onClick={confirm}><Icon name="check" />Complete project</button>
+                    <button className="btn btn-primary" disabled={change.isPending} onClick={confirm}><Icon name="check" />Complete project</button>
                 </>
             }
         >
@@ -92,19 +91,10 @@ export default function CompleteProjectModal({ project, openRequirements, contri
                     </div>
                 </div>
             )}
-            {unsent > 0 && (
-                <div className="banner hold">
-                    <Icon name="alert" />
-                    <div className="grow">
-                        <b>{unsent} material{unsent === 1 ? " hasn't" : "s haven't"} been sent to the client.</b> Completing freezes what the client owes,
-                        so send a client statement first: then {unsent === 1 ? "its price counts" : "their prices count"} in the agreed amount.
-                    </div>
-                </div>
-            )}
             {unpriced && (
                 <div className="banner attn">
                     <Icon name="alert" />
-                    <div className="grow"><b>Never priced.</b> This project closes as pure cost - no profit or margin, because no price was ever set.</div>
+                    <div className="grow"><b>Never priced.</b> This project closes as pure cost - no profit or margin, because {execution ? "no BOQ was ever agreed" : "no price was ever set"}.</div>
                 </div>
             )}
 

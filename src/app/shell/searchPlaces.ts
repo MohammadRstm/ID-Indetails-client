@@ -211,7 +211,7 @@ export const PLACES: Place[] = [
     {
         key: "site-records", icon: "projects", label: "Site materials and labour",
         words: ["materials", "material", "supplies", "deliveries", "suppliers", "supplier", "ground labour", "ground labor", "labour weeks",
-            "site workers", "site labour", "workers on site", "client statement", "client statements", "statements", "markup"],
+            "site workers", "site labour", "workers on site", "markup"],
         targets: (ctx) => inBusinesses(ctx, "projects", "execution").map((t) => ({ ...t, sub: "on each site" })),
     },
     {

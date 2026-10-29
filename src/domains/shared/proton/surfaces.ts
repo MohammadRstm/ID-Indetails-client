@@ -46,7 +46,6 @@ export const SURFACES: Record<ProtonSurface, (a: Ask) => SurfaceTarget | null> =
     site_pricing: (a) => onRecord(a, "projects", "money=pricing", a.domain === "execution" && a.p.hasAll(P.FINANCIAL_VIEW, P.PROJECT_PRICING_MANAGE)),
     new_invoice: (a) => onRecord(a, "projects", "invoice=new", a.p.hasAll(P.FINANCIAL_VIEW, P.INVOICE_CREATE)),
     record_payment: (a) => onRecord(a, "projects", "pay=1", a.p.hasAll(P.FINANCIAL_VIEW, P.PAYMENT_RECORD)),
-    new_statement: (a) => onRecord(a, "projects", "statement=new", a.domain === "execution" && a.p.has(P.STATEMENT_CREATE)),
     new_meeting: (a) => inArea(a, "meetings?new=1", a.p.hasAny(P.MEETING_CREATE, P.MEETING_MANAGE)),
     add_company_expense: (a) => inCompany(a, "overhead?add=1", a.p.has(P.OVERHEAD_MANAGE)),
     message_person: (a) => (a.id != null ? inArea(a, `messages?with=${a.id}`) : null),

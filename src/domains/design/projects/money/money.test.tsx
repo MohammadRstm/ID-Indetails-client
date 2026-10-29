@@ -98,7 +98,7 @@ describe("a project's money", () => {
 
     it("shows every change of the payment, newest first, in its own window", async () => {
         const changes = [
-            { id: 2, amount: 30000, previousAmount: 25000, materialMarkup: null, previousMaterialMarkup: null, description: "The client added a guest house", changedAt: "2026-09-20T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
+            { id: 2, amount: 30000, previousAmount: 25000, materialMarkup: null, previousMaterialMarkup: null, supervisionRate: null, previousSupervisionRate: null, description: "The client added a guest house", changedAt: "2026-09-20T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
             { id: 1, amount: 25000, previousAmount: null, materialMarkup: null, previousMaterialMarkup: null, description: "Agreed at the start", changedAt: "2026-06-01T09:00:00Z", changedBy: null },
         ];
         renderApp(path, admin, http.get(`/api/projects/${project.id}/payment-changes`, () => HttpResponse.json(changes)), ...projectWorkHandlers);
@@ -109,6 +109,7 @@ describe("a project's money", () => {
         expect(rows[0]).toHaveTextContent(`${money.exact(25000)} → ${money.exact(30000)}`);
         expect(rows[0]).toHaveTextContent("Sep 20, 2026 · Rana Haddad");
         expect(rows[0]).toHaveTextContent("The client added a guest house");
+        expect(rows[0]).not.toHaveTextContent("Supervision");
         expect(rows[1]).toHaveTextContent(money.exact(25000));
         expect(rows[1]).toHaveTextContent("Agreed at the start");
         expect(rows[1]).not.toHaveTextContent("→");

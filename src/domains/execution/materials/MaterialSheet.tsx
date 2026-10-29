@@ -32,7 +32,6 @@ function dropSaved(list: Row[], count: number) {
 /**
  * The Add materials sheet (the prototype's EX.MaterialSheet): rows typed like a spreadsheet, or pasted straight
  * from Excel, and added together. What is already recorded sits above, read-only, so nothing is typed twice.
- * What the client is charged is set later, on the client statement (a material may go at cost).
  */
 export default function MaterialSheet({ project, onClose }: { project: Project; onClose: () => void }) {
     const saved = useAllMaterials(project.id);

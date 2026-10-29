@@ -18,6 +18,14 @@
     ]
   },
   {
+    "code": "boq:create",
+    "description": "Write internal draft BOQs on a site project",
+    "domain": "execution",
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
     "code": "client:create",
     "description": "Add clients",
     "domain": null,
@@ -387,24 +395,6 @@
     "domain": null,
     "defaultFor": [
       "super_admin"
-    ]
-  },
-  {
-    "code": "statement:create",
-    "description": "Create client statements of materials supplied",
-    "domain": "execution",
-    "defaultFor": [
-      "super_admin",
-      "admin"
-    ]
-  },
-  {
-    "code": "statement:send",
-    "description": "Send client statements",
-    "domain": "execution",
-    "defaultFor": [
-      "super_admin",
-      "admin"
     ]
   },
   {

@@ -21,6 +21,10 @@ export const WORKERS: NumberShape = { digits: 5, decimals: 0, max: 10_000 };
 export const MARKUP_PERCENT: NumberShape = { digits: 3, decimals: 2, max: 500 };
 /** A project's TVA, as a percentage: 0 to 100. */
 export const TVA_PERCENT: NumberShape = { digits: 3, decimals: 2, max: 100 };
+/** A BOQ line's quantity or rate: 10 digits and 4 decimals, as the API keeps them. */
+export const BOQ_NUMBER: NumberShape = { digits: 10, decimals: 4 };
+/** A BOQ percentage as typed: a line's waste, or the whole BOQ's adjustment. Its range is checked by the form, so it can say so. */
+export const BOQ_PERCENT: NumberShape = { digits: 3, decimals: 2 };
 /** Hours excused in a month: at most the month itself. */
 export const MONTH_HOURS: NumberShape = { digits: 3, decimals: 2, max: 744 };
 

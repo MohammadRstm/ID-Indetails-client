@@ -34,6 +34,7 @@ const ROLE: Record<string, string> = { super_admin: "super admin", admin: "admin
 const BLOCKED_KIND: Record<string, string> = {
     expense: "An expense", material_add: "New materials", material_update: "A material change", labour_week: "A labour week",
     work_entry_create: "Logged hours", work_entry_update: "Changed hours", payment: "A lower payment", pricing: "A lower fee or material profit",
+    boq_agree: "Agreeing a BOQ or VO", boq_withdraw: "Withdrawing the agreement of a BOQ or VO",
 };
 const areaLabel = (d: unknown) => AREAS[d as "design" | "execution"]?.label ?? "";
 
@@ -188,10 +189,9 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             return {
                 text: `${title} may need a quote`,
                 sub: note.actor ? `Created by ${who} · send it or not` : "Send it or not",
-                icon: "file", route: project ? `${project}?quote=new` : project,
+                // an Execution site has no quotes: its price comes from BOQs
+                icon: "file", route: project && d === "design" ? `${project}?quote=new` : project,
             };
-        case "statement_sent":
-            return { text: `${s(p.number) || "A statement"} was sent to the client`, sub: `${title}${note.actor ? ` · by ${who}` : ""}`, icon: "file", route: project && note.subjectId ? `${project}?statement=${note.subjectId}` : project };
         case "client_added":
             return { text: `${s(p.organisation) || s(p.name) || "A client"} added as a client`, sub: by, icon: "briefcase", clientId: note.subjectId ?? undefined };
 

@@ -116,13 +116,3 @@ export function useDeleteMaterial(projectId: number) {
         },
     });
 }
-
-/** A material's own client price, or null to put it back on the project's markup (project:pricing_manage). */
-export function useSetMaterialPrice(projectId: number) {
-    const saved = useSaved(projectId);
-    return useMutation({
-        mutationFn: async ({ id, clientPrice }: { id: number; clientPrice: number | null }) =>
-            (await http.put<Material>(`/projects/${projectId}/materials/${id}/client-price`, { clientPrice })).data,
-        onSuccess: saved,
-    });
-}

@@ -13,8 +13,6 @@ import { useLabourWeeks } from "../labour/labourApi";
 import LabourPanel from "../labour/LabourPanel";
 import { useMaterials } from "../materials/materialsApi";
 import MaterialsPanel from "../materials/MaterialsPanel";
-import { useStatementLinks } from "../statements/statementLinks";
-import StatementList from "../statements/StatementList";
 import LabourHealth from "./LabourHealth";
 import MaterialMargins from "../materials/MaterialMargins";
 import SiteMoneyPanel from "./SiteMoneyPanel";
@@ -40,13 +38,13 @@ export default function ExecutionOverview({ project }: { project: Project }) {
 }
 
 /**
- * An Execution site's Financials tab, for those who see money: its work price first, then what the client has paid
- * against what the site has cost, its invoices and statements, what each material earns and how long labour lasts.
+ * An Execution site's Financials tab, for those who see money: its work price first (its BOQs and VOs have their own
+ * tab), then what the client has paid against what the site has cost, its invoices, what each material earns and how long
+ * labour lasts.
  */
 export function ExecutionFinancials({ project }: { project: Project }) {
     const permissions = usePermissions();
     const links = useBillingLinks();
-    const statements = useStatementLinks();
     const [params, setParams] = useSearchParams();
     const m = permissions.has(P.FINANCIAL_VIEW) ? project.money : null;
     if (!m) return null;
@@ -59,10 +57,8 @@ export function ExecutionFinancials({ project }: { project: Project }) {
             <WorkPriceSection project={project} onEdit={canPrice ? open("pricing") : undefined} onHistory={open("history")} />
             <SiteMoneyPanel project={project}
                 onRecordPayment={client && permissions.has(P.PAYMENT_RECORD) ? () => links.recordPayment() : undefined}
-                onStatement={client && permissions.has(P.STATEMENT_CREATE) ? statements.newStatement : undefined}
                 onEditPricing={canPrice ? open("pricing") : undefined} />
             {client && <BillingBand project={project} />}
-            {client && <StatementList project={project} />}
             {client && <MaterialMargins project={project} />}
             {client && <LabourHealth project={project} />}
         </>

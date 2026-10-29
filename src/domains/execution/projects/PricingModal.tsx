@@ -24,8 +24,7 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
 /**
  * The supervision rate, the TVA and the default material profit (the prototype's EX.MoneyModal), and why they change,
  * which joins the payment history. The work price isn't here: it is set when a bill of quantities is agreed. A new
- * default re-prices every material still on it; one with a price of its own, or already on a client statement,
- * keeps its price.
+ * default re-prices every material still on it; one with a price of its own keeps its price.
  */
 export default function PricingModal({ project, onClose, onSaved }: { project: Project; onClose: () => void; onSaved?: () => void }) {
     const x = siteMoneyOf(project.money!);
@@ -50,12 +49,11 @@ export default function PricingModal({ project, onClose, onSaved }: { project: P
     const list = materials ?? [];
     const auto = list.filter((m) => m.priceSource === "auto").length;
     const own = list.filter((m) => m.priceSource === "manual").length;
-    const stated = list.filter((m) => m.priceSource === "stated").length;
     const charge = materials
         ? r2(list.reduce((t, m) => t + (m.priceSource === "auto" ? r2(m.cost * (1 + markup / 100)) : m.clientPrice ?? m.cost), 0))
-        : x.materialCharge;
+        : null;
     const changedMarkup = markup / 100 !== x.markup;
-    const keep = [own > 0 && `${own} with a price of their own`, stated > 0 && `${stated} already on a client statement`].filter(Boolean).join(" and ");
+    const keep = own > 0 ? `${own} with a price of their own` : "";
 
     function submit() {
         if (!valid || save.isPending) return;
@@ -122,9 +120,11 @@ export default function PricingModal({ project, onClose, onSaved }: { project: P
                 <div className="hint">Kept in the payment history, for the project report.</div>
                 <FieldError message={errors.show("description", descriptionError)} />
             </div>
-            <div className="xm-owed mt">
-                <div><span>Materials charged</span><b className="mono">{money.exact(charge)}</b><em>on {money.exact(x.materialCost)} cost</em></div>
-            </div>
+            {charge != null && (
+                <div className="xm-owed mt">
+                    <div><span>Materials charged</span><b className="mono">{money.exact(charge)}</b><em>on {money.exact(x.materialCost)} cost</em></div>
+                </div>
+            )}
         </Modal>
     );
 }

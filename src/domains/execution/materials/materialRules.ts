@@ -35,8 +35,6 @@ export const COLS: Col[] = [
 ];
 /** Where Total sits: the footer's totals line up under it. */
 export const TOTAL_AT = COLS.findIndex((c) => c.k === "amount");
-/** What a statement freezes: the type, the cost and the price. */
-export const STATED_KEYS: ColKey[] = ["name", "quantity", "unit", "unitCost", "amount", "clientPrice"];
 
 export const BLOCK = 10;
 

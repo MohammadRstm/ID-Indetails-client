@@ -141,7 +141,7 @@ function Company({ settings: s }: { settings: CompanySettings }) {
                         <label className="label" htmlFor="s-website">Website</label>
                         <input id="s-website" className="input" placeholder="Optional - e.g. id-indetails.com" value={website} disabled={!canEdit}
                             onChange={(e) => setWebsite(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") saveDetails(); }} />
-                        <div className="hint">Printed under the company name on invoices and statements, with the address.</div>
+                        <div className="hint">Printed under the company name on invoices and BOQs, with the address.</div>
                     </div>
                 </div>
                 <div className="grid g-2 mt-s">
@@ -166,7 +166,7 @@ function Company({ settings: s }: { settings: CompanySettings }) {
                     </div>
                 )}
                 <div className="mt">
-                    <SwitchRow title="Logo" description="Used in the sidebar, the launcher and the sign-in page, and printed on invoices and statements when it is a PNG or JPEG." control={
+                    <SwitchRow title="Logo" description="Used in the sidebar, the launcher and the sign-in page, and printed on invoices and BOQs when it is a PNG or JPEG." control={
                         <div className="row" style={{ gap: 8 }}>
                             <Logo size={34} />
                             {canEdit && (

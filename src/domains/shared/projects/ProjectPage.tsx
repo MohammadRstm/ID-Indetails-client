@@ -34,21 +34,19 @@ import ClientTypeModal from "../../design/projects/money/ClientTypeModal";
 import PaymentModal from "../../design/projects/money/PaymentModal";
 import { staffDiscussion } from "../../design/projects/portal/staffDiscussion";
 import ReportModal from "../../design/projects/report/ReportModal";
-import { useMaterials } from "../../execution/materials/materialsApi";
 import PricingModal from "../../execution/projects/PricingModal";
 import PaymentHistoryModal from "./PaymentHistoryModal";
 import SendQuoteModal from "../billing/SendQuoteModal";
 import BlockedChangeModal from "./BlockedChangeModal";
+import BoqHost from "../../execution/boqs/BoqHost";
 import { AskPocketModal, MoveToPocketModal } from "../../execution/pocket/PocketActions";
-import StatementHost from "../../execution/statements/StatementHost";
-import { useStatementLinks } from "../../execution/statements/statementLinks";
 import CompleteProjectModal from "./CompleteProjectModal";
 import { useUrlFlag } from "@/shared/hooks/useUrlFlag";
 import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
 
-type TabKey = "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
+type TabKey = "financials" | "overview" | "boqs" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
 
 /**
  * What goes on a project's Overview tab and Timeline tab, and the domain's own bits of its head. Each domain
@@ -61,6 +59,8 @@ export type ProjectPanels = {
     hasOverview?: (permissions: Permissions) => boolean;
     /** Its own tab, first, for those who see money. */
     financials?: (project: Project) => ReactNode;
+    /** Execution client sites: their BOQs and VOs, for whoever writes drafts, sees money or manages the pricing. */
+    boqs?: (project: Project) => ReactNode;
     /** Its own tab, for those who see everyone's work. */
     analytics?: (project: Project) => ReactNode;
     /** Its own tab, for those who see everyone's work. */
@@ -143,6 +143,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const allowed: Record<TabKey, boolean> = {
         financials: seesMoney && panels.financials != null,
         overview: panels.hasOverview?.(permissions) ?? true,
+        // a draft's author may see no money at all, so the BOQs aren't on the Financials tab
+        boqs: panels.boqs != null && project.billingType === "client" && project.client != null
+            && permissions.hasAny(P.BOQ_CREATE, P.FINANCIAL_VIEW, P.PROJECT_PRICING_MANAGE),
         analytics: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.analytics != null,
         contributors: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.contributors != null,
         // every Design project's files, client or internal, for everyone who sees it
@@ -153,7 +156,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         timeline: timelineTab,
         meetings: true,
     };
-    const tabOrder: TabKey[] = ["financials", "overview", "analytics", "contributors", "requirements", "timeline", "meetings", "files", "portal"];
+    const tabOrder: TabKey[] = ["financials", "overview", "boqs", "analytics", "contributors", "requirements", "timeline", "meetings", "files", "portal"];
     const firstTab = tabOrder.find((k) => allowed[k]) ?? "meetings";
     // A tab the person may not open falls back to their first one, even when the link asks for it.
     const tab: TabKey = requested && allowed[requested] ? requested : firstTab;
@@ -191,10 +194,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const canNewInvoice = client && permissions.has(P.INVOICE_CREATE) && (bill?.notYetInvoiced ?? 0) - (bill?.drafts ?? 0) > 0.5;
     // a payment needs no invoice: it is held on account until an invoice is issued
     const canRecordPayment = client && permissions.has(P.PAYMENT_RECORD);
-    const materialCount = useMaterials(project.id, {}, site && client && permissions.has(P.STATEMENT_CREATE)).data?.all.count ?? 0;
-    const canStatement = site && client && permissions.has(P.STATEMENT_CREATE) && materialCount > 0;
-    const statements = useStatementLinks();
-    const moneyItems = canAddExpense || canEditBilling || canEditPricing || canStatement || canNewInvoice || canRecordPayment || canUsePocket;
+    const moneyItems = canAddExpense || canEditBilling || canEditPricing || canNewInvoice || canRecordPayment || canUsePocket;
     // name, description, location and target date, while the project is open
     const canEditDetails = permissions.has(P.PROJECT_EDIT) && project.status !== "completed" && project.status !== "archived";
 
@@ -303,7 +303,6 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                     {canEditPayment && <button className="pop-item" onClick={() => { close(); openMoney("payment"); }}><Icon name="card" />Edit customer payment</button>}
                                     {canEditBilling && <button className="pop-item" onClick={() => { close(); openMoney("client"); }}><Icon name="user" />Client & type</button>}
                                     {canEditPricing && <button className="pop-item" onClick={() => { close(); openMoney("pricing"); }}><Icon name="card" />Pricing</button>}
-                                    {canStatement && <button className="pop-item" onClick={() => { close(); statements.newStatement(); }}><Icon name="file" />Client statement</button>}
                                     {canNewInvoice && <button className="pop-item" onClick={() => { close(); billing.newInvoice(); }}><Icon name="file" />New invoice</button>}
                                     {canRecordPayment && <button className="pop-item" onClick={() => { close(); billing.recordPayment(); }}><Icon name="card" />Record a client payment</button>}
                                     {canUsePocket && <button className="pop-item" onClick={() => { close(); openMoney("to-pocket"); }}><Icon name="arrowRight" />Move to pocket money</button>}
@@ -347,6 +346,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             <Tabs value={tab} onChange={switchTab} items={[
                 ...(allowed.financials ? [{ key: "financials" as TabKey, label: "Financials" }] : []),
                 ...(allowed.overview ? [{ key: "overview" as TabKey, label: "Overview" }] : []),
+                ...(allowed.boqs ? [{ key: "boqs" as TabKey, label: "BOQs" }] : []),
                 ...(allowed.analytics ? [{ key: "analytics" as TabKey, label: "Analytics" }] : []),
                 ...(allowed.contributors ? [{ key: "contributors" as TabKey, label: "Contributors" }] : []),
                 ...(permissions.has(P.REQUIREMENT_VIEW) ? [{ key: "requirements" as TabKey, label: "Requirements", count: requirements.data?.total }] : []),
@@ -363,6 +363,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     : tab === "files" && panels.files ? panels.files(project)
                     : tab === "portal" && panels.portal ? panels.portal(project)
                         : tab === "financials" && panels.financials ? panels.financials(project)
+                        : tab === "boqs" && panels.boqs ? panels.boqs(project)
                             : tab === "analytics" && panels.analytics ? panels.analytics(project)
                                 : tab === "contributors" && panels.contributors ? panels.contributors(project)
                                     : panels.overview(project)}
@@ -380,7 +381,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {moneyAction === "to-pocket" && canUsePocket && <MoveToPocketModal project={project} onClose={closeMoney} />}
             {moneyAction === "ask-pocket" && canUsePocket && <AskPocketModal project={project} onClose={closeMoney} />}
             <BillingModalHost project={project} />
-            {site && <StatementHost project={project} />}
+            {site && <BoqHost project={project} />}
             {showReport && canReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}
             {editing && canEditDetails && <EditProjectModal project={project} onClose={() => setEditing(false)} />}
         </div>
