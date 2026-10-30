@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { errorMessage, toApiError } from "@/api/errors";
 import { loadFailed } from "@/api/queryState";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { toast } from "@/shared/components/Feedback/toast";
+import Pager from "@/shared/components/Data-Tables/Pager";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import AmountField from "@/shared/components/Forms/AmountField";
@@ -18,10 +19,13 @@ import Icon from "@/shared/icons/Icon";
 import HelpHint from "../../shared/help/HelpHint";
 import type { Project } from "../../shared/projects/projectsApi";
 import {
-    SUPERVISION_AMOUNT_MAX, SUPERVISION_NOTE_MAX, useRemoveSupervision, useSupervisionWithdrawals, useTakeSupervision, type SupervisionWithdrawal,
+    SUPERVISION_AMOUNT_MAX, SUPERVISION_NOTE_MAX, useAccountFigures, useRemoveSupervision, useSupervisionWithdrawals, useTakeSupervision, type SupervisionWithdrawal,
 } from "./accountApi";
 
 const usd = (amount: number) => money.exact(amount, "USD", { cents: true });
+
+/** Rows a page of the list shows; the API sends every one, so the list is paged here. */
+const PAGE_SIZE = 20;
 
 /**
  * What the company has taken of a site's supervision out of the project account, day by day (financial:view to read,
@@ -34,9 +38,14 @@ export default function SupervisionPanel({ project }: { project: Project }) {
     const [dialog, setDialog] = useState<"record" | SupervisionWithdrawal | null>(null);
     const canWrite = permissions.has(P.PAYMENT_RECORD);
     const list = query.data;
+    const [page, setPage] = useState(1);
+    const anchor = useRef<HTMLElement>(null);
+    // removing the last row of the last page steps back a page
+    const current = Math.min(page, Math.max(1, Math.ceil((list?.length ?? 0) / PAGE_SIZE)));
+    const shown = list?.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE) ?? [];
 
     return (
-        <section className="panel mt" aria-label="Supervision taken">
+        <section className="panel mt" aria-label="Supervision taken" ref={anchor}>
             <div className="panel-head">
                 <div className="grow">
                     <div className="panel-title">Supervision taken<HelpHint article="supervision-taken" label="supervision taken">What the company has taken of its supervision fee. It lowers the cash in the account and what is left to take, but it is not a cost, so profit stays as it is.</HelpHint></div>
@@ -51,30 +60,33 @@ export default function SupervisionPanel({ project }: { project: Project }) {
             {loadFailed(query) ? <div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the supervision taken" /></div>
                 : !list ? <div className="panel-body"><SkeletonLines lines={3} /></div>
                     : list.length === 0 ? <div className="panel-body"><p className="muted" style={{ margin: 0 }}>Nothing taken yet.</p></div> : (
-                        <div className="tbl-wrap">
-                            <table className="tbl tbl-min-sm">
-                                <thead>
-                                    <tr><th className="nowrap">Day</th><th className="r">Amount</th><th>Note</th><th>Recorded by</th>{canWrite && <th />}</tr>
-                                </thead>
-                                <tbody>
-                                    {list.map((w) => (
-                                        <tr key={w.id}>
-                                            <td className="nowrap">{fmtDateY(w.takenOn)}</td>
-                                            <td className="r mono">{usd(w.amountUsd)}</td>
-                                            <td className="muted trunc">{w.note || "-"}</td>
-                                            <td className="muted nowrap">{w.createdBy?.name ?? "-"}</td>
-                                            {canWrite && (
-                                                <td className="r">
-                                                    <button className="icon-btn" aria-label={`Remove the supervision taken on ${fmtDateY(w.takenOn)}`} title="Remove" onClick={() => setDialog(w)}>
-                                                        <Icon name="trash" />
-                                                    </button>
-                                                </td>
-                                            )}
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        <>
+                            <div className="tbl-wrap">
+                                <table className="tbl tbl-min-sm">
+                                    <thead>
+                                        <tr><th className="nowrap">Day</th><th className="r">Amount</th><th>Note</th><th>Recorded by</th>{canWrite && <th />}</tr>
+                                    </thead>
+                                    <tbody>
+                                        {shown.map((w) => (
+                                            <tr key={w.id}>
+                                                <td className="nowrap">{fmtDateY(w.takenOn)}</td>
+                                                <td className="r mono">{usd(w.amountUsd)}</td>
+                                                <td className="muted trunc">{w.note || "-"}</td>
+                                                <td className="muted nowrap">{w.createdBy?.name ?? "-"}</td>
+                                                {canWrite && (
+                                                    <td className="r">
+                                                        <button className="icon-btn" aria-label={`Remove the supervision taken on ${fmtDateY(w.takenOn)}`} title="Remove" onClick={() => setDialog(w)}>
+                                                            <Icon name="trash" />
+                                                        </button>
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <Pager page={current} pageSize={PAGE_SIZE} total={list.length} onPage={setPage} anchor={anchor} />
+                        </>
                     )}
             {canWrite && dialog === "record" && <RecordSupervisionModal project={project} onClose={() => setDialog(null)} />}
             {canWrite && dialog && dialog !== "record" && <RemoveSupervisionModal project={project} withdrawal={dialog} onClose={() => setDialog(null)} />}
@@ -86,21 +98,25 @@ export default function SupervisionPanel({ project }: { project: Project }) {
 function RecordSupervisionModal({ project, onClose }: { project: Project; onClose: () => void }) {
     const today = companyToday();
     const take = useTakeSupervision(project.id);
+    // what is left of the supervision due: nothing above it can be taken (the API refuses it too)
+    const left = useAccountFigures(project.id, true).data?.supervision.leftUsd;
     const [amount, setAmount] = useState<number | null>(null);
     const [day, setDay] = useState(today);
     const [note, setNote] = useState("");
     const errors = useFormErrors();
     const refused = toApiError(take.error);
     const edited = () => { if (take.error) take.reset(); };
-    const amountError = !(amount && amount > 0) ? "Enter the amount taken."
-        : amount > SUPERVISION_AMOUNT_MAX && `At most ${usd(SUPERVISION_AMOUNT_MAX)}.`;
+    const amountError = left != null && left <= 0 ? "Nothing of the supervision is left to take."
+        : !(amount && amount > 0) ? "Enter the amount taken."
+            : left != null && amount > left ? `At most ${usd(left)} is left to take.`
+                : amount > SUPERVISION_AMOUNT_MAX && `At most ${usd(SUPERVISION_AMOUNT_MAX)}.`;
     const dayError = !day ? "Pick the day it was taken." : day > today && "The day can't be in the future.";
     const noteError = note.trim().length > SUPERVISION_NOTE_MAX && `At most ${SUPERVISION_NOTE_MAX} characters.`;
     // the foot has the failure only when no field is what the API named
     const fieldRefused = refused.fieldErrors.amountUsd ?? refused.fieldErrors.takenOn ?? refused.fieldErrors.note;
 
     function submit() {
-        if (take.isPending) return;
+        if (take.isPending || left == null) return;
         if (amountError || dayError || noteError) return errors.tried();
         take.mutate({ amountUsd: amount!, takenOn: day, note: note.trim() || null }, {
             onSuccess: (saved) => {
@@ -125,6 +141,7 @@ function RecordSupervisionModal({ project, onClose }: { project: Project; onClos
                 <div className="field">
                     <label className="label required" htmlFor="sup-amount">Amount taken</label>
                     <AmountField id="sup-amount" currencies={false} value={amount} onChange={(v) => { edited(); setAmount(v); }} onBlur={errors.touch("amount")} />
+                    <div className="hint">{left == null ? "Working out what is left…" : <>Left to take: <b className="mono">{usd(Math.max(left, 0))}</b></>}</div>
                     <FieldError message={errors.show("amount", amountError) ?? refused.fieldErrors.amountUsd} />
                 </div>
                 <div className="field">
@@ -140,7 +157,7 @@ function RecordSupervisionModal({ project, onClose }: { project: Project; onClos
                 <FieldError message={errors.show("note", noteError) ?? refused.fieldErrors.note} />
             </div>
             <p className="hint mt">
-                It lowers the cash in the account and what is left to take. It is not a cost, so the profit stays as it is. Taking more than is due is allowed and shows as over.
+                It lowers the cash in the account and what is left to take. It is not a cost, so the profit stays as it is. No more than is left of what is due can be taken.
             </p>
         </Modal>
     );

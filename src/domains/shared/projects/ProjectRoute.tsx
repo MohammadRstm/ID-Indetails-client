@@ -7,8 +7,7 @@ import ClientPortalTab from "../../design/projects/portal/ClientPortalTab";
 import ProjectFilesTab from "../../design/projects/portal/ProjectFilesTab";
 import ProjectHistoryTab from "../../design/projects/history/ProjectHistoryTab";
 import { LogWorkAction, MyProjectWork, MyTeamLine } from "../../design/work/MyProjectWork";
-import BoqPanel from "../../execution/boqs/BoqPanel";
-import ExecutionOverview, { ExecutionFinancials, SiteTeamLine } from "../../execution/projects/ExecutionOverview";
+import { ExecutionFinancials, SiteTeamLine } from "../../execution/projects/ExecutionOverview";
 import ProjectPage, { type ProjectPanels } from "./ProjectPage";
 import type { Project } from "./projectsApi";
 
@@ -28,9 +27,12 @@ const PANELS: Record<Domain, ProjectPanels> = {
         meta: (project) => <MyTeamLine project={project} />,
     },
     execution: {
-        overview: (project) => <ExecutionOverview project={project} />,
+        // everything a site shows is a part of its Financials tab, open to everyone who sees the site, each part by permission
+        overview: () => null,
+        hasOverview: () => false,
         financials: (project) => <ExecutionFinancials project={project} />,
-        boqs: (project) => <BoqPanel project={project} />,
+        financialsForAll: true,
+        movedTabs: { overview: "expenses", boqs: "boqs", supervision: "supervision" },
         meta: (project) => <SiteTeamLine project={project} />,
     },
 };

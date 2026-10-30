@@ -24,20 +24,15 @@ afterEach(() => vi.useRealTimers());
 const moneyPanel = async () => (await screen.findByText("Project money")).closest(".panel") as HTMLElement;
 
 describe("an Execution site's overview", () => {
-    it("shows its progress, expenses and labour, and what the client paid against what it cost", async () => {
-        renderApp(`${path}?tab=overview`, karim, ...siteHandlers);
-        const kpis = (await screen.findByText("Ground labour", { selector: ".kpi-label" })).closest(".kpis") as HTMLElement;
-        expect(await within(kpis).findByText("4 weeks reported")).toBeInTheDocument();
-        expect(within(kpis).getByText("1 / 3")).toBeInTheDocument();
-        expect(within(kpis).getByText("Expenses", { selector: ".kpi-label" })).toBeInTheDocument();
-        expect(within(kpis).getByText(money.short(site.expenses.all.cost))).toBeInTheDocument();
-        expect(within(kpis).getByText("4 records")).toBeInTheDocument();
-        expect(within(kpis).getByText("Client owes")).toBeInTheDocument();
-        // the money is on its own tab
-        expect(screen.queryByText("Project money")).not.toBeInTheDocument();
-        await userEvent.click(screen.getByRole("tab", { name: "Financials" }));
-
+    it("shows what the client paid against what it cost, with no strip of figures above it", async () => {
+        renderApp(path, karim, ...siteHandlers);
+        // the site has no Overview tab of its own: its money is the Overview part of the Financials tab
+        expect(screen.queryByRole("tab", { name: "Overview" })).not.toBeInTheDocument();
         const panel = await moneyPanel();
+        // the strip of progress, requirements, expenses and labour is gone
+        for (const label of ["Progress", "Requirements", "Expenses", "Ground labour", "Client owes"]) {
+            expect(screen.queryByText(label, { selector: ".kpi-label" })).not.toBeInTheDocument();
+        }
         expect(within(panel).getByText(money.exact(m.billing.received), { selector: ".kpi-val" })).toBeInTheDocument();
         expect(await within(panel).findByText(`1 payment · ${money.short(10000)} up front`)).toBeInTheDocument();
         expect(within(panel).getByText(money.exact(m.cashProfit!), { selector: ".kpi-val span" })).toHaveClass("up");
@@ -48,11 +43,25 @@ describe("an Execution site's overview", () => {
         expect(within(panel).getByText("what was spent on site")).toBeInTheDocument();
         expect(within(panel).queryByText("Material profit")).not.toBeInTheDocument();
         expect(within(panel).queryByText(/Default material profit/)).not.toBeInTheDocument();
+        // the payments, the account and the labour have their own parts
+        expect(screen.queryByText(/Payments can be recorded without an invoice/)).not.toBeInTheDocument();
+        expect(screen.queryByText("Ground labour and profit")).not.toBeInTheDocument();
+    });
 
+    it("shows how long the ground labour lasts against the profit, and the payments band, in their own parts", async () => {
+        renderApp(`${path}?part=expenses&view=labour`, karim, ...siteHandlers);
         const health = (await screen.findByText("Ground labour and profit")).closest(".panel") as HTMLElement;
         expect(await within(health).findByText("Thu, Oct 8")).toBeInTheDocument();
         expect(within(health).getByText(/≈ 7 working days of ground labour at 6 workers/)).toBeInTheDocument();
-        expect(screen.getByText(/Payments can be recorded without an invoice/)).toBeInTheDocument();
+        // the weeks reported sit under it
+        expect(await screen.findByText("Weekly labour", { selector: ".panel-title" })).toBeInTheDocument();
+    });
+
+    it("shows the payments band and the payments received in the Client payments part", async () => {
+        renderApp(`${path}?part=payments`, karim, ...siteHandlers);
+        expect(await screen.findByText(/Payments can be recorded without an invoice/)).toBeInTheDocument();
+        expect(await screen.findByRole("region", { name: "Payments received" })).toBeInTheDocument();
+        expect(screen.queryByText("Project money")).not.toBeInTheDocument();
     });
 
     it("has no material margins, client prices or markup on the Financials tab", async () => {
@@ -81,10 +90,15 @@ describe("an Execution site's overview", () => {
     });
 
     it("says so when the site is losing money", async () => {
-        renderApp(`/execution/projects/${site.losingProject.id}`, karim, ...siteHandlers);
+        const loft = `/execution/projects/${site.losingProject.id}`;
+        renderApp(`${loft}?part=expenses&view=labour`, karim, ...siteHandlers);
         const health = (await screen.findByText("Ground labour and profit")).closest(".panel") as HTMLElement;
         expect(await within(health).findByText("Used up")).toBeInTheDocument();
         expect(within(health).getByText(`Losing money: ${money.exact(-site.losingProject.money!.cashProfit!)} below zero.`)).toBeInTheDocument();
+    });
+
+    it("shows a losing site's cash profit as down in the project money", async () => {
+        renderApp(`/execution/projects/${site.losingProject.id}`, karim, ...siteHandlers);
         expect(within(await moneyPanel()).getByText(money.exact(site.losingProject.money!.cashProfit!), { selector: ".kpi-val span" })).toHaveClass("down");
     });
 
@@ -94,7 +108,9 @@ describe("an Execution site's overview", () => {
             http.get("/api/projects/:id/site-money/timeline", () => { asked.push("timeline"); return HttpResponse.json(site.timeline); }),
             http.get("/api/payments", () => { asked.push("payments"); return HttpResponse.json(site.payments); }),
             ...siteHandlers);
-        expect(await screen.findByText("4 weeks reported", { selector: ".kpi-delta span" })).toBeInTheDocument();
+        // the Financials tab is theirs, but not its overview or its money parts: they open on the BOQs (boq:create)
+        expect(await screen.findByRole("tab", { name: "BOQs", selected: true })).toBeInTheDocument();
+        for (const name of ["Overview", "Client payments", "Accounts", "Supervision"]) expect(screen.queryByRole("tab", { name })).not.toBeInTheDocument();
         expect(screen.queryByText("Client owes")).not.toBeInTheDocument();
         expect(screen.queryByText("Project money")).not.toBeInTheDocument();
         expect(screen.queryByText("Client payments")).not.toBeInTheDocument();
@@ -133,11 +149,11 @@ describe("an Execution site's overview", () => {
     });
 
     it("takes a payment on account even before anything is invoiced", async () => {
-        renderApp(`/execution/projects/${site.losingProject.id}`, karim,
+        renderApp(`/execution/projects/${site.losingProject.id}?part=payments`, karim,
             http.get("/api/invoices", () => HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 })),
             http.get("/api/exchange-rates", () => HttpResponse.json([])),
             ...siteHandlers);
-        const band = (await screen.findByText("Client payments")).closest(".panel") as HTMLElement;
+        const band = (await screen.findByText("Client payments", { selector: ".u" })).closest(".panel") as HTMLElement;
         const record = within(band).getByRole("button", { name: "Record payment" });
         expect(record).toBeEnabled();
         await userEvent.click(record);
@@ -221,11 +237,8 @@ describe("the supervision and TVA", () => {
         expect(within(section).getByText(money.exact(m.projectFee!))).toHaveClass("pay-amount");
         // the account below carries the supervision, the TVA and the client total, so the price section doesn't repeat them
         expect(within(section).queryByText("Client total")).not.toBeInTheDocument();
-        const account = await screen.findByRole("region", { name: "Account" });
-        expect(await within(account).findByText("Supervision")).toBeInTheDocument();
-        expect(within(account).getByText("Supervision").closest("div")).toHaveTextContent(`10% of the work price+${money.exact(m.supervisionUsd!)}`);
-        expect(within(account).getByText("TVA").closest("div")).toHaveTextContent("never on supervision");
-        expect(within(account).getByText("Client total").closest("div")).toHaveTextContent(money.exact(m.revenueWithTva));
+        // the account is its own part
+        expect(screen.queryByRole("region", { name: "Price and costs" })).not.toBeInTheDocument();
         expect(section.compareDocumentPosition(await moneyPanel()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
         await userEvent.click(within(section).getByRole("button", { name: "Edit pricing" }));
@@ -247,6 +260,15 @@ describe("the supervision and TVA", () => {
         expect(rows[2]).toHaveTextContent("Material profit 10%");
         expect(rows[2]).not.toHaveTextContent("Supervision");
         expect(rows[2]).toHaveTextContent("Agreed at the start");
+    });
+
+    it("show the supervision, the TVA and the client total in the Accounts part", async () => {
+        renderApp(`${path}?part=accounts`, karim, ...siteHandlers);
+        const account = await screen.findByRole("region", { name: "Price and costs" });
+        expect(await within(account).findByText("Supervision")).toBeInTheDocument();
+        expect(within(account).getByText("Supervision").closest("div")).toHaveTextContent(`10% of the work price+${money.exact(m.supervisionUsd!)}`);
+        expect(within(account).getByText("TVA").closest("div")).toHaveTextContent("never on supervision");
+        expect(within(account).getByText("Client total").closest("div")).toHaveTextContent(money.exact(m.revenueWithTva));
     });
 
     it("shows a field error from the API beside its field, until something is changed", async () => {

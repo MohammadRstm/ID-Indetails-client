@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { errorMessage, isStatus } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
@@ -46,7 +46,7 @@ import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
 
-type TabKey = "financials" | "overview" | "boqs" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
+type TabKey = "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
 
 /**
  * What goes on a project's Overview tab and Timeline tab, and the domain's own bits of its head. Each domain
@@ -59,8 +59,10 @@ export type ProjectPanels = {
     hasOverview?: (permissions: Permissions) => boolean;
     /** Its own tab, first, for those who see money. */
     financials?: (project: Project) => ReactNode;
-    /** Execution client sites: their BOQs and VOs, for whoever writes drafts, sees money or manages the pricing. */
-    boqs?: (project: Project) => ReactNode;
+    /** The Financials tab is for everyone who sees the project; its own parts check each permission (Execution sites). */
+    financialsForAll?: boolean;
+    /** Tabs that became parts of the Financials tab: a link to one opens Financials at that part (?part=). */
+    movedTabs?: Partial<Record<string, string>>;
     /** Its own tab, for those who see everyone's work. */
     analytics?: (project: Project) => ReactNode;
     /** Its own tab, for those who see everyone's work. */
@@ -140,12 +142,17 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const seesMoney = permissions.has(P.FINANCIAL_VIEW);
     const timelineTab = !site && permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.timeline != null;
     const requested = params.get("tab") as TabKey | null;
+    // a link to a tab that became a part of the Financials tab (a site's old BOQs tab, say) opens that part instead
+    const movedPart = requested ? panels.movedTabs?.[requested] : undefined;
+    useEffect(() => {
+        if (!movedPart) return;
+        params.set("tab", "financials");
+        params.set("part", movedPart);
+        setParams(params, { replace: true });
+    }, [movedPart, params, setParams]);
     const allowed: Record<TabKey, boolean> = {
-        financials: seesMoney && panels.financials != null,
+        financials: (seesMoney || panels.financialsForAll === true) && panels.financials != null,
         overview: panels.hasOverview?.(permissions) ?? true,
-        // a draft's author may see no money at all, so the BOQs aren't on the Financials tab
-        boqs: panels.boqs != null && project.billingType === "client" && project.client != null
-            && permissions.hasAny(P.BOQ_CREATE, P.FINANCIAL_VIEW, P.PROJECT_PRICING_MANAGE),
         analytics: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.analytics != null,
         contributors: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.contributors != null,
         // every Design project's files, client or internal, for everyone who sees it
@@ -156,7 +163,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         timeline: timelineTab,
         meetings: true,
     };
-    const tabOrder: TabKey[] = ["financials", "overview", "boqs", "analytics", "contributors", "requirements", "timeline", "meetings", "files", "portal"];
+    const tabOrder: TabKey[] = ["financials", "overview", "analytics", "contributors", "requirements", "timeline", "meetings", "files", "portal"];
     const firstTab = tabOrder.find((k) => allowed[k]) ?? "meetings";
     // A tab the person may not open falls back to their first one, even when the link asks for it.
     const tab: TabKey = requested && allowed[requested] ? requested : firstTab;
@@ -205,6 +212,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         // a tab's own part, and the file whose comments are open, belong to that tab
         if (k !== tab) {
             params.delete("part");
+            params.delete("view");
             params.delete("comments");
         }
         setParams(params);
@@ -347,7 +355,6 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             <Tabs value={tab} onChange={switchTab} items={[
                 ...(allowed.financials ? [{ key: "financials" as TabKey, label: "Financials" }] : []),
                 ...(allowed.overview ? [{ key: "overview" as TabKey, label: "Overview" }] : []),
-                ...(allowed.boqs ? [{ key: "boqs" as TabKey, label: "BOQs" }] : []),
                 ...(allowed.analytics ? [{ key: "analytics" as TabKey, label: "Analytics" }] : []),
                 ...(allowed.contributors ? [{ key: "contributors" as TabKey, label: "Contributors" }] : []),
                 ...(permissions.has(P.REQUIREMENT_VIEW) ? [{ key: "requirements" as TabKey, label: "Requirements", count: requirements.data?.total }] : []),
@@ -364,7 +371,6 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     : tab === "files" && panels.files ? panels.files(project)
                     : tab === "portal" && panels.portal ? panels.portal(project)
                         : tab === "financials" && panels.financials ? panels.financials(project)
-                        : tab === "boqs" && panels.boqs ? panels.boqs(project)
                             : tab === "analytics" && panels.analytics ? panels.analytics(project)
                                 : tab === "contributors" && panels.contributors ? panels.contributors(project)
                                     : panels.overview(project)}

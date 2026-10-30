@@ -132,9 +132,12 @@ describe("a site, for an Execution employee", () => {
     it("is their labour and their logs, without expenses or money", async () => {
         const noMoney = { ...site.losingProject, money: null, staff: [{ id: tarek.id, name: "Tarek Nasser" }] };
         renderApp(`/execution/projects/${noMoney.id}`, tarek, http.get("/api/projects/:id", () => HttpResponse.json(noMoney)), ...siteHandlers);
+        // they open on the labour, the first part they may open: no overview, payments, accounts, BOQs or supervision
         expect(await screen.findByText("Weekly labour")).toBeInTheDocument();
-        expect(await screen.findByRole("form", { name: "Write a log" })).toBeInTheDocument();
-        expect(within(screen.getByRole("form", { name: "Write a log" })).queryByLabelText("Site")).not.toBeInTheDocument();
+        expect(screen.getAllByRole("tab", { name: /^(Overview|Client payments|Accounts|BOQs|Supervision|Overall expenses|Site staff)$/ }).map((t) => t.textContent))
+            .toEqual(["Overall expenses", "Site staff"]);
+        // without expenses to see, the labour has no views to choose between
+        expect(screen.queryByRole("tab", { name: "Ground labour" })).not.toBeInTheDocument();
         expect(screen.queryByText("Expenses", { selector: ".kpi-label" })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Add expenses" })).not.toBeInTheDocument();
         for (const text of ["Project money", "Client payments", "Charged to the client", "Client price", "Material profit", "Site expenses", "Ground labour and profit"]) {
@@ -143,20 +146,53 @@ describe("a site, for an Execution employee", () => {
         expect(screen.queryByRole("button", { name: "More actions" })).not.toBeInTheDocument();
     });
 
+    it("writes its logs in the Site staff part, without choosing the site", async () => {
+        const mine = { ...site.losingProject, money: null, staff: [{ id: tarek.id, name: "Tarek Nasser" }] };
+        renderApp(`/execution/projects/${mine.id}?part=staff`, tarek, http.get("/api/projects/:id", () => HttpResponse.json(mine)), ...siteHandlers);
+        expect(await screen.findByRole("form", { name: "Write a log" })).toBeInTheDocument();
+        expect(within(screen.getByRole("form", { name: "Write a log" })).queryByLabelText("Site")).not.toBeInTheDocument();
+        expect(screen.queryByText("Weekly labour")).not.toBeInTheDocument();
+    });
+
     it("takes no log from someone who doesn't oversee it", async () => {
         const notMine = { ...site.losingProject, money: null, staff: [{ id: 13, name: "Nour Aziz" }] };
-        renderApp(`/execution/projects/${notMine.id}`, tarek, http.get("/api/projects/:id", () => HttpResponse.json(notMine)), ...siteHandlers);
-        expect(await screen.findByText("Weekly labour")).toBeInTheDocument();
-        expect(screen.getByLabelText("Site staff")).toHaveTextContent("Nour Aziz");
+        renderApp(`/execution/projects/${notMine.id}?part=staff`, tarek, http.get("/api/projects/:id", () => HttpResponse.json(notMine)), ...siteHandlers);
+        expect(await screen.findByLabelText("Site staff")).toHaveTextContent("Nour Aziz");
         expect(screen.queryByRole("form", { name: "Write a log" })).not.toBeInTheDocument();
+    });
+
+    it("shows a colleague's name without a link to their profile, and no email or pay", async () => {
+        const notMine = { ...site.losingProject, money: null, staff: [{ id: 13, name: "Nour Aziz" }] };
+        renderApp(`/execution/projects/${notMine.id}?part=staff`, tarek, http.get("/api/projects/:id", () => HttpResponse.json(notMine)), ...siteHandlers);
+        const panel = await screen.findByLabelText("Site staff");
+        const row = (await within(panel).findByText("Nour Aziz")).closest("tr") as HTMLElement;
+        expect(within(row).queryByRole("link")).not.toBeInTheDocument();
+        expect(row).not.toHaveTextContent("nour@id-indetails.test");
+        expect(row).not.toHaveTextContent("month");
     });
 });
 
 describe("a site's staff and logs, for admins", () => {
+    it("lists the staff in a table: their name opening their profile, their email, their pay and what they cost the site", async () => {
+        const withStaff = { ...site.project, staff: [{ id: 13, name: "Nour Aziz" }] };
+        renderApp(`/execution/projects/${withStaff.id}?part=staff`, personas.executionAdmin,
+            http.get("/api/projects/:id", () => HttpResponse.json(withStaff)), ...siteHandlers);
+        const panel = await screen.findByLabelText("Site staff");
+        expect(within(panel).getAllByRole("columnheader").map((h) => h.textContent)).toEqual(["Name", "Email", "Pay", "Cost on this site"]);
+        const row = (await within(panel).findByText("Nour Aziz")).closest("tr") as HTMLElement;
+        expect(within(row).getByRole("link", { name: /Nour Aziz/ })).toHaveAttribute("href", "/execution/people/13");
+        expect(await within(row).findByText("nour@id-indetails.test")).toBeInTheDocument();
+        expect(await within(row).findByText("$1,800 / month")).toBeInTheDocument();
+        // site staff log no hours, so no share of their pay is counted on a site yet
+        expect(within(row).getByText("Not counted yet")).toBeInTheDocument();
+        // the daily logs sit under the table
+        expect((await screen.findAllByText("Daily logs")).length).toBeGreaterThan(0);
+    });
+
     it("change who oversees the site, at least one", async () => {
         const sent: unknown[] = [];
         const withStaff = { ...site.project, staff: [{ id: 13, name: "Nour Aziz" }] };
-        renderApp(`/execution/projects/${withStaff.id}?tab=overview`, personas.executionAdmin,
+        renderApp(`/execution/projects/${withStaff.id}?part=staff`, personas.executionAdmin,
             http.get("/api/projects/:id", () => HttpResponse.json(withStaff)),
             http.put("/api/projects/:id/staff", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(withStaff); }),
             ...siteHandlers);
