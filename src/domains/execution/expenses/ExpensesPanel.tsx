@@ -224,7 +224,7 @@ export default function ExpensesPanel({ project }: { project: Project }) {
                                     </div>
                                 )}
                                 <div ref={topRef} className={cx("mt-s pg-anchor", filtering && d.matching.count === 0 && "hide")}>
-                                    <ExpenseGrid cols={cols} rows={rows} offset={(page - 1) * PER_PAGE} showBy dash locked={locked} minWidth={1240}
+                                    <ExpenseGrid cols={cols} rows={rows} offset={(page - 1) * PER_PAGE} showBy dash resizable locked={locked} minWidth={1240}
                                         canDelete={(r) => items[r].canEdit}
                                         choices={(r, k) => (k === "accountLabelId" ? labelOptions(items[r]) : choices[k] ?? [])}
                                         onCell={(r, k, v, typing) => { if (!typing) save(r, k, v); }}

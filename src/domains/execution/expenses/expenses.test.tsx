@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -13,10 +13,10 @@ import { renderApp } from "@/test/renderApp";
 const karim = withPermissions(personas.executionAdmin, { grant: MONEY_AND_HIRING });
 // Mar Mikhael loft renovation: four expenses
 const open = site.losingProject;
-// the expenses are on the Overview; someone who sees money opens on the Financials tab
-const openPath = `/execution/projects/${open.id}?tab=overview`;
+// the expenses are the Overall expenses part of the Financials tab
+const openPath = `/execution/projects/${open.id}?part=expenses`;
 // Achrafieh Towers lobby: four expenses on a site with an agreed work price
-const pricedPath = `/execution/projects/${site.project.id}?tab=overview`;
+const pricedPath = `/execution/projects/${site.project.id}?part=expenses`;
 const plasterboard = site.openExpenses.items[0];
 
 beforeEach(() => {
@@ -46,17 +46,33 @@ async function typeInto(cell: HTMLElement, text: string) {
     await userEvent.keyboard("{Enter}");
 }
 
+/** Opens a choice cell and takes the option with this name, as site staff do with the mouse. */
+async function choose(cell: HTMLElement, option: string) {
+    await userEvent.click(cell);
+    await userEvent.click(await within(cell.closest("td") as HTMLElement).findByRole("option", { name: option }));
+}
+
+/** The names a choice cell offers: it is opened to read them and closed again. */
+async function offered(cell: HTMLElement) {
+    await userEvent.click(cell);
+    const names = within(cell.closest("td") as HTMLElement).getAllByRole("option").map((o) => o.textContent);
+    await userEvent.click(cell);
+    return names;
+}
+
 describe("the expenses on a site", () => {
     it("are listed with their cost, currency, day, category and who added them, and carry no client price", async () => {
         renderApp(openPath, karim, ...siteHandlers);
         const p = await panel();
         expect(await within(p).findByText("4 expenses · 4 kinds of item")).toBeInTheDocument();
         expect(within(p).getByLabelText("Item 1")).toHaveValue("Plasterboard");
-        expect(within(p).getByLabelText("Currency 1")).toHaveValue("USD");
+        expect(within(p).getByLabelText("Currency 1")).toHaveTextContent("USD");
         expect(within(p).getByLabelText("Supplier / payee 1")).toHaveValue("Gypsum Lb");
         expect(within(p).getByLabelText("Spent on 1")).toHaveValue("Sep 30, 2026");
-        expect(within(p).getByLabelText("Category 1")).toHaveValue("materials");
-        expect(within(p).getByLabelText("Account label 1")).toHaveValue("");
+        expect(within(p).getByLabelText("Category 1")).toHaveTextContent("Materials");
+        expect(within(p).getByLabelText("Account label 1")).toHaveTextContent("No label");
+        // the choices are drawn by the unit, not by the browser: buttons, not native selects
+        expect(within(p).getByLabelText("Category 1").tagName).toBe("BUTTON");
         expect(within(p).getAllByText("Nour Aziz")).toHaveLength(4);
         for (const gone of ["Client price 1", "Markup 1"]) expect(within(p).queryByLabelText(gone)).not.toBeInTheDocument();
         for (const gone of ["Charged to the client", "Material profit", "Client price"]) expect(within(p).queryByText(gone)).not.toBeInTheDocument();
@@ -81,9 +97,9 @@ describe("the expenses on a site", () => {
             http.get("/api/projects/:id/site-expenses", () => listWith([scaffolding, ...site.openExpenses.items], { totalCount: 5, all: totals, matching: totals })),
             ...siteHandlers);
         const p = await panel();
-        expect(await within(p).findByLabelText("Currency 1")).toHaveValue("LBP");
+        expect(await within(p).findByLabelText("Currency 1")).toHaveTextContent("LBP");
         expect(within(p).getByLabelText("Amount 1")).toHaveValue("4,500,000");
-        expect(within(p).getByLabelText("Category 1")).toHaveValue("equipment");
+        expect(within(p).getByLabelText("Category 1")).toHaveTextContent("Equipment");
         // one total for the dollars and one for the pounds
         expect(within(p).getByText("Expenses · USD")).toBeInTheDocument();
         expect(within(p).getByText(money.exact(6726))).toBeInTheDocument();
@@ -135,13 +151,11 @@ describe("the expenses on a site", () => {
             }),
             ...siteHandlers);
         const p = await panel();
-        await userEvent.selectOptions(await within(p).findByLabelText("Currency 1"), "LBP");
+        await choose(await within(p).findByLabelText("Currency 1"), "LBP");
         await waitFor(() => expect(saved[0]).toMatchObject({ currency: "LBP", category: "materials", accountLabelId: null }));
-        await userEvent.selectOptions(within(p).getByLabelText("Category 1"), "contractor");
+        await choose(within(p).getByLabelText("Category 1"), "Contractor");
         await waitFor(() => expect(saved[1]).toMatchObject({ category: "contractor" }));
-        const label = within(p).getByLabelText("Account label 1");
-        await waitFor(() => expect(within(label).getByRole("option", { name: "Permits" })).toBeInTheDocument());
-        await userEvent.selectOptions(label, "3");
+        await choose(within(p).getByLabelText("Account label 1"), "Permits");
         await waitFor(() => expect(saved[2]).toMatchObject({ accountLabelId: 3 }));
         // a day is typed the way people write it
         await typeInto(within(p).getByLabelText("Spent on 1"), "1/9/2026");
@@ -168,11 +182,10 @@ describe("the expenses on a site", () => {
             ...siteHandlers);
         const p = await panel();
         const own = await within(p).findByLabelText("Account label 1");
-        expect(own).toHaveValue("9");
-        expect(await within(own).findByRole("option", { name: "Old permits (archived)" })).toBeInTheDocument();
-        expect(within(own).getAllByRole("option").map((o) => o.textContent)).toEqual(["No label", "Concrete", "Finishing", "Permits", "Old permits (archived)"]);
+        await waitFor(() => expect(own).toHaveTextContent("Old permits (archived)"));
+        expect(await offered(own)).toEqual(["No label", "Concrete", "Finishing", "Permits", "Old permits (archived)"]);
         // nobody else can newly pick it
-        expect(within(within(p).getByLabelText("Account label 2")).queryByRole("option", { name: /Old permits/ })).not.toBeInTheDocument();
+        expect(await offered(within(p).getByLabelText("Account label 2"))).toEqual(["No label", "Concrete", "Finishing", "Permits"]);
         await typeInto(within(p).getByLabelText("Item 1"), "Plasterboard 12mm");
         await waitFor(() => expect(saved[0]).toMatchObject({ name: "Plasterboard 12mm", accountLabelId: 9 }));
     });
@@ -182,10 +195,10 @@ describe("the expenses on a site", () => {
             http.put("/api/projects/:id/site-expenses/:expenseId", () => noRate()),
             ...siteHandlers);
         const currency = await within(await panel()).findByLabelText("Currency 1");
-        await userEvent.selectOptions(currency, "LBP");
+        await choose(currency, "LBP");
         expect(await screen.findByText(NO_RATE)).toBeInTheDocument();
         expect(screen.getByText("Not saved")).toBeInTheDocument();
-        await waitFor(() => expect(currency).toHaveValue("USD"));
+        await waitFor(() => expect(currency).toHaveTextContent("USD"));
     });
 
     it("start the next change on a row from what was just saved, before the list comes back", async () => {
@@ -370,7 +383,7 @@ describe("the Add expenses sheet", () => {
     async function typePounds(sheet: HTMLElement, item: string, amount: string) {
         await waitFor(() => expect(within(sheet).getByLabelText("Item 5")).toHaveFocus());
         await userEvent.keyboard(`${item}{Enter}{Enter}{Enter}{Enter}${amount}`);
-        await userEvent.selectOptions(within(sheet).getByLabelText("Currency 5"), "LBP");
+        await choose(within(sheet).getByLabelText("Currency 5"), "LBP");
     }
 
     it("adds the rows typed, with the amount worked out as they are typed", async () => {
@@ -401,10 +414,10 @@ describe("the Add expenses sheet", () => {
     it("starts every row in dollars, spent today, under materials, with no label, and counts none of them as typed", async () => {
         renderApp(openPath, karim, ...siteHandlers);
         const sheet = await openSheet();
-        expect(await within(sheet).findByLabelText("Currency 5")).toHaveValue("USD");
+        expect(await within(sheet).findByLabelText("Currency 5")).toHaveTextContent("USD");
         expect(within(sheet).getByLabelText("Spent on 5")).toHaveValue("Sep 30, 2026");
-        expect(within(sheet).getByLabelText("Category 5")).toHaveValue("materials");
-        expect(within(sheet).getByLabelText("Account label 5")).toHaveValue("");
+        expect(within(sheet).getByLabelText("Category 5")).toHaveTextContent("Materials");
+        expect(within(sheet).getByLabelText("Account label 5")).toHaveTextContent("No label");
         expect(within(sheet).getByText("Nothing new typed yet")).toBeInTheDocument();
         expect(within(sheet).getByRole("button", { name: "Add expenses" })).toBeDisabled();
     });
@@ -416,10 +429,8 @@ describe("the Add expenses sheet", () => {
             ...siteHandlers);
         const sheet = await openSheet();
         await typePounds(sheet, "Scaffolding", "895000");
-        await userEvent.selectOptions(within(sheet).getByLabelText("Category 5"), "equipment");
-        const label = within(sheet).getByLabelText("Account label 5");
-        await waitFor(() => expect(within(label).getByRole("option", { name: "Permits" })).toBeInTheDocument());
-        await userEvent.selectOptions(label, "3");
+        await choose(within(sheet).getByLabelText("Category 5"), "Equipment");
+        await choose(within(sheet).getByLabelText("Account label 5"), "Permits");
         await typeInto(within(sheet).getByLabelText("Spent on 5"), "28/9/2026");
         expect(within(sheet).getByLabelText("Spent on 5")).toHaveValue("Sep 28, 2026");
         // the pounds are totalled apart and not counted in the dollars
@@ -441,11 +452,9 @@ describe("the Add expenses sheet", () => {
         const sheet = await openSheet();
         // the expense filed under the archived label is the first recorded (oldest first)
         const own = await within(sheet).findByLabelText("Account label 1");
-        expect(await within(own).findByRole("option", { name: "Old permits (archived)" })).toBeInTheDocument();
+        await waitFor(() => expect(own).toHaveTextContent("Old permits (archived)"));
         const fresh = within(sheet).getByLabelText("Account label 5");
-        await waitFor(() => expect(within(fresh).getByRole("option", { name: "Permits" })).toBeInTheDocument());
-        expect(within(fresh).queryByRole("option", { name: /Retired|Old permits/ })).not.toBeInTheDocument();
-        expect(within(fresh).getAllByRole("option").map((o) => o.textContent)).toEqual(["No label", "Concrete", "Finishing", "Permits"]);
+        expect(await offered(fresh)).toEqual(["No label", "Concrete", "Finishing", "Permits"]);
     });
 
     it("marks the rows still missing a cost, with what is wrong under them, and adds nothing", async () => {
@@ -558,7 +567,7 @@ describe("the Add expenses sheet", () => {
         // the row is still there to put right: change it to dollars and send it again
         expect(screen.getByRole("dialog", { name: "Add expenses" })).toBeInTheDocument();
         expect(within(sheet).getByLabelText("Item 5")).toHaveValue("Scaffolding");
-        await userEvent.selectOptions(within(sheet).getByLabelText("Currency 5"), "USD");
+        await choose(within(sheet).getByLabelText("Currency 5"), "USD");
         await waitFor(() => expect(within(sheet).queryByRole("alert")).not.toBeInTheDocument());
         expect(within(sheet).getByRole("button", { name: "Add 1 expense" })).toBeEnabled();
     });
@@ -578,13 +587,14 @@ describe("the Add expenses sheet", () => {
         const sheet = await openSheet();
         const first = await within(sheet).findByLabelText("Item 5");
         // the labels have to be on offer before one can be named
-        await waitFor(() => expect(within(within(sheet).getByLabelText("Account label 5")).getByRole("option", { name: "Concrete" })).toBeInTheDocument());
+        const label = within(sheet).getByLabelText("Account label 5");
+        await waitFor(async () => expect(await offered(label)).toContain("Concrete"));
         fireEvent.paste(first, { clipboardData: { getData: () => "Pump hire\t\t\t\t120000\tLBP\tHaddad Rentals\t3/9/2026\tequipment\tConcrete" } });
-        expect(within(sheet).getByLabelText("Currency 5")).toHaveValue("LBP");
+        expect(within(sheet).getByLabelText("Currency 5")).toHaveTextContent("LBP");
         expect(within(sheet).getByLabelText("Supplier / payee 5")).toHaveValue("Haddad Rentals");
         expect(within(sheet).getByLabelText("Spent on 5")).toHaveValue("Sep 3, 2026");
-        expect(within(sheet).getByLabelText("Category 5")).toHaveValue("equipment");
-        expect(within(sheet).getByLabelText("Account label 5")).toHaveValue("1");
+        expect(within(sheet).getByLabelText("Category 5")).toHaveTextContent("Equipment");
+        expect(within(sheet).getByLabelText("Account label 5")).toHaveTextContent("Concrete");
     });
 
     it("takes no client price", async () => {
@@ -619,5 +629,83 @@ describe("the Add expenses sheet", () => {
         await userEvent.click(within(sheet).getByRole("button", { name: "Cancel" }));
         expect(confirm).toHaveBeenCalledWith("Discard the 1 expense typed so far?");
         expect(screen.getByRole("dialog", { name: "Add expenses" })).toBeInTheDocument();
+    });
+});
+
+describe("the columns of the expenses grid", () => {
+    // jsdom lays nothing out: the table is 1000px wide, so ten pixels are one percent of it
+    beforeEach(() => {
+        localStorage.clear();
+        vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(1000);
+    });
+    afterEach(() => localStorage.clear());
+
+    /** The width of each of the grid's columns as a percentage of the table: the data columns, not the # and delete ones. */
+    const widths = (table: HTMLElement) =>
+        Array.from(table.querySelectorAll("col")).map((c) => parseFloat(c.style.width)).filter((_, i, all) => i > 0 && i < all.length - 1);
+    const total = (list: number[]) => Math.round(list.reduce((sum, w) => sum + w, 0) * 100) / 100;
+    const drag = (handle: HTMLElement, from: number, to: number) => {
+        fireEvent.pointerDown(handle, { button: 0, clientX: from, pointerId: 1 });
+        fireEvent.pointerMove(handle, { clientX: to, pointerId: 1 });
+        fireEvent.pointerUp(handle, { clientX: to, pointerId: 1 });
+    };
+    const gridOf = async () => (await within(await panel()).findByLabelText("Item 1")).closest("table") as HTMLElement;
+
+    it("give what one column gains to the next, so the table keeps its width", async () => {
+        renderApp(openPath, karim, ...siteHandlers);
+        const table = await gridOf();
+        const before = widths(table);
+        const sum = total(before);
+        // Item (14%) and Qty (6%): dragging Item 20px wider moves two points from Qty to Item
+        drag(within(table).getByRole("separator", { name: "Resize Item" }), 100, 120);
+        const after = widths(table);
+        expect(after[0]).toBeCloseTo(before[0] + 2);
+        expect(after[1]).toBeCloseTo(before[1] - 2);
+        expect(after.slice(2)).toEqual(before.slice(2));
+        expect(total(after)).toBe(sum);
+    });
+
+    it("never takes a column below a few percent, however far it is dragged", async () => {
+        renderApp(openPath, karim, ...siteHandlers);
+        const table = await gridOf();
+        const before = widths(table);
+        drag(within(table).getByRole("separator", { name: "Resize Item" }), 100, 1100);
+        const after = widths(table);
+        expect(after[1]).toBe(3);
+        expect(total(after)).toBe(total(before));
+        drag(within(table).getByRole("separator", { name: "Resize Item" }), 1100, -900);
+        expect(widths(table)[0]).toBe(3);
+        expect(total(widths(table))).toBe(total(before));
+    });
+
+    it("keeps the widths in this browser and puts them back on a double click", async () => {
+        renderApp(openPath, karim, ...siteHandlers);
+        const table = await gridOf();
+        const before = widths(table);
+        const handle = within(table).getByRole("separator", { name: "Resize Item" });
+        drag(handle, 100, 120);
+        const saved = Object.entries(localStorage).filter(([key]) => key.startsWith("expense-grid-widths"));
+        expect(saved).toHaveLength(1);
+        expect(JSON.parse(saved[0][1])[0]).toBeCloseTo(before[0] + 2);
+        fireEvent.doubleClick(handle);
+        expect(widths(table)).toEqual(before);
+        expect(Object.keys(localStorage).filter((key) => key.startsWith("expense-grid-widths"))).toEqual([]);
+    });
+
+    it("starts from the widths last dragged", async () => {
+        renderApp(openPath, karim, ...siteHandlers);
+        const first = await gridOf();
+        drag(within(first).getByRole("separator", { name: "Resize Item" }), 100, 120);
+        const dragged = widths(first);
+        cleanup();
+        renderApp(openPath, karim, ...siteHandlers);
+        expect(widths(await gridOf())).toEqual(dragged);
+    });
+
+    it("has no handle on the last column", async () => {
+        renderApp(openPath, karim, ...siteHandlers);
+        const table = await gridOf();
+        expect(within(table).getAllByRole("separator")).toHaveLength(10);
+        expect(within(table).queryByRole("separator", { name: "Resize Note" })).not.toBeInTheDocument();
     });
 });
