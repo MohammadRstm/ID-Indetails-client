@@ -116,7 +116,12 @@ export function actionFor(from: ProjectStatus, to: ProjectStatus): StatusAction 
 export function useChangeProjectStatus(id: number) {
     const invalidate = useInvalidate();
     return useMutation({
-        mutationFn: async (action: StatusAction) => (await http.post<Project>(`/projects/${id}/${action}`)).data,
+        // completing can also keep what a client paid beyond the price ({ keepPaidAhead })
+        mutationFn: async (input: StatusAction | { action: "complete"; keepPaidAhead: boolean }) => {
+            const action = typeof input === "string" ? input : input.action;
+            const body = typeof input === "string" ? undefined : { keepPaidAhead: input.keepPaidAhead };
+            return (await http.post<Project>(`/projects/${id}/${action}`, body)).data;
+        },
         // Completing ticks every open requirement; reopening unticks those again.
         // not awaited: the close-out window's own onSuccess (its toast with Undo) has to run before the project
         // comes back completed and the window goes
