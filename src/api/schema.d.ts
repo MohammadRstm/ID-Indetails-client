@@ -15388,6 +15388,14 @@ export interface components {
         };
         AccountPayeeRowResponse: {
             payee: null | string;
+            splits: components["schemas"]["AccountPayeeSplitResponse"][];
+            /** Format: double */
+            spentUsd: number;
+        };
+        AccountPayeeSplitResponse: {
+            /** Format: int64 */
+            accountLabelId: null | number;
+            category: components["schemas"]["SiteExpenseCategory"];
             /** Format: double */
             spentUsd: number;
         };
@@ -20585,6 +20593,8 @@ export interface components {
             location?: null | string;
             /** Format: int64 */
             ownerId?: number;
+            /** Format: date */
+            startDate?: null | string;
             /** Format: date */
             targetDate?: null | string;
             tint?: null | string;
