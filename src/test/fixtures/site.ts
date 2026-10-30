@@ -80,6 +80,12 @@ export const siteHandlers = [
         const items = new URL(request.url).searchParams.get("role") === "employee" ? siteStaff : [];
         return HttpResponse.json({ items, page: 1, pageSize: 100, totalCount: items.length });
     }),
+    // a site's staff table reads each person's email and pay: Nour is paid monthly, Tarek's pay isn't sent
+    http.get("/api/employees/:id", ({ params }) => {
+        const person = siteStaff.find((p) => String(p.id) === params.id) ?? siteStaff[0];
+        const currentPay = person.id === 13 ? { id: 1, amount: 1800, currency: "USD", basis: "monthly", effectiveFrom: "2026-01-12", createdAt: "2026-01-12T08:00:00Z", createdById: 1 } : null;
+        return HttpResponse.json({ ...person, currentPay, permissions: [] });
+    }),
     http.get("/api/me/sites", () => HttpResponse.json([])),
     http.get("/api/me/site-logs", () => HttpResponse.json({ items: [], page: 1, pageSize: 25, totalCount: 0 })),
     http.get("/api/site-logs", () => HttpResponse.json({ items: [], page: 1, pageSize: 25, totalCount: 0 })),

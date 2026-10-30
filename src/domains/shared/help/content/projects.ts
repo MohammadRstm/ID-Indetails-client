@@ -252,16 +252,16 @@ export const projects: Article[] = [
         title: "Recording the supervision the company has taken",
         category: "projects",
         who: and(sees("execution"), has(P.FINANCIAL_VIEW)),
-        summary: "On a site's Financials tab, Supervision taken lists what the company has taken of its supervision fee out of the project account. It is not a cost.",
+        summary: "On a site's Financials tab, in its Supervision part, Supervision taken lists what the company has taken of its supervision fee out of the project account. It is not a cost.",
         ask: ["supervision taken", "take supervision", "supervision withdrawal", "withdraw supervision", "supervision left", "supervision over", "company fee taken", "remove supervision taken"],
         blocks: [
             only(has(P.PAYMENT_RECORD), steps(
-                step("Open the site's **Financials** tab and find **Supervision taken**.", "Projects", "the site", "Financials"),
+                step("Open the site's **Financials** tab, choose **Supervision** and find **Supervision taken**.", "Projects", "the site", "Financials", "Supervision"),
                 step("Choose **Record supervision taken**, enter the amount and the day it was taken (today by default, never later), and a note if you like."),
-                step("**Record**. The Account section updates: the supervision taken goes up, what is left goes down and so does the cash in the account."),
+                step("**Record**. The supervision taken goes up and what is left goes down; on the Financials tab, the cash in the account goes down too."),
             )),
             list(
-                "The supervision due is the work price × the site's supervision rate. **Left** is what is due less what was taken; if more was taken than is due it reads **Over by**, and that is allowed.",
+                "The supervision due is the work price × the site's supervision rate. **Left** is what is due less what was taken. No more than what is left can be taken: a larger amount is refused. If a site's price is lowered after more was taken, **Left** reads **Over by**.",
                 "It is **not a cost**: the site's profit and margin don't change.",
                 "It can be recorded on a finished site too.",
             ),

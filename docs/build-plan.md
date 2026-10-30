@@ -197,6 +197,8 @@ Decisions made along the way, and anything skipped because it needs the user's i
 - **boq:create is given person by person** (the user, 29 Oct 2026). It stays a super-admin-only default; a super admin gives it to the admins who write internal drafts. They need no money permission for it: the BOQs tab opens with boq:create alone and shows them only their own drafts.
 - **Account labels** are one company-wide list that a super admin keeps in Settings → Account labels (add, rename, archive and restore, reorder with the arrows). The `useAccountLabels` hook (`domains/shared/accountLabels`) is what payments and expenses pick from, through the shared `AccountLabelSelect` (payments) and `labelChoices` (the expenses grid too).
 
+- **An Execution site has one tab for its money, with parts** (30 Oct 2026). Its old Overview, BOQs and Supervision tabs are parts of the Financials tab, chosen with `?part=`: Overview (financial:view: the work price and the project money), Client payments, Accounts, BOQs, Supervision, Overall expenses and Site staff. The Financials tab is open to everyone who sees the site and each part is gated on its own (`siteParts` in `ExecutionOverview.tsx`); a part a person may not open falls back to their first. An old `?tab=overview|boqs|supervision` link is forwarded to its part (`movedTabs` in `ProjectRoute.tsx`, read by `ProjectPage.tsx`). Overall expenses has two views, `?view=`: the expenses and the ground labour. The supervision taken can't go above what is left of the supervision due: the record window shows what is left and refuses more, as the API does.
+
 ### API follow-ups
 
 None open. Done since:

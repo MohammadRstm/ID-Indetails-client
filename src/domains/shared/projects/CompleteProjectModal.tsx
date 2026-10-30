@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { errorMessage } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
@@ -32,14 +33,25 @@ export default function CompleteProjectModal({ project, openRequirements, contri
     const m = permissions.has(P.FINANCIAL_VIEW) ? project.money : null;
     const execution = project.domain === "execution";
     const internal = project.billingType === "internal";
-    const unpriced = execution && m != null && m.revenue === 0;
+    // What the client paid beyond the price (TVA included). Kept by default: completing raises the price to what was
+    // received (a closing VO on a site, a higher payment on Design), so the project closes on what it really earned.
+    const paidAhead = !internal && m?.billing && m.billing.paidAhead > 0.5 ? m.billing.paidAhead : 0;
+    const [keep, setKeep] = useState(true);
+    // what keeping it adds to the revenue: the TVA in it is never revenue, and on a site supervision is part of it
+    const s = execution ? m?.supervisionRate ?? 0 : 0;
+    const t = m?.tvaRate ?? 0;
+    const gain = keep && paidAhead > 0 ? paidAhead * (1 + s) / (1 + s + t) : 0;
+    const revenue = (m?.revenue ?? 0) + gain;
+    const profit = (m?.profit ?? 0) + gain;
+    const margin = m && revenue > 0 ? profit / revenue : null;
+    const unpriced = execution && m != null && revenue === 0;
     const costOnly = internal || unpriced;
 
     function confirm() {
-        change.mutate("complete", {
+        change.mutate({ action: "complete", keepPaidAhead: keep && paidAhead > 0 }, {
             onSuccess: () => {
                 toast({
-                    text: `${project.title} closed${m && !costOnly && m.margin != null ? ` at ${money.pct(m.margin)} margin` : ""}`,
+                    text: `${project.title} closed${m && !costOnly && margin != null ? ` at ${money.pct(margin)} margin` : ""}`,
                     sub: "Removed from employee lists · history kept",
                     icon: "checkCircle",
                     actionLabel: "Undo",
@@ -54,8 +66,8 @@ export default function CompleteProjectModal({ project, openRequirements, contri
     const rows: [IconName, string, string][] = [
         ["checkCircle", "Status becomes Completed", `Completion date ${fmtDayDateY(companyToday())} · every requirement marked done, so progress is 100%.`],
         ["lock", execution ? "Price is locked" : "Payment is locked", internal ? "Internal projects carry no payment." : unpriced ? `No ${execution ? "BOQ was ever agreed" : "price was ever set"} - there is nothing to lock.`
-            : execution ? `${m ? `${money.fmt(m.revenue)}, the work price and supervision, ` : "The work price "}can no longer change while the project stays closed: no BOQ or VO can be agreed or withdrawn.`
-                : m ? `${money.fmt(m.revenue)} can no longer be changed while the project stays closed.` : "The agreed amount can no longer be changed while the project stays closed."],
+            : execution ? `${m ? `${money.fmt(revenue)}, the work price and supervision, ` : "The work price "}can no longer change while the project stays closed: no BOQ or VO can be agreed or withdrawn.`
+                : m ? `${money.fmt(revenue)} can no longer be changed while the project stays closed.` : "The agreed amount can no longer be changed while the project stays closed."],
         ["eye", "Leaves every employee's active list", "Employees stop seeing it among their active projects; their own entries stay in My work."],
         execution ? ["clock", "No new expenses or labour", "Every expense and weekly labour report - and therefore direct cost - is final."]
             : ["clock", "No new work entries", "Logged hours - and therefore labour cost - are final."],
@@ -74,7 +86,7 @@ export default function CompleteProjectModal({ project, openRequirements, contri
                 <>
                     <div className="grow mono" style={{ fontSize: 12 }}>
                         {change.error ? <FieldError message={errorMessage(change.error)} />
-                            : m ? (costOnly ? `Final cost ${money.fmt(m.cost.total)}` : `Final profit ${money.fmt(m.profit)} · ${money.pct(m.margin)}`) : null}
+                            : m ? (costOnly ? `Final cost ${money.fmt(m.cost.total)}` : `Final profit ${money.fmt(profit)} · ${money.pct(margin)}`) : null}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={change.isPending} onClick={confirm}><Icon name="check" />Complete project</button>
@@ -89,6 +101,17 @@ export default function CompleteProjectModal({ project, openRequirements, contri
                         {openRequirements === 1 ? "it" : "all of them"} as done, so progress becomes 100%. Reopening the project later puts{" "}
                         {openRequirements === 1 ? "it" : "them"} back as open.
                     </div>
+                </div>
+            )}
+            {paidAhead > 0 && (
+                <div className="banner hold">
+                    <Icon name="info" />
+                    <div className="grow">
+                        <b>The client paid {money.fmt(paidAhead)} beyond the agreed price.</b>{" "}
+                        {keep ? `It is kept: ${execution ? "a closing VO raises the price" : "the payment is raised"} to what was received, so it counts in the profit below.`
+                            : "It stays a balance owed back to the client and doesn't count in the profit."}
+                    </div>
+                    <button type="button" className="switch" role="switch" aria-checked={keep} aria-label="Keep what the client paid beyond the price" onClick={() => setKeep(!keep)} />
                 </div>
             )}
             {unpriced && (
@@ -115,18 +138,18 @@ export default function CompleteProjectModal({ project, openRequirements, contri
                     <div className="row wrap" style={{ gap: 12, alignItems: "baseline" }}>
                         <div>
                             <div className="u">Final profit</div>
-                            <Money value={m.profit} size="xl" tone="auto" />
+                            <Money value={profit} size="xl" tone="auto" />
                         </div>
-                        <MarginPill value={m.margin} />
+                        <MarginPill value={margin} />
                     </div>
                     <Waterfall height={200} steps={execution ? [
-                        { label: "Agreed", value: m.revenue, kind: "start" },
+                        { label: gain > 0 ? "Agreed + kept" : "Agreed", value: revenue, kind: "start", sub: gain > 0 ? `${money.short(gain)} paid beyond the price` : undefined },
                         { label: "Site expenses", value: m.cost.siteExpenses, kind: "cost" },
                         { label: "Ground labour", value: m.cost.groundLabour, kind: "cost" },
                         { label: "Other costs", value: m.cost.expenses, kind: "cost" },
                         { label: "Profit", value: 0, kind: "result" },
                     ] : [
-                        { label: "Payment", value: m.revenue, kind: "start" },
+                        { label: gain > 0 ? "Payment + kept" : "Payment", value: revenue, kind: "start", sub: gain > 0 ? `${money.short(gain)} paid beyond the price` : undefined },
                         { label: "Labour", value: m.cost.labour, kind: "cost", sub: `${Math.round(m.labourHours)}h` },
                         { label: "Expenses", value: m.cost.expenses, kind: "cost" },
                         { label: "Profit", value: 0, kind: "result" },

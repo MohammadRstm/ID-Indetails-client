@@ -23,7 +23,7 @@ const refusal = (code: string, message: string, errors: Record<string, string[]>
     HttpResponse.json({ type: errors ? "validation" : "business_rule", code, message, errors, traceId: "t" }, { status });
 const withLabel = (accountLabel: typeof concrete | null) => http.get("/api/payments", () =>
     HttpResponse.json({ ...billing.domainPayments, items: [{ ...paid, accountLabel }, ...billing.domainPayments.items.slice(1)] }));
-const band = async () => (await screen.findByText("Client payments")).closest(".panel") as HTMLElement;
+const band = async () => (await screen.findByText("Client payments", { selector: ".u" })).closest(".panel") as HTMLElement;
 const received = async () => (await screen.findByText("Payments received")).closest(".panel") as HTMLElement;
 const openLabel = async () => {
     await userEvent.click(await within(await received()).findByRole("button", { name: "Payment of Sep 28 actions" }));
@@ -60,7 +60,7 @@ describe("recording a payment under an account label", () => {
     it("files an Execution site's payment under a label too, and sends none when none is chosen", async () => {
         const recorded: Record<string, unknown>[] = [];
         const lobby = site.losingProject;
-        renderApp(`/execution/projects/${lobby.id}`, karim,
+        renderApp(`/execution/projects/${lobby.id}?part=payments`, karim,
             http.get("/api/invoices", () => HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 })),
             http.get("/api/exchange-rates", () => HttpResponse.json([])),
             http.post("/api/projects/:id/payments", async ({ request }) => { recorded.push(await request.json() as Record<string, unknown>); return HttpResponse.json(paid, { status: 201 }); }),

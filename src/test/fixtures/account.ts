@@ -23,10 +23,11 @@ export const accountFigures: Schemas["AccountFiguresResponse"] = {
     cashInAccountUsd: 464,
     byLabel: [{ accountLabel: null, receivedUsd: 10000, spentUsd: 9036, otherUsd: 500, restUsd: 464 }],
     byCategory: [{ category: "materials", spentUsd: 6036 }],
+    // each payee's split: what was spent with them under each category and label (all materials, none labelled)
     byPayee: [
         { payee: "Tile House", spentUsd: 3960 }, { payee: "Steel Co", spentUsd: 936 },
         { payee: "Sipes", spentUsd: 840 }, { payee: "Holcim", spentUsd: 300 },
-    ],
+    ].map((p) => ({ ...p, splits: [{ category: "materials" as const, accountLabelId: null, spentUsd: p.spentUsd }] })),
     unconverted: [],
 };
 

@@ -176,12 +176,13 @@ export const explainedMoney: Article[] = [
         title: "A site's account: what is left, by label",
         category: "money",
         who: and(sees("execution"), money),
-        summary: "The Account section of a site's Financials tab shows what the client pays and has paid, what the site has cost, the supervision and the cash in the account, split by account label.",
+        summary: "The Account section of a site's Financials tab shows what the client pays and has paid, what the site has cost, how the profit becomes the cash in the account, and that cash split by account label. The supervision has its own tab.",
         ask: ["account", "account figures", "cash in account", "rest to pay", "paid ahead", "rest in account", "by label", "unlabelled", "spending by category", "spending by payee", "over by", "supervision left"],
         blocks: [
             formula("Client total = work price + supervision + TVA", "A work price of $17,000 with 10% supervision and no TVA: $18,700."),
             formula("Rest to pay = client total − received", "$18,700 less $10,000 received: $8,700 to pay. When the client has paid more than the total it reads **Paid ahead** instead."),
             formula("Cash in account = received − costs − supervision taken − moved to the pocket money + paid by it", "$10,000 received, $9,036 of costs and $500 of supervision taken: $464."),
+            formula("Cash in account = profit − rest to pay + TVA − supervision taken", "Why the cash isn't the profit: the profit counts the whole price but the account holds only what was paid, the TVA paid is in it without being profit, and the supervision taken has left it. Pocket money is in both, so it cancels out."),
             list(
                 "**Costs** are the site's: site expenses, ground labour, staff and other costs. **Profit** is the agreed amount (work price plus supervision) less the costs. The TVA a client pays is in the account too, but it isn't revenue.",
                 "**Rest in account by label** is what was received under each label less what was spent under it. **Unlabelled** comes last and also carries what no label holds: ground labour, staff and other costs, the supervision taken and the pocket money moves. The rows add up to the cash in the account.",

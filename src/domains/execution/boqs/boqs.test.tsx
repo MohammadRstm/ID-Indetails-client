@@ -16,7 +16,8 @@ const reader = withPermissions(personas.executionAdmin, { grant: [P.FINANCIAL_VI
 // One who writes internal drafts of his own
 const author = withPermissions(personas.executionAdmin, { grant: [P.FINANCIAL_VIEW, P.BOQ_CREATE] });
 const path = `/execution/projects/${site.project.id}`;
-const boqsTab = `${path}?tab=boqs`;
+// the BOQs are a part of the site's Financials tab
+const boqsTab = `${path}?part=boqs`;
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -138,19 +139,21 @@ describe("a site's bills of quantities", () => {
     it("are not on the page, or asked for, without boq:create, financial:view or project:pricing_manage", async () => {
         const asked: string[] = [];
         renderApp(boqsTab, personas.executionAdmin, http.get("/api/projects/:id/boqs", () => { asked.push("list"); return HttpResponse.json(boqs.list); }), ...siteHandlers);
-        expect(await screen.findByRole("tab", { name: "Overview" })).toBeInTheDocument();
-        for (const name of ["Financials", "BOQs"]) expect(screen.queryByRole("tab", { name })).not.toBeInTheDocument();
+        // the Financials tab is open to everyone who sees the site, but its BOQs part is not theirs: they land on the expenses
+        expect(await screen.findByRole("tab", { name: "Overall expenses", selected: true })).toBeInTheDocument();
+        for (const name of ["Overview", "BOQs"]) expect(screen.queryByRole("tab", { name })).not.toBeInTheDocument();
         expect(screen.queryByRole("region", { name: "Bills of quantities" })).not.toBeInTheDocument();
         expect(asked).toEqual([]);
     });
 
-    it("have their own tab, so an author who sees no money still finds their drafts", async () => {
+    it("have their own part, so an author who sees no money still finds their drafts", async () => {
         const drafter = withPermissions(personas.executionAdmin, { grant: [P.BOQ_CREATE] });
         // without financial:view the API sends only the author's own drafts, and no price
         renderApp(boqsTab, drafter, listOf({ internal: [summaryOf(boqs.draftMine)], client: [], vos: [], price: null }), ...siteHandlers);
         const p = await panel();
+        // the first part they may open, with no overview or money parts beside it
         expect(screen.getByRole("tab", { name: "BOQs", selected: true })).toBeInTheDocument();
-        expect(screen.queryByRole("tab", { name: "Financials" })).not.toBeInTheDocument();
+        for (const name of ["Overview", "Client payments", "Accounts", "Supervision"]) expect(screen.queryByRole("tab", { name })).not.toBeInTheDocument();
         expect(await within(p).findByRole("button", { name: "Open Karim's quantities" })).toBeInTheDocument();
         expect(within(p).getByText("My drafts")).toBeInTheDocument();
         expect(within(p).getByRole("button", { name: "New draft" })).toBeEnabled();

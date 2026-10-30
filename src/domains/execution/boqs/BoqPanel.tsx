@@ -95,11 +95,11 @@ function Section({ title, boqs, list, onOpen, empty, showAuthor }: {
     title: string; boqs: BoqSummary[]; list: BoqList; onOpen: (id: number) => void; empty: string; showAuthor?: boolean;
 }) {
     return (
-        <div className="mt">
-            <div className="u" style={{ marginBottom: 4 }}>{title}</div>
+        <section className="boq-sec" aria-label={title}>
+            <h3 className="boq-sec-head">{title}<span className="muted num">{boqs.length}</span></h3>
             {boqs.length === 0 ? <p className="muted" style={{ margin: 0, fontSize: 12 }}>{empty}</p>
                 : boqs.map((b) => <Row key={b.id} boq={b} list={list} showAuthor={showAuthor} onOpen={() => onOpen(b.id)} />)}
-        </div>
+        </section>
     );
 }
 
@@ -115,7 +115,8 @@ function Row({ boq, list, showAuthor, onOpen }: { boq: BoqSummary; list: BoqList
 
     return (
         <div className="cost-row click" {...clickable(onOpen, "button")} aria-label={`Open ${boq.number ?? boq.title}`}>
-            <span className="mono nowrap" style={{ fontWeight: 600, fontSize: 12, minWidth: 92 }}>{boq.number ?? "-"}</span>
+            {/* the number is a reference, quieter than the title beside it */}
+            <span className="mono nowrap muted" style={{ fontSize: 10.5, letterSpacing: ".04em", minWidth: 92 }}>{boq.number ?? "-"}</span>
             <div className="grow" style={{ minWidth: 0 }}>
                 <div className="trunc"><b>{boq.title}</b></div>
                 <div className="muted trunc" style={{ fontSize: "11.5px" }}>{detail.join(" · ")}</div>
