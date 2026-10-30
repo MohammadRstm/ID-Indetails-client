@@ -10,11 +10,11 @@ This project is for ID-InDetails, a company whose staff include architectural en
 - **Financial management**: project money, costs, invoices and payments, salaries, company expenses and financial reports.
 - **Project management**: projects, clients, requirements, meetings, activity and a client portal where clients follow their project.
 - **Proton**, the system's AI assistant, which answers questions and can fill in forms.
-- **Domains**, the company's businesses: **Design** (architectural design work, which runs on logged hours) and **Execution** (construction sites, which run on materials, weekly labour and client statements).
+- **Domains**, the company's businesses: **Design** (architectural design work, which runs on logged hours) and **Execution** (construction sites, which run on BOQs and VOs, site expenses and weekly labour).
 - **Services** run from the same system: the company **Website** (its projects, services, locations, contact and analytics), with **Social media** and others planned.
 - A **Company** area above the domains, for super admins: overview, salaries, schedules, settings and permissions.
 
-The client talks to the separate ASP.NET API ([ID-Indetails-api](https://github.com/MohammadRstm/ID-Indetails-api)) and ports an approved prototype screen by screen. `docs/build-plan.md` holds the rules, the phases and a long list of past decisions ("Notes and open items"). Check it before changing behaviour that looks odd: most quirks there are deliberate.
+The client talks to the separate ASP.NET API ([ID-Indetails-api](https://github.com/MohammadRstm/ID-Indetails-api)) and follows the agreed screens. `docs/build-plan.md` holds the rules, the phases and a long list of past decisions ("Notes and open items"). Check it before changing behaviour that looks odd: most quirks there are deliberate.
 
 ## Commands
 
@@ -37,16 +37,17 @@ The path alias is `@/` → `src/`.
 - **`src/api`**: `http.ts` (axios) keeps the access token in memory only (`tokenStore`). On a 401 it refreshes once through the `/api/auth` refresh cookie and retries; refreshes are coordinated within a tab and across tabs. Errors come back as `ApiError` (status, code, message, field errors). `keys.ts` is the single query-key scheme: every key starts with its area (`["projects", ...]`), and mutations list what they invalidate with `useInvalidate`. `download.ts` fetches files, PDFs and CSVs as blobs because they need the token.
 - **`src/app`**: the shell, the session, live updates (`app/live`, SignalR on `/hubs/live`) and permissions (`permissions/codes.ts` has the `P.*` codes, plus `usePermissions()` and `<Can>`). `routing/routeTable.tsx` lists every screen once, with the admin page and the employee page and what each needs. The route guard and the sidebar both read it. `routing/pages.ts` lazy-loads every page as its own chunk, and reloads once if a chunk is missing after a deploy.
 - **`src/domains`**: the screens, by business area: `design`, `execution`, `company`, `website`, and `shared` (anything both Design and Execution use, such as projects, clients, finance, billing, people, meetings and messages). Each area holds its own React Query hooks (`*Api.ts`), components and pages.
+- **`src/domains/execution`**: a site's BOQs and VOs (`boqs`), its cost-only expenses (`expenses`), and its account figures, supervision taken and payments by label (`account`). Every figure there is the API's; never sum them in the client.
 - **`src/portal`**: the client portal at `/portal`. It has its own session, top bar and pages, outside the staff guards and shell.
 - **`src/auth`**: sign-in, password flows and invitation acceptance.
-- **`src/shared`**: the UI kit (`components/*`), charts, the prototype's icon set, formatting (dates in the company's time zone, durations, money) and the theme.
-- **`src/styles`**: `hourline.css` is the prototype's stylesheet, used unchanged as the design system. Components render its markup and class names. Put client-only adjustments in `client.css`. Don't restyle or invent new looks: screens must look exactly like the prototype.
+- **`src/shared`**: the UI kit (`components/*`), charts, the icon set, formatting (dates in the company's time zone, durations, money) and the theme.
+- **`src/styles`**: `hourline.css` is the design system. Components render its markup and class names. Put client-only adjustments in `client.css`. Don't restyle or invent new looks.
 
 Rules that hold everywhere:
 - **The client never calculates money, overtime or access rules.** Every figure comes from the API, which enforces every rule. The client only hides what the person's permissions (from `GET /api/auth/me`) don't allow.
 - Every route, nav item, action and money figure is gated by permission codes.
 - Repeated UI patterns are one shared component under `src/shared`. Pages compose them.
-- Loading shows skeletons. A failure shows a small inline error with a retry where it helps. Toasts are only for the outcome of an action the person just took (the prototype's own toast, not `sonner`).
+- Loading shows skeletons. A failure shows a small inline error with a retry where it helps. Toasts are only for the outcome of an action the person just took (the app's own toast, not `sonner`).
 
 ## Tests
 
