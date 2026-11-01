@@ -10,7 +10,7 @@ import { cx } from "@/shared/utils/cx";
 import { LogWorkHost } from "@/domains/design/work/LogWorkHost";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
-import { useCompanySettings } from "./shellQueries";
+import { formatsRemembered, useCompanySettings } from "./shellQueries";
 import { useArea } from "./useArea";
 
 // opened with ⌘K, so it loads then
@@ -54,8 +54,9 @@ export default function AppShell() {
     const [palette, setPalette] = useState(false);
     const area = useArea();
     const company = useCompanySettings();
-    // times and weeks follow the company's settings, so the page waits for them (a failure falls back to defaults)
-    const formatsKnown = !!company.data || company.isError;
+    // times and weeks follow the company's settings, so the page waits for them unless the last visit here saw them
+    // (a failure falls back to defaults); its own code and data load meanwhile
+    const formatsKnown = formatsRemembered || !!company.data || company.isError;
 
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {

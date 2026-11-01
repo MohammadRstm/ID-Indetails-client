@@ -4,6 +4,12 @@ import { keys } from "@/api/keys";
 import type { Schemas } from "@/api/types";
 
 export type FinanceOverview = Schemas["FinanceOverviewResponse"];
+
+/**
+ * How long money figures count as fresh: returning to the tab within it doesn't load them again. Every change to
+ * the money (a payment, an expense, logged work) invalidates them at once, so this only spares the heavy loads.
+ */
+const MONEY_STALE_MS = 5 * 60_000;
 export type FinanceSummary = Schemas["FinanceSummaryResponse"];
 export type FinanceClient = Schemas["FinanceClientResponse"];
 export type FinanceMonth = Schemas["FinanceMonthResponse"];
@@ -24,6 +30,7 @@ export function useFinanceOverview(domain: string, params: { from?: string; to?:
         queryKey: keys.finance.overview(domain, params),
         queryFn: async () => (await http.get<FinanceOverview>(`/finance/${domain}/overview`, { params })).data,
         enabled,
+        staleTime: MONEY_STALE_MS,
     });
     const part = <T,>(pick: (o: FinanceOverview) => T): FinancePart<T> => ({
         data: query.data ? pick(query.data) : undefined,
@@ -48,6 +55,7 @@ export function useFinanceSummary(domain: string, range: { from?: string; to?: s
         queryKey: keys.finance.summary(domain, range),
         queryFn: async () => (await http.get<FinanceSummary>(`/finance/${domain}/summary`, { params: range })).data,
         enabled,
+        staleTime: MONEY_STALE_MS,
     });
 }
 
@@ -57,6 +65,7 @@ export function useFinanceClients(domain: string, enabled: boolean) {
         queryKey: keys.finance.clients(domain),
         queryFn: async () => (await http.get<FinanceClient[]>(`/finance/${domain}/clients`)).data,
         enabled,
+        staleTime: MONEY_STALE_MS,
     });
 }
 
@@ -66,6 +75,7 @@ export function useFinanceMonthly(domain: string, months: number, enabled: boole
         queryKey: keys.finance.monthly(domain, months),
         queryFn: async () => (await http.get<FinanceMonth[]>(`/finance/${domain}/monthly`, { params: { months } })).data,
         enabled,
+        staleTime: MONEY_STALE_MS,
     });
 }
 
@@ -75,6 +85,7 @@ export function useFinanceProjects(domain: string, enabled: boolean) {
         queryKey: keys.finance.projects(domain),
         queryFn: async () => (await http.get<FinanceProjects>(`/finance/${domain}/projects`)).data,
         enabled,
+        staleTime: MONEY_STALE_MS,
     });
 }
 
@@ -84,6 +95,7 @@ export function useFinanceBilling(domain: string, months: number, enabled: boole
         queryKey: keys.finance.billing(domain, months),
         queryFn: async () => (await http.get<FinanceBilling>(`/finance/${domain}/billing`, { params: { months } })).data,
         enabled,
+        staleTime: MONEY_STALE_MS,
     });
 }
 
@@ -93,6 +105,7 @@ export function useFinanceAttention(domain: string, enabled: boolean) {
         queryKey: keys.finance.attention(domain),
         queryFn: async () => (await http.get<MoneyAttention[]>(`/finance/${domain}/attention`)).data,
         enabled,
+        staleTime: MONEY_STALE_MS,
     });
 }
 
@@ -102,5 +115,6 @@ export function useFinanceCosts(domain: string, range: { from?: string; to?: str
         queryKey: keys.finance.costs(domain, range),
         queryFn: async () => (await http.get<FinanceCosts>(`/finance/${domain}/costs`, { params: range })).data,
         enabled,
+        staleTime: MONEY_STALE_MS,
     });
 }
