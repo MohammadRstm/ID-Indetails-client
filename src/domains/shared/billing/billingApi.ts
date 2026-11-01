@@ -48,7 +48,7 @@ function useInvalidateBilling() {
     const invalidate = useInvalidate();
     // not awaited: a window's own onSuccess (its toast, closing it) runs at once, before the lists reload and
     // perhaps drop the row it was opened from
-    return () => { void invalidate(["invoices"], ["payments"], keys.projects.all, keys.finance.all, keys.clients.all, keys.dashboard.all, keys.activity.all, keys.box.all, ["company"]); };
+    return () => { void invalidate(["invoices"], ["payments"], keys.projects.all, keys.finance.all, keys.clients.all, keys.dashboard.all, keys.activity.all, ["company"]); };
 }
 
 /** One invoice with its lines, deliveries and balance (financial:view). */
@@ -140,6 +140,19 @@ export function useApplyPayment() {
     const refresh = useInvalidateBilling();
     return useMutation({
         mutationFn: async ({ id, invoiceId }: { id: number; invoiceId: number }) => (await http.put<Payment>(`/payments/${id}/invoice`, { invoiceId })).data,
+        onSuccess: refresh,
+    });
+}
+
+/**
+ * Files a live payment under an account label, changes it or clears it (payment:record and financial:view): the one thing
+ * about a payment that can change after it is recorded. A voided payment or an archived label is refused.
+ */
+export function useSetPaymentLabel() {
+    const refresh = useInvalidateBilling();
+    return useMutation({
+        mutationFn: async ({ id, accountLabelId }: { id: number; accountLabelId: number | null }) =>
+            (await http.put<Payment>(`/payments/${id}/label`, { accountLabelId })).data,
         onSuccess: refresh,
     });
 }

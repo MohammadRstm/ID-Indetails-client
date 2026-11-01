@@ -76,13 +76,13 @@ describe("Help's content", () => {
         expect(de).toEqual(expect.arrayContaining(["log-work", "timer", "hours-balance", "behind"]));
         // employees don't see their pay, nor how it's worked out
         for (const id of ["my-pay", "my-pay-estimates", "pay", "deductions"]) expect(de, id).not.toContain(id);
-        // site staff report labour and write daily logs; materials are recorded by whoever is given them
+        // site staff report labour and write daily logs; expenses are recorded by whoever is given them
         expect(xe).toEqual(expect.arrayContaining(["labour-week", "daily-log"]));
-        expect(xe).not.toContain("record-materials");
+        expect(xe).not.toContain("record-expenses");
         expect(xe).not.toContain("log-work");
-        expect(de).not.toContain("record-materials");
-        expect(xm).toEqual(expect.arrayContaining(["set-pricing", "client-statement", "execution-pricing", "site-money"]));
-        for (const id of ["set-pricing", "client-statement", "execution-pricing", "site-money"]) expect(xa, id).not.toContain(id);
+        expect(de).not.toContain("record-expenses");
+        expect(xm).toEqual(expect.arrayContaining(["set-pricing", "boqs", "write-boq", "agree-boq", "execution-pricing", "site-money"]));
+        for (const id of ["set-pricing", "boqs", "write-boq", "agree-boq", "execution-pricing", "site-money"]) expect(xa, id).not.toContain(id);
         expect(da).not.toContain("site-money");
         // the hours balance is Design's employees', and only employees log hours: admins are paid a fixed salary
         expect(da).not.toContain("hours-balance");
@@ -95,7 +95,7 @@ describe("Help's content", () => {
         const wa = readable(ctxOf("websiteAdmin"));
         expect(wa).toContain("company-website");
         expect(wa).not.toContain("website-staff");
-        for (const id of ["log-work", "company-details", "create-invoice", "revenue", "record-materials"]) expect(wa, id).not.toContain(id);
+        for (const id of ["log-work", "company-details", "create-invoice", "revenue", "record-expenses"]) expect(wa, id).not.toContain(id);
         expect(readable(ctxOf("superAdmin"))).toEqual(expect.arrayContaining(["company-website", "website-staff"]));
         expect(readable(ctxOf("designAdmin"))).not.toContain("company-website");
         expect(readable(ctxOf("designAdmin", withPermissions(personas.designAdmin, { grant: [P.WEBSITE_MANAGE] })))).toContain("company-website");
@@ -121,6 +121,11 @@ describe("Help's content", () => {
         expect(top(ctxOf("designAdmin"), "outstanding")).not.toContain("billing-terms");
         expect(top(ctxOf("designEmployee"), "outstanding")).not.toContain("billing-terms");
         expect(top(ctxOf("designEmployee"), "how is my salary calculated")).not.toContain("pay");
+        // an Execution site's price comes from its BOQs
+        const pricing = ctxOf("executionAdmin", withPermissions(personas.executionAdmin, { grant: MONEY_AND_HIRING }));
+        expect(top(pricing, "agree boq")).toContain("agree-boq");
+        expect(top(pricing, "variation order")).toContain("boqs");
+        expect(top(ctxOf("executionAdmin"), "agree boq")).not.toContain("agree-boq");
     });
 
     it("resolves links for the reader: a super admin's business links name the business", () => {
@@ -171,7 +176,7 @@ describe("the Help page", () => {
         expect(within(topics).queryByRole("button", { name: /The company/ })).toBeNull();
         // the one money article they get is how the costs they record add up
         await userEvent.click(within(topics).getByRole("button", { name: /Money, explained/ }));
-        expect(screen.getAllByRole("button", { name: /Material and ground labour costs/ })).toHaveLength(1);
+        expect(screen.getAllByRole("button", { name: /Site expense and ground labour costs/ })).toHaveLength(1);
         expect(screen.queryByRole("button", { name: /Revenue/ })).toBeNull();
     });
 

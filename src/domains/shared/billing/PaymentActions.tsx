@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { errorMessage, toApiError } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
+import AccountLabelSelect from "@/domains/shared/accountLabels/AccountLabelSelect";
 import { toast } from "@/shared/components/Feedback/toast";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Select from "@/shared/components/Forms/Select";
@@ -10,30 +11,34 @@ import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { fmtDate } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import { useApplyPayment, useInvoices, useVoidPayment, type Payment } from "./billingApi";
+import { useApplyPayment, useInvoices, useSetPaymentLabel, useVoidPayment, type Payment } from "./billingApi";
 
 /**
  * Correcting a payment, which the prototype couldn't do: putting money received on account against one of the
- * project's issued invoices (payment:record), or voiding one recorded in error (payment:void). A voided
- * payment stays in the register with its reason.
+ * project's issued invoices (payment:record), filing it under another account label (payment:record, and
+ * financial:view to see the payment answered), or voiding one recorded in error (payment:void). A voided
+ * payment stays in the register with its reason, and keeps its label.
  */
 export default function PaymentActions({ payment }: { payment: Payment }) {
     const permissions = usePermissions();
-    const [dialog, setDialog] = useState<"apply" | "void" | null>(null);
+    const [dialog, setDialog] = useState<"apply" | "label" | "void" | null>(null);
     const canApply = !payment.voidedAt && payment.invoiceId == null && permissions.has(P.PAYMENT_RECORD);
+    const canLabel = !payment.voidedAt && permissions.hasAll(P.PAYMENT_RECORD, P.FINANCIAL_VIEW);
     const canVoid = !payment.voidedAt && permissions.has(P.PAYMENT_VOID);
-    if (!canApply && !canVoid) return null;
+    if (!canApply && !canLabel && !canVoid) return null;
     return (
         <span onClick={(e) => e.stopPropagation()}>
             <MenuButton icon="dots" label={`Payment of ${fmtDate(payment.receivedOn)} actions`} width={210}>
                 {(close) => (
                     <div>
                         {canApply && <button className="pop-item" onClick={() => { close(); setDialog("apply"); }}><Icon name="file" />Apply to an invoice…</button>}
+                        {canLabel && <button className="pop-item" onClick={() => { close(); setDialog("label"); }}><Icon name="edit" />Label…</button>}
                         {canVoid && <button className="pop-item" onClick={() => { close(); setDialog("void"); }}><Icon name="x" />Void payment…</button>}
                     </div>
                 )}
             </MenuButton>
             {dialog === "apply" && <ApplyModal payment={payment} onClose={() => setDialog(null)} />}
+            {dialog === "label" && <LabelModal payment={payment} onClose={() => setDialog(null)} />}
             {dialog === "void" && <VoidModal payment={payment} onClose={() => setDialog(null)} />}
         </span>
     );
@@ -72,6 +77,50 @@ function ApplyModal({ payment, onClose }: { payment: Payment; onClose: () => voi
                 </div>
             )}
             <p className="hint mt">The money moves from the project's account onto that invoice; it was already counted as received, so nothing else changes.</p>
+        </Modal>
+    );
+}
+
+/** Files a live payment under an account label, changes it or clears it: the one thing about a payment that can change. */
+function LabelModal({ payment, onClose }: { payment: Payment; onClose: () => void }) {
+    const set = useSetPaymentLabel();
+    const current = payment.accountLabel ? String(payment.accountLabel.id) : "";
+    const [labelId, setLabelId] = useState(current);
+    // what the API refused about the label, beside the label; it goes as soon as another is picked
+    const refused = toApiError(set.error);
+    const labelError = refused.fieldErrors.accountLabelId ?? (refused.code === "account_label_archived" ? refused.message : undefined);
+
+    function go() {
+        if (set.isPending) return;
+        if (labelId === current) return onClose();
+        set.mutate({ id: payment.id, accountLabelId: labelId ? Number(labelId) : null }, {
+            onSuccess: (saved) => {
+                toast({
+                    text: saved.accountLabel ? `Filed under ${saved.accountLabel.name}` : "Label cleared",
+                    sub: `${money.fmt(payment.amountUsd)} · ${payment.project.title}`,
+                    icon: "checkCircle",
+                });
+                onClose();
+            },
+        });
+    }
+
+    return (
+        <Modal title="Label payment" sub={`${money.fmt(payment.amountUsd)} received ${fmtDate(payment.receivedOn)} · ${payment.project.title}`} onClose={onClose}
+            foot={
+                <>
+                    <div className="grow">{set.error && !labelError ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(set.error)}</span> : null}</div>
+                    <button className="btn" onClick={onClose}>Cancel</button>
+                    <button className="btn btn-primary" disabled={set.isPending} onClick={go}>Save</button>
+                </>
+            }>
+            <div className="field">
+                <label className="label" htmlFor="pay-label-set">Account label</label>
+                <AccountLabelSelect id="pay-label-set" value={labelId} own={payment.accountLabel}
+                    onChange={(v) => { if (set.error) set.reset(); setLabelId(v); }} />
+                <FieldError message={labelError} />
+            </div>
+            <p className="hint mt">Choose "No label" to clear it. The label decides where the payment is counted in the site's account; it changes no amount, invoice or profit.</p>
         </Modal>
     );
 }

@@ -33,8 +33,8 @@ describe("Execution's dashboard", () => {
         for (const title of ["Hours logged per week", "Needs attention & deadlines", "Where the time went", "Work entries", "Online now"]) {
             expect(screen.queryByText(title)).not.toBeInTheDocument();
         }
-        expect(screen.getByText(`materials ${money.short(s.cost.materials)} · ground labour ${money.short(s.cost.groundLabour)} · project expenses $0`)).toBeInTheDocument();
-        expect(screen.getByText("revenue less materials, ground labour and expenses")).toBeInTheDocument();
+        expect(screen.getByText(`site expenses ${money.short(s.cost.materials)} · ground labour ${money.short(s.cost.groundLabour)} · other costs $0`)).toBeInTheDocument();
+        expect(screen.getByText("revenue less site expenses, ground labour and other costs")).toBeInTheDocument();
         expect(asked).toEqual([]);
     });
 
@@ -57,22 +57,22 @@ describe("Execution's dashboard", () => {
 });
 
 describe("Execution's financials", () => {
-    it("split a site's cost into materials, ground labour and expenses", async () => {
+    it("split a site's cost into site expenses, ground labour and other costs", async () => {
         renderApp("/execution/financials", karim, ...executionMoneyHandlers);
         await waitFor(() => {
-            const materials = screen.getByText("Materials", { selector: ".kpi-label" }).closest(".kpi") as HTMLElement;
-            expect(within(materials).getByText(money.short(s.cost.materials))).toBeInTheDocument();
+            const siteExpenses = screen.getByText("Site expenses", { selector: ".kpi-label" }).closest(".kpi") as HTMLElement;
+            expect(within(siteExpenses).getByText(money.short(s.cost.materials))).toBeInTheDocument();
         });
         expect(screen.getByText("Ground labour", { selector: ".kpi-label" })).toBeInTheDocument();
         expect(screen.queryByText("Employee labour")).not.toBeInTheDocument();
-        expect(screen.getByText(/Materials, ground labour and expenses include internal work\./)).toBeInTheDocument();
+        expect(screen.getByText(/Site expenses, ground labour and other costs include internal work\./)).toBeInTheDocument();
     });
 
     it("list the sites without hours, with a column for each kind of cost", async () => {
         renderApp("/execution/financials?tab=projects", karim, ...executionMoneyHandlers);
         const table = (await screen.findByText("Profitability by project")).closest(".panel") as HTMLElement;
         const heads = (await within(table).findAllByRole("columnheader")).map((h) => h.textContent);
-        expect(heads).toEqual(expect.arrayContaining(["Materials", "Ground labour", "Expenses"]));
+        expect(heads).toEqual(expect.arrayContaining(["Site expenses", "Ground labour", "Other costs"]));
         expect(heads).not.toContain("Hours");
         expect(heads).not.toContain("Labour");
         expect(within(table).getByText("Margin needs 5% progress before it is shown.")).toBeInTheDocument();

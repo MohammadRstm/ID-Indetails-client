@@ -24,88 +24,81 @@ afterEach(() => vi.useRealTimers());
 const moneyPanel = async () => (await screen.findByText("Project money")).closest(".panel") as HTMLElement;
 
 describe("an Execution site's overview", () => {
-    it("shows its progress, materials and labour, and what the client paid against what it cost", async () => {
-        renderApp(`${path}?tab=overview`, karim, ...siteHandlers);
-        const kpis = (await screen.findByText("Ground labour", { selector: ".kpi-label" })).closest(".kpis") as HTMLElement;
-        expect(await within(kpis).findByText("4 weeks reported")).toBeInTheDocument();
-        expect(within(kpis).getByText("1 / 3")).toBeInTheDocument();
-        expect(within(kpis).getByText(money.short(site.materials.all.cost))).toBeInTheDocument();
-        expect(within(kpis).getByText("4 records")).toBeInTheDocument();
-        expect(within(kpis).getByText("Client owes")).toBeInTheDocument();
-        // the money is on its own tab
-        expect(screen.queryByText("Project money")).not.toBeInTheDocument();
-        await userEvent.click(screen.getByRole("tab", { name: "Financials" }));
-
+    it("shows what the client paid against what it cost, with no strip of figures above it", async () => {
+        renderApp(path, karim, ...siteHandlers);
+        // the site has no Overview tab of its own: its money is the Overview part of the Financials tab
+        expect(screen.queryByRole("tab", { name: "Overview" })).not.toBeInTheDocument();
         const panel = await moneyPanel();
+        // the strip of progress, requirements, expenses and labour is gone
+        for (const label of ["Progress", "Requirements", "Expenses", "Ground labour", "Client owes"]) {
+            expect(screen.queryByText(label, { selector: ".kpi-label" })).not.toBeInTheDocument();
+        }
         expect(within(panel).getByText(money.exact(m.billing.received), { selector: ".kpi-val" })).toBeInTheDocument();
         expect(await within(panel).findByText(`1 payment · ${money.short(10000)} up front`)).toBeInTheDocument();
         expect(within(panel).getByText(money.exact(m.cashProfit!), { selector: ".kpi-val span" })).toHaveClass("up");
         expect(within(panel).getByText("Client still owes")).toBeInTheDocument();
         expect(within(panel).getByText(`+${money.exact(m.projectFee!)}`)).toBeInTheDocument();
-        expect(within(panel).getByText(/Default material profit on new materials:/)).toHaveTextContent("15%");
+        expect(within(panel).getByText(`+${money.exact(m.supervisionUsd!)}`)).toBeInTheDocument();
+        // the expenses are a cost: the client isn't charged for them, and they carry no markup
+        expect(within(panel).getByText("what was spent on site")).toBeInTheDocument();
+        expect(within(panel).queryByText("Material profit")).not.toBeInTheDocument();
+        expect(within(panel).queryByText(/Default material profit/)).not.toBeInTheDocument();
+        // the payments, the account and the labour have their own parts
+        expect(screen.queryByText(/Payments can be recorded without an invoice/)).not.toBeInTheDocument();
+        expect(screen.queryByText("Ground labour and profit")).not.toBeInTheDocument();
+    });
 
+    it("shows how long the ground labour lasts against the profit, and the payments band, in their own parts", async () => {
+        renderApp(`${path}?part=expenses&view=labour`, karim, ...siteHandlers);
         const health = (await screen.findByText("Ground labour and profit")).closest(".panel") as HTMLElement;
         expect(await within(health).findByText("Thu, Oct 8")).toBeInTheDocument();
         expect(within(health).getByText(/≈ 7 working days of ground labour at 6 workers/)).toBeInTheDocument();
-        expect(screen.getByText(/Payments can be recorded without an invoice/)).toBeInTheDocument();
+        // the weeks reported sit under it
+        expect(await screen.findByText("Weekly labour", { selector: ".panel-title" })).toBeInTheDocument();
     });
 
-    it("searches and filters the material margins", async () => {
+    it("shows the payments band and the payments received in the Client payments part", async () => {
+        renderApp(`${path}?part=payments`, karim, ...siteHandlers);
+        expect(await screen.findByText(/Payments can be recorded without an invoice/)).toBeInTheDocument();
+        expect(await screen.findByRole("region", { name: "Payments received" })).toBeInTheDocument();
+        expect(screen.queryByText("Project money")).not.toBeInTheDocument();
+    });
+
+    it("has no material margins, client prices or markup on the Financials tab", async () => {
         renderApp(path, karim, ...siteHandlers);
-        const margins = (await screen.findByText("Material margins")).closest(".panel") as HTMLElement;
-        await within(margins).findByText("Paint");
-        const rows = () => within(margins).getAllByRole("row").filter((r) => r.closest("tbody"));
-        expect(rows()).toHaveLength(4);
-
-        await userEvent.type(within(margins).getByLabelText("Search material margins"), "paint");
-        expect(rows()).toHaveLength(1);
-        expect(within(margins).getByText("1 of 4 shown")).toBeInTheDocument();
-        expect(within(margins).getByText("The materials shown")).toBeInTheDocument();
-
-        await userEvent.click(within(margins).getByRole("button", { name: "Clear" }));
-        await userEvent.click(within(margins).getByRole("button", { name: "Not sent" }));
-        // every lobby material went on a statement
-        expect(within(margins).getByText("No materials match these filters.")).toBeInTheDocument();
-        await userEvent.click(within(margins).getByRole("button", { name: "Sent" }));
-        expect(rows()).toHaveLength(4);
+        const panel = await moneyPanel();
+        expect(screen.queryByText("Material margins")).not.toBeInTheDocument();
+        expect(screen.queryByRole("columnheader", { name: "Client price" })).not.toBeInTheDocument();
+        expect(within(panel).queryByText("Material profit")).not.toBeInTheDocument();
+        expect(within(panel).queryByText(/markup/i)).not.toBeInTheDocument();
+        // nothing is "sent" to the client either
+        expect(within(panel).queryByText("Not sent yet")).not.toBeInTheDocument();
+        // the expenses table is on the Overview, not here
+        expect(screen.queryByText("Expenses", { selector: ".panel-title" })).not.toBeInTheDocument();
     });
 
-    it("shows each material's margin, and that the lobby's were all sent to the client", async () => {
-        renderApp(path, karim, ...siteHandlers);
-        const margins = (await screen.findByText("Material margins")).closest(".panel") as HTMLElement;
-        const paint = (await within(margins).findByText("Paint")).closest("tr") as HTMLElement;
-        expect(paint).toHaveTextContent(money.exact(840));
-        expect(paint).toHaveTextContent(money.exact(966));
-        expect(paint).toHaveTextContent(`+${money.exact(126)}`);
-        expect(paint).toHaveTextContent("15%");
-        expect(paint).toHaveTextContent("Sent Sep 30");
-        expect(within(margins).getByText("Sent to the client").closest("tr")).toHaveTextContent("4 of 4 · counted in revenue");
-        expect(within(margins).getByRole("columnheader", { name: "Profit" })).toBeInTheDocument();
-        // it is money, on the Financials tab: the materials table is on the Overview
-        expect(screen.queryByText("Materials", { selector: ".panel-title" })).not.toBeInTheDocument();
-        expect(within(await moneyPanel()).queryByText("Not sent yet")).not.toBeInTheDocument();
-    });
-
-    it("counts materials not sent yet apart, and won't complete the site until they are", async () => {
+    it("completes a site whatever its expenses, with its price locked", async () => {
         const loft = site.losingProject;
         renderApp(`/execution/projects/${loft.id}?complete=1`, karim, ...siteHandlers);
         const dialog = await screen.findByRole("dialog", { name: `Close ${loft.title}` });
-        expect(within(dialog).getByText("4 materials haven't been sent to the client.")).toBeInTheDocument();
-        expect(within(dialog).getByRole("button", { name: "Complete project" })).toBeDisabled();
+        expect(within(dialog).queryByText(/been sent to the client/)).not.toBeInTheDocument();
+        expect(within(dialog).getByRole("button", { name: "Complete project" })).toBeEnabled();
+        expect(within(dialog).getByText("Price is locked")).toBeInTheDocument();
+        expect(within(dialog).getByText(/no BOQ or VO can be agreed or withdrawn/)).toBeInTheDocument();
         await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
-
-        const owed = (await within(await moneyPanel()).findByText("Not sent yet")).closest("div") as HTMLElement;
-        expect(owed).toHaveTextContent(money.exact(loft.money!.unsentMaterialCharge!));
-        expect(owed).toHaveTextContent("4 materials at client prices - a statement adds them");
-        const margins = (await screen.findByText("Material margins")).closest(".panel") as HTMLElement;
-        expect(await within(margins).findAllByText("Not yet")).toHaveLength(4);
+        expect(within(await moneyPanel()).queryByText("Not sent yet")).not.toBeInTheDocument();
     });
 
     it("says so when the site is losing money", async () => {
-        renderApp(`/execution/projects/${site.losingProject.id}`, karim, ...siteHandlers);
+        const loft = `/execution/projects/${site.losingProject.id}`;
+        renderApp(`${loft}?part=expenses&view=labour`, karim, ...siteHandlers);
         const health = (await screen.findByText("Ground labour and profit")).closest(".panel") as HTMLElement;
         expect(await within(health).findByText("Used up")).toBeInTheDocument();
         expect(within(health).getByText(`Losing money: ${money.exact(-site.losingProject.money!.cashProfit!)} below zero.`)).toBeInTheDocument();
+    });
+
+    it("shows a losing site's cash profit as down in the project money", async () => {
+        renderApp(`/execution/projects/${site.losingProject.id}`, karim, ...siteHandlers);
         expect(within(await moneyPanel()).getByText(money.exact(site.losingProject.money!.cashProfit!), { selector: ".kpi-val span" })).toHaveClass("down");
     });
 
@@ -115,7 +108,9 @@ describe("an Execution site's overview", () => {
             http.get("/api/projects/:id/site-money/timeline", () => { asked.push("timeline"); return HttpResponse.json(site.timeline); }),
             http.get("/api/payments", () => { asked.push("payments"); return HttpResponse.json(site.payments); }),
             ...siteHandlers);
-        expect(await screen.findByText("4 weeks reported", { selector: ".kpi-delta span" })).toBeInTheDocument();
+        // the Financials tab is theirs, but not its overview or its money parts: they open on the BOQs (boq:create)
+        expect(await screen.findByRole("tab", { name: "BOQs", selected: true })).toBeInTheDocument();
+        for (const name of ["Overview", "Client payments", "Accounts", "Supervision"]) expect(screen.queryByRole("tab", { name })).not.toBeInTheDocument();
         expect(screen.queryByText("Client owes")).not.toBeInTheDocument();
         expect(screen.queryByText("Project money")).not.toBeInTheDocument();
         expect(screen.queryByText("Client payments")).not.toBeInTheDocument();
@@ -137,17 +132,28 @@ describe("an Execution site's overview", () => {
         renderApp(path, karim, ...siteHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
         const menu = screen.getByRole("button", { name: "Put on hold" }).closest(".pop") as HTMLElement;
-        for (const name of ["Add project expense", "Fee & material profit", "New invoice", "Record a client payment"]) {
+        for (const name of ["Pricing", "New invoice", "Record a client payment"]) {
             expect(within(menu).getByRole("button", { name })).toBeInTheDocument();
         }
+        // a site records its costs in its Expenses list
+        expect(within(menu).queryByRole("button", { name: "Add project expense" })).not.toBeInTheDocument();
+    });
+
+    it("offers no project expense window, even from a link", async () => {
+        renderApp(`${path}?money=expense`, personas.superAdmin, ...siteHandlers);
+        await moneyPanel();
+        expect(screen.queryByRole("dialog", { name: "Add project expense" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+        expect(screen.queryByRole("button", { name: "Add project expense" })).not.toBeInTheDocument();
     });
 
     it("takes a payment on account even before anything is invoiced", async () => {
-        renderApp(`/execution/projects/${site.losingProject.id}`, karim,
+        renderApp(`/execution/projects/${site.losingProject.id}?part=payments`, karim,
             http.get("/api/invoices", () => HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 })),
             http.get("/api/exchange-rates", () => HttpResponse.json([])),
             ...siteHandlers);
-        const band = (await screen.findByText("Client payments")).closest(".panel") as HTMLElement;
+        const band = (await screen.findByText("Client payments", { selector: ".u" })).closest(".panel") as HTMLElement;
         const record = within(band).getByRole("button", { name: "Record payment" });
         expect(record).toBeEnabled();
         await userEvent.click(record);
@@ -155,24 +161,44 @@ describe("an Execution site's overview", () => {
     });
 });
 
-describe("the fee and material profit", () => {
-    it("are saved together, re-pricing what follows the markup", async () => {
+describe("the supervision and TVA", () => {
+    it("are saved together, with why, and no markup", async () => {
         const saved: unknown[] = [];
         renderApp(`/execution/projects/${site.losingProject.id}`, karim,
             http.put("/api/projects/:id/pricing", async ({ request }) => { saved.push(await request.json()); return HttpResponse.json(site.losingProject); }),
             ...siteHandlers);
-        await userEvent.click(within(await moneyPanel()).getByRole("button", { name: "Fee & material profit" }));
-        const dialog = await screen.findByRole("dialog", { name: "Fee & material profit" });
-        await userEvent.click(within(dialog).getByRole("button", { name: "25%" }));
-        expect(await within(dialog).findByText("Re-prices the 4 materials on the default material profit.")).toBeInTheDocument();
-        const fee = within(dialog).getByLabelText("Project fee");
-        await userEvent.clear(fee);
-        await userEvent.type(fee, "8500.50");
-        expect(fee).toHaveValue("8,500.50");
+        await userEvent.click(within(await moneyPanel()).getByRole("button", { name: "Pricing" }));
+        const dialog = await screen.findByRole("dialog", { name: "Pricing" });
+        // site expenses are costs only: no material profit to set, and no chips for one
+        expect(within(dialog).queryByText(/material profit/i)).toBeNull();
+        expect(within(dialog).queryByLabelText(/material profit/i)).toBeNull();
+        expect(within(dialog).queryByRole("button", { name: "25%" })).toBeNull();
+        expect(within(dialog).queryByText(/Materials charged/)).toBeNull();
+        // the work price comes from the agreed BOQs: shown, not typed in
+        expect(within(dialog).getByText(money.exact(site.losingProject.money!.projectFee!))).toBeInTheDocument();
+        expect(within(dialog).queryByLabelText("Customer payment")).toBeNull();
+        const supervision = within(dialog).getByLabelText("Supervision");
+        expect(supervision).toHaveValue("10");
+        await userEvent.clear(supervision);
+        await userEvent.type(supervision, "7.5");
         await userEvent.type(within(dialog).getByLabelText("Why it changes"), "The client asked for a second floor");
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-        await waitFor(() => expect(saved).toEqual([{ projectFee: 8500.5, materialMarkup: 0.25, description: "The client asked for a second floor" }]));
-        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+        await waitFor(() => expect(saved).toEqual([{ supervisionRate: 0.075, tvaRate: 0, description: "The client asked for a second floor" }]));
+        expect(saved[0]).not.toHaveProperty("projectFee");
+        expect(saved[0]).not.toHaveProperty("materialMarkup");
+        // an Execution site has no quote to send for the new price
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: "Pricing" })).toBeNull());
+        expect(screen.queryByRole("dialog", { name: "Send the quote?" })).toBeNull();
+    });
+
+    it("say the work price is set when a BOQ is agreed, while there is none", async () => {
+        const unpriced = { ...project, money: { ...m, projectFee: null } };
+        renderApp(`${path}?money=pricing`, karim, http.get(`/api/projects/${project.id}`, () => HttpResponse.json(unpriced)), ...siteHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "Pricing" });
+        expect(within(dialog).getByText("Set when a BOQ is agreed")).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+        const section = await screen.findByRole("region", { name: "Work price" });
+        expect(within(section).getByText("Set when a BOQ is agreed")).toBeInTheDocument();
     });
 
     it("need why they change, and a change", async () => {
@@ -180,74 +206,107 @@ describe("the fee and material profit", () => {
         renderApp(`${path}?money=pricing`, karim,
             http.put("/api/projects/:id/pricing", async ({ request }) => { saved.push(await request.json()); return HttpResponse.json(project); }),
             ...siteHandlers);
-        const dialog = await screen.findByRole("dialog", { name: "Fee & material profit" });
+        const dialog = await screen.findByRole("dialog", { name: "Pricing" });
         const save = within(dialog).getByRole("button", { name: "Save" });
         await userEvent.click(save);
-        expect(within(dialog).getByText("Change the fee or the material profit, or cancel.")).toBeInTheDocument();
-        expect(within(dialog).getByText("Say why the fee or the material profit changes.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Change the supervision or the TVA, or cancel.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Say why the supervision or the TVA changes.")).toBeInTheDocument();
         expect(saved).toEqual([]);
 
-        // the material profit alone is a change
-        await userEvent.click(within(dialog).getByRole("button", { name: "25%" }));
-        expect(within(dialog).queryByText("Change the fee or the material profit, or cancel.")).not.toBeInTheDocument();
+        // the TVA alone is a change
+        const tva = within(dialog).getByLabelText("TVA");
+        await userEvent.clear(tva);
+        await userEvent.type(tva, "11");
+        expect(within(dialog).queryByText("Change the supervision or the TVA, or cancel.")).not.toBeInTheDocument();
         await userEvent.click(save);
         expect(saved).toEqual([]);
         await userEvent.type(within(dialog).getByLabelText("Why it changes"), "Imported tiles");
         await userEvent.click(save);
-        await waitFor(() => expect(saved).toEqual([{ projectFee: m.projectFee, materialMarkup: 0.25, description: "Imported tiles" }]));
+        await waitFor(() => expect(saved).toEqual([{ supervisionRate: 0.1, tvaRate: 0.11, description: "Imported tiles" }]));
     });
 
-    it("come first on the Financials tab, in bold, with their history", async () => {
+    it("show the work price first on the Financials tab, in bold, and the supervision, the TVA and the client total in the account", async () => {
         const changes = [
-            { id: 4, amount: 9000, previousAmount: 8000, materialMarkup: 0.15, previousMaterialMarkup: 0.1, description: "A second floor", changedAt: "2026-09-10T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
-            { id: 3, amount: 8000, previousAmount: null, materialMarkup: 0.1, previousMaterialMarkup: null, description: "Agreed at the start", changedAt: "2026-05-01T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
+            { id: 5, amount: 9000, previousAmount: 9000, materialMarkup: null, previousMaterialMarkup: null, supervisionRate: 0.12, previousSupervisionRate: 0.12, description: "Same supervision, new TVA", changedAt: "2026-09-12T09:00:00Z", changedBy: null },
+            { id: 4, amount: 9000, previousAmount: 8000, materialMarkup: 0.15, previousMaterialMarkup: 0.1, supervisionRate: 0.12, previousSupervisionRate: 0.1, description: "A second floor", changedAt: "2026-09-10T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
+            { id: 3, amount: 8000, previousAmount: null, materialMarkup: 0.1, previousMaterialMarkup: null, supervisionRate: 0.1, previousSupervisionRate: null, description: "Agreed at the start", changedAt: "2026-05-01T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
         ];
         renderApp(path, karim, http.get(`/api/projects/${project.id}/payment-changes`, () => HttpResponse.json(changes)), ...siteHandlers);
         expect(await screen.findByRole("tab", { name: "Financials", selected: true })).toBeInTheDocument();
-        const section = await screen.findByRole("region", { name: "Project fee" });
+        const section = await screen.findByRole("region", { name: "Work price" });
         expect(within(section).getByText(money.exact(m.projectFee!))).toHaveClass("pay-amount");
-        expect(section).toHaveTextContent("default material profit of 15%");
+        // the account below carries the supervision, the TVA and the client total, so the price section doesn't repeat them
+        expect(within(section).queryByText("Client total")).not.toBeInTheDocument();
+        // the account is its own part
+        expect(screen.queryByRole("region", { name: "Price and costs" })).not.toBeInTheDocument();
         expect(section.compareDocumentPosition(await moneyPanel()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
-        await userEvent.click(within(section).getByRole("button", { name: "Edit project fee" }));
-        expect(await screen.findByRole("dialog", { name: "Fee & material profit" })).toBeInTheDocument();
+        await userEvent.click(within(section).getByRole("button", { name: "Edit pricing" }));
+        expect(await screen.findByRole("dialog", { name: "Pricing" })).toBeInTheDocument();
         await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
 
         await userEvent.click(within(section).getByRole("button", { name: "History" }));
-        const dialog = await screen.findByRole("dialog", { name: "Project fee history" });
+        const dialog = await screen.findByRole("dialog", { name: "Payment history" });
         const rows = await within(dialog).findAllByRole("listitem");
-        expect(rows[0]).toHaveTextContent(`${money.exact(8000)} → ${money.exact(9000)}`);
-        expect(rows[0]).toHaveTextContent("Material profit 10% → 15%");
-        expect(rows[0]).toHaveTextContent("A second floor");
-        expect(rows[1]).toHaveTextContent("Material profit 10%");
-        expect(rows[1]).toHaveTextContent("Agreed at the start");
+        // the supervision is shown like the TVA, only when it changed
+        expect(rows[0]).toHaveTextContent("Same supervision, new TVA");
+        expect(rows[0]).not.toHaveTextContent("Supervision 12%");
+        // a change made since the markup went has none to show; the older ones keep theirs
+        expect(rows[0]).not.toHaveTextContent("Material profit");
+        expect(rows[1]).toHaveTextContent(`${money.exact(8000)} → ${money.exact(9000)}`);
+        expect(rows[1]).toHaveTextContent("Material profit 10% → 15%");
+        expect(rows[1]).toHaveTextContent("Supervision 10% → 12%");
+        expect(rows[1]).toHaveTextContent("A second floor");
+        expect(rows[2]).toHaveTextContent("Material profit 10%");
+        expect(rows[2]).not.toHaveTextContent("Supervision");
+        expect(rows[2]).toHaveTextContent("Agreed at the start");
     });
 
-    it("say which materials keep their price", async () => {
-        renderApp(`${path}?money=pricing`, karim, ...siteHandlers);
-        const dialog = await screen.findByRole("dialog", { name: "Fee & material profit" });
-        await userEvent.click(within(dialog).getByRole("button", { name: "25%" }));
-        expect(await within(dialog).findByText("Applies to materials added from now on: the 4 already on a client statement keep their price.")).toBeInTheDocument();
+    it("show the supervision, the TVA and the client total in the Accounts part", async () => {
+        renderApp(`${path}?part=accounts`, karim, ...siteHandlers);
+        const account = await screen.findByRole("region", { name: "Price and costs" });
+        expect(await within(account).findByText("Supervision")).toBeInTheDocument();
+        expect(within(account).getByText("Supervision").closest("div")).toHaveTextContent(`10% of the work price+${money.exact(m.supervisionUsd!)}`);
+        expect(within(account).getByText("TVA").closest("div")).toHaveTextContent("never on supervision");
+        expect(within(account).getByText("Client total").closest("div")).toHaveTextContent(money.exact(m.revenueWithTva));
+    });
+
+    it("shows a field error from the API beside its field, until something is changed", async () => {
+        renderApp(`${path}?money=pricing`, karim,
+            http.put("/api/projects/:id/pricing", () => HttpResponse.json({
+                type: "validation", code: "validation_failed", message: "One or more fields are invalid.", traceId: "t",
+                errors: { supervisionRate: ["Change the supervision rate or the TVA."] },
+            }, { status: 400 })),
+            ...siteHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "Pricing" });
+        const supervision = within(dialog).getByLabelText("Supervision");
+        await userEvent.clear(supervision);
+        await userEvent.type(supervision, "7");
+        await userEvent.type(within(dialog).getByLabelText("Why it changes"), "The client asked");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        expect(await within(dialog).findByText("Change the supervision rate or the TVA.")).toBeInTheDocument();
+        await userEvent.type(supervision, "5");
+        await waitFor(() => expect(within(dialog).queryByText("Change the supervision rate or the TVA.")).not.toBeInTheDocument());
     });
 
     it("can't be changed without project:pricing_manage, even from a link", async () => {
         renderApp(`${path}?money=pricing`, withPermissions(karim, { revoke: [P.PROJECT_PRICING_MANAGE] }), ...siteHandlers);
         const panel = await moneyPanel();
-        expect(within(panel).queryByRole("button", { name: "Fee & material profit" })).not.toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Edit project fee" })).not.toBeInTheDocument();
+        expect(within(panel).queryByRole("button", { name: "Pricing" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Edit pricing" })).not.toBeInTheDocument();
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
         await userEvent.click(screen.getByRole("button", { name: "More actions" }));
         const menu = screen.getByRole("button", { name: "Put on hold" }).closest(".pop") as HTMLElement;
-        expect(within(menu).queryByRole("button", { name: "Fee & material profit" })).not.toBeInTheDocument();
+        expect(within(menu).queryByRole("button", { name: "Pricing" })).not.toBeInTheDocument();
     });
 
     it("are locked once the site is finalised", async () => {
         const locked = { ...project, money: { ...m, isLocked: true } };
         renderApp(path, karim, http.get(`/api/projects/${project.id}`, () => HttpResponse.json(locked)), ...siteHandlers);
         const panel = await moneyPanel();
-        expect(within(panel).queryByRole("button", { name: "Fee & material profit" })).not.toBeInTheDocument();
-        const section = screen.getByRole("region", { name: "Project fee" });
+        expect(within(panel).queryByRole("button", { name: "Pricing" })).not.toBeInTheDocument();
+        const section = screen.getByRole("region", { name: "Work price" });
         expect(within(section).getByText("locked")).toBeInTheDocument();
-        expect(within(section).queryByRole("button", { name: "Edit project fee" })).not.toBeInTheDocument();
+        expect(within(section).queryByRole("button", { name: "Edit pricing" })).not.toBeInTheDocument();
     });
 });

@@ -135,11 +135,12 @@ describe("a Design project, by permission", () => {
 });
 
 describe("an Execution site, by permission", () => {
-    it("shows its staff their labour, its requirements, its meetings and its team, without materials", async () => {
+    it("shows its staff their labour, its requirements, its meetings and its team, without expenses", async () => {
         renderApp(`/execution/projects/${site.losingProject.id}`, tarek, ...siteHandlers);
-        expect(await screen.findByText("Ground labour", { selector: ".kpi-label" })).toBeInTheDocument();
-        expect(screen.queryByText("Materials", { selector: ".kpi-label" })).toBeNull();
-        expect(tabs()).toEqual(["Overview", "Requirements", "Meetings"]);
+        // a site has no Overview tab: its labour is in the Financials tab, open to everyone who sees the site
+        expect(await screen.findByText("Weekly labour")).toBeInTheDocument();
+        expect(screen.queryByText("Expenses", { selector: ".kpi-label" })).toBeNull();
+        expect(tabs()).toEqual(["Financials", "Requirements", "Meetings"]);
         expect(document.querySelectorAll(".page-head .av-stack > *")).toHaveLength(site.losingProject.team!.count);
         for (const name of ["Mark as done", "More actions"]) expect(screen.queryByRole("button", { name })).toBeNull();
     });

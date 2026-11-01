@@ -10,6 +10,7 @@ import type { IconName } from "@/shared/icons/icons";
 import { cx } from "@/shared/utils/cx";
 import { revealInStrip } from "@/shared/utils/revealInStrip";
 import AccessSettings from "./AccessSettings";
+import AccountLabelsSettings from "./AccountLabelsSettings";
 import CompanySettingsSection from "./CompanySettings";
 import DataSettings from "./DataSettings";
 import FinanceSettings from "./FinanceSettings";
@@ -17,15 +18,15 @@ import { NotificationSettings, ProjectSettings } from "./RuleSettings";
 import TeamsSettings from "./TeamsSettings";
 import TimeSettings from "./TimeSettings";
 
-type Section = "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "admins" | "data";
+type Section = "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "labels" | "admins" | "data";
 
 // Teams is the API's, not the prototype's: the prototype had them fixed.
 const SECTIONS: [Section, string, IconName][] = [
     ["general", "Company", "building"], ["time", "Time tracking", "clock"], ["finance", "Finance", "card"], ["projects", "Projects", "projects"],
-    ["notifications", "Notifications", "bell"], ["teams", "Teams", "people"], ["admins", "Admins & access", "shield"], ["data", "Data & export", "database"],
+    ["notifications", "Notifications", "bell"], ["teams", "Teams", "people"], ["labels", "Account labels", "list"], ["admins", "Admins & access", "shield"], ["data", "Data & export", "database"],
 ];
 /** The same whichever business is being looked at. */
-const COMPANY_WIDE: Section[] = ["general", "admins"];
+const COMPANY_WIDE: Section[] = ["general", "labels", "admins"];
 /** What lets someone change each section: it shows only to them. The first one's appearance is everyone's. */
 const MANAGED_BY: Record<Section, PermissionCode[] | null> = {
     general: null,
@@ -34,6 +35,7 @@ const MANAGED_BY: Record<Section, PermissionCode[] | null> = {
     projects: [P.DOMAIN_SETTINGS_MANAGE],
     notifications: [P.DOMAIN_SETTINGS_MANAGE],
     teams: [P.TEAM_MANAGE],
+    labels: [P.COMPANY_SETTINGS_MANAGE],
     admins: [P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN, P.PERMISSION_MANAGE],
     data: [P.WORK_ENTRY_VIEW_ALL],
 };
@@ -113,6 +115,7 @@ function Settings({ domain, choice }: { domain: Domain; choice?: Choice }) {
                     {section === "projects" && <ProjectSettings domain={domain} />}
                     {section === "notifications" && <NotificationSettings domain={domain} />}
                     {section === "teams" && <TeamsSettings domain={domain} />}
+                    {section === "labels" && <AccountLabelsSettings />}
                     {section === "admins" && <AccessSettings domain={domain} />}
                     {section === "data" && <DataSettings domain={domain} />}
                 </div>

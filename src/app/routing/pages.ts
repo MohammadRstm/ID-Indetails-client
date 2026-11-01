@@ -47,7 +47,7 @@ export const MyWorkRoute = page(() => import("@/domains/shared/requirements/MyWo
 export const DailyLogPage = named(() => import("@/domains/execution/staff/StaffPages"), "DailyLogPage");
 export const MySitesPage = named(() => import("@/domains/execution/staff/StaffPages"), "MySitesPage");
 export const SiteLogsPage = named(() => import("@/domains/execution/staff/StaffPages"), "SiteLogsPage");
-export const BoxPage = page(() => import("@/domains/execution/box/BoxPage"));
+export const PocketPage = page(() => import("@/domains/execution/pocket/PocketPage"));
 export const SettingsPage = page(() => import("@/domains/shared/settings/SettingsPage"));
 export const CompanySettingsPage = named(() => import("@/domains/shared/settings/SettingsPage"), "CompanySettingsPage");
 export const CompanyProfilePage = page(() => import("@/domains/company/profile/CompanyProfilePage"));

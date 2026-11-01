@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { errorMessage } from "@/api/errors";
 import { loadFailed } from "@/api/queryState";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
+import { canOpen } from "@/app/routing/routeTable";
 import { useCurrentUser } from "@/app/session/useSession";
 import { PageHead } from "@/shared/components/Data/Panel";
 import { ProjectTile } from "@/shared/components/Data/Bits";
@@ -14,10 +15,13 @@ import { toast } from "@/shared/components/Feedback/toast";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Modal from "@/shared/components/Overlays/Modal";
 import { PROJECT_STATUS } from "@/shared/components/Data/status";
+import Avatar from "@/shared/components/Identity/Avatar";
+import { money } from "@/shared/format/money";
 import { fmtDateY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { clickable } from "@/shared/utils/clickable";
 import { cx } from "@/shared/utils/cx";
+import { useEmployee } from "../../design/people/peopleWorkApi";
 import { personName, useDomainPeople } from "../../shared/people/peopleApi";
 import type { Project } from "../../shared/projects/projectsApi";
 import { useProjects } from "../../shared/projects/projectsApi";
@@ -119,7 +123,34 @@ export function SiteLogsPage() {
     );
 }
 
-/** A site's staff and its daily logs, on its Overview: admins change who oversees it, staff write its logs. */
+/**
+ * One of a site's staff: their photo and name for everyone (opening their profile for those who may), their email for those who see people (employee:view), and
+ * their current pay for those the API shows it to (financial or pay access). What they cost the site isn't worked out
+ * yet: site staff are paid monthly and log no hours, so no share of their pay is counted on a site.
+ */
+function StaffRow({ person }: { person: { id: number; name: string } }) {
+    const permissions = usePermissions();
+    const employee = useEmployee(person.id, permissions.has(P.EMPLOYEE_VIEW)).data;
+    const pay = employee?.currentPay;
+    // their photo and name open their profile, for those who may open it
+    const profile = canOpen(permissions, "execution", `people/${person.id}`) ? `/execution/people/${person.id}` : null;
+    const who = (
+        <span className="row" style={{ gap: 8 }}>
+            <Avatar person={{ name: person.name, photoFileId: employee?.photoFileId }} size={28} />
+            <b className="trunc">{person.name}</b>
+        </span>
+    );
+    return (
+        <tr>
+            <td>{profile ? <Link to={profile} className="link-plain" title={`Open ${person.name}'s profile`}>{who}</Link> : who}</td>
+            <td className="muted trunc">{employee?.email ?? "-"}</td>
+            <td className="r mono nowrap">{pay ? `${money.exact(pay.amount, pay.currency)} / ${pay.basis === "monthly" ? "month" : "hour"}` : <span className="muted">-</span>}</td>
+            <td className="r muted nowrap">Not counted yet</td>
+        </tr>
+    );
+}
+
+/** A site's staff and its daily logs, in its Site staff part: admins change who oversees it, staff write its logs. */
 export function SiteStaffPanels({ project }: { project: Project }) {
     const permissions = usePermissions();
     const me = useCurrentUser();
@@ -135,15 +166,23 @@ export function SiteStaffPanels({ project }: { project: Project }) {
                 <div className="panel-head">
                     <div className="grow">
                         <div className="panel-title">Site staff</div>
-                        <div className="panel-sub">Who oversees this site: they report its ground labour and write its daily logs.</div>
+                        <div className="panel-sub">Who oversees this site: they report its ground labour and write its daily logs below.</div>
                     </div>
                     {permissions.has(P.PROJECT_EDIT) && <div className="panel-tools"><button className="btn btn-sm" onClick={() => setChanging(true)}><Icon name="edit" />Change</button></div>}
                 </div>
-                <div className="panel-body">
-                    {staff.length === 0 ? <div className="muted">Nobody yet.</div> : (
-                        <div className="chips">{staff.map((s) => <span key={s.id} className="chip">{s.name}</span>)}</div>
-                    )}
-                </div>
+                {staff.length === 0 ? <div className="panel-body"><div className="muted">Nobody yet.</div></div> : (
+                    <div className="tbl-wrap">
+                        <table className="tbl tbl-min-sm">
+                            <thead>
+                                <tr>
+                                    <th>Name</th><th>Email</th><th className="r">Pay</th>
+                                    <th className="r" title="Site staff are paid monthly and log no hours, so their pay isn't counted in a site's costs yet">Cost on this site</th>
+                                </tr>
+                            </thead>
+                            <tbody>{staff.map((s) => <StaffRow key={s.id} person={s} />)}</tbody>
+                        </table>
+                    </div>
+                )}
             </div>
             {onTeam && open && permissions.has(P.SITE_LOG_CREATE) && <div className="mt"><WriteSiteLog sites={[]} fixedSiteId={project.id} /></div>}
             {(readsAll || onTeam) && <SiteLogBrowser mine={!readsAll} projectId={project.id} title="Daily logs" />}

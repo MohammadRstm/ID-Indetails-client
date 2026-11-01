@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { errorMessage, isStatus } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
@@ -34,23 +34,23 @@ import ClientTypeModal from "../../design/projects/money/ClientTypeModal";
 import PaymentModal from "../../design/projects/money/PaymentModal";
 import { staffDiscussion } from "../../design/projects/portal/staffDiscussion";
 import ReportModal from "../../design/projects/report/ReportModal";
-import { useMaterials } from "../../execution/materials/materialsApi";
 import PricingModal from "../../execution/projects/PricingModal";
 import PaymentHistoryModal from "./PaymentHistoryModal";
-import BoxChoiceModal from "../../execution/box/BoxChoice";
-import StatementHost from "../../execution/statements/StatementHost";
-import { useStatementLinks } from "../../execution/statements/statementLinks";
+import SendQuoteModal from "../billing/SendQuoteModal";
+import BlockedChangeModal from "./BlockedChangeModal";
+import BoqHost from "../../execution/boqs/BoqHost";
+import { AskPocketModal, MoveToPocketModal } from "../../execution/pocket/PocketActions";
 import CompleteProjectModal from "./CompleteProjectModal";
 import { useUrlFlag } from "@/shared/hooks/useUrlFlag";
 import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
-import { asksBox, useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
+import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
 
 type TabKey = "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
 
 /**
  * What goes on a project's Overview tab and Timeline tab, and the domain's own bits of its head. Each domain
- * supplies its own (Design: work, money and analytics; Execution: the site's money, materials and labour),
+ * supplies its own (Design: work, money and analytics; Execution: the site's money, expenses and labour),
  * registered where the routes are built.
  */
 export type ProjectPanels = {
@@ -59,6 +59,10 @@ export type ProjectPanels = {
     hasOverview?: (permissions: Permissions) => boolean;
     /** Its own tab, first, for those who see money. */
     financials?: (project: Project) => ReactNode;
+    /** The Financials tab is for everyone who sees the project; its own parts check each permission (Execution sites). */
+    financialsForAll?: boolean;
+    /** Tabs that became parts of the Financials tab: a link to one opens Financials at that part (?part=). */
+    movedTabs?: Partial<Record<string, string>>;
     /** Its own tab, for those who see everyone's work. */
     analytics?: (project: Project) => ReactNode;
     /** Its own tab, for those who see everyone's work. */
@@ -120,15 +124,6 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const asksParticipation = clientProject && !portalByPermission;
     const participation = useDiscussionSummary(staffDiscussion, project.id, { enabled: asksParticipation, retry: false });
     const [showDone, setShowDone] = useState(false);
-    // archiving an open site or reopening a removed one asks first what happens to its money in the box
-    const [boxAsk, setBoxAsk] = useState<"archive" | "reopen" | null>(null);
-    function asksFirst(action: StatusAction) {
-        if ((action === "archive" || action === "reopen") && asksBox(project, action, permissions.has(P.FINANCIAL_VIEW))) {
-            setBoxAsk(action);
-            return true;
-        }
-        return false;
-    }
     // its own link (?details=1), so Proton or a shared link can open it
     const [editing, setEditing] = useUrlFlag("details");
     // the report opens through the link too (?report=1), as the projects list's menu does
@@ -147,8 +142,16 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const seesMoney = permissions.has(P.FINANCIAL_VIEW);
     const timelineTab = !site && permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.timeline != null;
     const requested = params.get("tab") as TabKey | null;
+    // a link to a tab that became a part of the Financials tab (a site's old BOQs tab, say) opens that part instead
+    const movedPart = requested ? panels.movedTabs?.[requested] : undefined;
+    useEffect(() => {
+        if (!movedPart) return;
+        params.set("tab", "financials");
+        params.set("part", movedPart);
+        setParams(params, { replace: true });
+    }, [movedPart, params, setParams]);
     const allowed: Record<TabKey, boolean> = {
-        financials: seesMoney && panels.financials != null,
+        financials: (seesMoney || panels.financialsForAll === true) && panels.financials != null,
         overview: panels.hasOverview?.(permissions) ?? true,
         analytics: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.analytics != null,
         contributors: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.contributors != null,
@@ -172,26 +175,34 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const m = seesMoney ? project.money : null;
     const openRequirements = requirements.data ? requirements.data.total - requirements.data.done : 0;
     // The money windows, opened from the Financials tab or the menu (?money=payment|client|history|expense|pricing):
-    // Design's customer payment and its client and type, an Execution site's fee and material profit, the payment's
-    // history, and either one's expenses
+    // Design's customer payment and its client and type, an Execution site's supervision and TVA, the payment's
+    // history, and a Design project's expenses (a site's are its Expenses list)
     const moneyAction = m ? params.get("money") : null;
     const canEditBilling = !site && !!m && !m.isLocked && permissions.has(P.PROJECT_EDIT);
     const canEditPayment = canEditBilling && project.billingType === "client";
     const hasPaymentHistory = !!m && (site || project.billingType === "client");
     const canEditPricing = site && !!m && !m.isLocked && permissions.has(P.PROJECT_PRICING_MANAGE);
-    const canAddExpense = !!m && !m.isLocked && permissions.has(P.EXPENSE_MANAGE);
-    const openMoney = (action: "payment" | "client" | "expense" | "pricing") => { params.set("money", action); setParams(params); };
+    // a site's costs are recorded in its Expenses list, so it has no project expense window
+    const canAddExpense = !site && !!m && !m.isLocked && permissions.has(P.EXPENSE_MANAGE);
+    // an Execution client site moves money with the pocket money: part of its profit in, or a request for some back
+    const canUsePocket = site && !!m && project.billingType === "client";
+    const openMoney = (action: "payment" | "client" | "expense" | "pricing" | "to-pocket" | "ask-pocket") => { params.set("money", action); setParams(params); };
     const closeMoney = () => { params.delete("money"); setParams(params, { replace: true }); };
+    // a quote is offered after a project is made or its payment or TVA changes (?quote=new), to whoever sends them;
+    // an Execution site has none, its price comes from agreed bills of quantities
+    const canQuote = !!m && !site && project.billingType === "client" && permissions.has(P.INVOICE_SEND);
+    const askQuote = () => { params.delete("money"); if (canQuote) params.set("quote", "new"); setParams(params, { replace: true }); };
+    const closeQuote = () => { params.delete("quote"); setParams(params, { replace: true }); };
+    // a change the profit floor refused, opened from its notification, for whoever sees the money to decide
+    const blocked = permissions.has(P.FINANCIAL_VIEW) ? Number(params.get("blocked")) || null : null;
+    const closeBlocked = () => { params.delete("blocked"); setParams(params, { replace: true }); };
     const billing = useBillingLinks();
     const bill = m?.billing;
     const client = !!m && !!project.client && project.billingType === "client";
     const canNewInvoice = client && permissions.has(P.INVOICE_CREATE) && (bill?.notYetInvoiced ?? 0) - (bill?.drafts ?? 0) > 0.5;
     // a payment needs no invoice: it is held on account until an invoice is issued
     const canRecordPayment = client && permissions.has(P.PAYMENT_RECORD);
-    const materialCount = useMaterials(project.id, {}, site && client && permissions.has(P.STATEMENT_CREATE)).data?.all.count ?? 0;
-    const canStatement = site && client && permissions.has(P.STATEMENT_CREATE) && materialCount > 0;
-    const statements = useStatementLinks();
-    const moneyItems = canAddExpense || canEditBilling || canEditPricing || canStatement || canNewInvoice || canRecordPayment;
+    const moneyItems = canAddExpense || canEditBilling || canEditPricing || canNewInvoice || canRecordPayment || canUsePocket;
     // name, description, location and target date, while the project is open
     const canEditDetails = permissions.has(P.PROJECT_EDIT) && project.status !== "completed" && project.status !== "archived";
 
@@ -201,12 +212,12 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         // a tab's own part, and the file whose comments are open, belong to that tab
         if (k !== tab) {
             params.delete("part");
+            params.delete("view");
             params.delete("comments");
         }
         setParams(params);
     }
     function run(action: StatusAction, text: string) {
-        if (asksFirst(action)) return;
         change.mutate(action, {
             onSuccess: () => toast({ text, icon: "checkCircle" }),
             onError: (e) => toast({ text: "The status didn't change", sub: errorMessage(e), icon: "alert" }),
@@ -235,7 +246,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                             {canChangeStatus ? (
                                 <MenuButton buttonClass="btn btn-sm" align="left" width={200} label="Project status"
                                     text={<span className="row" style={{ gap: 6 }}><StatusBadge status={project.status} /><Icon name="chevronDown" /></span>}>
-                                    {(close) => <ProjectStatusItems project={project} close={close} onComplete={() => setShowDone(true)} asksFirst={asksFirst} />}
+                                    {(close) => <ProjectStatusItems project={project} close={close} onComplete={() => setShowDone(true)} />}
                                 </MenuButton>
                             ) : <StatusBadge status={project.status} />}
                         </div>
@@ -300,10 +311,11 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                     {canAddExpense && <button className="pop-item" onClick={() => { close(); openMoney("expense"); }}><Icon name="plus" />Add project expense</button>}
                                     {canEditPayment && <button className="pop-item" onClick={() => { close(); openMoney("payment"); }}><Icon name="card" />Edit customer payment</button>}
                                     {canEditBilling && <button className="pop-item" onClick={() => { close(); openMoney("client"); }}><Icon name="user" />Client & type</button>}
-                                    {canEditPricing && <button className="pop-item" onClick={() => { close(); openMoney("pricing"); }}><Icon name="card" />Fee & material profit</button>}
-                                    {canStatement && <button className="pop-item" onClick={() => { close(); statements.newStatement(); }}><Icon name="file" />Client statement</button>}
+                                    {canEditPricing && <button className="pop-item" onClick={() => { close(); openMoney("pricing"); }}><Icon name="card" />Pricing</button>}
                                     {canNewInvoice && <button className="pop-item" onClick={() => { close(); billing.newInvoice(); }}><Icon name="file" />New invoice</button>}
                                     {canRecordPayment && <button className="pop-item" onClick={() => { close(); billing.recordPayment(); }}><Icon name="card" />Record a client payment</button>}
+                                    {canUsePocket && <button className="pop-item" onClick={() => { close(); openMoney("to-pocket"); }}><Icon name="arrowRight" />Move to pocket money</button>}
+                                    {canUsePocket && <button className="pop-item" onClick={() => { close(); openMoney("ask-pocket"); }}><Icon name="arrowDown" />Ask the pocket money</button>}
                                 </div>
                             )}
                         </MenuButton>
@@ -317,7 +329,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     <div className="grow">
                         <b>Completed {fmtDateY(project.completedAt)}.</b>{" "}
                         {canChangeStatus ? "It has left every employee's active project list and no new work can be logged against it. Everything recorded stays available here and in reports."
-                            : site ? "No new materials can be added; everything recorded stays here." : "New work can't be logged against it; everything recorded stays here."}
+                            : site ? "No new expenses can be added; everything recorded stays here." : "New work can't be logged against it; everything recorded stays here."}
                     </div>
                     {canChangeStatus && <button className="btn btn-sm" onClick={() => run("reopen", `${project.title} is active again`)}>Reopen</button>}
                 </div>
@@ -328,7 +340,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     <div className="grow">
                         <b>On hold{project.heldSince ? ` since ${fmtDateY(project.heldSince)}` : ""}.</b>{" "}
                         {canChangeStatus ? "Employees can still see it, but work entries are paused."
-                            : site ? "Materials can still be recorded; nothing new is scheduled until it resumes." : "You can still see it, but new work entries are paused until it resumes."}
+                            : site ? "Expenses can still be recorded; nothing new is scheduled until it resumes." : "You can still see it, but new work entries are paused until it resumes."}
                     </div>
                     {canChangeStatus && <button className="btn btn-sm" onClick={() => run("resume", `${project.title} is active again`)}>Resume</button>}
                 </div>
@@ -366,14 +378,17 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {(showDone || completeFromList) && canChangeStatus && !closed && (
                 <CompleteProjectModal project={project} openRequirements={openRequirements} onClose={closeComplete} />
             )}
-            {boxAsk && canChangeStatus && <BoxChoiceModal project={project} action={boxAsk} onClose={() => setBoxAsk(null)} />}
-            {moneyAction === "payment" && canEditPayment && <PaymentModal project={project} onClose={closeMoney} />}
+            {params.get("quote") === "new" && canQuote && <SendQuoteModal project={project} onClose={closeQuote} />}
+            {blocked != null && <BlockedChangeModal id={blocked} onClose={closeBlocked} />}
+            {moneyAction === "payment" && canEditPayment && <PaymentModal project={project} onClose={closeMoney} onSaved={askQuote} />}
             {moneyAction === "client" && canEditBilling && <ClientTypeModal project={project} onClose={closeMoney} />}
             {moneyAction === "history" && hasPaymentHistory && <PaymentHistoryModal project={project} onClose={closeMoney} />}
-            {moneyAction === "pricing" && canEditPricing && <PricingModal project={project} onClose={closeMoney} />}
+            {moneyAction === "pricing" && canEditPricing && <PricingModal project={project} onClose={closeMoney} onSaved={askQuote} />}
             {moneyAction === "expense" && canAddExpense && <ExpenseModal project={project} onClose={closeMoney} />}
+            {moneyAction === "to-pocket" && canUsePocket && <MoveToPocketModal project={project} onClose={closeMoney} />}
+            {moneyAction === "ask-pocket" && canUsePocket && <AskPocketModal project={project} onClose={closeMoney} />}
             <BillingModalHost project={project} />
-            {site && <StatementHost project={project} />}
+            {site && <BoqHost project={project} />}
             {showReport && canReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}
             {editing && canEditDetails && <EditProjectModal project={project} onClose={() => setEditing(false)} />}
         </div>

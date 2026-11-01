@@ -9,6 +9,7 @@ import { SearchInput } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import { Avatars } from "@/shared/components/Identity/People";
 import { Money } from "@/shared/components/Data/Money";
+import { plural } from "@/shared/format/labels";
 import { addDays, dayKey, fmtDate, monthKey, relTime, startOfWeek } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useProjects, type ProjectSummary } from "../../shared/projects/projectsApi";
@@ -26,7 +27,7 @@ export function SiteActiveCount() {
 }
 
 /**
- * The sites someone records materials and labour on (the Execution side of the prototype's P.EmpProjects): no
+ * The sites someone records expenses and labour on (the Execution side of the prototype's P.EmpProjects): no
  * hours to show them, just the sites, most recently recorded first, then the paused ones.
  */
 export function SiteCards() {
@@ -107,7 +108,7 @@ export function SiteCards() {
                             <div className="panel">
                                 {filtering
                                     ? <Empty art="search" title="No active projects match" text="Try another search or clear the filters." action={<button className="btn" onClick={clear}>Clear filters</button>} />
-                                    : <Empty art="projects" title="No active projects" text="When a project is created it appears here and you can start recording materials against it." />}
+                                    : <Empty art="projects" title="No active projects" text="When a project is created it appears here and you can start recording expenses against it." />}
                             </div>
                         )}
                         {held.length > 0 && (
@@ -123,7 +124,7 @@ export function SiteCards() {
     );
 }
 
-/** One site the person records on: its progress, its materials so far and who has been recording there. */
+/** One site the person records on: its progress, its expenses so far and who has been recording there. */
 function SiteCard({ project: p, summary: s, failed, paused }: { project: ProjectSummary; summary: SiteSummary | undefined; failed: boolean; paused?: boolean }) {
     const navigate = useNavigate();
     return (
@@ -148,7 +149,7 @@ function SiteCard({ project: p, summary: s, failed, paused }: { project: Project
             </div>
             <div className="pcard-mine">
                 <div className="grow">
-                    <div className="u">Materials logged</div>
+                    <div className="u">Expenses logged</div>
                     <div className="mono" style={{ fontWeight: 650, fontSize: 14 }}>
                         {/* the site's cost total is company money: shown only to people who may see money */}
                         {s ? (s.materialCost == null ? <span title="Amounts need the financial permission">—</span> : <Money short value={s.materialCost} />)
@@ -163,7 +164,7 @@ function SiteCard({ project: p, summary: s, failed, paused }: { project: Project
             </div>
             <div className="spread">
                 <span className="muted trunc" style={{ fontSize: "11.5px" }}>
-                    {s?.materialCount ? `${s.materialCount} materials on record` : "No materials logged yet"}
+                    {s?.materialCount ? `${plural(s.materialCount, "expense")} on record` : "No expenses logged yet"}
                 </span>
                 {paused && <span className="badge badge-hold"><Icon name="lock" />On hold</span>}
             </div>
