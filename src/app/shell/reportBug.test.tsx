@@ -27,8 +27,34 @@ describe("Report a bug", () => {
         await userEvent.type(within(dialog).getByLabelText("What went wrong"), "The timer stopped");
         await userEvent.type(within(dialog).getByLabelText("What happened"), "I changed page and it stopped.");
         await userEvent.click(within(dialog).getByRole("button", { name: "Send report" }));
-        await waitFor(() => expect(sent).toEqual([{ title: "The timer stopped", description: "I changed page and it stopped.", steps: null, page: "/design/projects" }]));
+        await waitFor(() => expect(sent).toEqual([expect.objectContaining({
+            title: "The timer stopped", description: "I changed page and it stopped.", steps: null, page: "/design/projects",
+        })]));
         expect(await screen.findByText("Thanks - your report was sent")).toBeInTheDocument();
+    });
+
+    it("sends the references of the requests that failed lately, so their log lines can be found", async () => {
+        const sent: { recentErrors: { ref: string; status: number; path: string }[] }[] = [];
+        const traceId = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01";
+        let failures = 0;
+        renderApp("/design/projects", personas.designEmployee, ...workHandlers,
+            http.get("/api/notifications/unread-count", () => {
+                failures++;
+                return HttpResponse.json(
+                    { type: "unexpected", code: "internal_error", message: "Something went wrong on our side. Please try again later.", errors: null, traceId },
+                    { status: 500 });
+            }),
+            http.post("/api/bug-reports", async ({ request }) => { sent.push(await request.json() as never); return new HttpResponse(null, { status: 204 }); }));
+        // the bell's count failed on the server (errors.test.ts covers the reference a failure shows)
+        await waitFor(() => expect(failures).toBeGreaterThan(0));
+
+        const dialog = await openReport();
+        await userEvent.type(within(dialog).getByLabelText("What went wrong"), "My projects don't load");
+        expect(within(dialog).getByText(/and the references of your last errors/)).toBeInTheDocument();
+        await userEvent.type(within(dialog).getByLabelText("What happened"), "It says something went wrong.");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Send report" }));
+        await waitFor(() => expect(sent).toHaveLength(1));
+        expect(sent[0].recentErrors).toContainEqual(expect.objectContaining({ ref: traceId, status: 500, path: "/api/notifications/unread-count" }));
     });
 
     it("says why a report wasn't sent, and keeps what was written", async () => {
