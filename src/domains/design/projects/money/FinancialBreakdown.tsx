@@ -87,7 +87,7 @@ export default function FinancialBreakdown({ project, money: m, contributors, en
                         <div className="u" style={{ marginBottom: 6 }}>Cost summary</div>
                         <CostRow label="Employee labour" value={money.fmt(m.cost.labour)} swatch={COST_COLORS.labour} />
                         <CostRow label="Project expenses" value={money.fmt(m.cost.expenses)} swatch={COST_COLORS.expense} />
-                        {m.cost.materials > 0 && <CostRow label="Materials" value={money.fmt(m.cost.materials)} swatch="var(--heat-2)" />}
+                        {m.cost.siteExpenses > 0 && <CostRow label="Site expenses" value={money.fmt(m.cost.siteExpenses)} swatch="var(--heat-2)" />}
                         {m.cost.groundLabour > 0 && <CostRow label="Ground labour" value={money.fmt(m.cost.groundLabour)} swatch="var(--warn-mark)" />}
                         <CostRow strong label="Total project cost" value={money.fmt(m.cost.total)} meta={m.labourHours > 0 ? `${money.fmt(m.costPerHour)}/h` : ""} />
                         <p className="hint mt-s">Company expenses - subscriptions, rent and other running costs - are carried by the company, not by this project.</p>

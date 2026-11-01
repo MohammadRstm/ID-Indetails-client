@@ -69,7 +69,8 @@ export function DesignFinancials({ project }: { project: Project }) {
     return (
         <>
             <PaymentSection label="Customer payment" amount={clientWork ? m.revenue : null} locked={m.isLocked}
-                sub={clientWork ? "The total the client pays for this project. Each change is kept with why it changed." : undefined}
+                tva={clientWork ? { rate: m.tvaRate, withTva: m.paymentWithTva } : undefined}
+                sub={clientWork ? "What the project earns, before TVA. The client only ever sees the total with TVA. Each change is kept with why it changed." : undefined}
                 onEdit={clientWork && canEditMoney ? open("money", "payment") : undefined}
                 onHistory={clientWork ? open("money", "history") : undefined}
                 empty={(

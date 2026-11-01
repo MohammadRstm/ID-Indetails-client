@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AMOUNT, fitNumber, MARKUP_PERCENT, MONTH_HOURS, QUANTITY, RATE, upTo, WORKERS } from "./limits";
+import { AMOUNT, fitNumber, MONTH_HOURS, QUANTITY, RATE, upTo, WORKERS } from "./limits";
 
 describe("the largest numbers that can be typed", () => {
     it("take an amount up to 13 digits and 2 decimals, and refuse the key that goes past", () => {
@@ -15,8 +15,6 @@ describe("the largest numbers that can be typed", () => {
         expect(fitNumber("10000", WORKERS)).toBe("10000");
         expect(fitNumber("10001", WORKERS)).toBeNull();
         expect(fitNumber("12.", WORKERS)).toBeNull();
-        expect(fitNumber("500", MARKUP_PERCENT)).toBe("500");
-        expect(fitNumber("500.5", MARKUP_PERCENT)).toBeNull();
         expect(fitNumber("744", MONTH_HOURS)).toBe("744");
         expect(fitNumber("745", MONTH_HOURS)).toBeNull();
         expect(fitNumber("999999999999.123456", RATE)).toBe("999999999999.123456");

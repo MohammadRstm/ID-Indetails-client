@@ -121,7 +121,7 @@ function Figures({ tabs }: { tabs: ReactNode }) {
                 {t && t.unconvertedOverhead.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedOverhead.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
                 {t && t.unconvertedAdminSalaries.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedAdminSalaries.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
                 <p className="hint mt">
-                    Revenue is the money received from clients in this window, on the day it arrived; costs are the labour, expenses, materials and site labour dated inside it.
+                    Revenue is the money received from clients in this window, on the day it arrived; costs are the labour, expenses, site expenses and site labour dated inside it.
                     Company expenses are the monthly pool of subscriptions and running costs, counted day by day for the {days} day{days === 1 ? "" : "s"} shown
                     - never charged to a project or a client. Super admins log no hours, so no project carries their pay: their salaries are counted the same way.
                     Everyone else's pay is already in the businesses' costs, through the hours they log.

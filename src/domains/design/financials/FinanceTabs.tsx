@@ -20,7 +20,7 @@ import { money } from "@/shared/format/money";
 import { fmtDateY, fmtH, fmtMonthY, MONTHS } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
 import { ClientBadge } from "../../shared/clients/ClientBits";
-import { costPartsOf, costWords } from "../../shared/finance/costParts";
+import { costPartsOf, costWords, projectCostOf } from "../../shared/finance/costParts";
 import type { FinanceClient, FinanceMonth, FinanceProjects, FinanceSummary } from "../../shared/finance/financeApi";
 import { clickable } from "@/shared/utils/clickable";
 
@@ -185,7 +185,7 @@ export function ProjectsTab({ projects, failed, tiles }: { projects: FinanceProj
                                         <td><StatusBadge status={f.status} /></td>
                                         <td className="r mono">{internal ? <span className="muted">-</span> : money.fmt(f.revenue)}</td>
                                         {hours && <td className="r mono">{fmtH(f.hours * 60)}</td>}
-                                        {parts.map((p) => <td key={p.key} className="r mono">{money.fmt(f.cost[p.key])}</td>)}
+                                        {parts.map((p) => <td key={p.key} className="r mono">{money.fmt(projectCostOf(f.cost, p))}</td>)}
                                         <td className="r mono">{money.fmt(f.cost.total)}</td>
                                         <td className={cx("r mono", !internal && (f.profit >= 0 ? "up" : "down"))}>
                                             {internal ? <span className="muted">{money.fmt(-f.cost.total)}</span> : money.fmt(f.profit)}
@@ -286,7 +286,7 @@ export function ClientsTab({ clients, projects, failed }: ClientsTabProps) {
                                         <td className="r num">{c.money.projects}</td>
                                         {hours && <td className="r mono">{fmtH(c.money.hours * 60)}</td>}
                                         <td className="r mono">{money.fmt(c.money.revenue)}</td>
-                                        {parts.map((p) => <td key={p.key} className="r mono">{money.fmt(c.money.cost[p.key])}</td>)}
+                                        {parts.map((p) => <td key={p.key} className="r mono">{money.fmt(projectCostOf(c.money.cost, p))}</td>)}
                                         <td className={cx("r mono", c.money.profit >= 0 ? "up" : "down")}>{money.fmt(c.money.profit)}</td>
                                         <td><MarginPill value={c.money.marginKnown ? c.money.margin : null} label={false} /></td>
                                     </tr>
@@ -325,7 +325,7 @@ export function CostsTab({ costs, error, retry, tiles }: { costs: Costs | undefi
                             }))} />
                     </Figure>
                 ) : (
-                    <Figure title="Site cost by kind" sub="Materials delivered, ground labour reported and project expenses in the period."
+                    <Figure title="Site cost by kind" sub="Site expenses recorded and ground labour reported in the period."
                         table={{ cols: [{ label: "Kind" }, { label: "Cost", right: true }], rows: costPartsOf(domain).map((p) => [p.label, money.fmt(costs.bySource[p.key])]) }}>
                         <RankBars format={(v) => money.short(v)} unit="Cost" showPct
                             items={costPartsOf(domain).map((p) => ({ label: p.label, value: costs.bySource[p.key] }))} />

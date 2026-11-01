@@ -8,7 +8,8 @@ import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
 const karim = personas.executionAdmin;
-const path = `/execution/projects/${site.project.id}`;
+// the ground labour is a view of the Overall expenses part of the Financials tab
+const path = `/execution/projects/${site.project.id}?part=expenses&view=labour`;
 
 beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });

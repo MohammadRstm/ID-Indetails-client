@@ -28,7 +28,7 @@ function outcome(user: CurrentUser, domain: Domain, path: string): Outcome {
 const PATHS = [
     "overview", "projects", "projects/:id", "clients", "clients/:id", "people", "people/:id", "financials",
     "my-work", "pay", "meetings", "activity", "reports", "profile", "settings", "notifications", "messages", "assistant/:chatId?", "help",
-    "daily-log", "sites", "site-logs", "box",
+    "daily-log", "sites", "site-logs", "pocket",
 ] as const;
 
 // one letter per path, in PATHS order: o open, h home, d denied (everyone here has Proton, so its page opens in their business)

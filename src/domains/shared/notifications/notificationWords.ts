@@ -31,6 +31,11 @@ const s = (v: unknown) => (typeof v === "string" ? v : "");
 const n = (v: unknown) => (typeof v === "number" ? v : 0);
 const plural = (count: number, one: string, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 const ROLE: Record<string, string> = { super_admin: "super admin", admin: "admin", employee: "employee" };
+const BLOCKED_KIND: Record<string, string> = {
+    expense: "An expense", material_add: "New expenses", material_update: "An expense change", labour_week: "A labour week",
+    work_entry_create: "Logged hours", work_entry_update: "Changed hours", payment: "A lower payment", pricing: "A lower supervision rate",
+    boq_agree: "Agreeing a BOQ or VO", boq_withdraw: "Withdrawing the agreement of a BOQ or VO",
+};
 const areaLabel = (d: unknown) => AREAS[d as "design" | "execution"]?.label ?? "";
 
 /**
@@ -100,7 +105,7 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             };
         }
         case "materials_added":
-            return { text: `${who} added ${plural(n(p.count), "material")} to ${title}`, icon: "list", route: project };
+            return { text: `${who} added ${plural(n(p.count), "expense")} to ${title}`, icon: "list", route: project };
         case "labour_week_submitted":
             return { text: `${who} ${p.updated ? "updated" : "submitted"} a labour report for ${title}`, sub: p.weekStart ? `Week of ${fmtDate(s(p.weekStart))}` : undefined, icon: "projects", route: project };
 
@@ -122,6 +127,16 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             return { text: `${title} reached ${n(p.progressPct)}% progress`, sub: "Ready to close out?", icon: "trendUp", route: project };
         case "project_idle":
             return { text: `${title} has had no work logged for ${n(p.days)} days`, sub: p.lastWorkOn ? `Last entry: ${fmtDate(s(p.lastWorkOn))}` : "Nothing logged on it yet", icon: "trendUp", route: project };
+        case "change_blocked":
+            return {
+                text: `A change on ${title} was stopped at zero profit`,
+                sub: `${BLOCKED_KIND[s(p.kind)] ?? "A change"}${note.actor ? ` by ${who}` : ""} · force it or dismiss it`,
+                icon: "alert", route: project && note.subjectId ? `${project}?blocked=${note.subjectId}` : project,
+            };
+        case "profit_low":
+            return { text: `${title} is close to zero profit`, sub: `${n(p.marginPct)}% margin left`, icon: "trendUp", route: project };
+        case "profit_at_zero":
+            return { text: `${title} is at zero profit or below`, sub: `${n(p.marginPct)}% margin`, icon: "alert", route: project };
         case "project_cost_high":
             return { text: `${title} has used ${n(p.usedPct)}% of its payment in cost`, sub: "Worth a look before it runs over", icon: "trendUp", route: project };
         case "project_closed":
@@ -164,8 +179,19 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 sub: `${p.invoiceNumber ? `Against ${s(p.invoiceNumber)}` : p.isInitial ? "The initial payment" : "On account"}${note.actor ? ` · by ${who}` : ""}`,
                 icon: "card", route: project,
             };
-        case "statement_sent":
-            return { text: `${s(p.number) || "A statement"} was sent to the client`, sub: `${title}${note.actor ? ` · by ${who}` : ""}`, icon: "file", route: project && note.subjectId ? `${project}?statement=${note.subjectId}` : project };
+        case "pocket_requested":
+            return {
+                text: `${title} asks for pocket money`,
+                sub: note.actor ? `Asked by ${who} · approve or deny it` : "Raised by the system · approve or deny it",
+                icon: "card", route: "/execution/pocket",
+            };
+        case "quote_due":
+            return {
+                text: `${title} may need a quote`,
+                sub: note.actor ? `Created by ${who} · send it or not` : "Send it or not",
+                // an Execution site has no quotes: its price comes from BOQs
+                icon: "file", route: project && d === "design" ? `${project}?quote=new` : project,
+            };
         case "client_added":
             return { text: `${s(p.organisation) || s(p.name) || "A client"} added as a client`, sub: by, icon: "briefcase", clientId: note.subjectId ?? undefined };
 

@@ -121,11 +121,11 @@ function OverviewPage({ domain }: { domain: Domain }) {
         {
             key: "expected", value: <Money short value={s?.expectedRevenue ?? 0} />,
             label: <>Expected revenue<HelpHint article="expected-revenue" label="expected revenue">What was agreed with clients in this period. Revenue is what they actually paid.</HelpHint></>,
-            sub: <span>{domain === "execution" ? "fees agreed and materials sent, in this period" : "payments agreed on projects, in this period"}</span>,
+            sub: <span>{domain === "execution" ? "work and supervision agreed, in this period" : "payments agreed on projects, in this period"}</span>,
         },
         {
             key: "cost", label: "Total cost", value: <Money short value={s?.cost.total ?? 0} />,
-            // "labour $12k · project expenses $1.6k"; a site's "materials $6k · ground labour $3k · project expenses $0"
+            // "labour $12k · project expenses $1.6k"; a site's "site expenses $6k · ground labour $3k · other costs $0"
             sub: <span>{costPartsOf(domain).map((p) => `${p.key === "labour" ? "labour" : p.label.toLowerCase()} ${money.short(s?.cost[p.key] ?? 0)}`).join(" · ")}</span>,
         },
         { key: "profit", label: "Net profit", value: <Money short value={s?.profit ?? 0} />, sub: <span>revenue less {costWords(domain).toLowerCase()}</span> },

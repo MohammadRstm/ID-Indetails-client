@@ -14,7 +14,7 @@
       "cost": {
         "labour": 0,
         "expenses": 0,
-        "materials": 6350,
+        "siteExpenses": 6350,
         "groundLabour": 3225,
         "total": 9575,
         "unconverted": [],
@@ -52,7 +52,7 @@
       "cost": {
         "labour": 0,
         "expenses": 0,
-        "materials": 6036,
+        "siteExpenses": 6036,
         "groundLabour": 3000,
         "total": 9036,
         "unconverted": [],
@@ -90,7 +90,7 @@
       "cost": {
         "labour": 0,
         "expenses": 0,
-        "materials": 6726,
+        "siteExpenses": 6726,
         "groundLabour": 3125,
         "total": 9851,
         "unconverted": [],

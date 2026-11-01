@@ -71,7 +71,7 @@ function FinancialsPage({ domain }: { domain: Domain }) {
     const invoiceCount = useInvoices({ domain, pageSize: 1 }).data?.totalCount;
     const tiles = new Map<number, Tile>((useProjects({ domain, pageSize: 100 }, usePermissions().has(P.PROJECT_VIEW)).data?.items ?? []).map((p) => [p.id, { icon: p.icon, tint: p.tint }]));
     const s = summary.data;
-    // Design spends on its employees' hours and expenses; a site on materials, ground labour and expenses
+    // Design spends on its employees' hours and expenses; a site on site expenses and ground labour
     const costTiles = domain === "design"
         ? [
             { key: "labour", label: "Employee labour", value: <Money short value={s?.cost.labour ?? 0} />, sub: <span>{fmtNumber(Math.round((s?.labourMinutes ?? 0) / 60))} hours logged</span> },

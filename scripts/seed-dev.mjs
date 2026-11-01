@@ -257,13 +257,23 @@ for (const s of SITES) {
         domainCode: "execution",
         billingType: "client",
         clientId: clients[s.client],
-        projectFee: s.fee,
         materialMarkup: s.markup,
         ownerId: people.karim.id,
         targetDate: dayKey(addDays(today, 60 + Math.floor(rand() * 120))),
         initialPayment: { amount: s.initial, currency: "USD", method: "bank", receivedOn: dayKey(monthStart), reference: "Advance", note: null },
         labourDefaults: { workers: 6, dailyPay: 25 },
     });
+}
+
+// a site's price is its agreed client BOQ: one line for the whole work, agreed by the super admin
+console.log("Agreeing each site's BOQ…");
+for (const s of SITES) {
+    const boq = await su.post(`/projects/${projects[s.key]}/boqs`, { kind: "client", title: `${s.title}: bill of quantities` });
+    await su.put(`/boqs/${boq.id}`, {
+        title: boq.title, adjustmentType: "none", adjustmentValue: null,
+        lines: [{ code: "1", description: "Site works", quantity: 1, wasteRate: 0, unit: "lot", rate: s.fee }],
+    });
+    await su.post(`/boqs/${boq.id}/agree`);
 }
 
 console.log("Moving the projects' start dates back…");
@@ -337,8 +347,8 @@ for (const [key, items] of Object.entries({
     }
 }
 
-/* ---------------- Execution: materials, labour, statement ---------------- */
-console.log("Site materials, labour weeks and a statement…");
+/* ---------------- Execution: materials and labour ---------------- */
+console.log("Site materials and labour weeks…");
 const MATERIALS = [
     ["Cement", 40, "bag", 7.5, "Holcim"], ["Rebar 12mm", 1.2, "ton", 780, "Steel Co"], ["Porcelain tiles", 180, "m²", 22, "Tile House"],
     ["Paint", 30, "gallon", 28, "Sipes"], ["Plasterboard", 90, "sheet", 11, "Gypsum Lb"], ["Electrical cable", 400, "m", 1.4, "Cables SAL"],
@@ -357,7 +367,6 @@ for (const [i, s] of SITES.entries()) {
         if (days.length) await people.joe.api.put(`/projects/${projects[s.key]}/labour-weeks/${dayKey(week)}`, { days, note: null });
     }
 }
-await karim.post(`/projects/${projects.lobby}/statements`, { mode: "detail", includeEarlier: false, excludedMaterialIds: [], unlistedTypeKeys: [] });
 
 /* ---------------- invoices and payments ---------------- */
 console.log("Invoices and payments…");

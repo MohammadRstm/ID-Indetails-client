@@ -72,6 +72,60 @@ describe("what the activity feed says", () => {
         expect(line("overhead_removed")).toBe("removed Figma from the company expenses");
     });
 
+    it("words BOQs and VOs by their number, with the total for people who see money", () => {
+        const site = { domain: "execution", project: { id: 7, name: "Achrafieh Towers lobby" }, client: { id: 6, name: "Achrafieh Towers SAL" } };
+        const boq = (kind: string, payload: Record<string, unknown> | null, extra: Partial<FeedEvent> = {}) => say(event(kind, { ...site, payload, ...extra }));
+        expect(boq("boq_created", { kind: "client", number: "BQ-2026-001" }, { amount: 17000 })).toBe("drafted BQ-2026-001 for Achrafieh Towers lobby - $17k");
+        expect(boq("boq_created", { kind: "client", number: "BQ-2026-001" })).toBe("drafted BQ-2026-001 for Achrafieh Towers lobby");
+        expect(boq("boq_created", { kind: "vo", number: "VO-2026-001" }, { amount: 6500 })).toBe("drafted VO-2026-001 for Achrafieh Towers lobby - $6.5k");
+        // an event that doesn't name its number still says which kind it was
+        expect(boq("boq_created", { kind: "vo" })).toBe("drafted a VO for Achrafieh Towers lobby");
+        expect(boq("boq_created", null)).toBe("drafted a client BOQ for Achrafieh Towers lobby");
+        expect(boq("boq_sent", { kind: "client", number: "BQ-2026-001", channel: "email" })).toBe("sent BQ-2026-001 to Achrafieh Towers SAL by email");
+        expect(boq("boq_sent", { kind: "client", number: "BQ-2026-001", channel: "whatsapp" })).toBe("sent BQ-2026-001 to Achrafieh Towers SAL on WhatsApp");
+        expect(boq("boq_sent", { kind: "vo", number: "VO-2026-001", channel: "download" })).toBe("sent VO-2026-001 to Achrafieh Towers SAL");
+        expect(boq("boq_agreed", { kind: "client", number: "BQ-2026-001" }, { amount: 17000 })).toBe("agreed BQ-2026-001 on Achrafieh Towers lobby - $17k");
+        expect(boq("boq_agreed", { kind: "client", number: "BQ-2026-001" })).toBe("agreed BQ-2026-001 on Achrafieh Towers lobby");
+        expect(boq("boq_agreement_withdrawn", { kind: "client", number: "BQ-2026-001", reason: "The client changed the scope" }))
+            .toBe("withdrew the agreement of BQ-2026-001 on Achrafieh Towers lobby - The client changed the scope");
+        expect(boq("boq_agreement_withdrawn", { kind: "vo", number: "VO-2026-001" })).toBe("withdrew the agreement of VO-2026-001 on Achrafieh Towers lobby");
+    });
+
+    it("words a site expense in its own currency, dollars when the event carries none", () => {
+        const site = { domain: "execution", project: { id: 7, name: "Achrafieh Towers lobby" } };
+        const expense = (kind: string, payload: Record<string, unknown> | null, extra: Partial<FeedEvent> = {}) =>
+            say(event(kind, { ...site, subjectType: "material", subjectId: 3, payload, ...extra }));
+        expect(expense("material_added", { name: "Crane hire" }, { amount: 1200 })).toBe("added Crane hire to Achrafieh Towers lobby - $1.2k");
+        expect(expense("material_added", { name: "Crane hire", currency: "USD" }, { amount: 1200 })).toBe("added Crane hire to Achrafieh Towers lobby - $1.2k");
+        expect(expense("material_added", { name: "Scaffolding", currency: "LBP" }, { amount: 895000 })).toBe("added Scaffolding to Achrafieh Towers lobby - 895k LBP");
+        expect(expense("material_updated", { name: "Scaffolding", currency: "LBP" }, { amount: 4500000 })).toBe("updated Scaffolding on Achrafieh Towers lobby - 4.5M LBP");
+        // without financial:view there is no amount, whatever the currency
+        expect(expense("material_updated", { name: "Scaffolding", currency: "LBP" })).toBe("updated Scaffolding on Achrafieh Towers lobby");
+        expect(expense("material_removed", { name: "Crane hire", currency: "LBP" }, { amount: 5 })).toBe("removed Crane hire from Achrafieh Towers lobby");
+        expect(expense("material_added", null)).toBe("added an expense to Achrafieh Towers lobby");
+    });
+
+    it("words a payment's label: filed, moved or cleared", () => {
+        const label = (payload: Record<string, unknown> | null, extra: Partial<FeedEvent> = {}) => say(event("payment_label_set", { subjectType: "payment", subjectId: 5, payload, ...extra }));
+        expect(label({ label: "Concrete", previousLabel: null }, { amount: 4000 })).toBe("filed a $4k payment under Concrete");
+        expect(label({ label: "Finishing", previousLabel: "Concrete" }, { amount: 4000 })).toBe("moved a $4k payment from Concrete to Finishing");
+        expect(label({ label: null, previousLabel: "Concrete" }, { amount: 4000 })).toBe("cleared the Concrete label from a $4k payment");
+        // without financial:view there is no amount; an event with no names still reads
+        expect(label({ label: "Concrete", previousLabel: null })).toBe("filed a payment under Concrete");
+        expect(label(null)).toBe("changed the label of a payment");
+    });
+
+    it("words supervision taken and its removal, without the amount or the day for those who don't see money", () => {
+        const site = { domain: "execution", project: { id: 7, name: "Achrafieh Towers lobby" }, subjectType: "supervision_withdrawal", subjectId: 2 };
+        const taken = (kind: string, payload: Record<string, unknown> | null, extra: Partial<FeedEvent> = {}) => say(event(kind, { ...site, payload, ...extra }));
+        expect(taken("supervision_taken", { takenOn: "2026-09-20", note: "First instalment" }, { amount: 300 }))
+            .toBe("recorded $300 of supervision taken from Achrafieh Towers lobby on Sep 20 - First instalment");
+        expect(taken("supervision_taken", { takenOn: "2026-09-20", note: null }, { amount: 300 })).toBe("recorded $300 of supervision taken from Achrafieh Towers lobby on Sep 20");
+        expect(taken("supervision_taken", null)).toBe("recorded supervision taken from Achrafieh Towers lobby");
+        expect(taken("supervision_withdrawal_removed", { takenOn: "2026-09-20" }, { amount: 300 })).toBe("removed $300 of supervision taken on Sep 20 from Achrafieh Towers lobby");
+        expect(taken("supervision_withdrawal_removed", null)).toBe("removed a record of supervision taken from Achrafieh Towers lobby");
+    });
+
     it("words a client portal publish with what it changed, when the event says", () => {
         const published = (payload: Record<string, unknown> | null) => feedWords(event("portal_published", { payload }), names);
         expect(published({ added: 2, updated: 1, removed: 1 })).toEqual({ icon: "send", text: "published the client portal of Beit Misk show apartment (2 new, 1 updated, 1 removed)" });

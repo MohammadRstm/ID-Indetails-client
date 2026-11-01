@@ -718,3 +718,25 @@ button.pc-comments { border: 0; cursor: pointer; }
 .site-logs { list-style: none; margin: 6px 0 0; padding: 0; }
 .site-log { padding: 8px 0; border-bottom: 1px solid var(--line); }
 .site-log:last-child { border-bottom: 0; }
+
+/* An Execution site's Financials parts: one row of sub-tabs that scrolls sideways on a phone */
+.subtabs { display: flex; max-width: 100%; overflow-x: auto; margin: 0 0 14px; }
+.subtabs .seg { flex: none; }
+
+/* The BOQs tab's sections (client BOQs, VOs, drafts): a heading with its count and a rule under it, so they stand apart */
+.boq-sec { margin-top: 22px; }
+.boq-sec-head { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; padding-bottom: 7px; border-bottom: 1px solid var(--line);
+  font-size: 15px; font-weight: 650; color: var(--ink); letter-spacing: 0; }
+.boq-sec-head .num { font-size: 12px; font-weight: 550; }
+
+/* A link that reads as the text it wraps (a person's photo and name), underlined on hover */
+.link-plain { color: inherit; text-decoration: none; }
+.link-plain:hover b { text-decoration: underline; }
+
+/* The account's price-and-costs card: a rule between what the client pays and what the site has cost */
+.xm-split > :last-child { border-left: 1px solid var(--line); padding-left: 20px; }
+@media (max-width: 860px) { .xm-split > :last-child { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 14px; } }
+
+/* A heading inside a card that splits it into parts (the account's spending by category and by payee) */
+.sec-head { margin: 0 0 10px; padding-bottom: 7px; border-bottom: 1px solid var(--line); font-size: 15px; font-weight: 650; color: var(--ink); letter-spacing: 0; }
+.sec-head.mt-l { margin-top: 26px; }

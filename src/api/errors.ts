@@ -6,6 +6,8 @@ export type ApiErrorBody = {
     code: string;
     message: string;
     errors: Record<string, string[]> | null;
+    /** For profit_floor: the refused change, kept so whoever sees the project's money can force it through. */
+    blockedChangeId?: number | null;
     traceId?: string;
 };
 
@@ -14,6 +16,7 @@ export class ApiError extends Error {
     readonly type: string;
     readonly code: string;
     readonly fieldErrors: Record<string, string>;
+    readonly blockedChangeId: number | null;
 
     constructor(status: number, body: Partial<ApiErrorBody>) {
         super(body.message || defaultMessage(status));
@@ -22,6 +25,7 @@ export class ApiError extends Error {
         this.type = body.type || "unexpected";
         this.code = body.code || "internal_error";
         this.fieldErrors = firstErrors(body.errors);
+        this.blockedChangeId = body.blockedChangeId ?? null;
     }
 
     get isNetwork() {

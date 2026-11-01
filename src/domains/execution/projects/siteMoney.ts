@@ -3,40 +3,36 @@ import type { Project } from "../../shared/projects/projectsApi";
 type ProjectMoney = NonNullable<Project["money"]>;
 
 /**
- * An Execution site's money as the prototype reads it (XM.money). The client pays the agreed amount: the project fee
- * plus the materials sent to them on a statement, at client prices. Ground labour is never billed: it comes out of
+ * An Execution site's money as the prototype reads it (XM.money). The client pays the agreed amount: the work price
+ * from the agreed BOQs and VOs, plus supervision. Site expenses and ground labour are never billed: they come out of
  * the profit.
  */
 export type SiteMoney = {
     received: number;
-    /** Materials, ground labour, expenses and any employee labour: all paid when they happen. */
+    /** Site expenses, ground labour and any employee labour: all paid when they happen. */
     spent: number;
-    materialCost: number;
+    /** What was spent on site: materials, contractors, equipment, fees. */
+    siteExpenses: number;
     labour: number;
-    /** Project expenses and employee labour together. */
+    /** Old project expenses and employee labour together. */
     other: number;
-    /** What the Execution box moved to the site. */
-    fromBox: number;
-    /** Received + from the box − spent: the headline. */
+    /** Moved into the pocket money: lowers the profit, not what the client owes. */
+    toPocket: number;
+    /** Paid by the pocket money. */
+    fromPocket: number;
+    /** Received − spent − to the pocket + from it: the headline. */
     cashProfit: number;
-    /** The project fee + the materials sent to the client, at client prices. */
+    /** The work price + supervision. */
     agreed: number;
     owed: number;
     /** Paid beyond the agreed amount so far. */
     credit: number;
     /** Agreed − spent: once the client has paid it all. */
     expectedProfit: number;
+    /** The work price: the agreed BOQ and VOs' total. */
     fee: number;
-    markup: number;
-    /** The materials sent to the client, at client prices. */
-    materialCharge: number;
-    /** What the materials sent earn: their charge − their cost. */
-    materialProfit: number;
-    /** What the materials sent cost. */
-    sentCost: number;
-    /** The materials not sent yet, at client prices: a statement adds them to what is owed. */
-    unsentCharge: number;
-    unsent: number;
+    /** The supervision fee on top of it. */
+    supervision: number;
     payments: number;
     locked: boolean;
 };
@@ -45,36 +41,29 @@ export function siteMoneyOf(m: ProjectMoney): SiteMoney {
     return {
         received: m.billing.received,
         spent: m.cost.total,
-        materialCost: m.cost.materials,
+        siteExpenses: m.cost.siteExpenses,
         labour: m.cost.groundLabour,
         other: m.cost.expenses + m.cost.labour,
-        fromBox: m.fromBox ?? 0,
-        cashProfit: m.cashProfit ?? m.billing.received + (m.fromBox ?? 0) - m.cost.total,
+        toPocket: m.toPocket ?? 0,
+        fromPocket: m.fromPocket ?? 0,
+        cashProfit: m.cashProfit ?? m.billing.received - m.cost.total - (m.toPocket ?? 0) + (m.fromPocket ?? 0),
         agreed: m.revenue,
         owed: m.billing.owed,
         credit: m.billing.paidAhead,
         expectedProfit: m.profit,
         fee: m.projectFee ?? 0,
-        markup: m.materialMarkup ?? 0,
-        materialCharge: m.materialCharge ?? 0,
-        materialProfit: m.materialProfit ?? 0,
-        sentCost: (m.materialCharge ?? 0) - (m.materialProfit ?? 0),
-        unsentCharge: m.unsentMaterialCharge ?? 0,
-        unsent: m.unsentMaterials,
+        supervision: m.supervisionUsd ?? 0,
         payments: m.billing.paymentCount,
         locked: m.isLocked,
     };
 }
 
 /** The colours the site's charts and cost rows share. */
-export const SITE_COLORS = { received: "var(--heat-3)", materials: "var(--heat-2)", labour: "var(--warn-mark)", other: "var(--heat-1)", fee: "var(--accent)" };
+export const SITE_COLORS = { received: "var(--heat-3)", siteExpenses: "var(--heat-2)", labour: "var(--warn-mark)", other: "var(--heat-1)", fee: "var(--accent)", supervision: "var(--heat-4)" };
 
 /** 0.163 → "16.3%". */
 export const pctOf = (ratio: number) => `${Math.round(ratio * 1000) / 10}%`;
 
-/** A markup as a signed percentage: 0.15 → "+15%", -0.05 → "−5%". */
-export const markupText = (ratio: number) => `${ratio >= 0 ? "+" : "−"}${Math.abs(Math.round(ratio * 1000) / 10)}%`;
-
-/** Open for site records (materials and labour): not closed, and not finalised, as the API's SiteRules has it. */
+/** Open for site records (expenses and labour): not closed, and not finalised, as the API's SiteRules has it. */
 export const isSiteOpen = (project: Project) =>
     project.status !== "completed" && project.status !== "archived" && !project.finalizedAt && !project.money?.isLocked;
