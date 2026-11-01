@@ -202,7 +202,7 @@ describe("the working time", () => {
         await userEvent.click(await screen.findByLabelText("Break per day"));
         await userEvent.click(screen.getByRole("option", { name: "30m" }));
         await waitFor(() => expect(post.bodies).toEqual([{
-            workDays: [1, 2, 3, 4, 5], startMinute: 540, endMinute: 1020, breakMinutes: 30, overtimeMultiplier: 1, effectiveFrom: "2026-09-30",
+            workDays: [1, 2, 3, 4, 5], startMinute: 540, endMinute: 1020, breakMinutes: 30, overtimeMultiplier: 1, overtimeThresholdHours: 0, effectiveFrom: "2026-09-30",
         }]));
     });
 
