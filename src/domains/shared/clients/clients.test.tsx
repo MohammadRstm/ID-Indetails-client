@@ -33,7 +33,7 @@ describe("the clients list", () => {
         let askedForMoney = false;
         const spy = () => { askedForMoney = true; return HttpResponse.json(null); };
         renderApp("/design/clients", noMoney,
-            http.get("/api/finance/:domain/summary", spy), http.get("/api/finance/:domain/clients", spy),
+            http.get("/api/finance/*", spy),
             ...projectHandlers);
         expect(await screen.findByText(client.displayName)).toBeInTheDocument();
         expect(screen.queryByRole("columnheader", { name: /revenue/i })).toBeNull();
@@ -44,7 +44,7 @@ describe("the clients list", () => {
 
     it("says so when the figures don't load, instead of loading forever", async () => {
         renderApp("/design/clients", admin,
-            http.get("/api/finance/:domain/summary", () => HttpResponse.json({ type: "forbidden", code: "forbidden", message: "Not allowed." }, { status: 403 })),
+            http.get("/api/finance/:domain/overview", () => HttpResponse.json({ type: "forbidden", code: "forbidden", message: "Not allowed." }, { status: 403 })),
             ...projectHandlers);
         expect(await screen.findByText(/Couldn't load the client figures\./)).toBeInTheDocument();
         // the list still loads

@@ -22,7 +22,7 @@ import BillingModalHost from "../../shared/billing/BillingModalHost";
 import BillingTab from "../../shared/billing/BillingTab";
 import { useInvoices } from "../../shared/billing/billingApi";
 import { costPartsOf, costWords } from "../../shared/finance/costParts";
-import { useFinanceClients, useFinanceCosts, useFinanceMonthly, useFinanceProjects, useFinanceSummary } from "../../shared/finance/financeApi";
+import { useFinanceCosts, useFinanceOverview } from "../../shared/finance/financeApi";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { ClientsTab, CostsTab, OverviewTab, ProjectsTab, type Failure, type Tile } from "./FinanceTabs";
 import HelpHint from "@/domains/shared/help/HelpHint";
@@ -63,10 +63,7 @@ function FinancialsPage({ domain }: { domain: Domain }) {
     const period = periods[periodKey];
     const range = { from: period.from, to: period.to };
 
-    const summary = useFinanceSummary(domain, range, true);
-    const monthly = useFinanceMonthly(domain, Math.max(4, Math.min(13, period.months)), tab === "overview");
-    const projects = useFinanceProjects(domain, true);
-    const clients = useFinanceClients(domain, true);
+    const { summary, monthly, projects, clients } = useFinanceOverview(domain, { ...range, months: Math.max(4, Math.min(13, period.months)) }, true);
     const costs = useFinanceCosts(domain, range, tab === "costs");
     const invoiceCount = useInvoices({ domain, pageSize: 1 }).data?.totalCount;
     const tiles = new Map<number, Tile>((useProjects({ domain, pageSize: 100 }, usePermissions().has(P.PROJECT_VIEW)).data?.items ?? []).map((p) => [p.id, { icon: p.icon, tint: p.tint }]));

@@ -4406,6 +4406,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/{domain}/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    From?: string;
+                    Months?: number;
+                    To?: string;
+                };
+                header?: never;
+                path: {
+                    domain: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FinanceOverviewResponse"];
+                        "text/json": components["schemas"]["FinanceOverviewResponse"];
+                        "text/plain": components["schemas"]["FinanceOverviewResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/finance/{domain}/projects": {
         parameters: {
             query?: never;
@@ -16765,6 +16808,14 @@ export interface components {
             /** Format: double */
             revenue: number;
             unconverted: components["schemas"]["UnconvertedCostResponse"][];
+        };
+        FinanceOverviewResponse: {
+            attention: components["schemas"]["MoneyAttentionResponse"][];
+            billing: components["schemas"]["FinanceBillingResponse"];
+            clients: components["schemas"]["FinanceClientResponse"][];
+            monthly: components["schemas"]["FinanceMonthResponse"][];
+            projects: components["schemas"]["FinanceProjectsResponse"];
+            summary: components["schemas"]["FinanceSummaryResponse"];
         };
         FinanceProjectResponse: {
             billingType: components["schemas"]["BillingType"];

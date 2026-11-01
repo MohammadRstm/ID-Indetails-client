@@ -19,6 +19,10 @@ export const financials = {
 };
 
 export const financialsHandlers = [
+    http.get("/api/finance/design/overview", () => HttpResponse.json({
+        summary: financials.summary, monthly: financials.monthly, projects: financials.projects, billing: overview.billing,
+        attention: overview.attention, clients: financials.clients,
+    })),
     http.get("/api/finance/design/summary", () => HttpResponse.json(financials.summary)),
     http.get("/api/finance/design/monthly", () => HttpResponse.json(financials.monthly)),
     http.get("/api/finance/design/costs", () => HttpResponse.json(financials.costs)),

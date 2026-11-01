@@ -3,6 +3,7 @@ import { http } from "@/api/http";
 import { keys } from "@/api/keys";
 import type { Schemas } from "@/api/types";
 
+export type FinanceOverview = Schemas["FinanceOverviewResponse"];
 export type FinanceSummary = Schemas["FinanceSummaryResponse"];
 export type FinanceClient = Schemas["FinanceClientResponse"];
 export type FinanceMonth = Schemas["FinanceMonthResponse"];
@@ -10,6 +11,36 @@ export type FinanceProjects = Schemas["FinanceProjectsResponse"];
 export type FinanceBilling = Schemas["FinanceBillingResponse"];
 export type MoneyAttention = Schemas["MoneyAttentionResponse"];
 export type FinanceCosts = Schemas["FinanceCostsResponse"];
+
+/** A part of the overview with its load's state, so a card shows loading and errors as it would with its own query. */
+export type FinancePart<T> = { data: T | undefined; isError: boolean; isPending: boolean; error: unknown; refetch: () => unknown };
+
+/**
+ * The summary over the range, the last months, every project, billing, the follow-ups and the clients, from one
+ * load on the server (a page asking for them one by one loads the domain's money each time). Needs financial:view.
+ */
+export function useFinanceOverview(domain: string, params: { from?: string; to?: string; months: number }, enabled: boolean) {
+    const query = useQuery({
+        queryKey: keys.finance.overview(domain, params),
+        queryFn: async () => (await http.get<FinanceOverview>(`/finance/${domain}/overview`, { params })).data,
+        enabled,
+    });
+    const part = <T,>(pick: (o: FinanceOverview) => T): FinancePart<T> => ({
+        data: query.data ? pick(query.data) : undefined,
+        isError: query.isError,
+        isPending: query.isPending,
+        error: query.error,
+        refetch: query.refetch,
+    });
+    return {
+        summary: part((o) => o.summary),
+        monthly: part((o) => o.monthly),
+        projects: part((o) => o.projects),
+        billing: part((o) => o.billing),
+        attention: part((o) => o.attention),
+        clients: part((o) => o.clients),
+    };
+}
 
 /** Revenue, cost, profit and margin over a period, with the billing position. Needs financial:view. */
 export function useFinanceSummary(domain: string, range: { from?: string; to?: string }, enabled: boolean) {

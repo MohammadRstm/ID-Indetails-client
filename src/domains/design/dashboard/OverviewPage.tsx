@@ -23,7 +23,7 @@ import Icon from "@/shared/icons/Icon";
 import { useClientOverview } from "../../shared/clients/clientsApi";
 import { MeetingsBoard } from "../../shared/meetings/Meetings";
 import { costPartsOf, costWords } from "../../shared/finance/costParts";
-import { useFinanceAttention, useFinanceBilling, useFinanceClients, useFinanceMonthly, useFinanceProjects, useFinanceSummary } from "../../shared/finance/financeApi";
+import { useFinanceOverview } from "../../shared/finance/financeApi";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { activityLevelOf } from "@/shared/components/Data/activity";
 import { usePeopleWork } from "../people/peopleWorkApi";
@@ -105,12 +105,8 @@ function OverviewPage({ domain, tabs }: { domain: Domain; tabs: ReactNode }) {
     const clientOverview = useClientOverview(domain, seesClients);
     const peopleWork = usePeopleWork(seesWork);
     const projectList = useProjects({ domain, pageSize: 100 }, permissions.has(P.PROJECT_VIEW));
-    const summary = useFinanceSummary(domain, { from: range.from, to: range.to }, seesMoney);
-    const monthly = useFinanceMonthly(domain, months, seesMoney);
-    const finProjects = useFinanceProjects(domain, seesMoney);
-    const billing = useFinanceBilling(domain, months, seesMoney);
-    const moneyAttention = useFinanceAttention(domain, seesMoney && design);
-    const finClients = useFinanceClients(domain, seesMoney);
+    const { summary, monthly, projects: finProjects, billing, attention: moneyAttention, clients: finClients } =
+        useFinanceOverview(domain, { from: range.from, to: range.to, months }, seesMoney);
 
     const o = overview.data;
     const d = dashboard.data;
@@ -123,7 +119,7 @@ function OverviewPage({ domain, tabs }: { domain: Domain; tabs: ReactNode }) {
     const hour = partsOf(new Date()).hour;
     const greeting = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
     const q = quarterOf(today);
-    const items = o ? followups(o.attention, seesMoney ? moneyAttention.data : [], today, (id) => projects.get(id)?.targetDate) : [];
+    const items = o ? followups(o.attention, seesMoney && design ? moneyAttention.data : [], today, (id) => projects.get(id)?.targetDate) : [];
     const weekStart = DAYS_LONG[company?.weekStart ?? 1];
 
     const activityFigures: KpiTab["items"] = [

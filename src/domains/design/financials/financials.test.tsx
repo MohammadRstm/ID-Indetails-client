@@ -31,7 +31,10 @@ describe("Financials", () => {
     it("asks for the period picked, all time from before any project", async () => {
         const asked: URLSearchParams[] = [];
         renderApp("/design/financials", nadia,
-            http.get("/api/finance/design/summary", ({ request }) => { asked.push(new URL(request.url).searchParams); return HttpResponse.json(financials.summary); }),
+            http.get("/api/finance/design/overview", ({ request }) => {
+                asked.push(new URL(request.url).searchParams);
+                return HttpResponse.json({ ...financials, billing: null, attention: [] });
+            }),
             ...financialsHandlers);
         await waitFor(() => expect(range(asked.at(-1))).toBe("2026-01-01 to 2026-09-30"));
         await userEvent.click(screen.getByRole("tab", { name: "Q3 2026" }));
@@ -55,14 +58,11 @@ describe("Financials", () => {
         expect(titles()).toEqual(az(titles()));
     });
 
-    it("says so where figures don't load, and keeps the rest", async () => {
+    it("says so when the figures don't load, instead of loading forever", async () => {
         renderApp("/design/financials?tab=projects", nadia,
-            http.get("/api/finance/design/projects", () => HttpResponse.json({ type: "forbidden", code: "forbidden", message: "Not allowed." }, { status: 403 })),
+            http.get("/api/finance/design/overview", () => HttpResponse.json({ type: "forbidden", code: "forbidden", message: "Not allowed." }, { status: 403 })),
             ...financialsHandlers);
-        expect(await screen.findByText(/Couldn't load the projects\./)).toBeInTheDocument();
-        await userEvent.click(screen.getByRole("tab", { name: /Clients/ }));
-        expect(await screen.findByText(/Couldn't load the project totals\./)).toBeInTheDocument();
-        expect(screen.getByText("Client ledger")).toBeInTheDocument();
+        expect(await screen.findByText(/Couldn't load the financials\./)).toBeInTheDocument();
     });
 
     it("asks for the costs only when their tab opens", async () => {

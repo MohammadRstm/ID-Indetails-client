@@ -34,6 +34,10 @@ export const overviewHandlers = [
     http.get("/api/reports/overview", () => HttpResponse.json(overview.overview)),
     http.get("/api/dashboard/design", () => HttpResponse.json(overview.dashboard)),
     http.get("/api/dashboard/design/deadlines", () => HttpResponse.json(overview.deadlines)),
+    http.get("/api/finance/design/overview", () => HttpResponse.json({
+        summary: overview.summary, monthly: overview.monthly, projects: overview.projects, billing: overview.billing,
+        attention: overview.attention, clients: overview.clients,
+    })),
     http.get("/api/finance/design/summary", () => HttpResponse.json(overview.summary)),
     http.get("/api/finance/design/monthly", () => HttpResponse.json(overview.monthly)),
     http.get("/api/finance/design/projects", () => HttpResponse.json(overview.projects)),
