@@ -80,7 +80,7 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
                                     options={[{ value: "USD", label: "USD" }, { value: "LBP", label: "LBP" }]} />
                             } />
                             <SwitchRow title={<>Overtime pay rate<HelpHint article="overtime" label="overtime">Time outside someone's hours, all of a day off, and time past what the day requires.</HelpHint></>}
-                                description={<>What an overtime hour (outside someone's hours, on a day off, or past the day's required hours) is paid, as a multiple of the normal rate (for a salary, its true hourly rate: the salary ÷ a standard month's paid hours). Used by Salaries; project labour cost is unaffected.{!canTime && <OnlyFor who="a super admin" />}</>}
+                                description={<>What an overtime hour (outside someone's hours, on a day off, or past the day's required hours) is paid, as a multiple of the overtime rate set with each person's pay (an hourly rate itself; for a salary, the salary ÷ 184 unless set otherwise). Used by Salaries, Project pay and project labour cost.{!canTime && <OnlyFor who="a super admin" />}</>}
                                 control={
                                     <Select className="select sm" style={{ width: 150 }} aria-label="Overtime pay rate" disabled={!canTime || setWt.isPending} value={String(overtime.latest.overtimeMultiplier)}
                                         onChange={(v) => setWt.mutate(overtime.body({ overtimeMultiplier: +v }), { onSuccess: saved("Overtime rate updated", overtime.when), onError: notSaved })}

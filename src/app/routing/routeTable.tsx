@@ -20,7 +20,6 @@ import {
     MeetingsPage,
     MessagesPage,
     ProtonPage,
-    MyPayPage,
     MyProfilePage,
     MyWorkRoute,
     NotificationsPage,
@@ -180,14 +179,9 @@ export const domainRoutes: DomainRoute[] = [
         },
     },
     {
-        path: "pay",
-        nav: { label: "My pay", icon: "card" },
-        employee: { element: <MyPayPage />, access: designOnly(all(P.WORK_ENTRY_VIEW_OWN)) },
-    },
-    {
         path: "meetings",
         nav: { label: "Meetings", icon: "calendar" },
-        admin: { element: <MeetingsPage />, access: all(P.PROJECT_VIEW) },
+        // admins set meetings from their Overview's Meetings tab, super admins from the company overview's
         employee: { element: <MeetingsPage />, access: designOnly(all(P.PROJECT_VIEW)) },
     },
     {

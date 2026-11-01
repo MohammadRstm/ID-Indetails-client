@@ -74,16 +74,6 @@ export function useMyEntries(params: { from?: string; to?: string; projectId?: n
     });
 }
 
-/** What they have earned in a month ("yyyy-MM"), day by day, and how their hours stand. */
-export function useMyPay(month: string, enabled = true) {
-    return useQuery({
-        queryKey: keys.work.pay(month),
-        queryFn: async () => (await http.get<Schemas["MyPayResponse"]>("/me/pay", { params: { month } })).data,
-        placeholderData: keepPreviousData,
-        enabled,
-    });
-}
-
 /** One of their days: its entries and the meetings on it. */
 export function useMyDay(date: string) {
     return useQuery({
@@ -220,7 +210,9 @@ export function useResizeMeeting() {
         mutationFn: async ({ id, body }: { id: number; body: Schemas["SaveMeetingRequest"] }) =>
             (await http.put<Schemas["MeetingResponse"]>(`/meetings/${id}`, body)).data,
         // it shows on its project's timeline too
-        onSuccess: (meeting) => { void invalidate(keys.meetings.all, keys.work.all, keys.projects.detail(meeting.project.id)); },
+        onSuccess: (meeting) => {
+            void invalidate(keys.meetings.all, keys.work.all, ...(meeting.project ? [keys.projects.detail(meeting.project.id)] : []));
+        },
     });
 }
 

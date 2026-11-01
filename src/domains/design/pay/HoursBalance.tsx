@@ -1,10 +1,7 @@
-import { useNavigate } from "react-router";
 import type { Schemas } from "@/api/types";
-import { usePermissions } from "@/app/permissions/usePermissions";
-import { canOpen } from "@/app/routing/routeTable";
 import { fmtDur, fmtH, fmtMonthY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import { useMyHours, useMyPay } from "../work/workApi";
+import { useMyHours } from "../work/workApi";
 
 type Hours = Schemas["MyHoursResponse"];
 type LedgerMonth = Schemas["MyLedgerMonthResponse"];
@@ -82,19 +79,14 @@ export function MyHoursBalance() {
 
 /**
  * At the top of a Design employee's home: behind this month, or last month closed short (the prototype's
- * UI.BehindNotice).
+ * UI.BehindNotice). In hours only: employees don't see their pay.
  */
 export function BehindNotice() {
-    const navigate = useNavigate();
-    const seesPay = canOpen(usePermissions(), "design", "pay");
     const hours = useMyHours();
     const months = hours.data?.applies ? hours.data.months : [];
     const cur = months.find((m) => m.inProgress);
     const last = months.find((m) => !m.inProgress);
     const flagged = last?.status === "short";
-    // whether last month's missing hours come off a salary depends on how they were paid then
-    const lastPay = useMyPay(last?.month.slice(0, 7) ?? "", flagged);
-    const monthly = lastPay.data?.salary?.basis === "monthly";
 
     const lines = [];
     if (cur?.status === "behind") {
@@ -108,7 +100,7 @@ export function BehindNotice() {
     if (last && flagged) {
         lines.push(
             <div key="l" className={lines.length ? "mt-s" : ""}><b>{fmtMonthY(last.month)} closed {fmtH(last.shortMinutes)} short.</b>
-                {" "}{monthly ? "Unless it's excused, the missing hours come off that month's salary." : "Hours that weren't worked weren't paid, and the month is marked short unless it's excused."}</div>,
+                {" "}Unless it's excused, the month stays marked short.</div>,
         );
     }
     if (!lines.length) return null;
@@ -116,7 +108,6 @@ export function BehindNotice() {
         <div className="banner attn mt pay-behind" role="status">
             <Icon name="clock" />
             <div className="grow">{lines}</div>
-            {seesPay && <button className="btn btn-sm" onClick={() => navigate("/design/pay")}>See my hours & pay</button>}
         </div>
     );
 }
