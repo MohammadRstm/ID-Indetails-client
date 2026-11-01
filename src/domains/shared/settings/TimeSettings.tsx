@@ -54,8 +54,8 @@ export default function TimeSettings({ domain }: { domain: Domain }) {
                         <SwitchRow title="Default working hours"
                             description={<>The week everyone works unless they have their own schedule (Company → Schedules). Its hours are also the working day that overtime is measured against.{!canTime && <OnlyFor who="a super admin" />}</>}
                             control={canTime ? <WeekEditor wt={wt} /> : <b className="mono">{daysText(wt.current.workDays, weekStart)} · {hoursText(wt.current)}</b>} />
-                        <SwitchRow title={<>Break per day<HelpHint article="working-day" label="the break">Paid, but not required work: a day asks for its hours minus the break.</HelpHint></>}
-                            description={<>One break for everyone, taken whenever suits. The break is paid, but it isn't required work: on every working day longer than 6 hours, 9 to 5 with a 1h break asks for 7h of work and is paid as 8h. Time worked past the 7h counts as overtime.{!canTime && <OnlyFor who="a super admin" />}</>}
+                        <SwitchRow title={<>Break per day<HelpHint article="working-day" label="the break">Paid, but not logged: a day asks for its hours minus the break. With no break, the whole day is logged.</HelpHint></>}
+                            description={<>One break for everyone, taken whenever suits. A break is paid, but it isn't logged: on every working day longer than 6 hours, 9 to 5 with a 1h break asks for 7h of work and is paid as 8h, and time worked past the 7h counts as overtime. With no break, the whole day is logged: 9 to 5 asks for 8h of work.{!canTime && <OnlyFor who="a super admin" />}</>}
                             control={<BreakEditor wt={wt} canEdit={canTime} />} />
                         <SwitchRow title="Entry edit window" description="How long an employee can edit or delete their own entry after logging it." control={
                             <Select className="select sm" style={{ width: 150 }} aria-label="Entry edit window" disabled={!canRule || save.isPending} value={rules.editWindow}
@@ -130,7 +130,7 @@ function BreakEditor({ wt, canEdit }: { wt: WorkingTime; canEdit: boolean }) {
     const opts = BREAKS.includes(p.breakMinutes) ? BREAKS : [...BREAKS, p.breakMinutes].sort((a, b) => a - b);
     function save(minutes: number) {
         setWt.mutate(change.body({ breakMinutes: minutes }), {
-            onSuccess: saved(minutes ? `Break set to ${fmtH(minutes)} a day` : "No break", `${hoursText(p)} now asks for ${fmtH(requiredOf(p.startMinute, p.endMinute, minutes))} of work · the break stays paid · ${change.when}`),
+            onSuccess: saved(minutes ? `Break set to ${fmtH(minutes)} a day` : "No break", `${hoursText(p)} now asks for ${fmtH(requiredOf(p.startMinute, p.endMinute, minutes))} of work · ${minutes ? "the break stays paid" : "the whole day is logged"} · ${change.when}`),
             onError: notSaved,
         });
     }

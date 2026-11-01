@@ -206,6 +206,15 @@ describe("the working time", () => {
         }]));
     });
 
+    it("takes the break away so the whole day is logged", async () => {
+        const post = recorder("post", "/api/company/working-time", settings.workingTime);
+        renderApp(page("time"), rana, post.handler, ...settingsHandlers);
+        await userEvent.click(await screen.findByLabelText("Break per day"));
+        await userEvent.click(screen.getByRole("option", { name: "No break" }));
+        await waitFor(() => expect(post.bodies).toEqual([expect.objectContaining({ breakMinutes: 0, effectiveFrom: "2026-09-30" })]));
+        expect(await screen.findByText(/now asks for 8h of work · the whole day is logged/)).toBeInTheDocument();
+    });
+
     it("warns that changing the company week changes everyone's pay", async () => {
         renderApp(page("time"), rana, ...settingsHandlers);
         const fri = await screen.findByRole("button", { name: "Fri" });
