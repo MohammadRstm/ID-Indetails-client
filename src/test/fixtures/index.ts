@@ -51,6 +51,10 @@ export const projectHandlers = [
     http.get("/api/employees", () => HttpResponse.json(empty)),
     http.get("/api/invoices", () => HttpResponse.json(empty)),
     http.get("/api/payments", () => HttpResponse.json(empty)),
+    http.get("/api/finance/:domain/overview", () => HttpResponse.json({
+        summary: fixtures.financeSummary, monthly: overview.monthly, projects: overview.projects, billing: overview.billing,
+        attention: [], clients: fixtures.financeClients,
+    })),
     http.get("/api/finance/:domain/summary", () => HttpResponse.json(fixtures.financeSummary)),
     http.get("/api/finance/:domain/clients", () => HttpResponse.json(fixtures.financeClients)),
     http.get("/api/search", () => HttpResponse.json(fixtures.search)),

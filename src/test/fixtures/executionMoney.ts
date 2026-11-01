@@ -26,6 +26,10 @@ export const executionMoney = {
 };
 
 export const executionMoneyHandlers = [
+    http.get("/api/finance/execution/overview", () => HttpResponse.json({
+        summary: executionMoney.summary, monthly: executionMoney.monthly, projects: executionMoney.projects, billing: executionMoney.billing,
+        attention: [], clients: executionMoney.clients,
+    })),
     http.get("/api/finance/execution/summary", () => HttpResponse.json(executionMoney.summary)),
     http.get("/api/finance/execution/monthly", () => HttpResponse.json(executionMoney.monthly)),
     http.get("/api/finance/execution/projects", () => HttpResponse.json(executionMoney.projects)),

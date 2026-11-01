@@ -41,6 +41,7 @@ export const keys = {
     },
     finance: {
         all: ["finance"] as const,
+        overview: (domain: string, params: object) => ["finance", domain, "overview", params] as const,
         summary: (domain: string, params: object) => ["finance", domain, "summary", params] as const,
         clients: (domain: string) => ["finance", domain, "clients"] as const,
         monthly: (domain: string, months: number) => ["finance", domain, "monthly", months] as const,

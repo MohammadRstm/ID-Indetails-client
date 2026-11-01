@@ -21,7 +21,7 @@ import { money } from "@/shared/format/money";
 import { companyToday, fmtH, fmtMonthY, MONTHS, partsOf, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import { useFinanceClients, useFinanceSummary } from "../finance/financeApi";
+import { useFinanceOverview } from "../finance/financeApi";
 import { ClientBadge } from "./ClientBits";
 import ClientModal from "./ClientModal";
 import { secondaryLine, useClientOverview, useClients, type ClientFilter, type ClientSort, type ClientSummary } from "./clientsApi";
@@ -60,8 +60,7 @@ export default function ClientsPage() {
     });
     const overview = useClientOverview(domain);
     const today = companyToday();
-    const summary = useFinanceSummary(domain, { from: `${today.slice(0, 7)}-01`, to: today }, seesMoney);
-    const financeClients = useFinanceClients(domain, seesMoney);
+    const { summary, clients: financeClients } = useFinanceOverview(domain, { from: `${today.slice(0, 7)}-01`, to: today, months: 1 }, seesMoney);
 
     const o = overview.data;
     const s = summary.data;
