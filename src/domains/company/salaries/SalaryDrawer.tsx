@@ -109,6 +109,11 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openPro
                         {s.excusedMinutes > 0 && <div><span>Excused</span><span className="mono">{wholeMonth ? "whole month" : fmtH(s.excusedMinutes)}</span></div>}
                         <div><span>Overtime logged</span><span className="mono">{fmtH(otLogged)}</span></div>
                         {s.madeUpMinutes > 0 && <div><span>…of which made up missing hours (paid as normal)</span><span className="mono">{fmtH(s.madeUpMinutes)}</span></div>}
+                        {s.overtimeThresholdMinutes != null && (
+                            <div title="Everything logged, overtime or not, plus paid leave. Overtime is paid only past the threshold.">
+                                <span>Counted toward the {fmtH(s.overtimeThresholdMinutes)} for overtime pay</span><span className="mono">{fmtH(s.countedMinutes ?? 0)}</span>
+                            </div>
+                        )}
                         {d.missedDays.length > 0 && (
                             <div title={d.missedDays.map((m) => fmtDate(m)).join(", ")}><span>Working days with nothing logged, not excused</span><span className="mono">{d.missedDays.length}</span></div>
                         )}
@@ -149,7 +154,11 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openPro
                     )}
                     {s.tracksHours && (
                         <div>
-                            <span>Overtime · {fmtH(s.overtimeMinutes)}{s.madeUpMinutes ? ` (of ${fmtH(otLogged)} logged)` : ""} at {cash(s.overtimeRate * multiplier, cur, true)}/h{multiplier !== 1 ? ` (×${multiplier})` : ""}</span>
+                            <span>
+                                Overtime · {fmtH(s.overtimePaidMinutes)}
+                                {s.overtimeThresholdMinutes != null ? ` past ${fmtH(s.overtimeThresholdMinutes)} (of ${fmtH(otLogged)} logged)` : s.madeUpMinutes ? ` (of ${fmtH(otLogged)} logged)` : ""}
+                                {" "}at {cash(s.overtimeRate * multiplier, cur, true)}/h{multiplier !== 1 ? ` (×${multiplier})` : ""}
+                            </span>
                             <span className="mono">{cash(s.overtimePay, cur)}</span>
                         </div>
                     )}
@@ -159,7 +168,8 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openPro
                     <div className="hint mt-s">
                         Salaried: {s.proRated ? "the salary is pro-rated by the working days they were employed" : "the salary is paid in full"}.
                         {" "}An hour this month is {cash(s.amount, cur)} ÷ the month's paid hours = {cash(s.hourlyRate, cur, true)}/h (it prices any deduction)
-                        {s.tracksHours ? `; overtime is paid at the overtime rate set with the pay, ${cash(s.overtimeRate, cur, true)}/h (the salary ÷ 184 unless set otherwise), whatever the month` : ""}.
+                        {s.tracksHours ? `; overtime is paid at the overtime rate set with the pay, ${cash(s.overtimeRate, cur, true)}/h (the salary ÷ 184 unless set otherwise), whatever the month` : ""}
+                        {s.overtimeThresholdMinutes != null ? `, and only for the hours counted past ${fmtH(s.overtimeThresholdMinutes)} (everything logged plus paid leave; the latest overtime is the part paid)` : ""}.
                         {s.deduction > 0 && d.missedDays.length > 0 && !d.inProgress ? " A whole day missed costs the full paid day, its break included." : ""}
                     </div>
                 )}
@@ -216,7 +226,9 @@ function HoursByProject({ detail: d, multiplier, openProject }: { detail: Salary
                 </table>
             </div>
             <div className="hint mt-s">
-                {s.basis === "monthly"
+                {s.basis === "monthly" && s.overtimeThresholdMinutes != null
+                    ? "Every hour, overtime too, is priced at the salary's rate that month: the overtime pay is for the month as a whole, so no project carries it."
+                    : s.basis === "monthly"
                     ? `Hours are priced at the salary's rate that month, overtime at the overtime rate${multiplier !== 1 ? ` ×${multiplier}` : ""}.`
                     : `Hours are priced at their rate on the day worked${multiplier !== 1 ? `, overtime at ×${multiplier}` : ""}.`}
                 {s.basis === "monthly"

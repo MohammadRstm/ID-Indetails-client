@@ -41,6 +41,8 @@ const withValue = (options: { value: string; label: string }[], value: number, l
     options.some((o) => +o.value === value) ? options : [...options, { value: String(value), label }];
 
 const OVERTIME = [{ value: "1", label: "×1 - same as normal" }, { value: "1.25", label: "×1.25" }, { value: "1.5", label: "×1.5" }, { value: "2", label: "×2" }];
+// a salary's overtime is paid only past this many hours a month; 0 pays all of it
+const THRESHOLD = [{ value: "0", label: "All overtime" }, ...[160, 176, 184, 200].map((h) => ({ value: String(h), label: `Past ${h} hours` }))];
 
 /** The prototype's Settings → Finance: the rules behind revenue, cost and pay, and invoicing and payments. */
 export default function FinanceSettings({ domain }: { domain: Domain }) {
@@ -60,6 +62,8 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
     const overtime = wt ? nextChange(wt, companyToday()) : null;
     const overtimeOpts = overtime && !OVERTIME.some((o) => +o.value === overtime.latest.overtimeMultiplier)
         ? [...OVERTIME, { value: String(overtime.latest.overtimeMultiplier), label: `×${overtime.latest.overtimeMultiplier}` }] : OVERTIME;
+    const threshold = overtime?.latest.overtimeThresholdHours ?? 0;
+    const thresholdOpts = withValue(THRESHOLD, threshold, `Past ${threshold} hours`);
 
     return (
         <>
@@ -80,11 +84,18 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
                                     options={[{ value: "USD", label: "USD" }, { value: "LBP", label: "LBP" }]} />
                             } />
                             <SwitchRow title={<>Overtime pay rate<HelpHint article="overtime" label="overtime">Time outside someone's hours, all of a day off, and time past what the day requires.</HelpHint></>}
-                                description={<>What an overtime hour (outside someone's hours, on a day off, or past the day's required hours) is paid, as a multiple of the overtime rate set with each person's pay (an hourly rate itself; for a salary, the salary ÷ 184 unless set otherwise). Used by Salaries, Project pay and project labour cost.{!canTime && <OnlyFor who="a super admin" />}</>}
+                                description={<>What an overtime hour (outside someone's hours, on a day off, or past the day's required hours) is paid, as a multiple of the overtime rate set with each person's pay (an hourly rate itself; for a salary, the salary ÷ {threshold || 184} unless set otherwise). Used by Salaries, Project pay and project labour cost.{!canTime && <OnlyFor who="a super admin" />}</>}
                                 control={
                                     <Select className="select sm" style={{ width: 150 }} aria-label="Overtime pay rate" disabled={!canTime || setWt.isPending} value={String(overtime.latest.overtimeMultiplier)}
                                         onChange={(v) => setWt.mutate(overtime.body({ overtimeMultiplier: +v }), { onSuccess: saved("Overtime rate updated", overtime.when), onError: notSaved })}
                                         options={overtimeOpts} />
+                                } />
+                            <SwitchRow title="Salaried overtime is paid"
+                                description={<>A salary's overtime is paid only for the hours counted past this in a month (everything logged, plus paid leave), or past the month's expected hours when those are more. Joining mid-month doesn't lower it. Hourly pay isn't affected, and employees still see all their overtime; only Salaries shows what is paid. It also sets a salary's suggested overtime rate (the salary ÷ these hours).{!canTime && <OnlyFor who="a super admin" />}</>}
+                                control={
+                                    <Select className="select sm" style={{ width: 150 }} aria-label="Salaried overtime is paid" disabled={!canTime || setWt.isPending} value={String(threshold)}
+                                        onChange={(v) => setWt.mutate(overtime.body({ overtimeThresholdHours: +v }), { onSuccess: saved("Overtime threshold updated", overtime.when), onError: notSaved })}
+                                        options={thresholdOpts} />
                                 } />
                             <SwitchRow title="Mixed currencies" description="People paid in another currency are shown beside the dollar figures. Totals are shown separately and never converted." control={<span className="badge cur-chip">No conversion</span>} />
                             <SwitchRow title="Lock the payment when a project is completed" description="Stops the revenue figure moving after the result is final." control={<Always />} />

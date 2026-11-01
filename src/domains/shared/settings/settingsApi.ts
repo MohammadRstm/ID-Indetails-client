@@ -3,6 +3,8 @@ import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
 import type { Paged, Schemas } from "@/api/types";
 import { ME_KEY } from "@/app/session/sessionContext";
+import { OVERTIME_HOURS } from "@/domains/design/pay/payRules";
+import { companyToday } from "@/shared/format/time";
 
 export type DomainSettings = Schemas["DomainSettingsResponse"];
 export type CompanySettings = Schemas["CompanySettingsResponse"];
@@ -96,6 +98,11 @@ const workingTimeKey = ["company", "working-time"] as const;
 export function policyOn(wt: WorkingTime | undefined, day: string): WorkingTimePolicy | undefined {
     if (!wt) return undefined;
     return [...wt.policies].sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom)).find((p) => p.effectiveFrom <= day) ?? wt.current;
+}
+
+/** The hours a salary's suggested overtime rate divides it by: the overtime threshold in force today, 184 when none is set. */
+export function useOvertimeHours() {
+    return policyOn(useWorkingTime().data, companyToday())?.overtimeThresholdHours || OVERTIME_HOURS;
 }
 
 export function useWorkingTime() {

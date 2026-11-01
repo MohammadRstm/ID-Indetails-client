@@ -35,7 +35,10 @@
     "total": 2118.67,
     "monthlyPay": 2464,
     "earnedSoFar": 2118.67,
-    "fullMonthEstimate": null
+    "fullMonthEstimate": null,
+    "overtimePaidMinutes": 0,
+    "overtimeThresholdMinutes": null,
+    "countedMinutes": null
   },
   "inProgress": true,
   "paidBreakDays": 18,
@@ -52,105 +55,120 @@
       "day": "2026-09-01",
       "minutes": 80,
       "overtimeMinutes": 20,
-      "madeUpMinutes": 20
+      "madeUpMinutes": 20,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 176,
       "day": "2026-09-04",
       "minutes": 120,
       "overtimeMinutes": 30,
-      "madeUpMinutes": 30
+      "madeUpMinutes": 30,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 185,
       "day": "2026-09-09",
       "minutes": 80,
       "overtimeMinutes": 20,
-      "madeUpMinutes": 20
+      "madeUpMinutes": 20,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 188,
       "day": "2026-09-10",
       "minutes": 100,
       "overtimeMinutes": 10,
-      "madeUpMinutes": 10
+      "madeUpMinutes": 10,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 192,
       "day": "2026-09-11",
       "minutes": 180,
       "overtimeMinutes": 70,
-      "madeUpMinutes": 70
+      "madeUpMinutes": 70,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 196,
       "day": "2026-09-14",
       "minutes": 120,
       "overtimeMinutes": 30,
-      "madeUpMinutes": 30
+      "madeUpMinutes": 30,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 201,
       "day": "2026-09-15",
       "minutes": 60,
       "overtimeMinutes": 20,
-      "madeUpMinutes": 20
+      "madeUpMinutes": 20,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 207,
       "day": "2026-09-18",
       "minutes": 150,
       "overtimeMinutes": 60,
-      "madeUpMinutes": 60
+      "madeUpMinutes": 60,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 208,
       "day": "2026-09-18",
       "minutes": 80,
       "overtimeMinutes": 80,
-      "madeUpMinutes": 80
+      "madeUpMinutes": 80,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 213,
       "day": "2026-09-21",
       "minutes": 60,
       "overtimeMinutes": 30,
-      "madeUpMinutes": 30
+      "madeUpMinutes": 30,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 217,
       "day": "2026-09-22",
       "minutes": 80,
       "overtimeMinutes": 50,
-      "madeUpMinutes": 50
+      "madeUpMinutes": 50,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 222,
       "day": "2026-09-23",
       "minutes": 80,
       "overtimeMinutes": 20,
-      "madeUpMinutes": 20
+      "madeUpMinutes": 20,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 226,
       "day": "2026-09-24",
       "minutes": 60,
       "overtimeMinutes": 30,
-      "madeUpMinutes": 30
+      "madeUpMinutes": 30,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 227,
       "day": "2026-09-24",
       "minutes": 60,
       "overtimeMinutes": 60,
-      "madeUpMinutes": 60
+      "madeUpMinutes": 60,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 235,
       "day": "2026-09-29",
       "minutes": 100,
       "overtimeMinutes": 10,
-      "madeUpMinutes": 10
+      "madeUpMinutes": 10,
+      "paidMinutes": 0
     }
   ],
   "excuses": [],

@@ -32,14 +32,17 @@ export const hoursText = (p: { startMinute: number; endMinute: number }) => `${c
 /**
  * Where a change to the working time goes. Each change is a new version from a day on, so past months never
  * move; the API takes one change a day, so after one already made today the next applies from tomorrow. Every
- * change starts from the latest version, so changes made one after another add up.
+ * change starts from the version in force on the day it applies, so changes made one after another add up, and a
+ * version already set for a later day (such as 1 December 2026's, with no break) keeps its own values from then.
  */
 export function nextChange(wt: WorkingTime, today: string) {
-    const latest: WorkingTimePolicy = wt.policies[0] ?? wt.current;
     const from = wt.policies.some((p) => p.effectiveFrom === today) ? addDays(today, 1) : today;
+    // newest first: the first that has started by then
+    const latest: WorkingTimePolicy = wt.policies.find((p) => p.effectiveFrom <= from) ?? wt.current;
     const body = (patch: Partial<Schemas["SetWorkingTimeRequest"]>): Schemas["SetWorkingTimeRequest"] => ({
         workDays: latest.workDays, startMinute: latest.startMinute, endMinute: latest.endMinute,
-        breakMinutes: latest.breakMinutes, overtimeMultiplier: latest.overtimeMultiplier, effectiveFrom: from, ...patch,
+        breakMinutes: latest.breakMinutes, overtimeMultiplier: latest.overtimeMultiplier, overtimeThresholdHours: latest.overtimeThresholdHours,
+        effectiveFrom: from, ...patch,
     });
     const when = from === today ? "Applies from today" : `A change already starts today, so this one applies from ${fmtDate(from)}`;
     return { latest, from, body, when };

@@ -176,6 +176,19 @@ describe("Salaries", () => {
 });
 
 describe("A person's salary", () => {
+    it("show what a salary's overtime is paid past its threshold, under the overtime pay", async () => {
+        const row = {
+            ...sep.rows.items[0], basis: "monthly", overtimeMinutes: 41 * 60, overtimePaidMinutes: 4 * 60,
+            overtimeThresholdMinutes: 184 * 60, countedMinutes: 188 * 60, overtimePay: 38.28,
+        };
+        const under = { ...row, userId: 99, name: "Lina Short", email: "lina@hourline.test", overtimePaidMinutes: 0, countedMinutes: 170 * 60, overtimePay: 0 };
+        renderApp("/company/salaries", rana,
+            http.get("/api/company/salaries", () => HttpResponse.json({ ...sep, rows: { ...sep.rows, items: [row, under], totalCount: 2 } })),
+            ...salaryHandlers);
+        expect(await within(await screen.findByText(row.name).then((n) => n.closest("tr") as HTMLElement)).findByText("4h past 184h · 188h counted")).toBeInTheDocument();
+        expect(within(rowOf(under.name)).getByText("under 184h · 170h counted")).toBeInTheDocument();
+    });
+
     it("opens from the keyboard", async () => {
         renderApp("/company/salaries", rana, ...salaryHandlers);
         const row = (await screen.findByText("Sarah Haddad")).closest("tr") as HTMLElement;

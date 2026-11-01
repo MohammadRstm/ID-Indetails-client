@@ -40,7 +40,10 @@
         "total": 1200,
         "monthlyPay": 1200,
         "earnedSoFar": 1145.45,
-        "fullMonthEstimate": 1200
+        "fullMonthEstimate": 1200,
+        "overtimePaidMinutes": 0,
+        "overtimeThresholdMinutes": null,
+        "countedMinutes": null
       },
       {
         "userId": 11,
@@ -78,7 +81,10 @@
         "total": 1500,
         "monthlyPay": 1500,
         "earnedSoFar": 1431.82,
-        "fullMonthEstimate": 1500
+        "fullMonthEstimate": 1500,
+        "overtimePaidMinutes": 0,
+        "overtimeThresholdMinutes": null,
+        "countedMinutes": null
       },
       {
         "userId": 14,
@@ -116,7 +122,10 @@
         "total": 1300,
         "monthlyPay": 1300,
         "earnedSoFar": 1240.91,
-        "fullMonthEstimate": 1300
+        "fullMonthEstimate": 1300,
+        "overtimePaidMinutes": 0,
+        "overtimeThresholdMinutes": null,
+        "countedMinutes": null
       }
     ],
     "page": 2,
@@ -142,7 +151,8 @@
     "madeUpMinutes": 2930,
     "shortPeople": 2,
     "shortMinutes": 930,
-    "expectedMinutes": 61740
+    "expectedMinutes": 61740,
+    "overtimePaidMinutes": 1380
   },
   "withoutPay": []
 }
