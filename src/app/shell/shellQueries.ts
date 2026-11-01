@@ -1,11 +1,32 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { http } from "@/api/http";
 import type { Paged, Schemas } from "@/api/types";
 import { P } from "@/app/permissions/codes";
 import type { Domain, Permissions } from "@/app/permissions/permissions";
-import { setFormatSettings } from "@/shared/format/time";
+import { setFormatSettings, type FormatSettings } from "@/shared/format/time";
 
 type CompanySettings = Schemas["CompanySettingsResponse"];
+
+const FORMATS_KEY = "hourline-company-formats";
+
+/** The formats the last visit in this browser saw; null on a first visit, or when site data is blocked. */
+function rememberedFormats(): FormatSettings | null {
+    try {
+        const raw = localStorage.getItem(FORMATS_KEY);
+        return raw ? (JSON.parse(raw) as FormatSettings) : null;
+    } catch {
+        return null;
+    }
+}
+
+// Set before any page renders: the first page needn't wait for the settings to load. They change rarely, and the
+// shell renders again with the new ones when they arrive.
+const lastFormats = rememberedFormats();
+if (lastFormats) setFormatSettings(lastFormats);
+
+/** Whether the formats are known before the settings load: from the last visit in this browser. */
+export const formatsRemembered = lastFormats !== null;
 
 /** The company settings every page formats with (time zone, 24-hour clock, week start). */
 export function useCompanySettings() {
@@ -17,13 +38,20 @@ export function useCompanySettings() {
 
     // set while rendering, not after: the page under the shell waits for these (AppShell) and must render with
     // the company's clock and week from its very first render
-    if (query.data) {
-        setFormatSettings({
-            timeZone: query.data.timeZone,
-            use24HourTime: query.data.use24HourTime,
-            weekStart: query.data.weekStart,
-        });
-    }
+    const formats: FormatSettings | null = query.data
+        ? { timeZone: query.data.timeZone, use24HourTime: query.data.use24HourTime, weekStart: query.data.weekStart }
+        : null;
+    if (formats) setFormatSettings(formats);
+
+    const remembered = formats && JSON.stringify(formats);
+    useEffect(() => {
+        if (!remembered) return;
+        try {
+            localStorage.setItem(FORMATS_KEY, remembered);
+        } catch {
+            // blocked site data: the next visit waits for the settings again
+        }
+    }, [remembered]);
 
     return query;
 }
