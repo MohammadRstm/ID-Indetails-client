@@ -17739,6 +17739,8 @@ export interface components {
             minutes: number;
             /** Format: int32 */
             overtimeMinutes: number;
+            /** Format: int32 */
+            paidMinutes: number;
             /** Format: int64 */
             workEntryId: number;
         };
@@ -19841,6 +19843,8 @@ export interface components {
             basePay: number;
             basis: components["schemas"]["PayBasis"];
             behind: boolean;
+            /** Format: int32 */
+            countedMinutes: null | number;
             currency: string;
             /** Format: double */
             deduction: number;
@@ -19868,10 +19872,14 @@ export interface components {
             normalMinutes: number;
             /** Format: int32 */
             overtimeMinutes: number;
+            /** Format: int32 */
+            overtimePaidMinutes: number;
             /** Format: double */
             overtimePay: number;
             /** Format: double */
             overtimeRate: number;
+            /** Format: int32 */
+            overtimeThresholdMinutes: null | number;
             /** Format: int64 */
             photoFileId: null | number;
             position: null | string;
@@ -19901,6 +19909,8 @@ export interface components {
             onMonthlySalary: number;
             /** Format: int32 */
             overtimeMinutes: number;
+            /** Format: int32 */
+            overtimePaidMinutes: number;
             /** Format: int32 */
             people: number;
             /** Format: int32 */
@@ -20187,6 +20197,8 @@ export interface components {
             endMinute?: number;
             /** Format: double */
             overtimeMultiplier?: number;
+            /** Format: int32 */
+            overtimeThresholdHours?: null | number;
             /** Format: int32 */
             startMinute?: number;
             workDays?: number[];
@@ -21150,6 +21162,8 @@ export interface components {
             id: number;
             /** Format: double */
             overtimeMultiplier: number;
+            /** Format: int32 */
+            overtimeThresholdHours: number;
             /** Format: int32 */
             requiredMinutesPerDay: number;
             /** Format: int32 */

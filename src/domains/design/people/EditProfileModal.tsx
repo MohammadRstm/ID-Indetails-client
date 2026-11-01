@@ -19,7 +19,8 @@ import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { isEmail } from "@/shared/utils/email";
-import { currentPay, hasFixedSalary, paidMonthlyOnly, OVERTIME_HOURS, suggestedOvertimeRate } from "../pay/payRules";
+import { currentPay, hasFixedSalary, paidMonthlyOnly, suggestedOvertimeRate } from "../pay/payRules";
+import { useOvertimeHours } from "@/domains/shared/settings/settingsApi";
 import { uploadFile } from "../work/workApi";
 import { useChangeEmail, useChangeMyEmail, useChangePay, usePayHistory, useSetPhoto, useTeams, useUpdateEmployee, useUpdateMyProfile } from "./peopleWorkApi";
 
@@ -46,6 +47,7 @@ export type ProfilePerson = {
 export default function EditProfileModal({ person, self, onClose }: { person: ProfilePerson; self: boolean; onClose: () => void }) {
     const permissions = usePermissions();
     const today = companyToday();
+    const overtimeHours = useOvertimeHours();
     const manages = !self && permissions.has(P.EMPLOYEE_MANAGE);
     const pays = !self && permissions.has(P.EMPLOYEE_PAY_MANAGE);
     // name, phone and photo: one's own, or someone else's with employee:manage
@@ -94,12 +96,12 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     const monthlyOnly = paidMonthlyOnly(person.role ?? "employee", person.domain);
     if (pays && pay == null && history.data) {
         // a rate an admin set by hand stays until it is changed
-        const typed = terms?.basis === "monthly" && terms.overtimeRate !== suggestedOvertimeRate(terms.amount) ? terms.overtimeRate : null;
+        const typed = terms?.basis === "monthly" && terms.overtimeRate !== suggestedOvertimeRate(terms.amount, overtimeHours) ? terms.overtimeRate : null;
         setPay({ basis: monthlyOnly ? "monthly" : terms?.basis ?? "hourly", amount: terms?.amount ?? 0, currency: terms?.currency ?? "USD", overtimeRate: typed });
     }
     // only a salaried Design employee earns overtime at a rate of its own; the API gives everyone else its suggestion
     const setsOvertime = !!pay && pay.basis === "monthly" && !monthlyOnly;
-    const overtimeRate = pay ? pay.overtimeRate ?? suggestedOvertimeRate(pay.amount) : 0;
+    const overtimeRate = pay ? pay.overtimeRate ?? suggestedOvertimeRate(pay.amount, overtimeHours) : 0;
     // someone with no pay yet (an invited admin) keeps none until an amount is typed
     const payChanged = !!pay && (terms
         ? pay.basis !== terms.basis || pay.currency !== terms.currency || Math.abs(pay.amount - terms.amount) > 0.004
@@ -266,7 +268,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                                     <div className="hint">
                                         {salaried ? "Admins and super admins are paid a fixed monthly salary: they log no hours, so no overtime."
                                             : pay.basis === "monthly" ? "Monthly salary."
-                                            : (pay.amount ? `= ${money.fmt(pay.amount * OVERTIME_HOURS, pay.currency)} for a month of ${OVERTIME_HOURS} hours; overtime at this rate × the multiplier` : "Paid per hour worked.")}
+                                            : (pay.amount ? `= ${money.fmt(pay.amount * overtimeHours, pay.currency)} for a month of ${overtimeHours} hours; overtime at this rate × the multiplier` : "Paid per hour worked.")}
                                     </div>
                                 </div>
                                 <div className="field">
@@ -282,7 +284,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                                         <AmountField id="ep-overtime" value={overtimeRate} currency={pay.currency} currencies={false}
                                             onChange={(rate) => setPay({ ...pay, overtimeRate: rate })} onBlur={errors.touch("overtime")} />
                                         {errors.show("overtime", overtimeError) ? <FieldError message={errors.show("overtime", overtimeError)} />
-                                            : <div className="hint">An hour of overtime, × the company's overtime multiplier. Suggested: the salary ÷ {OVERTIME_HOURS} h.</div>}
+                                            : <div className="hint">An hour of overtime, × the company's overtime multiplier. Suggested: the salary ÷ {overtimeHours} h.</div>}
                                     </div>
                                 </div>
                             )}

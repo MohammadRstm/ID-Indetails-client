@@ -35,7 +35,10 @@
     "total": 1822.5,
     "monthlyPay": 1800,
     "earnedSoFar": 1740.68,
-    "fullMonthEstimate": 1822.5
+    "fullMonthEstimate": 1822.5,
+    "overtimePaidMinutes": 130,
+    "overtimeThresholdMinutes": null,
+    "countedMinutes": null
   },
   "inProgress": true,
   "paidBreakDays": 0,
@@ -50,84 +53,96 @@
       "day": "2026-09-03",
       "minutes": 90,
       "overtimeMinutes": 60,
-      "madeUpMinutes": 60
+      "madeUpMinutes": 60,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 26,
       "day": "2026-09-08",
       "minutes": 150,
       "overtimeMinutes": 60,
-      "madeUpMinutes": 60
+      "madeUpMinutes": 60,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 27,
       "day": "2026-09-08",
       "minutes": 50,
       "overtimeMinutes": 50,
-      "madeUpMinutes": 50
+      "madeUpMinutes": 50,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 39,
       "day": "2026-09-11",
       "minutes": 110,
       "overtimeMinutes": 50,
-      "madeUpMinutes": 50
+      "madeUpMinutes": 50,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 46,
       "day": "2026-09-16",
       "minutes": 180,
       "overtimeMinutes": 60,
-      "madeUpMinutes": 60
+      "madeUpMinutes": 60,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 47,
       "day": "2026-09-16",
       "minutes": 70,
       "overtimeMinutes": 70,
-      "madeUpMinutes": 70
+      "madeUpMinutes": 70,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 51,
       "day": "2026-09-17",
       "minutes": 110,
       "overtimeMinutes": 50,
-      "madeUpMinutes": 50
+      "madeUpMinutes": 50,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 62,
       "day": "2026-09-22",
       "minutes": 110,
       "overtimeMinutes": 90,
-      "madeUpMinutes": 90
+      "madeUpMinutes": 90,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 69,
       "day": "2026-09-24",
       "minutes": 130,
       "overtimeMinutes": 130,
-      "madeUpMinutes": 130
+      "madeUpMinutes": 130,
+      "paidMinutes": 0
     },
     {
       "workEntryId": 73,
       "day": "2026-09-25",
       "minutes": 120,
       "overtimeMinutes": 50,
-      "madeUpMinutes": 30
+      "madeUpMinutes": 30,
+      "paidMinutes": 20
     },
     {
       "workEntryId": 78,
       "day": "2026-09-28",
       "minutes": 80,
       "overtimeMinutes": 60,
-      "madeUpMinutes": 0
+      "madeUpMinutes": 0,
+      "paidMinutes": 60
     },
     {
       "workEntryId": 82,
       "day": "2026-09-29",
       "minutes": 80,
       "overtimeMinutes": 50,
-      "madeUpMinutes": 0
+      "madeUpMinutes": 0,
+      "paidMinutes": 50
     }
   ],
   "excuses": [],

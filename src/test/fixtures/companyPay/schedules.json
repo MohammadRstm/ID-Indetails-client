@@ -14,7 +14,8 @@
     "breakMinutes": 60,
     "overtimeMultiplier": 1,
     "requiredMinutesPerDay": 420,
-    "requiredMinutesPerWeek": 2100
+    "requiredMinutesPerWeek": 2100,
+    "overtimeThresholdHours": 0
   },
   "people": [
     {

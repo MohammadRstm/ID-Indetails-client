@@ -6,14 +6,14 @@ import type { Schemas } from "@/api/types";
  * instead, the same every month: the salary ÷ 184 unless an admin types another.
  */
 
-/** The hours a month the company counts for a salary's overtime rate. */
+/** The hours a month a salary's overtime rate is worked out from when the working time sets no overtime threshold. */
 export const OVERTIME_HOURS = 184;
 
 /**
- * The overtime rate a salary is given when none is typed, to the cent: what the forms suggest. The API stores the
- * same when the field is left out, and stays the authority.
+ * The overtime rate a salary is given when none is typed, to the cent: what the forms suggest, the salary ÷ the
+ * overtime threshold's hours (see useOvertimeHours). The API stores the same when the field is left out, and stays the authority.
  */
-export const suggestedOvertimeRate = (salary: number) => Math.round((salary / OVERTIME_HOURS) * 100) / 100;
+export const suggestedOvertimeRate = (salary: number, hours = OVERTIME_HOURS) => Math.round((salary / hours) * 100) / 100;
 
 /** Admins and super admins are paid a fixed monthly salary: they log no hours. */
 export const hasFixedSalary = (role: string) => role !== "employee";

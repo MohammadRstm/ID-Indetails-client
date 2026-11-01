@@ -35,7 +35,10 @@
     "total": 61.5,
     "monthlyPay": 2000,
     "earnedSoFar": 61.5,
-    "fullMonthEstimate": null
+    "fullMonthEstimate": null,
+    "overtimePaidMinutes": 0,
+    "overtimeThresholdMinutes": null,
+    "countedMinutes": null
   },
   "inProgress": false,
   "paidBreakDays": 0,

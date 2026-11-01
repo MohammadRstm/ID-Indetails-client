@@ -225,7 +225,8 @@ export default function SalariesPage() {
                                     Everyone owes their scheduled hours each month. Overtime first makes up any hours short (paid as normal), the rest is paid as overtime;
                                     a salary loses the hours still short at the end of the month. Hourly: hours × rate. Monthly: the salary, whatever the month's length;
                                     an hour of it is the salary ÷ the month's paid hours, and overtime is paid at the rate set with the pay (the salary ÷ 184 unless set otherwise).
-                                    Admins and super admins are paid a fixed salary.
+                                    From November 2026 a salary's overtime is paid only for the hours counted past 184 in the month (everything logged plus paid leave),
+                                    or past the month's expected hours when those are more. Admins and super admins are paid a fixed salary.
                                 </div>}
                             </div>
                             <div className="panel-tools">
@@ -252,11 +253,11 @@ export default function SalariesPage() {
                                                     <th className="r">Expected<HelpHint article="hours-balance" label="expected">The hours their working days ask for this month (so far, for the current month).</HelpHint></th>
                                                     <th className="r" title="Logged inside their scheduled hours">In hours</th>
                                                     <th className="r">Made up<HelpHint article="hours-balance" label="made up">Overtime that covered missing hours, paid as normal hours.</HelpHint></th>
-                                                    <th className="r">Overtime<HelpHint article="overtime" label="overtime">Overtime left after making up missing hours, paid at the overtime rate.</HelpHint></th>
+                                                    <th className="r">Overtime<HelpHint article="overtime" label="overtime">Overtime logged, after making up missing hours. A salary is paid only what is past its threshold: see Overtime pay.</HelpHint></th>
                                                     <th>Short<HelpHint article="deductions" label="short">Hours still missing. On a monthly salary they come off the pay once the month ends, unless excused.</HelpHint></th>
                                                     <th className="r">Base pay<HelpHint article="pay" label="base pay">The month's pay as a monthly amount: the salary, or for hourly pay, the rate × the month's paid hours.</HelpHint></th>
                                                     <th className="r">Hourly pay<HelpHint article="pay" label="hourly pay">What an hour is worth this month: a salary ÷ the month's paid hours, so it changes with the number of working days.</HelpHint></th>
-                                                    <th className="r">Overtime pay</th>
+                                                    <th className="r">Overtime pay<HelpHint article="pay" label="overtime pay">At the overtime rate × the multiplier. A salary is paid only the overtime counted past its threshold (184 hours, or the month's expected hours if more): everything logged plus paid leave.</HelpHint></th>
                                                     <th className="r">To pay<HelpHint article="pay" label="to pay">What they are owed. While the month runs, a salary shows what it has earned so far, with the full month under it.</HelpHint></th><th />
                                                 </tr>
                                             </thead>
@@ -289,7 +290,10 @@ export default function SalariesPage() {
                                                                 </>
                                                             ) : <td colSpan={5} />}
                                                             <td colSpan={2} />
-                                                            <td className="r mono">{cash(t.overtimePay, t.currency)}</td>
+                                                            <td className="r mono">
+                                                                {cash(t.overtimePay, t.currency)}
+                                                                {i === 0 && sum.overtimePaidMinutes !== otPaid && <div className="muted" style={{ fontSize: "10.5px", fontWeight: 400 }}>{fmtH(sum.overtimePaidMinutes)} paid</div>}
+                                                            </td>
                                                             <td className="r mono" style={{ fontWeight: 700 }}>
                                                                 {cash(isThisMonth ? t.earnedSoFar : t.total, t.currency)}
                                                                 {isThisMonth && <div className="muted" style={{ fontSize: "10.5px", fontWeight: 400 }}>of {cash(t.total, t.currency)} full month</div>}
@@ -357,7 +361,14 @@ function SalaryLine({ row: r, running, onOpen }: { row: SalaryRow; running: bool
                 {cash(r.hourlyRate, r.currency, true)}/h
                 <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }}>{monthly ? `÷ ${paidHours}h this month` : "their rate"}</div>
             </td>
-            <td className="r mono">{r.overtimePay ? cash(r.overtimePay, r.currency) : "-"}</td>
+            <td className="r mono">
+                {r.overtimePay ? cash(r.overtimePay, r.currency) : "-"}
+                {r.overtimeThresholdMinutes != null && r.overtimeMinutes > 0 && (
+                    <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }} title="A salary is paid only the overtime counted past its threshold: everything logged plus paid leave">
+                        {r.overtimePaidMinutes ? `${fmtH(r.overtimePaidMinutes)} past ${fmtH(r.overtimeThresholdMinutes)}` : `under ${fmtH(r.overtimeThresholdMinutes)}`} · {fmtH(r.countedMinutes ?? 0)} counted
+                    </div>
+                )}
+            </td>
             <td className="r mono nowrap" style={{ fontWeight: 700 }}>
                 {cash(accruing ? r.earnedSoFar : r.total, r.currency)}
                 {accruing && <div className="muted" style={{ fontSize: "10.5px", fontWeight: 400, fontFamily: "inherit" }}>so far · {cash(r.fullMonthEstimate ?? r.total, r.currency)} full month</div>}

@@ -202,7 +202,7 @@ describe("the working time", () => {
         await userEvent.click(await screen.findByLabelText("Break per day"));
         await userEvent.click(screen.getByRole("option", { name: "30m" }));
         await waitFor(() => expect(post.bodies).toEqual([{
-            workDays: [1, 2, 3, 4, 5], startMinute: 540, endMinute: 1020, breakMinutes: 30, overtimeMultiplier: 1, effectiveFrom: "2026-09-30",
+            workDays: [1, 2, 3, 4, 5], startMinute: 540, endMinute: 1020, breakMinutes: 30, overtimeMultiplier: 1, overtimeThresholdHours: 0, effectiveFrom: "2026-09-30",
         }]));
     });
 
@@ -233,6 +233,30 @@ describe("the working time", () => {
         await userEvent.click(screen.getByRole("option", { name: "×1.5" }));
         await waitFor(() => expect(post.bodies).toEqual([expect.objectContaining({ breakMinutes: 30, overtimeMultiplier: 1.5, effectiveFrom: "2026-10-01" })]));
         expect(await screen.findByText(/A change already starts today, so this one applies from Oct 1/)).toBeInTheDocument();
+    });
+
+    it("sets after how many hours a month a salary's overtime is paid, keeping the rest of the week", async () => {
+        const post = recorder("post", "/api/company/working-time", settings.workingTime);
+        renderApp(page("finance"), rana, post.handler, ...settingsHandlers);
+        await userEvent.click(await screen.findByLabelText("Salaried overtime is paid"));
+        await userEvent.click(screen.getByRole("option", { name: "Past 184 hours" }));
+        await waitFor(() => expect(post.bodies).toEqual([expect.objectContaining({
+            overtimeThresholdHours: 184, overtimeMultiplier: settings.workingTime.current.overtimeMultiplier, breakMinutes: settings.workingTime.current.breakMinutes,
+        })]));
+    });
+
+    it("starts a change from the week in force, leaving a later one as it was set", async () => {
+        // a week set for 1 December with no break doesn't carry into a change made today
+        const december = { ...settings.workingTime.current, id: 3, effectiveFrom: "2026-12-01", breakMinutes: 0, overtimeThresholdHours: 184 };
+        const post = recorder("post", "/api/company/working-time", settings.workingTime);
+        renderApp(page("finance"), rana, post.handler,
+            http.get("/api/company/working-time", () => HttpResponse.json({ current: settings.workingTime.current, policies: [december, settings.workingTime.current] })),
+            ...settingsHandlers);
+        await userEvent.click(await screen.findByLabelText("Overtime pay rate"));
+        await userEvent.click(screen.getByRole("option", { name: "×1.5" }));
+        await waitFor(() => expect(post.bodies).toEqual([expect.objectContaining({
+            breakMinutes: settings.workingTime.current.breakMinutes, overtimeMultiplier: 1.5, effectiveFrom: "2026-09-30",
+        })]));
     });
 });
 

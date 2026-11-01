@@ -19,7 +19,8 @@ import { DOMAIN_LABEL } from "@/shared/format/labels";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { isEmail } from "@/shared/utils/email";
-import { hasFixedSalary, OVERTIME_HOURS, suggestedOvertimeRate } from "../../design/pay/payRules";
+import { hasFixedSalary, suggestedOvertimeRate } from "../../design/pay/payRules";
+import { useOvertimeHours } from "../settings/settingsApi";
 import { useInvite, useTeams } from "../../design/people/peopleWorkApi";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
@@ -48,6 +49,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     onClose: () => void;
 }) {
     const navigate = useNavigate();
+    const overtimeHours = useOvertimeHours();
     const permissions = usePermissions();
     const company = useCompanySettings().data;
     const invite = useInvite();
@@ -88,7 +90,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     const setsPay = permissions.has(P.EMPLOYEE_PAY_MANAGE);
     // only a salaried Design employee earns overtime at a rate of its own; the API gives everyone else its suggestion
     const setsOvertime = setsPay && monthly && !fixedSalary && !siteStaff;
-    const overtimeRate = typedOvertime ?? suggestedOvertimeRate(amount);
+    const overtimeRate = typedOvertime ?? suggestedOvertimeRate(amount, overtimeHours);
     const emailError = !email.trim() ? "Enter their work email." : !isEmail(email) && "Enter an email like name@company.com.";
     const payError = setsPay && !(amount > 0) && (fixedSalary ? "Enter their monthly salary." : `Enter their pay ${monthly ? "per month" : "per hour"}.`);
     const overtimeError = setsOvertime && amount > 0
@@ -202,13 +204,13 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                                             <label className="label required" htmlFor="ae-overtime" style={{ margin: 0 }}>Overtime rate</label>
                                             <AmountField id="ae-overtime" value={overtimeRate} currency={currency} currencies={false} onChange={setTypedOvertime} onBlur={errors.touch("overtime")} />
                                             {errors.show("overtime", overtimeError) ? <FieldError message={errors.show("overtime", overtimeError)} />
-                                                : <div className="hint">An hour of overtime, × the company's overtime multiplier. Suggested: the salary ÷ {OVERTIME_HOURS} h.</div>}
+                                                : <div className="hint">An hour of overtime, × the company's overtime multiplier. Suggested: the salary ÷ {overtimeHours} h.</div>}
                                         </div>
                                     ) : !monthly && (
                                         <div className="field">
-                                            <div className="u">A month of {OVERTIME_HOURS} hours is</div>
+                                            <div className="u">A month of {overtimeHours} hours is</div>
                                             <div className="mono" style={{ paddingTop: 4, fontSize: 14, fontWeight: 650 }}>
-                                                {amount ? `${money.fmt(amount * OVERTIME_HOURS, currency)} / month` : "-"}
+                                                {amount ? `${money.fmt(amount * overtimeHours, currency)} / month` : "-"}
                                             </div>
                                             <div className="hint">Overtime is paid at this rate × the company's overtime multiplier.</div>
                                         </div>
