@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { http } from "@/api/http";
-import type { Paged, Schemas } from "@/api/types";
+import type { Schemas } from "@/api/types";
 import { P } from "@/app/permissions/codes";
 import type { Domain, Permissions } from "@/app/permissions/permissions";
 import { setFormatSettings, type FormatSettings } from "@/shared/format/time";
@@ -56,9 +56,22 @@ export function useCompanySettings() {
     return query;
 }
 
-async function countOf(url: string, params: Record<string, unknown>): Promise<number> {
-    const { data } = await http.get<Paged<unknown>>(url, { params: { ...params, page: 1, pageSize: 1 } });
-    return data.totalCount;
+type NavCounts = Schemas["NavCountsResponse"];
+
+const counting = new Map<string, Promise<NavCounts>>();
+
+/**
+ * The sidebar's three counts come from one request. Each stays its own query, under its list's key, so a change to
+ * projects refreshes the projects count as before; the queries that start together share the request.
+ */
+function navCount(domain: string, pick: (counts: NavCounts) => number | null | undefined): Promise<number> {
+    let request = counting.get(domain);
+    if (!request) {
+        request = http.get<NavCounts>("/search/counts", { params: { domain } }).then((r) => r.data);
+        counting.set(domain, request);
+        void request.finally(() => counting.delete(domain)).catch(() => undefined);
+    }
+    return request.then((counts) => pick(counts) ?? 0);
 }
 
 /** The counts beside Projects, Clients and Employees in the sidebar, each for whoever may see that list. */
@@ -66,19 +79,19 @@ export function useNavCounts(domain: Domain | null, p: Permissions) {
     const enabled = domain != null;
     const projects = useQuery({
         queryKey: ["projects", "count", domain],
-        queryFn: () => countOf("/projects", { domain, status: "active" }),
+        queryFn: () => navCount(domain!, (c) => c.projects),
         enabled: enabled && p.has(P.PROJECT_VIEW),
         staleTime: 5 * 60_000,
     });
     const clients = useQuery({
         queryKey: ["clients", "count", domain],
-        queryFn: () => countOf("/clients", { domain }),
+        queryFn: () => navCount(domain!, (c) => c.clients),
         enabled: enabled && p.has(P.CLIENT_VIEW),
         staleTime: 5 * 60_000,
     });
     const people = useQuery({
         queryKey: ["employees", "count", domain],
-        queryFn: () => countOf("/employees", { domain, status: "active" }),
+        queryFn: () => navCount(domain!, (c) => c.people),
         enabled: enabled && p.has(P.EMPLOYEE_VIEW),
         staleTime: 5 * 60_000,
     });

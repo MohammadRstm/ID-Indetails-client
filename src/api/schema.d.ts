@@ -13482,6 +13482,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/search/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Domain?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NavCountsResponse"];
+                        "text/json": components["schemas"]["NavCountsResponse"];
+                        "text/plain": components["schemas"]["NavCountsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/site-logs": {
         parameters: {
             query?: never;
@@ -17605,6 +17644,14 @@ export interface components {
             location: null | string;
             status: components["schemas"]["ProjectStatus"];
             title: string;
+        };
+        NavCountsResponse: {
+            /** Format: int32 */
+            clients: null | number;
+            /** Format: int32 */
+            people: null | number;
+            /** Format: int32 */
+            projects: null | number;
         };
         NewProjectFill: {
             /**
