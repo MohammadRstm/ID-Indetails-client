@@ -147,7 +147,7 @@ export const company: Article[] = [
                 "**Expected**, **In hours**, **Made up**, **Overtime** and **Short** are the month's hours.",
                 "**Base pay** is the month's pay as a monthly amount: the salary, or for someone paid by the hour, their rate × the month's paid hours.",
                 "**Hourly pay** is what an hour is worth this month: a salary ÷ the month's paid hours, so it is lower in a month with more working days. The salary itself never changes.",
-                "**Overtime pay** is paid from the true hourly rate (a salary ÷ 173.33, a standard month), whatever the month.",
+                "**Overtime pay** is paid at the overtime rate set with the pay (a salary ÷ 184 unless set otherwise), whatever the month.",
                 "**To pay** is what they are owed. While the month runs, a salary shows what it has earned so far, with the full month as things stand under it; an hourly rate shows the hours logged so far. Pro-rating and deductions are noted under it.",
                 "Admins and super admins are paid a fixed salary: their hours aren't tracked.",
                 "Someone with no pay set isn't listed; a note above the table names them.",
@@ -193,7 +193,7 @@ export const company: Article[] = [
             list(
                 "Pick the week, month or quarter, and a project if you like; **Export** downloads it.",
                 "Each project lists who worked on it, their normal and overtime hours, and what that time was paid.",
-                "A salary's hours are paid at its rate that month (the salary ÷ the month's paid hours), overtime at the true hourly rate × the overtime rate.",
+                "A salary's hours are paid at its rate that month (the salary ÷ the month's paid hours), overtime at the overtime rate set with the pay × the company's multiplier.",
             ),
             links(link("Open project pay", { company: "project-pay" })),
         ],

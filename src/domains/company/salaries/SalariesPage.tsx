@@ -17,7 +17,7 @@ import { money } from "@/shared/format/money";
 import { addMonths, companyToday, fmtDate, fmtDateY, fmtH, fmtMonthY } from "@/shared/format/time";
 import useDebounce from "@/shared/hooks/useDebounce";
 import Icon from "@/shared/icons/Icon";
-import { hasFixedSalary, HOURS_PER_MONTH } from "@/domains/design/pay/payRules";
+import { hasFixedSalary } from "@/domains/design/pay/payRules";
 import type { Schemas } from "@/api/types";
 import { Banner } from "@/shared/components/Data/Bits";
 import SalaryDrawer, { LinkedSalaryDrawer } from "./SalaryDrawer";
@@ -214,7 +214,7 @@ export default function SalariesPage() {
                             key: "short", label: isThisMonth ? "Behind so far" : "Short on hours", value: String(sum.shortPeople),
                             sub: <span className={sum.shortPeople ? "down" : ""}>{sum.shortPeople ? `${fmtH(sum.shortMinutes)}${isThisMonth ? " behind in total" : " short, flagged"}` : "everyone worked their hours"}</span>,
                         }] : []),
-                        { key: "rate", label: "Overtime rate", value: `×${multiplier}`, sub: <span>{multiplier === 1 ? "paid like a normal hour" : "of the true hourly rate"}</span> },
+                        { key: "rate", label: "Overtime rate", value: `×${multiplier}`, sub: <span>{multiplier === 1 ? "the overtime rate as it is" : "of the overtime rate"}</span> },
                     ]} />
 
                     <div className="panel mt" ref={anchor}>
@@ -224,7 +224,7 @@ export default function SalariesPage() {
                                 {explain && <div className="panel-sub">
                                     Everyone owes their scheduled hours each month. Overtime first makes up any hours short (paid as normal), the rest is paid as overtime;
                                     a salary loses the hours still short at the end of the month. Hourly: hours × rate. Monthly: the salary, whatever the month's length;
-                                    an hour of it is the salary ÷ the month's paid hours, and overtime is paid from the salary ÷ {HOURS_PER_MONTH.toFixed(1)} h (a standard month).
+                                    an hour of it is the salary ÷ the month's paid hours, and overtime is paid at the rate set with the pay (the salary ÷ 184 unless set otherwise).
                                     Admins and super admins are paid a fixed salary.
                                 </div>}
                             </div>

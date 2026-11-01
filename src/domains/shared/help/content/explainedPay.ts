@@ -1,12 +1,11 @@
 import { P } from "@/app/permissions/codes";
 import { or as orFact } from "../helpFacts";
 import {
-    and, formula, has, isEmployee, list, note, only, or, para, sees, tracksOwnHours, type Article,
+    and, formula, has, list, note, only, or, para, sees, tracksOwnHours, type Article,
 } from "../helpModel";
 
 /** They log Design work. */
 const logs = and(sees("design"), has(P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN));
-const designEmployee = and(isEmployee, sees("design"), has(P.WORK_ENTRY_VIEW_OWN));
 const seesSalaries = has(P.SALARY_VIEW);
 
 export const explainedPay: Article[] = [
@@ -52,7 +51,7 @@ export const explainedPay: Article[] = [
             list(
                 "Work past midnight counts on the day it started; the minutes after midnight are outside your hours, so they're overtime.",
                 "Overtime depends on your whole day across all projects, not one entry.",
-                (f) => `Overtime is paid at the true hourly rate × ${orFact(f.multiplier, "the company's overtime rate")}: an hourly rate itself, or for a salary the salary ÷ 173.33 (a standard month), whatever the month.`,
+                (f) => `Overtime is paid at the overtime rate set with the pay × ${orFact(f.multiplier, "the company's overtime multiplier")}: an hourly rate itself, or for a salary the salary ÷ 184 unless set otherwise, whatever the month.`,
             ),
             only(or(tracksOwnHours, seesSalaries), note("For Design employees, overtime first makes up any hours missing that month; only what's left is paid as overtime. The part that made up hours is paid as normal hours.")),
         ],
@@ -89,21 +88,22 @@ export const explainedPay: Article[] = [
         id: "pay",
         title: "How pay is calculated",
         category: "pay",
-        who: or(designEmployee, seesSalaries, has(P.EMPLOYEE_PAY_MANAGE)),
+        // employees don't see their pay, nor how it's worked out
+        who: or(seesSalaries, has(P.EMPLOYEE_PAY_MANAGE)),
         summary: "Pay is a monthly salary or an hourly rate, plus overtime, minus any deductions. It is worked out fresh from the records each time.",
-        ask: ["how is pay calculated", "salary calculation", "hourly rate", "monthly salary", "pay", "173", "true hourly rate", "31 days", "28 days", "pro rata", "overtime pay", "base pay"],
+        ask: ["how is pay calculated", "salary calculation", "hourly rate", "monthly salary", "pay", "184", "overtime rate", "31 days", "28 days", "pro rata", "overtime pay", "base pay"],
         blocks: [
             para("**A monthly salary**"),
             formula("Pay = salary + overtime pay − deductions",
                 "The salary is the same every month, whatever its length. It is shared by working days in a month someone joins or leaves (or has days away): joining halfway pays about half."),
             formula("An hour of a salary this month = salary ÷ the month's paid hours",
                 "The paid hours of every working day in the month, the break included. A month with more working days makes each hour worth less: $1,760 is $10 an hour in a month of 22 working days (176 paid hours), $11 in one of 20. It prices deductions, so a missed day always costs that day's share."),
-            formula("True hourly rate of a salary = salary ÷ 173.33",
-                "173.33 hours is a standard month: a 40-hour paid week × 52 weeks ÷ 12 months (a part-time week scales it). Overtime is paid from it, whatever the month: a $1,733.30 salary's overtime starts from $10 an hour."),
+            formula("Overtime rate of a salary = salary ÷ 184, unless set otherwise",
+                "Set with the pay, and the same every month while that pay lasts: a $4,232 salary's overtime starts from $23 an hour. An admin can type another rate when setting the pay, and a pay change gets a new one."),
             para("**An hourly rate**"),
             formula("Pay = (hours inside your hours + hours made up) × rate + the paid break of each working day you worked + overtime pay",
                 "The break is paid on top, for every working day with some work inside your hours."),
-            formula("Overtime pay = overtime hours (after any making up) × true hourly rate × overtime rate"),
+            formula("Overtime pay = overtime hours (after any making up) × overtime rate × the company's multiplier"),
             list(
                 "The pay in force at the month's end prices a salaried month, even after a mid-month raise; hourly work is priced at each day's rate.",
                 "Pay is per currency and never converted.",
@@ -114,13 +114,13 @@ export const explainedPay: Article[] = [
                 "Execution staff log no hours, so they're paid their salary.",
             )),
         ],
-        related: ["deductions", "overtime", "working-day", "my-pay-estimates"],
+        related: ["deductions", "overtime", "working-day"],
     },
     {
         id: "deductions",
         title: "Deductions: missed hours and unpaid leave",
         category: "pay",
-        who: or(tracksOwnHours, seesSalaries, has(P.EMPLOYEE_PAY_MANAGE)),
+        who: or(seesSalaries, has(P.EMPLOYEE_PAY_MANAGE)),
         summary: "On a monthly salary, a month that ends short loses the missing hours, and a whole missed day costs the whole paid day, break included.",
         ask: ["deduction", "deducted", "missed day", "missing hours", "unpaid leave", "salary cut", "why was my pay lower", "short month"],
         blocks: [
@@ -140,23 +140,6 @@ export const explainedPay: Article[] = [
             ),
         ],
         related: ["hours-balance", "excuses", "pay"],
-    },
-    {
-        id: "my-pay-estimates",
-        title: "The estimates on My pay",
-        category: "pay",
-        who: designEmployee,
-        summary: "While a month runs, My pay shows what you've earned so far and what the month comes to if things stay as they are.",
-        ask: ["earned so far", "full month estimate", "as things stand", "would lose", "estimate", "my pay this month"],
-        blocks: [
-            list(
-                "**Earned so far**: your base pay for the share of the month's required hours so far, plus overtime pay.",
-                "**Full month, as things stand**: the month's base pay plus overtime, minus what you'd lose if the month ended short by what you're behind today.",
-                "Catching up the hours you're behind removes what you'd lose.",
-                "Once the month ends, the figure is the month's pay.",
-            ),
-        ],
-        related: ["pay", "hours-balance", "deductions"],
     },
     {
         id: "closed-months",
@@ -187,7 +170,7 @@ export const explainedPay: Article[] = [
                 "**Unpaid**: the hours stop counting as missing, but on a monthly salary the time is deducted.",
                 "A month can be excused afterwards; never a future month, and never by the person themselves.",
             ),
-            only(tracksOwnHours, para("You're told when hours of yours are excused, and they show on My pay.")),
+            only(tracksOwnHours, para("You're told when hours of yours are excused, and they show in your hours balance.")),
         ],
         related: ["deductions", "hours-balance"],
     },
@@ -217,7 +200,7 @@ export const explainedPay: Article[] = [
         ask: ["project pay vs salaries", "doesn't match", "difference", "project pay", "labour cost"],
         blocks: [
             list(
-                "Project pay prices each entry as Salaries does: hours inside a person's hours (and hours made up) at their rate that day (a salary's rate that month), overtime at their true hourly rate × the overtime rate.",
+                "Project pay prices each entry as Salaries does: hours inside a person's hours (and hours made up) at their rate that day (a salary's rate that month), overtime at their overtime rate × the multiplier. Project cost prices labour the same way, plus the paid break.",
                 "It leaves out the paid break and deductions, which belong to the person's month, not to a project.",
                 "Time with no pay record on its day is shown as unpriced, and paid 0.",
                 "Admins and super admins log no hours; any they logged before counts as normal hours.",

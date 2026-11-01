@@ -435,7 +435,7 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
         };
     });
     const trackMeetings: TrackMeeting[] = meetings.map((x) => ({
-        id: x.m.id, s: x.s, e: x.e, topic: x.m.topic, projectTitle: x.m.project.title, setBy: x.m.createdBy?.name ?? null,
+        id: x.m.id, s: x.s, e: x.e, topic: x.m.topic, projectTitle: x.m.project?.title ?? "General meeting", setBy: x.m.createdBy?.name ?? null,
         range: fmtRange(isoAt(date, x.s), isoAt(date, x.e)), editable: canChangeMeeting(x.m),
     }));
 

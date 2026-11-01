@@ -124,9 +124,9 @@ describe("Proton opening forms and windows", () => {
     it("opens an employee's own pages for them, and not for an admin, who has none", () => {
         const designer = permissionsOf(personas.designEmployee);
         expect(stepOf(command({ type: "open_page", page: "my_work", domain: "design" }), designer, "design")).toMatchObject({ path: "/design/my-work" });
-        expect(stepOf(command({ type: "open_page", page: "my_pay", domain: "design" }), designer, "design")).toMatchObject({ path: "/design/pay" });
         expect(stepOf(command({ type: "open_page", page: "my_profile", domain: "design" }), designer, "design")).toMatchObject({ path: "/design/profile" });
-        expect(stepOf(command({ type: "open_page", page: "my_pay", domain: "design" }), designAdmin, "design")).toBeNull();
+        // there is no pay page: employees don't see their pay
+        expect(stepOf(command({ type: "open_page", page: "my_pay", domain: "design" }), designer, "design")).toBeNull();
     });
 
     it("opens the Website area for those who may enter it", () => {

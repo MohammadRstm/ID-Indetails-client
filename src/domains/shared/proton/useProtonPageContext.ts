@@ -13,7 +13,7 @@ const DOMAIN_PAGES: Record<string, Page> = {
     overview: "dashboard", projects: "projects", clients: "clients", people: "people",
     financials: "financials", meetings: "meetings", activity: "activity", reports: "reports",
     settings: "settings", notifications: "notifications", messages: "messages", help: "help",
-    "my-work": "my_work", pay: "my_pay", profile: "my_profile",
+    "my-work": "my_work", profile: "my_profile",
 };
 const COMPANY_PAGES: Record<string, Page> = {
     "": "launcher", overview: "company_overview", overhead: "company_expenses", schedules: "schedules", salaries: "salaries",

@@ -19,8 +19,11 @@ export function useCanChangeMeeting() {
     return (m: Pick<Meeting, "createdBy">) => permissions.has(P.MEETING_MANAGE) || (permissions.has(P.MEETING_CREATE) && m.createdBy?.id === me);
 }
 
-/** A domain's meetings, of the projects the person can see. */
-export function useMeetings(params: { domain: string; projectId?: number; mine?: boolean }) {
+/**
+ * Meetings of the projects the person can see, and the general meetings they may see; a domain keeps that domain's
+ * (company-wide ones stay in).
+ */
+export function useMeetings(params: { domain?: string; projectId?: number; mine?: boolean }) {
     const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== false));
     return useQuery({
         queryKey: keys.meetings.list(p),
@@ -45,12 +48,23 @@ export function useCreateMeeting() {
     });
 }
 
+/** A meeting about no project, for its attendees; `domain` null is the whole company. */
+export function useCreateGeneralMeeting() {
+    const invalidate = useInvalidate();
+    return useMutation({
+        mutationFn: async (body: Schemas["SaveGeneralMeetingRequest"]) => (await http.post<Meeting>("/meetings", body)).data,
+        onSuccess: () => { void invalidate(keys.meetings.all, keys.work.all); },
+    });
+}
+
 export function useDeleteMeeting() {
     const invalidate = useInvalidate();
     return useMutation({
-        mutationFn: async ({ id }: { id: number; projectId: number }) => {
+        mutationFn: async ({ id }: { id: number; projectId: number | null }) => {
             await http.delete(`/meetings/${id}`);
         },
-        onSuccess: (_, { projectId }) => { void invalidate(keys.meetings.all, keys.work.all, keys.projects.detail(projectId)); },
+        onSuccess: (_, { projectId }) => {
+            void invalidate(keys.meetings.all, keys.work.all, ...(projectId != null ? [keys.projects.detail(projectId)] : []));
+        },
     });
 }
