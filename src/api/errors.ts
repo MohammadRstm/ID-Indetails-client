@@ -17,6 +17,8 @@ export class ApiError extends Error {
     readonly code: string;
     readonly fieldErrors: Record<string, string>;
     readonly blockedChangeId: number | null;
+    /** The request's trace id: every line the API logged for it carries it. */
+    readonly traceId: string | null;
 
     constructor(status: number, body: Partial<ApiErrorBody>) {
         super(body.message || defaultMessage(status));
@@ -26,11 +28,26 @@ export class ApiError extends Error {
         this.code = body.code || "internal_error";
         this.fieldErrors = firstErrors(body.errors);
         this.blockedChangeId = body.blockedChangeId ?? null;
+        this.traceId = body.traceId ?? null;
     }
 
     get isNetwork() {
         return this.status === 0;
     }
+
+    /**
+     * What a person can quote for an unexpected failure on the server's side, to find it in the log. Null for any
+     * other failure: their own mistakes, and outages the message already explains (a 503 "unavailable").
+     */
+    get ref(): string | null {
+        return this.status >= 500 && this.type === "unexpected" && this.traceId ? refOf(this.traceId) : null;
+    }
+}
+
+/** The part of a trace id a person can read out: the first 8 characters of a W3C trace id, otherwise the whole id. */
+export function refOf(traceId: string): string {
+    const w3c = /^[0-9a-f]{2}-([0-9a-f]{32})-/.exec(traceId);
+    return w3c ? w3c[1].slice(0, 8) : traceId;
 }
 
 function defaultMessage(status: number): string {
@@ -69,9 +86,10 @@ export function toApiError(error: unknown): ApiError {
     return new ApiError(-1, { message: error instanceof Error ? error.message : undefined });
 }
 
-/** The message to show for a failure. */
+/** The message to show for a failure; one on the server's side ends with its reference, "(ref 4bf92f35)". */
 export function errorMessage(error: unknown): string {
-    return toApiError(error).message;
+    const apiError = toApiError(error);
+    return apiError.ref ? `${apiError.message} (ref ${apiError.ref})` : apiError.message;
 }
 
 export function isStatus(error: unknown, status: number): boolean {

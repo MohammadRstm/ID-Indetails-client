@@ -19751,6 +19751,7 @@ export interface components {
         ReportBugRequest: {
             description?: string;
             page?: null | string;
+            recentErrors?: components["schemas"]["ReportedErrorRequest"][];
             steps?: null | string;
             title?: string;
         };
@@ -19760,6 +19761,14 @@ export interface components {
             /** Format: int32 */
             minutes: number;
             name: null | string;
+        };
+        ReportedErrorRequest: {
+            /** Format: date-time */
+            at?: string;
+            path?: null | string;
+            ref?: string;
+            /** Format: int32 */
+            status?: number;
         };
         ReportMatrixProjectResponse: {
             /** Format: int64 */

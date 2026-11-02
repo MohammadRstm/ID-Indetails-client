@@ -3,6 +3,7 @@ import { useLocation } from "react-router";
 import { useMutation } from "@tanstack/react-query";
 import { errorMessage } from "@/api/errors";
 import { http } from "@/api/http";
+import { recentErrors } from "@/api/recentErrors";
 import { toast } from "@/shared/components/Feedback/toast";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Modal from "@/shared/components/Overlays/Modal";
@@ -39,7 +40,11 @@ export default function ReportBugModal({ onClose }: { onClose: () => void }) {
     const errors = useFormErrors();
     const send = useMutation({
         mutationFn: async () => {
-            await http.post("/bug-reports", { title: title.trim(), description: description.trim(), steps: steps.trim() || null, page: pathname });
+            await http.post("/bug-reports", {
+                title: title.trim(), description: description.trim(), steps: steps.trim() || null, page: pathname,
+                // the requests that failed lately here: their references find what happened in the API's log
+                recentErrors: recentErrors(),
+            });
         },
     });
     const titleError = !title.trim() ? "Say in a few words what went wrong." : title.length > MAX_TITLE && `At most ${MAX_TITLE} characters.`;
@@ -67,7 +72,7 @@ export default function ReportBugModal({ onClose }: { onClose: () => void }) {
                 <>
                     <div className="grow muted" style={{ fontSize: 12 }}>
                         {send.error ? <span className="err"><Icon name="alert" />{errorMessage(send.error)}</span>
-                            : "Sent with this page's address, your browser and your name."}
+                            : `Sent with this page's address, your browser and your name${recentErrors().length ? ", and the references of your last errors" : ""}.`}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={send.isPending} onClick={submit}>{send.isPending ? "Sending…" : "Send report"}</button>

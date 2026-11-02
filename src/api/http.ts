@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { toApiError } from "./errors";
+import { rememberError } from "./recentErrors";
 import { tokenStore } from "./tokenStore";
 import type { AuthResponse } from "./types";
 
@@ -99,7 +100,9 @@ http.interceptors.response.use(
             if (auth) return http(config);
             handlers.onExpired();
         }
-        return Promise.reject(toApiError(error));
+        const failure = toApiError(error);
+        rememberError(failure, config?.url);
+        return Promise.reject(failure);
     },
 );
 
