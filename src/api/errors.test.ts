@@ -10,9 +10,11 @@ describe("Error messages", () => {
         expect(errorMessage(failure)).toBe("Something went wrong on our side. Please try again later. (ref 4bf92f35)");
     });
 
-    it("say nothing more for the person's own mistakes, or without a trace id", () => {
+    it("say nothing more for the person's own mistakes, known outages, or without a trace id", () => {
         expect(errorMessage(new ApiError(422, { message: "This project is on hold.", traceId }))).toBe("This project is on hold.");
         expect(errorMessage(new ApiError(500, { message: "Something went wrong." }))).toBe("Something went wrong.");
+        // an outage the message already explains
+        expect(errorMessage(new ApiError(503, { type: "unavailable", message: "Google Analytics didn't answer.", traceId }))).toBe("Google Analytics didn't answer.");
     });
 
     it("quote a server request id whole", () => {

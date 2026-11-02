@@ -35,9 +35,12 @@ export class ApiError extends Error {
         return this.status === 0;
     }
 
-    /** What a person can quote for a failure on the server's side, to find it in the log; null for any other failure. */
+    /**
+     * What a person can quote for an unexpected failure on the server's side, to find it in the log. Null for any
+     * other failure: their own mistakes, and outages the message already explains (a 503 "unavailable").
+     */
     get ref(): string | null {
-        return this.status >= 500 && this.traceId ? refOf(this.traceId) : null;
+        return this.status >= 500 && this.type === "unexpected" && this.traceId ? refOf(this.traceId) : null;
     }
 }
 
