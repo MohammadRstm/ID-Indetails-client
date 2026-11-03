@@ -43,8 +43,11 @@ are part of the same app and need nothing more from nginx.
   `/assets/*` file is a 404, which the app answers by reloading once onto the new build.
 - **Caching:**
   - `index.html` is `no-cache`, so a deploy shows at once.
+  - `sw.js` and `manifest.webmanifest` are `no-cache` too, so a new service worker is found at once (see
+    [The installed app](#the-installed-app)). A missing `sw.js` is a 404, never `index.html`: a browser can't update or
+    remove a worker whose file comes back as a page.
   - `/assets/*` (content-hashed names) is `max-age=31536000, immutable`.
-  - Other files (the favicon) are cached for 1 hour.
+  - Other files (the favicon, the icons, the offline page) are cached for 1 hour.
   - API answers are never cached or compressed by nginx.
 - **gzip** for the app's text files.
 - **Security headers** on every app response:
@@ -65,6 +68,51 @@ are part of the same app and need nothing more from nginx.
   `?access_token=`, and sign-up and reset links carry their token in the page's query string. Configure the TLS
   proxy's logs the same way.
 
+## The installed app
+
+Staff can install the app on a phone or a computer: on Android through Chrome, on iOS through Safari's Share → Add to
+Home Screen. It opens on its own, without the browser's bars, and it is the same app, signed in the same way. On iOS
+the installed app keeps its own sign-in, apart from Safari's.
+
+- **Installing from the app** (`src/app/pwa/install.ts`):
+  - Chromium (Android, and computers) offers its own install prompt once, early. The app catches it as it starts
+    (`main.tsx`) and holds back the browser's own install bar. "Install ID-Indetails" then shows that prompt.
+  - iOS has no prompt, so "Install ID-Indetails" shows the Share → Add to Home Screen steps.
+  - Both account menus have "Install ID-Indetails" while the browser can install the app. On phones, a banner above the
+    page suggests it too. Using the banner or putting it away keeps it away for 30 days in that browser.
+  - Opened from its icon, or once installed, the app offers nothing. A browser that can't install it (Firefox, or Safari
+    on a Mac) shows nothing either.
+  - Staff only, for now: the client portal's pages leave the manifest out, so the browser offers no install there. A
+    client who adds a portal page to their home screen gets a plain shortcut to it. The portal is to become an app of
+    its own.
+- **Its files** are made by `vite-plugin-pwa` (`vite.config.ts`):
+  - `manifest.webmanifest`: the name "ID-Indetails", opens at `/`, standalone, the top bar's colour, and the icons in
+    `public/icons` (iOS takes `public/apple-touch-icon.png`, named in `index.html`);
+  - `sw.js`, the service worker.
+- **What the worker keeps:** only `offline.html`, the icons, the favicon and the manifest, which are the same for
+  everyone. It never keeps the app's pages or code (`index.html`, `/assets`), or anything from the API. Nobody's data
+  is ever in its cache, so signing out has nothing to clear, and the next person on a shared phone sees nothing of the
+  last.
+- **What it does:** opening a page always goes to the network. Only when there is no connection does it show
+  `offline.html` ("You're offline", with Try again). It never touches `/api`, `/hubs`, `/openapi` or `/healthz`, so
+  the access token and the refresh cookie go past it as before.
+- **Updates:**
+  - A deploy shows at the next load, as before, since the worker never serves the app.
+  - `sw.js` is never cached: nginx says so, and the page registers it with `updateViaCache: "none"`. A new worker takes
+    over at once.
+  - An app left open (an installed app is mostly brought back rather than opened again) looks for a new worker at most
+    once an hour when it comes back. It also checks for a new version of the app at most every 15 minutes
+    (`src/app/pwa/newVersion.ts`), and the shell then offers to reload ("A new version of ID InDetails is ready"). It
+    never reloads by itself, so nothing typed is lost.
+- **Production builds only:** `npm run dev` and the tests register nothing. To try it locally, run `npm run build`,
+  then `npm run preview` (`http://localhost:4173`). Browsers treat localhost as secure, and so does an Android phone
+  reaching it through `chrome://inspect`'s port forwarding.
+- **Removing the worker:** never by deploying a build without `sw.js`, or an older image, because browsers keep a
+  worker whose file has gone. Build with `selfDestroying: true` in the plugin's options instead. Its `sw.js` unregisters
+  itself and deletes its cache on every device that had it, after which the option and the files can go.
+- **Security headers:** the CSP needs nothing more. The worker falls under `script-src 'self'` and the manifest under
+  `default-src 'self'`.
+
 ## CI (`.github/workflows/ci.yml`)
 
 CI runs on every pull request to `main` and on every push to `main`. It publishes and deploys nothing.
@@ -76,8 +124,8 @@ CI runs on every pull request to `main` and on every push to `main`. It publishe
      browser.
 2. **image:**
    - builds the image without pushing it, then runs it read-only;
-   - checks the non-root user, `/healthz`, the deep-link fallback, the cache and security headers, and that a
-     missing asset is a 404;
+   - checks the non-root user, `/healthz`, the deep-link fallback, the cache and security headers, the service
+     worker's and the manifest's types and cache headers, and that a missing asset is a 404;
    - checks the container refuses to start without `API_UPSTREAM`;
    - a Trivy scan that fails on fixable high or critical issues.
 

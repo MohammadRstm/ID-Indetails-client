@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { Outlet } from "react-router";
 import { createQueryClient } from "@/api/queryClient";
+import { useNoInstall } from "@/app/pwa/install";
 import { usePortalLive } from "./live/usePortalLive";
 import PortalSessionProvider from "./PortalSessionProvider";
 
@@ -11,6 +12,7 @@ import PortalSessionProvider from "./PortalSessionProvider";
  */
 export default function PortalRoot() {
     const [queryClient] = useState(createQueryClient);
+    useNoInstall();
     return (
         <QueryClientProvider client={queryClient}>
             <PortalSessionProvider>

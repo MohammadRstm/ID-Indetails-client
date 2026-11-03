@@ -49,6 +49,7 @@ The web app for ID InDetails, the company's internal project, time and money pla
   - The app shell and the session.
   - Permissions: `usePermissions()` and `<Can>`.
   - The route table (`routing/routeTable.tsx`). Every screen is listed once, with the permission it needs. The route guard and the sidebar both read it.
+  - The installed app (`pwa`): installing it (the browser's prompt, or the iOS steps), the service worker's registration and the "new version is ready" banner. See [docs/deployment.md](docs/deployment.md#the-installed-app).
 - **`src/services`: app-wide services,** such as live updates.
 
 The client never calculates money or decides access. Every figure comes from the API, and every rule is enforced there. The client hides what someone can't see or do, based on the permissions `GET /api/auth/me` returns.

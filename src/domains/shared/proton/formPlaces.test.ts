@@ -19,12 +19,21 @@ describe("where a form Proton fills lives", () => {
             .toEqual(go("/design/projects/42?tab=requirements"));
         expect(placeOf(fill({ form: "file_rename", id: 3 }), { id: 42, domain: "design" }, designAdmin, "design"))
             .toEqual(go("/design/projects/42?tab=files&rename=3"));
+        // a site's expenses sheet and labour weeks are in its Financials tab's expenses part
         expect(placeOf(fill({ form: "materials" }), { id: 8, domain: "execution" }, executionAdmin, "execution"))
-            .toEqual(go("/execution/projects/8?materials=add"));
+            .toEqual(go("/execution/projects/8?tab=financials&part=expenses&view=expenses&materials=add"));
+        expect(placeOf(fill({ form: "labour_week", labourWeek: { week: "2026-09-23", days: null } }), { id: 8, domain: "execution" }, executionAdmin, "execution"))
+            .toEqual(go("/execution/projects/8?tab=financials&part=expenses&view=labour&labour=2026-09-23"));
         expect(placeOf(fill({ form: "company_expense", id: 4 }), { id: null, domain: null }, superAdmin, null))
             .toEqual(go("/company/overhead?edit=4"));
         expect(placeOf(fill({ form: "hour_excuse", id: 9 }), { id: 9, domain: null }, superAdmin, null))
             .toEqual(go("/company/salaries?person=9"));
+    });
+
+    it("invites from the Employees page in Design, and from the company overview's People tab elsewhere", () => {
+        expect(placeOf(fill({ form: "invite" }), { id: null, domain: null }, superAdmin, "design")).toEqual(go("/design/people?invite=1"));
+        expect(placeOf(fill({ form: "invite" }), { id: null, domain: null }, superAdmin, "execution"))
+            .toEqual(go("/company/overview?tab=people&invite=1"));
     });
 
     it("opens a money form only for someone who sees money and may record it", () => {
