@@ -21,8 +21,12 @@ function read(): Theme {
 
 let current: Theme = read();
 
+// the phone's bar (and an installed app's) takes the top bar's colour (--surface in hourline.css)
+const BAR_COLOUR: Record<Theme, string> = { light: "#FFFFFF", dark: "#131A1B" };
+
 export function applyTheme() {
     document.documentElement.setAttribute("data-theme", current);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", BAR_COLOUR[current]);
 }
 
 export function setTheme(theme: Theme) {

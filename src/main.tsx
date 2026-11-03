@@ -7,11 +7,15 @@ import "@/styles/client.css";
 import "@/styles/portal.css";
 import "@/styles/portal-notifications.css";
 import { applyTheme } from "@/shared/theme";
+import { watchForNewVersion } from "@/app/pwa/newVersion";
+import { registerServiceWorker } from "@/app/pwa/serviceWorker";
 import App from "./App";
 
 // The production CSP allows no string evaluation: zod validates without compiling code (and stops probing for it).
 z.config({ jitless: true });
 applyTheme();
+registerServiceWorker();
+watchForNewVersion();
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
