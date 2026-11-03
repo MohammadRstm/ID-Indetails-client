@@ -37,7 +37,9 @@ const seesPortalFiles = (p: Permissions) => p.hasAny(P.CLIENT_PORTAL_MANAGE, P.C
 export const SURFACES: Record<ProtonSurface, (a: Ask) => SurfaceTarget | null> = {
     new_project: (a) => inArea(a, "projects?new=1", a.p.has(P.PROJECT_CREATE)),
     new_client: (a) => inArea(a, "clients?new=1", a.p.has(P.CLIENT_CREATE)),
-    invite_person: (a) => inArea(a, "people?invite=1", a.p.has(P.EMPLOYEE_INVITE)),
+    // the Employees page is Design's: elsewhere people are invited from the company overview's People tab
+    invite_person: (a) => inArea(a, "people?invite=1", a.p.has(P.EMPLOYEE_INVITE))
+        ?? inCompany(a, "overview?tab=people&invite=1", a.p.hasAny(P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN)),
     edit_project: (a) => onRecord(a, "projects", "details=1", a.p.has(P.PROJECT_EDIT)),
     edit_client: (a) => onRecord(a, "clients", "details=1", a.p.has(P.CLIENT_MANAGE)),
     project_report: (a) => onRecord(a, "projects", "report=1", a.domain === "design" && a.p.hasAll(P.FINANCIAL_VIEW, P.WORK_ENTRY_VIEW_ALL)),

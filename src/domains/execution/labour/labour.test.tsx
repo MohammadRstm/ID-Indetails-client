@@ -3,6 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { delay, http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
+import { permissionsOf } from "@/app/permissions/permissions";
+import type { FormFill } from "@/domains/shared/proton/formFill";
+import { placeOf } from "@/domains/shared/proton/formPlaces";
 import { site, siteHandlers } from "@/test/fixtures/site";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
@@ -28,6 +31,14 @@ describe("weekly labour", () => {
         expect(within(p).getAllByRole("row")).toHaveLength(8);
         expect(within(p).getByText("Weekly total").closest("tr")).toHaveTextContent("$725");
         expect(within(p).getByRole("button", { name: "Save changes" })).toBeInTheDocument();
+    });
+
+    it("opens the week Proton fills from the link it uses, though the expenses list is the part's first view", async () => {
+        const fill = { form: "labour_week", id: null, labourWeek: { week: "2026-09-23", days: null } } as FormFill;
+        const place = placeOf(fill, { id: site.project.id, domain: "execution" }, permissionsOf(karim), "execution");
+        renderApp(place?.kind === "go" ? place.path : "", karim, ...siteHandlers);
+        const p = await panel();
+        expect(await within(p).findByLabelText("Workers on Sep 21")).toHaveValue("5");
     });
 
     it("fills a week not reported yet from the defaults, up to today", async () => {

@@ -6,6 +6,9 @@ import { inArea, inCompany, inWebsite, onDesignProject, onRecord, SURFACES, type
 /** What a fill command says beside the fill: the record it is about (a project, a person) and its business. */
 export type FillAt = { id: number | null; domain: Domain | null };
 
+/** A site's Overall expenses: the expenses part of its Financials tab, where its expenses sheet and labour weeks live. */
+const SITE_EXPENSES = "tab=financials&part=expenses";
+
 /**
  * Where each form Proton fills lives here, so a fill opens its own form when it isn't open yet: the same routes and
  * the same permissions the pages check, as for surfaces. A fill's `id` is the record the form edits (or the project or
@@ -68,7 +71,8 @@ export function placeOf(fill: FormFill, at: FillAt, p: Permissions, current: Dom
         case "company_expense":
             return fill.id != null ? inCompany(ask(null, null), `overhead?edit=${fill.id}`, p.has(P.OVERHEAD_MANAGE)) : SURFACES.add_company_expense(ask(null, null));
         case "materials":
-            return at.domain === "execution" ? onRecord(project(), "projects", "materials=add", p.hasAny(P.MATERIAL_CREATE, P.MATERIAL_MANAGE)) : null;
+            // the expenses sheet lives in the Financials tab's expenses part
+            return at.domain === "execution" ? onRecord(project(), "projects", `${SITE_EXPENSES}&view=expenses&materials=add`, p.hasAny(P.MATERIAL_CREATE, P.MATERIAL_MANAGE)) : null;
         case "invoice":
             return fill.id != null
                 ? onRecord(project(), "projects", `edit=${fill.id}`, p.hasAll(P.FINANCIAL_VIEW, P.INVOICE_CREATE))
@@ -79,7 +83,7 @@ export function placeOf(fill: FormFill, at: FillAt, p: Permissions, current: Dom
             return SURFACES.add_project_expense(project());
         case "labour_week":
             return at.domain === "execution"
-                ? onRecord(project(), "projects", `labour=${fill.labourWeek?.week ?? "current"}`, p.hasAny(P.LABOUR_REPORT_CREATE, P.LABOUR_REPORT_MANAGE))
+                ? onRecord(project(), "projects", `${SITE_EXPENSES}&view=labour&labour=${fill.labourWeek?.week ?? "current"}`, p.hasAny(P.LABOUR_REPORT_CREATE, P.LABOUR_REPORT_MANAGE))
                 : null;
         case "schedule":
             return inCompany(ask(null, null), `schedules?schedule=${fill.id}`, p.has(P.SCHEDULE_MANAGE));
