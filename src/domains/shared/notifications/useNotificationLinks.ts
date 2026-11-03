@@ -23,7 +23,7 @@ export function useReader(): Reader {
 }
 
 /** Whether this person may open a page: a business's page by its route's rules, a company page by its own. */
-function openable(permissions: Permissions, route: string): boolean {
+export function openable(permissions: Permissions, route: string): boolean {
     const [first, ...rest] = route.split("?")[0].split("/").filter(Boolean);
     const path = rest.join("/");
     if (first === "company") return companyRoutes.some((r) => r.path === path && r.access(permissions));
@@ -31,17 +31,26 @@ function openable(permissions: Permissions, route: string): boolean {
     return path ? canOpen(permissions, first, route.slice(first.length + 2)) : permissions.canSeeDomain(first);
 }
 
-/** Opens what a notification is about, when the reader may; otherwise the click only marks it read. */
-export function useOpenNotification() {
-    const navigate = useNavigate();
+/** Where a notification leads, when the reader may open it. */
+export function useNotificationRoute() {
     const permissions = usePermissions();
-    return async (view: NotificationView) => {
+    return async (view: NotificationView): Promise<string | null> => {
         let route = view.route;
         // a client's page is in its own business, which only the client knows
         if (!route && view.clientId) {
             const client = await http.get<Schemas["ClientResponse"]>(`/clients/${view.clientId}`).then((r) => r.data).catch(() => null);
             if (client) route = `/${client.domain}/clients/${client.id}`;
         }
-        if (route && openable(permissions, route)) navigate(route);
+        return route && openable(permissions, route) ? route : null;
+    };
+}
+
+/** Opens what a notification is about, when the reader may; otherwise the click only marks it read. */
+export function useOpenNotification() {
+    const navigate = useNavigate();
+    const routeOf = useNotificationRoute();
+    return async (view: NotificationView) => {
+        const route = await routeOf(view);
+        if (route) navigate(route);
     };
 }

@@ -572,7 +572,13 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/*+json": null | components["schemas"]["RefreshRequest"];
+                    "application/json": null | components["schemas"]["RefreshRequest"];
+                    "text/json": null | components["schemas"]["RefreshRequest"];
+                };
+            };
             responses: {
                 /** @description OK */
                 200: {
@@ -627,6 +633,83 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/web-push": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebPushKeyResponse"];
+                        "text/json": components["schemas"]["WebPushKeyResponse"];
+                        "text/plain": components["schemas"]["WebPushKeyResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["RegisterWebPushRequest"];
+                    "application/json": components["schemas"]["RegisterWebPushRequest"];
+                    "text/json": components["schemas"]["RegisterWebPushRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -16563,7 +16646,7 @@ export interface components {
             note?: null | string;
         };
         /** @enum {unknown} */
-        DevicePlatform: "ios" | "android";
+        DevicePlatform: "ios" | "android" | "web";
         DeviceResponse: {
             appVersion: null | string;
             /** Format: date-time */
@@ -17271,6 +17354,7 @@ export interface components {
         };
         LoginRequest: {
             email?: string;
+            installedApp?: boolean;
             password?: string;
         };
         LogWorkFill: {
@@ -19732,10 +19816,18 @@ export interface components {
             receivedOn?: null | string;
             reference?: null | string;
         };
+        RefreshRequest: {
+            installedApp?: boolean;
+        };
         RegisterDeviceRequest: {
             appVersion?: null | string;
             platform?: null | components["schemas"]["DevicePlatform"];
             pushToken?: string;
+        };
+        RegisterWebPushRequest: {
+            auth?: string;
+            endpoint?: string;
+            p256dh?: string;
         };
         RenameProtonConversationRequest: {
             title?: string;
@@ -20797,6 +20889,9 @@ export interface components {
             fileId: null | number;
             found: boolean;
             projectTitle: null | string;
+        };
+        WebPushKeyResponse: {
+            publicKey: null | string;
         };
         WebsiteAnalyticsChannel: {
             channel: string;

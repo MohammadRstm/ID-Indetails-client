@@ -31,6 +31,7 @@ import {
     PortalResetPasswordPage,
     PortalRoot,
     PortalSignInPage,
+    PushOpener,
     RequirePortalSession,
     ResetPasswordPage,
     SignInPage,
@@ -42,6 +43,7 @@ import AppShell from "@/app/shell/AppShell";
 import CompanyLauncher from "@/app/shell/CompanyLauncher";
 import Toasts from "@/shared/components/Feedback/Toasts";
 import TipHost from "@/shared/components/Overlays/TipHost";
+import { usePushLinks } from "@/app/pwa/push";
 
 export default function App() {
     const [queryClient] = useState(createQueryClient);
@@ -71,6 +73,7 @@ function Boundary() {
 }
 
 export function AppRoutes() {
+    usePushLinks();
     return (
         <Routes>
             <Route element={<Boundary />}>
@@ -100,6 +103,7 @@ export function AppRoutes() {
                         <Route element={<LiveRoute />}>
                             <Route index element={<HomeRedirect />} />
                             <Route path="/no-access" element={<NoAccess />} />
+                            <Route path="/open-push" element={<PushOpener />} />
                             <Route path="/company" element={<CompanyLauncher />} />
                             {import.meta.env.DEV && <Route path="/dev/kit" element={<KitGallery />} />}
 

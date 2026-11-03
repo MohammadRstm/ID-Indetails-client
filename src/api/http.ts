@@ -23,9 +23,11 @@ type SessionHandlers = {
     onRefreshed: (auth: AuthResponse) => void;
     /** The session is gone (expired, revoked, signed out elsewhere). */
     onExpired: () => void;
+    /** Whether this is the installed app, whose sessions the API keeps for 30 days since last use. */
+    installedApp: () => boolean;
 };
 
-let handlers: SessionHandlers = { onRefreshed: () => {}, onExpired: () => {} };
+let handlers: SessionHandlers = { onRefreshed: () => {}, onExpired: () => {}, installedApp: () => false };
 
 /** The session is over (a refresh found no session): the app signs out, as a 401 on a request would. */
 export function sessionExpired() {
@@ -42,7 +44,7 @@ let refreshing: Promise<AuthResponse | null> | null = null;
 export function refreshSession(): Promise<AuthResponse | null> {
     refreshing ??= withRefreshLock(async () => {
         try {
-            const { data } = await bare.post<AuthResponse>("/auth/refresh");
+            const { data } = await bare.post<AuthResponse>("/auth/refresh", { installedApp: handlers.installedApp() });
             tokenStore.set(data.accessToken);
             handlers.onRefreshed(data);
             return data;
@@ -109,7 +111,7 @@ http.interceptors.response.use(
 /** Signs in with the API's shape; the caller stores the result. */
 export async function signIn(email: string, password: string): Promise<AuthResponse> {
     try {
-        const { data } = await bare.post<AuthResponse>("/auth/login", { email, password });
+        const { data } = await bare.post<AuthResponse>("/auth/login", { email, password, installedApp: handlers.installedApp() });
         tokenStore.set(data.accessToken);
         return data;
     } catch (error) {

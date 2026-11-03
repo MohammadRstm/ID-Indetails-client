@@ -11,10 +11,13 @@ import { LogWorkHost } from "@/domains/design/work/LogWorkHost";
 import InstallBanner from "@/app/pwa/InstallBanner";
 import InstallSteps from "@/app/pwa/InstallSteps";
 import OfflineBanner from "@/app/pwa/OfflineBanner";
+import PushBanner from "@/app/pwa/PushBanner";
+import { useAppBadge, usePushSync } from "@/app/pwa/push";
+import { useCurrentUser } from "@/app/session/useSession";
 import UpdateBanner from "@/app/pwa/UpdateBanner";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
-import { formatsRemembered, useCompanySettings } from "./shellQueries";
+import { formatsRemembered, useCompanySettings, useUnreadBadges } from "./shellQueries";
 import { useArea } from "./useArea";
 
 // opened with ⌘K, so it loads then
@@ -61,6 +64,10 @@ export default function AppShell() {
     // times and weeks follow the company's settings, so the page waits for them unless the last visit here saw them
     // (a failure falls back to defaults); its own code and data load meanwhile
     const formatsKnown = formatsRemembered || !!company.data || company.isError;
+    const me = useCurrentUser();
+    const badges = useUnreadBadges();
+    usePushSync(me.id);
+    useAppBadge(badges.notificationsLoaded && badges.messages ? badges.notifications + badges.messages.unread : null);
 
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
@@ -102,6 +109,7 @@ export default function AppShell() {
                 <OfflineBanner />
                 <UpdateBanner />
                 <InstallBanner />
+                <PushBanner />
                 {/* a page that fails keeps the shell around it, and moving to another page clears it */}
                 <ErrorBoundary FallbackComponent={CrashScreen} resetKeys={[location.pathname]}>
                     <Suspense fallback={<PageLoading />}>

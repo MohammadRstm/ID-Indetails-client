@@ -41,7 +41,7 @@ export function catchInstallPrompt() {
 }
 
 /** Opened as the installed app, from its icon, rather than in a browser tab. */
-function isStandalone(): boolean {
+export function isStandalone(): boolean {
     return !!window.matchMedia?.("(display-mode: standalone)")?.matches || (navigator as { standalone?: boolean }).standalone === true;
 }
 

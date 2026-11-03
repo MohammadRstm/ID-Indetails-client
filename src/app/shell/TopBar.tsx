@@ -15,6 +15,7 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { myProfilePath } from "./profilePath";
 import InstallMenuItem from "@/app/pwa/InstallMenuItem";
+import PushMenuItem from "@/app/pwa/PushMenuItem";
 import ReportBugModal from "./ReportBugModal";
 import { useArrivalChime } from "@/domains/shared/messages/messageSounds";
 import { useUnreadBadges } from "./shellQueries";
@@ -113,6 +114,7 @@ export default function TopBar({ area, onMenu, onSearch, sideShown = true }: Top
                             <button className="pop-item" onClick={() => { close(); setReporting(true); }}>
                                 <Icon name="flag" />Report a bug
                             </button>
+                            <PushMenuItem close={close} />
                             <InstallMenuItem close={close} />
                             <div className="pop-sep" />
                             <button className="pop-item" onClick={() => { close(); signOut(); }}>
