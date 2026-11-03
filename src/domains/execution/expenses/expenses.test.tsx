@@ -453,6 +453,8 @@ describe("the Add expenses sheet", () => {
             http.get("/api/account-labels", () => HttpResponse.json([...site.accountLabels, { id: 4, name: "Retired", position: 4, archived: true }])),
             ...siteHandlers);
         const sheet = await openSheet();
+        // the sheet puts the cursor in the first new row once open: a list opened before that would close again
+        await waitFor(() => expect(within(sheet).getByLabelText("Item 5")).toHaveFocus());
         // the expense filed under the archived label is the first recorded (oldest first)
         const own = await within(sheet).findByLabelText("Account label 1");
         await waitFor(() => expect(own).toHaveTextContent("Old permits (archived)"));
