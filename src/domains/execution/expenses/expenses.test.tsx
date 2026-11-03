@@ -453,6 +453,8 @@ describe("the Add expenses sheet", () => {
         // the expense filed under the archived label is the first recorded (oldest first)
         const own = await within(sheet).findByLabelText("Account label 1");
         await waitFor(() => expect(own).toHaveTextContent("Old permits (archived)"));
+        // the sheet puts the cursor in the first new row once open: a list opened before that closes as it moves
+        await waitFor(() => expect(within(sheet).getByLabelText("Item 5")).toHaveFocus());
         const fresh = within(sheet).getByLabelText("Account label 5");
         expect(await offered(fresh)).toEqual(["No label", "Concrete", "Finishing", "Permits"]);
     });
