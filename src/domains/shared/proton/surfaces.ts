@@ -13,7 +13,7 @@ export type SurfaceTarget = { kind: "go"; path: string } | { kind: "opener"; id:
 export type Ask = { p: Permissions; domain: Domain | null; id: number | null; section: string | null; tab: string | null; itemId?: number | null };
 
 /** The settings sections and company tabs a link may name: the pages' own. */
-const SETTINGS = ["general", "time", "finance", "projects", "notifications", "teams", "admins", "data"] as const;
+const SETTINGS = ["general", "time", "finance", "projects", "notifications", "teams", "admins", "data", "labels"] as const;
 const COMPANY_TABS = ["overview", "people", "teams"] as const;
 
 export const inArea = (a: Ask, path: string, allowed = true): SurfaceTarget | null =>
@@ -69,6 +69,12 @@ export const SURFACES: Record<ProtonSurface, (a: Ask) => SurfaceTarget | null> =
     view_project_file: (a) => (a.itemId != null ? onDesignProject(a, `tab=files&view=${a.itemId}`, a.p.has(P.PROJECT_VIEW)) : null),
     // the discussion is for whoever takes part in it, which only the server knows: the tab shows it to them alone
     portal_discussion: (a) => onDesignProject(a, `tab=portal&part=discussion${a.itemId != null ? `&item=${a.itemId}` : ""}`),
+    // an Execution client site's BOQ, opened in its editor, and its pocket money windows: the page shows them to whoever sees its money
+    view_boq: (a) => (a.domain === "execution" && a.itemId != null
+        ? onRecord(a, "projects", `tab=financials&part=boqs&boq=${a.itemId}`, a.p.hasAny(P.BOQ_CREATE, P.FINANCIAL_VIEW, P.PROJECT_PRICING_MANAGE))
+        : null),
+    to_pocket: (a) => onRecord(a, "projects", "money=to-pocket", a.domain === "execution" && a.p.has(P.FINANCIAL_VIEW)),
+    ask_pocket: (a) => onRecord(a, "projects", "money=ask-pocket", a.domain === "execution" && a.p.has(P.FINANCIAL_VIEW)),
     // the preview has a page of its own, outside the app's shell
     portal_preview: (a) => (a.domain === "design" && a.id != null && a.p.canSeeDomain("design") && seesPortalFiles(a.p) ? { kind: "go", path: previewPath(a.id) } : null),
 };

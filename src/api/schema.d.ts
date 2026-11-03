@@ -16251,7 +16251,7 @@ export interface components {
             currency: null | string;
             /**
              * Format: int64
-             * @description A category id from get_company_expenses.
+             * @description A category id from list_overhead.
              */
             groupId: null | number;
             /** Format: double */
@@ -19369,7 +19369,7 @@ export interface components {
         /** @enum {unknown} */
         ProtonMessageRole: "user" | "proton";
         /** @enum {unknown} */
-        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_profile" | "website_projects" | "website_analytics" | "website_services" | "website_locations" | "website_contact" | "website_site" | "website_staff" | null;
+        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_profile" | "pocket" | "site_logs" | "daily_log" | "my_sites" | "website_projects" | "website_analytics" | "website_services" | "website_locations" | "website_contact" | "website_site" | "website_staff" | null;
         ProtonPageContext: {
             area: string;
             /** Format: int64 */
@@ -19412,7 +19412,7 @@ export interface components {
             title: string;
         };
         /** @enum {unknown} */
-        ProtonProjectPart: "presentation" | "model" | "drawing" | "access" | "discussion" | null;
+        ProtonProjectPart: "presentation" | "model" | "drawing" | "access" | "discussion" | "overview" | "payments" | "accounts" | "boqs" | "supervision" | "expenses" | "labour" | "staff" | null;
         /** @enum {unknown} */
         ProtonProjectSection: "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal" | null;
         /** @enum {unknown} */
@@ -19458,7 +19458,7 @@ export interface components {
             unit: components["schemas"]["ProtonUnit"];
         };
         /** @enum {unknown} */
-        ProtonSettingsSection: "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "admins" | "data" | null;
+        ProtonSettingsSection: "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "admins" | "data" | "labels" | null;
         ProtonSourceResponse: {
             comparedWith: null | string;
             label: string;
@@ -19486,7 +19486,7 @@ export interface components {
             text: string;
         };
         /** @enum {unknown} */
-        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | "new_website_project" | "edit_website_project" | "file_comments" | "portal_discussion" | "portal_preview" | "invite_website_staff" | "view_project_file" | null;
+        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | "new_website_project" | "edit_website_project" | "file_comments" | "portal_discussion" | "portal_preview" | "invite_website_staff" | "view_project_file" | "view_boq" | "to_pocket" | "ask_pocket" | null;
         ProtonTableBlock: {
             columns: components["schemas"]["ProtonColumn"][];
             rows: components["schemas"]["ProtonDataRow"][];

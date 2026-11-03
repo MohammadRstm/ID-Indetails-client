@@ -77,6 +77,17 @@ describe("the page context", () => {
         expect(pageContextOf("/website/analytics", "?project=8")).toMatchObject({ page: "website_analytics", entityType: null, entityId: null });
         expect(pageContextOf("/website/projects/8", "")).toMatchObject({ entityType: null, entityId: null });
     });
+
+    it("names an Execution site's part, ground labour included, and Execution's own pages", () => {
+        // a site's page is its Financials tab unless another tab is open
+        expect(pageContextOf("/execution/projects/7", "?part=boqs")).toMatchObject({ entityType: "project", entityId: 7, section: "financials", part: "boqs" });
+        expect(pageContextOf("/execution/projects/7", "?part=expenses&view=labour")?.part).toBe("labour");
+        expect(pageContextOf("/execution/projects/7", "?tab=meetings&part=boqs")).toMatchObject({ section: "meetings", part: null });
+        expect(pageContextOf("/execution/daily-log", "")?.page).toBe("daily_log");
+        expect(pageContextOf("/execution/sites", "")?.page).toBe("my_sites");
+        expect(pageContextOf("/execution/site-logs", "")?.page).toBe("site_logs");
+        expect(pageContextOf("/execution/pocket", "")?.page).toBe("pocket");
+    });
 });
 
 describe("Proton opening forms and windows", () => {
@@ -169,6 +180,33 @@ describe("Proton opening forms and windows", () => {
         expect(stepOf(surface("file_comments", { id: 42, domain: "design" }), designAdmin, "design")).toBeNull();
         expect(stepOf(surface("portal_preview", { id: 42, domain: "design" }), permissionsOf(personas.designEmployee), "design")).toBeNull();
         expect(stepOf(surface("portal_discussion", { id: 7, domain: "execution" }), superAdmin, "execution")).toBeNull();
+    });
+
+    it("opens an Execution site's parts, a BOQ, the pocket money windows and Execution's own pages, for those who may", () => {
+        const siteStaff = permissionsOf(personas.executionEmployee);
+        const site = (part: string) => command({ type: "open_project", id: 7, domain: "execution", section: "financials", part });
+        expect(stepOf(site("boqs"), superAdmin, "execution")).toMatchObject({ path: "/execution/projects/7?tab=financials&part=boqs" });
+        // ground labour is a view of the expenses part
+        expect(stepOf(site("labour"), siteStaff, "execution")).toMatchObject({ path: "/execution/projects/7?tab=financials&part=expenses&view=labour" });
+        // a site's part isn't a Design project's
+        expect(stepOf(command({ type: "open_project", id: 42, domain: "design", section: "financials", part: "boqs" }), superAdmin, "design"))
+            .toMatchObject({ path: "/design/projects/42?tab=financials" });
+
+        expect(stepOf(surface("view_boq", { id: 7, domain: "execution", itemId: 3 }), superAdmin, "execution"))
+            .toMatchObject({ path: "/execution/projects/7?tab=financials&part=boqs&boq=3" });
+        expect(stepOf(surface("view_boq", { id: 7, domain: "execution" }), superAdmin, "execution")).toBeNull();
+        expect(stepOf(surface("to_pocket", { id: 7, domain: "execution" }), superAdmin, "execution")).toMatchObject({ path: "/execution/projects/7?money=to-pocket" });
+        expect(stepOf(surface("ask_pocket", { id: 7, domain: "execution" }), superAdmin, "execution")).toMatchObject({ path: "/execution/projects/7?money=ask-pocket" });
+        expect(stepOf(surface("ask_pocket", { id: 7, domain: "execution" }), siteStaff, "execution")).toBeNull();
+        expect(stepOf(surface("settings_section", { domain: "execution", settingsSection: "labels" }), superAdmin, "execution"))
+            .toMatchObject({ path: "/execution/settings?section=labels" });
+
+        expect(stepOf(command({ type: "open_page", page: "pocket", domain: "execution" }), superAdmin, "execution")).toMatchObject({ path: "/execution/pocket" });
+        expect(stepOf(command({ type: "open_page", page: "site_logs", domain: "execution" }), superAdmin, "execution")).toMatchObject({ path: "/execution/site-logs" });
+        expect(stepOf(command({ type: "open_page", page: "daily_log", domain: "execution" }), siteStaff, "execution")).toMatchObject({ path: "/execution/daily-log" });
+        expect(stepOf(command({ type: "open_page", page: "my_sites", domain: "execution" }), siteStaff, "execution")).toMatchObject({ path: "/execution/sites" });
+        // a site staff member's own pages are no admin's
+        expect(stepOf(command({ type: "open_page", page: "daily_log", domain: "execution" }), superAdmin, "execution")).toBeNull();
     });
 
     it("opens the pages Proton couldn't reach before, for those who may", () => {
