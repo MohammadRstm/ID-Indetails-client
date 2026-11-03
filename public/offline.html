@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#F2F5F4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0B1011" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>ID InDetails</title>
+    <!--
+      Shown by the service worker (vite.config.ts) when a page of the app can't be opened because there is no connection.
+      It stands alone, as the app's code may not be there, and the security policy allows no inline script.
+    -->
+    <style>
+      :root { color-scheme: light dark; --ground: #F2F5F4; --ink: #111819; --ink-3: #697572; --accent: #0C6B69; --on-accent: #FFFFFF; }
+      @media (prefers-color-scheme: dark) {
+        :root { --ground: #0B1011; --ink: #E6EDEB; --ink-3: #7B8986; --accent: #36B0A6; --on-accent: #04201E; }
+      }
+      html, body { height: 100%; margin: 0; }
+      body {
+        display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; box-sizing: border-box;
+        background: var(--ground); color: var(--ink); text-align: center;
+        font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased;
+      }
+      svg { color: var(--ink-3); margin-bottom: 6px; }
+      h1 { margin: 0; font-size: 19px; font-weight: 650; letter-spacing: -.01em; }
+      p { margin: 0; max-width: 34ch; color: var(--ink-3); }
+      a {
+        display: inline-flex; align-items: center; height: 40px; margin-top: 8px; padding: 0 18px; border-radius: 8px;
+        background: var(--accent); color: var(--on-accent); font-weight: 600; text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- the company's mark; also in index.html and favicon.svg -->
+    <svg width="30" height="56" viewBox="-12 0 1212 2235" aria-hidden="true">
+      <path fill="currentColor" d="M638 2235C962.8 2185.6 1199.1 1901.5 1187.6 1573.8L1187.6 660.2C1199.1 332.5 962.8 48.4 638 0L638 395.6C736.1 404 808.6 489 801.5 586.5L801.5 1647.5C808.6 1745 736.1 1830 638 1838.4ZM549 2235C225.2 2185.6 -11.1 1901.5 0.4 1573.8L0.4 660.2C-11.1 332.5 225.2 48.4 549 0L549 395.6C452.9 404 380.4 489 387.5 586.5L387.5 1647.5C380.4 1745 452.9 1830 549 1838.4Z"/>
+    </svg>
+    <h1>You're offline</h1>
+    <p>ID InDetails needs a connection to open. Check your Wi-Fi or mobile data, then try again.</p>
+    <!-- an empty link opens this same page again -->
+    <a href="">Try again</a>
+  </body>
+</html>
