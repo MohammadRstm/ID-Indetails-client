@@ -8,6 +8,8 @@ import { toast } from "@/shared/components/Feedback/toast";
 import Skeleton, { SkeletonKpis, SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { cx } from "@/shared/utils/cx";
 import { LogWorkHost } from "@/domains/design/work/LogWorkHost";
+import InstallBanner from "@/app/pwa/InstallBanner";
+import InstallSteps from "@/app/pwa/InstallSteps";
 import UpdateBanner from "@/app/pwa/UpdateBanner";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
@@ -97,6 +99,7 @@ export default function AppShell() {
             <div className="main">
                 <TopBar area={area} onMenu={toggleMenu} sideShown={!sideHidden} onSearch={() => setPalette(true)} />
                 <UpdateBanner />
+                <InstallBanner />
                 {/* a page that fails keeps the shell around it, and moving to another page clears it */}
                 <ErrorBoundary FallbackComponent={CrashScreen} resetKeys={[location.pathname]}>
                     <Suspense fallback={<PageLoading />}>
@@ -111,6 +114,7 @@ export default function AppShell() {
                 </ErrorBoundary>
             )}
             <LogWorkHost />
+            <InstallSteps />
         </div>
     );
 }
