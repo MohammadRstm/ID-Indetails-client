@@ -103,6 +103,13 @@ jobs:
           for h in content-security-policy x-content-type-options referrer-policy x-frame-options; do
             echo "$headers" | grep -qi "^$h:" || fail "missing header $h"
           done
+          # the service worker and the install manifest: checked again on every visit, each with its own type
+          headers=$(curl -fsSI http://localhost:8080/sw.js) || fail "/sw.js isn't served"
+          echo "$headers" | grep -qiE '^content-type: (application|text)/javascript' || fail "/sw.js isn't served as JavaScript"
+          echo "$headers" | grep -qi '^cache-control: no-cache' || fail "/sw.js is cached"
+          headers=$(curl -fsSI http://localhost:8080/manifest.webmanifest) || fail "the manifest isn't served"
+          echo "$headers" | grep -qi '^content-type: application/manifest+json' || fail "the manifest has the wrong type"
+          echo "$headers" | grep -qi '^cache-control: no-cache' || fail "the manifest is cached"
           asset=$(curl -fs http://localhost:8080/ | grep -o '/assets/[^"]*\.js' | head -1)
           curl -fsSI "http://localhost:8080$asset" | grep -qi 'immutable' || fail "hashed assets aren't cached for good"
           [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/assets/missing.js)" = "404" ] || fail "a missing asset isn't a 404"

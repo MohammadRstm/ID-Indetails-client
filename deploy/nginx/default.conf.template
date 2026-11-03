@@ -109,7 +109,23 @@ server {
         add_header Cache-Control "no-cache" always;
     }
 
-    # Other files of the build (the favicon), and every app route, which the app draws itself.
+    # The service worker: always checked again, so a new one is found at once. Never index.html when it is missing: a
+    # browser can't update or remove a worker whose file comes back as a page.
+    location = /sw.js {
+        include /etc/nginx/conf.d/snippets/security-headers.conf;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri =404;
+    }
+
+    # The installed app's manifest, with its own type.
+    location = /manifest.webmanifest {
+        include /etc/nginx/conf.d/snippets/security-headers.conf;
+        add_header Cache-Control "no-cache" always;
+        types { application/manifest+json webmanifest; }
+        try_files $uri =404;
+    }
+
+    # Other files of the build (the favicon, the icons, the offline page), and every app route, which the app draws itself.
     location / {
         include /etc/nginx/conf.d/snippets/security-headers.conf;
         add_header Cache-Control "public, max-age=3600" always;
