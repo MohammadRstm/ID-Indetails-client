@@ -74,6 +74,17 @@ Staff can install the app on a phone or a computer: on Android through Chrome, o
 Home Screen. It opens on its own, without the browser's bars, and it is the same app, signed in the same way. On iOS
 the installed app keeps its own sign-in, apart from Safari's.
 
+- **Installing from the app** (`src/app/pwa/install.ts`):
+  - Chromium (Android, and computers) offers its own install prompt once, early. The app catches it as it starts
+    (`main.tsx`) and holds back the browser's own install bar. "Install ID-Indetails" then shows that prompt.
+  - iOS has no prompt, so "Install ID-Indetails" shows the Share → Add to Home Screen steps.
+  - Both account menus have "Install ID-Indetails" while the browser can install the app. On phones, a banner above the
+    page suggests it too. Using the banner or putting it away keeps it away for 30 days in that browser.
+  - Opened from its icon, or once installed, the app offers nothing. A browser that can't install it (Firefox, or Safari
+    on a Mac) shows nothing either.
+  - Staff only, for now: the client portal's pages leave the manifest out, so the browser offers no install there. A
+    client who adds a portal page to their home screen gets a plain shortcut to it. The portal is to become an app of
+    its own.
 - **Its files** are made by `vite-plugin-pwa` (`vite.config.ts`):
   - `manifest.webmanifest`: the name "ID-Indetails", opens at `/`, standalone, the top bar's colour, and the icons in
     `public/icons` (iOS takes `public/apple-touch-icon.png`, named in `index.html`);
