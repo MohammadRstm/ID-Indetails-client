@@ -4,6 +4,9 @@ import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Schemas } from "@/api/types";
 import { P } from "@/app/permissions/codes";
+import { permissionsOf } from "@/app/permissions/permissions";
+import type { FormFill } from "@/domains/shared/proton/formFill";
+import { placeOf } from "@/domains/shared/proton/formPlaces";
 import { money } from "@/shared/format/money";
 import { site, siteHandlers } from "@/test/fixtures/site";
 import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
@@ -615,8 +618,9 @@ describe("the Add expenses sheet", () => {
         expect(added[0]?.items[0]).not.toHaveProperty("clientPrice");
     });
 
-    it("opens from the link Proton uses to fill it", async () => {
-        renderApp(`${openPath}&materials=add`, karim, ...siteHandlers);
+    it("opens from the link Proton uses to fill it, though the money's overview is the first part", async () => {
+        const place = placeOf({ form: "materials", id: null } as FormFill, { id: open.id, domain: "execution" }, permissionsOf(karim), "execution");
+        renderApp(place?.kind === "go" ? place.path : "", karim, ...siteHandlers);
         expect(await screen.findByRole("dialog", { name: "Add expenses" })).toBeInTheDocument();
     });
 
