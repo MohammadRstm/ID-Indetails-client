@@ -8717,6 +8717,158 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{projectId}/departments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectDepartmentsResponse"];
+                        "text/json": components["schemas"]["ProjectDepartmentsResponse"];
+                        "text/plain": components["schemas"]["ProjectDepartmentsResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SetProjectDepartmentsRequest"];
+                    "application/json": components["schemas"]["SetProjectDepartmentsRequest"];
+                    "text/json": components["schemas"]["SetProjectDepartmentsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectDepartmentsResponse"];
+                        "text/json": components["schemas"]["ProjectDepartmentsResponse"];
+                        "text/plain": components["schemas"]["ProjectDepartmentsResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/departments/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectDepartmentChangeResponse"][];
+                        "text/json": components["schemas"]["ProjectDepartmentChangeResponse"][];
+                        "text/plain": components["schemas"]["ProjectDepartmentChangeResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/departments/shares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SetDepartmentSharesRequest"];
+                    "application/json": components["schemas"]["SetDepartmentSharesRequest"];
+                    "text/json": components["schemas"]["SetDepartmentSharesRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectDepartmentsResponse"];
+                        "text/json": components["schemas"]["ProjectDepartmentsResponse"];
+                        "text/plain": components["schemas"]["ProjectDepartmentsResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{projectId}/expenses": {
         parameters: {
             query?: never;
@@ -15559,7 +15711,7 @@ export interface components {
         /** @enum {unknown} */
         BillingType: "client" | "internal";
         /** @enum {unknown} */
-        BlockedChangeKind: "expense" | "material_add" | "material_update" | "labour_week" | "work_entry_create" | "work_entry_update" | "payment" | "pricing" | "boq_agree" | "boq_withdraw";
+        BlockedChangeKind: "expense" | "material_add" | "material_update" | "labour_week" | "work_entry_create" | "work_entry_update" | "payment" | "pricing" | "boq_agree" | "boq_withdraw" | "work_entry_department";
         BlockedChangeResponse: {
             /** Format: date-time */
             decidedAt: null | string;
@@ -16230,6 +16382,7 @@ export interface components {
             billingType?: components["schemas"]["BillingType"];
             /** Format: int64 */
             clientId?: null | number;
+            departmentIds?: null | number[];
             description?: null | string;
             domainCode?: null | string;
             icon?: null | string;
@@ -16335,6 +16488,48 @@ export interface components {
         DeliveryChannel: "email" | "whatsapp" | "download";
         DenyPocketRequestRequest: {
             note?: null | string;
+        };
+        DepartmentMoneyResponse: {
+            /** Format: double */
+            budget: number;
+            /** Format: double */
+            cost: number;
+            /** Format: double */
+            left: number;
+            /** Format: int32 */
+            minutes: number;
+            people: components["schemas"]["DepartmentPersonResponse"][];
+        };
+        DepartmentMonthResponse: {
+            /** Format: double */
+            cost: number;
+            /** Format: double */
+            hourlyRate: null | number;
+            /** Format: int32 */
+            minutes: number;
+            /** Format: date */
+            month: string;
+        };
+        DepartmentPersonResponse: {
+            /** Format: double */
+            cost: number;
+            /** Format: int32 */
+            minutes: number;
+            months: components["schemas"]["DepartmentMonthResponse"][];
+            person: components["schemas"]["PersonRefResponse"];
+        };
+        DepartmentShareRequest: {
+            /** Format: int64 */
+            departmentId: number;
+            /** Format: double */
+            share: number;
+        };
+        DepartmentShareResponse: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: double */
+            share: number;
         };
         /** @enum {unknown} */
         DevicePlatform: "ios" | "android";
@@ -18478,6 +18673,37 @@ export interface components {
             currency: string;
             weeks: components["schemas"]["CostWeekResponse"][];
         };
+        /** @enum {unknown} */
+        ProjectDepartmentChangeKind: "created" | "departments" | "shares";
+        ProjectDepartmentChangeResponse: {
+            after: components["schemas"]["DepartmentShareResponse"][];
+            before: components["schemas"]["DepartmentShareResponse"][];
+            /** Format: date-time */
+            changedAt: string;
+            changedBy: components["schemas"]["PersonRefResponse"];
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["ProjectDepartmentChangeKind"];
+            reason: null | string;
+        };
+        ProjectDepartmentRefResponse: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+        };
+        ProjectDepartmentResponse: {
+            /** Format: int64 */
+            id: number;
+            money: null | components["schemas"]["DepartmentMoneyResponse"];
+            name: string;
+            /** Format: double */
+            share: null | number;
+        };
+        ProjectDepartmentsResponse: {
+            departments: components["schemas"]["ProjectDepartmentResponse"][];
+            name: null | string;
+            other: null | components["schemas"]["DepartmentMoneyResponse"];
+        };
         ProjectExpenseFill: {
             /** Format: double */
             amount: null | number;
@@ -18785,6 +19011,8 @@ export interface components {
             completedAt: null | string;
             /** Format: date-time */
             createdAt: string;
+            departments: null | components["schemas"]["ProjectDepartmentRefResponse"][];
+            departmentsName: null | string;
             description: null | string;
             domain: string;
             /** Format: date-time */
@@ -20018,6 +20246,10 @@ export interface components {
             body?: string;
             mentionIds?: number[];
         };
+        SetDepartmentSharesRequest: {
+            reason?: string;
+            shares?: components["schemas"]["DepartmentShareRequest"][];
+        };
         SetLabourDefaultsRequest: {
             /** Format: double */
             dailyPay?: number;
@@ -20027,6 +20259,9 @@ export interface components {
         SetPaymentLabelRequest: {
             /** Format: int64 */
             accountLabelId?: null | number;
+        };
+        SetProjectDepartmentsRequest: {
+            departmentIds?: number[];
         };
         SetScheduleRequest: {
             days?: components["schemas"]["ScheduleDayRequest"][];

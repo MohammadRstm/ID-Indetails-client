@@ -99,6 +99,21 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 sub: `${s(p.entryDescription)}${p.text ? ` - “${s(p.text)}”` : ""}`, icon: "chat",
                 route: note.subjectId ? (reader.isAdmin ? `/design/people/${reader.userId}?entry=${note.subjectId}` : `/design/profile?entry=${note.subjectId}`) : undefined,
             };
+        case "log_department_blocked":
+            return {
+                text: note.count > 1
+                    ? `${note.count} logs on ${title} wait for ${s(p.departmentName) || "a department"}`
+                    : `${s(p.personName) || who}'s hours on ${title} wait for ${s(p.departmentName) || "their department"}`,
+                sub: `Add ${s(p.departmentName) || "the department"} to the project to let them through`,
+                icon: "clock", route: project ? `${project}?departments=edit` : undefined,
+            };
+        case "work_entry_released":
+            return p.released === false
+                ? { text: `Your hours waiting on ${title} couldn't be added`, sub: `${s(p.reason)} Log them again.`.trim(), icon: "alert", route: "/design/my-work" }
+                : {
+                    text: note.count > 1 ? `${note.count} of your logs waiting on ${title} went through` : `Your hours waiting on ${title} went through`,
+                    sub: "Their department is on the project now: don't log them again", icon: "checkCircle", route: "/design/my-work",
+                };
         case "weekly_summary":
             return {
                 text: `Weekly summary: you logged ${fmtDur(n(p.minutes))} last week`,

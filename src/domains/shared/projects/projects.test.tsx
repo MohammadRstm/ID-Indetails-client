@@ -227,7 +227,7 @@ describe("a new project and its details", () => {
         await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ title: fixtures.project.title, location: "Jounieh", ownerId: fixtures.project.owner.id })]));
     });
 
-    it("leaves the customer payment to whoever may see the money", async () => {
+    it("leaves the customer payment to whoever may see the money, and asks the departments", async () => {
         const bodies: Record<string, unknown>[] = [];
         renderApp(`/design/projects?new=1&client=${fixtures.client.id}`, personas.designAdmin,
             http.post("/api/projects", async ({ request }) => {
@@ -239,8 +239,16 @@ describe("a new project and its details", () => {
         expect(within(dialog).queryByLabelText("Customer payment")).toBeNull();
         expect(within(dialog).queryByText("Customer payment")).toBeNull();
         await userEvent.type(within(dialog).getByLabelText("Project name"), "Villa interiors");
+        // a client project's departments split its payment: one at least
         await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
-        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ billingType: "client", clientId: fixtures.client.id, revenue: null })]));
+        expect(within(dialog).getByText("Choose the departments working on it.")).toBeInTheDocument();
+        expect(bodies).toEqual([]);
+        await userEvent.click(await within(dialog).findByRole("button", { name: "Architecture" }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Interiors" }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({
+            billingType: "client", clientId: fixtures.client.id, revenue: null, departmentIds: [12, 13],
+        })]));
     });
 
     it("asks the customer payment of a super admin", async () => {

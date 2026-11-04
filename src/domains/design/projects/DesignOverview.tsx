@@ -33,6 +33,7 @@ import BillingBand from "../../shared/billing/BillingBand";
 import PaymentSection from "../../shared/projects/PaymentSection";
 import FinancialBreakdown, { CostFigures } from "./money/FinancialBreakdown";
 import MoneyBand from "./money/MoneyBand";
+import DepartmentsPanel from "./departments/DepartmentsPanel";
 import { useProjectExpenses } from "./money/moneyApi";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
@@ -84,6 +85,10 @@ export function DesignFinancials({ project }: { project: Project }) {
                 onEditPayment={clientWork && canEditPayment ? open("money", "payment") : undefined} onAddExpense={onAddExpense}
                 onCloseProject={permissions.has(P.PROJECT_CHANGE_STATUS) && !closed ? open("complete", "1") : undefined} />
             {project.billingType === "client" && <BillingBand project={project} />}
+            {clientWork && (
+                <DepartmentsPanel project={project} locked={m.isLocked}
+                    onEditDepartments={permissions.has(P.PROJECT_EDIT) && !closed ? open("departments", "edit") : undefined} />
+            )}
             <FinancialBreakdown project={project} money={m} contributors={seesWork ? all.data?.contributors : undefined} entryCount={all.data?.entryCount}
                 expenses={expenses.data?.items} expensesFailed={expenses.isError && !expenses.data ? { error: expenses.error, retry: () => void expenses.refetch() } : null}
                 onPerson={seesWork ? setDrawer : undefined} onAddExpense={onAddExpense}

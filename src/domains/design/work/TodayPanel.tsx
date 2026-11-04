@@ -16,7 +16,7 @@ import OvertimeWarning from "./OvertimeWarning";
 import { ScopeCheck } from "./Scope";
 import TimeRange from "./TimeRange";
 import {
-    loggableProjects, useDomainSettings, useMyDay, useMyProjects, useMySchedule, useOvertimeFor, useSaveEntry, useUndoLog,
+    loggableProjects, useDomainSettings, useMyDay, useMyProjects, useMySchedule, isKeptLog, useOvertimeFor, useSaveEntry, useUndoLog,
 } from "./workApi";
 import { loadFailed } from "@/api/queryState";
 
@@ -149,6 +149,16 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                 setOutside(false);
                 attachment.clear();
                 setTouched(false);
+            },
+            onError: (failure) => {
+                if (!isKeptLog(failure)) return;
+                // kept for their department: nothing to fix here, and nothing to log again
+                save.reset();
+                setDesc("");
+                setOutside(false);
+                attachment.clear();
+                setTouched(false);
+                toast({ text: `Your hours on ${title} are waiting for your department`, sub: errorMessage(failure), icon: "clock" });
             },
         });
     }

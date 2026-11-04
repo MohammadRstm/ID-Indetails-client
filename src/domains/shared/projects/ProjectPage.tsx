@@ -32,6 +32,7 @@ import BillingModalHost from "../billing/BillingModalHost";
 import { useBillingLinks } from "../billing/billingLinks";
 import ClientTypeModal from "../../design/projects/money/ClientTypeModal";
 import PaymentModal from "../../design/projects/money/PaymentModal";
+import { DepartmentsModal } from "../../design/projects/departments/DepartmentsPanel";
 import { staffDiscussion } from "../../design/projects/portal/staffDiscussion";
 import ReportModal from "../../design/projects/report/ReportModal";
 import PricingModal from "../../execution/projects/PricingModal";
@@ -199,6 +200,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const moneyItems = canAddExpense || canEditBilling || canEditPricing || canNewInvoice || canRecordPayment || canUsePocket;
     // name, description, location and target date, while the project is open
     const canEditDetails = permissions.has(P.PROJECT_EDIT) && project.status !== "completed" && project.status !== "archived";
+    // a Design client project's departments, opened from the menu, the Financials tab or the alert of hours waiting (?departments=edit)
+    const canEditDepartments = canEditDetails && !site && project.billingType === "client" && !project.finalizedAt;
+    const closeDepartments = () => { params.delete("departments"); setParams(params, { replace: true }); };
 
     function switchTab(k: TabKey) {
         if (k === firstTab) params.delete("tab");
@@ -261,6 +265,11 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                     <ClientBadge client={{ id: project.client.id, displayName: project.client.displayName }} sub={false} link={permissions.has(P.CLIENT_VIEW)} />
                                 </span>
                             )}
+                            {!site && (project.departments?.length ?? 0) > 0 && (
+                                <span className="row" style={{ gap: 6 }}>Departments
+                                    <b className="sec">{project.departmentsName ?? (project.departments ?? []).map((d) => d.name).join(", ")}</b>
+                                </span>
+                            )}
                             {m && (project.billingType === "internal" ? (
                                 <span className="badge" title="No client and no payment - tracked as company cost">Internal project - no client</span>
                             ) : site ? (
@@ -292,6 +301,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                             {(close) => (
                                 <div>
                                     {canEditDetails && <button className="pop-item" onClick={() => { close(); setEditing(true); }}><Icon name="edit" />Edit details</button>}
+                                    {canEditDepartments && (
+                                        <button className="pop-item" onClick={() => { close(); params.set("departments", "edit"); setParams(params); }}><Icon name="people" />Departments</button>
+                                    )}
                                     {canEditDetails && ((canChangeStatus && !closed) || moneyItems) && <div className="pop-sep" />}
                                     {canChangeStatus && !closed && (
                                         <>
@@ -384,6 +396,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {site && <BoqHost project={project} />}
             {showReport && canReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}
             {editing && canEditDetails && <EditProjectModal project={project} onClose={() => setEditing(false)} />}
+            {params.get("departments") === "edit" && canEditDepartments && (
+                <DepartmentsModal project={project} current={(project.departments ?? []).map((d) => d.id)} onClose={closeDepartments} />
+            )}
         </div>
     );
 }
