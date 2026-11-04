@@ -47,6 +47,27 @@ export const projectWork = {
         other: null,
     } as Schemas["ProjectDepartmentsResponse"],
     teams: teamsJson as unknown as Schemas["TeamResponse"][],
+    /** Its variation orders, newest first: one waiting for the client, one already in the price. */
+    designVos: [
+        {
+            id: 22, projectId: 1, number: "VO-2026-002", title: "Pool house", status: "pending", split: "shares",
+            lines: [{ id: 5, description: "Pool house design", amount: 4000 }],
+            allocations: [], totalUsd: 4000, tvaRate: 0.11, tvaUsd: 440, totalWithTvaUsd: 4440,
+            outsideScopeMinutes: null, outsideScopeFrom: null,
+            createdBy: { id: 1, name: "Rana Saab" }, createdAt: "2026-09-28T09:00:00Z",
+            sentBy: { id: 1, name: "Rana Saab" }, sentAt: "2026-09-28T09:00:00Z",
+            appliedBy: null, appliedAt: null, cancelledBy: null, cancelledAt: null,
+        },
+        {
+            id: 21, projectId: 1, number: "VO-2026-001", title: "Guest house", status: "applied", split: "departments",
+            lines: [{ id: 3, description: "Guest house design", amount: 9000 }, { id: 4, description: "No pergola", amount: -1000 }],
+            allocations: [{ departmentId: 12, name: "Architecture", amount: 8000 }], totalUsd: 8000, tvaRate: 0.11, tvaUsd: 880, totalWithTvaUsd: 8880,
+            outsideScopeMinutes: 150, outsideScopeFrom: "2026-09-01",
+            createdBy: { id: 1, name: "Rana Saab" }, createdAt: "2026-09-10T09:00:00Z",
+            sentBy: null, sentAt: null,
+            appliedBy: { id: 1, name: "Rana Saab" }, appliedAt: "2026-09-10T09:00:00Z", cancelledBy: null, cancelledAt: null,
+        },
+    ] as Schemas["DesignVoResponse"][],
 };
 
 export const projectWorkHandlers = [
@@ -67,6 +88,8 @@ export const projectWorkHandlers = [
     http.get("/api/projects/:id/cost-timeline", () => HttpResponse.json(projectWork.costTimeline)),
     http.get("/api/projects/:id/departments", () => HttpResponse.json(projectWork.departments)),
     http.get("/api/projects/:id/departments/history", () => HttpResponse.json([])),
+    http.get("/api/projects/:id/design-vos", () => HttpResponse.json(projectWork.designVos)),
+    http.get("/api/projects/:id/design-vos/outside-scope", () => HttpResponse.json({ from: "2026-09-10", minutes: 150 })),
     // the departments to choose from
     http.get("/api/teams", () => HttpResponse.json(projectWork.teams)),
     // the customer payment's history

@@ -6,6 +6,7 @@ import { DesignAnalytics, DesignContributors, DesignFinancials, DesignProgress }
 import ClientPortalTab from "../../design/projects/portal/ClientPortalTab";
 import ProjectFilesTab from "../../design/projects/portal/ProjectFilesTab";
 import ProjectHistoryTab from "../../design/projects/history/ProjectHistoryTab";
+import DesignVosTab from "../../design/projects/vos/DesignVosTab";
 import { LogWorkAction, MyProjectWork, MyTeamLine } from "../../design/work/MyProjectWork";
 import { ExecutionFinancials, SiteTeamLine } from "../../execution/projects/ExecutionOverview";
 import ProjectPage, { type ProjectPanels } from "./ProjectPage";
@@ -18,6 +19,7 @@ const PANELS: Record<Domain, ProjectPanels> = {
         // the Overview is someone's own work; those who see money or everyone's work have their own tabs instead
         hasOverview: (p) => p.has(P.WORK_ENTRY_VIEW_OWN) || (!p.has(P.FINANCIAL_VIEW) && !p.has(P.WORK_ENTRY_VIEW_ALL)),
         financials: (project) => <DesignFinancials project={project} />,
+        vos: (project) => <DesignVosTab project={project} />,
         analytics: (project) => <DesignAnalytics project={project} />,
         contributors: (project) => <DesignContributors project={project} />,
         files: (project) => <ProjectFilesTab project={project} />,
