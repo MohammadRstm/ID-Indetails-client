@@ -51,7 +51,7 @@ export default function EntryComments({ entryId, author, domain }: { entryId: nu
                                     <span className="muted">{relTime(c.createdAt)}</span>
                                 </div>
                                 <div className="cm-text">{c.body}</div>
-                                {c.sentToGroup && <div className="cm-sent"><Icon name="chat" />Sent to the team group chat · @all</div>}
+                                {c.sentToGroup && <div className="cm-sent"><Icon name="chat" />Sent to the department group chat · @all</div>}
                             </div>
                         </div>
                     )) : <div className="muted" style={{ fontSize: "12.5px", padding: "6px 0" }}>No comments on this entry yet.</div>}

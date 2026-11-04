@@ -14,6 +14,7 @@ const DOMAIN_PAGES: Record<string, Page> = {
     financials: "financials", meetings: "meetings", activity: "activity", reports: "reports",
     settings: "settings", notifications: "notifications", messages: "messages", help: "help",
     "my-work": "my_work", profile: "my_profile",
+    pocket: "pocket", "site-logs": "site_logs", "daily-log": "daily_log", sites: "my_sites",
 };
 const COMPANY_PAGES: Record<string, Page> = {
     "": "launcher", overview: "company_overview", overhead: "company_expenses", schedules: "schedules", salaries: "salaries",
@@ -31,6 +32,8 @@ const PARTS: Partial<Record<Section, readonly Part[]>> = {
     files: ["presentation", "model", "drawing"],
     portal: ["presentation", "model", "drawing", "access", "discussion"],
 };
+/** An Execution site's Financials parts; ground labour is the expenses part's labour view. */
+const SITE_PARTS: readonly Part[] = ["overview", "payments", "accounts", "boqs", "supervision", "expenses", "labour", "staff"];
 const isId = (v: string | null | undefined): v is string => v != null && /^\d+$/.test(v);
 
 /**
@@ -45,8 +48,12 @@ export function pageContextOf(pathname: string, search: string, surface: string 
     const query = new URLSearchParams(search);
     const tab = query.get("tab");
     const entityType = area !== "company" && area !== "website" && isId(id) ? RECORDS[page ?? ""] ?? null : null;
-    const section = entityType === "project" && SECTIONS.includes(tab as Section) ? (tab as Section) : null;
-    const part = section ? PARTS[section]?.find((p) => p === query.get("part")) ?? null : null;
+    // a site's page opens on its Financials tab, where everything about the site is a part
+    const site = entityType === "project" && area === "execution";
+    const section = entityType === "project" && SECTIONS.includes(tab as Section) ? (tab as Section) : site && tab == null ? "financials" : null;
+    const asked = site && query.get("part") === "expenses" && query.get("view") === "labour" ? "labour" : query.get("part");
+    const part = !section ? null : site && section === "financials" ? SITE_PARTS.find((p) => p === asked) ?? null
+        : PARTS[section]?.find((p) => p === asked) ?? null;
     // an open chat, by id only: who it is with, or which team; or a website project, open in its form
     const shown = known === "messages" ? ([["person", query.get("with")], ["team", query.get("group")]] as const).find(([, v]) => isId(v))
         : known === "website_projects" && isId(query.get("project")) ? (["website_project", query.get("project")] as const)

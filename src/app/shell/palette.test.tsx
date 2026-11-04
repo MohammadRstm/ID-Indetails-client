@@ -71,13 +71,13 @@ describe("the search palette", () => {
         await waitFor(() => expect(window.location.pathname).toBe("/company/salaries"));
     });
 
-    it("takes a business's admin to the teams in their Settings", async () => {
+    it("takes a business's admin to the departments in their Settings", async () => {
         renderApp("/design/projects", personas.designAdmin,
             http.get("/api/search", () => HttpResponse.json({ projects: [], clients: [], people: [] })),
             ...projectHandlers);
         const dialog = await openPalette(false);
         await userEvent.type(within(dialog).getByRole("textbox", { name: "Search" }), "departments");
-        await userEvent.click(await within(dialog).findByText("Open teams"));
+        await userEvent.click(await within(dialog).findByText("Open departments"));
         await waitFor(() => expect(`${window.location.pathname}${window.location.search}`).toBe("/design/settings?section=teams"));
     });
 

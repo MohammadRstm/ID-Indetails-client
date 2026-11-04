@@ -164,6 +164,14 @@
     ]
   },
   {
+    "code": "financial:write",
+    "description": "Set a Design project's price, its departments' shares and its variation orders",
+    "domain": "design",
+    "defaultFor": [
+      "super_admin"
+    ]
+  },
+  {
     "code": "hours:excuse",
     "description": "Excuse hours and days off in the hours ledger",
     "domain": null,

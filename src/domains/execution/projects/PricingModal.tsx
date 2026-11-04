@@ -19,7 +19,7 @@ import { siteMoneyOf } from "./siteMoney";
  * history. The work price isn't here: it is set when a bill of quantities is agreed. Site expenses are costs and carry
  * no markup, so nothing else is priced.
  */
-export default function PricingModal({ project, onClose, onSaved }: { project: Project; onClose: () => void; onSaved?: () => void }) {
+export default function PricingModal({ project, onClose }: { project: Project; onClose: () => void }) {
     const x = siteMoneyOf(project.money!);
     const save = useSetPricing(project.id);
     const [description, setDescription] = useState("");
@@ -48,7 +48,7 @@ export default function PricingModal({ project, onClose, onSaved }: { project: P
                     sub: m ? `Agreed so far ${money.exact(m.revenue)} · expected profit ${money.exact(m.profit)}` : undefined,
                     icon: "checkCircle",
                 });
-                (onSaved ?? onClose)();
+                onClose();
             },
         });
     }
@@ -58,7 +58,7 @@ export default function PricingModal({ project, onClose, onSaved }: { project: P
             foot={
                 <>
                     <div className="grow muted" style={{ fontSize: 12 }}>
-                        {save.error ? <FormFailure error={save.error} onForced={onSaved ?? onClose} /> : <>Agreed so far {money.exact(x.agreed)}</>}
+                        {save.error ? <FormFailure error={save.error} onForced={onClose} /> : <>Agreed so far {money.exact(x.agreed)}</>}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={save.isPending} onClick={submit}>{save.isPending ? "Saving…" : "Save"}</button>

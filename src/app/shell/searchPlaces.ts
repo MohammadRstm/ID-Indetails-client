@@ -12,7 +12,7 @@ import { areaBase, type ShellArea } from "./useArea";
  * Every page and action the search can take someone to, with the words people use for it. Search is how new
  * people find their way around, so each place lists what someone might type when looking for it, not just its
  * name: "payroll", "wages" and "employee pay" all find Salaries. Where a place leads depends on who is asking
- * (teams are a company overview tab for super admins and a Settings section for a business's admins), and a
+ * (departments are a company overview tab for super admins and a Settings section for a business's admins), and a
  * place this person can't open isn't offered at all. The API checks every request again.
  */
 
@@ -155,8 +155,9 @@ export const PLACES: Place[] = [
         targets: invite,
     },
     {
-        key: "teams", icon: "people", label: "Open teams",
-        words: ["teams", "team", "groups", "departments", "department", "squads", "units", "crews", "team list", "manage teams",
+        key: "teams", icon: "people", label: "Open departments",
+        words: ["departments", "department", "teams", "team", "groups", "squads", "units", "crews", "team list", "manage teams", "department list", "manage departments",
+            "create department", "new department", "add department", "rename department", "delete department", "department members",
             "create team", "new team", "add team", "rename team", "delete team", "team members"],
         targets: teams,
     },

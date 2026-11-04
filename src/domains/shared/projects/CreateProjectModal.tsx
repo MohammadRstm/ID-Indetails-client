@@ -78,9 +78,10 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const client = useClient(clientId);
     const execMoney = execution && billing === "client";
     // the money is set by whoever may see it; anyone else creates the project and leaves it to them
-    const setsPayment = !execution && billing === "client" && permissions.has(P.FINANCIAL_VIEW);
+    const setsPayment = !execution && billing === "client" && permissions.has(P.FINANCIAL_WRITE);
     const setsPricing = execMoney && permissions.has(P.PROJECT_PRICING_MANAGE);
-    const setsTva = billing === "client" && permissions.has(P.FINANCIAL_VIEW);
+    // a Design price and its TVA are written with financial:write; an Execution site's TVA still with financial:view
+    const setsTva = billing === "client" && permissions.has(execution ? P.FINANCIAL_VIEW : P.FINANCIAL_WRITE);
     const errors = useFormErrors();
     const titleError = title.trim() === "" && "Give the project a name.";
     const clientError = billing === "client" && clientId == null && "Choose who the project is for, or make it internal.";
@@ -128,10 +129,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                 action: () => navigate(`/${domain}/projects/${project.id}`),
             });
             onClose();
-            // Straight to Requirements: a new project's progress means nothing until it has some. Whoever sends quotes
-            // is asked there whether this one gets one, except on an Execution site, which has none.
-            const quote = billing === "client" && !execution && permissions.has(P.INVOICE_SEND) ? "&quote=new" : "";
-            navigate(`/${domain}/projects/${project.id}?tab=requirements${quote}`);
+            // Straight to Requirements: a new project's progress means nothing until it has some.
+            navigate(`/${domain}/projects/${project.id}?tab=requirements`);
         } catch {
             // Shown in the foot.
         }

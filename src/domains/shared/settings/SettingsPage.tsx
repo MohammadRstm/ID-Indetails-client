@@ -23,7 +23,7 @@ type Section = "general" | "time" | "finance" | "projects" | "notifications" | "
 // Teams is the API's, not the prototype's: the prototype had them fixed.
 const SECTIONS: [Section, string, IconName][] = [
     ["general", "Company", "building"], ["time", "Time tracking", "clock"], ["finance", "Finance", "card"], ["projects", "Projects", "projects"],
-    ["notifications", "Notifications", "bell"], ["teams", "Teams", "people"], ["labels", "Account labels", "list"], ["admins", "Admins & access", "shield"], ["data", "Data & export", "database"],
+    ["notifications", "Notifications", "bell"], ["teams", "Departments", "people"], ["labels", "Account labels", "list"], ["admins", "Admins & access", "shield"], ["data", "Data & export", "database"],
 ];
 /** The same whichever business is being looked at. */
 const COMPANY_WIDE: Section[] = ["general", "labels", "admins"];

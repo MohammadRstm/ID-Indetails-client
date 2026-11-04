@@ -213,13 +213,6 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 sub: note.actor ? `Asked by ${who} · approve or deny it` : "Raised by the system · approve or deny it",
                 icon: "card", route: "/execution/pocket",
             };
-        case "quote_due":
-            return {
-                text: `${title} may need a quote`,
-                sub: note.actor ? `Created by ${who} · send it or not` : "Send it or not",
-                // an Execution site has no quotes: its price comes from BOQs
-                icon: "file", route: project && d === "design" ? `${project}?quote=new` : project,
-            };
         case "client_added":
             return { text: `${s(p.organisation) || s(p.name) || "A client"} added as a client`, sub: by, icon: "briefcase", clientId: note.subjectId ?? undefined };
 
@@ -263,7 +256,7 @@ export function describe(note: Notification, reader: Reader): NotificationView {
         case "domain_changed":
             return { text: `You were moved to ${areaLabel(p.to) || "another business"}`, sub: by, icon: "shield", route: p.to ? `/${s(p.to)}` : undefined };
         case "team_changed":
-            return { text: p.teamId == null ? "You were taken out of your team" : "You were moved to another team", sub: by, icon: "people", route: mine };
+            return { text: p.teamId == null ? "You were taken out of your department" : "You were moved to another department", sub: by, icon: "people", route: mine };
         case "permissions_changed": {
             const granted = (p.granted as unknown[] | undefined)?.length ?? 0, revoked = (p.revoked as unknown[] | undefined)?.length ?? 0, reset = (p.reset as unknown[] | undefined)?.length ?? 0;
             const parts = [granted ? `${granted} granted` : null, revoked ? `${revoked} taken away` : null, reset ? "some reset to your role's" : null].filter(Boolean);

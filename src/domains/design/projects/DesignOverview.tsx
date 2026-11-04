@@ -65,13 +65,14 @@ export function DesignFinancials({ project }: { project: Project }) {
     const allRange = rangeOptions(project, companyNow().today).all;
     const clientWork = project.billingType === "client";
     const canEditMoney = permissions.has(P.PROJECT_EDIT) && !m.isLocked;
+    const canEditPayment = canEditMoney && permissions.has(P.FINANCIAL_WRITE);
 
     return (
         <>
             <PaymentSection label="Customer payment" amount={clientWork ? m.revenue : null} locked={m.isLocked}
                 tva={clientWork ? { rate: m.tvaRate, withTva: m.paymentWithTva } : undefined}
                 sub={clientWork ? "What the project earns, before TVA. The client only ever sees the total with TVA. Each change is kept with why it changed." : undefined}
-                onEdit={clientWork && canEditMoney ? open("money", "payment") : undefined}
+                onEdit={clientWork && canEditPayment ? open("money", "payment") : undefined}
                 onHistory={clientWork ? open("money", "history") : undefined}
                 empty={(
                     <span className="row" style={{ gap: 10 }}>
@@ -80,7 +81,7 @@ export function DesignFinancials({ project }: { project: Project }) {
                     </span>
                 )} />
             <MoneyBand project={project} money={m} contributors={all.data?.contributorCount} expenseCount={expenses.data?.items.length}
-                onEditPayment={clientWork && canEditMoney ? open("money", "payment") : undefined} onAddExpense={onAddExpense}
+                onEditPayment={clientWork && canEditPayment ? open("money", "payment") : undefined} onAddExpense={onAddExpense}
                 onCloseProject={permissions.has(P.PROJECT_CHANGE_STATUS) && !closed ? open("complete", "1") : undefined} />
             {project.billingType === "client" && <BillingBand project={project} />}
             <FinancialBreakdown project={project} money={m} contributors={seesWork ? all.data?.contributors : undefined} entryCount={all.data?.entryCount}

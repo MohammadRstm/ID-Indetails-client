@@ -18,6 +18,7 @@ import { money } from "@/shared/format/money";
 import { DOMAIN_LABEL } from "@/shared/format/labels";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
+import { cx } from "@/shared/utils/cx";
 import { isEmail } from "@/shared/utils/email";
 import { hasFixedSalary, suggestedOvertimeRate } from "../../design/pay/payRules";
 import { useOvertimeHours } from "../settings/settingsApi";
@@ -64,7 +65,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     const [email, setEmail] = useState("");
     const [position, setPosition] = useState("");
     const [teamId, setTeamId] = useState("");
-    // address, position and team only: never the role or the pay
+    // address, position and department only: never the role or the pay
     const proton = useProtonForm("invite", null, (fill) => {
         const v = fill.invite;
         const done: string[] = [];
@@ -96,9 +97,12 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     const overtimeError = setsOvertime && amount > 0
         && (!(overtimeRate > 0) ? "Enter their overtime rate." : overtimeRate > amount && "The overtime rate can't be more than the salary.");
     const team = teams.find((t) => String(t.id) === teamId);
+    // a Design employee's hours are counted in their department: they always have one
+    const needsDepartment = design && role === "employee";
+    const departmentError = needsDepartment && !teamId && "Choose the department they work in.";
 
     function choose(next: Joins) {
-        // another business: its own teams, and its usual way of paying
+        // another business: its own departments, and its usual way of paying
         setChosen(next);
         setTeamId("");
         setBasis(next === "design" ? "hourly" : "monthly");
@@ -107,7 +111,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
 
     function send() {
         if (invite.isPending) return;
-        if (emailError || payError || overtimeError) return errors.tried();
+        if (emailError || payError || overtimeError || departmentError) return errors.tried();
         invite.mutate({
             email: email.trim(), role, domainCode: role === "super_admin" ? null : domain, teamId: teamId ? +teamId : null,
             position: position.trim() || null,
@@ -180,8 +184,10 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                             </div>
                             {!website && (
                                 <div className="field">
-                                    <label className="label" htmlFor="ae-team">Team</label>
-                                    <Select id="ae-team" value={teamId} onChange={setTeamId} options={[{ value: "", label: "No team" }, ...teams.map((t) => ({ value: String(t.id), label: t.name }))]} />
+                                    <label className={cx("label", needsDepartment && "required")} htmlFor="ae-team">Department</label>
+                                    <Select id="ae-team" value={teamId} onChange={setTeamId}
+                                        options={[{ value: "", label: needsDepartment ? "Choose a department" : "No department" }, ...teams.map((t) => ({ value: String(t.id), label: t.name }))]} />
+                                    <FieldError message={errors.show("team", departmentError)} />
                                 </div>
                             )}
                         </div>

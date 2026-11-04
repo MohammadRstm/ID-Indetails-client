@@ -11198,68 +11198,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/projects/{projectId}/quotes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    projectId: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QuoteResponse"][];
-                        "text/json": components["schemas"]["QuoteResponse"][];
-                        "text/plain": components["schemas"]["QuoteResponse"][];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    projectId: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QuoteResponse"];
-                        "text/json": components["schemas"]["QuoteResponse"];
-                        "text/plain": components["schemas"]["QuoteResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/projects/{projectId}/reopen": {
         parameters: {
             query?: never;
@@ -13266,170 +13204,6 @@ export interface paths {
                         "text/json": components["schemas"]["PublicWebsiteSocialLink"][];
                         "text/plain": components["schemas"]["PublicWebsiteSocialLink"][];
                     };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/quotes/{quoteId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    quoteId: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QuoteResponse"];
-                        "text/json": components["schemas"]["QuoteResponse"];
-                        "text/plain": components["schemas"]["QuoteResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/quotes/{quoteId}/deliveries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    quoteId: number;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/*+json": components["schemas"]["RecordDeliveryRequest"];
-                    "application/json": components["schemas"]["RecordDeliveryRequest"];
-                    "text/json": components["schemas"]["RecordDeliveryRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QuoteResponse"];
-                        "text/json": components["schemas"]["QuoteResponse"];
-                        "text/plain": components["schemas"]["QuoteResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/quotes/{quoteId}/email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    quoteId: number;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/*+json": components["schemas"]["EmailDocumentRequest"];
-                    "application/json": components["schemas"]["EmailDocumentRequest"];
-                    "text/json": components["schemas"]["EmailDocumentRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QuoteResponse"];
-                        "text/json": components["schemas"]["QuoteResponse"];
-                        "text/plain": components["schemas"]["QuoteResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/quotes/{quoteId}/pdf": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    quoteId: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
                 };
             };
         };
@@ -16334,7 +16108,7 @@ export interface components {
             currency: null | string;
             /**
              * Format: int64
-             * @description A category id from get_company_expenses.
+             * @description A category id from list_overhead.
              */
             groupId: null | number;
             /** Format: double */
@@ -19453,7 +19227,7 @@ export interface components {
         /** @enum {unknown} */
         ProtonMessageRole: "user" | "proton";
         /** @enum {unknown} */
-        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_profile" | "website_projects" | "website_analytics" | "website_services" | "website_locations" | "website_contact" | "website_site" | "website_staff" | null;
+        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_profile" | "pocket" | "site_logs" | "daily_log" | "my_sites" | "website_projects" | "website_analytics" | "website_services" | "website_locations" | "website_contact" | "website_site" | "website_staff" | null;
         ProtonPageContext: {
             area: string;
             /** Format: int64 */
@@ -19496,7 +19270,7 @@ export interface components {
             title: string;
         };
         /** @enum {unknown} */
-        ProtonProjectPart: "presentation" | "model" | "drawing" | "access" | "discussion" | null;
+        ProtonProjectPart: "presentation" | "model" | "drawing" | "access" | "discussion" | "overview" | "payments" | "accounts" | "boqs" | "supervision" | "expenses" | "labour" | "staff" | null;
         /** @enum {unknown} */
         ProtonProjectSection: "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal" | null;
         /** @enum {unknown} */
@@ -19542,7 +19316,7 @@ export interface components {
             unit: components["schemas"]["ProtonUnit"];
         };
         /** @enum {unknown} */
-        ProtonSettingsSection: "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "admins" | "data" | null;
+        ProtonSettingsSection: "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "admins" | "data" | "labels" | null;
         ProtonSourceResponse: {
             comparedWith: null | string;
             label: string;
@@ -19570,7 +19344,7 @@ export interface components {
             text: string;
         };
         /** @enum {unknown} */
-        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | "new_website_project" | "edit_website_project" | "file_comments" | "portal_discussion" | "portal_preview" | "invite_website_staff" | "view_project_file" | null;
+        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | "new_website_project" | "edit_website_project" | "file_comments" | "portal_discussion" | "portal_preview" | "invite_website_staff" | "view_project_file" | "view_boq" | "to_pocket" | "ask_pocket" | null;
         ProtonTableBlock: {
             columns: components["schemas"]["ProtonColumn"][];
             rows: components["schemas"]["ProtonDataRow"][];
@@ -19753,38 +19527,6 @@ export interface components {
             minutes: number;
             /** Format: date */
             quarterStart: string;
-        };
-        QuoteDeliveryResponse: {
-            channel: components["schemas"]["DeliveryChannel"];
-            /** Format: int64 */
-            id: number;
-            note: null | string;
-            recipient: null | string;
-            /** Format: date-time */
-            sentAt: string;
-            sentBy: null | components["schemas"]["PersonRefResponse"];
-        };
-        QuoteResponse: {
-            client: components["schemas"]["InvoiceClientResponse"];
-            /** Format: date-time */
-            createdAt: string;
-            createdBy: components["schemas"]["PersonRefResponse"];
-            deliveries: components["schemas"]["QuoteDeliveryResponse"][];
-            domain: string;
-            /** Format: int64 */
-            id: number;
-            /** Format: double */
-            netUsd: number;
-            number: string;
-            /** Format: int64 */
-            projectId: number;
-            projectLocation: null | string;
-            projectTitle: string;
-            scope: null | string;
-            /** Format: double */
-            totalUsd: number;
-            /** Format: double */
-            tvaRate: number;
         };
         ReactivateEmployeeRequest: {
             payGap?: null | boolean;

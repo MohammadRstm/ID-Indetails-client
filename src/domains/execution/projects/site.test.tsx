@@ -186,9 +186,7 @@ describe("the supervision and TVA", () => {
         await waitFor(() => expect(saved).toEqual([{ supervisionRate: 0.075, tvaRate: 0, description: "The client asked for a second floor" }]));
         expect(saved[0]).not.toHaveProperty("projectFee");
         expect(saved[0]).not.toHaveProperty("materialMarkup");
-        // an Execution site has no quote to send for the new price
         await waitFor(() => expect(screen.queryByRole("dialog", { name: "Pricing" })).toBeNull());
-        expect(screen.queryByRole("dialog", { name: "Send the quote?" })).toBeNull();
     });
 
     it("say the work price is set when a BOQ is agreed, while there is none", async () => {
