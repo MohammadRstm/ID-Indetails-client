@@ -109,7 +109,7 @@ describe("Add employee", () => {
         });
     }
 
-    it("invites them with a team, position and pay", async () => {
+    it("invites them with a department, position and pay", async () => {
         const bodies: unknown[] = [];
         renderApp("/design/people?invite=1", nadia, sendsTo(bodies), ...peopleHandlers);
         const dialog = await screen.findByRole("dialog", { name: "Add employee" });
@@ -140,6 +140,8 @@ describe("Add employee", () => {
         // only a super admin can invite a super admin
         expect(within(dialog).queryByRole("tab", { name: "Super admin" })).not.toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Work email"), "amara@id-indetails.test");
+        await userEvent.click(within(dialog).getByLabelText("Department"));
+        await userEvent.click(screen.getByRole("option", { name: "Interiors" }));
         await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
         await screen.findByRole("dialog", { name: "Invitation sent" });
         expect(bodies).toEqual([expect.objectContaining({ role: "employee", domainCode: "design", pay: null })]);
@@ -180,6 +182,8 @@ describe("Add employee", () => {
         await userEvent.clear(pay);
         await userEvent.type(pay, "4600");
         expect(overtime).toHaveValue("25");
+        await userEvent.click(within(dialog).getByLabelText("Department"));
+        await userEvent.click(screen.getByRole("option", { name: "Interiors" }));
         await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
 
         await screen.findByRole("dialog", { name: "Invitation sent" });
