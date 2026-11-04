@@ -46,7 +46,7 @@ function isStandalone(): boolean {
 }
 
 /** An iPhone or iPad. iPadOS says it is a Mac, but a Mac has no touch screen. */
-function isIos(): boolean {
+export function isIos(): boolean {
     const agent = navigator.userAgent;
     return /iPhone|iPad|iPod/.test(agent) || (/Macintosh/.test(agent) && navigator.maxTouchPoints > 1);
 }

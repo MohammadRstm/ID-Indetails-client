@@ -10,6 +10,7 @@ import { cx } from "@/shared/utils/cx";
 import { LogWorkHost } from "@/domains/design/work/LogWorkHost";
 import InstallBanner from "@/app/pwa/InstallBanner";
 import InstallSteps from "@/app/pwa/InstallSteps";
+import OfflineBanner from "@/app/pwa/OfflineBanner";
 import UpdateBanner from "@/app/pwa/UpdateBanner";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
@@ -98,6 +99,7 @@ export default function AppShell() {
             <Sidebar area={area} />
             <div className="main">
                 <TopBar area={area} onMenu={toggleMenu} sideShown={!sideHidden} onSearch={() => setPalette(true)} />
+                <OfflineBanner />
                 <UpdateBanner />
                 <InstallBanner />
                 {/* a page that fails keeps the shell around it, and moving to another page clears it */}
