@@ -477,7 +477,7 @@ describe("admins and access", () => {
         // this Nadia was handed the money: all of its group
         const money = await within(dialog).findByRole("checkbox", { name: "Money & billing" });
         expect(money).toBeChecked();
-        expect(money.closest(".perm-group-head")).toHaveTextContent("8 of 8");
+        expect(money.closest(".perm-group-head")).toHaveTextContent("9 of 9");
         expect(within(dialog).getByRole("checkbox", { name: "Company overview & expenses" }).closest(".perm-group-head")).toHaveTextContent("0 of 3");
         // a permission is hidden until its group is opened
         expect(within(dialog).queryByRole("checkbox", { name: "Void issued invoices" })).not.toBeInTheDocument();
