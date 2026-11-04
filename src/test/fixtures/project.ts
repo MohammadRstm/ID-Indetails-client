@@ -10,6 +10,7 @@ import projectJson from "./project/project.json";
 import timelineJson from "./project/timeline.json";
 import timelineEntriesJson from "./project/timelineEntries.json";
 import workJson from "./project/work.json";
+import teamsJson from "./people/teams.json";
 
 /*
  * A Design project as its admin sees it, captured from the seeded development API: Villa Mounir interiors,
@@ -27,6 +28,25 @@ export const projectWork = {
     employee: employeeJson as unknown as Schemas["EmployeeResponse"],
     expenses: expensesJson as unknown as Schemas["ExpenseListResponse"],
     costTimeline: costTimelineJson as unknown as Schemas["ProjectCostTimelineResponse"],
+    /** Its departments as whoever sees the money reads them: Architecture over its budget, Interiors well within. */
+    departments: {
+        name: null,
+        departments: [
+            {
+                id: 12, name: "Architecture", share: 0.6,
+                money: {
+                    budget: 6000, cost: 6500, left: -500, minutes: 3000,
+                    people: [{
+                        person: { id: 9, name: "Yara Mansour" }, minutes: 3000, cost: 6500,
+                        months: [{ month: "2026-08-01", minutes: 1200, hourlyRate: 12.5, cost: 2500 }, { month: "2026-09-01", minutes: 1800, hourlyRate: 13.25, cost: 4000 }],
+                    }],
+                },
+            },
+            { id: 13, name: "Interiors", share: 0.4, money: { budget: 4000, cost: 1000, left: 3000, minutes: 480, people: [] } },
+        ],
+        other: null,
+    } as Schemas["ProjectDepartmentsResponse"],
+    teams: teamsJson as unknown as Schemas["TeamResponse"][],
 };
 
 export const projectWorkHandlers = [
@@ -45,6 +65,10 @@ export const projectWorkHandlers = [
     http.get("/api/employees", () => HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 })),
     http.get("/api/projects/:id/expenses", () => HttpResponse.json(projectWork.expenses)),
     http.get("/api/projects/:id/cost-timeline", () => HttpResponse.json(projectWork.costTimeline)),
+    http.get("/api/projects/:id/departments", () => HttpResponse.json(projectWork.departments)),
+    http.get("/api/projects/:id/departments/history", () => HttpResponse.json([])),
+    // the departments to choose from
+    http.get("/api/teams", () => HttpResponse.json(projectWork.teams)),
     // the customer payment's history
     http.get("/api/activity", () => HttpResponse.json({ items: [], page: 1, pageSize: 40, totalCount: 0 })),
 ];

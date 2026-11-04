@@ -21,6 +21,7 @@ import ClientPicker from "../clients/ClientPicker";
 import { useClient } from "../clients/clientsApi";
 import { personName, useProjectOwners } from "../people/peopleApi";
 import { StaffPicker } from "../../execution/staff/StaffPages";
+import { DepartmentPicker } from "../../design/projects/departments/DepartmentPicker";
 import { useCreateProject } from "./projectsApi";
 import PercentField from "./PercentField";
 import TvaField from "./TvaField";
@@ -62,6 +63,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const [supervisionPct, setSupervisionPct] = useState<number | "">(10);
     // who oversees a site: chosen when it is created
     const [staffIds, setStaffIds] = useState<number[]>([]);
+    // who works on a Design client project: each department gets a share of its payment, and only their people log on it
+    const [departmentIds, setDepartmentIds] = useState<number[]>([]);
     // Proton fills the project's details, never its money: the "more details" section opens to show what it filled
     const proton = useProtonForm("new_project", null, (fill) => {
         const v = fill.newProject;
@@ -86,7 +89,9 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const titleError = title.trim() === "" && "Give the project a name.";
     const clientError = billing === "client" && clientId == null && "Choose who the project is for, or make it internal.";
     const staffError = execution && staffIds.length === 0 && "Choose at least one staff member to oversee the site.";
-    const ok = !titleError && !clientError && !staffError;
+    const choosesDepartments = !execution && billing === "client";
+    const departmentsError = choosesDepartments && departmentIds.length === 0 && "Choose the departments working on it.";
+    const ok = !titleError && !clientError && !staffError && !departmentsError;
 
     // Who can own it: the domain's admins and the super admins (the creator first, when they are one), never an employee.
     const owners = [
@@ -120,6 +125,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                 supervisionRate: setsPricing ? (+supervisionPct || 0) / 100 : null,
                 labourDefaults: execution && (workers !== "" || dailyPay) ? { workers: +workers || 0, dailyPay: dailyPay || 0 } : null,
                 staffIds: execution ? staffIds : null,
+                departmentIds: choosesDepartments ? departmentIds : null,
             });
             toast({
                 text: `"${project.title}" created · active from today`,
@@ -216,6 +222,15 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                         </div>
                     ) : (
                         <div className="hint mt">Internal projects have no client: their labour and expenses are tracked as company cost.</div>
+                    )}
+
+                    {choosesDepartments && (
+                        <div className="field mt">
+                            <label className="label required">Departments</label>
+                            <DepartmentPicker value={departmentIds} onChange={setDepartmentIds} />
+                            {errors.show("departments", departmentsError) ? <FieldError message={errors.show("departments", departmentsError)} />
+                                : <div className="hint">Each one gets an equal share of the payment to start, adjusted later. Only their people log hours on it.</div>}
+                        </div>
                     )}
 
                     <div className="field mt">
