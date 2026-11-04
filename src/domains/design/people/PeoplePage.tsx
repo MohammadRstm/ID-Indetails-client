@@ -96,7 +96,7 @@ function PeopleWork() {
             {loadFailed(query) ? <div className="panel"><div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the employees" /></div></div> : (
                 <>
                     <KpiStrip loading={!query.data} items={[
-                        { key: "people", label: "Employees", value: active.length, sub: <span>{rows.filter((r) => r.status === "invited").length} invited · {teams.length} teams</span> },
+                        { key: "people", label: "Employees", value: active.length, sub: <span>{rows.filter((r) => r.status === "invited").length} invited · {teams.length} departments</span> },
                         {
                             key: "online", label: "Online now", value: online.length,
                             sub: <div className="av-stack">{online.slice(0, 7).map((r) => <PersonAvatar key={r.id} person={person(r)} size={18} />)}</div>,
@@ -117,7 +117,7 @@ function PeopleWork() {
                                     }))} />
                             )}
                         </Figure>
-                        <Figure title="Team activity" sub="Hours per team over the last 30 days.">
+                        <Figure title="Department activity" sub="Hours per department over the last 30 days.">
                             {!query.data ? <SkeletonLines lines={4} /> : (
                                 <RankBars unit="Hours" showPct items={[...byTeam.entries()].map(([t, v]) => ({ label: t, value: v })).sort((a, b) => b.value - a.value)} />
                             )}
@@ -130,8 +130,8 @@ function PeopleWork() {
                             { value: "all", label: "Everyone" }, { value: "online", label: "Online" }, { value: "offline", label: "Offline" }, { value: "invited", label: "Invited" },
                         ]} />
                         <div className="grow" />
-                        <Select className="select sm" style={{ width: 160 }} aria-label="Team" value={team} onChange={setTeam}
-                            options={[{ value: "all", label: "All teams" }, ...teams.map((t) => ({ value: t, label: t }))]} />
+                        <Select className="select sm" style={{ width: 160 }} aria-label="Department" value={team} onChange={setTeam}
+                            options={[{ value: "all", label: "All departments" }, ...teams.map((t) => ({ value: t, label: t }))]} />
                     </div>
 
                     <div className="panel">
@@ -141,7 +141,7 @@ function PeopleWork() {
                                     <thead>
                                         <tr>
                                             <SortTh sortKey="name" sort={sort} onSort={setSort}>Employee</SortTh>
-                                            <th>Team</th>
+                                            <th>Department</th>
                                             {seesMoney && <th className="r">Rate</th>}
                                             <th>Status</th>
                                             <th>Current focus</th>
@@ -182,7 +182,7 @@ function PeopleWork() {
                                 </table>
                             </div>
                         )}
-                        {query.data && filtered.length === 0 && <Empty art="search" title="No employees match" text="Try another team or clear the search." />}
+                        {query.data && filtered.length === 0 && <Empty art="search" title="No employees match" text="Try another department or clear the search." />}
                     </div>
                 </>
             )}

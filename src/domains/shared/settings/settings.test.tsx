@@ -50,7 +50,7 @@ describe("Settings", () => {
         renderApp("/design/settings", nadia, ...settingsHandlers);
         const nav = await screen.findByRole("navigation", { name: "Settings" });
         expect(within(nav).getAllByRole("button").map((b) => b.textContent))
-            .toEqual(["Appearance", "Time tracking", "Projects", "Notifications", "Teams", "Data & export"]);
+            .toEqual(["Appearance", "Time tracking", "Projects", "Notifications", "Departments", "Data & export"]);
         expect(await screen.findByText("Applies to this browser only. The sun / moon button in the top bar does the same.")).toBeInTheDocument();
         expect(screen.queryByLabelText("Company name")).not.toBeInTheDocument();
     });
@@ -59,13 +59,13 @@ describe("Settings", () => {
         renderApp("/design/settings", moneyNadia, ...settingsHandlers);
         const nav = await screen.findByRole("navigation", { name: "Settings" });
         expect(within(nav).getAllByRole("button").map((b) => b.textContent))
-            .toEqual(["Appearance", "Time tracking", "Finance", "Projects", "Notifications", "Teams", "Admins & access", "Data & export"]);
+            .toEqual(["Appearance", "Time tracking", "Finance", "Projects", "Notifications", "Departments", "Admins & access", "Data & export"]);
     });
 
-    it("give someone with only team:manage the theme and the teams", async () => {
+    it("give someone with only team:manage the theme and the departments", async () => {
         renderApp("/design/settings", withPermissions(personas.designEmployee, { grant: [P.TEAM_MANAGE] }), ...settingsHandlers);
         const nav = await screen.findByRole("navigation", { name: "Settings" });
-        expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Appearance", "Teams"]);
+        expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Appearance", "Departments"]);
     });
 
     it("let someone with only exchange_rate:manage set the rate, without the billing around it", async () => {
@@ -366,7 +366,7 @@ describe("invoicing settings", () => {
     });
 });
 
-describe("teams", () => {
+describe("departments", () => {
     it("are added, renamed and removed", async () => {
         const created = recorder("post", "/api/teams", { id: 99, name: "Lighting", domain: "design", memberCount: 0 });
         const renamed = recorder("put", "/api/teams/:id", settings.teams[0]);
@@ -374,13 +374,13 @@ describe("teams", () => {
         // once removed, the team leaves the list its row was drawn from
         const teams = http.get("/api/teams", () => HttpResponse.json(removed.bodies.length ? settings.teams.filter((t) => t.name !== "Operations") : settings.teams));
         renderApp(page("teams"), nadia, created.handler, renamed.handler, removed.handler, teams, ...settingsHandlers);
-        await userEvent.click(await screen.findByRole("button", { name: "Add team" }));
-        await userEvent.type(screen.getByLabelText("Team name"), "Lighting{Enter}");
+        await userEvent.click(await screen.findByRole("button", { name: "Add department" }));
+        await userEvent.type(screen.getByLabelText("Department name"), "Lighting{Enter}");
         await waitFor(() => expect(created.bodies).toEqual([{ name: "Lighting", domainCode: "design" }]));
 
         const data = screen.getByText("Data").closest(".switch-row") as HTMLElement;
         await userEvent.click(within(data).getByRole("button", { name: "Rename" }));
-        const name = within(data).getByLabelText("Team name");
+        const name = within(data).getByLabelText("Department name");
         await userEvent.clear(name);
         await userEvent.type(name, "Data & insights{Enter}");
         await waitFor(() => expect(renamed.bodies).toEqual([{ name: "Data & insights" }]));
@@ -389,15 +389,15 @@ describe("teams", () => {
         await userEvent.click(within(ops).getByRole("button", { name: "Remove" }));
         await userEvent.click(within(ops).getByRole("button", { name: "Remove" }));
         await waitFor(() => expect(removed.bodies).toHaveLength(1));
-        expect(await screen.findByText("Team removed")).toBeInTheDocument();
+        expect(await screen.findByText("Department removed")).toBeInTheDocument();
     });
 
     it("aren't offered without team:manage", async () => {
         renderApp(page("teams"), withPermissions(nadia, { revoke: [P.TEAM_MANAGE] }), ...settingsHandlers);
         const nav = await screen.findByRole("navigation", { name: "Settings" });
-        expect(within(nav).queryByRole("button", { name: "Teams" })).not.toBeInTheDocument();
+        expect(within(nav).queryByRole("button", { name: "Departments" })).not.toBeInTheDocument();
         expect(screen.queryByText("Architecture")).not.toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Add team" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Add department" })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Rename" })).not.toBeInTheDocument();
     });
 });

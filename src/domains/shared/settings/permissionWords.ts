@@ -40,7 +40,7 @@ export const PERMISSION_SECTIONS: PermissionSection[] = [
     {
         title: "People",
         groups: [
-            { title: "People & teams", codes: [P.EMPLOYEE_VIEW, P.EMPLOYEE_MANAGE, P.EMPLOYEE_INVITE, P.EMPLOYEE_PAY_MANAGE, P.TEAM_MANAGE] },
+            { title: "People & departments", codes: [P.EMPLOYEE_VIEW, P.EMPLOYEE_MANAGE, P.EMPLOYEE_INVITE, P.EMPLOYEE_PAY_MANAGE, P.TEAM_MANAGE] },
             { title: "Access & security", codes: [P.PERMISSION_MANAGE, P.EMPLOYEE_CHANGE_EMAIL, P.SESSION_MANAGE, P.EMPLOYEE_INVITE_SUPER_ADMIN] },
         ],
     },

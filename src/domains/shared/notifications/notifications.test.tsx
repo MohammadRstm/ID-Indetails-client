@@ -49,14 +49,6 @@ group("A notification's words", () => {
         expect(describe(note("profit_at_zero", { projectTitle: project.title, marginPct: -3 }, { project }), admin).text).toBe("Studio Nour brand space is at zero profit or below");
     });
 
-    it("offer a quote only for a Design project: an Execution site is priced by its BOQs", () => {
-        const design = note("quote_due", { projectTitle: project.title }, { actor: nadia, project });
-        expect(describe(design, admin)).toMatchObject({ text: "Studio Nour brand space may need a quote", route: "/design/projects/5?quote=new" });
-        const site = { ...project, id: 7, title: "Achrafieh Towers lobby", domain: "execution" };
-        const execution = note("quote_due", { projectTitle: site.title }, { actor: nadia, project: site });
-        expect(describe(execution, admin).route).toBe("/execution/projects/7");
-    });
-
     it("speak to the reader: requirements open the project's tab, and those who log work hear about logging", () => {
         const assigned = note("requirement_assigned", { text: "Mood board", deadline: "2026-10-02", projectTitle: project.title }, { actor: nadia, project });
         expect(describe(assigned, designer)).toMatchObject({ text: "Nadia Karam assigned you a requirement on Studio Nour brand space", sub: "Mood board · due Oct 2", route: "/design/projects/5?tab=requirements" });

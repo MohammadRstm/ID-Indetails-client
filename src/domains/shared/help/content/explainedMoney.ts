@@ -296,7 +296,7 @@ export const explainedMoney: Article[] = [
                 "**Requirement assigned**, **due tomorrow** and **overdue**: about requirements assigned to you.",
                 "**Project created**, **status changed** and **new requirements**: about your business's projects, when it has project notifications on.",
                 "**You're the owner** of a project, and it's **nearly done** (90% of its requirements).",
-                "**Role, team, business, pay, permissions or schedule changed**, and **hours excused**: something about your account changed (never an amount).",
+                "**Role, department, business, pay, permissions or schedule changed**, and **hours excused**: something about your account changed (never an amount).",
             ),
             only(has(P.WORK_ENTRY_CREATE), para("**Weekly summary**: on the first day of the week, how much you logged the week before. **Comment**: someone commented on one of your entries.")),
             only(has(P.WORK_ENTRY_VIEW_ALL), para("**Work logged**, or one **daily digest**: as the business's settings say.")),

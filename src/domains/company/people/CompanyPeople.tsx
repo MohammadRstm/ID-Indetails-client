@@ -88,7 +88,7 @@ export default function CompanyPeople({ domain }: { domain?: Domain | "website" 
                                 <div className="tbl-wrap">
                                     <table className="tbl tbl-min">
                                         <thead>
-                                            <tr><th>Person</th><th>Access</th>{!domain && <th>Business</th>}{domain !== "website" && <th>Team</th>}<th>Status</th><th>Joined</th><th aria-label="Actions" /></tr>
+                                            <tr><th>Person</th><th>Access</th>{!domain && <th>Business</th>}{domain !== "website" && <th>Department</th>}<th>Status</th><th>Joined</th><th aria-label="Actions" /></tr>
                                         </thead>
                                         <tbody>{list.items.map((p) => <PersonRow key={p.id} person={p} business={!domain} team={domain !== "website"} />)}</tbody>
                                     </table>

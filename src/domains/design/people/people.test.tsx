@@ -40,10 +40,10 @@ describe("Employees", () => {
         expect(within(t).queryByText("$9/h")).not.toBeInTheDocument();
     });
 
-    it("filters by team and presence", async () => {
+    it("filters by department and presence", async () => {
         renderApp("/design/people", nadia, ...peopleHandlers);
         const t = await table();
-        await userEvent.click(screen.getByRole("button", { name: "Team" }));
+        await userEvent.click(screen.getByRole("button", { name: "Department" }));
         await userEvent.click(screen.getByRole("option", { name: "Interiors" }));
         expect(within(t).queryByText("Yara Mansour")).not.toBeInTheDocument();
         expect(within(t).getByText("Sarah Haddad")).toBeInTheDocument();
@@ -119,7 +119,7 @@ describe("Add employee", () => {
         await userEvent.click(send);
         expect(within(dialog).getByText("Enter their pay per hour.")).toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Position"), "Junior designer");
-        await userEvent.click(within(dialog).getByLabelText("Team"));
+        await userEvent.click(within(dialog).getByLabelText("Department"));
         await userEvent.click(screen.getByRole("option", { name: "Interiors" }));
         await userEvent.type(within(dialog).getByLabelText("Pay"), "12");
         await userEvent.click(send);
@@ -240,6 +240,20 @@ describe("Someone's profile", () => {
             http.get("/api/employees/404", () => HttpResponse.json({ type: "not_found", code: "employee_not_found", message: "No such employee." }, { status: 404 })),
             ...peopleHandlers);
         expect(await screen.findByText("Employee not found")).toBeInTheDocument();
+    });
+
+    it("keeps a Design employee in a department", async () => {
+        const updates: unknown[] = [];
+        renderApp("/design/people/9", nadia,
+            http.put("/api/employees/9", async ({ request }) => { updates.push(await request.json()); return HttpResponse.json(yara); }),
+            ...peopleHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
+        await userEvent.click(within(dialog).getByLabelText("Department"));
+        await userEvent.click(await screen.findByRole("option", { name: "Choose a department" }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        expect(within(dialog).getByText("Choose the department they work in.")).toBeInTheDocument();
+        expect(updates).toEqual([]);
     });
 
     it("saves an admin's edit, and new pay from a date", async () => {

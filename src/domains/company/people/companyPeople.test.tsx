@@ -78,9 +78,12 @@ describe("the company's people", () => {
         expect(within(dialog).getByText("Enter an email like name@company.com.")).toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Work email"), ".test");
         expect(within(dialog).queryByText("Enter an email like name@company.com.")).not.toBeInTheDocument();
+        // a Design employee's hours are counted in their department
+        expect(within(dialog).getByText("Choose the department they work in.")).toBeInTheDocument();
 
         await userEvent.click(within(dialog).getByRole("tab", { name: "Execution" }));
-        await userEvent.click(within(dialog).getByLabelText("Team"));
+        expect(within(dialog).queryByText("Choose the department they work in.")).not.toBeInTheDocument();
+        await userEvent.click(within(dialog).getByLabelText("Department"));
         await userEvent.click(screen.getByRole("option", { name: "Site" }));
         expect(within(dialog).getByText("Enter their pay per month.")).toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Pay"), "900");
@@ -180,26 +183,26 @@ describe("the company's people", () => {
         renderApp("/company/overview?tab=people", withPermissions(rana, { revoke: [P.EMPLOYEE_VIEW] }), peopleList(), ...handlers);
         expect(await screen.findByText("What the company keeps")).toBeInTheDocument();
         expect(screen.queryByRole("tab", { name: "People" })).not.toBeInTheDocument();
-        expect(screen.getByRole("tab", { name: "Teams" })).toBeInTheDocument();
+        expect(screen.getByRole("tab", { name: "Departments" })).toBeInTheDocument();
     });
 });
 
-describe("the company's teams", () => {
+describe("the company's departments", () => {
     it("are kept for both businesses, and a new one needs a name", async () => {
         const created: unknown[] = [];
         renderApp("/company/overview?tab=teams", rana,
             http.post("/api/teams", async ({ request }) => { created.push(await request.json()); return HttpResponse.json({ id: 99, name: "Finishing crew", domain: "execution", memberCount: 0 }, { status: 201 }); }),
             ...handlers);
-        const design = (await screen.findByText("Design teams")).closest(".panel") as HTMLElement;
-        const execution = screen.getByText("Execution teams").closest(".panel") as HTMLElement;
+        const design = (await screen.findByText("Design departments")).closest(".panel") as HTMLElement;
+        const execution = screen.getByText("Execution departments").closest(".panel") as HTMLElement;
         expect(await within(design).findByText("Interiors")).toBeInTheDocument();
         expect(within(execution).getByText("Site")).toBeInTheDocument();
         expect(within(execution).queryByText("Interiors")).not.toBeInTheDocument();
 
-        await userEvent.click(within(execution).getByRole("button", { name: "Add team" }));
+        await userEvent.click(within(execution).getByRole("button", { name: "Add department" }));
         await userEvent.click(within(execution).getByRole("button", { name: "Add" }));
-        expect(within(execution).getByText("Give the team a name.")).toBeInTheDocument();
-        await userEvent.type(within(execution).getByLabelText("Team name"), "Finishing crew");
+        expect(within(execution).getByText("Give the department a name.")).toBeInTheDocument();
+        await userEvent.type(within(execution).getByLabelText("Department name"), "Finishing crew");
         await userEvent.click(within(execution).getByRole("button", { name: "Add" }));
         await waitFor(() => expect(created).toEqual([{ name: "Finishing crew", domainCode: "execution" }]));
     });
@@ -207,7 +210,7 @@ describe("the company's teams", () => {
     it("are no longer in a business's settings for whoever has them here", async () => {
         renderApp("/design/settings?section=teams", rana, ...settingsHandlers);
         const nav = await screen.findByRole("navigation", { name: "Settings" });
-        expect(within(nav).queryByRole("button", { name: "Teams" })).not.toBeInTheDocument();
+        expect(within(nav).queryByRole("button", { name: "Departments" })).not.toBeInTheDocument();
         expect(within(nav).getByRole("button", { name: "Company" })).toHaveAttribute("aria-current", "page");
     });
 });
