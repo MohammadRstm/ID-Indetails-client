@@ -572,7 +572,13 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/*+json": null | components["schemas"]["RefreshRequest"];
+                    "application/json": null | components["schemas"]["RefreshRequest"];
+                    "text/json": null | components["schemas"]["RefreshRequest"];
+                };
+            };
             responses: {
                 /** @description OK */
                 200: {
@@ -627,6 +633,83 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/web-push": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebPushKeyResponse"];
+                        "text/json": components["schemas"]["WebPushKeyResponse"];
+                        "text/plain": components["schemas"]["WebPushKeyResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["RegisterWebPushRequest"];
+                    "application/json": components["schemas"]["RegisterWebPushRequest"];
+                    "text/json": components["schemas"]["RegisterWebPushRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -2878,6 +2961,160 @@ export interface paths {
                         "text/json": components["schemas"]["UpcomingDeadlinesResponse"];
                         "text/plain": components["schemas"]["UpcomingDeadlinesResponse"];
                     };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/design-vos/{voId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    voId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DesignVoResponse"];
+                        "text/json": components["schemas"]["DesignVoResponse"];
+                        "text/plain": components["schemas"]["DesignVoResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/design-vos/{voId}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    voId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DesignVoResponse"];
+                        "text/json": components["schemas"]["DesignVoResponse"];
+                        "text/plain": components["schemas"]["DesignVoResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/design-vos/{voId}/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    voId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["EmailDocumentRequest"];
+                    "application/json": components["schemas"]["EmailDocumentRequest"];
+                    "text/json": components["schemas"]["EmailDocumentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/design-vos/{voId}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    voId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };
@@ -8862,6 +9099,109 @@ export interface paths {
                 };
             };
         };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/design-vos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DesignVoResponse"][];
+                        "text/json": components["schemas"]["DesignVoResponse"][];
+                        "text/plain": components["schemas"]["DesignVoResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["CreateDesignVoRequest"];
+                    "application/json": components["schemas"]["CreateDesignVoRequest"];
+                    "text/json": components["schemas"]["CreateDesignVoRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/design-vos/outside-scope": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OutsideScopeResponse"];
+                        "text/json": components["schemas"]["OutsideScopeResponse"];
+                        "text/plain": components["schemas"]["OutsideScopeResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -15711,7 +16051,7 @@ export interface components {
         /** @enum {unknown} */
         BillingType: "client" | "internal";
         /** @enum {unknown} */
-        BlockedChangeKind: "expense" | "material_add" | "material_update" | "labour_week" | "work_entry_create" | "work_entry_update" | "payment" | "pricing" | "boq_agree" | "boq_withdraw" | "work_entry_department";
+        BlockedChangeKind: "expense" | "material_add" | "material_update" | "labour_week" | "work_entry_create" | "work_entry_update" | "payment" | "pricing" | "boq_agree" | "boq_withdraw" | "work_entry_department" | "design_vo";
         BlockedChangeResponse: {
             /** Format: date-time */
             decidedAt: null | string;
@@ -16344,6 +16684,14 @@ export interface components {
             note?: null | string;
             organisation?: null | string;
         };
+        CreateDesignVoRequest: {
+            allocations?: components["schemas"]["DesignVoAllocationRequest"][];
+            apply?: boolean;
+            lines?: components["schemas"]["DesignVoLineRequest"][];
+            showOutsideScope?: boolean;
+            split?: components["schemas"]["DesignVoSplit"];
+            title?: string;
+        };
         CreateExpenseRequest: {
             /** Format: double */
             amount?: number;
@@ -16531,8 +16879,73 @@ export interface components {
             /** Format: double */
             share: number;
         };
+        DesignVoAllocationRequest: {
+            /** Format: double */
+            amount: number;
+            /** Format: int64 */
+            departmentId: number;
+        };
+        DesignVoAllocationResponse: {
+            /** Format: double */
+            amount: number;
+            /** Format: int64 */
+            departmentId: number;
+            name: string;
+        };
+        DesignVoLineRequest: {
+            /** Format: double */
+            amount: number;
+            description: string;
+        };
+        DesignVoLineResponse: {
+            /** Format: double */
+            amount: number;
+            description: string;
+            /** Format: int64 */
+            id: number;
+        };
+        DesignVoResponse: {
+            allocations: components["schemas"]["DesignVoAllocationResponse"][];
+            /** Format: date-time */
+            appliedAt: null | string;
+            appliedBy: null | components["schemas"]["PersonRefResponse"];
+            /** Format: date-time */
+            cancelledAt: null | string;
+            cancelledBy: null | components["schemas"]["PersonRefResponse"];
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: components["schemas"]["PersonRefResponse"];
+            /** Format: int64 */
+            id: number;
+            lines: components["schemas"]["DesignVoLineResponse"][];
+            number: string;
+            /** Format: date */
+            outsideScopeFrom: null | string;
+            /** Format: int32 */
+            outsideScopeMinutes: null | number;
+            /** Format: int64 */
+            projectId: number;
+            /** Format: date-time */
+            sentAt: null | string;
+            sentBy: null | components["schemas"]["PersonRefResponse"];
+            split: components["schemas"]["DesignVoSplit"];
+            status: components["schemas"]["DesignVoStatus"];
+            title: string;
+            /** Format: double */
+            totalUsd: number;
+            /** Format: double */
+            totalWithTvaUsd: number;
+            /** Format: double */
+            tvaRate: number;
+            /** Format: double */
+            tvaUsd: number;
+        };
         /** @enum {unknown} */
-        DevicePlatform: "ios" | "android";
+        DesignVoSplit: "shares" | "departments";
+        /** @enum {unknown} */
+        DesignVoStatus: "pending" | "applied" | "cancelled";
+        /** @enum {unknown} */
+        DevicePlatform: "ios" | "android" | "web";
         DeviceResponse: {
             appVersion: null | string;
             /** Format: date-time */
@@ -17240,6 +17653,7 @@ export interface components {
         };
         LoginRequest: {
             email?: string;
+            installedApp?: boolean;
             password?: string;
         };
         LogWorkFill: {
@@ -17711,6 +18125,12 @@ export interface components {
             /** Format: int64 */
             projectId: number;
             projectTitle: string;
+        };
+        OutsideScopeResponse: {
+            /** Format: date */
+            from: string;
+            /** Format: int32 */
+            minutes: number;
         };
         OverheadAmountResponse: {
             /** Format: double */
@@ -19702,10 +20122,18 @@ export interface components {
             receivedOn?: null | string;
             reference?: null | string;
         };
+        RefreshRequest: {
+            installedApp?: boolean;
+        };
         RegisterDeviceRequest: {
             appVersion?: null | string;
             platform?: null | components["schemas"]["DevicePlatform"];
             pushToken?: string;
+        };
+        RegisterWebPushRequest: {
+            auth?: string;
+            endpoint?: string;
+            p256dh?: string;
         };
         RenameProtonConversationRequest: {
             title?: string;
@@ -20774,6 +21202,9 @@ export interface components {
             fileId: null | number;
             found: boolean;
             projectTitle: null | string;
+        };
+        WebPushKeyResponse: {
+            publicKey: null | string;
         };
         WebsiteAnalyticsChannel: {
             channel: string;

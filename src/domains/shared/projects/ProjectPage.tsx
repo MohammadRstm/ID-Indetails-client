@@ -46,7 +46,7 @@ import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
 
-type TabKey = "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
+type TabKey = "financials" | "vos" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
 
 /**
  * What goes on a project's Overview tab and Timeline tab, and the domain's own bits of its head. Each domain
@@ -69,6 +69,8 @@ export type ProjectPanels = {
     contributors?: (project: Project) => ReactNode;
     /** Design only: the project's files, for everyone who sees the project. */
     files?: (project: Project) => ReactNode;
+    /** Design only: a client project's variation orders, for those who see money. */
+    vos?: (project: Project) => ReactNode;
     /** Design only: the client portal's files (client_portal:manage, or client_access:manage to look) and who of the client's contacts can follow it (client_access:manage). */
     portal?: (project: Project) => ReactNode;
     timeline?: (project: Project) => ReactNode;
@@ -152,6 +154,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     }, [movedPart, params, setParams]);
     const allowed: Record<TabKey, boolean> = {
         financials: (seesMoney || panels.financialsForAll === true) && panels.financials != null,
+        vos: seesMoney && !site && project.billingType === "client" && panels.vos != null,
         overview: panels.hasOverview?.(permissions) ?? true,
         analytics: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.analytics != null,
         contributors: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.contributors != null,
@@ -163,7 +166,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         timeline: timelineTab,
         meetings: true,
     };
-    const tabOrder: TabKey[] = ["financials", "overview", "analytics", "contributors", "requirements", "timeline", "meetings", "files", "portal"];
+    const tabOrder: TabKey[] = ["financials", "vos", "overview", "analytics", "contributors", "requirements", "timeline", "meetings", "files", "portal"];
     const firstTab = tabOrder.find((k) => allowed[k]) ?? "meetings";
     // A tab the person may not open falls back to their first one, even when the link asks for it.
     const tab: TabKey = requested && allowed[requested] ? requested : firstTab;
@@ -360,6 +363,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
 
             <Tabs value={tab} onChange={switchTab} items={[
                 ...(allowed.financials ? [{ key: "financials" as TabKey, label: "Financials" }] : []),
+                ...(allowed.vos ? [{ key: "vos" as TabKey, label: "Variation orders" }] : []),
                 ...(allowed.overview ? [{ key: "overview" as TabKey, label: "Overview" }] : []),
                 ...(allowed.analytics ? [{ key: "analytics" as TabKey, label: "Analytics" }] : []),
                 ...(allowed.contributors ? [{ key: "contributors" as TabKey, label: "Contributors" }] : []),
@@ -377,6 +381,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     : tab === "files" && panels.files ? panels.files(project)
                     : tab === "portal" && panels.portal ? panels.portal(project)
                         : tab === "financials" && panels.financials ? panels.financials(project)
+                        : tab === "vos" && panels.vos ? panels.vos(project)
                             : tab === "analytics" && panels.analytics ? panels.analytics(project)
                                 : tab === "contributors" && panels.contributors ? panels.contributors(project)
                                     : panels.overview(project)}

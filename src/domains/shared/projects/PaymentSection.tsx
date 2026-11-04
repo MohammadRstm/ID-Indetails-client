@@ -13,6 +13,8 @@ type PaymentSectionProps = {
     locked?: boolean;
     /** Left out when the viewer may not change it. */
     onEdit?: () => void;
+    /** The pencil corrects mistakes only (Design: a change of scope is a variation order): smaller, and says so. */
+    correctionOnly?: boolean;
     onHistory?: () => void;
     /** What to offer instead when there is no payment (internal work). */
     empty?: ReactNode;
@@ -22,7 +24,7 @@ type PaymentSectionProps = {
  * A project's agreed payment, first on its Financials tab: the amount in bold, the pencil that changes it (with why)
  * and the history of its changes.
  */
-export default function PaymentSection({ label, amount, tva, sub, locked, onEdit, onHistory, empty }: PaymentSectionProps) {
+export default function PaymentSection({ label, amount, tva, sub, locked, onEdit, correctionOnly, onHistory, empty }: PaymentSectionProps) {
     return (
         <section className="panel pay-section" aria-label={label}>
             <div className="panel-body row" style={{ gap: 16, alignItems: "center" }}>
@@ -40,8 +42,9 @@ export default function PaymentSection({ label, amount, tva, sub, locked, onEdit
                             )}
                             {locked ? <span className="locked-field"><Icon name="lock" style={{ width: 12, height: 12 }} />locked</span>
                                 : onEdit && (
-                                    <button className="icon-btn" aria-label={`Edit ${label.toLowerCase()}`} title={`Change the ${label.toLowerCase()}`} onClick={onEdit}>
-                                        <Icon name="edit" />
+                                    <button className="icon-btn" aria-label={`Edit ${label.toLowerCase()}`} onClick={onEdit}
+                                        title={correctionOnly ? `Correct a mistake in the ${label.toLowerCase()}. A change of scope is a variation order.` : `Change the ${label.toLowerCase()}`}>
+                                        <Icon name="edit" style={correctionOnly ? { width: 12, height: 12 } : undefined} />
                                     </button>
                                 )}
                         </div>
