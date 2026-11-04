@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- resizes-content: on Android the page shrinks above the keyboard, so a field near the foot (a chat's composer) stays
+         in sight -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
     <!-- The installed app (its manifest comes from vite.config.ts). The phone's bar takes the top bar's colour, which
          theme.ts keeps in step with dark mode. -->
     <meta name="theme-color" content="#FFFFFF" />

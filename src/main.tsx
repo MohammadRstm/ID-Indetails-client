@@ -7,6 +7,7 @@ import "@/styles/client.css";
 import "@/styles/portal.css";
 import "@/styles/portal-notifications.css";
 import { applyTheme } from "@/shared/theme";
+import { stopFieldZoomOnIos } from "@/app/pwa/fieldZoom";
 import { catchInstallPrompt } from "@/app/pwa/install";
 import { watchForNewVersion } from "@/app/pwa/newVersion";
 import { registerServiceWorker } from "@/app/pwa/serviceWorker";
@@ -19,6 +20,7 @@ registerServiceWorker();
 watchForNewVersion();
 // before React draws anything: the browser offers installing once, early
 catchInstallPrompt();
+stopFieldZoomOnIos();
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>

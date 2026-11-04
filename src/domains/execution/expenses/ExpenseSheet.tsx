@@ -153,8 +153,8 @@ export default function ExpenseSheet({ project, onClose }: { project: Project; o
             )}
             <FilledNote fields={proton.filled} />
             <div className="sh-help" {...proton.guard}>
-                <span><kbd>Enter</kbd> next column</span><span><kbd>Shift</kbd>+<kbd>Enter</kbd> back</span>
-                <span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move between cells</span><span>Paste straight from Excel</span>
+                <span className="sh-key"><kbd>Enter</kbd> next column</span><span className="sh-key"><kbd>Shift</kbd>+<kbd>Enter</kbd> back</span>
+                <span className="sh-key"><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move between cells</span><span className="sh-key">Paste straight from Excel</span>
                 <span className="grow" />
                 <span className="muted">{N ? `${N} already recorded · ` : ""}{rows.length} new rows · more are added as you fill them</span>
             </div>
