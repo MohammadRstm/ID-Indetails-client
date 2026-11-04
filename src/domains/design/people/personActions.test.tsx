@@ -68,13 +68,13 @@ describe("Someone's account", () => {
         await waitFor(() => expect(sent).toEqual([{ role: "admin", domainCode: null, position: "Studio lead" }]));
     });
 
-    it("can be moved to the other business, into one of its teams", async () => {
+    it("can be moved to the other business, into one of its departments", async () => {
         const { sent, handler } = recording("put", "/api/employees/:id/domain");
         renderApp("/design/people/9", rana, handler, teams, ...peopleHandlers);
         await menu();
         await userEvent.click(screen.getByRole("button", { name: "Move to Execution…" }));
         const dialog = await screen.findByRole("dialog", { name: "Move to Execution" });
-        await userEvent.click(within(dialog).getByLabelText("Team"));
+        await userEvent.click(within(dialog).getByLabelText("Department"));
         await userEvent.click(await screen.findByRole("option", { name: "Site" }));
         await userEvent.click(within(dialog).getByRole("button", { name: "Move to Execution" }));
         await waitFor(() => expect(sent).toEqual([{ domainCode: "execution", teamId: 20 }]));

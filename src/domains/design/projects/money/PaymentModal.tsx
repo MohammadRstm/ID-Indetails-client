@@ -15,8 +15,7 @@ import TvaField from "../../../shared/projects/TvaField";
  * A client project's customer payment and why it changes (the prototype's PF.PaymentModal, with the reason the
  * project report needs). Both are required; the change joins the payment history.
  */
-/** <paramref name="onSaved"/> follows a save, instead of closing: the page offers to send the quote. */
-export default function PaymentModal({ project, onClose, onSaved }: { project: Project; onClose: () => void; onSaved?: () => void }) {
+export default function PaymentModal({ project, onClose }: { project: Project; onClose: () => void }) {
     const save = useSetPayment(project.id);
     const current = project.money?.revenue ?? 0;
     const currentTva = project.money?.tvaRate ?? 0;
@@ -35,7 +34,7 @@ export default function PaymentModal({ project, onClose, onSaved }: { project: P
         save.mutate({ revenue: amount, tvaRate: tva, description: description.trim() }, {
             onSuccess: () => {
                 toast({ text: `Payment set to ${money.fmt(amount)}`, sub: project.title, icon: "checkCircle" });
-                (onSaved ?? onClose)();
+                onClose();
             },
         });
     }
@@ -44,7 +43,7 @@ export default function PaymentModal({ project, onClose, onSaved }: { project: P
         <Modal surfaceId="project_payment_terms" title="Customer payment" sub={project.title} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{save.error ? <FormFailure error={save.error} onForced={onSaved ?? onClose} /> : "The payment can be changed until the project is completed."}</div>
+                    <div className="grow">{save.error ? <FormFailure error={save.error} onForced={onClose} /> : "The payment can be changed until the project is completed."}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={save.isPending} onClick={submit}>{save.isPending ? "Saving…" : "Save"}</button>
                 </>

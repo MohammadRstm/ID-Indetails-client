@@ -36,7 +36,6 @@ import { staffDiscussion } from "../../design/projects/portal/staffDiscussion";
 import ReportModal from "../../design/projects/report/ReportModal";
 import PricingModal from "../../execution/projects/PricingModal";
 import PaymentHistoryModal from "./PaymentHistoryModal";
-import SendQuoteModal from "../billing/SendQuoteModal";
 import BlockedChangeModal from "./BlockedChangeModal";
 import BoqHost from "../../execution/boqs/BoqHost";
 import { AskPocketModal, MoveToPocketModal } from "../../execution/pocket/PocketActions";
@@ -179,7 +178,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     // history, and a Design project's expenses (a site's are its Expenses list)
     const moneyAction = m ? params.get("money") : null;
     const canEditBilling = !site && !!m && !m.isLocked && permissions.has(P.PROJECT_EDIT);
-    const canEditPayment = canEditBilling && project.billingType === "client";
+    const canEditPayment = canEditBilling && project.billingType === "client" && permissions.has(P.FINANCIAL_WRITE);
     const hasPaymentHistory = !!m && (site || project.billingType === "client");
     const canEditPricing = site && !!m && !m.isLocked && permissions.has(P.PROJECT_PRICING_MANAGE);
     // a site's costs are recorded in its Expenses list, so it has no project expense window
@@ -188,11 +187,6 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const canUsePocket = site && !!m && project.billingType === "client";
     const openMoney = (action: "payment" | "client" | "expense" | "pricing" | "to-pocket" | "ask-pocket") => { params.set("money", action); setParams(params); };
     const closeMoney = () => { params.delete("money"); setParams(params, { replace: true }); };
-    // a quote is offered after a project is made or its payment or TVA changes (?quote=new), to whoever sends them;
-    // an Execution site has none, its price comes from agreed bills of quantities
-    const canQuote = !!m && !site && project.billingType === "client" && permissions.has(P.INVOICE_SEND);
-    const askQuote = () => { params.delete("money"); if (canQuote) params.set("quote", "new"); setParams(params, { replace: true }); };
-    const closeQuote = () => { params.delete("quote"); setParams(params, { replace: true }); };
     // a change the profit floor refused, opened from its notification, for whoever sees the money to decide
     const blocked = permissions.has(P.FINANCIAL_VIEW) ? Number(params.get("blocked")) || null : null;
     const closeBlocked = () => { params.delete("blocked"); setParams(params, { replace: true }); };
@@ -378,12 +372,11 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {(showDone || completeFromList) && canChangeStatus && !closed && (
                 <CompleteProjectModal project={project} openRequirements={openRequirements} onClose={closeComplete} />
             )}
-            {params.get("quote") === "new" && canQuote && <SendQuoteModal project={project} onClose={closeQuote} />}
             {blocked != null && <BlockedChangeModal id={blocked} onClose={closeBlocked} />}
-            {moneyAction === "payment" && canEditPayment && <PaymentModal project={project} onClose={closeMoney} onSaved={askQuote} />}
+            {moneyAction === "payment" && canEditPayment && <PaymentModal project={project} onClose={closeMoney} />}
             {moneyAction === "client" && canEditBilling && <ClientTypeModal project={project} onClose={closeMoney} />}
             {moneyAction === "history" && hasPaymentHistory && <PaymentHistoryModal project={project} onClose={closeMoney} />}
-            {moneyAction === "pricing" && canEditPricing && <PricingModal project={project} onClose={closeMoney} onSaved={askQuote} />}
+            {moneyAction === "pricing" && canEditPricing && <PricingModal project={project} onClose={closeMoney} />}
             {moneyAction === "expense" && canAddExpense && <ExpenseModal project={project} onClose={closeMoney} />}
             {moneyAction === "to-pocket" && canUsePocket && <MoveToPocketModal project={project} onClose={closeMoney} />}
             {moneyAction === "ask-pocket" && canUsePocket && <AskPocketModal project={project} onClose={closeMoney} />}

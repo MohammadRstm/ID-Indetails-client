@@ -33,7 +33,7 @@ type Tab = "overview" | "people" | "teams" | "meetings";
 
 const SUBS: Record<Exclude<Tab, "overview">, string> = {
     people: "Everyone in Design, Execution and above them",
-    teams: "The teams of both businesses",
+    teams: "The departments of both businesses",
     meetings: "General meetings, and the meetings of both businesses' projects",
 };
 
@@ -57,7 +57,7 @@ export default function CompanyOverviewPage() {
     const tabs: { key: Tab; label: string }[] = [
         { key: "overview", label: "Overview" },
         ...(permissions.has(P.EMPLOYEE_VIEW) ? [{ key: "people" as const, label: "People" }] : []),
-        { key: "teams", label: "Teams" },
+        { key: "teams", label: "Departments" },
         ...(permissions.has(P.MEETING_MANAGE) ? [{ key: "meetings" as const, label: "Meetings" }] : []),
     ];
     const requested = params.get("tab");

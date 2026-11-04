@@ -32,18 +32,18 @@ export default function TeamsSettings({ domain, named }: { domain: Domain; named
         <div className="panel">
             <div className="panel-head">
                 <div>
-                    <div className="panel-title">{named ? `${DOMAIN_LABEL[domain]} teams` : "Teams"}</div>
-                    <div className="panel-sub">Who works with whom. A person's team is shown on their profile and groups the schedules.</div>
+                    <div className="panel-title">{named ? `${DOMAIN_LABEL[domain]} departments` : "Departments"}</div>
+                    <div className="panel-sub">Who works with whom. A person's department is shown on their profile and groups the schedules.</div>
                 </div>
-                {canEdit && !adding && <div className="panel-tools"><button className="btn btn-sm" onClick={() => setAdding(true)}><Icon name="plus" />Add team</button></div>}
+                {canEdit && !adding && <div className="panel-tools"><button className="btn btn-sm" onClick={() => setAdding(true)}><Icon name="plus" />Add department</button></div>}
             </div>
             <div className="panel-body">
-                {loadFailed(teams) ? <LoadError error={teams.error} retry={() => teams.refetch()} what="the teams" />
+                {loadFailed(teams) ? <LoadError error={teams.error} retry={() => teams.refetch()} what="the departments" />
                     : !teams.data ? <SkeletonLines lines={4} /> : (
                         <>
                             {adding && <TeamRow domain={domain} team={null} canEdit onDone={() => setAdding(false)} />}
                             {list.map((t) => <TeamRow key={t.id} domain={domain} team={t} canEdit={canEdit} />)}
-                            {!list.length && !adding && <Empty art="search" title="No teams yet" text={canEdit ? "Add the first one: people can then be put in it from their profile." : "An admin with team access can add them."} />}
+                            {!list.length && !adding && <Empty art="search" title="No departments yet" text={canEdit ? "Add the first one: people can then be put in it from their profile." : "An admin with department access can add them."} />}
                         </>
                     )}
             </div>
@@ -60,7 +60,7 @@ function TeamRow({ domain, team, canEdit, onDone }: { domain: Domain; team: Team
     const [tried, setTried] = useState(false);
     const editing = name != null;
     const error = save.error ?? remove.error;
-    const nameError = tried && !name?.trim() ? "Give the team a name." : undefined;
+    const nameError = tried && !name?.trim() ? "Give the department a name." : undefined;
     // Proton renames a team: the row opens for editing with the new name, and the person saves it
     const proton = useProtonForm("team", team?.id ?? null, (fill) => {
         const next = fill.team?.name;
@@ -73,7 +73,7 @@ function TeamRow({ domain, team, canEdit, onDone }: { domain: Domain; team: Team
         if (save.isPending) return;
         if (!name?.trim()) return setTried(true);
         save.mutate({ id: team?.id ?? null, name: name.trim(), domain }, {
-            onSuccess: () => { saved(team ? "Team renamed" : "Team added", name.trim())(); setName(null); onDone?.(); },
+            onSuccess: () => { saved(team ? "Department renamed" : "Department added", name.trim())(); setName(null); onDone?.(); },
         });
     }
 
@@ -83,7 +83,7 @@ function TeamRow({ domain, team, canEdit, onDone }: { domain: Domain; team: Team
                 <FilledNote fields={proton.filled} />
                 {editing ? (
                     <>
-                        <input className="input" autoFocus aria-label="Team name" placeholder={domain === "execution" ? "e.g. Finishing crew" : "e.g. Interiors"} value={name} maxLength={100}
+                        <input className="input" autoFocus aria-label="Department name" placeholder={domain === "execution" ? "e.g. Finishing crew" : "e.g. Interiors"} value={name} maxLength={100}
                             onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") { setName(team ? null : ""); onDone?.(); } }} />
                         <FieldError message={nameError} />
                     </>
@@ -104,7 +104,7 @@ function TeamRow({ domain, team, canEdit, onDone }: { domain: Domain; team: Team
                 <div className="row" style={{ gap: 6 }}>
                     <span className="muted" style={{ fontSize: 12 }}>Remove {team!.name}?</span>
                     <button className="btn btn-sm btn-danger" disabled={remove.isPending}
-                        onClick={() => remove.mutate(team!.id, { onSuccess: saved("Team removed", team!.name), onSettled: () => setConfirming(false) })}>Remove</button>
+                        onClick={() => remove.mutate(team!.id, { onSuccess: saved("Department removed", team!.name), onSettled: () => setConfirming(false) })}>Remove</button>
                     <button className="btn btn-sm" onClick={() => setConfirming(false)}>Keep</button>
                 </div>
             ) : (

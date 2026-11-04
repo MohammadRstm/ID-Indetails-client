@@ -304,9 +304,7 @@ describe("a new Execution project", () => {
         await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ supervisionRate: 0.08, tvaRate: 0.05, staffIds: [5] })]));
         expect(bodies[0]).not.toHaveProperty("projectFee");
         expect(bodies[0]).not.toHaveProperty("initialPayment");
-        // an Execution site has no quote to offer afterwards
         await screen.findByRole("heading", { name: site.project.title });
-        expect(screen.queryByRole("dialog", { name: "Send the quote?" })).toBeNull();
     });
 
     it("leaves the supervision and the TVA to a super admin for a plain Execution admin", async () => {

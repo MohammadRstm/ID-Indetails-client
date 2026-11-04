@@ -115,6 +115,9 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
         && (!(overtimeRate > 0) ? "Enter the overtime rate." : overtimeRate > (pay?.amount ?? 0) && "The overtime rate can't be more than the salary.");
     const emailError = emailChanged && !isEmail(email) && "Enter an email like name@company.com.";
     const passwordError = self && emailChanged && !password && "Enter your password to change your sign-in address.";
+    // a Design employee's hours are counted in their department: they always have one
+    const needsDepartment = manages && person.domain === "design" && person.role === "employee";
+    const departmentError = needsDepartment && !teamId && "Choose the department they work in.";
     // what the API says about the address or the password is shown next to that field
     const refused = emailCall.error ? toApiError(emailCall.error) : null;
     const refusedEmail = refused && (refused.fieldErrors.email ?? (refused.status === 409 || refused.code === "email_unchanged" ? refused.message : undefined));
@@ -135,7 +138,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
 
     async function save() {
         if (busy) return;
-        if (nameError || positionError || payError || overtimeError || emailError || passwordError) return errors.tried();
+        if (nameError || positionError || payError || overtimeError || emailError || passwordError || departmentError) return errors.tried();
         const [firstName, ...rest] = name.trim().split(/\s+/);
         const lastName = rest.join(" ");
         const newEmail = email.trim().toLowerCase();
@@ -172,7 +175,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                 <>
                     <div className="grow muted">
                         {error ? <span className="err"><Icon name="alert" />{errorMessage(error)}</span>
-                            : self ? "Position, team and pay are set by your admin." : "Changes are recorded; pay changes apply forward only."}
+                            : self ? "Position, department and pay are set by your admin." : "Changes are recorded; pay changes apply forward only."}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={busy} onClick={save}><Icon name="check" />Save</button>
@@ -242,9 +245,11 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                                 <FieldError message={errors.show("position", positionError)} />
                             </div>
                             <div className="field">
-                                <label className="label" htmlFor="ep-team">Team</label>
-                                <Select id="ep-team" value={teamId} onChange={setTeamId} options={[{ value: "", label: "No team" }, ...teams.map((t) => ({ value: String(t.id), label: t.name }))]} />
-                                <div className="hint">Also moves them to that team's group chat.</div>
+                                <label className={cx("label", needsDepartment && "required")} htmlFor="ep-team">Department</label>
+                                <Select id="ep-team" value={teamId} onChange={setTeamId}
+                                    options={[{ value: "", label: needsDepartment ? "Choose a department" : "No department" }, ...teams.map((t) => ({ value: String(t.id), label: t.name }))]} />
+                                <FieldError message={errors.show("team", departmentError)} />
+                                <div className="hint">Also moves them to that department's group chat.</div>
                             </div>
                         </div>
                     ) : self && (

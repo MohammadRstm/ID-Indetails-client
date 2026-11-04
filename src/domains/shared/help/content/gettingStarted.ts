@@ -109,15 +109,15 @@ export const gettingStarted: Article[] = [
     },
     {
         id: "messages",
-        title: "Messages and team chats",
+        title: "Messages and department chats",
         category: "start",
         who: everyone,
-        summary: "The chat icon at the top opens your chats: Announcements, your team's group chat and direct messages.",
-        ask: ["messages", "chat", "message someone", "team chat", "group chat", "direct message", "mention", "announcements", "announcement", "company news"],
+        summary: "The chat icon at the top opens your chats: Announcements, your department's group chat and direct messages.",
+        ask: ["messages", "chat", "message someone", "department chat", "team chat", "group chat", "direct message", "mention", "announcements", "announcement", "company news"],
         blocks: [
             list(
                 "**Announcements** comes first: everyone in the company reads it, and you are told on your phone when there's news.",
-                "Each team has a group chat: the team, its business's admins and the super admins.",
+                "Each department has a group chat: the department, its business's admins and the super admins.",
                 "Direct messages are between two people. Use **Find people or groups** to start one.",
                 "In a group, type **@** and a name to mention someone.",
                 "You can attach files and photos.",
@@ -138,7 +138,7 @@ export const gettingStarted: Article[] = [
                 step("Open **My profile** from the menu under your name.", "My profile"),
                 step("Choose **Edit profile**, make the change and save."),
             ),
-            only(isEmployee, note("Your position, team and pay are set by an admin.")),
+            only(isEmployee, note("Your position, department and pay are set by an admin.")),
             links(link("Open my profile", { profile: true })),
         ],
     },

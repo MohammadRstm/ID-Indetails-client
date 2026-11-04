@@ -6,13 +6,16 @@ import { usePermissions } from "@/app/permissions/usePermissions";
 import { AREAS } from "@/app/routing/areas";
 import { useCurrentUser } from "@/app/session/useSession";
 import { toast } from "@/shared/components/Feedback/toast";
+import { FieldError } from "@/shared/components/Forms/Field";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import DateInput from "@/shared/components/Forms/DateInput";
 import Select from "@/shared/components/Forms/Select";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
 import Modal from "@/shared/components/Overlays/Modal";
 import { addDays, companyToday, fmtDateY, fmtMonthY } from "@/shared/format/time";
+import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
+import { cx } from "@/shared/utils/cx";
 import { loadFailed } from "@/api/queryState";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
@@ -184,8 +187,13 @@ function MoveModal({ account, onClose }: { account: Account; onClose: () => void
     const move = useMoveEmployee(account.id);
     const teams = useTeams(to);
     const [team, setTeam] = useState("none");
+    const errors = useFormErrors();
+    // a Design employee's hours are counted in their department: they join with one
+    const needsDepartment = to === "design" && account.role === "employee";
+    const departmentError = needsDepartment && team === "none" && "Choose the department they join.";
 
     function go() {
+        if (departmentError) return errors.tried();
         move.mutate({ domainCode: to, teamId: team === "none" ? null : Number(team) }, {
             onSuccess: () => { toast({ text: `${account.name} moved to ${AREAS[to].label}`, sub: "Any permissions set just for them were cleared.", icon: "arrowRight" }); onClose(); },
         });
@@ -195,9 +203,10 @@ function MoveModal({ account, onClose }: { account: Account; onClose: () => void
         <Modal title={`Move to ${AREAS[to].label}`} sub={account.name} onClose={onClose}
             foot={<Foot error={move.error} busy={move.isPending} label={`Move to ${AREAS[to].label}`} onCancel={onClose} onGo={go} />}>
             <div className="field">
-                <label className="label" htmlFor="move-team">Team</label>
+                <label className={cx("label", needsDepartment && "required")} htmlFor="move-team">Department</label>
                 <Select id="move-team" value={team} onChange={setTeam}
-                    options={[{ value: "none", label: "No team" }, ...(teams.data ?? []).map((t) => ({ value: String(t.id), label: t.name }))]} />
+                    options={[{ value: "none", label: needsDepartment ? "Choose a department" : "No department" }, ...(teams.data ?? []).map((t) => ({ value: String(t.id), label: t.name }))]} />
+                <FieldError message={errors.show("team", departmentError)} />
             </div>
             <p className="hint mt">
                 They keep their role and their history. They leave {AREAS[other(to)].label}'s projects and chats and see {AREAS[to].label}'s instead;

@@ -76,8 +76,7 @@ describe("a project's money", () => {
         expect(within(dialog).queryByText("Say why the payment changes.")).not.toBeInTheDocument();
         await userEvent.click(save);
         await waitFor(() => expect(saved).toEqual([{ revenue: 30000, tvaRate: m.tvaRate ?? 0, description: "The client added a guest house" }]));
-        // whoever sends quotes is asked whether to send the new price
-        expect(await screen.findByRole("dialog", { name: "Send the quote?" })).toBeInTheDocument();
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: "Customer payment" })).toBeNull());
     });
 
     it("says why the API refused a payment change, keeping the form", async () => {

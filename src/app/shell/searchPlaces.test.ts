@@ -45,7 +45,7 @@ describe("finding a page by what people call it", () => {
         expect(top(personas.superAdmin, company, query)?.path).toBe(path);
     });
 
-    it("takes a super admin to the company overview's Teams tab, and a business admin to their Settings", () => {
+    it("takes a super admin to the company overview's Departments tab, and a business admin to their Settings", () => {
         expect(top(personas.superAdmin, company, "teams")?.path).toBe("/company/overview?tab=teams");
         expect(top(personas.superAdmin, design, "departments")?.path).toBe("/company/overview?tab=teams");
         expect(top(personas.designAdmin, design, "teams")?.path).toBe("/design/settings?section=teams");
@@ -106,7 +106,7 @@ describe("finding a page by what people call it", () => {
         expect(top(personas.designEmployee, design, "timesheet")?.path).toBe("/design/my-work");
         expect(top(personas.designEmployee, design, "log hours")?.label).toBe("Log work");
         expect(top(personas.designEmployee, design, "my profile")?.path).toBe("/design/profile");
-        const notTheirs = ["Open salaries", "Billing and invoices", "Open company expenses", "Open teams", "Admins and access", "Open clients", "Open financials"];
+        const notTheirs = ["Open salaries", "Billing and invoices", "Open company expenses", "Open departments", "Admins and access", "Open clients", "Open financials"];
         for (const query of ["payroll", "invoices", "company expenses", "teams", "permissions", "clients", "financials"]) {
             expect(labels(personas.designEmployee, design, query).filter((l) => notTheirs.includes(l))).toEqual([]);
         }
