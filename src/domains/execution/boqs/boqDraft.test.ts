@@ -22,9 +22,9 @@ describe("a BOQ being typed", () => {
         const draft = { ...line(good(), { waste: "12.5" }), adjustment: "percent" as const, adjustmentValue: "-5" };
         const request = requestOf(draft, "client", STARTED);
         expect(request).toMatchObject({ title: "Lobby works, option B", reason: null, adjustmentType: "percent", adjustmentValue: -0.05 });
-        expect(request.lines![0]).toEqual({ id: 201, code: "1.1", description: "Demolition", quantity: 100, wasteRate: 0.125, unit: "m²", rate: 20 });
+        expect(request.lines![0]).toEqual({ id: 201, nature: "work", code: "1.1", description: "Demolition", quantity: 100, wasteRate: 0.125, unit: "m²", rate: 20 });
         // no final quantity, line total, subtotal or total is ever sent
-        expect(Object.keys(request.lines![0]).sort()).toEqual(["code", "description", "id", "quantity", "rate", "unit", "wasteRate"]);
+        expect(Object.keys(request.lines![0]).sort()).toEqual(["code", "description", "id", "nature", "quantity", "rate", "unit", "wasteRate"]);
         expect(Object.keys(request).sort()).toEqual(["adjustmentType", "adjustmentValue", "lines", "reason", "title", "updatedAt"]);
         // and the save it started from, so the API refuses it if someone saved since
         expect(request.updatedAt).toBe(STARTED);
@@ -41,7 +41,7 @@ describe("a BOQ being typed", () => {
     it("sends a blank code or unit as none, a blank waste as 0 and a new line without an id", () => {
         const blank = { ...blankLine(), description: " Paint ", quantity: "3", rate: "4.5", waste: "" };
         const [sent] = requestOf({ ...good(), lines: [blank] }, "client", STARTED).lines!;
-        expect(sent).toEqual({ id: null, code: null, description: "Paint", quantity: 3, wasteRate: 0, unit: null, rate: 4.5 });
+        expect(sent).toEqual({ id: null, nature: "work", code: null, description: "Paint", quantity: 3, wasteRate: 0, unit: null, rate: 4.5 });
     });
 
     it("knows when it differs from the saved BOQ, and when only the typing does", () => {

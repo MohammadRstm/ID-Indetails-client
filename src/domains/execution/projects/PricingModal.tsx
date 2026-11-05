@@ -76,7 +76,7 @@ export default function PricingModal({ project, onClose }: { project: Project; o
             </div>
             <div className="mt">
                 <TvaField id="xm-tva" value={tvaPct} onChange={(v) => { edited(); setTvaPct(v); }} />
-                <div className="hint">Charged on the work price only, never on supervision. The client only sees totals with it included. Now {money.pct(currentTva)}.</div>
+                <div className="hint">Charged on the work price only, never on supervision or permits. The client only sees totals with it included. Now {money.pct(currentTva)}.</div>
                 <FieldError message={refused.tvaRate} />
             </div>
             <FieldError message={errors.show("unchanged", unchanged)} />

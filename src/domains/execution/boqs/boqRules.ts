@@ -14,7 +14,7 @@ const REFUSALS: Record<string, string> = {
     boq_already_agreed: "Another client BOQ is already agreed on this site. Withdraw its agreement first to agree this one.",
     boq_not_agreed_yet: "A VO can only be made or agreed once the client BOQ is agreed.",
     boq_not_agreed: "Only an agreed BOQ has an agreement to withdraw.",
-    boq_price_below_zero: "Agreeing or withdrawing this VO would take the site's work price below zero.",
+    boq_price_below_zero: "Agreeing or withdrawing this VO would take the site's work price or its permits below zero.",
     boq_has_agreed_vos: "This client BOQ can't be withdrawn while a VO is agreed. Withdraw the agreed VOs first.",
     boq_empty: "This BOQ has no lines. Add some and save before sending or agreeing it.",
     boq_internal: "An internal draft is never sent or agreed. Make a client BOQ from it instead.",
@@ -28,6 +28,9 @@ export function boqErrorMessage(error: unknown): string {
     const failure = toApiError(error);
     return REFUSALS[failure.code] ?? failure.message;
 }
+
+/** What a BOQ charges before supervision and TVA: its work total and its permits. */
+export const boqTotal = (boq: Pick<BoqSummary, "totalUsd" | "permitsUsd">) => boq.totalUsd + boq.permitsUsd;
 
 /** Every BOQ the caller can see that has lines to start from. */
 export const copyableBoqs = (list: BoqList | undefined): BoqSummary[] =>

@@ -45,6 +45,11 @@ function ChangeRow({ change: c, site }: { change: PaymentChange; site: boolean }
                     Material profit {markupChanged ? <>{pct(c.previousMaterialMarkup!)} → {pct(c.materialMarkup)}</> : pct(c.materialMarkup)}
                 </div>
             )}
+            {c.permits != null && c.previousPermits != null && c.permits !== c.previousPermits && (
+                <div className="muted" style={{ fontSize: 12 }}>
+                    Permits {money.exact(c.previousPermits)} → {money.exact(c.permits)}
+                </div>
+            )}
             {c.supervisionRate != null && c.previousSupervisionRate != null && c.supervisionRate !== c.previousSupervisionRate && (
                 <div className="muted" style={{ fontSize: 12 }}>
                     Supervision {pct(c.previousSupervisionRate)} → {pct(c.supervisionRate)}

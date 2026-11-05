@@ -62,7 +62,8 @@ export default function AccountSection({ project, onSupervision }: { project: Pr
                         <div className="u" style={{ marginBottom: 6 }}>What the client pays</div>
                         <CostRow label="Work price" value={usd(f.workUsd)} meta="the agreed BOQ and VOs" />
                         <CostRow label="Supervision" value={`+${usd(f.supervisionUsd)}`} meta={`${pctOf(f.supervisionRate)} of the work price`} />
-                        <CostRow label="TVA" value={`+${usd(f.tvaUsd)}`} meta={`${pctOf(f.tvaRate)} of the work price, never on supervision`} />
+                        <CostRow label="TVA" value={`+${usd(f.tvaUsd)}`} meta={`${pctOf(f.tvaRate)} of the work price, never on supervision${f.permitsUsd !== 0 ? " or permits" : ""}`} />
+                        {f.permitsUsd !== 0 && <CostRow label="Permits" value={`+${usd(f.permitsUsd)}`} meta="charged as they are: no supervision or TVA" />}
                         <CostRow strong label="Client total" value={usd(f.clientTotalUsd)} />
                         <CostRow label="Received" value={usd(f.receivedUsd)} meta="every payment, TVA included" />
                         <CostRow strong label={paidAhead ? "Paid ahead" : "Rest to pay"} value={usd(paidAhead ? -f.restToPayUsd : f.restToPayUsd)}
@@ -75,7 +76,7 @@ export default function AccountSection({ project, onSupervision }: { project: Pr
                         <CostRow label="Staff" value={usd(f.costs.staffUsd)} meta="employees' labour" />
                         <CostRow label="Other costs" value={usd(f.costs.otherUsd)} />
                         <CostRow strong label="Total costs" value={usd(f.costs.totalUsd)} />
-                        <CostRow strong label="Profit" value={usd(f.profitUsd)} tone={f.profitUsd < 0 ? "down" : ""} meta="work price and supervision, less the costs" />
+                        <CostRow strong label="Profit" value={usd(f.profitUsd)} tone={f.profitUsd < 0 ? "down" : ""} meta={`work price and supervision${f.permitsUsd !== 0 ? " and permits" : ""}, less the costs`} />
                     </div>
                 </div>
             </Card>

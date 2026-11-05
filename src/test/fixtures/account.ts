@@ -9,6 +9,7 @@ import type { Schemas } from "@/api/types";
 
 export const accountFigures: Schemas["AccountFiguresResponse"] = {
     workUsd: 17000,
+    permitsUsd: 0,
     supervisionRate: 0.1,
     supervisionUsd: 1700,
     tvaRate: 0,

@@ -8,6 +8,8 @@ export type BoqList = Schemas["BoqListResponse"];
 export type BoqSummary = Schemas["BoqSummaryResponse"];
 export type Boq = Schemas["BoqDetailResponse"];
 export type BoqLine = Schemas["BoqLineResponse"];
+/** Work, or a permit: a permit is charged as it is, with no supervision and no TVA. */
+export type BoqLineNature = Schemas["BoqLineNature"];
 export type BoqKind = Schemas["BoqKind"];
 export type BoqAdjustmentType = Schemas["BoqAdjustmentType"];
 export type BoqDeliveryChannel = Schemas["DeliveryChannel"];
