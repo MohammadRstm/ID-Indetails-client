@@ -4,6 +4,8 @@ import { configureSession, http, refreshSession, signIn as apiSignIn, signOut as
 import { tokenStore } from "@/api/tokenStore";
 import type { AuthResponse, CurrentUser } from "@/api/types";
 import { ME_KEY, SessionContext, type SessionValue, type SessionStatus } from "./sessionContext";
+import { isStandalone } from "@/app/pwa/install";
+import { forgetPush, resetPushSync } from "@/app/pwa/push";
 import { clearToasts, toast } from "@/shared/components/Feedback/toast";
 import { forgetFileUrls } from "@/shared/files/useFileUrl";
 import { onSessionReset, resetSessionState } from "./sessionReset";
@@ -20,6 +22,7 @@ const RESTORE_ATTEMPTS = 3;
 // what the shared layer keeps outside React Query goes with the person too
 onSessionReset(clearToasts);
 onSessionReset(forgetFileUrls);
+onSessionReset(resetPushSync);
 
 /**
  * Holds who is signed in. On load it restores the session from the refresh cookie, once. A sign-out in one tab
@@ -59,6 +62,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
                 queryClient.setQueryData(ME_KEY, auth.user);
             },
             onExpired: () => end("Your session ended. Please sign in again."),
+            installedApp: isStandalone,
         });
 
         let cancelled = false;
@@ -113,6 +117,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             return;
         }
         channel.current?.postMessage("signed-out");
+        void forgetPush();
         end(null);
     }, [end]);
 

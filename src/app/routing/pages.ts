@@ -76,6 +76,7 @@ export const FinancialsRoute = page(() => import("@/domains/design/financials/Fi
 export const PeoplePage = page(() => import("@/domains/design/people/PeoplePage"));
 export const PersonProfilePage = named(() => import("@/domains/design/people/ProfilePage"), "PersonProfilePage");
 export const MyProfilePage = named(() => import("@/domains/design/people/ProfilePage"), "MyProfilePage");
+export const PushOpener = page(() => import("@/app/pwa/PushOpener"));
 export const ReportsPage = page(() => import("@/domains/design/reports/ReportsPage"));
 export const KitGallery = import.meta.env.DEV ? page(() => import("@/app/pages/KitGallery")) : () => null;
 // the preview of what a project's client would get, in a browser tab of its own, outside the shell

@@ -83,6 +83,11 @@ export const keys = {
         deadlines: (domain: string) => ["dashboard", domain, "deadlines"] as const,
     },
     search: (q: string) => ["search", q] as const,
+    /** Whether this browser gets the signed-in person's notifications (app/pwa/push.ts). */
+    webPush: {
+        all: ["web-push"] as const,
+        state: (userId: number) => ["web-push", userId] as const,
+    },
 };
 
 /** Refreshes every query under these prefixes (active ones refetch now, the rest when next shown). */

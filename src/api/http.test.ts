@@ -28,18 +28,22 @@ describe("http", () => {
                 request.headers.get("authorization") === "Bearer new"
                     ? HttpResponse.json({ ok: true })
                     : HttpResponse.json({ code: "unauthenticated" }, { status: 401 })),
-            mock.post("/api/auth/refresh", () => {
+            mock.post("/api/auth/refresh", async ({ request }) => {
                 refreshes++;
+                bodies.push(await request.json());
                 return HttpResponse.json(auth("new"));
             }),
         );
+        const bodies: unknown[] = [];
         const onRefreshed = vi.fn();
-        configureSession({ onRefreshed, onExpired: vi.fn() });
+        configureSession({ onRefreshed, onExpired: vi.fn(), installedApp: () => true });
 
         const results = await Promise.all([http.get("/ping"), http.get("/ping"), http.get("/ping")]);
 
         expect(results.every((r) => r.data.ok)).toBe(true);
         expect(refreshes).toBe(1);
+        // the installed app says so, and the API keeps its session for 30 days
+        expect(bodies).toEqual([{ installedApp: true }]);
         expect(onRefreshed).toHaveBeenCalledTimes(1);
         expect(tokenStore.get()).toBe("new");
     });
@@ -51,7 +55,7 @@ describe("http", () => {
             mock.post("/api/auth/refresh", () => HttpResponse.json({ code: "refresh_token_invalid" }, { status: 401 })),
         );
         const onExpired = vi.fn();
-        configureSession({ onRefreshed: vi.fn(), onExpired });
+        configureSession({ onRefreshed: vi.fn(), onExpired, installedApp: () => false });
 
         await expect(http.get("/ping")).rejects.toBeInstanceOf(ApiError);
         expect(onExpired).toHaveBeenCalledTimes(1);
@@ -65,7 +69,7 @@ describe("http", () => {
             mock.post("/api/auth/refresh", () => HttpResponse.json({ code: "rate_limited", message: "Too many requests." }, { status: 429 })),
         );
         const onExpired = vi.fn();
-        configureSession({ onRefreshed: vi.fn(), onExpired });
+        configureSession({ onRefreshed: vi.fn(), onExpired, installedApp: () => false });
 
         const error = await http.get("/ping").catch((e) => e);
 

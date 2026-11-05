@@ -88,7 +88,7 @@ the installed app keeps its own sign-in, apart from Safari's.
 - **Its files** are made by `vite-plugin-pwa` (`vite.config.ts`):
   - `manifest.webmanifest`: the name "ID-Indetails", opens at `/`, standalone, the top bar's colour, and the icons in
     `public/icons` (iOS takes `public/apple-touch-icon.png`, named in `index.html`);
-  - `sw.js`, the service worker.
+  - `sw.js`, the service worker, built from `src/sw.ts` with Workbox's own modules (`tsconfig.sw.json` type-checks it).
 - **What the worker keeps:** only `offline.html`, the icons, the favicon and the manifest, which are the same for
   everyone. It never keeps the app's pages or code (`index.html`, `/assets`), or anything from the API. Nobody's data
   is ever in its cache, so signing out has nothing to clear, and the next person on a shared phone sees nothing of the
@@ -96,6 +96,25 @@ the installed app keeps its own sign-in, apart from Safari's.
 - **What it does:** opening a page always goes to the network. Only when there is no connection does it show
   `offline.html` ("You're offline", with Try again). It never touches `/api`, `/hubs`, `/openapi` or `/healthz`, so
   the access token and the refresh cookie go past it as before.
+- **Notifications on this device** (`src/app/pwa/push.ts`), in place of the phone app's (the API's
+  `docs/notifications.md`, "Browsers"):
+  - Both account menus have "Turn on notifications" where the browser can get them and the server sends them (its
+    VAPID key is set). The browser asks permission from that tap, which iOS requires; there, only the installed app
+    (iOS 16.4 or later) can get them. The installed app also shows a banner until they are on, which stays away 30 days
+    once put away. "Turn off notifications" stops them; "Notifications blocked" means the person refused, and only the
+    browser's site settings allow them again.
+  - Turning them on subscribes with the server's public key and registers the subscription with the API for this
+    session (`PUT /api/auth/web-push`). The app registers it again when it opens and after an hour away, so a new session
+    keeps them, and subscribes again by itself if the server's key changed.
+  - The browser remembers who turned them on: anyone else signing in there drops the subscription, and signing out
+    forgets it (the API already stopped it with the session).
+  - The worker shows every push (browsers may stop a site's pushes otherwise), silently during quiet hours where the
+    browser allows it, and sets the icon's count; the open app keeps that count to what is unread.
+  - A tap opens `/open-push` (`PushOpener`): a notification opens what the bell would and is marked read, a message its
+    chat, a labour reminder the site's labour week; anything the person may not open goes to their notifications. An open
+    window does this without reloading.
+  - The installed app tells the API so at sign-in and on every refresh (`installedApp`), and its session then lasts 30
+    days since last use, so the pushes keep coming while it isn't opened.
 - **Updates:**
   - A deploy shows at the next load, as before, since the worker never serves the app.
   - `sw.js` is never cached: nginx says so, and the page registers it with `updateViaCache: "none"`. A new worker takes
