@@ -6,9 +6,10 @@ import {
 } from "./boqsApi";
 
 /*
- * A BOQ as it is being typed in. Everything is text until it is sent; every figure that comes out of the
- * numbers (final quantity, line total, subtotal, adjustment, total, supervision, TVA) is worked out by the API
- * and only ever shown from the last saved BOQ: nothing here adds or multiplies money.
+ * A BOQ as it is being typed in, like the expenses sheet: rows of text, ten blank ones more each time the last is
+ * used, and the blank ones left out when it is saved. Every figure that comes out of the numbers (final quantity,
+ * line total, subtotal, adjustment, total, supervision, TVA) is worked out here as it is typed, the way the API works
+ * it out (BoqRules, ExecutionPricing); the API works them out again when it is saved, and its figures are kept.
  */
 
 export type LineDraft = {
@@ -44,8 +45,30 @@ const fractionOf = (percent: number) => Math.round(percent * 100) / 10000;
 let made = 0;
 export const newLineKey = () => `new-${++made}`;
 
+/** The blank work rows the editor starts with, and adds each time the last one is used. */
+export const BLOCK = 10;
+
+/** A permit is one price: one of it, no waste. */
 export const blankLine = (nature: BoqLineNature = "work"): LineDraft =>
     ({ key: newLineKey(), id: null, nature, code: "", description: "", quantity: nature === "permit" ? "1" : "", waste: "0", unit: "", rate: "" });
+
+/** Whether anything is typed in the line: a blank one is left out when the BOQ is saved. */
+export function lineUsed(l: LineDraft): boolean {
+    const typed = [l.code, l.description, l.rate, ...(l.nature === "work" ? [l.quantity, l.unit] : [])].some((v) => v.trim() !== "");
+    return typed || (l.nature === "work" && l.waste.trim() !== "" && Number(l.waste) !== 0);
+}
+
+/**
+ * The lines with blank work rows to type into: at least a block of them, and a block more once every one is used (or
+ * when `more` asks for it), as long as the BOQ can take more lines.
+ */
+export function withBlankLines(lines: LineDraft[], more = false): LineDraft[] {
+    const work = lines.filter((l) => l.nature === "work");
+    const missing = work.length < BLOCK ? BLOCK - work.length : more || work.every(lineUsed) ? BLOCK : 0;
+    const room = Math.max(0, BOQ_MAX_LINES - lines.filter(lineUsed).length);
+    const added = Array.from({ length: Math.min(missing, room) }, () => blankLine("work"));
+    return added.length ? [...work, ...added, ...lines.filter((l) => l.nature === "permit")] : lines;
+}
 
 /** The lines with a new blank one at the end of its part: a work line before the permits, a permit at the very end. */
 export function withNewLine(lines: LineDraft[], nature: BoqLineNature): LineDraft[] {
@@ -53,10 +76,14 @@ export function withNewLine(lines: LineDraft[], nature: BoqLineNature): LineDraf
     return [...lines.slice(0, at), blankLine(nature), ...lines.slice(at)];
 }
 
-const lineOf = (line: BoqLine): LineDraft => ({
-    key: `line-${line.id}`, id: line.id, nature: line.nature, code: line.code ?? "", description: line.description, quantity: String(line.quantity),
-    waste: percentText(line.wasteRate), unit: line.unit ?? "", rate: String(line.rate),
-});
+/** A saved line as it is typed. A permit is one price, so one saved with a quantity becomes one of its total. */
+function lineOf(line: BoqLine): LineDraft {
+    const draft = {
+        key: `line-${line.id}`, id: line.id, nature: line.nature, code: line.code ?? "", description: line.description, quantity: String(line.quantity),
+        waste: percentText(line.wasteRate), unit: line.unit ?? "", rate: String(line.rate),
+    };
+    return line.nature === "permit" && (line.quantity !== 1 || line.wasteRate !== 0) ? { ...draft, quantity: "1", waste: "0", rate: String(line.totalUsd) } : draft;
+}
 
 /** The editor's starting point: the BOQ as last saved, its work lines first and then its permits. */
 export function draftOf(boq: Boq): Draft {
@@ -80,7 +107,7 @@ export function requestOf(draft: Draft, kind: BoqKind, startedFrom: string): Sch
         reason: kind === "vo" ? draft.reason.trim() : null,
         adjustmentType: draft.adjustment,
         adjustmentValue: draft.adjustment === "none" ? null : draft.adjustment === "percent" ? fractionOf(value) : value,
-        lines: draft.lines.map((l) => ({
+        lines: draft.lines.filter(lineUsed).map((l) => ({
             id: l.id,
             nature: l.nature,
             code: l.code.trim() || null,
@@ -96,22 +123,47 @@ export function requestOf(draft: Draft, kind: BoqKind, startedFrom: string): Sch
 /** What makes two drafts the same: the text, trimmed, and the numbers as numbers ("1.50" is 1.5). */
 const signature = (draft: Draft) => JSON.stringify([
     draft.title.trim(), draft.reason.trim(), draft.adjustment, draft.adjustment === "none" ? null : numberOf(draft.adjustmentValue),
-    draft.lines.map((l) => [l.id, l.nature, l.code.trim(), l.description.trim(), numberOf(l.quantity), numberOf(l.waste || "0"), l.unit.trim(), numberOf(l.rate)]),
+    draft.lines.filter(lineUsed).map((l) => [l.id, l.nature, l.code.trim(), l.description.trim(), numberOf(l.quantity), numberOf(l.waste || "0"), l.unit.trim(), numberOf(l.rate)]),
 ]);
 
-/** Whether the draft differs from the saved BOQ, in anything the API would keep. */
+/** Whether the draft differs from the saved BOQ, in anything the API would keep: blank rows count for nothing. */
 export const isDirty = (draft: Draft, saved: Boq) => signature(draft) !== signature(draftOf(saved));
 
-/**
- * Whether a line differs from its saved self (a line never saved always does): its computed cells are the last
- * save's, so until it is saved they say nothing about what it is now.
+/*
+ * The figures, worked out as the API does: to the cent, half a cent away from zero.
  */
-export function lineChanged(line: LineDraft, saved: BoqLine | undefined): boolean {
-    if (!saved) return true;
-    const now = lineOf(saved);
-    const same = (a: string, b: string) => a.trim() === b.trim();
-    return !(line.nature === now.nature && same(line.code, now.code) && same(line.description, now.description) && same(line.unit, now.unit)
-        && numberOf(line.quantity) === numberOf(now.quantity) && numberOf(line.waste || "0") === numberOf(now.waste) && numberOf(line.rate) === numberOf(now.rate));
+
+/** A sum of money to the cent, half a cent away from zero, steady against binary fractions (1.005 is 1.01). */
+export const toCents = (n: number) => (Math.sign(n) * Math.round(Math.abs(n) * 100 + 1e-6)) / 100;
+
+/** A line's final quantity (with its waste) and total (that × its unit cost); null until both numbers are typed. */
+export function lineFigures(l: LineDraft): { finalQuantity: number; total: number } | null {
+    const quantity = numberOf(l.quantity), rate = numberOf(l.rate);
+    const waste = l.waste.trim() === "" ? 0 : fractionOf(Number(l.waste));
+    if (!Number.isFinite(quantity) || !Number.isFinite(rate) || !Number.isFinite(waste)) return null;
+    const finalQuantity = toCents(quantity * (1 + waste));
+    return { finalQuantity, total: toCents(finalQuantity * rate) };
+}
+
+export type DraftTotals = { subtotal: number; adjustment: number; total: number; permits: number };
+
+/** The work's subtotal, its adjustment and total, and the permits apart: the adjustment is the work's only. */
+export function totalsOf(draft: Draft): DraftTotals {
+    const sum = (nature: BoqLineNature) =>
+        toCents(draft.lines.filter((l) => l.nature === nature && lineUsed(l)).reduce((all, l) => all + (lineFigures(l)?.total ?? 0), 0));
+    const subtotal = sum("work");
+    const value = numberOf(draft.adjustmentValue);
+    const adjustment = !Number.isFinite(value) ? 0
+        : draft.adjustment === "percent" ? toCents(subtotal * fractionOf(value))
+            : draft.adjustment === "total" ? toCents(toCents(value) - subtotal) : 0;
+    return { subtotal, adjustment, total: toCents(subtotal + adjustment), permits: sum("permit") };
+}
+
+/** What the client receives on top of the work: supervision and TVA on the work only, never on the permits. */
+export function clientFiguresOf(totals: DraftTotals, supervisionRate: number, tvaRate: number) {
+    const supervision = toCents(totals.total * supervisionRate);
+    const tva = toCents(totals.total * tvaRate);
+    return { supervision, tva, clientTotal: toCents(totals.total + supervision + totals.permits + tva) };
 }
 
 /*
@@ -126,8 +178,9 @@ const atMost = (n: number) => `At most ${n.toLocaleString("en-US")} characters.`
 
 function lineProblems(l: LineDraft, kind: BoqKind): LineProblems {
     const p: LineProblems = {};
+    const permit = l.nature === "permit";
     if (l.code.trim().length > BOQ_CODE_MAX) p.code = atMost(BOQ_CODE_MAX);
-    if (!l.description.trim()) p.description = l.nature === "permit" ? "Say which permit it is." : "Describe the work.";
+    if (!l.description.trim()) p.description = permit ? "Say which permit it is." : "Describe the work.";
     else if (l.description.trim().length > BOQ_DESCRIPTION_MAX) p.description = atMost(BOQ_DESCRIPTION_MAX);
     if (l.unit.trim().length > BOQ_UNIT_MAX) p.unit = atMost(BOQ_UNIT_MAX);
     const quantity = numberOf(l.quantity);
@@ -136,8 +189,8 @@ function lineProblems(l: LineDraft, kind: BoqKind): LineProblems {
     const waste = l.waste.trim() === "" ? 0 : Number(l.waste);
     if (Number.isNaN(waste) || waste < 0 || waste > 100) p.waste = "The waste is between 0% and 100%.";
     const rate = numberOf(l.rate);
-    if (Number.isNaN(rate)) p.rate = "Enter a rate.";
-    else if (rate < 0 && kind !== "vo") p.rate = "Only a VO can have a negative rate.";
+    if (Number.isNaN(rate)) p.rate = permit ? "Enter the price." : "Enter a unit cost.";
+    else if (rate < 0 && kind !== "vo") p.rate = permit ? "Only a VO can have a negative price." : "Only a VO can have a negative unit cost.";
     return p;
 }
 
@@ -155,8 +208,9 @@ export function problemsOf(draft: Draft, kind: BoqKind): DraftProblems {
         else if (draft.adjustment === "percent" && (value < -99 || value > 100)) problems.adjustmentValue = "The adjustment is between -99% and 100%.";
         else if (draft.adjustment === "total" && value < 0 && kind !== "vo") problems.adjustmentValue = "The new total can't be negative.";
     }
-    if (draft.lines.length > BOQ_MAX_LINES) problems.lines = `At most ${BOQ_MAX_LINES.toLocaleString("en-US")} lines.`;
-    for (const l of draft.lines) {
+    const used = draft.lines.filter(lineUsed);
+    if (used.length > BOQ_MAX_LINES) problems.lines = `At most ${BOQ_MAX_LINES.toLocaleString("en-US")} lines.`;
+    for (const l of used) {
         const p = lineProblems(l, kind);
         if (Object.keys(p).length) problems.line[l.key] = p;
     }
@@ -168,13 +222,15 @@ const CELL: Record<string, keyof LineProblems> = { code: "code", description: "d
 
 /**
  * What the API refused, placed beside what it was about: a line's field error (lines[2].description) goes on the
- * third line as it was sent, and an error about the lines as a whole under them. What the form found itself comes first.
+ * third line as it was sent (the blank rows are never sent), and an error about the lines as a whole under them. What
+ * the form found itself comes first.
  */
 export function withServerProblems(problems: DraftProblems, draft: Draft, fields: Record<string, string>): DraftProblems {
     const line = { ...problems.line };
+    const sent = draft.lines.filter(lineUsed);
     for (const [key, message] of Object.entries(fields)) {
         const named = /^lines\[(\d+)\]\.(\w+)$/.exec(key);
-        const target = named && draft.lines[Number(named[1])];
+        const target = named && sent[Number(named[1])];
         const cell = named && CELL[named[2]];
         if (target && cell) line[target.key] = { ...line[target.key], [cell]: line[target.key]?.[cell] ?? message };
     }

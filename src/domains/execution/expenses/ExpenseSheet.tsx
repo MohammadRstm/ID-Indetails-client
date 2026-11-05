@@ -3,7 +3,6 @@ import { loadFailed } from "@/api/queryState";
 import { errorMessage, toApiError } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
-import { useAccountLabels } from "@/domains/shared/accountLabels/accountLabelsApi";
 import FormFailure from "@/domains/shared/projects/FormFailure";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { useProtonForm } from "@/domains/shared/proton/formFill";
@@ -19,7 +18,7 @@ import type { Project } from "../../shared/projects/projectsApi";
 import { siteMoneyOf } from "../projects/siteMoney";
 import ExpenseGrid, { type GridRow } from "./ExpenseGrid";
 import {
-    BLOCK, blankRow, blankRows, CATEGORIES, COLS, costOf, CURRENCIES, entryOf, joinTotals, labelChoices, link, listTotals, pasteInto, rowOf, rowProblems, rowUsed,
+    BLOCK, blankRow, blankRows, CATEGORIES, COLS, costOf, CURRENCIES, entryOf, joinTotals, link, listTotals, pasteInto, rowOf, rowProblems, rowUsed,
     serverProblems, totalsOf, withServerProblems, writeTotals, type Choices, type ColKey, type Row,
 } from "./expenseRules";
 import { useAddExpenses, useAllExpenses } from "./expensesApi";
@@ -41,7 +40,6 @@ function dropSaved(list: Row[], count: number) {
  */
 export default function ExpenseSheet({ project, onClose }: { project: Project; onClose: () => void }) {
     const saved = useAllExpenses(project.id);
-    const labels = useAccountLabels();
     const permissions = usePermissions();
     const client = project.billingType === "client" && !!project.client;
     const x = client && permissions.has(P.FINANCIAL_VIEW) && project.money ? siteMoneyOf(project.money) : null;
@@ -78,7 +76,7 @@ export default function ExpenseSheet({ project, onClose }: { project: Project; o
     const dollars = newTotals.find((t) => t.currency === "USD")?.total ?? 0;
     const pounds = newTotals.filter((t) => t.currency !== "USD");
     const recordedTotals = saved.data ? listTotals(saved.data.all) : [];
-    const choices: Choices = { currency: CURRENCIES, category: CATEGORIES, accountLabelId: labelChoices(labels.data) };
+    const choices: Choices = { currency: CURRENCIES, category: CATEGORIES };
 
     // a pound expense on a day with no exchange rate: about the sheet as a whole, not a cell, so it is said above the rows
     const noRate = toApiError(add.error).code === "exchange_rate_missing";
@@ -169,7 +167,7 @@ export default function ExpenseSheet({ project, onClose }: { project: Project; o
                 <SheetGrid first={N}>
                     <ExpenseGrid cols={cols} rows={shown} eager showBy={N > 0} minWidth={1240}
                         problems={[...recorded.map(() => null), ...problems]} tried={tried}
-                        choices={(r, k) => (k === "accountLabelId" ? labelChoices(labels.data, r < N ? items[r].accountLabel : null) : choices[k] ?? [])}
+                        choices={(_, k) => choices[k] ?? []}
                         locked={(r) => r < N}
                         canDelete={(r) => r >= N}
                         onCell={(r, k, v) => { if (r >= N) setCell(r - N, k, v); }}

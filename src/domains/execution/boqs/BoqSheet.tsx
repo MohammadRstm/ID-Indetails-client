@@ -15,7 +15,7 @@ import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../shared/projects/projectsApi";
 import { useBoqAccess } from "./boqAccess";
 import { AgreeBoqModal, WithdrawBoqModal } from "./BoqAgreementModals";
-import { draftOf, fitSigned, hasProblems, isDirty, problemsOf, requestOf, withNewLine, withServerProblems, type Draft, type LineDraft } from "./boqDraft";
+import { draftOf, fitSigned, hasProblems, isDirty, lineUsed, problemsOf, requestOf, withBlankLines, withNewLine, withServerProblems, type Draft, type LineDraft } from "./boqDraft";
 import { BoqDeliveries, BoqTotals } from "./BoqFigures";
 import BoqLinesTable from "./BoqLinesTable";
 import { useBoqLinks } from "./boqLinks";
@@ -29,9 +29,9 @@ type Dialog = "agree" | "withdraw" | "send" | "copy" | "delete" | null;
 const SAVE_FIRST = "Save your changes first.";
 
 /**
- * A BOQ, VO or internal draft to read or write: its title and reason, its lines (the work, then the permits, which carry
- * no supervision or TVA), the work's adjustment and the figures of its last save. Every figure comes from that save:
- * the API works them all out, and a line changed since shows a dash until it is saved. An agreed BOQ opens read-only.
+ * A BOQ, VO or internal draft to read or write: its title and reason, its lines (the work, typed like the expenses
+ * sheet into blank rows that are left out when it is saved, then the permits, which carry no supervision or TVA), the
+ * work's adjustment and its figures, worked out as it is typed. An agreed BOQ opens read-only.
  */
 export default function BoqSheet({ project, boq, onClose }: { project: Project; boq: Boq; onClose: () => void }) {
     const access = useBoqAccess(project);
@@ -41,7 +41,9 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
     const duplicate = useDuplicateBoq();
     const remove = useDeleteBoq(project.id);
     const errors = useFormErrors();
-    const [draft, setDraft] = useState(() => draftOf(boq));
+    // blank rows to type into, for whoever can change it
+    const draftFor = (from: Boq) => { const d = draftOf(from); return access.canEdit(from) ? { ...d, lines: withBlankLines(d.lines) } : d; };
+    const [draft, setDraft] = useState(() => draftFor(boq));
     // the save the draft started from: sent with the next save, so it can't undo one made since by someone else
     const [startedFrom, setStartedFrom] = useState(boq.updatedAt);
     const [dialog, setDialog] = useState<Dialog>(null);
@@ -62,12 +64,14 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
     const changedMeanwhile = toApiError(save.error).code === "boq_changed";
     const edited = () => { if (save.error) save.reset(); };
     /** Starts over from a save: the draft, the figures and the save the next one checks against. */
-    const startFrom = (saved: Boq) => { setDraft(draftOf(saved)); setStartedFrom(saved.updatedAt); };
+    const startFrom = (saved: Boq) => { setDraft(draftFor(saved)); setStartedFrom(saved.updatedAt); };
     const change = (patch: Partial<Draft>) => { edited(); setDraft((d) => ({ ...d, ...patch })); };
-    const changeLine = (key: string, field: keyof LineDraft, value: string) => {
+    // a line typed into the last blank row brings ten more
+    const changeLine = (key: string, patch: Partial<LineDraft>) => {
         edited();
-        setDraft((d) => ({ ...d, lines: d.lines.map((l) => (l.key === key ? { ...l, [field]: value } : l)) }));
+        setDraft((d) => ({ ...d, lines: withBlankLines(d.lines.map((l) => (l.key === key ? { ...l, ...patch } : l))) }));
     };
+    const grow = () => setDraft((d) => ({ ...d, lines: withBlankLines(d.lines, true) }));
 
     function close() {
         if (dirty && !window.confirm("Discard the changes made since the last save?")) return;
@@ -115,10 +119,11 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
     const setAdjustment = (adjustment: BoqAdjustmentType) => change({ adjustment, adjustmentValue: "" });
     const work = draft.lines.filter((l) => l.nature === "work");
     const permits = draft.lines.filter((l) => l.nature === "permit");
-    const full = draft.lines.length >= BOQ_MAX_LINES;
+    const workUsed = work.filter(lineUsed).length;
+    const full = draft.lines.filter(lineUsed).length >= BOQ_MAX_LINES;
     const tableProps = {
-        saved: boq.lines, readOnly: !editable, problems: shown, errors, onChange: changeLine, onMove: move,
-        onRemove: (i: number) => change({ lines: draft.lines.filter((_, at) => at !== i) }),
+        readOnly: !editable, problems: shown, errors, onChange: changeLine, onMove: move,
+        onRemove: (i: number) => change({ lines: withBlankLines(draft.lines.filter((_, at) => at !== i)) }),
     };
 
     return (
@@ -198,15 +203,12 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
             )}
 
             <div className="spread mt" style={{ marginBottom: 6 }}>
-                <span className="u">Lines · {work.length}</span>
-                {editable && (
-                    <button type="button" className="btn btn-sm" disabled={full} onClick={() => change({ lines: withNewLine(draft.lines, "work") })}>
-                        <Icon name="plus" />Add line
-                    </button>
-                )}
+                <span className="u">Lines · {workUsed}</span>
+                {editable && <span className="muted" style={{ fontSize: 12 }}>Enter moves to the next cell · the arrows move between cells · empty rows are left out when it is saved</span>}
             </div>
-            {work.length === 0 && <p className="muted" style={{ margin: "0 0 8px" }}>No lines yet.{editable ? " Add the first one." : ""}</p>}
-            {work.length > 0 && <BoqLinesTable label="Lines" lines={work} first={0} {...tableProps} />}
+            {editable || workUsed > 0
+                ? <BoqLinesTable label="Lines" nature="work" lines={work} first={0} onGrow={grow} {...tableProps} />
+                : <p className="muted" style={{ margin: "0 0 8px" }}>No lines yet.</p>}
 
             <div className="spread mt" style={{ marginBottom: 6 }}>
                 <span className="u">Permits · {permits.length}</span>
@@ -220,12 +222,12 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
                 ? <p className="muted" style={{ margin: "0 0 8px" }}>No permits. They are charged as they are: no supervision and no TVA on them.</p>
                 : (
                     <>
-                        <BoqLinesTable label="Permits" lines={permits} first={work.length} {...tableProps} />
+                        <BoqLinesTable label="Permits" nature="permit" lines={permits} first={work.length} {...tableProps} />
                         <div className="hint mt-s">Charged as they are: no supervision, no TVA and no adjustment on them. Their real cost goes in the expenses.</div>
                     </>
                 )}
             <FieldError message={shown.lines} />
-            {boq.kind !== "vo" && editable && <div className="hint mt-s">A negative rate is only allowed on a VO.</div>}
+            {boq.kind !== "vo" && editable && <div className="hint mt-s">A negative unit cost is only allowed on a VO.</div>}
 
             <div className="field mt">
                 <label className="label">Adjust the whole BOQ</label>
@@ -248,7 +250,7 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
                 <FieldError message={errors.show("adjustment", problems.adjustmentValue) ?? fields.adjustmentValue} />
             </div>
 
-            <BoqTotals boq={boq} stale={dirty} />
+            <BoqTotals boq={boq} draft={draft} />
             <BoqDeliveries boq={boq} />
 
             {dialog === "agree" && <AgreeBoqModal project={project} boq={boq} onClose={() => setDialog(null)} />}
