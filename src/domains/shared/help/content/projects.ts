@@ -241,6 +241,7 @@ export const projects: Article[] = [
             steps(step("Open the site, then **More → Pricing**.", "Projects", "the site", "More")),
             list(
                 "The **Supervision** is a percentage of the work price, charged on top of it. The **TVA** is charged on the work price only, never on supervision.",
+                "**Permits** are the BOQs' permit lines, their own part of each BOQ. They are charged as they are: no supervision, no TVA and no adjustment on them. Their real cost goes in the site's expenses.",
                 "Every change needs a reason, which is kept in the payment history.",
                 "Site expenses are costs only: they carry no markup, and nothing on them is charged to the client.",
             ),

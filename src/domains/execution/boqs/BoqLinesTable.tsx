@@ -27,7 +27,12 @@ const UNSAVED = "—";
 const quantityText = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 2 });
 
 type Props = {
+    /** The table's name: "Lines" for the work, "Permits" for the permits. */
+    label: string;
+    /** One part of the BOQ's lines: its work, or its permits. */
     lines: LineDraft[];
+    /** How many of the BOQ's lines come before this part: its lines are numbered, moved and removed by their place in all of them. */
+    first: number;
     /** The lines of the last save: the final quantity and total of a line come from there, never from the typed numbers. */
     saved: BoqLine[];
     readOnly: boolean;
@@ -39,11 +44,11 @@ type Props = {
 };
 
 /**
- * A BOQ's lines, one row each: what is typed, then what the API worked out when the BOQ was last saved. A line
- * changed since then shows a dash in the cells it works out, until it is saved. Errors show under the line, as it
- * is left or once a save was tried.
+ * One part of a BOQ's lines, its work or its permits, one row each: what is typed, then what the API worked out when
+ * the BOQ was last saved. A line changed since then shows a dash in the cells it works out, until it is saved. Errors
+ * show under the line, as it is left or once a save was tried. A line moves within its part.
  */
-export default function BoqLinesTable({ lines, saved, readOnly, problems, errors, onChange, onMove, onRemove }: Props) {
+export default function BoqLinesTable({ label, lines, first, saved, readOnly, problems, errors, onChange, onMove, onRemove }: Props) {
     const byId = new Map(saved.map((l) => [l.id, l]));
 
     function cell(l: LineDraft, n: number, c: Col) {
@@ -66,7 +71,7 @@ export default function BoqLinesTable({ lines, saved, readOnly, problems, errors
 
     return (
         <div className="sh-wrap">
-            <table className="sh" aria-label="Lines">
+            <table className="sh" aria-label={label}>
                 <colgroup>
                     <col style={{ width: 36 }} />
                     {COLS.map((c) => <col key={c.field} style={{ width: c.w }} />)}
@@ -87,7 +92,7 @@ export default function BoqLinesTable({ lines, saved, readOnly, problems, errors
                 </thead>
                 <tbody>
                     {lines.map((l, i) => {
-                        const n = i + 1;
+                        const n = first + i + 1;
                         const was = l.id == null ? undefined : byId.get(l.id);
                         const stale = lineChanged(l, was);
                         const said = (Object.keys(problems.line[l.key] ?? {}) as Field[])
@@ -106,9 +111,9 @@ export default function BoqLinesTable({ lines, saved, readOnly, problems, errors
                                     </td>
                                     {!readOnly && (
                                         <td className="sh-act">
-                                            <button type="button" className="icon-btn" style={{ width: 24, height: 24 }} aria-label={`Move line ${n} up`} disabled={i === 0} onClick={() => onMove(i, -1)}><Icon name="arrowUp" /></button>
-                                            <button type="button" className="icon-btn" style={{ width: 24, height: 24 }} aria-label={`Move line ${n} down`} disabled={i === lines.length - 1} onClick={() => onMove(i, 1)}><Icon name="arrowDown" /></button>
-                                            <button type="button" className="sh-del" aria-label={`Remove line ${n}`} title="Remove" onClick={() => onRemove(i)}><Icon name="trash" /></button>
+                                            <button type="button" className="icon-btn" style={{ width: 24, height: 24 }} aria-label={`Move line ${n} up`} disabled={i === 0} onClick={() => onMove(first + i, -1)}><Icon name="arrowUp" /></button>
+                                            <button type="button" className="icon-btn" style={{ width: 24, height: 24 }} aria-label={`Move line ${n} down`} disabled={i === lines.length - 1} onClick={() => onMove(first + i, 1)}><Icon name="arrowDown" /></button>
+                                            <button type="button" className="sh-del" aria-label={`Remove line ${n}`} title="Remove" onClick={() => onRemove(first + i)}><Icon name="trash" /></button>
                                         </td>
                                     )}
                                 </tr>

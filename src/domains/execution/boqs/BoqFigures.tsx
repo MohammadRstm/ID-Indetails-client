@@ -15,31 +15,37 @@ function clientFiguresOf(boq: Boq) {
 }
 
 /**
- * What the API worked out when the BOQ was last saved: the subtotal, the adjustment, the total and, for what the
- * client receives, supervision, TVA and what the client pays. None of it is worked out here, so while there are
- * unsaved changes it says whose figures these are.
+ * What the API worked out when the BOQ was last saved: the work's subtotal, adjustment and total, its permits and, for
+ * what the client receives, supervision and TVA (on the work only) and what the client pays. None of it is worked out
+ * here, so while there are unsaved changes it says whose figures these are.
  */
 export function BoqTotals({ boq, stale }: { boq: Boq; stale: boolean }) {
     const adjusted = boq.adjustmentType !== "none";
     const client = boq.kind !== "internal" ? clientFiguresOf(boq) : null;
+    const workLines = boq.lines.filter((l) => l.nature === "work").length;
+    const hasPermits = boq.lines.some((l) => l.nature === "permit");
+    const permits = hasPermits && (
+        <div><span>Permits</span><b className="mono">{cents(boq.permitsUsd)}</b><em>no supervision or TVA on them</em></div>
+    );
     return (
         <div className="mt">
             <div className="xm-owed" role="group" aria-label="Totals">
-                <div><span>Subtotal</span><b className="mono">{cents(boq.subtotalUsd)}</b><em>{boq.lines.length === 1 ? "1 line" : `${boq.lines.length} lines`}, as last saved</em></div>
+                <div><span>{hasPermits ? "Work subtotal" : "Subtotal"}</span><b className="mono">{cents(boq.subtotalUsd)}</b><em>{workLines === 1 ? "1 line" : `${workLines} lines`}, as last saved</em></div>
                 {adjusted && (
                     <div>
                         <span>Adjustment</span><b className="mono">{cents(boq.adjustmentUsd)}</b>
                         <em>{boq.adjustmentType === "percent" ? `${pctOf(boq.adjustmentValue ?? 0)} of the subtotal` : "to the new total"}</em>
                     </div>
                 )}
-                <div><span>Total</span><b className="mono">{cents(boq.totalUsd)}</b><em>the work this {boq.kind === "vo" ? "VO adds" : "BOQ prices"}</em></div>
-                {client && (
+                <div><span>{hasPermits ? "Work total" : "Total"}</span><b className="mono">{cents(boq.totalUsd)}</b><em>the work this {boq.kind === "vo" ? "VO adds" : "BOQ prices"}</em></div>
+                {client ? (
                     <>
-                        <div><span>Supervision</span><b className="mono">{cents(client.supervisionUsd)}</b><em>{pctOf(client.supervisionRate)} of the total</em></div>
-                        <div><span>TVA</span><b className="mono">{cents(client.tvaUsd)}</b><em>{pctOf(client.tvaRate)} of the total, never on supervision</em></div>
-                        <div><span>Client pays</span><b className="mono">{cents(client.clientTotalUsd)}</b><em>total + supervision + TVA</em></div>
+                        <div><span>Supervision</span><b className="mono">{cents(client.supervisionUsd)}</b><em>{pctOf(client.supervisionRate)} of the work</em></div>
+                        <div><span>TVA</span><b className="mono">{cents(client.tvaUsd)}</b><em>{pctOf(client.tvaRate)} of the work, never on supervision{hasPermits ? " or permits" : ""}</em></div>
+                        {permits}
+                        <div><span>Client pays</span><b className="mono">{cents(client.clientTotalUsd)}</b><em>work + supervision + TVA{hasPermits ? " + permits" : ""}</em></div>
                     </>
-                )}
+                ) : permits}
             </div>
             {stale && <div className="hint mt-s">These are the figures of the last save. They are worked out again when you save.</div>}
         </div>

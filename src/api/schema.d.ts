@@ -15782,6 +15782,8 @@ export interface components {
             /** Format: double */
             clientTotalUsd: number;
             costs: components["schemas"]["AccountCostsResponse"];
+            /** Format: double */
+            permitsUsd: number;
             pocket: components["schemas"]["AccountPocketResponse"];
             /** Format: double */
             profitUsd: number;
@@ -16116,6 +16118,8 @@ export interface components {
             lineCount: number;
             lines: components["schemas"]["BoqLineResponse"][];
             number: null | string;
+            /** Format: double */
+            permitsUsd: number;
             /** Format: int64 */
             projectId: number;
             reason: null | string;
@@ -16143,6 +16147,8 @@ export interface components {
             /** Format: date-time */
             sentAt: string;
         };
+        /** @enum {unknown} */
+        BoqLineNature: "work" | "permit";
         BoqLineResponse: {
             code: null | string;
             description: string;
@@ -16150,6 +16156,7 @@ export interface components {
             finalQuantity: number;
             /** Format: int64 */
             id: number;
+            nature: components["schemas"]["BoqLineNature"];
             /** Format: int32 */
             position: number;
             /** Format: double */
@@ -16172,9 +16179,13 @@ export interface components {
             /** Format: double */
             agreedBoqUsd: number;
             /** Format: double */
+            agreedPermitsUsd: number;
+            /** Format: double */
             agreedVosUsd: number;
             /** Format: double */
             clientTotalUsd: number;
+            /** Format: double */
+            permitsUsd: number;
             /** Format: double */
             supervisionRate: number;
             /** Format: double */
@@ -16202,6 +16213,8 @@ export interface components {
             /** Format: int32 */
             lineCount: number;
             number: null | string;
+            /** Format: double */
+            permitsUsd: number;
             reason: null | string;
             status: components["schemas"]["BoqStatus"];
             title: string;
@@ -19296,6 +19309,8 @@ export interface components {
             /** Format: double */
             paymentWithTva: number;
             /** Format: double */
+            permitsUsd: null | number;
+            /** Format: double */
             profit: number;
             projected: null | components["schemas"]["ProjectProjectionResponse"];
             /** Format: double */
@@ -19332,9 +19347,13 @@ export interface components {
             /** Format: double */
             materialMarkup: null | number;
             /** Format: double */
+            permits: null | number;
+            /** Format: double */
             previousAmount: null | number;
             /** Format: double */
             previousMaterialMarkup: null | number;
+            /** Format: double */
+            previousPermits: null | number;
             /** Format: double */
             previousSupervisionRate: null | number;
             /** Format: double */
@@ -20503,6 +20522,7 @@ export interface components {
             description?: string;
             /** Format: int64 */
             id?: null | number;
+            nature?: components["schemas"]["BoqLineNature"];
             /** Format: double */
             quantity?: number;
             /** Format: double */

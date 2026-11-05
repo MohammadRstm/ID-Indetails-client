@@ -2,7 +2,7 @@ import type { Schemas } from "@/api/types";
 import { fitNumber, type NumberShape } from "@/shared/format/limits";
 import {
     BOQ_CODE_MAX, BOQ_DESCRIPTION_MAX, BOQ_MAX_LINES, BOQ_REASON_MAX, BOQ_TITLE_MAX, BOQ_UNIT_MAX,
-    type Boq, type BoqAdjustmentType, type BoqKind, type BoqLine,
+    type Boq, type BoqAdjustmentType, type BoqKind, type BoqLine, type BoqLineNature,
 } from "./boqsApi";
 
 /*
@@ -15,6 +15,8 @@ export type LineDraft = {
     /** Stable while it is edited: the saved line's id, or a made-up one for a new line. */
     key: string;
     id: number | null;
+    /** The work lines come first, then the permits: the lines are sent in that order. */
+    nature: BoqLineNature;
     code: string;
     description: string;
     quantity: string;
@@ -42,17 +44,25 @@ const fractionOf = (percent: number) => Math.round(percent * 100) / 10000;
 let made = 0;
 export const newLineKey = () => `new-${++made}`;
 
-export const blankLine = (): LineDraft => ({ key: newLineKey(), id: null, code: "", description: "", quantity: "", waste: "0", unit: "", rate: "" });
+export const blankLine = (nature: BoqLineNature = "work"): LineDraft =>
+    ({ key: newLineKey(), id: null, nature, code: "", description: "", quantity: nature === "permit" ? "1" : "", waste: "0", unit: "", rate: "" });
+
+/** The lines with a new blank one at the end of its part: a work line before the permits, a permit at the very end. */
+export function withNewLine(lines: LineDraft[], nature: BoqLineNature): LineDraft[] {
+    const at = nature === "work" ? lines.filter((l) => l.nature === "work").length : lines.length;
+    return [...lines.slice(0, at), blankLine(nature), ...lines.slice(at)];
+}
 
 const lineOf = (line: BoqLine): LineDraft => ({
-    key: `line-${line.id}`, id: line.id, code: line.code ?? "", description: line.description, quantity: String(line.quantity),
+    key: `line-${line.id}`, id: line.id, nature: line.nature, code: line.code ?? "", description: line.description, quantity: String(line.quantity),
     waste: percentText(line.wasteRate), unit: line.unit ?? "", rate: String(line.rate),
 });
 
-/** The editor's starting point: the BOQ as last saved. */
+/** The editor's starting point: the BOQ as last saved, its work lines first and then its permits. */
 export function draftOf(boq: Boq): Draft {
     const adjustmentValue = boq.adjustmentValue == null ? "" : boq.adjustmentType === "percent" ? percentText(boq.adjustmentValue) : String(boq.adjustmentValue);
-    return { title: boq.title, reason: boq.reason ?? "", adjustment: boq.adjustmentType, adjustmentValue, lines: boq.lines.map(lineOf) };
+    const lines = [...boq.lines.filter((l) => l.nature === "work"), ...boq.lines.filter((l) => l.nature === "permit")].map(lineOf);
+    return { title: boq.title, reason: boq.reason ?? "", adjustment: boq.adjustmentType, adjustmentValue, lines };
 }
 
 /** A typed number, or NaN when there is none. */
@@ -72,6 +82,7 @@ export function requestOf(draft: Draft, kind: BoqKind, startedFrom: string): Sch
         adjustmentValue: draft.adjustment === "none" ? null : draft.adjustment === "percent" ? fractionOf(value) : value,
         lines: draft.lines.map((l) => ({
             id: l.id,
+            nature: l.nature,
             code: l.code.trim() || null,
             description: l.description.trim(),
             quantity: numberOf(l.quantity),
@@ -85,7 +96,7 @@ export function requestOf(draft: Draft, kind: BoqKind, startedFrom: string): Sch
 /** What makes two drafts the same: the text, trimmed, and the numbers as numbers ("1.50" is 1.5). */
 const signature = (draft: Draft) => JSON.stringify([
     draft.title.trim(), draft.reason.trim(), draft.adjustment, draft.adjustment === "none" ? null : numberOf(draft.adjustmentValue),
-    draft.lines.map((l) => [l.id, l.code.trim(), l.description.trim(), numberOf(l.quantity), numberOf(l.waste || "0"), l.unit.trim(), numberOf(l.rate)]),
+    draft.lines.map((l) => [l.id, l.nature, l.code.trim(), l.description.trim(), numberOf(l.quantity), numberOf(l.waste || "0"), l.unit.trim(), numberOf(l.rate)]),
 ]);
 
 /** Whether the draft differs from the saved BOQ, in anything the API would keep. */
@@ -99,7 +110,7 @@ export function lineChanged(line: LineDraft, saved: BoqLine | undefined): boolea
     if (!saved) return true;
     const now = lineOf(saved);
     const same = (a: string, b: string) => a.trim() === b.trim();
-    return !(same(line.code, now.code) && same(line.description, now.description) && same(line.unit, now.unit)
+    return !(line.nature === now.nature && same(line.code, now.code) && same(line.description, now.description) && same(line.unit, now.unit)
         && numberOf(line.quantity) === numberOf(now.quantity) && numberOf(line.waste || "0") === numberOf(now.waste) && numberOf(line.rate) === numberOf(now.rate));
 }
 
@@ -116,7 +127,7 @@ const atMost = (n: number) => `At most ${n.toLocaleString("en-US")} characters.`
 function lineProblems(l: LineDraft, kind: BoqKind): LineProblems {
     const p: LineProblems = {};
     if (l.code.trim().length > BOQ_CODE_MAX) p.code = atMost(BOQ_CODE_MAX);
-    if (!l.description.trim()) p.description = "Describe the work.";
+    if (!l.description.trim()) p.description = l.nature === "permit" ? "Say which permit it is." : "Describe the work.";
     else if (l.description.trim().length > BOQ_DESCRIPTION_MAX) p.description = atMost(BOQ_DESCRIPTION_MAX);
     if (l.unit.trim().length > BOQ_UNIT_MAX) p.unit = atMost(BOQ_UNIT_MAX);
     const quantity = numberOf(l.quantity);

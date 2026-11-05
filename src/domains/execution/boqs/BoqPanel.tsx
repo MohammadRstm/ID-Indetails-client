@@ -11,7 +11,7 @@ import type { Project } from "../../shared/projects/projectsApi";
 import { pctOf } from "../projects/siteMoney";
 import { useBoqAccess } from "./boqAccess";
 import { useBoqLinks } from "./boqLinks";
-import { agreedClient, isNotChosen, SENT } from "./boqRules";
+import { agreedClient, boqTotal, isNotChosen, SENT } from "./boqRules";
 import { useBoqs, type BoqKind, type BoqList, type BoqSummary } from "./boqsApi";
 import NewBoqModal from "./NewBoqModal";
 
@@ -86,7 +86,8 @@ function PriceSummary({ list }: { list: BoqList }) {
             <div><span>Work price</span><b className="mono">{cents(p.workUsd)}</b><em>the agreed BOQ and VOs</em></div>
             <div><span>Supervision</span><b className="mono">{cents(p.supervisionUsd)}</b><em>{pctOf(p.supervisionRate)} of the work price</em></div>
             <div><span>TVA</span><b className="mono">{cents(p.tvaUsd)}</b><em>{pctOf(p.tvaRate)} of the work price</em></div>
-            <div><span>Client total</span><b className="mono">{cents(p.clientTotalUsd)}</b><em>work price + supervision + TVA</em></div>
+            {p.permitsUsd !== 0 && <div><span>Permits</span><b className="mono">{cents(p.permitsUsd)}</b><em>no supervision or TVA on them</em></div>}
+            <div><span>Client total</span><b className="mono">{cents(p.clientTotalUsd)}</b><em>work price + supervision + TVA{p.permitsUsd !== 0 ? " + permits" : ""}</em></div>
         </div>
     );
 }
@@ -123,7 +124,7 @@ function Row({ boq, list, showAuthor, onOpen }: { boq: BoqSummary; list: BoqList
             </div>
             {boq.status === "agreed" ? <span className="badge badge-active"><Icon name="checkCircle" />Agreed</span>
                 : <span className="badge">{notChosen ? "Not chosen" : "Draft"}</span>}
-            <span className="mono" style={{ minWidth: 100, textAlign: "right" }}>{cents(boq.totalUsd)}</span>
+            <span className="mono" style={{ minWidth: 100, textAlign: "right" }}>{cents(boqTotal(boq))}</span>
         </div>
     );
 }

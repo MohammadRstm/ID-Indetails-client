@@ -18,7 +18,11 @@ const karim = { id: 3, name: "Karim Test" };
 const nadia = { id: 2, name: "Nadia Test" };
 
 const line = (id: number, position: number, code: string | null, description: string, quantity: number, wasteRate: number, finalQuantity: number, unit: string | null, rate: number, totalUsd: number): Line =>
-    ({ id, position, code, description, quantity, wasteRate, finalQuantity, unit, rate, totalUsd });
+    ({ id, position, nature: "work", code, description, quantity, wasteRate, finalQuantity, unit, rate, totalUsd });
+
+/** A permit line: charged as it is, with no supervision or TVA. */
+const permit = (id: number, position: number, description: string, rate: number): Line =>
+    ({ ...line(id, position, null, description, 1, 0, 1, "L.S", rate, rate), nature: "permit" });
 
 /** Three lines that make $17,000. */
 const lobbyLines = (first: number): Line[] => [
@@ -29,7 +33,7 @@ const lobbyLines = (first: number): Line[] => [
 
 const summary = (over: Partial<Summary>): Summary => ({
     id: 31, kind: "client", number: "BQ-2026-001", title: "Lobby works", author: rana, status: "draft", totalUsd: 17000, lineCount: 3, reason: null,
-    createdAt: "2026-10-01T09:00:00Z", updatedAt: "2026-10-02T09:00:00Z", agreedAt: null, agreedBy: null, lastDelivery: null, ...over,
+    createdAt: "2026-10-01T09:00:00Z", updatedAt: "2026-10-02T09:00:00Z", agreedAt: null, agreedBy: null, lastDelivery: null, permitsUsd: 0, ...over,
 });
 
 const agreedSummary = summary({ status: "agreed", agreedAt: "2026-10-05T09:00:00Z", agreedBy: rana, lastDelivery: { channel: "email", sentAt: "2026-10-03T09:00:00Z" } });
@@ -46,7 +50,8 @@ const detail = (s: Summary, lines: Line[], figures: { supervisionUsd: number; cl
 });
 
 const price = (over: Partial<NonNullable<List["price"]>> = {}): NonNullable<List["price"]> => ({
-    agreedBoqUsd: 17000, agreedVosUsd: 0, workUsd: 17000, supervisionRate: 0.1, supervisionUsd: 1700, tvaRate: 0, tvaUsd: 0, clientTotalUsd: 18700, ...over,
+    agreedBoqUsd: 17000, agreedVosUsd: 0, workUsd: 17000, supervisionRate: 0.1, supervisionUsd: 1700, tvaRate: 0, tvaUsd: 0, clientTotalUsd: 18700,
+    agreedPermitsUsd: 0, permitsUsd: 0, ...over,
 });
 
 const agreed = detail(agreedSummary, lobbyLines(101), { supervisionUsd: 1700, clientTotalUsd: 18700 }, {
@@ -57,6 +62,10 @@ const vo = detail(fence, [line(301, 1, "V1", "Fence", 50, 0, 50, "m", 130, 6500)
 const draftMine = detail(mine, [line(401, 1, "1.1", "Demolition", 100, 0.05, 105, "m²", 20, 2100), line(402, 2, "2.1", "Porcelain tiles", 180, 0.1, 198, "m²", 30, 5940), line(403, 3, "3.1", "Electrical first fix", 1, 0, 1, "lot", 8460, 8460)],
     { supervisionUsd: 1650, clientTotalUsd: 18150 });
 const draftTheirs = detail(theirs, [line(501, 1, "1", "All the works", 1, 0, 1, "lot", 17500, 17500)], { supervisionUsd: 1750, clientTotalUsd: 19250 });
+/** A VO for the building permit: $2,000 of work with its supervision, and a $3,000 permit with none. */
+const permitVo = detail(summary({ id: 42, kind: "vo", number: "VO-2026-002", title: "Building permit", reason: "The municipality asked for a new permit", totalUsd: 2000, lineCount: 2, permitsUsd: 3000 }),
+    [line(311, 1, "V1", "Drawings for the permit", 1, 0, 1, "lot", 2000, 2000), permit(312, 2, "Building permit fee", 3000)],
+    { supervisionUsd: 200, clientTotalUsd: 5200 });
 
 export const boqs = {
     /** BQ-2026-001 is agreed: the other client draft is "not chosen", and a VO can be made. */
@@ -68,14 +77,14 @@ export const boqs = {
     } as List,
     price,
     /** Every BOQ in full, by id. */
-    detail: { 31: agreed, 32: draftB, 41: vo, 51: draftMine, 52: draftTheirs } as Record<number, Detail>,
-    agreed, draftB, vo, draftMine, draftTheirs, lobbyLines,
+    detail: { 31: agreed, 32: draftB, 41: vo, 42: permitVo, 51: draftMine, 52: draftTheirs } as Record<number, Detail>,
+    agreed, draftB, vo, permitVo, draftMine, draftTheirs, lobbyLines,
 };
 
 /** The summary of a BOQ, for the lists. */
 export const summaryOf = (d: Detail): Summary => ({
     id: d.id, kind: d.kind, number: d.number, title: d.title, author: d.author, status: d.status, totalUsd: d.totalUsd, lineCount: d.lines.length, reason: d.reason,
-    createdAt: d.createdAt, updatedAt: d.updatedAt, agreedAt: d.agreedAt, agreedBy: d.agreedBy, lastDelivery: d.lastDelivery,
+    createdAt: d.createdAt, updatedAt: d.updatedAt, agreedAt: d.agreedAt, agreedBy: d.agreedBy, lastDelivery: d.lastDelivery, permitsUsd: d.permitsUsd,
 });
 
 export const boqHandlers = [
