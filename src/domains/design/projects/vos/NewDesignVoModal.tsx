@@ -31,11 +31,13 @@ export default function NewDesignVoModal({ project, onClose, onSend }: { project
     const [split, setSplit] = useState<Split>("shares");
     const [given, setGiven] = useState<Record<number, string>>({});
     const [showOutside, setShowOutside] = useState(false);
+    const [chargeTva, setChargeTva] = useState(true);
     const outside = useOutsideScope(project.id, true);
 
     const amounts = lines.map((l) => parseAmount(l.amount));
     const total = Math.round(amounts.reduce<number>((sum, a) => sum + (a ?? 0), 0) * 100) / 100;
-    const tvaRate = project.money?.tvaRate ?? 0;
+    const projectTva = project.money?.tvaRate ?? 0;
+    const tvaRate = chargeTva ? projectTva : 0;
     const tva = Math.round(total * tvaRate * 100) / 100;
     const byHand = split === "departments" && departments.length > 0;
     const handTotal = Math.round(departments.reduce((sum, d) => sum + (parseAmount(given[d.id] ?? "") ?? 0), 0) * 100) / 100;
@@ -66,6 +68,7 @@ export default function NewDesignVoModal({ project, onClose, onSend }: { project
                 : [],
             showOutsideScope: showOutside,
             apply,
+            chargeTva,
         }, {
             onSuccess: (vo) => {
                 if (apply) {
@@ -118,7 +121,9 @@ export default function NewDesignVoModal({ project, onClose, onSend }: { project
                     : <div className="hint">Before TVA. A minus amount takes work out, e.g. -1,500.</div>}
                 <div className="mt-s" aria-label="Totals">
                     <div className="spread" style={{ fontSize: 12.5 }}><span className="muted">Total before TVA</span><span className="mono">{cents(total)}</span></div>
-                    <div className="spread" style={{ fontSize: 12.5 }}><span className="muted">TVA ({sharePct(tvaRate)})</span><span className="mono">{cents(tva)}</span></div>
+                    <div className="spread" style={{ fontSize: 12.5 }}>
+                        <span className="muted">{tvaRate > 0 ? `TVA (${sharePct(tvaRate)})` : "TVA"}</span><span className="mono">{tvaRate > 0 ? cents(tva) : "None"}</span>
+                    </div>
                     <div className="spread" style={{ fontWeight: 650 }}><span>Total</span><span className="mono">{cents(total + tva)}</span></div>
                 </div>
             </div>
@@ -146,6 +151,16 @@ export default function NewDesignVoModal({ project, onClose, onSend }: { project
                         </div>
                     )}
                 </div>
+            )}
+
+            {projectTva > 0 && (
+                <label className="scope-check mt">
+                    <input type="checkbox" checked={chargeTva} onChange={(e) => setChargeTva(e.target.checked)} />
+                    <span>
+                        Charge TVA ({sharePct(projectTva)})
+                        <span className="hint" style={{ display: "block" }}>Untick it for a variation order without TVA. It can be added or taken off later.</span>
+                    </span>
+                </label>
             )}
 
             <label className="scope-check mt">

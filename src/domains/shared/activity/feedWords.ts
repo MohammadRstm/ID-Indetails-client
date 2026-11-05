@@ -130,6 +130,12 @@ const WORDS: Record<string, Words> = {
     },
     project_fee_set: { icon: "card", text: (e) => `set ${project(e)}'s fee${e.amount == null ? "" : ` to ${money.fmt(e.amount)}`}` },
     permits_set: { icon: "card", text: (e) => `set ${project(e)}'s permits${e.amount == null ? "" : ` to ${money.fmt(e.amount)}`}` },
+    design_vo_tva_set: {
+        icon: "card",
+        text: (e, p) => p.chargesTva === true
+            ? `added TVA to ${str(p.number) ?? "a variation order"} on ${project(e)}`
+            : `took the TVA off ${str(p.number) ?? "a variation order"} on ${project(e)}`,
+    },
     // material_markup_set and material_priced are no longer recorded (client prices and the markup are gone); older events stay in the feed
     material_markup_set: { icon: "card", text: (e, p) => `changed the material markup on ${project(e)}${num(p.markup) != null ? ` to ${money.pct(num(p.markup)!)}` : ""}` },
     expense_added: { icon: "plus", text: (e, p) => `added ${e.amount == null ? "an" : `a ${money.fmt(e.amount, str(p.currency) ?? "USD")}`} expense to ${project(e)}${str(p.label) ? ` - ${str(p.label)}` : ""}` },

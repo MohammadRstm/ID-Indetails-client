@@ -508,7 +508,7 @@ describe("admins and access", () => {
         await within(dialog).findByRole("checkbox", { name: "Payroll & schedules" });
         // admins log no hours, so their own hours aren't offered; everyone's still are
         expect(within(dialog).queryByRole("checkbox", { name: "Own hours" })).not.toBeInTheDocument();
-        expect(within(dialog).getByRole("checkbox", { name: "Team's hours" })).toBeInTheDocument();
+        expect(within(dialog).getByRole("checkbox", { name: "Department's hours" })).toBeInTheDocument();
 
         // the whole group gives "View what each employee is owed" with excusing hours, so nothing is said to be missing
         await userEvent.click(within(dialog).getByRole("checkbox", { name: "Payroll & schedules" }));

@@ -14,7 +14,7 @@ import Icon from "@/shared/icons/Icon";
 import type { Project } from "../../../shared/projects/projectsApi";
 import NewDesignVoModal from "./NewDesignVoModal";
 import SendDesignVoModal from "./SendDesignVoModal";
-import { downloadDesignVoPdf, useCancelDesignVo, useConfirmDesignVo, useDesignVos, type DesignVo } from "./designVosApi";
+import { downloadDesignVoPdf, useCancelDesignVo, useConfirmDesignVo, useDesignVos, useSetDesignVoTva, type DesignVo } from "./designVosApi";
 
 const STATUS: Record<DesignVo["status"], { label: string; cls: string }> = {
     pending: { label: "Waiting for the client", cls: "badge-hold" },
@@ -49,7 +49,7 @@ export default function DesignVosTab({ project }: { project: Project }) {
                                 text="When the client asks for more, or for less, record it here: the price and the departments' budgets follow." />
                         ) : (
                             <ol className="pay-hist" aria-label="Variation orders">
-                                {vos.data.map((vo) => <VoRow key={vo.id} vo={vo} writes={writes} onSend={() => setSending(vo)} />)}
+                                {vos.data.map((vo) => <VoRow key={vo.id} vo={vo} writes={writes} projectTva={project.money?.tvaRate ?? 0} onSend={() => setSending(vo)} />)}
                             </ol>
                         )}
             </div>
@@ -59,9 +59,11 @@ export default function DesignVosTab({ project }: { project: Project }) {
     );
 }
 
-function VoRow({ vo, writes, onSend }: { vo: DesignVo; writes: boolean; onSend: () => void }) {
+function VoRow({ vo, writes, projectTva, onSend }: { vo: DesignVo; writes: boolean; projectTva: number; onSend: () => void }) {
     const confirm = useConfirmDesignVo();
     const cancel = useCancelDesignVo();
+    const setTva = useSetDesignVoTva();
+    const taxed = vo.tvaRate > 0;
     const status = STATUS[vo.status];
     const when = vo.status === "applied" ? `Applied ${fmtDateY(vo.appliedAt!)}${vo.appliedBy ? ` by ${vo.appliedBy.name}` : ""}`
         : vo.status === "cancelled" ? `Cancelled ${fmtDateY(vo.cancelledAt!)}`
@@ -75,6 +77,16 @@ function VoRow({ vo, writes, onSend }: { vo: DesignVo; writes: boolean; onSend: 
                 sub: vo.title, icon: action === "confirm" ? "checkCircle" : "x",
             }),
             onError: (e) => toast({ text: `${vo.number} wasn't ${action === "confirm" ? "applied" : "cancelled"}`, sub: errorMessage(e), icon: "alert" }),
+        });
+    }
+
+    function switchTva() {
+        setTva.mutate({ id: vo.id, chargeTva: !taxed }, {
+            onSuccess: (saved) => toast({
+                text: taxed ? `TVA taken off ${vo.number}` : `TVA added to ${vo.number}`,
+                sub: `${money.exact(saved.totalWithTvaUsd, "USD", { cents: true })} in all · ${vo.title}`, icon: "checkCircle",
+            }),
+            onError: (e) => toast({ text: `${vo.number}'s TVA wasn't changed`, sub: errorMessage(e), icon: "alert" }),
         });
     }
 
@@ -93,6 +105,9 @@ function VoRow({ vo, writes, onSend }: { vo: DesignVo; writes: boolean; onSend: 
                             <div>
                                 <button className="pop-item" onClick={() => { close(); void downloadDesignVoPdf(vo); }}><Icon name="download" />Download PDF</button>
                                 {writes && vo.status !== "cancelled" && <button className="pop-item" onClick={() => { close(); onSend(); }}><Icon name="send" />Send to the client</button>}
+                                {writes && vo.status !== "cancelled" && projectTva > 0 && (
+                                    <button className="pop-item" onClick={() => { close(); switchTva(); }}><Icon name="edit" />{taxed ? "Take the TVA off" : "Add the TVA"}</button>
+                                )}
                                 {writes && vo.status === "pending" && (
                                     <>
                                         <div className="pop-sep" />
@@ -106,7 +121,7 @@ function VoRow({ vo, writes, onSend }: { vo: DesignVo; writes: boolean; onSend: 
                 </div>
             </div>
             <div className="muted" style={{ fontSize: 12 }}>
-                {when} · {vo.lines.length === 1 ? "1 line" : `${vo.lines.length} lines`} · {money.exact(vo.totalWithTvaUsd, "USD", { cents: true })} with TVA
+                {when} · {vo.lines.length === 1 ? "1 line" : `${vo.lines.length} lines`} · {taxed ? `${money.exact(vo.totalWithTvaUsd, "USD", { cents: true })} with TVA` : "no TVA"}
                 {vo.allocations.length > 0 && ` · ${vo.allocations.map((a) => `${a.name} ${money.fmt(a.amount)}`).join(", ")}`}
                 {vo.outsideScopeMinutes != null && ` · ${fmtH(vo.outsideScopeMinutes)} outside the scope shown`}
             </div>

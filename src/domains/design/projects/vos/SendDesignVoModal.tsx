@@ -34,7 +34,7 @@ export default function SendDesignVoModal({ project, vo, onClose }: { project: P
             else await downloadDesignVoPdf(vo);
             toast({
                 text: way === "email" ? `${vo.number} emailed to ${address.trim()}` : `${vo.number} downloaded`,
-                sub: `${money.exact(vo.totalWithTvaUsd, "USD", { cents: true })} with TVA · ${project.title}`, icon: "send",
+                sub: `${money.exact(vo.totalWithTvaUsd, "USD", { cents: true })} ${vo.tvaRate > 0 ? "with TVA" : "no TVA"} · ${project.title}`, icon: "send",
             });
             onClose();
         } finally {

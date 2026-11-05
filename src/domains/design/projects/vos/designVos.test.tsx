@@ -67,9 +67,45 @@ describe("a Design project's variation orders", () => {
         await waitFor(() => expect(sent).toEqual([{
             title: "Terrace",
             lines: [{ description: "Terrace design", amount: 2500 }, { description: "No balcony", amount: -500 }],
-            split: "shares", allocations: [], showOutsideScope: true, apply: false,
+            split: "shares", allocations: [], showOutsideScope: true, apply: false, chargeTva: true,
         }]));
         expect(await screen.findByRole("dialog", { name: "Send VO-2026-003" })).toBeInTheDocument();
+    });
+
+    it("leave the TVA off when asked, and take it off or put it back from the menu", async () => {
+        const sent: unknown[] = [];
+        const switched: unknown[] = [];
+        const taxedProject = { ...project, money: { ...project.money!, tvaRate: 0.11 } };
+        renderApp(`${path}?tab=vos`, rana,
+            http.get(`/api/projects/${project.id}`, () => HttpResponse.json(taxedProject)),
+            http.post("/api/projects/:id/design-vos", async ({ request }) => {
+                sent.push(await request.json());
+                return HttpResponse.json({ ...applied, id: 31, number: "VO-2026-003", tvaRate: 0, tvaUsd: 0, totalWithTvaUsd: applied.totalUsd }, { status: 201 });
+            }),
+            http.put("/api/design-vos/:id/tva", async ({ request, params }) => {
+                switched.push({ id: String(params.id), ...(await request.json() as object) });
+                return HttpResponse.json({ ...applied, tvaRate: 0, tvaUsd: 0, totalWithTvaUsd: applied.totalUsd });
+            }),
+            ...projectWorkHandlers);
+
+        // an applied VO with TVA can have it taken off
+        const row = within(await list()).getAllByRole("listitem")[1];
+        expect(within(row).getByText(/with TVA/)).toBeInTheDocument();
+        await userEvent.click(within(row).getByRole("button", { name: `Actions for ${applied.number}` }));
+        await userEvent.click(await screen.findByRole("button", { name: "Take the TVA off" }));
+        await waitFor(() => expect(switched).toEqual([{ id: String(applied.id), chargeTva: false }]));
+
+        // and a new one made without it
+        await userEvent.click(screen.getByRole("button", { name: "New variation order" }));
+        const dialog = await screen.findByRole("dialog", { name: "New variation order" });
+        await userEvent.type(within(dialog).getByLabelText("Title"), "Site visits");
+        await userEvent.type(within(dialog).getByLabelText("Line 1"), "Two extra site visits");
+        await userEvent.type(within(dialog).getByLabelText("Amount of line 1"), "1000");
+        expect(within(within(dialog).getByLabelText("Totals")).getByText("TVA (11%)")).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("checkbox", { name: /Charge TVA \(11%\)/ }));
+        expect(within(within(dialog).getByLabelText("Totals")).getByText("None")).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Add to the price" }));
+        await waitFor(() => expect(sent).toEqual([expect.objectContaining({ apply: true, chargeTva: false })]));
     });
 
     it("is confirmed once the client agrees", async () => {

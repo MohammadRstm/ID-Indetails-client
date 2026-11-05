@@ -3126,6 +3126,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/design-vos/{voId}/tva": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    voId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SetDesignVoTvaRequest"];
+                    "application/json": components["schemas"]["SetDesignVoTvaRequest"];
+                    "text/json": components["schemas"]["SetDesignVoTvaRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DesignVoResponse"];
+                        "text/json": components["schemas"]["DesignVoResponse"];
+                        "text/plain": components["schemas"]["DesignVoResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/domain-settings/{domainCode}": {
         parameters: {
             query?: never;
@@ -16700,6 +16745,7 @@ export interface components {
         CreateDesignVoRequest: {
             allocations?: components["schemas"]["DesignVoAllocationRequest"][];
             apply?: boolean;
+            chargeTva?: boolean;
             lines?: components["schemas"]["DesignVoLineRequest"][];
             showOutsideScope?: boolean;
             split?: components["schemas"]["DesignVoSplit"];
@@ -20698,6 +20744,9 @@ export interface components {
             reason?: null | string;
             shares?: components["schemas"]["DepartmentShareRequest"][];
         };
+        SetDesignVoTvaRequest: {
+            chargeTva?: boolean;
+        };
         SetLabourDefaultsRequest: {
             /** Format: double */
             dailyPay?: number;
@@ -21625,7 +21674,7 @@ export interface components {
         };
         WorkEntryCommentFill: {
             body: null | string;
-            /** @description Also post it to the person's team chat. */
+            /** @description Also post it to the person's department chat. */
             shareWithTeam: null | boolean;
         };
         WorkEntryCommentResponse: {
