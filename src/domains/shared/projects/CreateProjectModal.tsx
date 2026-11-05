@@ -88,10 +88,9 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const errors = useFormErrors();
     const titleError = title.trim() === "" && "Give the project a name.";
     const clientError = billing === "client" && clientId == null && "Choose who the project is for, or make it internal.";
-    const staffError = execution && staffIds.length === 0 && "Choose at least one staff member to oversee the site.";
     const choosesDepartments = !execution && billing === "client";
     const departmentsError = choosesDepartments && departmentIds.length === 0 && "Choose the departments working on it.";
-    const ok = !titleError && !clientError && !staffError && !departmentsError;
+    const ok = !titleError && !clientError && !departmentsError;
 
     // Who can own it: the domain's admins and the super admins (the creator first, when they are one), never an employee.
     const owners = [
@@ -172,10 +171,9 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
 
                     {execution && (
                         <div className="field mt">
-                            <label className="label required">Site staff</label>
+                            <label className="label">Site staff</label>
                             <StaffPicker value={staffIds} onChange={setStaffIds} />
-                            {errors.show("staff", staffError) ? <FieldError message={errors.show("staff", staffError)} />
-                                : <div className="hint">Who oversees the site: they report its ground labour and write its daily logs.</div>}
+                            <div className="hint">Who oversees the site: they report its ground labour and write its daily logs. Optional: add them on the site when it needs them.</div>
                         </div>
                     )}
 

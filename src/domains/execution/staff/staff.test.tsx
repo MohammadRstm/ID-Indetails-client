@@ -189,7 +189,7 @@ describe("a site's staff and logs, for admins", () => {
         expect((await screen.findAllByText("Daily logs")).length).toBeGreaterThan(0);
     });
 
-    it("change who oversees the site, at least one", async () => {
+    it("change who oversees the site, down to nobody", async () => {
         const sent: unknown[] = [];
         const withStaff = { ...site.project, staff: [{ id: 13, name: "Nour Aziz" }] };
         renderApp(`/execution/projects/${withStaff.id}?part=staff`, personas.executionAdmin,
@@ -200,12 +200,16 @@ describe("a site's staff and logs, for admins", () => {
         await userEvent.click(within(panel).getByRole("button", { name: "Change" }));
         const dialog = await screen.findByRole("dialog", { name: "Site staff" });
         await userEvent.click(await within(dialog).findByRole("button", { name: /Nour Aziz/ }));
-        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-        expect(within(dialog).getByText("Choose at least one staff member to oversee the site.")).toBeInTheDocument();
-        expect(sent).toEqual([]);
         await userEvent.click(within(dialog).getByRole("button", { name: /Tarek Nasser/ }));
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
         await waitFor(() => expect(sent).toEqual([{ staffIds: [5] }]));
+
+        // and everyone can be taken off until the site needs them again
+        await userEvent.click(within(await screen.findByLabelText("Site staff")).getByRole("button", { name: "Change" }));
+        const again = await screen.findByRole("dialog", { name: "Site staff" });
+        await userEvent.click(await within(again).findByRole("button", { name: /Nour Aziz/ }));
+        await userEvent.click(within(again).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(sent).toEqual([{ staffIds: [5] }, { staffIds: [] }]));
     });
 
     it("read every site's logs, by person", async () => {

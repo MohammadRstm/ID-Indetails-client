@@ -328,13 +328,9 @@ describe("a new Execution project", () => {
         expect(within(dialog).queryByLabelText("TVA")).toBeNull();
         expect(within(dialog).queryByText("Money")).toBeNull();
         await userEvent.type(within(dialog).getByLabelText("Project name"), "Lobby works");
-        // a site needs the staff who oversee it
+        // its staff can come later
         await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
-        expect(within(dialog).getByText("Choose at least one staff member to oversee the site.")).toBeInTheDocument();
-        expect(bodies).toEqual([]);
-        await userEvent.click(await within(dialog).findByRole("button", { name: /Tarek Nasser/ }));
-        await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
-        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ supervisionRate: null, tvaRate: null, staffIds: [5] })]));
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ supervisionRate: null, tvaRate: null, staffIds: [] })]));
     });
 });
 
