@@ -4,7 +4,6 @@ import { errorMessage, toApiError } from "@/api/errors";
 import { loadFailed } from "@/api/queryState";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
-import { useAccountLabels } from "@/domains/shared/accountLabels/accountLabelsApi";
 import { CostRow, MixedCurrency } from "@/shared/components/Data/Money";
 import Pager from "@/shared/components/Data-Tables/Pager";
 import Empty from "@/shared/components/Feedback/Empty";
@@ -23,7 +22,7 @@ import { isSiteOpen } from "../projects/siteMoney";
 import ExpenseGrid, { type GridRow } from "./ExpenseGrid";
 import ExpenseSheet from "./ExpenseSheet";
 import {
-    CATEGORIES, COLS, CURRENCIES, entryOf, firstProblem, labelChoices, link, listTotals, problems, rowOf, TOTAL_AT, writeTotals, type Choices, type ColKey, type CurrencyTotal, type Row,
+    CATEGORIES, COLS, CURRENCIES, entryOf, firstProblem, link, listTotals, problems, rowOf, TOTAL_AT, writeTotals, type Choices, type ColKey, type CurrencyTotal, type Row,
 } from "./expenseRules";
 import { useDeleteExpense, useExpenses, useUpdateExpense, type ExpenseQuery, type SiteExpense } from "./expensesApi";
 
@@ -54,7 +53,6 @@ export default function ExpensesPanel({ project }: { project: Project }) {
     const [supplier, setSupplier] = useState("");
     const [by, setBy] = useState("");
     const [category, setCategory] = useState("");
-    const [label, setLabel] = useState("");
     const [period, setPeriod] = useState("");
     const [page, setPage] = useState(1);
     const [adding, setAdding] = useState(false);
@@ -65,11 +63,9 @@ export default function ExpensesPanel({ project }: { project: Project }) {
     const today = companyToday();
     const PERIODS = periods(today);
     const permissions = usePermissions();
-    // whoever sets the labels up sees the archived ones too, to find what is filed under them
-    const labels = useAccountLabels(permissions.has(P.COMPANY_SETTINGS_MANAGE)).data;
     const query: ExpenseQuery = {
         type: type || undefined, supplier: supplier || undefined, addedById: by ? +by : undefined,
-        category: CATEGORIES.find((c) => c.value === category)?.value, accountLabelId: label ? +label : undefined,
+        category: CATEGORIES.find((c) => c.value === category)?.value,
         from: PERIODS[period]?.[1], search: search || undefined, page, pageSize: PER_PAGE,
     };
     const list = useExpenses(project.id, query);
@@ -79,8 +75,8 @@ export default function ExpensesPanel({ project }: { project: Project }) {
     const open = isSiteOpen(project);
     const cols = COLS;
     const d = list.data;
-    const filtering = !!(type || supplier || by || category || label || period || q.trim());
-    const onlyType = type && !supplier && !by && !category && !label && !period && !q.trim() ? d?.types.find((t) => t.key === type)?.label : null;
+    const filtering = !!(type || supplier || by || category || period || q.trim());
+    const onlyType = type && !supplier && !by && !category && !period && !q.trim() ? d?.types.find((t) => t.key === type)?.label : null;
     const filterLabel = onlyType ?? "filtered";
     const canAdd = d?.canAdd ?? false;
     // ?materials=add opens the sheet (Proton fills it there; its form is still called materials)
@@ -99,7 +95,7 @@ export default function ExpensesPanel({ project }: { project: Project }) {
         return (v: string) => { set(v); setPage(1); };
     }
     function clearFilters() {
-        setType(""); setQ(""); setSupplier(""); setBy(""); setCategory(""); setLabel(""); setPeriod(""); setPage(1);
+        setType(""); setQ(""); setSupplier(""); setBy(""); setCategory(""); setPeriod(""); setPage(1);
     }
     const keyOf = (e: SiteExpense, k: ColKey) => `${e.id}:${k}`;
     /** Shows these cells' new values until the save settles, and returns what ends that. */
@@ -156,7 +152,6 @@ export default function ExpensesPanel({ project }: { project: Project }) {
     }));
     const locked = (r: number) => !items[r].canEdit;
     const choices: Choices = { currency: CURRENCIES, category: CATEGORIES };
-    const labelOptions = (e: SiteExpense) => labelChoices(labels, e.accountLabel);
 
     const matching = d ? listTotals(d.matching) : [];
     const all = d ? listTotals(d.all) : [];
@@ -193,10 +188,6 @@ export default function ExpensesPanel({ project }: { project: Project }) {
                                         options={[{ value: "", label: `All items (${d.types.length})` }, ...d.types.map((t) => ({ value: t.key, label: `${t.label} (${t.count})` }))]} />
                                     <Select className="select sm" aria-label="Filter by category" value={category} onChange={filter(setCategory)}
                                         options={[{ value: "", label: "All categories" }, ...CATEGORIES]} />
-                                    {labels && labels.length > 0 && (
-                                        <Select className="select sm" aria-label="Filter by account label" value={label} onChange={filter(setLabel)}
-                                            options={[{ value: "", label: "All labels" }, ...labels.map((l) => ({ value: String(l.id), label: l.archived ? `${l.name} (archived)` : l.name }))]} />
-                                    )}
                                     {d.suppliers.length > 0 && (
                                         <Select className="select sm" aria-label="Filter by supplier or payee" value={supplier} onChange={filter(setSupplier)}
                                             options={[{ value: "", label: "All suppliers / payees" }, ...d.suppliers.map((s) => ({ value: s.key, label: s.label }))]} />
@@ -226,7 +217,7 @@ export default function ExpensesPanel({ project }: { project: Project }) {
                                 <div ref={topRef} className={cx("mt-s pg-anchor", filtering && d.matching.count === 0 && "hide")}>
                                     <ExpenseGrid cols={cols} rows={rows} offset={(page - 1) * PER_PAGE} showBy dash resizable locked={locked} minWidth={1240}
                                         canDelete={(r) => items[r].canEdit}
-                                        choices={(r, k) => (k === "accountLabelId" ? labelOptions(items[r]) : choices[k] ?? [])}
+                                        choices={(_, k) => choices[k] ?? []}
                                         onCell={(r, k, v, typing) => { if (!typing) save(r, k, v); }}
                                         onDelete={(r) => del(items[r])}
                                         foot={

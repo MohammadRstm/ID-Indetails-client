@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Schemas } from "@/api/types";
+import { labelChoices } from "@/domains/shared/accountLabels/labelChoices";
 import {
-    blankRow, blankRows, CATEGORIES, COLS, costOf, CURRENCIES, entryOf, firstProblem, joinTotals, labelChoices, link, listTotals, pasteInto, problems, resolveChoice, resolveDay,
+    blankRow, blankRows, CATEGORIES, COLS, costOf, CURRENCIES, entryOf, firstProblem, joinTotals, link, listTotals, pasteInto, problems, resolveChoice, resolveDay,
     resolveUnit, rowOf, rowUsed, serverProblems, totalsOf, withServerProblems, writeTotals, type Row,
 } from "./expenseRules";
 
@@ -120,15 +121,19 @@ describe("the sheet", () => {
         expect(pasted[1]).toMatchObject({ currency: "USD", category: "materials", accountLabelId: "" });
     });
 
-    it("reads a currency, a supplier, a day, a category and a label from a pasted block", () => {
-        const choices = { currency: CURRENCIES, category: CATEGORIES, accountLabelId: [{ value: "", label: "No label" }, { value: "1", label: "Concrete" }] };
-        const pasted = pasteInto(blankRows(1), 0, 0, "Pump hire\t\t\t\t120000\tlbp\tRentals\t3/9/2026\tEquipment\tconcrete", COLS, choices);
+    it("reads a currency, a supplier, a day, a category and a note from a pasted block", () => {
+        const choices = { currency: CURRENCIES, category: CATEGORIES };
+        const pasted = pasteInto(blankRows(1), 0, 0, "Pump hire\t\t\t\t120000\tlbp\tRentals\t3/9/2026\tEquipment\tTwo days", COLS, choices);
         expect(pasted[0]).toMatchObject({
-            name: "Pump hire", amount: "120000", currency: "LBP", supplier: "Rentals", spentOn: "2026-09-03", category: "equipment", accountLabelId: "1",
+            name: "Pump hire", amount: "120000", currency: "LBP", supplier: "Rentals", spentOn: "2026-09-03", category: "equipment", note: "Two days", accountLabelId: "",
         });
     });
 
-    it("leaves a day, currency, category or label that is empty or unknown as it was", () => {
+    it("has no account label column: a pasted row never sets one", () => {
+        expect(COLS.map((c) => c.label)).not.toContain("Account label");
+    });
+
+    it("leaves a day, currency or category that is empty or unknown as it was", () => {
         const choices = { currency: CURRENCIES, category: CATEGORIES };
         const [blank] = blankRows(1);
         const pasted = pasteInto([blank], 0, 0, "Sand\t2\tton\t30\t\t\t\t\tgifts\t", COLS, choices);
@@ -195,9 +200,9 @@ describe("what the API refuses", () => {
     it("is put on the row and cell it names, counting only the rows that were sent", () => {
         const rows = [row({}), row({ name: "Sand", amount: "5" }), row({}), row({ name: "Glass", amount: "9" })];
         const refused = serverProblems(rows, {
-            "items[0].unitCost": "Unit cost must be more than zero.", "items[1].accountLabelId": "This label is archived.", "items[5].name": "No such item.", items: "Add 1 to 100 expenses at a time.",
+            "items[0].unitCost": "Unit cost must be more than zero.", "items[1].note": "The note is too long.", "items[5].name": "No such item.", items: "Add 1 to 100 expenses at a time.",
         });
-        expect(refused).toEqual([null, { unitCost: "Unit cost must be more than zero." }, null, { accountLabelId: "This label is archived." }]);
+        expect(refused).toEqual([null, { unitCost: "Unit cost must be more than zero." }, null, { note: "The note is too long." }]);
     });
 
     it("comes after what the sheet found itself on the same cell", () => {

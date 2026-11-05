@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { BOQ_NUMBER } from "@/shared/format/limits";
 import { boqs } from "@/test/fixtures/boqs";
-import { blankLine, draftOf, fitSigned, hasProblems, isDirty, lineChanged, percentText, problemsOf, requestOf, withServerProblems, type Draft } from "./boqDraft";
+import {
+    BLOCK, blankLine, clientFiguresOf, draftOf, fitSigned, hasProblems, isDirty, lineFigures, lineUsed, percentText, problemsOf, requestOf, toCents, totalsOf,
+    withBlankLines, withServerProblems, type Draft,
+} from "./boqDraft";
 
 const saved = boqs.draftB;
 /** The save a draft started from, which goes with the next save. */
@@ -51,21 +54,87 @@ describe("a BOQ being typed", () => {
         expect(isDirty(line(good(), { quantity: "101" }), saved)).toBe(true);
         expect(isDirty({ ...good(), title: "Another" }, saved)).toBe(true);
         expect(isDirty({ ...good(), adjustment: "percent", adjustmentValue: "5" }, saved)).toBe(true);
-        expect(isDirty({ ...good(), lines: [...good().lines, blankLine()] }, saved)).toBe(true);
+        // blank rows to type into are no change; a line typed into one is
+        expect(isDirty({ ...good(), lines: withBlankLines(good().lines) }, saved)).toBe(false);
+        expect(isDirty({ ...good(), lines: [...good().lines, { ...blankLine(), description: "Paint" }] }, saved)).toBe(true);
         expect(isDirty({ ...good(), lines: good().lines.slice(1) }, saved)).toBe(true);
         expect(isDirty({ ...good(), lines: [...good().lines].reverse() }, saved)).toBe(true);
     });
+});
 
-    it("knows which lines changed since the last save, as only they lose their computed cells", () => {
-        const [first, second] = good().lines;
-        expect(lineChanged(first, saved.lines[0])).toBe(false);
-        expect(lineChanged({ ...first, quantity: "200" }, saved.lines[0])).toBe(true);
-        expect(lineChanged({ ...first, waste: "6" }, saved.lines[0])).toBe(true);
-        expect(lineChanged({ ...first, rate: "" }, saved.lines[0])).toBe(true);
-        expect(lineChanged({ ...first, description: "Demolition " }, saved.lines[0])).toBe(false);
-        // a line never saved has nothing worked out yet; a moved one still has
-        expect(lineChanged(blankLine(), undefined)).toBe(true);
-        expect(lineChanged(second, saved.lines[1])).toBe(false);
+describe("the rows of a BOQ being typed, like the expenses sheet", () => {
+    it("start with ten to type into, and ten more each time the last is used", () => {
+        const start = withBlankLines(good().lines);
+        expect(start).toHaveLength(BLOCK);
+        expect(start.slice(0, 3).map((l) => l.id)).toEqual([201, 202, 203]);
+        const typedIntoAll = start.map((l) => (lineUsed(l) ? l : { ...l, description: "More work" }));
+        expect(withBlankLines(typedIntoAll)).toHaveLength(2 * BLOCK);
+        // ten more on request (Enter on the last row), and the permits stay last
+        const withPermit = [...start, { ...blankLine("permit"), description: "Permit", rate: "300" }];
+        const more = withBlankLines(withPermit, true);
+        expect(more).toHaveLength(2 * BLOCK + 1);
+        expect(more[more.length - 1].nature).toBe("permit");
+    });
+
+    it("count as used once anything is typed in them, the waste only when it isn't 0", () => {
+        expect(lineUsed(blankLine())).toBe(false);
+        expect(lineUsed({ ...blankLine(), waste: "" })).toBe(false);
+        expect(lineUsed({ ...blankLine(), waste: "5" })).toBe(true);
+        expect(lineUsed({ ...blankLine(), code: "A 2.1.1" })).toBe(true);
+        // a permit's quantity of one is not typed
+        expect(lineUsed(blankLine("permit"))).toBe(false);
+        expect(lineUsed({ ...blankLine("permit"), rate: "300" })).toBe(true);
+    });
+
+    it("are left out when it is saved, with nothing wrong found in them", () => {
+        const draft = { ...good(), lines: withBlankLines(good().lines) };
+        expect(requestOf(draft, "client", STARTED).lines).toHaveLength(3);
+        expect(hasProblems(problemsOf(draft, "client"))).toBe(false);
+    });
+
+    it("place what the API refused by the lines sent, which skip the blank rows", () => {
+        const [first, second, third] = good().lines;
+        const draft = { ...good(), lines: [first, blankLine(), second, third] };
+        const shown = withServerProblems(problemsOf(draft, "client"), draft, { "lines[1].rate": "Too high." });
+        expect(shown.line[second.key]).toEqual({ rate: "Too high." });
+    });
+
+    it("turn a permit saved with a quantity into one price, its total", () => {
+        const permit = { ...saved.lines[0], id: 9, nature: "permit" as const, quantity: 2, wasteRate: 0, rate: 1500, totalUsd: 3000 };
+        const [line] = draftOf({ ...saved, lines: [permit] }).lines;
+        expect(line).toMatchObject({ quantity: "1", waste: "0", rate: "3000" });
+    });
+});
+
+describe("the figures of a BOQ, worked out as it is typed", () => {
+    it("work out a line's final quantity with its waste, and its total from that", () => {
+        const [demolition] = good().lines;
+        expect(lineFigures(demolition)).toEqual({ finalQuantity: 105, total: 2100 });
+        expect(lineFigures({ ...demolition, waste: "12.5", quantity: "3.333" })).toEqual({ finalQuantity: 3.75, total: 75 });
+        expect(lineFigures({ ...demolition, rate: "" })).toBeNull();
+        expect(lineFigures({ ...demolition, quantity: "-" })).toBeNull();
+    });
+
+    it("round to the cent as the API does, half a cent away from zero", () => {
+        expect(toCents(1.005)).toBe(1.01);
+        expect(toCents(-1.005)).toBe(-1.01);
+        expect(toCents(2.344)).toBe(2.34);
+    });
+
+    it("add the work up, adjust it, and keep the permits apart", () => {
+        const draft = { ...good(), lines: [...withBlankLines(good().lines), { ...blankLine("permit"), description: "Permit", rate: "3000" }] };
+        expect(totalsOf(draft)).toEqual({ subtotal: 17000, adjustment: 0, total: 17000, permits: 3000 });
+        expect(totalsOf({ ...draft, adjustment: "percent", adjustmentValue: "-5" })).toMatchObject({ adjustment: -850, total: 16150, permits: 3000 });
+        expect(totalsOf({ ...draft, adjustment: "total", adjustmentValue: "16000" })).toMatchObject({ adjustment: -1000, total: 16000 });
+        // an adjustment still being typed changes nothing yet
+        expect(totalsOf({ ...draft, adjustment: "percent", adjustmentValue: "-" })).toMatchObject({ adjustment: 0, total: 17000 });
+    });
+
+    it("give the client supervision and TVA on the work only, as the saved BOQ does", () => {
+        const totals = totalsOf(good());
+        // the fixture's saved figures: 10% supervision, no TVA
+        expect(clientFiguresOf(totals, 0.1, 0)).toEqual({ supervision: saved.supervisionUsd, tva: 0, clientTotal: saved.clientTotalUsd });
+        expect(clientFiguresOf({ subtotal: 1000, adjustment: 0, total: 1000, permits: 300 }, 0.1, 0.11)).toEqual({ supervision: 100, tva: 110, clientTotal: 1510 });
     });
 });
 
@@ -85,7 +154,7 @@ describe("what is wrong with a BOQ, as the API would refuse it", () => {
         expect(problemsOf({ ...good(), reason: "" }, "client").reason).toBeUndefined();
     });
 
-    it("limits a line's code, description and unit, and wants a description, a quantity and a rate", () => {
+    it("limits a line's code, description and unit, and wants a description, a quantity and a unit cost", () => {
         const key = good().lines[0].key;
         const of = (over: Partial<Draft["lines"][number]>) => problemsOf(line(good(), over), "client").line[key] ?? {};
         expect(of({ code: "c".repeat(21) }).code).toBe("At most 20 characters.");
@@ -95,8 +164,14 @@ describe("what is wrong with a BOQ, as the API would refuse it", () => {
         expect(of({ description: "d".repeat(501) }).description).toBe("At most 500 characters.");
         expect(of({ description: "d".repeat(500) }).description).toBeUndefined();
         expect(of({ quantity: "" }).quantity).toBe("Enter a quantity.");
-        expect(of({ rate: "" }).rate).toBe("Enter a rate.");
-        expect(of({ rate: "-" }).rate).toBe("Enter a rate.");
+        expect(of({ rate: "" }).rate).toBe("Enter a unit cost.");
+        expect(of({ rate: "-" }).rate).toBe("Enter a unit cost.");
+    });
+
+    it("wants a permit's name and price", () => {
+        const permit = { ...blankLine("permit"), code: "P1" };
+        const draft = { ...good(), lines: [...good().lines, permit] };
+        expect(problemsOf(draft, "client").line[permit.key]).toEqual({ description: "Say which permit it is.", rate: "Enter the price." });
     });
 
     it("keeps a quantity from below 0 and the waste between 0% and 100%", () => {
@@ -110,10 +185,10 @@ describe("what is wrong with a BOQ, as the API would refuse it", () => {
         expect(of({ waste: "" }).waste).toBeUndefined();
     });
 
-    it("allows a negative rate only on a VO", () => {
+    it("allows a negative unit cost only on a VO", () => {
         const key = good().lines[0].key;
-        expect(problemsOf(line(good(), { rate: "-5" }), "client").line[key]?.rate).toBe("Only a VO can have a negative rate.");
-        expect(problemsOf(line(good(), { rate: "-5" }), "internal").line[key]?.rate).toBe("Only a VO can have a negative rate.");
+        expect(problemsOf(line(good(), { rate: "-5" }), "client").line[key]?.rate).toBe("Only a VO can have a negative unit cost.");
+        expect(problemsOf(line(good(), { rate: "-5" }), "internal").line[key]?.rate).toBe("Only a VO can have a negative unit cost.");
         const vo = draftOf(boqs.vo);
         expect(problemsOf(line(vo, { rate: "-5" }), "vo").line[vo.lines[0].key]).toBeUndefined();
     });

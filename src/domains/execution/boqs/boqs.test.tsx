@@ -249,7 +249,8 @@ describe("the BOQ editor", () => {
         expect(within(dialog).getByRole("button", { name: "Send…" })).toBeEnabled();
         expect(within(dialog).getByRole("button", { name: "Withdraw agreement" })).toBeEnabled();
 
-        // every figure is the API's
+        // only its lines, no blank rows, and the figures they make
+        expect(within(dialog).queryByLabelText("Description 4")).not.toBeInTheDocument();
         const row = within(dialog).getByLabelText("Quantity 1").closest("tr") as HTMLElement;
         expect(row).toHaveTextContent("105");
         expect(row).toHaveTextContent("$2,100");
@@ -276,7 +277,7 @@ describe("the BOQ editor", () => {
         expect(within(dialog).getByLabelText("Description 1")).toBeEnabled();
     });
 
-    it("shows a dash in the cells of a line changed since the last save, until it is saved", async () => {
+    it("works out a line's figures and the totals as it is typed, and keeps the API's once it is saved", async () => {
         const [first, ...rest] = boqs.draftB.lines;
         const after = {
             ...boqs.draftB, lines: [{ ...first, quantity: 200, finalQuantity: 210, totalUsd: 4200 }, ...rest],
@@ -290,14 +291,18 @@ describe("the BOQ editor", () => {
 
         const quantity = within(dialog).getByLabelText("Quantity 1");
         await userEvent.clear(quantity);
-        await userEvent.type(quantity, "200");
+        // a line still missing a number has no figures yet
         expect(within(row(1)).getAllByText("—")).toHaveLength(2);
-        expect(row(1)).not.toHaveTextContent("$2,100");
-        // the other lines keep what the last save worked out, and so do the totals, which say whose they are
+        await userEvent.type(quantity, "200");
+        // 200 with its 5% waste is 210, at $20 each
+        expect(row(1)).toHaveTextContent("210");
+        expect(row(1)).toHaveTextContent("$4,200");
         expect(row(2)).toHaveTextContent("$5,940");
-        expect(within(within(dialog).getByRole("group", { name: "Totals" })).getByText("Subtotal").closest("div")).toHaveTextContent("$17,000");
+        const totals = within(dialog).getByRole("group", { name: "Totals" });
+        expect(within(totals).getByText("Subtotal").closest("div")).toHaveTextContent("$19,100");
+        expect(within(totals).getByText("Supervision").closest("div")).toHaveTextContent("$1,910");
+        expect(within(totals).getByText("Client pays").closest("div")).toHaveTextContent("$21,010");
         expect(within(dialog).getByText("Unsaved changes")).toBeInTheDocument();
-        expect(within(dialog).getByText("These are the figures of the last save. They are worked out again when you save.")).toBeInTheDocument();
 
         await userEvent.click(save(dialog));
         await waitFor(() => expect(calls.sent).toHaveLength(1));
@@ -335,10 +340,10 @@ describe("the BOQ editor", () => {
         await userEvent.paste("t".repeat(113));
         expect(within(dialog).getByText("At most 120 characters.")).toBeInTheDocument();
 
-        const rate = within(dialog).getByLabelText("Rate 1");
+        const rate = within(dialog).getByLabelText("Unit cost 1");
         await userEvent.clear(rate);
         await userEvent.type(rate, "-5");
-        expect(within(dialog).getByText("Line 1: Only a VO can have a negative rate.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Line 1: Only a VO can have a negative unit cost.")).toBeInTheDocument();
         const waste = within(dialog).getByLabelText("Waste % 1");
         await userEvent.clear(waste);
         await userEvent.type(waste, "150");
@@ -396,25 +401,31 @@ describe("the BOQ editor", () => {
         expect(within(dialog).getByText("The new total can't be negative.")).toBeInTheDocument();
     });
 
-    it("adds, moves and removes lines, and saves them in the order shown", async () => {
+    it("types new lines into blank rows, moves and removes lines, and saves them in the order shown without the blank ones", async () => {
         const calls = saving(32, boqs.draftB);
         const dialog = await open(32, "BQ-2026-002", karim, ...calls.handlers);
+        // ten rows to type into, and no button to add one
+        const lines = within(dialog).getByRole("table", { name: "Lines" });
+        expect(within(lines).getByLabelText("Description 10")).toHaveValue("");
+        expect(within(lines).queryByLabelText("Description 11")).not.toBeInTheDocument();
+        expect(within(dialog).queryByRole("button", { name: "Add line" })).not.toBeInTheDocument();
         expect(within(dialog).getByRole("button", { name: "Move line 1 up" })).toBeDisabled();
         expect(within(dialog).getByRole("button", { name: "Move line 3 down" })).toBeDisabled();
+        // a blank row has nothing to move or remove
+        expect(within(dialog).queryByRole("button", { name: "Remove line 4" })).not.toBeInTheDocument();
 
-        await userEvent.click(within(dialog).getByRole("button", { name: "Add line" }));
         const description = within(dialog).getByLabelText("Description 4");
-        // a line never saved has nothing worked out yet
-        expect(within(description.closest("tr") as HTMLElement).getAllByText("—")).toHaveLength(2);
         await userEvent.type(description, "Painting");
         await userEvent.type(within(dialog).getByLabelText("Quantity 4"), "10");
-        await userEvent.type(within(dialog).getByLabelText("Rate 4"), "12");
+        await userEvent.type(within(dialog).getByLabelText("Unit cost 4"), "12");
+        expect(description.closest("tr")).toHaveTextContent("$120");
         await userEvent.click(within(dialog).getByRole("button", { name: "Move line 4 up" }));
         expect(within(dialog).getByLabelText("Description 3")).toHaveValue("Painting");
         await userEvent.click(within(dialog).getByRole("button", { name: "Remove line 1" }));
-        expect(within(dialog).queryByLabelText("Description 4")).not.toBeInTheDocument();
         expect(within(dialog).getByLabelText("Description 1")).toHaveValue("Porcelain tiles");
         expect(within(dialog).getByLabelText("Description 2")).toHaveValue("Painting");
+        expect(within(dialog).getByLabelText("Description 4")).toHaveValue("");
+        expect(within(dialog).getByText("Lines · 3")).toBeInTheDocument();
 
         await userEvent.click(save(dialog));
         await waitFor(() => expect(calls.sent).toHaveLength(1));
@@ -425,10 +436,61 @@ describe("the BOQ editor", () => {
         ]);
     });
 
-    it("keeps permits in their own part, charged with no supervision or TVA", async () => {
+    it("moves between cells like the expenses sheet, and adds ten rows when Enter leaves the last one", async () => {
+        const dialog = await open(32, "BQ-2026-002");
+        const cell = (label: string) => within(dialog).getByLabelText(label);
+        await userEvent.click(cell("Description 4"));
+        await userEvent.keyboard("Painting{Enter}");
+        expect(cell("Quantity 4")).toHaveFocus();
+        await userEvent.keyboard("3{Enter}{Enter}m²{Enter}50{Enter}");
+        // the last cell of a row goes on to the next row
+        expect(cell("Code 5")).toHaveFocus();
+        expect(cell("Description 4").closest("tr")).toHaveTextContent("$150");
+        // Shift+Enter goes back, the arrows go up and down
+        await userEvent.keyboard("{Shift>}{Enter}{/Shift}");
+        expect(cell("Unit cost 4")).toHaveFocus();
+        await userEvent.keyboard("{ArrowUp}");
+        expect(cell("Unit cost 3")).toHaveFocus();
+
+        await userEvent.click(cell("Unit cost 10"));
+        await userEvent.keyboard("{Enter}");
+        await waitFor(() => expect(cell("Code 11")).toHaveFocus());
+        expect(cell("Description 20")).toHaveValue("");
+    });
+
+    it("offers the codes already in use under a line's code, and fills in the work it names", async () => {
+        const calls = saving(32, boqs.draftB);
+        const dialog = await open(32, "BQ-2026-002", karim, ...calls.handlers);
+        const cell = (label: string) => within(dialog).getByLabelText(label);
+        await userEvent.click(cell("Code 4"));
+        const codes = within(dialog).getByRole("listbox", { name: "Codes for Code 4" });
+        expect(within(codes).getByText("Excavation")).toBeInTheDocument();
+        // ↓ moves through them and Enter takes one: its work and unit come with it, and the cursor goes on
+        await userEvent.keyboard("{ArrowDown}{ArrowDown}{Enter}");
+        expect(cell("Code 4")).toHaveValue("1.2");
+        expect(cell("Description 4")).toHaveValue("Backfill under SOG");
+        expect(cell("Unit 4")).toHaveValue("Camion");
+        expect(cell("Description 4")).toHaveFocus();
+
+        // what is typed narrows them, by code or by the work, and a code of one's own is kept as typed
+        await userEvent.click(cell("Code 5"));
+        await userEvent.keyboard("raft");
+        expect(within(within(dialog).getByRole("listbox", { name: "Codes for Code 5" })).getAllByText(/^A 2\.1\.\d$/).length).toBeGreaterThan(0);
+        await userEvent.clear(cell("Code 5"));
+        await userEvent.keyboard("A 2.1{Enter}");
+        expect(cell("Code 5")).toHaveValue("A 2.1");
+        expect(cell("Description 5")).toHaveFocus();
+        expect(cell("Description 5")).toHaveValue("");
+    });
+
+    it("keeps permits in their own part, one price each, charged with no supervision or TVA", async () => {
         const dialog = await open(42, "VO-2026-002");
         expect(within(within(dialog).getByRole("table", { name: "Lines" })).getByLabelText("Description 1")).toHaveValue("Drawings for the permit");
-        expect(within(within(dialog).getByRole("table", { name: "Permits" })).getByLabelText("Description 2")).toHaveValue("Building permit fee");
+        const permits = within(dialog).getByRole("table", { name: "Permits" });
+        expect(within(permits).getByLabelText("Permit description 1")).toHaveValue("Building permit fee");
+        expect(within(permits).getByLabelText("Price 1")).toHaveValue("3000");
+        // no quantity, waste or unit to type for a permit
+        for (const cell of ["Quantity 1", "Waste % 1", "Unit 1", "Unit cost 1"]) expect(within(permits).queryByLabelText(cell)).not.toBeInTheDocument();
 
         const totals = within(dialog).getByRole("group", { name: "Totals" });
         expect(within(totals).getByText("Work total").closest("div")).toHaveTextContent("$2,000");
@@ -444,16 +506,13 @@ describe("the BOQ editor", () => {
 
         await userEvent.click(within(dialog).getByRole("button", { name: "Add a permit" }));
         const permits = within(dialog).getByRole("table", { name: "Permits" });
-        await userEvent.type(within(permits).getByLabelText("Description 4"), "Building permit fee");
-        // a permit is one lot unless it says otherwise
-        expect(within(permits).getByLabelText("Quantity 4")).toHaveValue("1");
-        await userEvent.type(within(permits).getByLabelText("Rate 4"), "3000");
-        // a new work line goes before the permits, and a permit stays in its part
-        await userEvent.click(within(dialog).getByRole("button", { name: "Add line" }));
-        expect(within(within(dialog).getByRole("table", { name: "Lines" })).getByLabelText("Description 4")).toHaveValue("");
-        expect(within(permits).getByLabelText("Description 5")).toHaveValue("Building permit fee");
-        expect(within(permits).getByRole("button", { name: "Move line 5 up" })).toBeDisabled();
-        await userEvent.click(within(dialog).getByRole("button", { name: "Remove line 4" }));
+        await userEvent.type(within(permits).getByLabelText("Permit description 1"), "Building permit fee");
+        await userEvent.type(within(permits).getByLabelText("Price 1"), "3000");
+        expect(within(permits).getByRole("button", { name: "Move permit 1 up" })).toBeDisabled();
+        // its price counts at once, beside the work and not in it
+        const totals = within(dialog).getByRole("group", { name: "Totals" });
+        expect(within(totals).getByText("Permits").closest("div")).toHaveTextContent("$3,000");
+        expect(within(totals).getByText("Work subtotal").closest("div")).toHaveTextContent("$17,000");
 
         await userEvent.click(save(dialog));
         await waitFor(() => expect(calls.sent).toHaveLength(1));
@@ -461,10 +520,10 @@ describe("the BOQ editor", () => {
             { id: null, nature: "permit", code: null, description: "Building permit fee", quantity: 1, wasteRate: 0, unit: null, rate: 3000 });
     });
 
-    it("lets a VO take a negative rate, and needs its reason", async () => {
+    it("lets a VO take a negative unit cost, and needs its reason", async () => {
         const calls = saving(41, boqs.vo);
         const dialog = await open(41, "VO-2026-001", karim, ...calls.handlers);
-        const rate = within(dialog).getByLabelText("Rate 1");
+        const rate = within(dialog).getByLabelText("Unit cost 1");
         await userEvent.clear(rate);
         await userEvent.type(rate, "-130");
         const reason = within(dialog).getByLabelText("Reason");
@@ -472,7 +531,7 @@ describe("the BOQ editor", () => {
         await userEvent.clear(reason);
         await userEvent.click(save(dialog));
         expect(within(dialog).getByText("Say why the variation is needed.")).toBeInTheDocument();
-        expect(within(dialog).queryByText("Line 1: Only a VO can have a negative rate.")).not.toBeInTheDocument();
+        expect(within(dialog).queryByText("Line 1: Only a VO can have a negative unit cost.")).not.toBeInTheDocument();
         expect(calls.sent).toEqual([]);
 
         await userEvent.type(reason, "Take the fence out");
@@ -558,7 +617,7 @@ describe("the BOQ editor", () => {
     it("keeps an empty BOQ from being sent or agreed", async () => {
         const empty = { ...boqs.draftB, lines: [], lineCount: 0, subtotalUsd: 0, totalUsd: 0, supervisionUsd: 0, clientTotalUsd: 0 };
         const dialog = await open(32, "BQ-2026-002", karim, http.get("/api/boqs/32", () => HttpResponse.json(empty)), listOf(boqs.unagreed));
-        expect(await within(dialog).findByText("No lines yet. Add the first one.")).toBeInTheDocument();
+        expect(await within(dialog).findByText("Lines · 0")).toBeInTheDocument();
         for (const name of ["Send…", "Agree"]) {
             expect(within(dialog).getByRole("button", { name })).toBeDisabled();
             expect(within(dialog).getByRole("button", { name })).toHaveAttribute("title", "Add lines and save first.");

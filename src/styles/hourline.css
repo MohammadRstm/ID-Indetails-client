@@ -1392,6 +1392,11 @@ tr.voided .mono, .cost-row.voided .mono { text-decoration: line-through; }
   box-shadow: var(--shadow-3); padding: 4px; margin-top: 2px; }
 .sh-opt { padding: 6px 9px; border-radius: 7px; font-size: 12px; cursor: pointer; white-space: nowrap; }
 .sh-opt.on, .sh-opt:hover { background: var(--accent-soft); color: var(--accent-ink); }
+.sh-opts.boq-codes { min-width: 380px; max-height: 260px; overflow-y: auto; }
+.sh-opts.boq-codes .sh-opt { display: flex; gap: 10px; }
+.sh-opts.boq-codes .sh-opt b { flex: none; min-width: 58px; font-weight: 600; }
+.sh-opts.boq-codes .sh-opt span { overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); }
+.sh-opts.boq-codes .sh-opt.on span, .sh-opts.boq-codes .sh-opt:hover span { color: inherit; }
 .sh-choice { display: flex; align-items: center; justify-content: space-between; gap: 4px; text-align: left; cursor: pointer; }
 .sh-choice svg { width: 14px; height: 14px; flex: none; color: var(--ink-3); }
 .sh-choice:disabled { cursor: default; }

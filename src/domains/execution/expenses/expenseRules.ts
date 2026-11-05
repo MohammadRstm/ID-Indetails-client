@@ -7,8 +7,9 @@ import type { SiteExpense, SiteExpenseCategory } from "./expensesApi";
 
 /*
  * An expense is an item and a cost: quantity × unit cost when both are known, otherwise a total typed in (a
- * lump-sum payment nobody counted), in dollars or Lebanese pounds, spent on a day, under a category and,
- * optionally, an account label. The sheet holds every cell as the text typed, so these work on text.
+ * lump-sum payment nobody counted), in dollars or Lebanese pounds, spent on a day, under a category. The sheet
+ * holds every cell as the text typed, so these work on text. An expense filed under an account label keeps it,
+ * though the sheet no longer shows or sets one.
  */
 
 export const UNITS = ["bag", "tonne", "m³", "m²", "m", "piece", "litre", "hour", "lot"];
@@ -35,7 +36,7 @@ export type Row = {
     /** The day as "yyyy-MM-dd", or what was typed when that isn't a day. */
     spentOn: string;
     category: string;
-    /** The account label's id, "" for none. */
+    /** The account label's id, "" for none: not a column any more, but kept so a change never clears it. */
     accountLabelId: string;
     note: string;
 };
@@ -47,7 +48,7 @@ export type RowProblems = Partial<Record<ColKey, string>> | null;
 export type Choices = Partial<Record<ColKey, Choice[]>>;
 
 export const COLS: Col[] = [
-    { k: "name", label: "Item", type: "text", w: "14%" },
+    { k: "name", label: "Item", type: "text", w: "17%" },
     { k: "quantity", label: "Qty", type: "num", w: "6%", dash: true },
     { k: "unit", label: "Unit", type: "combo", w: "7%", dash: true },
     { k: "unitCost", label: "Unit cost", type: "num", w: "8%", dash: true, money: true },
@@ -56,8 +57,7 @@ export const COLS: Col[] = [
     { k: "supplier", label: "Supplier / payee", type: "text", w: "10%" },
     { k: "spentOn", label: "Spent on", type: "date", w: "9%" },
     { k: "category", label: "Category", type: "choice", w: "8%" },
-    { k: "accountLabelId", label: "Account label", type: "choice", w: "8%" },
-    { k: "note", label: "Note", type: "text", w: "8%" },
+    { k: "note", label: "Note", type: "text", w: "13%" },
 ];
 /** Where Amount sits: the footer's totals line up under it. */
 export const TOTAL_AT = COLS.findIndex((c) => c.k === "amount");
@@ -204,8 +204,6 @@ export function entryOf(r: Row): Schemas["SiteExpenseEntryRequest"] {
         currency: r.currency, spentOn: r.spentOn, category: categoryOf(r.category), accountLabelId: r.accountLabelId ? Number(r.accountLabelId) : null,
     };
 }
-
-export { labelChoices } from "@/domains/shared/accountLabels/labelChoices";
 
 export type CurrencyTotal = { currency: string; total: number };
 const dollarsFirst = (a: CurrencyTotal, b: CurrencyTotal) => (a.currency === "USD" ? -1 : b.currency === "USD" ? 1 : a.currency.localeCompare(b.currency));
