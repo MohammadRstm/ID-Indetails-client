@@ -333,7 +333,7 @@ describe("a project's billing", () => {
     });
 
     it("keeps invoicing, payments and voiding to the people who may", async () => {
-        renderApp(`${path}?invoice=${inv.id}`, withPermissions(admin, { revoke: [P.INVOICE_CREATE, P.PAYMENT_RECORD, P.INVOICE_VOID] }), ...handlers);
+        renderApp(`${tab}&invoice=${inv.id}`, withPermissions(admin, { revoke: [P.INVOICE_CREATE, P.PAYMENT_RECORD, P.INVOICE_VOID] }), ...handlers);
         const dialog = await screen.findByRole("dialog", { name: inv.number! });
         expect(within(dialog).queryByRole("button", { name: "Record payment" })).not.toBeInTheDocument();
         expect(within(dialog).queryByRole("button", { name: "Void invoice" })).not.toBeInTheDocument();
