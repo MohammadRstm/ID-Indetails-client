@@ -17402,7 +17402,7 @@ export interface components {
             position: null | string;
             /**
              * Format: int64
-             * @description A team id from find_recipient or another tool.
+             * @description A department id from list_teams. A Design employee needs one.
              */
             teamId: null | number;
         };
@@ -19836,7 +19836,7 @@ export interface components {
         /** @enum {unknown} */
         ProtonProjectPart: "presentation" | "model" | "drawing" | "access" | "discussion" | "overview" | "payments" | "accounts" | "boqs" | "supervision" | "expenses" | "labour" | "staff" | null;
         /** @enum {unknown} */
-        ProtonProjectSection: "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal" | null;
+        ProtonProjectSection: "financials" | "payments" | "vos" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal" | null;
         /** @enum {unknown} */
         ProtonQuickReply: "yes" | "no" | "design" | "execution" | "today" | "this_week" | "last_week" | "this_month" | "last_month" | "this_quarter" | "last_quarter" | "this_year" | "last_year";
         ProtonQuickReplyOption: {
@@ -19908,7 +19908,7 @@ export interface components {
             text: string;
         };
         /** @enum {unknown} */
-        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | "new_website_project" | "edit_website_project" | "file_comments" | "portal_discussion" | "portal_preview" | "invite_website_staff" | "view_project_file" | "view_boq" | "to_pocket" | "ask_pocket" | null;
+        ProtonSurface: "new_project" | "new_client" | "invite_person" | "edit_project" | "edit_client" | "project_report" | "project_payment_terms" | "add_project_expense" | "site_pricing" | "new_invoice" | "record_payment" | "new_meeting" | "add_company_expense" | "message_person" | "message_team" | "log_work" | "report_bug" | "settings_section" | "company_overview_tab" | "new_website_project" | "edit_website_project" | "file_comments" | "portal_discussion" | "portal_preview" | "invite_website_staff" | "view_project_file" | "view_boq" | "to_pocket" | "ask_pocket" | "project_departments" | null;
         ProtonTableBlock: {
             columns: components["schemas"]["ProtonColumn"][];
             rows: components["schemas"]["ProtonDataRow"][];
