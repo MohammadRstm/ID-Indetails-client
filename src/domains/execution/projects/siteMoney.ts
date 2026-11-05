@@ -4,8 +4,8 @@ type ProjectMoney = NonNullable<Project["money"]>;
 
 /**
  * An Execution site's money as the prototype reads it (XM.money). The client pays the agreed amount: the work price
- * from the agreed BOQs and VOs, plus supervision. Site expenses and ground labour are never billed: they come out of
- * the profit.
+ * from the agreed BOQs and VOs, plus supervision, plus the permits as they are. Site expenses and ground labour are
+ * never billed: they come out of the profit.
  */
 export type SiteMoney = {
     received: number;
@@ -22,7 +22,7 @@ export type SiteMoney = {
     fromPocket: number;
     /** Received − spent − to the pocket + from it: the headline. */
     cashProfit: number;
-    /** The work price + supervision. */
+    /** The work price + supervision + permits. */
     agreed: number;
     owed: number;
     /** Paid beyond the agreed amount so far. */
@@ -33,6 +33,8 @@ export type SiteMoney = {
     fee: number;
     /** The supervision fee on top of it. */
     supervision: number;
+    /** The agreed BOQs' permits, charged as they are: no supervision and no TVA on them. */
+    permits: number;
     payments: number;
     locked: boolean;
 };
@@ -53,6 +55,7 @@ export function siteMoneyOf(m: ProjectMoney): SiteMoney {
         expectedProfit: m.profit,
         fee: m.projectFee ?? 0,
         supervision: m.supervisionUsd ?? 0,
+        permits: m.permitsUsd ?? 0,
         payments: m.billing.paymentCount,
         locked: m.isLocked,
     };

@@ -15,7 +15,7 @@ import { isEmail } from "@/shared/utils/email";
 import { channelsOf, waLink } from "../../shared/billing/channels";
 import { useClient } from "../../shared/clients/clientsApi";
 import type { Project } from "../../shared/projects/projectsApi";
-import { boqErrorMessage } from "./boqRules";
+import { boqErrorMessage, boqTotal } from "./boqRules";
 import { BOQ_NOTE_MAX, downloadBoqPdf, useEmailBoq, useRecordBoqDelivery, type Boq } from "./boqsApi";
 
 type Way = "email" | "whatsapp" | "download";
@@ -74,7 +74,7 @@ export default function SendBoqModal({ project, boq, onClose }: { project: Proje
             }
             toast({
                 text: way === "email" ? `${name} emailed to ${address.trim()}` : way === "whatsapp" ? `${name} shared on WhatsApp` : `${name} downloaded`,
-                sub: `${money.exact(boq.totalUsd, "USD", { cents: true })} · ${project.title}`, icon: "send",
+                sub: `${money.exact(boqTotal(boq), "USD", { cents: true })} · ${project.title}`, icon: "send",
             });
             onClose();
         } catch (e) {

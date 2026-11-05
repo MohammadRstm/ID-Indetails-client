@@ -9,6 +9,7 @@ import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import type { Project } from "../../shared/projects/projectsApi";
 import BoqFailure from "./BoqFailure";
+import { boqTotal } from "./boqRules";
 import { BOQ_REASON_MAX, useAgreeBoq, useWithdrawBoqAgreement, type Boq } from "./boqsApi";
 
 const cents = (n: number) => money.exact(n, "USD", { cents: true });
@@ -25,7 +26,7 @@ export function AgreeBoqModal({ project, boq, onClose }: { project: Project; boq
     function submit() {
         agree.mutate(boq.id, {
             onSuccess: () => {
-                toast({ text: `${nameOf(boq)} agreed`, sub: `${cents(boq.totalUsd)} · ${project.title}`, icon: "checkCircle" });
+                toast({ text: `${nameOf(boq)} agreed`, sub: `${cents(boqTotal(boq))} · ${project.title}`, icon: "checkCircle" });
                 onClose();
             },
         });
@@ -41,10 +42,11 @@ export function AgreeBoqModal({ project, boq, onClose }: { project: Project; boq
                 </>
             }>
             <p style={{ margin: 0 }}>
-                Agree <b>{nameOf(boq)}</b>{boq.number ? ` (${boq.title})` : ""} for <b className="mono">{cents(boq.totalUsd)}</b>?
+                Agree <b>{nameOf(boq)}</b>{boq.number ? ` (${boq.title})` : ""} for <b className="mono">{cents(boqTotal(boq))}</b>?
             </p>
             <p className="hint mt-s">
-                {!vo ? "Its total becomes the site's work price" : boq.totalUsd < 0 ? "Its total comes off the site's work price" : "Its total is added to the site's work price"}, and it can no longer be changed or deleted.
+                {!vo ? "Its total becomes the site's work price" : boq.totalUsd < 0 ? "Its total comes off the site's work price" : "Its total is added to the site's work price"}
+                {boq.permitsUsd !== 0 ? ` and its permits (${cents(boq.permitsUsd)}) the site's permits` : ""}, and it can no longer be changed or deleted.
                 {boq.clientTotalUsd != null && <>With supervision and TVA the client pays <span className="mono">{cents(boq.clientTotalUsd)}</span> for it. </>}
                 You can withdraw the agreement later, with a reason.
             </p>
@@ -82,8 +84,8 @@ export function WithdrawBoqModal({ project, boq, onClose }: { project: Project; 
                 </>
             }>
             <p style={{ margin: 0 }}>
-                <b>{nameOf(boq)}</b>{boq.number ? ` (${boq.title})` : ""} of <b className="mono">{cents(boq.totalUsd)}</b> goes back to a draft, and its total
-                comes off the site's work price.
+                <b>{nameOf(boq)}</b>{boq.number ? ` (${boq.title})` : ""} of <b className="mono">{cents(boqTotal(boq))}</b> goes back to a draft, and its total
+                comes off the site's work price{boq.permitsUsd !== 0 ? ", its permits off the site's permits" : ""}.
             </p>
             <div className="field mt">
                 <label className="label required" htmlFor="boq-why">Why is it withdrawn?</label>

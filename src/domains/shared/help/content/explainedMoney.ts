@@ -143,7 +143,7 @@ export const explainedMoney: Article[] = [
             formula("Client total = work price + supervision + TVA"),
             list(
                 "The work price is typed in nowhere: it only changes when a BOQ or a VO is agreed or its agreement is withdrawn.",
-                "The **agreed amount** that profit is measured against is the work price plus supervision. TVA is on top of it and isn't revenue.",
+                "The **agreed amount** that profit is measured against is the work price plus supervision, plus the permits. TVA is on top of it and isn't revenue.",
                 "Site expenses are costs only: nothing on them is charged to the client, so they don't add to what the client owes.",
                 "While the site is open the price moves as BOQs and VOs are agreed; finishing the site freezes it.",
             ),
@@ -184,7 +184,7 @@ export const explainedMoney: Article[] = [
             formula("Cash in account = received − costs − supervision taken − moved to the pocket money + paid by it", "$10,000 received, $9,036 of costs and $500 of supervision taken: $464."),
             formula("Cash in account = profit − rest to pay + TVA − supervision taken", "Why the cash isn't the profit: the profit counts the whole price but the account holds only what was paid, the TVA paid is in it without being profit, and the supervision taken has left it. Pocket money is in both, so it cancels out."),
             list(
-                "**Costs** are the site's: site expenses, ground labour, staff and other costs. **Profit** is the agreed amount (work price plus supervision) less the costs. The TVA a client pays is in the account too, but it isn't revenue.",
+                "**Costs** are the site's: site expenses, ground labour, staff and other costs. **Profit** is the agreed amount (work price plus supervision, plus the permits) less the costs. The TVA a client pays is in the account too, but it isn't revenue.",
                 "**Rest in account by label** is what was received under each label less what was spent under it. **Unlabelled** comes last and also carries what no label holds: ground labour, staff and other costs, the supervision taken and the pocket money moves. The rows add up to the cash in the account.",
                 "**Spending by category** and **by payee** count site expenses only. A payee is the supplier as typed, ignoring capitals and extra spaces; expenses with no supplier are listed under **No payee**.",
                 "A cost with no exchange rate for its day is left out of every figure and listed apart. Add the rate to count it.",

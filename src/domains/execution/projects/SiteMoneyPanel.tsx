@@ -92,12 +92,13 @@ export default function SiteMoneyPanel({ project, onRecordPayment, onEditPricing
                         <div className="u" style={{ marginBottom: 6 }}>Where the profit comes from</div>
                         <CostRow label="Work price" swatch={SITE_COLORS.fee} value={`+${money.exact(x.fee)}`} meta={x.fee ? "from the agreed BOQs" : "none agreed yet"} />
                         <CostRow label="Supervision" swatch={SITE_COLORS.supervision} value={`+${money.exact(x.supervision)}`} meta="on top of the work price" />
+                        {x.permits !== 0 && <CostRow label="Permits" swatch={SITE_COLORS.fee} value={`${x.permits < 0 ? "−" : "+"}${money.exact(Math.abs(x.permits))}`} meta="charged as they are: no supervision or TVA" />}
                         <CostRow label="Site expenses" swatch={SITE_COLORS.siteExpenses} value={`−${money.exact(x.siteExpenses)}`} tone={x.siteExpenses ? "down" : ""} meta="what was spent on site" />
                         <CostRow label="Ground labour" swatch={SITE_COLORS.labour} value={`−${money.exact(x.labour)}`} tone={x.labour ? "down" : ""} meta="not billed to the client" />
                         {x.other > 0 && <CostRow label="Other costs" swatch={SITE_COLORS.other} value={`−${money.exact(x.other)}`} tone="down" />}
                         <CostRow strong label="Expected profit" value={money.exact(x.expectedProfit)} tone={x.expectedProfit < 0 ? "down" : ""} />
                         <div className="xm-owed mt">
-                            <div><span>Agreed so far</span><b className="mono">{money.exact(x.agreed)}</b><em>the work price and supervision</em></div>
+                            <div><span>Agreed so far</span><b className="mono">{money.exact(x.agreed)}</b><em>the work price and supervision{x.permits !== 0 ? ", and the permits" : ""}</em></div>
                             <div><span>Received</span><b className="mono">{money.exact(x.received)}</b><em>{plural(x.payments, "payment")}</em></div>
                             {x.toPocket > 0 && (
                                 <div><span>To the pocket money</span><b className="mono">−{money.exact(x.toPocket)}</b><em>set aside from this site's profit</em></div>

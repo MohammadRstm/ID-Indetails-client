@@ -15,11 +15,11 @@ import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../shared/projects/projectsApi";
 import { useBoqAccess } from "./boqAccess";
 import { AgreeBoqModal, WithdrawBoqModal } from "./BoqAgreementModals";
-import { blankLine, draftOf, fitSigned, hasProblems, isDirty, problemsOf, requestOf, withServerProblems, type Draft, type LineDraft } from "./boqDraft";
+import { draftOf, fitSigned, hasProblems, isDirty, problemsOf, requestOf, withNewLine, withServerProblems, type Draft, type LineDraft } from "./boqDraft";
 import { BoqDeliveries, BoqTotals } from "./BoqFigures";
 import BoqLinesTable from "./BoqLinesTable";
 import { useBoqLinks } from "./boqLinks";
-import { agreeBlock, agreedClient, boqErrorMessage, emptyBlock, isNotChosen, KIND_LABEL, withdrawBlock } from "./boqRules";
+import { agreeBlock, agreedClient, boqErrorMessage, boqTotal, emptyBlock, isNotChosen, KIND_LABEL, withdrawBlock } from "./boqRules";
 import { BOQ_MAX_LINES, BOQ_REASON_MAX, BOQ_TITLE_MAX, downloadBoqPdf, useBoq, useBoqs, useDeleteBoq, useDuplicateBoq, useSaveBoq, type Boq, type BoqAdjustmentType } from "./boqsApi";
 import CopyLinesModal from "./CopyLinesModal";
 import SendBoqModal from "./SendBoqModal";
@@ -29,9 +29,9 @@ type Dialog = "agree" | "withdraw" | "send" | "copy" | "delete" | null;
 const SAVE_FIRST = "Save your changes first.";
 
 /**
- * A BOQ, VO or internal draft to read or write: its title and reason, its lines, the whole-BOQ adjustment and the
- * figures of its last save. Every figure comes from that save: the API works them all out, and a line changed since
- * shows a dash until it is saved. An agreed BOQ opens read-only.
+ * A BOQ, VO or internal draft to read or write: its title and reason, its lines (the work, then the permits, which carry
+ * no supervision or TVA), the work's adjustment and the figures of its last save. Every figure comes from that save:
+ * the API works them all out, and a line changed since shows a dash until it is saved. An agreed BOQ opens read-only.
  */
 export default function BoqSheet({ project, boq, onClose }: { project: Project; boq: Boq; onClose: () => void }) {
     const access = useBoqAccess(project);
@@ -80,7 +80,7 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
         save.mutate(requestOf(draft, boq.kind, startedFrom), {
             onSuccess: (saved) => {
                 startFrom(saved);
-                toast({ text: `${saved.number ?? saved.title} saved`, sub: money.exact(saved.totalUsd, "USD", { cents: true }), icon: "checkCircle" });
+                toast({ text: `${saved.number ?? saved.title} saved`, sub: money.exact(boqTotal(saved), "USD", { cents: true }), icon: "checkCircle" });
             },
         });
     }
@@ -113,6 +113,13 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
     }
 
     const setAdjustment = (adjustment: BoqAdjustmentType) => change({ adjustment, adjustmentValue: "" });
+    const work = draft.lines.filter((l) => l.nature === "work");
+    const permits = draft.lines.filter((l) => l.nature === "permit");
+    const full = draft.lines.length >= BOQ_MAX_LINES;
+    const tableProps = {
+        saved: boq.lines, readOnly: !editable, problems: shown, errors, onChange: changeLine, onMove: move,
+        onRemove: (i: number) => change({ lines: draft.lines.filter((_, at) => at !== i) }),
+    };
 
     return (
         <Modal size="xl" title={name} sub={`${KIND_LABEL[boq.kind]}${boq.number ? ` · ${boq.title}` : ""} · ${project.title}`} onClose={close}
@@ -191,18 +198,32 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
             )}
 
             <div className="spread mt" style={{ marginBottom: 6 }}>
-                <span className="u">Lines · {draft.lines.length}</span>
+                <span className="u">Lines · {work.length}</span>
                 {editable && (
-                    <button type="button" className="btn btn-sm" disabled={draft.lines.length >= BOQ_MAX_LINES} onClick={() => change({ lines: [...draft.lines, blankLine()] })}>
+                    <button type="button" className="btn btn-sm" disabled={full} onClick={() => change({ lines: withNewLine(draft.lines, "work") })}>
                         <Icon name="plus" />Add line
                     </button>
                 )}
             </div>
-            {draft.lines.length === 0 && <p className="muted" style={{ margin: "0 0 8px" }}>No lines yet.{editable ? " Add the first one." : ""}</p>}
-            {draft.lines.length > 0 && (
-                <BoqLinesTable lines={draft.lines} saved={boq.lines} readOnly={!editable} problems={shown} errors={errors}
-                    onChange={changeLine} onMove={move} onRemove={(i) => change({ lines: draft.lines.filter((_, at) => at !== i) })} />
-            )}
+            {work.length === 0 && <p className="muted" style={{ margin: "0 0 8px" }}>No lines yet.{editable ? " Add the first one." : ""}</p>}
+            {work.length > 0 && <BoqLinesTable label="Lines" lines={work} first={0} {...tableProps} />}
+
+            <div className="spread mt" style={{ marginBottom: 6 }}>
+                <span className="u">Permits · {permits.length}</span>
+                {editable && (
+                    <button type="button" className="btn btn-sm" disabled={full} onClick={() => change({ lines: withNewLine(draft.lines, "permit") })}>
+                        <Icon name="plus" />Add a permit
+                    </button>
+                )}
+            </div>
+            {permits.length === 0
+                ? <p className="muted" style={{ margin: "0 0 8px" }}>No permits. They are charged as they are: no supervision and no TVA on them.</p>
+                : (
+                    <>
+                        <BoqLinesTable label="Permits" lines={permits} first={work.length} {...tableProps} />
+                        <div className="hint mt-s">Charged as they are: no supervision, no TVA and no adjustment on them. Their real cost goes in the expenses.</div>
+                    </>
+                )}
             <FieldError message={shown.lines} />
             {boq.kind !== "vo" && editable && <div className="hint mt-s">A negative rate is only allowed on a VO.</div>}
 
@@ -222,7 +243,7 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
                                 if (next != null) change({ adjustmentValue: next });
                             }} />
                     )}
-                    {draft.adjustment === "percent" && <span className="muted">% of the subtotal; a minus takes it off</span>}
+                    {draft.adjustment === "percent" && <span className="muted">% of the work subtotal; a minus takes it off</span>}
                 </div>
                 <FieldError message={errors.show("adjustment", problems.adjustmentValue) ?? fields.adjustmentValue} />
             </div>

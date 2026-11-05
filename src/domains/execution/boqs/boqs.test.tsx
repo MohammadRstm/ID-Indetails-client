@@ -304,9 +304,9 @@ describe("the BOQ editor", () => {
         expect(calls.sent[0]).toEqual({
             title: "Lobby works, option B", reason: null, adjustmentType: "none", adjustmentValue: null,
             lines: [
-                { id: 201, code: "1.1", description: "Demolition", quantity: 200, wasteRate: 0.05, unit: "m²", rate: 20 },
-                { id: 202, code: "2.1", description: "Porcelain tiles", quantity: 180, wasteRate: 0.1, unit: "m²", rate: 30 },
-                { id: 203, code: "3.1", description: "Electrical first fix", quantity: 1, wasteRate: 0, unit: "lot", rate: 8960 },
+                { id: 201, nature: "work", code: "1.1", description: "Demolition", quantity: 200, wasteRate: 0.05, unit: "m²", rate: 20 },
+                { id: 202, nature: "work", code: "2.1", description: "Porcelain tiles", quantity: 180, wasteRate: 0.1, unit: "m²", rate: 30 },
+                { id: 203, nature: "work", code: "3.1", description: "Electrical first fix", quantity: 1, wasteRate: 0, unit: "lot", rate: 8960 },
             ],
             // the save it started from, which the API checks so it can't undo a newer one
             updatedAt: boqs.draftB.updatedAt,
@@ -419,10 +419,46 @@ describe("the BOQ editor", () => {
         await userEvent.click(save(dialog));
         await waitFor(() => expect(calls.sent).toHaveLength(1));
         expect(calls.sent[0].lines).toEqual([
-            { id: 202, code: "2.1", description: "Porcelain tiles", quantity: 180, wasteRate: 0.1, unit: "m²", rate: 30 },
-            { id: null, code: null, description: "Painting", quantity: 10, wasteRate: 0, unit: null, rate: 12 },
-            { id: 203, code: "3.1", description: "Electrical first fix", quantity: 1, wasteRate: 0, unit: "lot", rate: 8960 },
+            { id: 202, nature: "work", code: "2.1", description: "Porcelain tiles", quantity: 180, wasteRate: 0.1, unit: "m²", rate: 30 },
+            { id: null, nature: "work", code: null, description: "Painting", quantity: 10, wasteRate: 0, unit: null, rate: 12 },
+            { id: 203, nature: "work", code: "3.1", description: "Electrical first fix", quantity: 1, wasteRate: 0, unit: "lot", rate: 8960 },
         ]);
+    });
+
+    it("keeps permits in their own part, charged with no supervision or TVA", async () => {
+        const dialog = await open(42, "VO-2026-002");
+        expect(within(within(dialog).getByRole("table", { name: "Lines" })).getByLabelText("Description 1")).toHaveValue("Drawings for the permit");
+        expect(within(within(dialog).getByRole("table", { name: "Permits" })).getByLabelText("Description 2")).toHaveValue("Building permit fee");
+
+        const totals = within(dialog).getByRole("group", { name: "Totals" });
+        expect(within(totals).getByText("Work total").closest("div")).toHaveTextContent("$2,000");
+        expect(within(totals).getByText("Supervision").closest("div")).toHaveTextContent("$200");
+        expect(within(totals).getByText("Permits").closest("div")).toHaveTextContent(/\$3,000.*no supervision or TVA on them/);
+        expect(within(totals).getByText("Client pays").closest("div")).toHaveTextContent(/\$5,200.*work \+ supervision \+ TVA \+ permits/);
+    });
+
+    it("adds a permit to its own part, after the work, and saves it as a permit", async () => {
+        const calls = saving(32, boqs.draftB);
+        const dialog = await open(32, "BQ-2026-002", karim, ...calls.handlers);
+        expect(within(dialog).getByText(/No permits\. They are charged as they are/)).toBeInTheDocument();
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Add a permit" }));
+        const permits = within(dialog).getByRole("table", { name: "Permits" });
+        await userEvent.type(within(permits).getByLabelText("Description 4"), "Building permit fee");
+        // a permit is one lot unless it says otherwise
+        expect(within(permits).getByLabelText("Quantity 4")).toHaveValue("1");
+        await userEvent.type(within(permits).getByLabelText("Rate 4"), "3000");
+        // a new work line goes before the permits, and a permit stays in its part
+        await userEvent.click(within(dialog).getByRole("button", { name: "Add line" }));
+        expect(within(within(dialog).getByRole("table", { name: "Lines" })).getByLabelText("Description 4")).toHaveValue("");
+        expect(within(permits).getByLabelText("Description 5")).toHaveValue("Building permit fee");
+        expect(within(permits).getByRole("button", { name: "Move line 5 up" })).toBeDisabled();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Remove line 4" }));
+
+        await userEvent.click(save(dialog));
+        await waitFor(() => expect(calls.sent).toHaveLength(1));
+        expect((calls.sent[0].lines as unknown[]).at(-1)).toEqual(
+            { id: null, nature: "permit", code: null, description: "Building permit fee", quantity: 1, wasteRate: 0, unit: null, rate: 3000 });
     });
 
     it("lets a VO take a negative rate, and needs its reason", async () => {
@@ -567,8 +603,8 @@ describe("what is done with a BOQ", () => {
     it("copies the chosen lines of another BOQ into a draft", async () => {
         const copied: unknown[] = [];
         const added = [
-            { id: 205, position: 4, code: "1.1", description: "Demolition", quantity: 100, wasteRate: 0.05, finalQuantity: 105, unit: "m²", rate: 20, totalUsd: 2100 },
-            { id: 206, position: 5, code: "3.1", description: "Electrical first fix", quantity: 1, wasteRate: 0, finalQuantity: 1, unit: "lot", rate: 8460, totalUsd: 8460 },
+            { id: 205, position: 4, nature: "work" as const, code: "1.1", description: "Demolition", quantity: 100, wasteRate: 0.05, finalQuantity: 105, unit: "m²", rate: 20, totalUsd: 2100 },
+            { id: 206, position: 5, nature: "work" as const, code: "3.1", description: "Electrical first fix", quantity: 1, wasteRate: 0, finalQuantity: 1, unit: "lot", rate: 8460, totalUsd: 8460 },
         ];
         const memory = remembered(32, boqs.draftB);
         const dialog = await open(32, "BQ-2026-002", karim, memory.read,
