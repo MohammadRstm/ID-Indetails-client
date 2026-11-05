@@ -14,7 +14,7 @@ describe("Proton's UI commands", () => {
         expect(stepOf(command({ type: "open_project", id: 42, domain: "design", section: "requirements" }), designAdmin, "design"))
             .toEqual({ kind: "go", path: "/design/projects/42?tab=requirements", label: "It" });
         // the project page's newer tabs
-        for (const section of ["financials", "analytics", "contributors"]) {
+        for (const section of ["financials", "payments", "vos", "analytics", "contributors"]) {
             expect(stepOf(command({ type: "open_project", id: 42, domain: "design", section }), designAdmin, "design"))
                 .toEqual({ kind: "go", path: `/design/projects/42?tab=${section}`, label: "It" });
         }
@@ -68,6 +68,9 @@ describe("the page context", () => {
     it("names a files or portal tab's part, and the Website area's pages and open project", () => {
         expect(pageContextOf("/design/projects/42", "?tab=portal&part=discussion&item=3")).toMatchObject({ section: "portal", part: "discussion" });
         expect(pageContextOf("/design/projects/42", "?tab=files&part=drawing")).toMatchObject({ section: "files", part: "drawing" });
+        // a Design client project's client payments and variation orders
+        expect(pageContextOf("/design/projects/42", "?tab=vos")).toMatchObject({ entityType: "project", section: "vos", part: null });
+        expect(pageContextOf("/design/projects/42", "?tab=payments")).toMatchObject({ section: "payments" });
         // a part another tab doesn't have, or no tab at all, names none
         expect(pageContextOf("/design/projects/42", "?tab=files&part=discussion")?.part).toBeNull();
         expect(pageContextOf("/design/projects/42", "?part=access")?.part).toBeNull();
@@ -196,6 +199,9 @@ describe("Proton opening forms and windows", () => {
             .toMatchObject({ path: "/execution/projects/7?tab=financials&part=boqs&boq=3" });
         expect(stepOf(surface("view_boq", { id: 7, domain: "execution" }), superAdmin, "execution")).toBeNull();
         expect(stepOf(surface("to_pocket", { id: 7, domain: "execution" }), superAdmin, "execution")).toMatchObject({ path: "/execution/projects/7?money=to-pocket" });
+        // a Design project's departments window, for whoever may edit the project; a site has none
+        expect(stepOf(surface("project_departments", { id: 42, domain: "design" }), superAdmin, "design")).toMatchObject({ path: "/design/projects/42?departments=edit" });
+        expect(stepOf(surface("project_departments", { id: 7, domain: "execution" }), superAdmin, "execution")).toBeNull();
         expect(stepOf(surface("ask_pocket", { id: 7, domain: "execution" }), superAdmin, "execution")).toMatchObject({ path: "/execution/projects/7?money=ask-pocket" });
         expect(stepOf(surface("ask_pocket", { id: 7, domain: "execution" }), siteStaff, "execution")).toBeNull();
         expect(stepOf(surface("settings_section", { domain: "execution", settingsSection: "labels" }), superAdmin, "execution"))

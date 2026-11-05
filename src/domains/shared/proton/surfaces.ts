@@ -75,6 +75,8 @@ export const SURFACES: Record<ProtonSurface, (a: Ask) => SurfaceTarget | null> =
         : null),
     to_pocket: (a) => onRecord(a, "projects", "money=to-pocket", a.domain === "execution" && a.p.has(P.FINANCIAL_VIEW)),
     ask_pocket: (a) => onRecord(a, "projects", "money=ask-pocket", a.domain === "execution" && a.p.has(P.FINANCIAL_VIEW)),
+    // a Design client project's departments window: the page shows it while the project is open to whoever may edit it
+    project_departments: (a) => onDesignProject(a, "departments=edit", a.p.has(P.PROJECT_EDIT)),
     // the preview has a page of its own, outside the app's shell
     portal_preview: (a) => (a.domain === "design" && a.id != null && a.p.canSeeDomain("design") && seesPortalFiles(a.p) ? { kind: "go", path: previewPath(a.id) } : null),
 };
