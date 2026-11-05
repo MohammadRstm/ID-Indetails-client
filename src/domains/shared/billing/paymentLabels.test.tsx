@@ -43,7 +43,7 @@ describe("recording a payment under an account label", () => {
 
     it("offers the open labels on a Design project, and files the payment under the one chosen", async () => {
         const recorded: unknown[] = [];
-        renderApp(designPath, designAdmin,
+        renderApp(`${designPath}?tab=payments`, designAdmin,
             http.post(`/api/projects/${designProject.id}/payments`, async ({ request }) => { recorded.push(await request.json()); return HttpResponse.json(paid, { status: 201 }); }),
             ...designHandlers);
         await userEvent.click(within(await band()).getByRole("button", { name: "Record payment" }));
@@ -85,7 +85,7 @@ describe("recording a payment under an account label", () => {
 
     it("shows the API's refusal of a label beside the label, until another is picked", async () => {
         const message = "Permits is archived, so a new payment can't be filed under it.";
-        renderApp(designPath, designAdmin,
+        renderApp(`${designPath}?tab=payments`, designAdmin,
             http.post(`/api/projects/${designProject.id}/payments`, () => refusal("account_label_archived", message)),
             ...designHandlers);
         await userEvent.click(within(await band()).getByRole("button", { name: "Record payment" }));
@@ -102,7 +102,7 @@ describe("recording a payment under an account label", () => {
     });
 
     it("shows a label the API names in a field error beside the label", async () => {
-        renderApp(designPath, designAdmin,
+        renderApp(`${designPath}?tab=payments`, designAdmin,
             http.post(`/api/projects/${designProject.id}/payments`, () => refusal("validation_failed", "One or more fields are invalid.", { accountLabelId: ["That account label doesn't exist."] }, 400)),
             ...designHandlers);
         await userEvent.click(within(await band()).getByRole("button", { name: "Record payment" }));

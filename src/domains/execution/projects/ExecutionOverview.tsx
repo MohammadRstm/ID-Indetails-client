@@ -6,11 +6,11 @@ import { Avatars } from "@/shared/components/Identity/People";
 import { cx } from "@/shared/utils/cx";
 import BillingBand from "../../shared/billing/BillingBand";
 import { useBillingLinks } from "../../shared/billing/billingLinks";
+import ProjectPayments from "../../shared/billing/ProjectPayments";
 import type { Project } from "../../shared/projects/projectsApi";
 import LabourPanel from "../labour/LabourPanel";
 import ExpensesPanel from "../expenses/ExpensesPanel";
 import AccountSection from "../account/AccountSection";
-import SitePayments from "../account/SitePayments";
 import SupervisionTab from "../account/SupervisionTab";
 import BoqPanel from "../boqs/BoqPanel";
 import LabourHealth from "./LabourHealth";
@@ -67,7 +67,7 @@ export function ExecutionFinancials({ project }: { project: Project }) {
                 </div>
             </div>
             {part === "overview" ? <SiteOverview project={project} />
-                : part === "payments" ? <><BillingBand project={project} /><SitePayments project={project} /></>
+                : part === "payments" ? <><BillingBand project={project} /><ProjectPayments project={project} /></>
                     : part === "accounts" ? <AccountSection project={project} onSupervision={() => pick("supervision")} />
                         : part === "boqs" ? <BoqPanel project={project} />
                             : part === "supervision" ? <SupervisionTab project={project} />

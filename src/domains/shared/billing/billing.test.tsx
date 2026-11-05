@@ -15,6 +15,8 @@ import { invoiceStateOf } from "./invoiceStatus";
 const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const project = projectWork.project;
 const path = `/design/projects/${project.id}`;
+/** The project's own Client payments tab: what was received, the invoices, then each payment. */
+const tab = `${path}?tab=payments`;
 const inv = billing.issued;
 
 // Wednesday 30 September 2026, noon in Beirut
@@ -26,20 +28,33 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
-const band = async () => (await screen.findByText("Client payments")).closest(".panel") as HTMLElement;
+const band = async () => (await screen.findByText("cash received - does not change profit or margin")).closest(".panel") as HTMLElement;
 const handlers = [...billingHandlers, ...projectWorkHandlers];
 
 describe("a project's billing", () => {
     it("shows what was received, what is owed and the invoices", async () => {
-        renderApp(path, admin, ...handlers);
+        renderApp(tab, admin, ...handlers);
         const panel = await band();
         expect(within(panel).getByText(`${money.fmt(inv.balance!)} overdue`)).toBeInTheDocument();
         expect(await within(panel).findByText(inv.number!)).toBeInTheDocument();
     });
 
+    it("has its own tab: each payment in a table under the invoices, and none of it on the Financials tab", async () => {
+        renderApp(tab, admin, ...handlers);
+        const received = await screen.findByRole("region", { name: "Payments received" });
+        expect(await within(received).findByText("ID-2026-002")).toBeInTheDocument();
+        expect(within(received).getByText(money.fmt(14400))).toBeInTheDocument();
+        expect((await band()).compareDocumentPosition(received) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+        await userEvent.click(screen.getByRole("tab", { name: "Financials" }));
+        await screen.findByRole("region", { name: "Customer payment" });
+        expect(screen.queryByText("cash received - does not change profit or margin")).not.toBeInTheDocument();
+        expect(screen.queryByRole("region", { name: "Payments received" })).not.toBeInTheDocument();
+    });
+
     it("writes a draft beside what the client will receive", async () => {
         const saved: unknown[] = [];
-        renderApp(path, admin,
+        renderApp(tab, admin,
             http.post(`/api/projects/${project.id}/invoices`, async ({ request }) => { saved.push(await request.json()); return HttpResponse.json(billing.draft, { status: 201 }); }),
             ...handlers);
         await userEvent.click(within(await band()).getByRole("button", { name: "New invoice" }));
@@ -55,7 +70,7 @@ describe("a project's billing", () => {
     it("saves and sends: a draft is issued, then emailed by the server", async () => {
         const calls: string[] = [];
         const emailed: unknown[] = [];
-        renderApp(path, admin,
+        renderApp(tab, admin,
             http.post(`/api/projects/${project.id}/invoices`, () => HttpResponse.json(billing.draft, { status: 201 })),
             http.post(`/api/invoices/${billing.draft.id}/issue`, () => { calls.push("issue"); return HttpResponse.json(inv); }),
             http.post(`/api/invoices/${inv.id}/email`, async ({ request }) => { calls.push("email"); emailed.push(await request.json()); return HttpResponse.json(inv, { status: 201 }); }),
@@ -94,7 +109,7 @@ describe("a project's billing", () => {
 
     it("won't save an invoice line that has an amount but no description", async () => {
         let saved = false;
-        renderApp(path, admin,
+        renderApp(tab, admin,
             http.post(`/api/projects/${project.id}/invoices`, () => { saved = true; return HttpResponse.json(billing.draft, { status: 201 }); }),
             ...handlers);
         await userEvent.click(within(await band()).getByRole("button", { name: "New invoice" }));
@@ -112,7 +127,7 @@ describe("a project's billing", () => {
     });
 
     it("keeps the other lines' rows in place when a line above them is removed", async () => {
-        renderApp(path, admin, ...handlers);
+        renderApp(tab, admin, ...handlers);
         await userEvent.click(within(await band()).getByRole("button", { name: "New invoice" }));
         const dialog = await screen.findByRole("dialog", { name: "New invoice" });
         await userEvent.type(within(dialog).getByLabelText("Line 1"), "First milestone");
@@ -144,7 +159,7 @@ describe("a project's billing", () => {
             ...project,
             money: { ...project.money!, billing: { ...project.money!.billing, invoiced: 0, outstanding: 0, overdue: 0, drafts: 0, issuedCount: 0, received: 0, onAccount: 0 } },
         };
-        renderApp(path, admin,
+        renderApp(tab, admin,
             http.get(`/api/projects/${project.id}`, () => HttpResponse.json(uninvoiced)),
             http.get("/api/invoices", () => HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 })),
             http.post(`/api/projects/${project.id}/payments`, async ({ request }) => {
@@ -173,7 +188,7 @@ describe("a project's billing", () => {
 
     it("records a payment against the open invoice, for its balance", async () => {
         const recorded: unknown[] = [];
-        renderApp(path, admin,
+        renderApp(tab, admin,
             http.post(`/api/projects/${project.id}/payments`, async ({ request }) => {
                 recorded.push(await request.json());
                 return HttpResponse.json({ ...billing.domainPayments.items[0], amountUsd: 7800 }, { status: 201 });
@@ -193,7 +208,7 @@ describe("a project's billing", () => {
             { ...billing.rates[0], id: 2, ratePerUsd: 90000, effectiveFrom: "2026-09-25" },
             { ...billing.rates[0], id: 1, ratePerUsd: 89500, effectiveFrom: "2026-09-01" },
         ];
-        renderApp(path, admin,
+        renderApp(tab, admin,
             http.get("/api/exchange-rates", () => HttpResponse.json(rates)),
             http.post(`/api/projects/${project.id}/payments`, async ({ request }) => {
                 recorded.push(await request.json() as { fxRate?: number });
@@ -218,7 +233,7 @@ describe("a project's billing", () => {
         // a fraction of a cent left is settled; a balance with a floating-point tail is still its cents
         const settled = { ...row, id: 4, number: "ID-2026-004", balance: 0.004 };
         const owing = { ...row, balance: 1234.56 - 1e-7 };
-        renderApp(path, admin,
+        renderApp(tab, admin,
             http.get("/api/invoices", () => HttpResponse.json({ ...billing.projectInvoices, items: [settled, owing], totalCount: 2 })),
             http.post(`/api/projects/${project.id}/payments`, async ({ request }) => {
                 recorded.push(await request.json());
@@ -258,7 +273,7 @@ describe("a project's billing", () => {
 
     it("splits what is left into invoices that go out on their own days", async () => {
         const planned: unknown[] = [];
-        renderApp(path, admin,
+        renderApp(tab, admin,
             http.post(`/api/projects/${project.id}/invoice-plan`, async ({ request }) => {
                 planned.push(await request.json());
                 return HttpResponse.json([inv, { ...billing.draft, sendOn: "2026-10-30" }, { ...billing.draft, sendOn: "2026-11-30" }], { status: 201 });
@@ -288,7 +303,7 @@ describe("a project's billing", () => {
 
     it("keeps custom amounts to the amount being split", async () => {
         let planned = false;
-        renderApp(path, admin,
+        renderApp(tab, admin,
             http.post(`/api/projects/${project.id}/invoice-plan`, () => { planned = true; return HttpResponse.json([], { status: 201 }); }),
             ...handlers);
         await userEvent.click(within(await band()).getByRole("button", { name: "Auto invoice" }));
@@ -318,7 +333,7 @@ describe("a project's billing", () => {
     });
 
     it("keeps invoicing, payments and voiding to the people who may", async () => {
-        renderApp(`${path}?invoice=${inv.id}`, withPermissions(admin, { revoke: [P.INVOICE_CREATE, P.PAYMENT_RECORD, P.INVOICE_VOID] }), ...handlers);
+        renderApp(`${tab}&invoice=${inv.id}`, withPermissions(admin, { revoke: [P.INVOICE_CREATE, P.PAYMENT_RECORD, P.INVOICE_VOID] }), ...handlers);
         const dialog = await screen.findByRole("dialog", { name: inv.number! });
         expect(within(dialog).queryByRole("button", { name: "Record payment" })).not.toBeInTheDocument();
         expect(within(dialog).queryByRole("button", { name: "Void invoice" })).not.toBeInTheDocument();
@@ -344,7 +359,7 @@ describe("a domain whose invoicing isn't set up", () => {
         { type: "not_found", code: "billing_settings_missing", message: "Billing settings have not been set up for this domain yet." }, { status: 404 }));
 
     it("says so beside the invoices, with the way to set it up", async () => {
-        renderApp(path, admin, notSetUp, ...handlers);
+        renderApp(tab, admin, notSetUp, ...handlers);
         const panel = await band();
         expect(await within(panel).findByText("Invoicing isn't set up for Design yet.")).toBeInTheDocument();
         expect(within(panel).getByRole("link", { name: "Set up invoicing" })).toHaveAttribute("href", "/design/settings?section=finance");
@@ -353,7 +368,7 @@ describe("a domain whose invoicing isn't set up", () => {
     });
 
     it("tells someone who can't set it up who can", async () => {
-        renderApp(path, withPermissions(admin, { revoke: [P.BILLING_SETTINGS_MANAGE] }), notSetUp, ...handlers);
+        renderApp(tab, withPermissions(admin, { revoke: [P.BILLING_SETTINGS_MANAGE] }), notSetUp, ...handlers);
         const panel = await band();
         expect(await within(panel).findByText(/Ask an admin who manages the billing settings to set it up/)).toBeInTheDocument();
         expect(within(panel).queryByRole("link", { name: "Set up invoicing" })).not.toBeInTheDocument();

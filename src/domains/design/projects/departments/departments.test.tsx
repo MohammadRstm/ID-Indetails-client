@@ -23,24 +23,39 @@ afterEach(() => vi.useRealTimers());
 const panel = async () => screen.findByRole("region", { name: "Departments" });
 
 describe("a Design project's departments", () => {
-    it("show each one's budget, what its hours cost and who logged them, and say when one is over", async () => {
+    it("show a row each with its budget, what its hours cost and what's left, the cost in red when it's over", async () => {
         renderApp(path, rana, ...projectWorkHandlers);
         const departments = await panel();
-        const architecture = await within(departments).findByRole("group", { name: "Architecture" });
+        const architecture = await within(departments).findByRole("row", { name: "Architecture" });
         expect(within(architecture).getByText("60%")).toBeInTheDocument();
         expect(within(architecture).getByText(money.fmt(6000))).toBeInTheDocument();
-        expect(within(architecture).getByText("Over budget")).toBeInTheDocument();
-        expect(within(architecture).getByText(money.fmt(500))).toHaveClass("down");
-        // its people, with this month's rate
-        expect(within(architecture).getByText("Yara Mansour")).toBeInTheDocument();
-        expect(within(architecture).getByText(`50h · ${money.exact(13.25)}/h`)).toBeInTheDocument();
+        expect(within(architecture).getByText("108%")).toBeInTheDocument();
+        expect(within(architecture).getByText(money.fmt(6500))).toHaveClass("down");
+        expect(within(architecture).getByText(money.fmt(-500))).toHaveClass("down");
 
-        const interiors = within(departments).getByRole("group", { name: "Interiors" });
-        expect(within(interiors).getByText("Left")).toBeInTheDocument();
+        const interiors = within(departments).getByRole("row", { name: "Interiors" });
+        expect(within(interiors).getByText(money.fmt(1000))).not.toHaveClass("down");
         expect(within(interiors).getByText(money.fmt(3000))).not.toHaveClass("down");
     });
 
-    it("take new shares adding up to 100%, with why, from whoever writes the money", async () => {
+    it("open one for who logged its hours, at what rate, and their share of its cost", async () => {
+        renderApp(path, rana, ...projectWorkHandlers);
+        await userEvent.click(await within(await panel()).findByRole("row", { name: "Architecture" }));
+        const dialog = await screen.findByRole("dialog", { name: "Architecture" });
+        expect(within(dialog).getByText("Over budget")).toBeInTheDocument();
+        expect(within(dialog).getAllByText(money.fmt(6500)).every((n) => n.classList.contains("down"))).toBe(true);
+
+        // most cost first; a rate that changed shows its range
+        const people = within(dialog).getAllByRole("row").filter((r) => r.getAttribute("aria-label"));
+        expect(people.map((r) => r.getAttribute("aria-label"))).toEqual(["Yara Mansour", "Karim Haddad"]);
+        expect(within(people[0]).getByText("40h")).toBeInTheDocument();
+        expect(within(people[0]).getByText(`${money.exact(12.5)}–${money.exact(13.25)}/h`)).toBeInTheDocument();
+        expect(within(people[0]).getByText("80%")).toBeInTheDocument();
+        expect(within(people[1]).getByText(`${money.exact(13)}/h`)).toBeInTheDocument();
+        expect(within(people[1]).getByText(money.fmt(1300))).toBeInTheDocument();
+    });
+
+    it("take new shares adding up to 100%, with why if you like, from whoever writes the money", async () => {
         const sent: unknown[] = [];
         renderApp(path, rana,
             http.put("/api/projects/:id/departments/shares", async ({ request }) => {
@@ -55,17 +70,16 @@ describe("a Design project's departments", () => {
         await userEvent.type(architecture, "70");
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
         expect(within(dialog).getByText("The shares add up to 110%: they must make 100%.")).toBeInTheDocument();
-        expect(within(dialog).getByText("Say why the shares change.")).toBeInTheDocument();
         expect(sent).toEqual([]);
 
+        // no reason needed: one given is kept in the history
         const interiors = within(dialog).getByLabelText("Interiors");
         await userEvent.clear(interiors);
         await userEvent.type(interiors, "30");
-        await userEvent.type(within(dialog).getByLabelText("Why they change"), "Interiors is lighter than planned");
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
         await waitFor(() => expect(sent).toEqual([{
             shares: [{ departmentId: 12, share: 0.7 }, { departmentId: 13, share: 0.3 }],
-            reason: "Interiors is lighter than planned",
+            reason: null,
         }]));
     });
 

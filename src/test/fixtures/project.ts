@@ -37,8 +37,11 @@ export const projectWork = {
                 money: {
                     budget: 6000, cost: 6500, left: -500, minutes: 3000,
                     people: [{
-                        person: { id: 9, name: "Yara Mansour" }, minutes: 3000, cost: 6500,
-                        months: [{ month: "2026-08-01", minutes: 1200, hourlyRate: 12.5, cost: 2500 }, { month: "2026-09-01", minutes: 1800, hourlyRate: 13.25, cost: 4000 }],
+                        person: { id: 10, name: "Karim Haddad" }, minutes: 600, cost: 1300,
+                        months: [{ month: "2026-09-01", minutes: 600, hourlyRate: 13, cost: 1300 }],
+                    }, {
+                        person: { id: 9, name: "Yara Mansour" }, minutes: 2400, cost: 5200,
+                        months: [{ month: "2026-08-01", minutes: 1200, hourlyRate: 12.5, cost: 2400 }, { month: "2026-09-01", minutes: 1200, hourlyRate: 13.25, cost: 2800 }],
                     }],
                 },
             },

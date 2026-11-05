@@ -29,7 +29,6 @@ import ContributorDrawer, { type WorkRange } from "./ContributorDrawer";
 import { rangeOptions, type RangeKey } from "./ranges";
 import EntryModal from "./EntryModal";
 import { useLatestEntry, useProjectTimeline, useProjectWork, type Contributor, type ProjectWork } from "./projectWorkApi";
-import BillingBand from "../../shared/billing/BillingBand";
 import PaymentSection from "../../shared/projects/PaymentSection";
 import FinancialBreakdown, { CostFigures } from "./money/FinancialBreakdown";
 import MoneyBand from "./money/MoneyBand";
@@ -84,7 +83,6 @@ export function DesignFinancials({ project }: { project: Project }) {
             <MoneyBand project={project} money={m} contributors={all.data?.contributorCount} expenseCount={expenses.data?.items.length}
                 onEditPayment={clientWork && canEditPayment ? open("money", "payment") : undefined} onAddExpense={onAddExpense}
                 onCloseProject={permissions.has(P.PROJECT_CHANGE_STATUS) && !closed ? open("complete", "1") : undefined} />
-            {project.billingType === "client" && <BillingBand project={project} />}
             {clientWork && (
                 <DepartmentsPanel project={project} locked={m.isLocked}
                     onEditDepartments={permissions.has(P.PROJECT_EDIT) && !closed ? open("departments", "edit") : undefined} />
