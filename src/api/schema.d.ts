@@ -20675,7 +20675,7 @@ export interface components {
             mentionIds?: number[];
         };
         SetDepartmentSharesRequest: {
-            reason?: string;
+            reason?: null | string;
             shares?: components["schemas"]["DepartmentShareRequest"][];
         };
         SetLabourDefaultsRequest: {
