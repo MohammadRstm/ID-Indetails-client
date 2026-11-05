@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import { toApiError } from "@/api/errors";
 import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
 import type { Paged, Schemas } from "@/api/types";
@@ -143,6 +144,15 @@ function useWorkChanged() {
     const invalidate = useInvalidate();
     // logged work is labour cost too: the money screens and the company figures follow
     return () => { void invalidate(keys.work.all, keys.projects.all, keys.clients.all, keys.activity.all, keys.dashboard.all, keys.finance.all, ["company"]); };
+}
+
+/**
+ * Hours kept instead of logged: the logger's department isn't on the project yet. They go through once it is added and
+ * the logger hears it, so the form closes as if saved, saying so.
+ */
+export function isKeptLog(error: unknown) {
+    const failure = toApiError(error);
+    return failure.code === "department_not_on_project" && failure.blockedChangeId != null;
 }
 
 export function useSaveEntry() {

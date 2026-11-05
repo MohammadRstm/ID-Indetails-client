@@ -29,10 +29,10 @@ import ContributorDrawer, { type WorkRange } from "./ContributorDrawer";
 import { rangeOptions, type RangeKey } from "./ranges";
 import EntryModal from "./EntryModal";
 import { useLatestEntry, useProjectTimeline, useProjectWork, type Contributor, type ProjectWork } from "./projectWorkApi";
-import BillingBand from "../../shared/billing/BillingBand";
 import PaymentSection from "../../shared/projects/PaymentSection";
 import FinancialBreakdown, { CostFigures } from "./money/FinancialBreakdown";
 import MoneyBand from "./money/MoneyBand";
+import DepartmentsPanel from "./departments/DepartmentsPanel";
 import { useProjectExpenses } from "./money/moneyApi";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
@@ -72,7 +72,7 @@ export function DesignFinancials({ project }: { project: Project }) {
             <PaymentSection label="Customer payment" amount={clientWork ? m.revenue : null} locked={m.isLocked}
                 tva={clientWork ? { rate: m.tvaRate, withTva: m.paymentWithTva } : undefined}
                 sub={clientWork ? "What the project earns, before TVA. The client only ever sees the total with TVA. Each change is kept with why it changed." : undefined}
-                onEdit={clientWork && canEditPayment ? open("money", "payment") : undefined}
+                onEdit={clientWork && canEditPayment ? open("money", "payment") : undefined} correctionOnly
                 onHistory={clientWork ? open("money", "history") : undefined}
                 empty={(
                     <span className="row" style={{ gap: 10 }}>
@@ -83,7 +83,10 @@ export function DesignFinancials({ project }: { project: Project }) {
             <MoneyBand project={project} money={m} contributors={all.data?.contributorCount} expenseCount={expenses.data?.items.length}
                 onEditPayment={clientWork && canEditPayment ? open("money", "payment") : undefined} onAddExpense={onAddExpense}
                 onCloseProject={permissions.has(P.PROJECT_CHANGE_STATUS) && !closed ? open("complete", "1") : undefined} />
-            {project.billingType === "client" && <BillingBand project={project} />}
+            {clientWork && (
+                <DepartmentsPanel project={project} locked={m.isLocked}
+                    onEditDepartments={permissions.has(P.PROJECT_EDIT) && !closed ? open("departments", "edit") : undefined} />
+            )}
             <FinancialBreakdown project={project} money={m} contributors={seesWork ? all.data?.contributors : undefined} entryCount={all.data?.entryCount}
                 expenses={expenses.data?.items} expensesFailed={expenses.isError && !expenses.data ? { error: expenses.error, retry: () => void expenses.refetch() } : null}
                 onPerson={seesWork ? setDrawer : undefined} onAddExpense={onAddExpense}

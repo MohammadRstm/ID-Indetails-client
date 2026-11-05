@@ -80,7 +80,7 @@ export const billing: Article[] = [
         title: "Creating an invoice",
         category: "billing",
         who: has(P.INVOICE_CREATE),
-        summary: "On the project: More → New invoice (or New invoice on its billing band). It stays a draft until it is sent.",
+        summary: "On the project: More → New invoice (or New invoice on its Client payments tab). It stays a draft until it is sent.",
         ask: ["new invoice", "create invoice", "bill a client", "invoice", "draft invoice", "edit draft"],
         blocks: [
             steps(
@@ -105,7 +105,7 @@ export const billing: Article[] = [
         ask: ["send invoice", "issue invoice", "email invoice", "whatsapp invoice", "resend invoice", "invoice pdf"],
         blocks: [
             steps(
-                step("Open the invoice (from the project's billing band, or **Financials → Billing**) and choose **Send invoice…**.", "Financials", "Billing"),
+                step("Open the invoice (from the project's **Client payments** tab, or **Financials → Billing**) and choose **Send invoice…**.", "Financials", "Billing"),
                 step("Pick how it is sent: email, WhatsApp, or download the PDF and send it yourself."),
             ),
             list(
@@ -126,7 +126,7 @@ export const billing: Article[] = [
         ask: ["auto invoice", "schedule invoices", "instalments", "installments", "payment plan", "split invoice", "monthly invoices", "recurring invoice"],
         blocks: [
             steps(
-                step("On the project's billing band, choose **Auto invoice**.", "Projects", "the project"),
+                step("On the project's **Client payments** tab, choose **Auto invoice**.", "Projects", "the project"),
                 step("Set the **Amount to split**, how many invoices, when the first one goes out and how often, and who to **Email them to**."),
             ),
             list(

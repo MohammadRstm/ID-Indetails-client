@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { errorMessage } from "@/api/errors";
 import FormFailure from "@/domains/shared/projects/FormFailure";
 import { useCurrentUser } from "@/app/session/useSession";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -21,7 +22,7 @@ import { ScopeCheck } from "./Scope";
 import TimeRange from "./TimeRange";
 import { startTimer } from "./timer";
 import {
-    entryBody, loggableProjects, useDomainSettings, useMyDay, useMyProjects, useMySchedule, useOvertimeFor, useSaveEntry, useUndoLog,
+    entryBody, loggableProjects, useDomainSettings, useMyDay, useMyProjects, useMySchedule, isKeptLog, useOvertimeFor, useSaveEntry, useUndoLog,
     type DomainSettings, type MyProject, type WorkEntry,
 } from "./workApi";
 
@@ -183,10 +184,15 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                     actionLabel: "Undo", action: () => undo.mutate({ id: saved.id, restore, deleted: deletes }),
                 });
             },
+            onError: (failure) => {
+                if (!isKeptLog(failure)) return;
+                closeLogWork();
+                toast({ text: `Your hours on ${title} are waiting for your department`, sub: errorMessage(failure), icon: "clock" });
+            },
         });
     }
 
-    const failure = save.error && !error ? <FormFailure error={save.error} onForced={closeLogWork} /> : null;
+    const failure = save.error && !error && !isKeptLog(save.error) ? <FormFailure error={save.error} onForced={closeLogWork} /> : null;
     const required = preview?.requiredMinutes ?? schedule.data?.day.requiredMinutes;
 
     return (

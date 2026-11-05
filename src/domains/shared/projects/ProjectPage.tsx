@@ -32,6 +32,7 @@ import BillingModalHost from "../billing/BillingModalHost";
 import { useBillingLinks } from "../billing/billingLinks";
 import ClientTypeModal from "../../design/projects/money/ClientTypeModal";
 import PaymentModal from "../../design/projects/money/PaymentModal";
+import { DepartmentsModal } from "../../design/projects/departments/DepartmentsPanel";
 import { staffDiscussion } from "../../design/projects/portal/staffDiscussion";
 import ReportModal from "../../design/projects/report/ReportModal";
 import PricingModal from "../../execution/projects/PricingModal";
@@ -45,7 +46,7 @@ import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
 
-type TabKey = "financials" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
+type TabKey = "financials" | "payments" | "vos" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
 
 /**
  * What goes on a project's Overview tab and Timeline tab, and the domain's own bits of its head. Each domain
@@ -68,6 +69,10 @@ export type ProjectPanels = {
     contributors?: (project: Project) => ReactNode;
     /** Design only: the project's files, for everyone who sees the project. */
     files?: (project: Project) => ReactNode;
+    /** Design only: a client project's payments (what was received, its invoices, each payment), for those who see money. */
+    payments?: (project: Project) => ReactNode;
+    /** Design only: a client project's variation orders, for those who see money. */
+    vos?: (project: Project) => ReactNode;
     /** Design only: the client portal's files (client_portal:manage, or client_access:manage to look) and who of the client's contacts can follow it (client_access:manage). */
     portal?: (project: Project) => ReactNode;
     timeline?: (project: Project) => ReactNode;
@@ -151,6 +156,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     }, [movedPart, params, setParams]);
     const allowed: Record<TabKey, boolean> = {
         financials: (seesMoney || panels.financialsForAll === true) && panels.financials != null,
+        payments: seesMoney && !site && project.billingType === "client" && panels.payments != null,
+        vos: seesMoney && !site && project.billingType === "client" && panels.vos != null,
         overview: panels.hasOverview?.(permissions) ?? true,
         analytics: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.analytics != null,
         contributors: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.contributors != null,
@@ -162,7 +169,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         timeline: timelineTab,
         meetings: true,
     };
-    const tabOrder: TabKey[] = ["financials", "overview", "analytics", "contributors", "requirements", "timeline", "meetings", "files", "portal"];
+    const tabOrder: TabKey[] = ["financials", "payments", "vos", "overview", "analytics", "contributors", "requirements", "timeline", "meetings", "files", "portal"];
     const firstTab = tabOrder.find((k) => allowed[k]) ?? "meetings";
     // A tab the person may not open falls back to their first one, even when the link asks for it.
     const tab: TabKey = requested && allowed[requested] ? requested : firstTab;
@@ -199,6 +206,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const moneyItems = canAddExpense || canEditBilling || canEditPricing || canNewInvoice || canRecordPayment || canUsePocket;
     // name, description, location and target date, while the project is open
     const canEditDetails = permissions.has(P.PROJECT_EDIT) && project.status !== "completed" && project.status !== "archived";
+    // a Design client project's departments, opened from the menu, the Financials tab or the alert of hours waiting (?departments=edit)
+    const canEditDepartments = canEditDetails && !site && project.billingType === "client" && !project.finalizedAt;
+    const closeDepartments = () => { params.delete("departments"); setParams(params, { replace: true }); };
 
     function switchTab(k: TabKey) {
         if (k === firstTab) params.delete("tab");
@@ -261,6 +271,11 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                     <ClientBadge client={{ id: project.client.id, displayName: project.client.displayName }} sub={false} link={permissions.has(P.CLIENT_VIEW)} />
                                 </span>
                             )}
+                            {!site && (project.departments?.length ?? 0) > 0 && (
+                                <span className="row" style={{ gap: 6 }}>Departments
+                                    <b className="sec">{project.departmentsName ?? (project.departments ?? []).map((d) => d.name).join(", ")}</b>
+                                </span>
+                            )}
                             {m && (project.billingType === "internal" ? (
                                 <span className="badge" title="No client and no payment - tracked as company cost">Internal project - no client</span>
                             ) : site ? (
@@ -292,6 +307,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                             {(close) => (
                                 <div>
                                     {canEditDetails && <button className="pop-item" onClick={() => { close(); setEditing(true); }}><Icon name="edit" />Edit details</button>}
+                                    {canEditDepartments && (
+                                        <button className="pop-item" onClick={() => { close(); params.set("departments", "edit"); setParams(params); }}><Icon name="people" />Departments</button>
+                                    )}
                                     {canEditDetails && ((canChangeStatus && !closed) || moneyItems) && <div className="pop-sep" />}
                                     {canChangeStatus && !closed && (
                                         <>
@@ -348,6 +366,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
 
             <Tabs value={tab} onChange={switchTab} items={[
                 ...(allowed.financials ? [{ key: "financials" as TabKey, label: "Financials" }] : []),
+                ...(allowed.payments ? [{ key: "payments" as TabKey, label: "Client payments" }] : []),
+                ...(allowed.vos ? [{ key: "vos" as TabKey, label: "Variation orders" }] : []),
                 ...(allowed.overview ? [{ key: "overview" as TabKey, label: "Overview" }] : []),
                 ...(allowed.analytics ? [{ key: "analytics" as TabKey, label: "Analytics" }] : []),
                 ...(allowed.contributors ? [{ key: "contributors" as TabKey, label: "Contributors" }] : []),
@@ -365,6 +385,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     : tab === "files" && panels.files ? panels.files(project)
                     : tab === "portal" && panels.portal ? panels.portal(project)
                         : tab === "financials" && panels.financials ? panels.financials(project)
+                        : tab === "payments" && panels.payments ? panels.payments(project)
+                        : tab === "vos" && panels.vos ? panels.vos(project)
                             : tab === "analytics" && panels.analytics ? panels.analytics(project)
                                 : tab === "contributors" && panels.contributors ? panels.contributors(project)
                                     : panels.overview(project)}
@@ -384,6 +406,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {site && <BoqHost project={project} />}
             {showReport && canReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}
             {editing && canEditDetails && <EditProjectModal project={project} onClose={() => setEditing(false)} />}
+            {params.get("departments") === "edit" && canEditDepartments && (
+                <DepartmentsModal project={project} current={(project.departments ?? []).map((d) => d.id)} onClose={closeDepartments} />
+            )}
         </div>
     );
 }

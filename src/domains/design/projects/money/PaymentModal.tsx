@@ -7,6 +7,7 @@ import { FieldError } from "@/shared/components/Forms/Field";
 import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
+import Icon from "@/shared/icons/Icon";
 import { PAYMENT_DESCRIPTION_MAX, useSetPayment } from "../../../shared/projects/paymentApi";
 import type { Project } from "../../../shared/projects/projectsApi";
 import TvaField from "../../../shared/projects/TvaField";
@@ -48,6 +49,12 @@ export default function PaymentModal({ project, onClose }: { project: Project; o
                     <button className="btn btn-primary" disabled={save.isPending} onClick={submit}>{save.isPending ? "Saving…" : "Save"}</button>
                 </>
             }>
+            <div className="banner warn" role="note" style={{ marginBottom: 12 }}>
+                <Icon name="alert" />
+                <div className="grow">
+                    <b>For correcting a mistake only.</b> A change of scope, more work or less, is a variation order: it keeps the departments' budgets and the client's PDF right.
+                </div>
+            </div>
             <div className="field">
                 <label className="label required" htmlFor="pay-amount">Customer payment</label>
                 <AmountField id="pay-amount" value={amount} currency="USD" currencies={false} onChange={setAmount} />

@@ -709,6 +709,15 @@ button.pc-comments { border: 0; cursor: pointer; }
 .pay-hist-row { padding: 10px 0; border-bottom: 1px solid var(--line); }
 .pay-hist-row:last-child { border-bottom: 0; }
 
+/* A Design project's departments: a row each, with its budget, what its hours cost and what's left; one over its budget
+   is marked in red down its edge. */
+.dept-name { font-weight: 650; }
+.tbl tbody tr.dept-over > td:first-child { box-shadow: inset 3px 0 0 var(--loss); }
+.bar.loss i { background: var(--loss); }
+
+/* A warning above a form: the payment pencil corrects mistakes, a change of scope is a variation order. */
+.banner.warn { border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); background: var(--warn-soft); }
+
 /* Work logged as outside the project's original scope: the box in the log forms, and the tag on the entry. */
 .scope-check { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; font-size: 13px; }
 .scope-check input { margin-top: 2px; }
