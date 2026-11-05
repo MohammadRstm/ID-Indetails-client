@@ -12,7 +12,6 @@ import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
-import { FieldError } from "@/shared/components/Forms/Field";
 import Modal from "@/shared/components/Overlays/Modal";
 import { PROJECT_STATUS } from "@/shared/components/Data/status";
 import Avatar from "@/shared/components/Identity/Avatar";
@@ -170,7 +169,7 @@ export function SiteStaffPanels({ project }: { project: Project }) {
                     </div>
                     {permissions.has(P.PROJECT_EDIT) && <div className="panel-tools"><button className="btn btn-sm" onClick={() => setChanging(true)}><Icon name="edit" />Change</button></div>}
                 </div>
-                {staff.length === 0 ? <div className="panel-body"><div className="muted">Nobody yet.</div></div> : (
+                {staff.length === 0 ? <div className="panel-body"><div className="muted">Nobody yet. Add someone when the site needs its daily logs and labour reports.</div></div> : (
                     <div className="tbl-wrap">
                         <table className="tbl tbl-min-sm">
                             <thead>
@@ -194,8 +193,6 @@ export function SiteStaffPanels({ project }: { project: Project }) {
 function SiteStaffModal({ project, onClose }: { project: Project; onClose: () => void }) {
     const save = useSetSiteStaff(project.id);
     const [chosen, setChosen] = useState<number[]>((project.staff ?? []).map((s) => s.id));
-    const [tried, setTried] = useState(false);
-    const error = chosen.length === 0 && "Choose at least one staff member to oversee the site.";
 
     return (
         <Modal title="Site staff" sub={project.title} onClose={onClose}
@@ -204,17 +201,14 @@ function SiteStaffModal({ project, onClose }: { project: Project; onClose: () =>
                     <div className="grow">{save.error != null && <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span>}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={save.isPending} onClick={() => {
-                        setTried(true);
-                        if (error) return;
                         save.mutate(chosen, { onSuccess: () => { toast({ text: "Site staff saved", sub: project.title, icon: "checkCircle" }); onClose(); } });
                     }}>{save.isPending ? "Saving…" : "Save"}</button>
                 </>
             }>
             <div className="field">
-                <label className="label required">Who oversees the site</label>
+                <label className="label">Who oversees the site</label>
                 <StaffPicker value={chosen} onChange={setChosen} />
-                <FieldError message={tried && error ? error : undefined} />
-                <div className="hint">Someone taken off keeps the logs and labour they recorded, but records nothing new here.</div>
+                <div className="hint">Someone taken off keeps the logs and labour they recorded, but records nothing new here. A site can have nobody until it needs them.</div>
             </div>
         </Modal>
     );
