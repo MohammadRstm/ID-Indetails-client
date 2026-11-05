@@ -61,6 +61,15 @@ export function useCancelDesignVo() {
     });
 }
 
+/** Adds the project's TVA to a VO, or takes it off: whoever writes the money decides (financial:write). */
+export function useSetDesignVoTva() {
+    const changed = useVoChanged();
+    return useMutation({
+        mutationFn: async ({ id, chargeTva }: { id: number; chargeTva: boolean }) => (await http.put<DesignVo>(`/design-vos/${id}/tva`, { chargeTva })).data,
+        onSuccess: changed,
+    });
+}
+
 /** Emails the VO with its PDF to the client; a failed email changes nothing (503 email_delivery_failed). */
 export function useEmailDesignVo() {
     return useMutation({
