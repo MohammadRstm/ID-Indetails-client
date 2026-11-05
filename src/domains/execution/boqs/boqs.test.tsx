@@ -794,7 +794,7 @@ describe("agreeing a BOQ", () => {
         await userEvent.click(await within(dialog).findByRole("button", { name: "Agree" }));
         const confirm = await screen.findByRole("dialog", { name: "Agree VO-2026-001" });
         await userEvent.click(within(confirm).getByRole("button", { name: "Agree" }));
-        expect(await within(confirm).findByText("Agreeing or withdrawing this VO would take the site's work price below zero.")).toBeInTheDocument();
+        expect(await within(confirm).findByText("Agreeing or withdrawing this VO would take the site's work price or its permits below zero.")).toBeInTheDocument();
     });
 
     it("tells someone who can't see the money only that it was refused", async () => {
