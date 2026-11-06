@@ -20,6 +20,8 @@ export type ProjectListParams = {
     ownerId?: number;
     year?: number;
     quarter?: number;
+    /** Leaves archived projects out when no status is asked for: the list's "All". */
+    excludeArchived?: boolean;
     sort?: ProjectSort;
     page?: number;
     pageSize?: number;
@@ -59,7 +61,8 @@ export function useProjectStatusCounts(domain: string) {
         queries: STATUSES.map((status) => ({
             queryKey: [...keys.projects.counts(domain), status],
             queryFn: async () => (await http.get<Paged<ProjectSummary>>("/projects", {
-                params: clean({ domain, status: status === "all" ? undefined : status, page: 1, pageSize: 1 }),
+                // "All" leaves the archived projects out, as the list does
+                params: clean(status === "all" ? { domain, excludeArchived: true, page: 1, pageSize: 1 } : { domain, status, page: 1, pageSize: 1 }),
             })).data.totalCount,
             staleTime: 60_000,
         })),
@@ -113,6 +116,24 @@ export function actionFor(from: ProjectStatus, to: ProjectStatus): StatusAction 
         archived: ["archive"],
     };
     return STATUS_ACTIONS[from].find((a) => wanted[to].includes(a)) ?? null;
+}
+
+/** What deleting an archived project would remove, or why it can't be deleted (project:delete). */
+export function useProjectDeletion(id: number) {
+    return useQuery({
+        queryKey: [...keys.projects.detail(id), "deletion"],
+        queryFn: async () => (await http.get<Schemas["ProjectDeletionResponse"]>(`/projects/${id}/deletion`)).data,
+        staleTime: 0,
+    });
+}
+
+/** Deletes an archived project made by mistake, with everything on it: its name, as typed, confirms it. */
+export function useDeleteProject(id: number) {
+    const invalidate = useInvalidate();
+    return useMutation({
+        mutationFn: async (title: string) => { await http.delete(`/projects/${id}`, { data: { title } }); },
+        onSuccess: () => { void invalidate(keys.projects.all, keys.activity.all, keys.dashboard.all, keys.clients.all, keys.finance.all); },
+    });
 }
 
 export function useChangeProjectStatus(id: number) {

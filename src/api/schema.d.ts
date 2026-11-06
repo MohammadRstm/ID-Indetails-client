@@ -16674,6 +16674,9 @@ export interface components {
             startDate: string;
             title: string;
         };
+        DeleteProjectRequest: {
+            title?: null | string;
+        };
         CompleteProjectRequest: {
             keepPaidAhead?: boolean;
             settleOwed?: null | components["schemas"]["OwedSettlement"];
@@ -18334,6 +18337,11 @@ export interface components {
         };
         /** @enum {unknown} */
         OwedSettlement: "excused" | "written_off";
+        ProjectDeletionResponse: {
+            blockers: string[];
+            canDelete: boolean;
+            removes: string[];
+        };
         PagedResponseOfActivityItemResponse: {
             items: components["schemas"]["ActivityItemResponse"][];
             /** Format: int32 */

@@ -41,6 +41,7 @@ import BlockedChangeModal from "./BlockedChangeModal";
 import BoqHost from "../../execution/boqs/BoqHost";
 import { AskPocketModal, MoveToPocketModal } from "../../execution/pocket/PocketActions";
 import CompleteProjectModal from "./CompleteProjectModal";
+import DeleteProjectModal from "./DeleteProjectModal";
 import { useUrlFlag } from "@/shared/hooks/useUrlFlag";
 import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
@@ -128,6 +129,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const asksParticipation = clientProject && !portalByPermission;
     const participation = useDiscussionSummary(staffDiscussion, project.id, { enabled: asksParticipation, retry: false });
     const [showDone, setShowDone] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     // its own link (?details=1), so Proton or a shared link can open it
     const [editing, setEditing] = useUrlFlag("details");
     // the report opens through the link too (?report=1), as the projects list's menu does
@@ -299,6 +301,9 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     {canReport && (
                         <button className="btn" onClick={() => setShowReport(true)}><Icon name="download" />Export report</button>
                     )}
+                    {project.status === "archived" && permissions.has(P.PROJECT_DELETE) && (
+                        <button className="btn btn-danger" onClick={() => setDeleting(true)}><Icon name="trash" />Delete project</button>
+                    )}
                     {canChangeStatus && (closed ? (
                         <button className="btn" onClick={() => run("reopen", `${project.title} is active again`)}><Icon name="refresh" />Reopen project</button>
                     ) : (
@@ -407,6 +412,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             <BillingModalHost project={project} />
             {site && <BoqHost project={project} />}
             {showReport && canReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}
+            {deleting && <DeleteProjectModal project={project} onClose={() => setDeleting(false)} />}
             {editing && canEditDetails && <EditProjectModal project={project} onClose={() => setEditing(false)} />}
             {params.get("departments") === "edit" && canEditDepartments && (
                 <DepartmentsModal project={project} current={(project.departments ?? []).map((d) => d.id)} onClose={closeDepartments} />
