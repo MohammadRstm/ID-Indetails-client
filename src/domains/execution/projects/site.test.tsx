@@ -82,6 +82,9 @@ describe("an Execution site's overview", () => {
         renderApp(`/execution/projects/${loft.id}?complete=1`, karim, ...siteHandlers);
         const dialog = await screen.findByRole("dialog", { name: `Close ${loft.title}` });
         expect(within(dialog).queryByText(/been sent to the client/)).not.toBeInTheDocument();
+        // what the client still owes is excused or written off first
+        expect(within(dialog).getByRole("button", { name: "Complete project" })).toBeDisabled();
+        await userEvent.click(within(dialog).getByRole("radio", { name: /Excuse it/ }));
         expect(within(dialog).getByRole("button", { name: "Complete project" })).toBeEnabled();
         expect(within(dialog).getByText("Price is locked")).toBeInTheDocument();
         expect(within(dialog).getByText(/no BOQ or VO can be agreed or withdrawn/)).toBeInTheDocument();

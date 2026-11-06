@@ -8,6 +8,8 @@ export type Project = Schemas["ProjectResponse"];
 export type ProjectStatus = Schemas["ProjectStatus"];
 export type ProjectSort = Schemas["ProjectSort"];
 export type ProjectTotals = Schemas["ProjectListTotalsResponse"];
+/** What became of what a client still owed when its project was completed: excused (a discount) or written off (lost). */
+export type OwedSettlement = Schemas["OwedSettlement"];
 
 export type ProjectListParams = {
     domain: string;
@@ -116,10 +118,12 @@ export function actionFor(from: ProjectStatus, to: ProjectStatus): StatusAction 
 export function useChangeProjectStatus(id: number) {
     const invalidate = useInvalidate();
     return useMutation({
-        // completing can also keep what a client paid beyond the price ({ keepPaidAhead })
-        mutationFn: async (input: StatusAction | { action: "complete"; keepPaidAhead: boolean }) => {
+        // completing can also keep what a client paid beyond the price ({ keepPaidAhead }), or excuse or write off what
+        // they still owe ({ settleOwed })
+        mutationFn: async (input: StatusAction | { action: "complete"; keepPaidAhead: boolean; settleOwed?: OwedSettlement }) => {
             const action = typeof input === "string" ? input : input.action;
-            const body = typeof input === "string" ? undefined : { keepPaidAhead: input.keepPaidAhead };
+            const body = typeof input === "string" ? undefined
+                : { keepPaidAhead: input.keepPaidAhead, ...(input.settleOwed ? { settleOwed: input.settleOwed } : {}) };
             return (await http.post<Project>(`/projects/${id}/${action}`, body)).data;
         },
         // Completing ticks every open requirement; reopening unticks those again.

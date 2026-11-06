@@ -283,10 +283,12 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                     <span className="muted">·</span>{m.billing.paidAhead > 0 ? "Paid ahead" : "Owed"}
                                     <b className="sec mono">{money.fmt(m.billing.paidAhead > 0 ? m.billing.paidAhead : m.billing.owed)}</b>
                                     {m.isLocked && <LockedSince at={project.finalizedAt} />}
+                                    <SettledOwed money={m} />
                                 </span>
                             ) : (
                                 <span className="row" style={{ gap: 6 }}>Payment <b className="sec mono">{money.fmt(m.revenue)}</b>
                                     {m.isLocked && <LockedSince at={project.finalizedAt} />}
+                                    <SettledOwed money={m} />
                                 </span>
                             ))}
                         </div>
@@ -410,6 +412,17 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                 <DepartmentsModal project={project} current={(project.departments ?? []).map((d) => d.id)} onClose={closeDepartments} />
             )}
         </div>
+    );
+}
+
+/** What the client still owed when the project was completed, and whether it was excused or written off. */
+function SettledOwed({ money: m }: { money: NonNullable<Project["money"]> }) {
+    if (m.settledOwedUsd == null) return null;
+    const excused = m.settledOwedAs === "excused";
+    return (
+        <span className="muted" title={excused ? "Forgiven when the project was completed: a discount agreed with the client" : "Never paid: written off as lost revenue when the project was completed"}>
+            · {excused ? "Excused" : "Written off"} <b className="sec mono">{money.fmt(m.settledOwedUsd)}</b> at completion
+        </span>
     );
 }
 
