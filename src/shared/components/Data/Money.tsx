@@ -58,7 +58,7 @@ export function CostRow({ label, value, meta, swatch, strong, tone, onClick }: C
         <div className={cx("cost-row", strong && "strong", onClick && "click")} {...clickable(onClick, "button")}>
             {swatch && <i className="cost-dot" style={{ background: swatch }} />}
             <span className="grow trunc">{label}</span>
-            {meta && <span className="muted" style={{ fontSize: "11.5px" }}>{meta}</span>}
+            {meta && <span className="muted cost-meta" style={{ fontSize: "11.5px" }}>{meta}</span>}
             <span className={cx("mono", tone)}>{value}</span>
         </div>
     );

@@ -197,6 +197,25 @@ table { line-height: normal; font-weight: normal; }
   .switch-row { flex-wrap: wrap; }
   .switch-row > .grow { flex: 1 1 220px; }
 }
+/* An amount never breaks over two lines. On a phone a cost line's note moves under its label, so the label and the
+   amount keep the first line; a BOQ's title gets a line of its own above its number, status and total; a ranked bar's
+   name gets the whole width above its bar; and the project's payment card puts its History button under the amount. */
+.cost-row > .mono, .pay-tva { white-space: nowrap; }
+.boq-row-no { font-size: 10.5px; letter-spacing: .04em; min-width: 92px; white-space: nowrap; }
+.boq-row-total { min-width: 100px; text-align: right; }
+@media (max-width: 640px) {
+  .cost-row { flex-wrap: wrap; row-gap: 2px; }
+  .cost-row > .grow { flex: 1 1 0; }
+  .cost-row > .cost-meta { order: 3; flex: 1 1 100%; }
+  .boq-row { row-gap: 6px; }
+  .boq-row > .boq-row-title { order: -1; flex: 1 1 100%; }
+  .boq-row > .boq-row-no { min-width: 0; }
+  .boq-row > .boq-row-total { min-width: 0; margin-left: auto; }
+  .rb, .pb { flex-wrap: wrap; row-gap: 4px; }
+  .rb > .rb-lab, .pb > .pb-lab { flex: 1 1 100%; width: auto; max-width: none; }
+  .pay-section > .panel-body, .pay-section .panel-body .row { flex-wrap: wrap; }
+  .pay-section > .panel-body > .grow { flex: 1 1 100%; }
+}
 
 /* A menu drawn over the page beside its button (Popover floating): never inside a table it would stretch. */
 .pop.floating { position: fixed; z-index: 300; }
