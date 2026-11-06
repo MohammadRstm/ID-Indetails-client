@@ -13,7 +13,7 @@ export const PERMISSION_SECTIONS: PermissionSection[] = [
     {
         title: "Projects",
         groups: [
-            { title: "Projects", codes: [P.PROJECT_VIEW, P.PROJECT_CREATE, P.PROJECT_EDIT, P.PROJECT_CHANGE_STATUS, P.PROJECT_FILES_MANAGE] },
+            { title: "Projects", codes: [P.PROJECT_VIEW, P.PROJECT_CREATE, P.PROJECT_EDIT, P.PROJECT_CHANGE_STATUS, P.PROJECT_FILES_MANAGE, P.PROJECT_DELETE] },
             { title: "Requirements & meetings", codes: [P.REQUIREMENT_VIEW, P.REQUIREMENT_MANAGE, P.REQUIREMENT_COMPLETE_OWN, P.MEETING_CREATE, P.MEETING_MANAGE] },
             { title: "Clients", codes: [P.CLIENT_VIEW, P.CLIENT_CREATE, P.CLIENT_MANAGE] },
             { title: "Client portal", codes: [P.CLIENT_ACCESS_MANAGE, P.CLIENT_PORTAL_MANAGE] },

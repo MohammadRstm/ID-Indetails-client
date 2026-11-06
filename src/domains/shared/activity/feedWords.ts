@@ -152,6 +152,7 @@ const WORDS: Record<string, Words> = {
         text: (e, p) => `changed the labour defaults on ${project(e)}${num(p.workers) != null ? ` to ${num(p.workers)} workers` : ""}${e.amount == null ? "" : ` at ${money.fmt(e.amount)} a day`}`,
     },
     project_finalized: { icon: "checkCircle", text: (e) => `closed ${project(e)}${e.amount == null ? "" : ` at ${money.fmt(e.amount)} revenue`}` },
+    project_deleted: { icon: "trash", text: (_e, p) => `deleted the project${quoted(p.title)}, made by mistake` },
     owed_excused: { icon: "card", text: (e) => `excused ${e.amount == null ? "what the client still owed" : `the ${money.fmt(e.amount)} the client still owed`} on ${project(e)}` },
     owed_written_off: { icon: "card", text: (e) => `wrote off ${e.amount == null ? "what the client never paid" : `the ${money.fmt(e.amount)} the client never paid`} on ${project(e)}` },
 

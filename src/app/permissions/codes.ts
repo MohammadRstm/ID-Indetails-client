@@ -8,6 +8,7 @@ export const P = {
     PROJECT_EDIT: "project:edit",
     PROJECT_CHANGE_STATUS: "project:change_status",
     PROJECT_PRICING_MANAGE: "project:pricing_manage",
+    PROJECT_DELETE: "project:delete",
     BOQ_CREATE: "boq:create",
     REQUIREMENT_VIEW: "requirement:view",
     REQUIREMENT_MANAGE: "requirement:manage",

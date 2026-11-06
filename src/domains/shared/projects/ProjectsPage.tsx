@@ -12,7 +12,7 @@ import { MarginPill, StatusBadge } from "@/shared/components/Data/Pills";
 import DataTable, { type Column } from "@/shared/components/Data-Tables/DataTable";
 import Pager from "@/shared/components/Data-Tables/Pager";
 import Empty from "@/shared/components/Feedback/Empty";
-import { ChipGroup, FilterSep, SearchInput } from "@/shared/components/Forms/Filters";
+import { FilterSep, SearchInput } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import { Avatars } from "@/shared/components/Identity/People";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
@@ -45,6 +45,9 @@ const SORTS: { value: ProjectSort; label: string }[] = [
     { value: "client", label: "Client" },
 ];
 const PAGE_SIZE = 50;
+
+/** "Active (12)": a status with its count, once known. */
+const withCount = (label: string, count: number | undefined) => (count == null ? label : `${label} (${count})`);
 
 /**
  * The projects page, for everyone, its parts by permission. Someone who logs work (work_entry:view_own) is
@@ -108,6 +111,8 @@ function ProjectTable({ section }: { section: boolean }) {
         domain,
         search: debounced.trim() || undefined,
         status: status === "all" ? undefined : status,
+        // archived projects show only once Archived is chosen
+        excludeArchived: status === "all" ? true : undefined,
         clientId: client !== "all" && client !== "internal" ? +client : undefined,
         billingType: client === "internal" ? "internal" : type === "all" ? undefined : type,
         ownerId: owner === "all" ? undefined : +owner,
@@ -245,25 +250,23 @@ function ProjectTable({ section }: { section: boolean }) {
 
             <div className="filters">
                 <SearchInput value={search} onChange={(v) => reset(() => setSearch(v))} placeholder="Search projects" />
-                <ChipGroup value={status} onChange={(v) => reset(() => setStatus(v))} aria-label="Status" options={[
-                    { value: "all", label: "All", count: counts.all },
-                    { value: "active", label: "Active", count: counts.active },
-                    { value: "hold", label: "On hold", count: counts.hold },
-                    { value: "completed", label: "Completed", count: counts.completed },
-                    { value: "archived", label: "Archived", count: counts.archived },
+                <Select className="select sm" style={{ width: 150 }} aria-label="Status" value={status} onChange={(v) => reset(() => setStatus(v as ProjectStatus | "all"))} options={[
+                    { value: "all", label: withCount("All", counts.all) },
+                    { value: "active", label: withCount("Active", counts.active) },
+                    { value: "hold", label: withCount("On hold", counts.hold) },
+                    { value: "completed", label: withCount("Completed", counts.completed) },
+                    { value: "archived", label: withCount("Archived", counts.archived) },
                 ]} />
                 <FilterSep />
-                <div className="chips">
-                    {[1, 2, 3, 4].map((q) => (
-                        <button key={q} className={cx("chip", quarter === q && "on")} onClick={() => reset(() => setQuarter(quarter === q ? null : q))}>Q{q}</button>
-                    ))}
-                    <Select className="select sm" style={{ width: 88 }} aria-label="Year" value={String(year)}
-                        options={[thisYear, thisYear - 1].map((y) => ({ value: String(y), label: String(y) }))} onChange={(v) => reset(() => setYear(+v))} />
-                </div>
+                <Select className="select sm" style={{ width: 112 }} aria-label="Quarter" value={quarter ? String(quarter) : "any"}
+                    onChange={(v) => reset(() => setQuarter(v === "any" ? null : +v))}
+                    options={[{ value: "any", label: "Any time" }, ...[1, 2, 3, 4].map((q) => ({ value: String(q), label: `Q${q}` }))]} />
+                <Select className="select sm" style={{ width: 88 }} aria-label="Year" value={String(year)}
+                    options={[thisYear, thisYear - 1].map((y) => ({ value: String(y), label: String(y) }))} onChange={(v) => reset(() => setYear(+v))} />
                 {seesMoney && !site && (
                     <>
                         <FilterSep />
-                        <ChipGroup value={type} onChange={(v) => reset(() => setType(v))} aria-label="Type" options={[
+                        <Select className="select sm" style={{ width: 120 }} aria-label="Type" value={type} onChange={(v) => reset(() => setType(v as typeof type))} options={[
                             { value: "all", label: "All work" }, { value: "client", label: "Client" }, { value: "internal", label: "Internal" },
                         ]} />
                     </>
