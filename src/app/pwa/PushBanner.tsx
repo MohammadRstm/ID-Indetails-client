@@ -2,36 +2,24 @@ import { useState } from "react";
 import { useCurrentUser } from "@/app/session/useSession";
 import Icon from "@/shared/icons/Icon";
 import { isStandalone } from "./install";
-import { usePush } from "./push";
-
-const AWAY_KEY = "hourline.push-banner";
-const AWAY_MS = 30 * 24 * 60 * 60_000;
-
-function readAway(): boolean {
-    try {
-        return Date.now() - Number(localStorage.getItem(AWAY_KEY) ?? 0) < AWAY_MS;
-    } catch {
-        return false;
-    }
-}
+import { pushBannerAway, putPushBannerAway, usePush } from "./push";
 
 /**
  * In the installed app only, until notifications are on: the phone app's notifications are the reason to install it.
- * Put away, it stays away for a month; the account menu still turns them on.
+ * It shows even when the phone already allows them (Android lets people allow them in its settings), since allowing
+ * them doesn't sign this device up: only turning them on here does. Put away, or turned off, it stays away for a month;
+ * the account menu still turns them on.
  */
 export default function PushBanner() {
     const me = useCurrentUser();
     const push = usePush(me.id);
-    const [away, setAway] = useState(readAway);
-    if (away || push.state !== "off" || !isStandalone() || Notification.permission !== "default") return null;
+    // read on every render: turning them off from the account menu puts the banner away too
+    const [putAwayHere, setPutAwayHere] = useState(false);
+    if (putAwayHere || pushBannerAway() || push.state !== "off" || !isStandalone()) return null;
 
     const putAway = () => {
-        setAway(true);
-        try {
-            localStorage.setItem(AWAY_KEY, String(Date.now()));
-        } catch {
-            // private window: put away until the app is opened again
-        }
+        setPutAwayHere(true);
+        putPushBannerAway();
     };
 
     return (

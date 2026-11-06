@@ -23,6 +23,8 @@ import { OPEN_PUSH_MESSAGE } from "./pushMessages";
 export type PushState = "unavailable" | "install" | "blocked" | "off" | "on";
 
 const OWNER_KEY = "hourline.push-owner";
+const BANNER_AWAY_KEY = "hourline.push-banner";
+const BANNER_AWAY_MS = 30 * 24 * 60 * 60_000;
 
 /** How often an open app registers its subscription again, so it follows a new session (a password change). */
 const SYNC_EVERY_MS = 60 * 60_000;
@@ -45,6 +47,23 @@ function setOwner(userId: number | null) {
         else localStorage.removeItem(OWNER_KEY);
     } catch {
         // private window: nobody is remembered, so the next sign-in starts with them off
+    }
+}
+
+/** Whether the installed app's offer to turn notifications on was put away, or they were turned off, in the last month. */
+export function pushBannerAway(): boolean {
+    try {
+        return Date.now() - Number(localStorage.getItem(BANNER_AWAY_KEY) ?? 0) < BANNER_AWAY_MS;
+    } catch {
+        return false;
+    }
+}
+
+export function putPushBannerAway() {
+    try {
+        localStorage.setItem(BANNER_AWAY_KEY, String(Date.now()));
+    } catch {
+        // private window: put away until the app is opened again
     }
 }
 
@@ -127,6 +146,8 @@ export function usePush(userId: number) {
             await http.delete("/auth/web-push");
             await (await subscription())?.unsubscribe();
             setOwner(null);
+            // turned off on purpose: the banner doesn't offer them again straight away
+            putPushBannerAway();
             toast({ text: "Notifications are off for this device", icon: "bell" });
         } catch {
             toast({ text: "Notifications couldn't be turned off", sub: "Try again in a moment.", icon: "alert" });

@@ -146,12 +146,13 @@ table { line-height: normal; font-weight: normal; }
 
 /* ---------------- phones ----------------
    The prototype was drawn for a laptop; below 640px its top bar ran off the screen. The top bar's buttons
-   drop their words (their names stay for screen readers) and Help moves to the account menu only. */
+   drop their words (their names stay for screen readers) and Help moves to the account menu only. Only the bar's own
+   buttons shrink: a menu opened from it (notifications, messages, the account) keeps its buttons' words. */
 @media (max-width: 640px) {
   .top { gap: 6px; padding: 0 8px; }
   .top-actions { gap: 2px; }
   .top .top-label, .top .timer-title { display: none; }
-  .top .btn-sm { width: 32px; padding: 0; }
+  .top-actions > .btn-sm, .top .timer > .btn-sm { width: 32px; padding: 0; }
   .top .timer { padding-left: 8px; gap: 6px; }
   .top .timer .btn-sm { width: 27px; height: 24px; border-radius: 99px; }
 }
@@ -196,6 +197,25 @@ table { line-height: normal; font-weight: normal; }
 @media (max-width: 640px) {
   .switch-row { flex-wrap: wrap; }
   .switch-row > .grow { flex: 1 1 220px; }
+}
+/* An amount never breaks over two lines. On a phone a cost line's note moves under its label, so the label and the
+   amount keep the first line; a BOQ's title gets a line of its own above its number, status and total; a ranked bar's
+   name gets the whole width above its bar; and the project's payment card puts its History button under the amount. */
+.cost-row > .mono, .pay-tva { white-space: nowrap; }
+.boq-row-no { font-size: 10.5px; letter-spacing: .04em; min-width: 92px; white-space: nowrap; }
+.boq-row-total { min-width: 100px; text-align: right; }
+@media (max-width: 640px) {
+  .cost-row { flex-wrap: wrap; row-gap: 2px; }
+  .cost-row > .grow { flex: 1 1 0; }
+  .cost-row > .cost-meta { order: 3; flex: 1 1 100%; }
+  .boq-row { row-gap: 6px; }
+  .boq-row > .boq-row-title { order: -1; flex: 1 1 100%; }
+  .boq-row > .boq-row-no { min-width: 0; }
+  .boq-row > .boq-row-total { min-width: 0; margin-left: auto; }
+  .rb, .pb { flex-wrap: wrap; row-gap: 4px; }
+  .rb > .rb-lab, .pb > .pb-lab { flex: 1 1 100%; width: auto; max-width: none; }
+  .pay-section > .panel-body, .pay-section .panel-body .row { flex-wrap: wrap; }
+  .pay-section > .panel-body > .grow { flex: 1 1 100%; }
 }
 
 /* A menu drawn over the page beside its button (Popover floating): never inside a table it would stretch. */
@@ -786,7 +806,7 @@ button.pc-comments { border: 0; cursor: pointer; }
    sidebar's tabs grow to about 40px tall (the top bar's keep their width, so a narrow phone still fits them all), and the
    small "?" and switches take taps from around them without looking any bigger. Keyboard tips have no use here. */
 @media (pointer: coarse) {
-  .top .icon-btn { height: 40px; }
+  .top > .icon-btn, .top-actions > .icon-btn, .top-actions > .pop-host > .icon-btn { height: 40px; }
   .nav-item, .pop-item, .sel-opt { padding-top: 11px; padding-bottom: 11px; }
   .help-tip { position: relative; }
   .help-tip::after { content: ""; position: absolute; inset: -12px; }

@@ -115,16 +115,16 @@ function Row({ boq, list, showAuthor, onOpen }: { boq: BoqSummary; list: BoqList
     ].filter((part): part is string => !!part);
 
     return (
-        <div className="cost-row click" {...clickable(onOpen, "button")} aria-label={`Open ${boq.number ?? boq.title}`}>
+        <div className="cost-row click boq-row" {...clickable(onOpen, "button")} aria-label={`Open ${boq.number ?? boq.title}`}>
             {/* the number is a reference, quieter than the title beside it */}
-            <span className="mono nowrap muted" style={{ fontSize: 10.5, letterSpacing: ".04em", minWidth: 92 }}>{boq.number ?? "-"}</span>
-            <div className="grow" style={{ minWidth: 0 }}>
+            <span className="mono nowrap muted boq-row-no">{boq.number ?? "-"}</span>
+            <div className="grow boq-row-title">
                 <div className="trunc"><b>{boq.title}</b></div>
                 <div className="muted trunc" style={{ fontSize: "11.5px" }}>{detail.join(" · ")}</div>
             </div>
             {boq.status === "agreed" ? <span className="badge badge-active"><Icon name="checkCircle" />Agreed</span>
                 : <span className="badge">{notChosen ? "Not chosen" : "Draft"}</span>}
-            <span className="mono" style={{ minWidth: 100, textAlign: "right" }}>{cents(boqTotal(boq))}</span>
+            <span className="mono boq-row-total">{cents(boqTotal(boq))}</span>
         </div>
     );
 }

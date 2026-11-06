@@ -179,6 +179,50 @@ describe("notifications on this device", () => {
     });
 });
 
+describe("the installed app's offer to turn notifications on", () => {
+    beforeEach(() => {
+        localStorage.clear();
+        resetPushSync();
+        vi.stubGlobal("matchMedia", (query: string) => ({
+            matches: query.includes("display-mode: standalone"),
+            addEventListener: () => {},
+            removeEventListener: () => {},
+        }));
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        Reflect.deleteProperty(navigator, "serviceWorker");
+    });
+
+    it("shows even when the phone already allows notifications, since allowing them doesn't sign this device up", async () => {
+        const browser = browserWithPush({ permission: "granted" });
+        const server = pushServer();
+        renderApp(PAGE, me, ...server.handlers, ...quietPage);
+
+        await userEvent.click(await screen.findByRole("button", { name: "Turn on" }));
+
+        await waitFor(() => expect(server.calls.registered).toHaveLength(1));
+        expect(browser.subscribe).toHaveBeenCalledWith({ userVisibleOnly: true, applicationServerKey: bytes(KEY) });
+        expect(screen.queryByRole("button", { name: "Turn on" })).toBeNull();
+    });
+
+    it("doesn't come back once they were turned off on this device", async () => {
+        localStorage.setItem(OWNER_KEY, String(me.id));
+        browserWithPush({ permission: "granted", subscribedWith: KEY });
+        const server = pushServer();
+        renderApp(PAGE, me, ...server.handlers, ...quietPage);
+
+        await openAccountMenu();
+        await userEvent.click(await screen.findByRole("button", { name: "Turn off notifications" }));
+        await waitFor(() => expect(server.calls.stopped).toBe(1));
+
+        await openAccountMenu();
+        expect(await screen.findByRole("button", { name: "Turn on notifications" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Turn on" })).toBeNull();
+    });
+});
+
 describe("a tapped push", () => {
     const at = (data: PushData) => openPathOf(data);
 

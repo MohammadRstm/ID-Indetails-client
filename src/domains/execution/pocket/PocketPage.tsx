@@ -138,31 +138,34 @@ function Requests({ requests, balance }: { requests: PocketRequest[]; balance: n
                     <div className="panel-sub">Sites asking the pocket money for money. Approve the amount you choose, or deny it.</div>
                 </div>
             </div>
-            <table className="tbl">
-                <thead><tr><th>Site</th><th>Asked</th><th className="r">Profit so far</th><th className="r">Suggested</th><th /></tr></thead>
-                <tbody>
-                    {requests.map((r) => (
-                        <tr key={r.id}>
-                            <td>
-                                <Link to={`/execution/projects/${r.project.id}?tab=financials`} style={{ fontWeight: 600 }}>{r.project.title}</Link>
-                                {r.note && <div className="muted" style={{ fontSize: 11.5 }}>{r.note}</div>}
-                            </td>
-                            <td>
-                                {fmtDateY(r.requestedAt)}
-                                <div className="muted" style={{ fontSize: 11.5 }}>{r.requestedBy?.name ?? "Raised by the system"}</div>
-                            </td>
-                            <td className={(r.cashProfit ?? 0) < 0 ? "r mono down" : "r mono"}>{r.cashProfit != null ? money.exact(r.cashProfit) : "-"}</td>
-                            <td className="r mono">{money.exact(r.suggestedNow ?? r.suggestedAmount)}</td>
-                            <td className="r">
-                                <div className="row end" style={{ gap: 6 }}>
-                                    <button className="btn btn-sm btn-primary" onClick={() => setApproving(r)} aria-label={`Approve ${r.project.title}`}>Approve</button>
-                                    <button className="btn btn-sm" onClick={() => setDenying(r)} aria-label={`Deny ${r.project.title}`}>Deny</button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            {/* on a phone the table scrolls sideways instead of widening the page */}
+            <div className="tbl-wrap">
+                <table className="tbl">
+                    <thead><tr><th>Site</th><th>Asked</th><th className="r">Profit so far</th><th className="r">Suggested</th><th /></tr></thead>
+                    <tbody>
+                        {requests.map((r) => (
+                            <tr key={r.id}>
+                                <td>
+                                    <Link to={`/execution/projects/${r.project.id}?tab=financials`} style={{ fontWeight: 600 }}>{r.project.title}</Link>
+                                    {r.note && <div className="muted" style={{ fontSize: 11.5 }}>{r.note}</div>}
+                                </td>
+                                <td>
+                                    {fmtDateY(r.requestedAt)}
+                                    <div className="muted" style={{ fontSize: 11.5 }}>{r.requestedBy?.name ?? "Raised by the system"}</div>
+                                </td>
+                                <td className={(r.cashProfit ?? 0) < 0 ? "r mono down" : "r mono"}>{r.cashProfit != null ? money.exact(r.cashProfit) : "-"}</td>
+                                <td className="r mono">{money.exact(r.suggestedNow ?? r.suggestedAmount)}</td>
+                                <td className="r">
+                                    <div className="row end" style={{ gap: 6 }}>
+                                        <button className="btn btn-sm btn-primary" onClick={() => setApproving(r)} aria-label={`Approve ${r.project.title}`}>Approve</button>
+                                        <button className="btn btn-sm" onClick={() => setDenying(r)} aria-label={`Deny ${r.project.title}`}>Deny</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
             {approving && <ApproveModal request={approving} balance={balance} onClose={() => setApproving(null)} />}
             {denying && <DenyModal request={denying} onClose={() => setDenying(null)} />}
         </div>
@@ -171,20 +174,22 @@ function Requests({ requests, balance }: { requests: PocketRequest[]; balance: n
 
 function MovesTable({ items, out }: { items: PocketEntry[]; out?: boolean }) {
     return (
-        <table className="tbl">
-            <thead><tr><th>Date</th><th>{out ? "Paid to" : "From"}</th><th>Note</th><th>By</th><th className="r">Amount</th></tr></thead>
-            <tbody>
-                {items.map((e) => (
-                    <tr key={e.id}>
-                        <td className="mono">{fmtDateY(e.createdAt)}</td>
-                        <td><Link to={`/execution/projects/${e.project.id}?tab=financials`}>{e.project.title}</Link></td>
-                        <td className="muted">{e.note ?? "-"}</td>
-                        <td>{e.by.name}</td>
-                        <td className="r"><MoneyIn amount={e.amount} /></td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
+        <div className="tbl-wrap">
+            <table className="tbl">
+                <thead><tr><th>Date</th><th>{out ? "Paid to" : "From"}</th><th>Note</th><th>By</th><th className="r">Amount</th></tr></thead>
+                <tbody>
+                    {items.map((e) => (
+                        <tr key={e.id}>
+                            <td className="mono">{fmtDateY(e.createdAt)}</td>
+                            <td><Link to={`/execution/projects/${e.project.id}?tab=financials`}>{e.project.title}</Link></td>
+                            <td className="muted">{e.note ?? "-"}</td>
+                            <td>{e.by.name}</td>
+                            <td className="r"><MoneyIn amount={e.amount} /></td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
     );
 }
 
