@@ -20,16 +20,16 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
-/** The Mar Mikhael loft (10% supervision, no TVA) with this much paid beyond its client total. */
+/** The Mar Mikhael loft (10% supervision, no TVA) with this much paid beyond its client total, so nothing owed. */
 const loftPaidAhead = (paidAhead: number) => {
     const loft = site.losingProject;
     const m = loft.money!;
-    return { ...loft, money: { ...m, billing: { ...m.billing, paidAhead } } };
+    return { ...loft, money: { ...m, billing: { ...m.billing, paidAhead, owed: 0 } } };
 };
-/** The Design project with this much paid beyond its payment. */
+/** The Design project with this much paid beyond its payment, so nothing owed. */
 const designPaidAhead = (paidAhead: number) => {
     const m = fixtures.project.money!;
-    return { ...fixtures.project, money: { ...m, billing: { ...m.billing, paidAhead } } };
+    return { ...fixtures.project, money: { ...m, billing: { ...m.billing, paidAhead, owed: 0 } } };
 };
 
 const loftPath = (id: number) => `/execution/projects/${id}?complete=1`;
@@ -85,11 +85,12 @@ describe("closing a site the client has paid ahead", () => {
     });
 
     it("has no switch when nothing was paid beyond the price, and keeps nothing", async () => {
-        const loft = site.losingProject;
+        // paid exactly what is agreed
+        const loft = loftPaidAhead(0);
         const bodies: unknown[] = [];
         renderApp(loftPath(loft.id), karim,
             http.post("/api/projects/:id/complete", async ({ request }) => { bodies.push(await request.json()); return HttpResponse.json({ ...loft, status: "completed", completedAt: "2026-09-30T09:00:00Z" }); }),
-            ...siteHandlers);
+            http.get("/api/projects/:id", () => HttpResponse.json(loft)), ...siteHandlers);
         const dialog = await closing(loft.title);
         expect(within(dialog).queryByRole("switch")).not.toBeInTheDocument();
         expect(within(dialog).queryByText(/beyond the agreed price/)).not.toBeInTheDocument();
@@ -103,6 +104,67 @@ describe("closing a site the client has paid ahead", () => {
         const dialog = await closing(loft.title);
         expect(within(dialog).queryByRole("switch")).not.toBeInTheDocument();
         expect(within(dialog).queryByText(/Final profit/)).not.toBeInTheDocument();
+    });
+});
+
+describe("closing a project whose client still owes", () => {
+    const settleChoice = (dialog: HTMLElement) => within(dialog).getByRole("radiogroup", { name: "What becomes of what the client still owes" });
+    const complete = (dialog: HTMLElement) => within(dialog).getByRole("button", { name: "Complete project" });
+
+    it("asks a site's money manager to excuse or write off all of it, and closes only once one is chosen", async () => {
+        // the loft: $3,800 still owed, 10% supervision and no TVA
+        const loft = site.losingProject;
+        const m = loft.money!;
+        const bodies: unknown[] = [];
+        renderApp(loftPath(loft.id), karim,
+            http.post("/api/projects/:id/complete", async ({ request }) => { bodies.push(await request.json()); return HttpResponse.json({ ...loft, status: "completed", completedAt: "2026-09-30T09:00:00Z" }); }),
+            ...siteHandlers);
+        const dialog = await closing(loft.title);
+        expect(within(dialog).getByText(`The client still owes ${money.fmt(m.billing.owed)}.`)).toBeInTheDocument();
+        expect(complete(dialog)).toBeDisabled();
+        expect(complete(dialog)).toHaveAttribute("title", "Say what becomes of what the client still owes first.");
+
+        await userEvent.click(within(settleChoice(dialog)).getByRole("radio", { name: /Excuse it/ }));
+        // the price drops to what was received: with no TVA all of it comes off the revenue and the profit
+        const profit = m.profit - m.billing.owed;
+        expect(within(dialog).getByText(`Final profit ${money.fmt(profit)} · ${money.pct(profit / (m.revenue - m.billing.owed))}`)).toBeInTheDocument();
+        await userEvent.click(complete(dialog));
+        await waitFor(() => expect(bodies).toEqual([{ keepPaidAhead: false, settleOwed: "excused" }]));
+    });
+
+    it("writes off what a Design client never paid, lowering the payment", async () => {
+        const design = fixtures.project;
+        const m = design.money!;
+        const bodies: unknown[] = [];
+        renderApp("/design/projects/1?complete=1", nadia,
+            http.post("/api/projects/1/complete", async ({ request }) => { bodies.push(await request.json()); return HttpResponse.json({ ...design, status: "completed", completedAt: "2026-09-30T09:00:00Z" }); }),
+            ...projectHandlers);
+        const dialog = await closing(design.title);
+        await userEvent.click(within(settleChoice(dialog)).getByRole("radio", { name: /Write it off/ }));
+        const profit = m.profit - m.billing.owed;
+        expect(within(dialog).getByText(`Final profit ${money.fmt(profit)} · ${money.pct(profit / (m.revenue - m.billing.owed))}`)).toBeInTheDocument();
+        await userEvent.click(complete(dialog));
+        await waitFor(() => expect(bodies).toEqual([{ keepPaidAhead: false, settleOwed: "written_off" }]));
+    });
+
+    it("only says it stays owed to someone who sees the money but doesn't change it", async () => {
+        const loft = site.losingProject;
+        const bodies: unknown[] = [];
+        renderApp(loftPath(loft.id), withPermissions(karim, { revoke: [P.PROJECT_PRICING_MANAGE] }),
+            http.post("/api/projects/:id/complete", async ({ request }) => { bodies.push(await request.json()); return HttpResponse.json({ ...loft, status: "completed", completedAt: "2026-09-30T09:00:00Z" }); }),
+            ...siteHandlers);
+        const dialog = await closing(loft.title);
+        expect(within(dialog).getByText(/It stays owed once the project is closed\./)).toBeInTheDocument();
+        expect(within(dialog).queryByRole("radiogroup")).not.toBeInTheDocument();
+        await userEvent.click(complete(dialog));
+        await waitFor(() => expect(bodies).toEqual([{ keepPaidAhead: false }]));
+    });
+
+    it("shows on the project what was excused when it was completed", async () => {
+        const m = fixtures.project.money!;
+        const closed = { ...fixtures.project, status: "completed", money: { ...m, isLocked: true, settledOwedUsd: 1500, settledOwedAs: "excused" } };
+        renderApp("/design/projects/1", nadia, http.get("/api/projects/1", () => HttpResponse.json(closed)), ...projectHandlers);
+        expect(await screen.findByText(/Excused/)).toHaveTextContent(`Excused ${money.fmt(1500)} at completion`);
     });
 });
 

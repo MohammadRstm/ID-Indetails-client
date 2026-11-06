@@ -16676,6 +16676,7 @@ export interface components {
         };
         CompleteProjectRequest: {
             keepPaidAhead?: boolean;
+            settleOwed?: null | components["schemas"]["OwedSettlement"];
         };
         /** @enum {unknown} */
         ContactKind: "email" | "phone";
@@ -18331,6 +18332,8 @@ export interface components {
             to: string;
             weekly: components["schemas"]["WeekTotalResponse"][];
         };
+        /** @enum {unknown} */
+        OwedSettlement: "excused" | "written_off";
         PagedResponseOfActivityItemResponse: {
             items: components["schemas"]["ActivityItemResponse"][];
             /** Format: int32 */
@@ -19367,6 +19370,9 @@ export interface components {
             revenue: number;
             /** Format: double */
             revenueWithTva: number;
+            settledOwedAs: null | components["schemas"]["OwedSettlement"];
+            /** Format: double */
+            settledOwedUsd: null | number;
             /** Format: double */
             supervisionRate: null | number;
             /** Format: double */

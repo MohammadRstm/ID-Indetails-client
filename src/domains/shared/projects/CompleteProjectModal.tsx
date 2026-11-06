@@ -15,7 +15,7 @@ import { money } from "@/shared/format/money";
 import { fmtDayDateY, companyToday, fmtH } from "@/shared/format/time";
 import type { IconName } from "@/shared/icons/icons";
 import Icon from "@/shared/icons/Icon";
-import { useChangeProjectStatus, type Project } from "./projectsApi";
+import { useChangeProjectStatus, type OwedSettlement, type Project } from "./projectsApi";
 
 type CompleteProjectModalProps = {
     project: Project;
@@ -37,18 +37,28 @@ export default function CompleteProjectModal({ project, openRequirements, contri
     // received (a closing VO on a site, a higher payment on Design), so the project closes on what it really earned.
     const paidAhead = !internal && m?.billing && m.billing.paidAhead > 0.5 ? m.billing.paidAhead : 0;
     const [keep, setKeep] = useState(true);
-    // what keeping it adds to the revenue: the TVA in it is never revenue, and on a site supervision is part of it
+    // What the client still owes (TVA included). Whoever changes the project's money says what becomes of all of it:
+    // excused (a discount agreed with the client) or written off (revenue lost). Either lowers the price to what was
+    // received, so the client owes nothing more; the project isn't completed until one is chosen.
+    const owed = !internal && m?.billing && m.billing.owed > 0.5 ? m.billing.owed : 0;
+    const settles = owed > 0 && permissions.has(execution ? P.PROJECT_PRICING_MANAGE : P.FINANCIAL_WRITE);
+    const [settle, setSettle] = useState<OwedSettlement | null>(null);
+    // what keeping or settling changes in the revenue: the TVA in it is never revenue, and on a site supervision is part of it
     const s = execution ? m?.supervisionRate ?? 0 : 0;
     const t = m?.tvaRate ?? 0;
-    const gain = keep && paidAhead > 0 ? paidAhead * (1 + s) / (1 + s + t) : 0;
-    const revenue = (m?.revenue ?? 0) + gain;
-    const profit = (m?.profit ?? 0) + gain;
+    const asRevenue = (gross: number) => gross * (1 + s) / (1 + s + t);
+    const gain = keep && paidAhead > 0 ? asRevenue(paidAhead) : 0;
+    const loss = settles && settle ? asRevenue(owed) : 0;
+    const revenue = (m?.revenue ?? 0) + gain - loss;
+    const profit = (m?.profit ?? 0) + gain - loss;
+    const settled = settle === "excused" ? "excused" : "written off";
     const margin = m && revenue > 0 ? profit / revenue : null;
     const unpriced = execution && m != null && revenue === 0;
     const costOnly = internal || unpriced;
 
     function confirm() {
-        change.mutate({ action: "complete", keepPaidAhead: keep && paidAhead > 0 }, {
+        if (settles && !settle) return;
+        change.mutate({ action: "complete", keepPaidAhead: keep && paidAhead > 0, ...(settles && settle ? { settleOwed: settle } : {}) }, {
             onSuccess: () => {
                 toast({
                     text: `${project.title} closed${m && !costOnly && margin != null ? ` at ${money.pct(margin)} margin` : ""}`,
@@ -89,7 +99,9 @@ export default function CompleteProjectModal({ project, openRequirements, contri
                             : m ? (costOnly ? `Final cost ${money.fmt(m.cost.total)}` : `Final profit ${money.fmt(profit)} · ${money.pct(margin)}`) : null}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" disabled={change.isPending} onClick={confirm}><Icon name="check" />Complete project</button>
+                    <button className="btn btn-primary" disabled={change.isPending || (settles && !settle)} title={settles && !settle ? "Say what becomes of what the client still owes first." : undefined} onClick={confirm}>
+                        <Icon name="check" />Complete project
+                    </button>
                 </>
             }
         >
@@ -112,6 +124,31 @@ export default function CompleteProjectModal({ project, openRequirements, contri
                             : "It stays a balance owed back to the client and doesn't count in the profit."}
                     </div>
                     <button type="button" className="switch" role="switch" aria-checked={keep} aria-label="Keep what the client paid beyond the price" onClick={() => setKeep(!keep)} />
+                </div>
+            )}
+            {settles && (
+                <div className="banner attn">
+                    <Icon name="alert" />
+                    <div className="grow">
+                        <b>The client still owes {money.fmt(owed)}.</b> Say what becomes of all of it. Either way the {execution ? "price" : "payment"} drops to
+                        what was received, so they owe nothing more, and the profit below follows.
+                        <div className="row wrap mt-s" role="radiogroup" aria-label="What becomes of what the client still owes" style={{ gap: 14 }}>
+                            <label className="scope-check">
+                                <input type="radio" name="settle-owed" checked={settle === "excused"} onChange={() => setSettle("excused")} />
+                                <span>Excuse it<span className="hint" style={{ display: "block" }}>Forgiven: a discount agreed with the client</span></span>
+                            </label>
+                            <label className="scope-check">
+                                <input type="radio" name="settle-owed" checked={settle === "written_off"} onChange={() => setSettle("written_off")} />
+                                <span>Write it off<span className="hint" style={{ display: "block" }}>Never paid: revenue lost</span></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {owed > 0 && !settles && (
+                <div className="banner">
+                    <Icon name="info" />
+                    <div className="grow"><b>The client still owes {money.fmt(owed)}.</b> It stays owed once the project is closed.</div>
                 </div>
             )}
             {unpriced && (
@@ -143,13 +180,19 @@ export default function CompleteProjectModal({ project, openRequirements, contri
                         <MarginPill value={margin} />
                     </div>
                     <Waterfall height={200} steps={execution ? [
-                        { label: gain > 0 ? "Agreed + kept" : "Agreed", value: revenue, kind: "start", sub: gain > 0 ? `${money.short(gain)} paid beyond the price` : undefined },
+                        {
+                            label: gain > 0 ? "Agreed + kept" : loss > 0 ? `Agreed − ${settled}` : "Agreed", value: revenue, kind: "start",
+                            sub: gain > 0 ? `${money.short(gain)} paid beyond the price` : loss > 0 ? `${money.short(loss)} ${settled}` : undefined,
+                        },
                         { label: "Site expenses", value: m.cost.siteExpenses, kind: "cost" },
                         { label: "Ground labour", value: m.cost.groundLabour, kind: "cost" },
                         { label: "Other costs", value: m.cost.expenses, kind: "cost" },
                         { label: "Profit", value: 0, kind: "result" },
                     ] : [
-                        { label: gain > 0 ? "Payment + kept" : "Payment", value: revenue, kind: "start", sub: gain > 0 ? `${money.short(gain)} paid beyond the price` : undefined },
+                        {
+                            label: gain > 0 ? "Payment + kept" : loss > 0 ? `Payment − ${settled}` : "Payment", value: revenue, kind: "start",
+                            sub: gain > 0 ? `${money.short(gain)} paid beyond the price` : loss > 0 ? `${money.short(loss)} ${settled}` : undefined,
+                        },
                         { label: "Labour", value: m.cost.labour, kind: "cost", sub: `${Math.round(m.labourHours)}h` },
                         { label: "Expenses", value: m.cost.expenses, kind: "cost" },
                         { label: "Profit", value: 0, kind: "result" },
