@@ -146,12 +146,13 @@ table { line-height: normal; font-weight: normal; }
 
 /* ---------------- phones ----------------
    The prototype was drawn for a laptop; below 640px its top bar ran off the screen. The top bar's buttons
-   drop their words (their names stay for screen readers) and Help moves to the account menu only. */
+   drop their words (their names stay for screen readers) and Help moves to the account menu only. Only the bar's own
+   buttons shrink: a menu opened from it (notifications, messages, the account) keeps its buttons' words. */
 @media (max-width: 640px) {
   .top { gap: 6px; padding: 0 8px; }
   .top-actions { gap: 2px; }
   .top .top-label, .top .timer-title { display: none; }
-  .top .btn-sm { width: 32px; padding: 0; }
+  .top-actions > .btn-sm, .top .timer > .btn-sm { width: 32px; padding: 0; }
   .top .timer { padding-left: 8px; gap: 6px; }
   .top .timer .btn-sm { width: 27px; height: 24px; border-radius: 99px; }
 }
@@ -805,7 +806,7 @@ button.pc-comments { border: 0; cursor: pointer; }
    sidebar's tabs grow to about 40px tall (the top bar's keep their width, so a narrow phone still fits them all), and the
    small "?" and switches take taps from around them without looking any bigger. Keyboard tips have no use here. */
 @media (pointer: coarse) {
-  .top .icon-btn { height: 40px; }
+  .top > .icon-btn, .top-actions > .icon-btn, .top-actions > .pop-host > .icon-btn { height: 40px; }
   .nav-item, .pop-item, .sel-opt { padding-top: 11px; padding-bottom: 11px; }
   .help-tip { position: relative; }
   .help-tip::after { content: ""; position: absolute; inset: -12px; }
