@@ -5,6 +5,7 @@ import { loadFailed } from "@/api/queryState";
 import FormFailure from "@/domains/shared/projects/FormFailure";
 import { Bar } from "@/shared/components/Data/Bits";
 import { Kpi } from "@/shared/components/Data/Kpi";
+import { MixedCurrency } from "@/shared/components/Data/Money";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
@@ -116,7 +117,10 @@ function DepartmentRow({ department: d, onOpen }: { department: ProjectDepartmen
             <td className="r mono">{budgeted ? money.fmt(m.budget) : "-"}</td>
             <td>{budgeted && <Bar value={m.budget > 0 ? (m.cost / m.budget) * 100 : 0} tone={over ? "loss" : undefined} />}</td>
             <td className="r mono">{fmtH(m.minutes)}</td>
-            <td className={cx("r mono", over && "money down")}>{money.fmt(m.cost)}</td>
+            <td className={cx("r mono", over && "money down")}>
+                {money.fmt(m.cost)}
+                {m.unconverted.length > 0 && <div><MixedCurrency amounts={m.unconverted} /></div>}
+            </td>
             <td className={cx("r mono", over && "money down")}>{budgeted ? money.fmt(m.left) : "-"}</td>
             <td className="r muted"><Icon name="chevronRight" /></td>
         </tr>
@@ -146,7 +150,8 @@ function DepartmentCostModal({ project, department: d, onClose }: { project: Pro
             {d.share != null ? (
                 <div className="kpis" style={{ borderRadius: "var(--r2)" }}>
                     <Kpi label="Budget" value={money.fmt(m.budget)} />
-                    <Kpi label={`Cost · ${fmtH(m.minutes)}`} value={<span className={cx("mono", over && "down")}>{money.fmt(m.cost)}</span>} />
+                    <Kpi label={`Cost · ${fmtH(m.minutes)}`} value={<span className={cx("mono", over && "down")}>{money.fmt(m.cost)}</span>}
+                        sub={m.unconverted.length > 0 ? <MixedCurrency amounts={m.unconverted} /> : undefined} />
                     <Kpi label={over ? "Over budget" : "Left"} value={<span className={cx("mono", over && "down")}>{money.fmt(Math.abs(m.left))}</span>} />
                 </div>
             ) : <div className="hint">{OTHER_NOTE}</div>}
@@ -179,7 +184,10 @@ function DepartmentCostModal({ project, department: d, onClose }: { project: Pro
                                 <td className="r mono" style={{ fontWeight: 650 }}>{fmtH(m.minutes)}</td>
                                 <td />
                                 <td />
-                                <td className={cx("r mono", over && "money down")} style={{ fontWeight: 650 }}>{money.fmt(m.cost)}</td>
+                                <td className={cx("r mono", over && "money down")} style={{ fontWeight: 650 }}>
+                                    {money.fmt(m.cost)}
+                                    {m.unconverted.length > 0 && <div><MixedCurrency amounts={m.unconverted} /></div>}
+                                </td>
                             </tr>
                         </tfoot>
                     </table>

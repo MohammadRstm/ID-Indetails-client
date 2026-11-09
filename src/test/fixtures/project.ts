@@ -35,7 +35,7 @@ export const projectWork = {
             {
                 id: 12, name: "Architecture", share: 0.6,
                 money: {
-                    budget: 6000, cost: 6500, left: -500, minutes: 3000,
+                    budget: 6000, cost: 6500, left: -500, minutes: 3000, unconverted: [],
                     people: [{
                         person: { id: 10, name: "Karim Haddad" }, minutes: 600, cost: 1300,
                         months: [{ month: "2026-09-01", minutes: 600, hourlyRate: 13, cost: 1300 }],
@@ -45,7 +45,7 @@ export const projectWork = {
                     }],
                 },
             },
-            { id: 13, name: "Interiors", share: 0.4, money: { budget: 4000, cost: 1000, left: 3000, minutes: 480, people: [] } },
+            { id: 13, name: "Interiors", share: 0.4, money: { budget: 4000, cost: 1000, left: 3000, minutes: 480, unconverted: [], people: [] } },
         ],
         other: null,
     } as Schemas["ProjectDepartmentsResponse"],

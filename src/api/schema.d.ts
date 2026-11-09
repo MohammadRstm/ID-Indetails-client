@@ -17330,6 +17330,7 @@ export interface components {
             /** Format: int32 */
             minutes: number;
             people: components["schemas"]["DepartmentPersonResponse"][];
+            unconverted: components["schemas"]["CurrencyAmountResponse"][];
         };
         DepartmentMonthResponse: {
             /** Format: double */
