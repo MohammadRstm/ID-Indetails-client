@@ -26,7 +26,7 @@ describe("the Company overview", () => {
         expect(within(keeps).getByText("Company net profit").closest(".co-line")).toHaveTextContent(money.fmt(o.netProfit));
         // everyone who logs no hours is on a fixed salary, so their pay comes off here, under the company's expenses
         expect(within(keeps).getByText("Fixed salaries").closest(".co-line")).toHaveTextContent(money.fmt(o.fixedSalaries));
-        // and so does what Design salaries paid for paid time off
+        // and so does what Design staff were paid for paid time off
         expect(within(keeps).getByText("Paid leave").closest(".co-line")).toHaveTextContent(money.fmt(o.paidLeave));
         // and the overtime premium past a salary's threshold, which projects carry at the hourly rate only
         expect(within(keeps).getByText("Overtime premium").closest(".co-line")).toHaveTextContent(money.fmt(o.overtimePremium));

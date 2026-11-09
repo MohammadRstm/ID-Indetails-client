@@ -261,7 +261,7 @@ export const explainedMoney: Article[] = [
             list(
                 "Company expenses and these salaries count for the share of each month's days the period covers: half of a month counts half its rent.",
                 "**Fixed salaries** are the pay of everyone who logs no hours: admins, super admins and site staff. No project carries it, so it's a company cost, taken off here instead.",
-                "**Paid leave** is what Design salaries paid for paid time off. Nothing is logged for it, so no project carries it either.",
+                "**Paid leave** is what Design staff were paid for paid time off, on a salary or hourly pay. Nothing is logged for it, so no project carries it either.",
                 "The **overtime premium** is what salaries paid for overtime past the month's threshold, beyond the hourly rate their projects carry those hours at.",
                 "**Outstanding** is as of today, whatever the period.",
                 "The monthly chart on Company expenses shows each month's profit before company expenses, and the net profit after them, the fixed salaries, paid leave and the overtime premium.",
