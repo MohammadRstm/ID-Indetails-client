@@ -106,7 +106,7 @@ export const company: Article[] = [
         blocks: [
             list(
                 "Pick the period at the top: a month, a quarter or a year.",
-                "**What the company keeps**: each business's profit, then company expenses, fixed salaries and paid leave, then the company's net profit.",
+                "**What the company keeps**: each business's profit, then company expenses, fixed salaries, paid leave and the overtime premium, then the company's net profit.",
                 "Each business's card has **Manage**, to step into it.",
                 "**People** and **Departments** tabs cover both businesses.",
             ),

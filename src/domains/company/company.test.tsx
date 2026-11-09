@@ -28,6 +28,8 @@ describe("the Company overview", () => {
         expect(within(keeps).getByText("Fixed salaries").closest(".co-line")).toHaveTextContent(money.fmt(o.fixedSalaries));
         // and so does what Design salaries paid for paid time off
         expect(within(keeps).getByText("Paid leave").closest(".co-line")).toHaveTextContent(money.fmt(o.paidLeave));
+        // and the overtime premium past a salary's threshold, which projects carry at the hourly rate only
+        expect(within(keeps).getByText("Overtime premium").closest(".co-line")).toHaveTextContent(money.fmt(o.overtimePremium));
         const across = screen.getByText("Across both").closest(".panel") as HTMLElement;
         expect(within(across).getByText("Clients served").closest(".cost-row")).toHaveTextContent(String(o.clientsServed));
         expect(screen.getAllByRole("button", { name: "Manage" })).toHaveLength(2);

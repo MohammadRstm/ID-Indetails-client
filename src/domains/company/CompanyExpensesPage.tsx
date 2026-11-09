@@ -124,7 +124,7 @@ export default function CompanyExpensesPage() {
 
                     <div className={seesCompany ? "grid g-8-4 mt" : "mt"}>
                         {seesCompany && <Figure title={`What company expenses do to each month · ${chartYear}`}
-                            sub="The company's net profit, after company expenses, fixed salaries and paid leave, against what it would have been without them."
+                            sub="The company's net profit, after company expenses, fixed salaries, paid leave and the overtime premium, against what it would have been without them."
                             tools={
                                 <div className="row" style={{ gap: 4 }}>
                                     <button className="icon-btn" aria-label="Previous year" disabled={chartYear <= thisYear - YEARS_BACK} onClick={() => setChartYear((y) => y - 1)}><Icon name="chevronLeft" /></button>
@@ -133,8 +133,8 @@ export default function CompanyExpensesPage() {
                                 </div>
                             }
                             table={{
-                                cols: [{ label: "Month" }, { label: "Company expenses", right: true }, { label: "Fixed salaries", right: true }, { label: "Paid leave", right: true }, { label: "Profit before", right: true }, { label: "Net profit", right: true }],
-                                rows: yearList.map((m) => [fmtMonthY(m.month), money.fmt(m.overhead), money.fmt(salariesOf(m)), money.fmt(paidLeaveOf(m)), money.fmt(m.profitBeforeOverhead), money.fmt(netOf(m))]),
+                                cols: [{ label: "Month" }, { label: "Company expenses", right: true }, { label: "Fixed salaries", right: true }, { label: "Paid leave", right: true }, { label: "Overtime premium", right: true }, { label: "Profit before", right: true }, { label: "Net profit", right: true }],
+                                rows: yearList.map((m) => [fmtMonthY(m.month), money.fmt(m.overhead), money.fmt(salariesOf(m)), money.fmt(paidLeaveOf(m)), money.fmt(premiumOf(m)), money.fmt(m.profitBeforeOverhead), money.fmt(netOf(m))]),
                             }}>
                             {loadFailed(yearMonths) ? <LoadError error={yearMonths.error} retry={() => yearMonths.refetch()} what={`${chartYear}'s months`} />
                                 : !yearMonths.data ? <SkeletonLines lines={7} /> : (
@@ -144,8 +144,8 @@ export default function CompanyExpensesPage() {
                                         { label: "Net profit", area: true, points: yearList.map((m) => ({ y: netOf(m), label: monthLabel(m.month), tip: fmtMonthY(m.month) })) },
                                     ]} />
                                     <div className="chart-note">
-                                        The gap between the two lines is company expenses, fixed salaries and paid leave
-                                        - {money.fmt(yearList.reduce((t, m) => t + m.overhead + salariesOf(m) + paidLeaveOf(m), 0))} in {chartYear}{chartYear === thisYear ? " so far" : ""},
+                                        The gap between the two lines is company expenses, fixed salaries, paid leave and the overtime premium
+                                        - {money.fmt(yearList.reduce((t, m) => t + m.overhead + salariesOf(m) + paidLeaveOf(m) + premiumOf(m), 0))} in {chartYear}{chartYear === thisYear ? " so far" : ""},
                                         carried by the company rather than by any one project.
                                     </div>
                                 </>
@@ -231,4 +231,5 @@ export default function CompanyExpensesPage() {
 // An API from before these salaries were in each month sends none of these fields: the net profit is then the profit after overhead.
 const salariesOf = (m: CompanyMonth) => m.fixedSalaries ?? 0;
 const paidLeaveOf = (m: CompanyMonth) => m.paidLeave ?? 0;
+const premiumOf = (m: CompanyMonth) => m.overtimePremium ?? 0;
 const netOf = (m: CompanyMonth) => m.netProfit ?? m.profitAfterOverhead;

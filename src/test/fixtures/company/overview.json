@@ -50,6 +50,8 @@
   "unconvertedFixedSalaries": [],
   "paidLeave": 0,
   "unconvertedPaidLeave": [],
+  "overtimePremium": 0,
+  "unconvertedOvertimePremium": [],
   "adminSalaries": 2500,
   "unconvertedAdminSalaries": [],
   "netProfit": 9624.15,

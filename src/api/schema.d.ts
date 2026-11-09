@@ -16600,6 +16600,8 @@ export interface components {
             /** Format: double */
             overhead: number;
             /** Format: double */
+            overtimePremium: number;
+            /** Format: double */
             paidLeave: number;
             /** Format: double */
             profitAfterOverhead: number;
@@ -16633,6 +16635,8 @@ export interface components {
             /** Format: double */
             overhead: number;
             /** Format: double */
+            overtimePremium: number;
+            /** Format: double */
             paidLeave: number;
             /** Format: int32 */
             projectsWithActivity: number;
@@ -16644,6 +16648,7 @@ export interface components {
             unconvertedFixedSalaries: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedInvoices: components["schemas"]["UnconvertedInvoicesResponse"][];
             unconvertedOverhead: components["schemas"]["CurrencyTotalResponse"][];
+            unconvertedOvertimePremium: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedPaidLeave: components["schemas"]["CurrencyTotalResponse"][];
         };
         CompanyProtonSwitchRequest: {
