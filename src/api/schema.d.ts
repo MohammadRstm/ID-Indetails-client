@@ -16991,9 +16991,9 @@ export interface components {
         };
         CompanyMonthResponse: {
             /** Format: double */
-            adminSalaries: number;
-            /** Format: double */
             expenses: number;
+            /** Format: double */
+            fixedSalaries: number;
             /** Format: double */
             groundLabour: number;
             /** Format: double */
@@ -17006,6 +17006,10 @@ export interface components {
             netProfit: number;
             /** Format: double */
             overhead: number;
+            /** Format: double */
+            overtimePremium: number;
+            /** Format: double */
+            paidLeave: number;
             /** Format: double */
             profitAfterOverhead: number;
             /** Format: double */
@@ -17023,6 +17027,8 @@ export interface components {
             /** Format: double */
             cost: number;
             domains: components["schemas"]["DomainOverviewResponse"][];
+            /** Format: double */
+            fixedSalaries: number;
             /** Format: date */
             from: string;
             /** Format: double */
@@ -17035,6 +17041,10 @@ export interface components {
             outstanding: number;
             /** Format: double */
             overhead: number;
+            /** Format: double */
+            overtimePremium: number;
+            /** Format: double */
+            paidLeave: number;
             /** Format: int32 */
             projectsWithActivity: number;
             /** Format: double */
@@ -17042,8 +17052,11 @@ export interface components {
             /** Format: date */
             to: string;
             unconvertedAdminSalaries: components["schemas"]["CurrencyTotalResponse"][];
+            unconvertedFixedSalaries: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedInvoices: components["schemas"]["UnconvertedInvoicesResponse"][];
             unconvertedOverhead: components["schemas"]["CurrencyTotalResponse"][];
+            unconvertedOvertimePremium: components["schemas"]["CurrencyTotalResponse"][];
+            unconvertedPaidLeave: components["schemas"]["CurrencyTotalResponse"][];
         };
         CompanyProtonSwitchRequest: {
             enabled?: boolean;

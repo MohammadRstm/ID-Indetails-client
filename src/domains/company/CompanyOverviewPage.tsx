@@ -111,9 +111,9 @@ function Figures({ tabs }: { tabs: ReactNode }) {
                 <div>
                     <div className="panel-title">
                         What the company keeps
-                        <HelpHint article="company-figures" label="what the company keeps">Both businesses' profit, minus company expenses and the admins' and super admins' salaries for the period.</HelpHint>
+                        <HelpHint article="company-figures" label="what the company keeps">Both businesses' profit, minus company expenses, fixed salaries, paid leave and the overtime premium for the period.</HelpHint>
                     </div>
-                    <div className="panel-sub">{period.label}. Each business earns its own profit. Company expenses and the admins' and super admins' fixed salaries belong to no project, so they come out once, here.</div>
+                    <div className="panel-sub">{period.label}. Each business earns its own profit. Company expenses, fixed salaries, paid leave and the overtime premium belong to no project, so they come out once, here.</div>
                 </div>
             </div>
             <div className="panel-body">
@@ -122,16 +122,22 @@ function Figures({ tabs }: { tabs: ReactNode }) {
                         {t.domains.map((d) => <Line key={d.domain} label={`${label(d.domain)} profit`} value={d.profit} tone="auto" />)}
                         <Line label="Combined" value={t.grossProfit} rule />
                         <Line label="Company expenses" value={-t.overhead} />
-                        <Line label="Admins' and super admins' salaries" value={-t.adminSalaries} />
+                        <Line label="Fixed salaries" value={-t.fixedSalaries} />
+                        <Line label="Paid leave" value={-t.paidLeave} />
+                        <Line label="Overtime premium" value={-t.overtimePremium} />
                         <Line label="Company net profit" value={t.netProfit} strong tone="auto" />
                     </div>
                 )}
                 {t && t.unconvertedOverhead.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedOverhead.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
-                {t && t.unconvertedAdminSalaries.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedAdminSalaries.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
+                {t && t.unconvertedFixedSalaries.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedFixedSalaries.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
+                {t && t.unconvertedPaidLeave.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedPaidLeave.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
+                {t && t.unconvertedOvertimePremium.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedOvertimePremium.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
                 <p className="hint mt">
                     Revenue is the money received from clients in this window, on the day it arrived; costs are the labour, expenses, site expenses and site labour dated inside it.
                     Company expenses are the monthly pool of subscriptions and running costs, counted day by day for the {days} day{days === 1 ? "" : "s"} shown
-                    - never charged to a project or a client. Super admins log no hours, so no project carries their pay: their salaries are counted the same way.
+                    - never charged to a project or a client. Fixed salaries are the pay of everyone who logs no hours (admins, super admins and site staff), so no project carries it: they are counted the same way.
+                    Paid leave is what Design staff were paid for paid time off, on a salary or hourly pay, which no project carries either.
+                    The overtime premium is what salaries paid for overtime past the month's threshold, beyond the hourly rate their projects carry those hours at.
                     Everyone else's pay is already in the businesses' costs, through the hours they log.
                 </p>
             </div>

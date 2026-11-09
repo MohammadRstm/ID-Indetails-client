@@ -9,7 +9,9 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "adminSalaries": 0,
+    "fixedSalaries": 0,
+    "paidLeave": 0,
+    "overtimePremium": 0,
     "netProfit": 0
   },
   {
@@ -22,7 +24,9 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "adminSalaries": 0,
+    "fixedSalaries": 0,
+    "paidLeave": 0,
+    "overtimePremium": 0,
     "netProfit": 0
   },
   {
@@ -35,7 +39,9 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "adminSalaries": 0,
+    "fixedSalaries": 0,
+    "paidLeave": 0,
+    "overtimePremium": 0,
     "netProfit": 0
   },
   {
@@ -48,7 +54,9 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "adminSalaries": 0,
+    "fixedSalaries": 0,
+    "paidLeave": 0,
+    "overtimePremium": 0,
     "netProfit": 0
   },
   {
@@ -61,7 +69,9 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "adminSalaries": 0,
+    "fixedSalaries": 0,
+    "paidLeave": 0,
+    "overtimePremium": 0,
     "netProfit": 0
   },
   {
@@ -74,7 +84,9 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "adminSalaries": 0,
+    "fixedSalaries": 0,
+    "paidLeave": 0,
+    "overtimePremium": 0,
     "netProfit": 0
   },
   {
@@ -87,7 +99,9 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "adminSalaries": 0,
+    "fixedSalaries": 0,
+    "paidLeave": 0,
+    "overtimePremium": 0,
     "netProfit": 0
   },
   {
@@ -100,7 +114,9 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "adminSalaries": 0,
+    "fixedSalaries": 0,
+    "paidLeave": 0,
+    "overtimePremium": 0,
     "netProfit": 0
   },
   {
@@ -113,7 +129,9 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "adminSalaries": 0,
+    "fixedSalaries": 0,
+    "paidLeave": 0,
+    "overtimePremium": 0,
     "netProfit": 0
   },
   {
@@ -126,7 +144,9 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "adminSalaries": 0,
+    "fixedSalaries": 0,
+    "paidLeave": 0,
+    "overtimePremium": 0,
     "netProfit": 0
   },
   {
@@ -139,7 +159,9 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "adminSalaries": 0,
+    "fixedSalaries": 0,
+    "paidLeave": 0,
+    "overtimePremium": 0,
     "netProfit": 0
   },
   {
@@ -152,7 +174,9 @@
     "overhead": 0,
     "profitBeforeOverhead": 0,
     "profitAfterOverhead": 0,
-    "adminSalaries": 0,
+    "fixedSalaries": 0,
+    "paidLeave": 0,
+    "overtimePremium": 0,
     "netProfit": 0
   },
   {
@@ -165,7 +189,9 @@
     "overhead": 0,
     "profitBeforeOverhead": 12124.15,
     "profitAfterOverhead": 12124.15,
-    "adminSalaries": 0,
+    "fixedSalaries": 0,
+    "paidLeave": 0,
+    "overtimePremium": 0,
     "netProfit": 12124.15
   }
 ]
