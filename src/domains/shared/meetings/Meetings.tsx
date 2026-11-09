@@ -30,6 +30,7 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { personName, usePeople } from "../people/peopleApi";
 import { useProjects } from "../projects/projectsApi";
+import { useAway } from "../timeOff/timeOffApi";
 import {
     meetingTitle, useCanChangeMeeting, useCreateGeneralMeeting, useCreateMeeting, useDeleteMeeting, useMeetings, useProjectMeetings, type Meeting,
 } from "./meetingsApi";
@@ -96,9 +97,13 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
         .filter((x) => x.id !== me && x.status === "active" && (where == null || x.domain === where || x.role === "super_admin"))
         .map((x) => ({ id: x.id, name: personName(x), photoFileId: x.photoFileId, team: x.team?.name ?? null }))
         .sort((a, b) => a.name.localeCompare(b.name));
-    const [attendees, setAttendees] = useState<number[]>([]);
-    const picked = attendees.filter((id) => invitable.some((x) => x.id === id));
     const [day, setDay] = useState(companyToday());
+    // people on time off that day can be seen but not picked (the API refuses them too)
+    const away = useAway(day, day);
+    const offIds = new Set((away.data ?? []).map((a) => a.userId));
+    const options = invitable.map((x) => ({ ...x, off: offIds.has(x.id) }));
+    const [attendees, setAttendees] = useState<number[]>([]);
+    const picked = attendees.filter((id) => options.some((x) => x.id === id && !x.off));
     const [start, setStart] = useState(() => Math.min(23 * 60 + 30, Math.ceil(minutesOfDay(new Date()) / 30) * 30));
     const [end, setEnd] = useState(() => Math.min(23 * 60 + 59, start + 60));
     const [topic, setTopic] = useState("");
@@ -181,7 +186,7 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
                 {general && (
                     <div className="field" style={{ marginBottom: 12 }}>
                         <label className="label required" htmlFor="mtg-attendees">Attendees</label>
-                        <PeoplePicker id="mtg-attendees" value={picked} onChange={setAttendees} options={invitable} none="Choose people" clear="Clear" />
+                        <PeoplePicker id="mtg-attendees" value={picked} onChange={setAttendees} options={options} none="Choose people" clear="Clear" />
                         <FieldError message={errors.show("attendees", attendeesError)} />
                     </div>
                 )}

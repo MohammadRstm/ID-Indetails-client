@@ -122,6 +122,17 @@ describe("Messages", () => {
         await waitFor(() => expect(read).toEqual(["direct/2"]));
     });
 
+    it("flag a colleague on time off beside their name, in the list and above their chat", async () => {
+        renderApp("/design/messages?with=2", rana,
+            http.get("/api/time-off/away", () => HttpResponse.json([{ userId: 2, firstDay: "2026-09-29", lastDay: "2026-10-04" }])),
+            ...messageHandlers);
+        const t = await screen.findByText("Can we talk about the Q4 plan?").then(() => thread());
+        expect(await within(t.querySelector(".msg-thread-head") as HTMLElement).findByText("Off until Oct 4")).toBeInTheDocument();
+        const row = within(sidebar()).getAllByText(people.nadia.name)[0].closest(".msg-contact-row") as HTMLElement;
+        expect(within(row).getByText("Off until Oct 4")).toBeInTheDocument();
+        expect(screen.getAllByText(/^Off until/)).toHaveLength(2);
+    });
+
     it("on a phone, show the chats first, then the one picked, with a way back", async () => {
         renderApp("/design/messages", rana, ...messageHandlers);
         // the newest chat opens beside the list, but a phone shows the list until one is picked

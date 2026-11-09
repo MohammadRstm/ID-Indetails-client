@@ -11,7 +11,7 @@ const ALL = Object.values(P) as PermissionCode[];
 /** Company-layer codes: super admins only, unless granted. */
 const COMPANY_ONLY: PermissionCode[] = [
     P.COMPANY_VIEW, P.OVERHEAD_MANAGE, P.SALARY_VIEW, P.COMPANY_SETTINGS_MANAGE, P.WORKING_TIME_MANAGE,
-    P.SCHEDULE_MANAGE, P.HOURS_EXCUSE, P.EMPLOYEE_INVITE_SUPER_ADMIN, P.PERMISSION_MANAGE, P.EXCHANGE_RATE_MANAGE,
+    P.SCHEDULE_MANAGE, P.HOURS_EXCUSE, P.TIME_OFF_DECIDE, P.EMPLOYEE_INVITE_SUPER_ADMIN, P.PERMISSION_MANAGE, P.EXCHANGE_RATE_MANAGE,
     P.OVERHEAD_CATEGORY_MANAGE, P.SESSION_MANAGE, P.EMPLOYEE_CHANGE_EMAIL, P.PROTON_BUDGET_MANAGE,
 ];
 /** The website's own: its staff hold them, and anyone else only when granted (which opens the Website area). */
@@ -27,12 +27,12 @@ const SUPER_ADMIN_ONLY: PermissionCode[] = [
     P.EMPLOYEE_INVITE, P.EMPLOYEE_PAY_MANAGE, P.MESSAGE_ANNOUNCE, P.PROJECT_DELETE,
 ];
 const DESIGN_ONLY: PermissionCode[] = [
-    P.FINANCIAL_WRITE, P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN, P.WORK_ENTRY_VIEW_ALL, P.WORK_ENTRY_COMMENT, P.CLIENT_ACCESS_MANAGE, P.CLIENT_PORTAL_MANAGE, P.PROJECT_FILES_MANAGE,
+    P.FINANCIAL_WRITE, P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN, P.TIME_OFF_REQUEST, P.WORK_ENTRY_VIEW_ALL, P.WORK_ENTRY_COMMENT, P.CLIENT_ACCESS_MANAGE, P.CLIENT_PORTAL_MANAGE, P.PROJECT_FILES_MANAGE,
 ];
 /** Choosing the client's files and publishing them: super admins only, unless granted. Admins manage the project's files. */
 const CLIENT_PORTAL: PermissionCode[] = [P.CLIENT_PORTAL_MANAGE];
-/** Logging one's own hours: employees only. Admins and super admins are paid a fixed salary and log no hours. */
-const OWN_WORK: PermissionCode[] = [P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN];
+/** Logging one's own hours, and asking for time off from them: employees only. Admins and super admins are paid a fixed salary and log no hours. */
+const OWN_WORK: PermissionCode[] = [P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN, P.TIME_OFF_REQUEST];
 
 const without = (codes: PermissionCode[], ...remove: PermissionCode[][]) => codes.filter((c) => !remove.flat().includes(c));
 
@@ -64,7 +64,7 @@ export const personas: Record<PersonaName, CurrentUser> = {
     designAdmin: user(2, "Nadia", "admin", "design", without(ALL, COMPANY_ONLY, SUPER_ADMIN_ONLY, EXECUTION_ONLY, OWN_WORK, CLIENT_PORTAL, WEBSITE), "Design director"),
     executionAdmin: user(3, "Karim", "admin", "execution", without(ALL, COMPANY_ONLY, SUPER_ADMIN_ONLY, DESIGN_ONLY, WEBSITE), "Operations manager"),
     designEmployee: user(4, "Sarah", "employee", "design",
-        [P.PROJECT_VIEW, P.REQUIREMENT_VIEW, P.REQUIREMENT_COMPLETE_OWN, P.MEETING_CREATE, P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN, P.PROTON_USE], "Interior designer"),
+        [P.PROJECT_VIEW, P.REQUIREMENT_VIEW, P.REQUIREMENT_COMPLETE_OWN, P.MEETING_CREATE, P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN, P.TIME_OFF_REQUEST, P.PROTON_USE], "Interior designer"),
     executionEmployee: user(5, "Tarek", "employee", "execution",
         [P.PROJECT_VIEW, P.REQUIREMENT_VIEW, P.REQUIREMENT_COMPLETE_OWN, P.MEETING_CREATE, P.LABOUR_REPORT_CREATE, P.SITE_LOG_CREATE, P.PROTON_USE], "Site engineer"),
     // the website's staff: admins with the website's permissions and nothing else

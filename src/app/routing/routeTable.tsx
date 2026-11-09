@@ -33,6 +33,8 @@ import {
     ReportsPage,
     SalariesPage,
     SchedulesPage,
+    TimeOffPage,
+    CompanyTimeOffPage,
     SettingsPage,
     WebsiteAnalyticsPage,
     WebsiteContactPage,
@@ -185,6 +187,11 @@ export const domainRoutes: DomainRoute[] = [
         employee: { element: <MeetingsPage />, access: designOnly(all(P.PROJECT_VIEW)) },
     },
     {
+        path: "time-off",
+        nav: { label: "Time off", icon: "sun" },
+        employee: { element: <TimeOffPage />, access: designOnly(all(P.TIME_OFF_REQUEST)) },
+    },
+    {
         path: "activity",
         nav: { label: "Activity", icon: "activity" },
         admin: { element: <ActivityPage />, access: designOnly(all(P.ACTIVITY_VIEW)) },
@@ -236,6 +243,7 @@ export const companyRoutes: CompanyRoute[] = [
     { path: "salaries", nav: { label: "Salaries", icon: "people" }, element: <SalariesPage />, access: (p) => p.has(P.SALARY_VIEW) },
     { path: "project-pay", nav: { label: "Project pay", icon: "briefcase" }, element: <ProjectPayPage />, access: (p) => p.has(P.SALARY_VIEW) },
     { path: "schedules", nav: { label: "Schedules", icon: "calendar" }, element: <SchedulesPage />, access: (p) => p.has(P.SCHEDULE_MANAGE) },
+    { path: "time-off", nav: { label: "Time off", icon: "sun" }, element: <CompanyTimeOffPage />, access: (p) => p.has(P.TIME_OFF_DECIDE) },
     // the website moved to its own area: old links still land on the right page
     { path: "website", element: <MovedWebsite />, access: () => true },
     // the assistant's cost and budget: super admins only, everyone else sees just their question allowance

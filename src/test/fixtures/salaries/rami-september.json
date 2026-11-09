@@ -172,6 +172,8 @@
     }
   ],
   "excuses": [],
+  "timeOff": [],
+  "timeOffPay": 0,
   "workingDays": [
     {
       "date": "2026-09-01",

@@ -68,6 +68,39 @@ describe("Someone's account", () => {
         await waitFor(() => expect(sent).toEqual([{ role: "admin", domainCode: null, position: "Studio lead" }]));
     });
 
+    it("asks which department a Design admin belongs to when the person has none, and shows the API's refusal next to it", async () => {
+        const { sent, handler } = recording("put", "/api/employees/:id/role");
+        const interiors = people.teams.find((t) => t.name === "Interiors")!;
+        renderApp("/design/people/9", rana, handler, as({ team: null }), ...peopleHandlers);
+        await menu();
+        await userEvent.click(screen.getByRole("button", { name: "Change role…" }));
+        const dialog = await screen.findByRole("dialog", { name: "Change role" });
+        await userEvent.click(within(dialog).getByRole("tab", { name: "Admin" }));
+        expect(await within(dialog).findByLabelText("Department")).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Make admin" }));
+        expect(within(dialog).getByText("Choose the department they work in.")).toBeInTheDocument();
+        expect(sent).toEqual([]);
+        await userEvent.click(within(dialog).getByLabelText("Department"));
+        await userEvent.click(await screen.findByRole("option", { name: "Interiors" }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Make admin" }));
+        await waitFor(() => expect(sent).toEqual([{ role: "admin", domainCode: null, teamId: interiors.id }]));
+    });
+
+    it("shows the API's department_required refusal next to the department", async () => {
+        renderApp("/design/people/9", rana, as({ team: null }),
+            http.put("/api/employees/:id/role", () => HttpResponse.json(
+                { type: "validation", code: "department_required", message: "A Design admin needs a department.", errors: { teamId: ["A Design admin needs a department."] } }, { status: 400 })),
+            ...peopleHandlers);
+        await menu();
+        await userEvent.click(screen.getByRole("button", { name: "Change role…" }));
+        const dialog = await screen.findByRole("dialog", { name: "Change role" });
+        await userEvent.click(within(dialog).getByRole("tab", { name: "Admin" }));
+        await userEvent.click(await within(dialog).findByLabelText("Department"));
+        await userEvent.click(await screen.findByRole("option", { name: "Interiors" }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Make admin" }));
+        expect(await within(dialog).findByText("A Design admin needs a department.")).toBeInTheDocument();
+    });
+
     it("can be moved to the other business, into one of its departments", async () => {
         const { sent, handler } = recording("put", "/api/employees/:id/domain");
         renderApp("/design/people/9", rana, handler, teams, ...peopleHandlers);

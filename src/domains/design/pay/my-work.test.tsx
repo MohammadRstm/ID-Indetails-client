@@ -56,4 +56,14 @@ describe("the hours balance on the home page", () => {
         expect(screen.queryByRole("button", { name: /pay/i })).not.toBeInTheDocument();
         expect(screen.getByText("Hours balance")).toBeInTheDocument();
     });
+
+    it("includes time off in the excused column's note", async () => {
+        const [first, ...rest] = work.hours.months;
+        const off = { requestId: 5, firstDay: "2026-09-14", lastDay: "2026-09-15", isPaid: true, days: ["2026-09-14", "2026-09-15"] };
+        renderApp("/design/projects", sarah,
+            http.get("/api/me/hours", () => HttpResponse.json({ ...work.hours, months: [{ ...first, timeOff: [off] }, ...rest] })),
+            ...workHandlers);
+        const cell = (await screen.findByText("Hours balance")).closest(".panel")!.querySelector("td[title]");
+        expect(cell).toHaveAttribute("title", expect.stringContaining("Time off Sep 14–Sep 15 · 2 days"));
+    });
 });

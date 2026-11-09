@@ -56,6 +56,8 @@ export const CompanyOverviewPage = page(() => import("@/domains/company/CompanyO
 export const ProjectPayPage = page(() => import("@/domains/company/projectPay/ProjectPayPage"));
 export const SalariesPage = page(() => import("@/domains/company/salaries/SalariesPage"));
 export const SchedulesPage = page(() => import("@/domains/company/schedules/SchedulesPage"));
+export const TimeOffPage = page(() => import("@/domains/design/timeOff/TimeOffPage"));
+export const CompanyTimeOffPage = page(() => import("@/domains/company/timeOff/CompanyTimeOffPage"));
 export const ProtonBudgetPage = page(() => import("@/domains/company/proton/ProtonBudgetPage"));
 const website = () => import("@/domains/website/WebsitePage");
 export const WebsiteProjectsPage = named(website, "WebsiteProjectsPage");

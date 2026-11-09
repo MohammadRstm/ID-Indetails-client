@@ -314,6 +314,12 @@ export const PLACES: Place[] = [
         targets: (ctx) => when(!ctx.p.isAdmin, () => inBusinesses(ctx, "my-work")),
     },
     {
+        key: "time-off", icon: "sun", label: "Request time off",
+        words: ["time off", "request time off", "pto", "vacation", "holiday", "leave", "days off", "day off", "annual leave",
+            "ask for leave", "ask for time off", "sick day", "my time off"],
+        targets: (ctx) => when(ctx.p.has(P.TIME_OFF_REQUEST), () => inBusinesses(ctx, "time-off", "design")),
+    },
+    {
         key: "log-work", icon: "plus", label: "Log work", starter: "employee",
         words: ["log work", "log time", "log hours", "add hours", "track time", "record time", "timer", "start timer", "clock in",
             "time entry", "new entry", "add entry", "add work"],
@@ -383,6 +389,12 @@ export const PLACES: Place[] = [
         words: ["schedules", "schedule", "working hours", "work schedule", "personal schedule", "shifts", "shift", "roster", "rota",
             "timetable", "part time", "part-time", "someone's hours", "work days", "days off"],
         targets: (ctx) => company(ctx, "schedules"),
+    },
+    {
+        key: "company-time-off", icon: "sun", label: "Open time off requests",
+        words: ["time off", "time off requests", "pto", "leave requests", "vacation requests", "holiday requests", "approve time off",
+            "approve leave", "approve vacation", "decline time off", "who is off", "days off", "annual leave"],
+        targets: (ctx) => company(ctx, "time-off"),
     },
 
     // ---- the website area ----

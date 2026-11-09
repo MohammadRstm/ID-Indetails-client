@@ -97,8 +97,8 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     const overtimeError = setsOvertime && amount > 0
         && (!(overtimeRate > 0) ? "Enter their overtime rate." : overtimeRate > amount && "The overtime rate can't be more than the salary.");
     const team = teams.find((t) => String(t.id) === teamId);
-    // a Design employee's hours are counted in their department: they always have one
-    const needsDepartment = design && role === "employee";
+    // a Design employee's hours are counted in their department, and a Design admin looks after one: both always have one
+    const needsDepartment = design && (role === "employee" || role === "admin");
     const departmentError = needsDepartment && !teamId && "Choose the department they work in.";
 
     function choose(next: Joins) {

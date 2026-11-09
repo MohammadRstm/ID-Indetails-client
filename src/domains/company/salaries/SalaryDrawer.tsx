@@ -257,6 +257,12 @@ function HourlyLines({ detail: d, month }: { detail: SalaryDetail; month: string
                     <span className="mono">{cash(d.paidBreakPay, cur)}</span>
                 </div>
             )}
+            {d.timeOffPay > 0 && (
+                <div>
+                    <span>Paid time off</span>
+                    <span className="mono">{cash(d.timeOffPay, cur)}</span>
+                </div>
+            )}
         </>
     );
 }

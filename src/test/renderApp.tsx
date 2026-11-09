@@ -23,6 +23,9 @@ const nothingLogged = [
     http.get("/api/me/overtime", () => HttpResponse.json({ ...work.overtime, overtimeMinutes: 0, madeUpMinutes: 0, paidMinutes: 0, entries: 0, days: [] })),
     http.get("/api/me/hours", () => HttpResponse.json({ ...work.hours, applies: false, months: [], totalMonths: 0 })),
     http.get("/api/domain-settings/:domain", () => HttpResponse.json(work.settings)),
+    // nobody has asked for time off, and nobody is away, unless a test says so
+    http.get("/api/me/time-off", () => HttpResponse.json([])),
+    http.get("/api/time-off/away", () => HttpResponse.json([])),
 ];
 
 /** The API calls every signed-in page makes (settings, branding, badges, counts), answered with calm defaults. */

@@ -4,7 +4,10 @@ import Popover from "@/shared/components/Overlays/Popover";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 
-export type PickablePerson = { id: number; name: string; photoFileId?: number | null; team?: string | null };
+export type PickablePerson = { id: number; name: string; photoFileId?: number | null; team?: string | null;
+    /** On time off the day it matters: shown, but can't be newly picked. */
+    off?: boolean;
+};
 
 type PeoplePickerProps = {
     value: number[];
@@ -42,9 +45,11 @@ export default function PeoplePicker({ value, onChange, options, id, none = "Not
                 </div>
                 <div className="req-pick-list">
                     {shown.map((x) => (
-                        <button key={x.id} type="button" className={cx("pop-item", value.includes(x.id) && "on")} onClick={() => toggle(x.id)}>
+                        <button key={x.id} type="button" className={cx("pop-item", value.includes(x.id) && "on")} disabled={x.off && !value.includes(x.id)}
+                            title={x.off ? "On time off that day" : undefined} onClick={() => toggle(x.id)}>
                             <Avatars people={[x]} size={20} />
                             <span className="grow trunc">{x.name}{x.team && <span className="muted" style={{ fontSize: 11 }}> · {x.team}</span>}</span>
+                            {x.off && <span className="badge badge-hold">Off</span>}
                             {value.includes(x.id) && <Icon name="check" className="chk" />}
                         </button>
                     ))}

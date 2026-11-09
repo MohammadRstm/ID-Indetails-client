@@ -38,7 +38,7 @@ export function useProjectOwners(domain: string, enabled: boolean, seesSuperAdmi
     return [...(superAdmins.data ?? []), ...(admins.data ?? [])];
 }
 
-export type PeopleQuery = { search?: string; domain?: string; role?: string; status?: string; page: number; pageSize: number };
+export type PeopleQuery = { id?: number; search?: string; domain?: string; role?: string; status?: string; page: number; pageSize: number };
 
 /** Everyone the viewer may see, a page at a time: the company area's list of people (employee:view). */
 export function usePeople(params: PeopleQuery, enabled = true) {
