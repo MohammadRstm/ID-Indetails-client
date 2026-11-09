@@ -6,6 +6,7 @@ import { useCurrentUser } from "@/app/session/useSession";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
+import { OffBadge } from "../timeOff/OffBadge";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
@@ -129,6 +130,7 @@ export default function MessagesPage() {
                                                             <div className="trunc" style={{ fontWeight: 600 }}>{p.name}</div>
                                                             <div className="muted trunc" style={{ fontSize: 11 }}>{p.position ?? ""}{super_ && p.domain ? ` · ${areaLabel(p.domain)}` : ""}</div>
                                                         </div>
+                                                        <OffBadge userId={p.id} />
                                                         {count(byChat.get(chatKey(k)))}
                                                     </div>
                                                 );

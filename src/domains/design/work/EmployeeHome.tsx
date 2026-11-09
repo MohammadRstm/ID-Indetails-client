@@ -13,8 +13,9 @@ import Select from "@/shared/components/Forms/Select";
 import { SearchInput } from "@/shared/components/Forms/Filters";
 import { Avatars } from "@/shared/components/Identity/People";
 import { tip } from "@/shared/components/Overlays/tip";
-import { addDays, DAYS, dayKey, daysBetween, fmtDate, fmtDayDate, fmtDur, fmtH, monthKey, partsOf, relTime, startOfWeek } from "@/shared/format/time";
+import { addDays, companyToday, DAYS, dayKey, daysBetween, fmtDate, fmtDayDate, fmtDur, fmtH, monthKey, partsOf, relTime, startOfWeek } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import { useMyTimeOff } from "../../shared/timeOff/timeOffApi";
 import { BehindNotice, MyHoursBalance } from "../pay/HoursBalance";
 import { companyNow, workHoursOf } from "./day";
 import { openLogWork } from "./logWorkStore";
@@ -73,10 +74,29 @@ export function MyWorkBand() {
                 </div>
             )}
             <BehindNotice />
+            {permissions.has(P.TIME_OFF_REQUEST) && <TimeOffNotice />}
             {canLog && <TodayPanel />}
             <OvertimePanel />
             <MyHoursBalance />
         </>
+    );
+}
+
+/** While they are off today, until when; otherwise their next approved time off, when there is one. */
+function TimeOffNotice() {
+    const requests = useMyTimeOff().data;
+    const today = companyToday();
+    const approved = (requests ?? []).filter((r) => r.status === "approved" && r.lastDay >= today);
+    const now = approved.find((r) => r.firstDay <= today);
+    const next = approved.filter((r) => r.firstDay > today).sort((a, b) => a.firstDay.localeCompare(b.firstDay))[0];
+    if (!now && !next) return null;
+    return (
+        <div className="banner hold mt"><Icon name="sun" />
+            <div className="grow">
+                {now ? <><b>You're off until {fmtDate(now.lastDay)}.</b> Hours can't be logged on your time off.</>
+                    : <><b>Time off from {fmtDate(next.firstDay)} to {fmtDate(next.lastDay)}.</b> It is approved.</>}
+            </div>
+        </div>
     );
 }
 

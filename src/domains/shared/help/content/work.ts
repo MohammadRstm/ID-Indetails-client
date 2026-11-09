@@ -38,6 +38,30 @@ export const work: Article[] = [
         related: ["edit-entry", "timer", "overtime", "closed-months"],
     },
     {
+        id: "request-time-off",
+        title: "Asking for time off",
+        category: "work",
+        who: has(P.TIME_OFF_REQUEST),
+        summary: "Time off in the sidebar: pick the first and last day, say why, and send it. A super admin approves it, with pay or without, or declines it.",
+        ask: ["time off", "request time off", "pto", "vacation", "holiday", "leave", "day off", "days off", "annual leave", "sick day", "withdraw time off"],
+        blocks: [
+            steps(
+                step("Open **Time off** and choose **Request time off**.", "Time off"),
+                step("Pick the **First day** and the **Last day**, write the **Reason** and send it."),
+            ),
+            list(
+                "Time off is for whole days. It starts tomorrow at the earliest, and no more than 6 months ahead.",
+                "A request can't overlap time off you already asked for, or days that were excused.",
+                "Until someone decides, you can **Withdraw** it. After that only a super admin can take it back.",
+                "While you're on approved time off you can't log hours, and your colleagues see only that you're off, never why or whether it's paid.",
+                "Only you and the super admins see the reason, and whether it is paid or unpaid.",
+                "If a request is still waiting when its first day comes, it expires and you're told.",
+            ),
+            links(link("Open time off", { business: "time-off", only: "design" })),
+        ],
+        related: ["log-work"],
+    },
+    {
         id: "timer",
         title: "Timing your work with the timer",
         category: "work",

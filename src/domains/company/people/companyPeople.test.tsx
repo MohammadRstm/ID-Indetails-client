@@ -32,7 +32,8 @@ function peopleList(asked: URLSearchParams[] = []) {
         const q = new URL(request.url).searchParams;
         asked.push(q);
         const rows = everyone.filter((p) => (!q.get("status") || p.status === q.get("status"))
-            && (!q.get("domain") || p.domain === q.get("domain")) && (!q.get("role") || p.role === q.get("role")));
+            && (!q.get("domain") || p.domain === q.get("domain")) && (!q.get("role") || p.role === q.get("role"))
+            && (!q.get("id") || p.id === +q.get("id")!));
         return HttpResponse.json({ items: rows, page: 1, pageSize: 25, totalCount: rows.length });
     });
 }
@@ -60,6 +61,46 @@ describe("the company's people", () => {
         await userEvent.click(screen.getByRole("option", { name: "Super admins" }));
         await waitFor(() => expect(asked.at(-1)?.get("role")).toBe("super_admin"));
         expect(asked.at(-1)?.get("domain")).toBeNull();
+    });
+
+    it("flags who is on time off today next to their presence", async () => {
+        renderApp("/company/overview?tab=people", rana, peopleList(),
+            http.get("/api/time-off/away", () => HttpResponse.json([{ userId: nadia.id, firstDay: "2026-09-28", lastDay: "2026-10-02" }])),
+            ...handlers);
+        const table = await screen.findByRole("table");
+        const row = (text: string) => within(table).getByText(text).closest("tr") as HTMLElement;
+        expect(await within(row("Nadia Karam")).findByText("Off until Oct 2")).toBeInTheDocument();
+        expect(within(row("Karim Jaber")).queryByText(/^Off until/)).not.toBeInTheDocument();
+    });
+
+    it("lists only the person a security alert names, with their actions, until everyone is shown again", async () => {
+        const asked: URLSearchParams[] = [];
+        renderApp(`/company/overview?tab=people&person=${karim.id}`, rana, peopleList(asked), ...handlers);
+        const table = await screen.findByRole("table");
+        expect(await within(table).findByText("Karim Jaber")).toBeInTheDocument();
+        expect(within(table).queryByText("Nadia Karam")).not.toBeInTheDocument();
+        expect(asked[0].get("id")).toBe(String(karim.id));
+        expect(screen.getByText(/Showing one person/)).toBeInTheDocument();
+        // the person's actions are right there
+        await userEvent.click(within(table).getByRole("button", { name: "More actions" }));
+        expect(screen.getByRole("button", { name: "End all sessions…" })).toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole("button", { name: "Show everyone" }));
+        expect(await within(screen.getByRole("table")).findByText("Nadia Karam")).toBeInTheDocument();
+        expect(asked.at(-1)?.get("id")).toBeNull();
+        expect(screen.queryByText(/Showing one person/)).not.toBeInTheDocument();
+    });
+
+    it("asks for a department when a Design admin is added, as for a Design employee", async () => {
+        renderApp("/company/overview?tab=people", rana, peopleList(), ...handlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Add person" }));
+        const dialog = await screen.findByRole("dialog", { name: "Add person" });
+        await userEvent.click(within(dialog).getByRole("tab", { name: "Admin" }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
+        expect(within(dialog).getByText("Choose the department they work in.")).toBeInTheDocument();
+        // an Execution admin needs none
+        await userEvent.click(within(dialog).getByRole("tab", { name: "Execution" }));
+        expect(within(dialog).queryByText("Choose the department they work in.")).not.toBeInTheDocument();
     });
 
     it("adds someone to the business chosen, saying what is missing first", async () => {

@@ -153,6 +153,9 @@ describe("Add employee", () => {
         const dialog = await screen.findByRole("dialog", { name: "Add employee" });
         await userEvent.type(within(dialog).getByLabelText("Work email"), "omar@id-indetails.test");
         await userEvent.click(within(dialog).getByRole("tab", { name: "Admin" }));
+        // Design's admins belong to a department too
+        await userEvent.click(within(dialog).getByLabelText("Department"));
+        await userEvent.click(screen.getByRole("option", { name: "Interiors" }));
         expect(within(dialog).queryByRole("tablist", { name: "Pay basis" })).not.toBeInTheDocument();
         expect(within(dialog).getByText("Fixed salary")).toBeInTheDocument();
         await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
@@ -197,6 +200,8 @@ describe("Add employee", () => {
         const dialog = await screen.findByRole("dialog", { name: "Add employee" });
         await userEvent.type(within(dialog).getByLabelText("Work email"), "yara@id-indetails.test");
         await userEvent.click(within(dialog).getByRole("tab", { name: "Admin" }));
+        await userEvent.click(within(dialog).getByLabelText("Department"));
+        await userEvent.click(screen.getByRole("option", { name: "Interiors" }));
         await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "2500");
         await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
         expect(await within(dialog).findByText("Someone already uses that email.")).toBeInTheDocument();
@@ -204,6 +209,37 @@ describe("Add employee", () => {
 });
 
 describe("Someone's profile", () => {
+    it("flags who is on time off in the list and on their profile", async () => {
+        const away = http.get("/api/time-off/away", () => HttpResponse.json([{ userId: 9, firstDay: "2026-09-29", lastDay: "2026-10-05" }]));
+        renderApp("/design/people", nadia, away, ...peopleHandlers);
+        const row = (await screen.findByText("Yara Mansour", { selector: ".tbl *" })).closest("tr") as HTMLElement;
+        expect(await within(row).findByText("Off until Oct 5")).toBeInTheDocument();
+        expect(screen.getAllByText(/^Off until/)).toHaveLength(1);
+    });
+
+    it("flags a person on time off on their profile", async () => {
+        renderApp("/design/people/9", nadia,
+            http.get("/api/time-off/away", () => HttpResponse.json([{ userId: 9, firstDay: "2026-09-29", lastDay: "2026-10-05" }])),
+            ...peopleHandlers);
+        expect(await screen.findByRole("heading", { name: "Yara Mansour" })).toBeInTheDocument();
+        expect(await screen.findByText("Off until Oct 5")).toBeInTheDocument();
+    });
+
+    it("keeps a Design admin in a department too", async () => {
+        const updates: unknown[] = [];
+        renderApp("/design/people/9", nadia,
+            http.get("/api/employees/9", () => HttpResponse.json({ ...yara, role: "admin" })),
+            http.put("/api/employees/9", async ({ request }) => { updates.push(await request.json()); return HttpResponse.json(yara); }),
+            ...peopleHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
+        await userEvent.click(within(dialog).getByLabelText("Department"));
+        await userEvent.click(await screen.findByRole("option", { name: "Choose a department" }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        expect(within(dialog).getByText("Choose the department they work in.")).toBeInTheDocument();
+        expect(updates).toEqual([]);
+    });
+
     it("shows their work, overtime and cost to the company", async () => {
         renderApp("/design/people/9", nadia, ...peopleHandlers);
         expect(await screen.findByRole("heading", { name: "Yara Mansour" })).toBeInTheDocument();

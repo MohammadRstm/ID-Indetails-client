@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { errorMessage, toApiError } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -146,17 +146,27 @@ function RoleModal({ account, onClose }: { account: Account; onClose: () => void
     const [position, setPosition] = useState<string | null>(null);
     if (position == null && current) setPosition(current.position ?? "");
     const newPosition = position != null && position.trim() !== (current?.position ?? "") ? position.trim() : null;
+    // a Design employee or admin always has a department: asked for when they have none, or are joining Design from elsewhere
+    const joinsDesign = (needsDomain ? domain : account.domain) === "design";
+    const needsDepartment = joinsDesign && role !== "super_admin" && (needsDomain || (current != null && !current.team));
+    const teams = useTeams("design", needsDepartment);
+    const [team, setTeam] = useState("");
+    const errors = useFormErrors();
+    const departmentError = needsDepartment && !team && "Choose the department they work in.";
+    const refused = change.error ? toApiError(change.error) : null;
+    const refusedTeam = refused?.fieldErrors.teamId;
 
     function go() {
+        if (departmentError) return errors.tried();
         // the position goes only when it changed; without it, the title stays as it is
-        change.mutate({ role, domainCode: needsDomain ? domain : null, ...(newPosition != null ? { position: newPosition } : {}) }, {
+        change.mutate({ role, domainCode: needsDomain ? domain : null, ...(needsDepartment ? { teamId: +team } : {}), ...(newPosition != null ? { position: newPosition } : {}) }, {
             onSuccess: () => { toast({ text: `${account.name} is now ${role === "admin" ? "an admin" : role === "employee" ? "an employee" : "a super admin"}`, sub: "Any permissions set just for them were cleared.", icon: "shield" }); onClose(); },
         });
     }
 
     return (
         <Modal title="Change role" sub={account.name} onClose={onClose}
-            foot={<Foot error={change.error} busy={change.isPending} label={`Make ${label.toLowerCase()}`} onCancel={onClose} onGo={go} />}>
+            foot={<Foot error={refusedTeam ? null : change.error} busy={change.isPending} label={`Make ${label.toLowerCase()}`} onCancel={onClose} onGo={go} />}>
             <div className="field">
                 <label className="label required">New role</label>
                 <Segmented aria-label="New role" value={role} onChange={setRole} options={options.map((o) => ({ value: o.value, label: o.label }))} />
@@ -166,6 +176,14 @@ function RoleModal({ account, onClose }: { account: Account; onClose: () => void
                     <label className="label required">Business they join</label>
                     <Segmented aria-label="Business they join" value={domain} onChange={setDomain}
                         options={(["design", "execution"] as Domain[]).map((d) => ({ value: d, label: AREAS[d].label }))} />
+                </div>
+            )}
+            {needsDepartment && (
+                <div className="field mt">
+                    <label className="label required" htmlFor="role-team">Department</label>
+                    <Select id="role-team" value={team} onChange={setTeam}
+                        options={[{ value: "", label: "Choose a department" }, ...(teams.data ?? []).map((t) => ({ value: String(t.id), label: t.name }))]} />
+                    <FieldError message={errors.show("team", departmentError) ?? refusedTeam} />
                 </div>
             )}
             <div className="field mt">
@@ -188,8 +206,8 @@ function MoveModal({ account, onClose }: { account: Account; onClose: () => void
     const teams = useTeams(to);
     const [team, setTeam] = useState("none");
     const errors = useFormErrors();
-    // a Design employee's hours are counted in their department: they join with one
-    const needsDepartment = to === "design" && account.role === "employee";
+    // a Design employee or admin always has a department: they join with one
+    const needsDepartment = to === "design" && (account.role === "employee" || account.role === "admin");
     const departmentError = needsDepartment && team === "none" && "Choose the department they join.";
 
     function go() {

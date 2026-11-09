@@ -48,7 +48,9 @@ export default function ExcuseHours({ detail, month, canExcuse }: ExcuseHoursPro
     const [unpaid, setUnpaid] = useState(!ruled);
     const mins = Math.round((parseFloat(hours) || 0) * 60);
     const [hoursTried, setHoursTried] = useState(false);
-    const done = new Set(detail.excuses.flatMap((x) => x.days));
+    // days of approved time off count as taken too: they are decided on Company > Time off, not here
+    const done = new Set([...detail.excuses.flatMap((x) => x.days), ...detail.timeOff.flatMap((t) => t.days)]);
+    const timeOffDays = new Set(detail.timeOff.flatMap((t) => t.days));
     const pickedMins = detail.workingDays.filter((d) => picked.includes(d.date)).reduce((t, d) => t + d.requiredMinutes, 0);
     // only a salary loses anything for unpaid time; without the hours rule there is nothing else to excuse
     const canUnpaid = monthly;
@@ -77,7 +79,7 @@ export default function ExcuseHours({ detail, month, canExcuse }: ExcuseHoursPro
         fillEmpty(note, v.reason, setNote, "reason", filled);
         return filled;
     });
-    if (!ruled && !canUnpaid && detail.excuses.length === 0) return null;
+    if (!ruled && !canUnpaid && detail.excuses.length === 0 && detail.timeOff.length === 0) return null;
 
     function start() {
         setOpen(true);
@@ -125,6 +127,15 @@ export default function ExcuseHours({ detail, month, canExcuse }: ExcuseHoursPro
                     {canExcuse && <button className="btn btn-sm btn-quiet" disabled={remove.isPending} onClick={() => drop(x)}>Remove</button>}
                 </div>
             ))}
+            {detail.timeOff.map((t) => (
+                <div key={t.requestId} className="hl-excuse-row">
+                    <Icon name="calendar" />
+                    <div className="grow">
+                        <b>Time off · {fmtDate(t.firstDay)}–{fmtDate(t.lastDay)} · {plural(t.days.length, "day")} · {t.isPaid ? "Paid" : "Unpaid"}</b>
+                        <div className="muted" style={{ fontSize: "11.5px" }}>Decided on Company › Time off</div>
+                    </div>
+                </div>
+            ))}
             {canExcuse && (ruled || canUnpaid) && (!open ? (
                 <button className="btn btn-sm" onClick={start}><Icon name="plus" />{ruled ? "Excuse hours or days…" : "Record unpaid leave…"}</button>
             ) : (
@@ -142,7 +153,7 @@ export default function ExcuseHours({ detail, month, canExcuse }: ExcuseHoursPro
                                     const taken = done.has(w.date), on = picked.includes(w.date);
                                     return (
                                         <button key={w.date} type="button" disabled={taken} className={cx("hl-day", on && "on", taken && "done")}
-                                            title={taken ? "Already excused" : `${fmtH(w.requiredMinutes)} scheduled`} aria-pressed={on}
+                                            title={taken ? (timeOffDays.has(w.date) ? "On time off" : "Already excused") : `${fmtH(w.requiredMinutes)} scheduled`} aria-pressed={on}
                                             aria-label={fmtDate(w.date)} onClick={() => toggle(w.date)}>
                                             <span>{DAYS[new Date(`${w.date}T12:00:00Z`).getUTCDay()]}</span><b>{+w.date.slice(8)}</b>
                                         </button>

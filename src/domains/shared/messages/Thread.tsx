@@ -19,6 +19,7 @@ import GroupTile, { AnnouncementsTile } from "./GroupTile";
 import { mentionParts, startsRun } from "./messageText";
 import { chatKey, useMarkChatRead, usePresence, useSendMessage, useTeamMembers, useThread, type Chat, type Contact, type Message } from "./messagesApi";
 import { playReceived, playSent } from "./messageSounds";
+import { OffBadge } from "../timeOff/OffBadge";
 import SoundToggle from "./SoundToggle";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
@@ -168,6 +169,7 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                                 <div className="trunc" style={{ fontWeight: 650 }}>{person.name}</div>
                                 <div className="muted trunc" style={{ fontSize: "11.5px" }}>{person.position ?? ROLE[person.role] ?? ""}</div>
                             </div>
+                            <OffBadge userId={person.id} />
                         </div>
                     </div>
                 ) : team ? (

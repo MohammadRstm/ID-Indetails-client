@@ -1,5 +1,5 @@
 import type { Schemas } from "@/api/types";
-import { fmtDur, fmtH, fmtMonthY } from "@/shared/format/time";
+import { fmtDate, fmtDur, fmtH, fmtMonthY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useMyHours } from "../work/workApi";
 
@@ -59,7 +59,7 @@ export function HoursBalance({ hours, self }: { hours: Hours; self: boolean }) {
                                     <td className="r mono">{fmtH(l.insideMinutes)}</td>
                                     <td className="r mono">{l.madeUpMinutes ? fmtH(l.madeUpMinutes) : "-"}</td>
                                     <td className="r mono ot-text">{l.overtimePaidMinutes ? fmtH(l.overtimePaidMinutes) : "-"}</td>
-                                    <td className="r mono" title={l.excuses.map((x) => x.note).join(" · ")}>{l.wholeMonthExcused ? "all" : l.excusedMinutes ? fmtH(l.excusedMinutes) : "-"}</td>
+                                    <td className="r mono" title={[...l.excuses.map((x) => x.note), ...l.timeOff.map((t) => `Time off ${fmtDate(t.firstDay)}–${fmtDate(t.lastDay)} · ${t.days.length} day${t.days.length === 1 ? "" : "s"}`)].join(" · ")}>{l.wholeMonthExcused ? "all" : l.excusedMinutes ? fmtH(l.excusedMinutes) : "-"}</td>
                                     <td><LedgerStatus month={l} /></td>
                                 </tr>
                             ))}

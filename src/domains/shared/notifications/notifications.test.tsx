@@ -83,6 +83,30 @@ group("A notification's words", () => {
         expect(describe(note("something_new", {}), designer).text).toBe("Something new");
     });
 
+    it("tell super admins, the employee and the department about time off", () => {
+        const sup: Reader = { ...admin, isSuperAdmin: true };
+        const ask = { name: "Sarah Haddad", firstDay: "2026-10-12", lastDay: "2026-10-16" };
+        expect(describe(note("time_off_requested", ask), sup)).toMatchObject({ text: "Sarah Haddad asks for time off from Oct 12 to Oct 16", route: "/company/time-off" });
+        expect(describe(note("time_off_undecided", ask), sup)).toMatchObject({ text: "Sarah Haddad's time off from Oct 12 is still undecided", route: "/company/time-off" });
+        expect(describe(note("time_off_withdrawn", ask), sup)).toMatchObject({ text: "Sarah Haddad took back their request for time off", route: "/company/time-off" });
+        expect(describe(note("time_off_ended", { name: "Sarah Haddad", userId: 4, why: "she moved to Execution" }), sup))
+            .toMatchObject({ text: "Sarah Haddad's time off was cut short: she moved to Execution", route: "/company/time-off" });
+        // the alerts open the People page on that person, where their sessions can be ended
+        expect(describe(note("time_off_online", { name: "Sarah Haddad", userId: 4, lastDay: "2026-10-16" }), sup))
+            .toMatchObject({ text: "Sarah Haddad is on time off but is using the app", icon: "alert", route: "/company/overview?tab=people&person=4" });
+        expect(describe(note("time_off_hours", { name: "Sarah Haddad", userId: 4, lastDay: "2026-10-16" }), sup))
+            .toMatchObject({ text: "Sarah Haddad is on time off but tried to log hours", icon: "alert", route: "/company/overview?tab=people&person=4" });
+
+        expect(describe(note("time_off_approved", { ...ask, isPaid: true }), designer)).toMatchObject({ text: "Your time off from Oct 12 to Oct 16 was approved (paid)", route: "/design/time-off" });
+        expect(describe(note("time_off_approved", { ...ask, isPaid: false }), designer).text).toBe("Your time off from Oct 12 to Oct 16 was approved (unpaid)");
+        expect(describe(note("time_off_declined", ask), designer)).toMatchObject({ text: "Your time off from Oct 12 to Oct 16 was declined", route: "/design/time-off" });
+        expect(describe(note("time_off_rejected", { ...ask, endedOn: "2026-10-14" }), designer)).toMatchObject({ text: "Your time off was taken back from Oct 14", route: "/design/time-off" });
+        expect(describe(note("time_off_expired", ask), designer)).toMatchObject({ text: "Your request for time off from Oct 12 expired undecided", route: "/design/time-off" });
+
+        expect(describe(note("time_off_starts", { name: "Sarah Haddad", userId: 4, lastDay: "2026-10-16" }), admin)).toMatchObject({ text: "Sarah Haddad is off until Oct 16", route: "/design/people/4" });
+        expect(describe(note("time_off_back", { name: "Sarah Haddad", userId: 4 }), admin)).toMatchObject({ text: "Sarah Haddad is back at work today", route: "/design/people/4" });
+    });
+
     it("tell staff what a client wrote in a project's portal, and open its discussion", () => {
         const discussion = "/design/projects/5?tab=portal&part=discussion";
         const payload = { projectTitle: project.title, authorName: "Rania Aoun" };

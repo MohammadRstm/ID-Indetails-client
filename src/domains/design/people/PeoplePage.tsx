@@ -4,6 +4,7 @@ import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { RankBars, Spark } from "@/shared/components/Charts/Bars";
 import Figure from "@/shared/components/Charts/Figure";
+import { OffBadge } from "@/domains/shared/timeOff/OffBadge";
 import { Presence, ProjectTile } from "@/shared/components/Data/Bits";
 import { KpiStrip } from "@/shared/components/Data/Kpi";
 import { PageHead } from "@/shared/components/Data/Panel";
@@ -161,7 +162,7 @@ function PeopleWork() {
                                                     <td><PersonLine person={person(r)} size={30} presence sub={r.position ?? false} /></td>
                                                     <td className="muted nowrap">{r.teamName ?? "-"}</td>
                                                     {seesMoney && <td className="r mono nowrap">{r.hourlyRate ? `${money.short(r.hourlyRate.amount, r.hourlyRate.currency)}/h` : "-"}</td>}
-                                                    <td>{r.status === "invited" ? <StatusBadge status="invited" /> : <Presence online={r.online} lastSeenAt={r.lastSeenAt} />}</td>
+                                                    <td>{r.status === "invited" ? <StatusBadge status="invited" /> : <span className="row wrap" style={{ gap: 6 }}><Presence online={r.online} lastSeenAt={r.lastSeenAt} /><OffBadge userId={r.id} /></span>}</td>
                                                     <td>
                                                         {r.focus ? (
                                                             <div className="pname"><ProjectTile icon={focus?.icon} tint={focus?.tint} size="sm" /><span className="trunc" style={{ maxWidth: 150 }}>{r.focus.title}</span></div>

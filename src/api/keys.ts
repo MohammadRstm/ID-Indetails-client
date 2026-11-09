@@ -34,6 +34,12 @@ export const keys = {
         all: ["employees"] as const,
         list: (params: object) => ["employees", "list", params] as const,
     },
+    timeOff: {
+        all: ["time-off"] as const,
+        mine: () => ["time-off", "mine"] as const,
+        list: (view: string, page: number) => ["time-off", "list", view, page] as const,
+        away: (from: string, to: string) => ["time-off", "away", from, to] as const,
+    },
     pocket: {
         all: ["pocket"] as const,
         summary: () => ["pocket", "summary"] as const,
