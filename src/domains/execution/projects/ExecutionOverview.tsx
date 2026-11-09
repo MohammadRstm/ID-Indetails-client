@@ -91,8 +91,7 @@ function SiteOverview({ project }: { project: Project }) {
         <>
             {m && (
                 <>
-                    {/* the account carries the supervision, TVA and client total, so the price section doesn't repeat them */}
-                    <WorkPriceSection project={project} breakdown={!client} onEdit={canPrice ? open("pricing") : undefined} onHistory={open("history")} />
+                    <WorkPriceSection project={project} onEdit={canPrice ? open("pricing") : undefined} onHistory={open("history")} />
                     <SiteMoneyPanel project={project}
                         onRecordPayment={client && permissions.has(P.PAYMENT_RECORD) ? () => links.recordPayment() : undefined}
                         onEditPricing={canPrice ? open("pricing") : undefined} />

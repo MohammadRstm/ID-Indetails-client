@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { money } from "@/shared/format/money";
+import { accountFigures } from "@/test/fixtures/account";
 import { site, siteHandlers } from "@/test/fixtures/site";
 import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
@@ -226,7 +227,7 @@ describe("the supervision and TVA", () => {
         await waitFor(() => expect(saved).toEqual([{ supervisionRate: 0.1, tvaRate: 0.11, description: "Imported tiles" }]));
     });
 
-    it("show the work price first on the Financials tab, in bold, and the supervision, the TVA and the client total in the account", async () => {
+    it("show the price first on the Financials tab as a sum: work price + supervision + TVA = client total", async () => {
         const changes = [
             { id: 5, amount: 9000, previousAmount: 9000, materialMarkup: null, previousMaterialMarkup: null, supervisionRate: 0.12, previousSupervisionRate: 0.12, description: "Same supervision, new TVA", changedAt: "2026-09-12T09:00:00Z", changedBy: null },
             { id: 4, amount: 9000, previousAmount: 8000, materialMarkup: 0.15, previousMaterialMarkup: 0.1, supervisionRate: 0.12, previousSupervisionRate: 0.1, description: "A second floor", changedAt: "2026-09-10T09:00:00Z", changedBy: { id: 1, name: "Rana Haddad" } },
@@ -235,9 +236,15 @@ describe("the supervision and TVA", () => {
         renderApp(path, karim, http.get(`/api/projects/${project.id}/payment-changes`, () => HttpResponse.json(changes)), ...siteHandlers);
         expect(await screen.findByRole("tab", { name: "Financials", selected: true })).toBeInTheDocument();
         const section = await screen.findByRole("region", { name: "Work price" });
-        expect(within(section).getByText(money.exact(m.projectFee!))).toHaveClass("pay-amount");
-        // the account below carries the supervision, the TVA and the client total, so the price section doesn't repeat them
-        expect(within(section).queryByText("Client total")).not.toBeInTheDocument();
+        // the client total the payments below count against, added up from the account's own figures
+        const sum = await within(section).findByRole("group", { name: "Client total" });
+        expect(within(sum).getByText(money.exact(accountFigures.workUsd, "USD", { cents: true, twoDecimals: true }))).toHaveClass("pay-amount");
+        expect(within(sum).getByText("Supervision").closest("div")).toHaveTextContent(money.exact(accountFigures.supervisionUsd, "USD", { cents: true, twoDecimals: true }));
+        expect(within(sum).getByText("TVA").closest("div")).toHaveTextContent(money.exact(accountFigures.tvaUsd, "USD", { cents: true, twoDecimals: true }));
+        expect(within(sum).getByText("Client total").closest("div")).toHaveTextContent(money.exact(accountFigures.clientTotalUsd, "USD", { cents: true, twoDecimals: true }));
+        expect(within(sum).getAllByLabelText("plus")).toHaveLength(2);
+        expect(within(sum).getAllByLabelText("equals")).toHaveLength(1);
+        expect(within(sum).queryByText("Permits")).not.toBeInTheDocument();
         // the account is its own part
         expect(screen.queryByRole("region", { name: "Price and costs" })).not.toBeInTheDocument();
         expect(section.compareDocumentPosition(await moneyPanel()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -261,6 +268,17 @@ describe("the supervision and TVA", () => {
         expect(rows[2]).toHaveTextContent("Material profit 10%");
         expect(rows[2]).not.toHaveTextContent("Supervision");
         expect(rows[2]).toHaveTextContent("Agreed at the start");
+    });
+
+    it("add the permits to the sum when the site has them", async () => {
+        renderApp(path, karim,
+            http.get("/api/projects/:id/account-figures", () => HttpResponse.json({ ...accountFigures, permitsUsd: 5000, clientTotalUsd: accountFigures.clientTotalUsd + 5000 })),
+            ...siteHandlers);
+        const section = await screen.findByRole("region", { name: "Work price" });
+        const sum = await within(section).findByRole("group", { name: "Client total" });
+        expect(within(sum).getByText("Permits").closest("div")).toHaveTextContent(money.exact(5000, "USD", { cents: true, twoDecimals: true }));
+        expect(within(sum).getAllByLabelText("plus")).toHaveLength(3);
+        expect(within(sum).getByText("Client total").closest("div")).toHaveTextContent(money.exact(accountFigures.clientTotalUsd + 5000, "USD", { cents: true, twoDecimals: true }));
     });
 
     it("show the supervision, the TVA and the client total in the Accounts part", async () => {
