@@ -3250,6 +3250,7 @@ export interface paths {
             parameters: {
                 query?: {
                     Domain?: string;
+                    Id?: number;
                     Page?: number;
                     PageSize?: number;
                     Role?: string;
@@ -6374,6 +6375,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/time-off": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TimeOffResponse"][];
+                        "text/json": components["schemas"]["TimeOffResponse"][];
+                        "text/plain": components["schemas"]["TimeOffResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["AskTimeOffRequest"];
+                    "application/json": components["schemas"]["AskTimeOffRequest"];
+                    "text/json": components["schemas"]["AskTimeOffRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TimeOffResponse"];
+                        "text/json": components["schemas"]["TimeOffResponse"];
+                        "text/plain": components["schemas"]["TimeOffResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/time-off/{id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TimeOffResponse"];
+                        "text/json": components["schemas"]["TimeOffResponse"];
+                        "text/plain": components["schemas"]["TimeOffResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/work-entries": {
         parameters: {
             query?: never;
@@ -8593,6 +8697,7 @@ export interface paths {
                     BillingType?: components["schemas"]["BillingType"];
                     ClientId?: number;
                     Domain?: string;
+                    ExcludeArchived?: boolean;
                     OwnerId?: number;
                     Page?: number;
                     PageSize?: number;
@@ -8718,7 +8823,32 @@ export interface paths {
             };
         };
         post?: never;
-        delete?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["DeleteProjectRequest"];
+                    "application/json": components["schemas"]["DeleteProjectRequest"];
+                    "text/json": components["schemas"]["DeleteProjectRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -8987,6 +9117,45 @@ export interface paths {
                         "application/json": components["schemas"]["ProjectCostTimelineResponse"];
                         "text/json": components["schemas"]["ProjectCostTimelineResponse"];
                         "text/plain": components["schemas"]["ProjectCostTimelineResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/deletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectDeletionResponse"];
+                        "text/json": components["schemas"]["ProjectDeletionResponse"];
+                        "text/plain": components["schemas"]["ProjectDeletionResponse"];
                     };
                 };
             };
@@ -12546,6 +12715,7 @@ export interface paths {
                     BillingType?: components["schemas"]["BillingType"];
                     ClientId?: number;
                     Domain?: string;
+                    ExcludeArchived?: boolean;
                     OwnerId?: number;
                     Page?: number;
                     PageSize?: number;
@@ -14080,6 +14250,222 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/time-off": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Page?: number;
+                    PageSize?: number;
+                    View?: components["schemas"]["TimeOffView"];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfTimeOffResponse"];
+                        "text/json": components["schemas"]["PagedResponseOfTimeOffResponse"];
+                        "text/plain": components["schemas"]["PagedResponseOfTimeOffResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/time-off/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ApproveTimeOffRequest"];
+                    "application/json": components["schemas"]["ApproveTimeOffRequest"];
+                    "text/json": components["schemas"]["ApproveTimeOffRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TimeOffResponse"];
+                        "text/json": components["schemas"]["TimeOffResponse"];
+                        "text/plain": components["schemas"]["TimeOffResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/time-off/{id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["TimeOffNoteRequest"];
+                    "application/json": components["schemas"]["TimeOffNoteRequest"];
+                    "text/json": components["schemas"]["TimeOffNoteRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TimeOffResponse"];
+                        "text/json": components["schemas"]["TimeOffResponse"];
+                        "text/plain": components["schemas"]["TimeOffResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/time-off/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["TimeOffNoteRequest"];
+                    "application/json": components["schemas"]["TimeOffNoteRequest"];
+                    "text/json": components["schemas"]["TimeOffNoteRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TimeOffResponse"];
+                        "text/json": components["schemas"]["TimeOffResponse"];
+                        "text/plain": components["schemas"]["TimeOffResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/time-off/away": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    From?: string;
+                    To?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AwayResponse"][];
+                        "text/json": components["schemas"]["AwayResponse"][];
+                        "text/plain": components["schemas"]["AwayResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -15990,6 +16376,10 @@ export interface components {
             amount?: number;
             note?: null | string;
         };
+        ApproveTimeOffRequest: {
+            isPaid?: boolean;
+            note?: null | string;
+        };
         AskProtonRequest: {
             choice?: null | components["schemas"]["ProtonChoiceRequest"];
             /** Format: uuid */
@@ -16000,6 +16390,13 @@ export interface components {
             suggestion?: null | number;
             text?: string;
             voice?: null | components["schemas"]["ProtonVoiceTurnRequest"];
+        };
+        AskTimeOffRequest: {
+            /** Format: date */
+            firstDay?: string;
+            /** Format: date */
+            lastDay?: string;
+            reason?: string;
         };
         AttachFileRequest: {
             /** Format: int64 */
@@ -16025,6 +16422,14 @@ export interface components {
             /** Format: date-time */
             accessTokenExpiresAt: string;
             user: components["schemas"]["CurrentUserResponse"];
+        };
+        AwayResponse: {
+            /** Format: date */
+            firstDay: string;
+            /** Format: date */
+            lastDay: string;
+            /** Format: int64 */
+            userId: number;
         };
         BillingMonthResponse: {
             /** Format: double */
@@ -16334,6 +16739,8 @@ export interface components {
             domainCode?: null | string;
             position?: null | string;
             role?: string;
+            /** Format: int64 */
+            teamId?: null | number;
         };
         ChatPersonResponse: {
             /** Format: int64 */
@@ -16687,9 +17094,6 @@ export interface components {
             startDate: string;
             title: string;
         };
-        DeleteProjectRequest: {
-            title?: null | string;
-        };
         CompleteProjectRequest: {
             keepPaidAhead?: boolean;
             settleOwed?: null | components["schemas"]["OwedSettlement"];
@@ -16907,6 +17311,9 @@ export interface components {
             /** Format: uuid */
             conversationId?: string;
             typed?: null | string;
+        };
+        DeleteProjectRequest: {
+            title?: null | string;
         };
         /** @enum {unknown} */
         DeliveryChannel: "email" | "whatsapp" | "download";
@@ -17882,6 +18289,16 @@ export interface components {
             /** Format: date */
             month: string;
         };
+        MonthTimeOffResponse: {
+            days: string[];
+            /** Format: date */
+            firstDay: string;
+            isPaid: boolean;
+            /** Format: date */
+            lastDay: string;
+            /** Format: int64 */
+            requestId: number;
+        };
         MoveEmployeeRequest: {
             domainCode?: string;
             /** Format: int64 */
@@ -17936,6 +18353,7 @@ export interface components {
             /** Format: int32 */
             shortMinutes: number;
             status: components["schemas"]["LedgerStatus"];
+            timeOff: components["schemas"]["MonthTimeOffResponse"][];
             wholeMonthExcused: boolean;
         };
         MyOvertimeDayResponse: {
@@ -18349,12 +18767,7 @@ export interface components {
             weekly: components["schemas"]["WeekTotalResponse"][];
         };
         /** @enum {unknown} */
-        OwedSettlement: "excused" | "written_off";
-        ProjectDeletionResponse: {
-            blockers: string[];
-            canDelete: boolean;
-            removes: string[];
-        };
+        OwedSettlement: "excused" | "written_off" | null;
         PagedResponseOfActivityItemResponse: {
             items: components["schemas"]["ActivityItemResponse"][];
             /** Format: int32 */
@@ -18447,6 +18860,15 @@ export interface components {
         };
         PagedResponseOfSiteLogResponse: {
             items: components["schemas"]["SiteLogResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfTimeOffResponse: {
+            items: components["schemas"]["TimeOffResponse"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -19175,6 +19597,11 @@ export interface components {
         ProjectCostTimelineResponse: {
             currency: string;
             weeks: components["schemas"]["CostWeekResponse"][];
+        };
+        ProjectDeletionResponse: {
+            blockers: string[];
+            canDelete: boolean;
+            removes: string[];
         };
         /** @enum {unknown} */
         ProjectDepartmentChangeKind: "created" | "departments" | "shares";
@@ -20413,6 +20840,9 @@ export interface components {
             paidBreakPay: number;
             projects: components["schemas"]["SalaryProjectResponse"][];
             salary: components["schemas"]["SalaryRowResponse"];
+            timeOff: components["schemas"]["MonthTimeOffResponse"][];
+            /** Format: double */
+            timeOffPay: number;
             workingDays: components["schemas"]["SalaryDayResponse"][];
         };
         SalaryProjectResponse: {
@@ -21164,6 +21594,61 @@ export interface components {
             /** Format: int64 */
             userId: number;
         };
+        TimeOffMeetingResponse: {
+            /** Format: date-time */
+            endsAt: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: date-time */
+            startsAt: string;
+            topic: null | string;
+        };
+        TimeOffNoteRequest: {
+            note?: null | string;
+        };
+        TimeOffPersonResponse: {
+            departmentName: null | string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: int64 */
+            photoFileId: null | number;
+        };
+        TimeOffResponse: {
+            /** Format: int32 */
+            daysTaken: number;
+            /** Format: date-time */
+            decidedAt: null | string;
+            decidedByName: null | string;
+            decisionNote: null | string;
+            /** Format: date-time */
+            endedAt: null | string;
+            endedByName: null | string;
+            /** Format: date */
+            endedOn: null | string;
+            endNote: null | string;
+            /** Format: date */
+            firstDay: string;
+            /** Format: int64 */
+            id: number;
+            isPaid: null | boolean;
+            /** Format: date */
+            lastDay: string;
+            meetings: null | components["schemas"]["TimeOffMeetingResponse"][];
+            person: null | components["schemas"]["TimeOffPersonResponse"];
+            reason: string;
+            /** Format: date-time */
+            requestedAt: string;
+            status: components["schemas"]["TimeOffStatus"];
+            /** Format: int32 */
+            takenThisYear: null | number;
+            /** Format: int32 */
+            workingDays: number;
+        };
+        /** @enum {unknown} */
+        TimeOffStatus: "pending" | "approved" | "declined" | "withdrawn" | "expired" | "cancelled" | "rejected" | "ended";
+        /** @enum {unknown} */
+        TimeOffView: "pending" | "current" | "past";
         TopUpProtonBudgetRequest: {
             /** Format: double */
             amountUsd?: number;

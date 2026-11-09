@@ -1,3 +1,4 @@
+import { OffBadge } from "@/domains/shared/timeOff/OffBadge";
 import { useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { downloadFile } from "@/api/download";
@@ -145,6 +146,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                             {extra.status === "deactivated" && <span className="badge badge-archived"><Icon name="lock" />{extra.leftOn ? `Left ${fmtDateY(extra.leftOn)}` : "Deactivated"}</span>}
                             {extra.sessionsRevokedAt && <span className="badge badge-hold"><Icon name="lock" />Sign-in suspended since {fmtDateY(extra.sessionsRevokedAt)}</span>}
                             {extra.isJoker && <span className="badge" title="Holds a different set of permissions from the role's">Custom access</span>}
+                            <OffBadge userId={person.id} />
                         </div>
                     </div>
                 </div>

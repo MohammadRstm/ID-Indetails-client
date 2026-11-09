@@ -305,6 +305,31 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 icon: "people", route: `/company/salaries?month=${s(p.month)}`,
             };
         }
+        // time off: super admins decide, the employee hears the outcome, and the department hears who is off
+        case "time_off_requested":
+            return { text: `${s(p.name) || who} asks for time off from ${fmtDate(s(p.firstDay))} to ${fmtDate(s(p.lastDay))}`, sub: "Approve or decline it", icon: "calendar", route: "/company/time-off" };
+        case "time_off_undecided":
+            return { text: `${s(p.name) || who}'s time off from ${fmtDate(s(p.firstDay))} is still undecided`, sub: "It expires when the day comes", icon: "calendar", route: "/company/time-off" };
+        case "time_off_withdrawn":
+            return { text: `${s(p.name) || who} took back their request for time off`, sub: `${fmtDate(s(p.firstDay))} to ${fmtDate(s(p.lastDay))}`, icon: "calendar", route: "/company/time-off" };
+        case "time_off_ended":
+            return { text: `${s(p.name) || who}'s time off was cut short${p.why ? `: ${s(p.why)}` : ""}`, icon: "calendar", route: "/company/time-off" };
+        case "time_off_online":
+            return { text: `${s(p.name) || who} is on time off but is using the app`, sub: p.lastDay ? `Off until ${fmtDate(s(p.lastDay))}` : undefined, icon: "alert", route: `/company/overview?tab=people&person=${n(p.userId)}` };
+        case "time_off_hours":
+            return { text: `${s(p.name) || who} is on time off but tried to log hours`, sub: p.lastDay ? `Off until ${fmtDate(s(p.lastDay))}` : undefined, icon: "alert", route: `/company/overview?tab=people&person=${n(p.userId)}` };
+        case "time_off_approved":
+            return { text: `Your time off from ${fmtDate(s(p.firstDay))} to ${fmtDate(s(p.lastDay))} was approved (${p.isPaid ? "paid" : "unpaid"})`, sub: by, icon: "checkCircle", route: "/design/time-off" };
+        case "time_off_declined":
+            return { text: `Your time off from ${fmtDate(s(p.firstDay))} to ${fmtDate(s(p.lastDay))} was declined`, sub: by, icon: "calendar", route: "/design/time-off" };
+        case "time_off_rejected":
+            return { text: `Your time off was taken back from ${fmtDate(s(p.endedOn))}`, sub: `It was ${fmtDate(s(p.firstDay))} to ${fmtDate(s(p.lastDay))}`, icon: "calendar", route: "/design/time-off" };
+        case "time_off_expired":
+            return { text: `Your request for time off from ${fmtDate(s(p.firstDay))} expired undecided`, sub: `${fmtDate(s(p.firstDay))} to ${fmtDate(s(p.lastDay))}`, icon: "calendar", route: "/design/time-off" };
+        case "time_off_starts":
+            return { text: `${s(p.name) || who} is off until ${fmtDate(s(p.lastDay))}`, icon: "calendar", route: `/design/people/${n(p.userId)}` };
+        case "time_off_back":
+            return { text: `${s(p.name) || who} is back at work today`, icon: "calendar", route: `/design/people/${n(p.userId)}` };
         default:
             return { text: note.kind.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()), icon: "bell", route: project };
     }

@@ -186,6 +186,31 @@ export const company: Article[] = [
         related: ["excuses", "deductions"],
     },
     {
+        id: "decide-time-off",
+        title: "Deciding on time off requests",
+        category: "company",
+        who: has(P.TIME_OFF_DECIDE),
+        summary: "Time off lists what Design employees asked for. Approve with pay or without, or decline; approved time off can be rejected until its last day.",
+        ask: ["time off", "approve time off", "decline time off", "reject time off", "pto", "vacation", "leave requests", "holiday", "paid leave", "unpaid leave"],
+        blocks: [
+            steps(
+                step("Open **Time off** and stay on **Pending**.", "Company", "Time off"),
+                step("Choose **Approve with pay**, **Approve without pay** or **Decline**, add a note if you like, and confirm."),
+            ),
+            list(
+                "The first decision wins. If another super admin decided first, you're told it was already decided.",
+                "Every day from the first to the last counts as time off: the person can't log hours, and an Off flag shows on them.",
+                "Pay and days taken count only their working days. Paid: as a normal day. Unpaid: a monthly salary loses the full paid day.",
+                "Meetings they are already in stay as they are; the approve dialog lists them so you can move them.",
+                "A request still pending when its first day comes expires, and the person is told. You're reminded the day before.",
+                "**Reject** takes approved time off back until its last day. Days before today stay time off; today and after become normal work days.",
+                "Their department and the super admins are told when time off starts. Only you and the person see the reason and whether it's paid.",
+            ),
+            links(link("Open time off", { company: "time-off" })),
+        ],
+        related: ["excuse-hours"],
+    },
+    {
         id: "project-pay",
         title: "Project pay",
         category: "company",

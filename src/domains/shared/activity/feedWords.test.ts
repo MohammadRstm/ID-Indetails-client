@@ -38,6 +38,20 @@ describe("what the activity feed says", () => {
             .toBe("scheduled a meeting on Beit Misk show apartment · Client presentation, Sat, Oct 3 at 10:00 AM");
     });
 
+    it("words time off for the people who decide it", () => {
+        const sarah = { subjectType: "user", subjectId: 3, project: null };
+        const days = { firstDay: "2026-10-12", lastDay: "2026-10-16" };
+        const off = (kind: string, payload: object) => say(event(kind, { ...sarah, payload: { requestId: 1, ...days, ...payload } }));
+        expect(off("time_off_requested", {})).toBe("asked for time off from Oct 12 to Oct 16");
+        expect(off("time_off_withdrawn", {})).toBe("took back their request for time off from Oct 12 to Oct 16");
+        expect(off("time_off_approved", { isPaid: true })).toBe("approved time off for Sarah Haddad from Oct 12 to Oct 16 with pay");
+        expect(off("time_off_approved", { isPaid: false })).toBe("approved time off for Sarah Haddad from Oct 12 to Oct 16 without pay");
+        expect(off("time_off_declined", {})).toBe("declined time off for Sarah Haddad from Oct 12 to Oct 16");
+        expect(off("time_off_expired", {})).toBe("Sarah Haddad's request for time off from Oct 12 to Oct 16 expired undecided");
+        expect(off("time_off_rejected", { endedOn: "2026-10-14" })).toBe("took back Sarah Haddad's time off from Oct 14");
+        expect(off("time_off_ended", { endedOn: "2026-10-14" })).toBe("Sarah Haddad's time off was cut short on Oct 14");
+    });
+
     it("says what was excused from a person's hours, and whether it is paid", () => {
         const sarah = { subjectType: "user", subjectId: 3 };
         const excuse = (payload: object, kind = "hours_excused") => say(event(kind, { ...sarah, project: null, payload: { month: "2026-09-01", isPaid: true, ...payload } }));

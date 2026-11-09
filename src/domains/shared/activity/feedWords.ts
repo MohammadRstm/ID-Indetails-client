@@ -44,6 +44,9 @@ const excused = (p: Payload) => {
             : `${minutes != null ? fmtH(minutes) : "some hours"} in ${month}`;
     return `${amount}${p.isPaid === false ? ", unpaid" : ""}`;
 };
+/** The days of a time-off event: " from Oct 12 to Oct 16". */
+const offDays = (p: Payload) => (str(p.firstDay) && str(p.lastDay) ? ` from ${fmtDate(str(p.firstDay)!)} to ${fmtDate(str(p.lastDay)!)}` : "");
+const withPay = (p: Payload) => (p.isPaid === true ? " with pay" : p.isPaid === false ? " without pay" : "");
 /** A BOQ or VO by its number (BQ-2026-001), or by its kind when the event carries none. */
 const boq = (p: Payload) => str(p.number) ?? (p.kind === "vo" ? "a VO" : "a client BOQ");
 /** What a payment's account label changed from and to, as the event carries them (names, or null for none). */
@@ -71,6 +74,15 @@ const WORDS: Record<string, Words> = {
     work_entry_deleted: { icon: "trash", text: (e, p) => `deleted ${entryLength(p)} on ${project(e)}` },
     work_entry_restored: { icon: "refresh", text: (e, p) => `restored ${entryLength(p)} on ${project(e)}` },
     work_entry_commented: { icon: "chat", text: (e) => `commented on work on ${project(e)}` },
+
+    // time off (the person is the subject; only those who decide it see these)
+    time_off_requested: { icon: "calendar", text: (_e, p) => `asked for time off${offDays(p)}` },
+    time_off_withdrawn: { icon: "x", text: (_e, p) => `took back their request for time off${offDays(p)}` },
+    time_off_approved: { icon: "checkCircle", text: (e, p, names) => `approved time off for ${subject(e, names)}${offDays(p)}${withPay(p)}` },
+    time_off_declined: { icon: "x", text: (e, p, names) => `declined time off for ${subject(e, names)}${offDays(p)}` },
+    time_off_expired: { icon: "clock", text: (e, p, names) => `${subject(e, names)}'s request for time off${offDays(p)} expired undecided` },
+    time_off_rejected: { icon: "refresh", text: (e, p, names) => `took back ${subject(e, names)}'s time off${str(p.endedOn) ? ` from ${fmtDate(str(p.endedOn)!)}` : ""}` },
+    time_off_ended: { icon: "refresh", text: (e, p, names) => `${subject(e, names)}'s time off was cut short${str(p.endedOn) ? ` on ${fmtDate(str(p.endedOn)!)}` : ""}` },
 
     // projects
     project_created: { icon: "plus", text: (e) => `created project ${project(e)}` },

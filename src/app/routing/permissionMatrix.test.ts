@@ -28,21 +28,21 @@ function outcome(user: CurrentUser, domain: Domain, path: string): Outcome {
 const PATHS = [
     "overview", "projects", "projects/:id", "clients", "clients/:id", "people", "people/:id", "financials",
     "my-work", "meetings", "activity", "reports", "profile", "settings", "notifications", "messages", "assistant/:chatId?", "help",
-    "daily-log", "sites", "site-logs", "pocket",
+    "daily-log", "sites", "site-logs", "pocket", "time-off",
 ] as const;
 
 // one letter per path, in PATHS order: o open, h home, d denied (everyone here has Proton, so its page opens in their business)
 // admins set meetings from a tab on their Overview, super admins from the company overview: no Meetings page for them
 const MATRIX: Record<PersonaName, Record<Domain, string>> = {
-    superAdmin:        { design: "oooooooohhoohooooo hhdd", execution: "ooooodoohhddhooooo hhoo" },
+    superAdmin:        { design: "oooooooohhoohooooo hhdd h", execution: "ooooodoohhddhooooo hhoo h" },
     // admins: no Financials until a super admin hands them the money
-    designAdmin:       { design: "ooooooodhhoohooooo hhdd", execution: "hhhhhhhhhhhhhhhhhh hhhh" },
-    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhh hhhh", execution: "ooooododhhddhooooo hhod" },
-    designEmployee:    { design: "doodddddooddodoooo dddd", execution: "hhhhhhhhhhhhhhhhhh hhhh" },
+    designAdmin:       { design: "ooooooodhhoohooooo hhdd h", execution: "hhhhhhhhhhhhhhhhhh hhhh h" },
+    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhh hhhh h", execution: "ooooododhhddhooooo hhod h" },
+    designEmployee:    { design: "doodddddooddodoooo dddd o", execution: "hhhhhhhhhhhhhhhhhh hhhh h" },
     // site staff: their daily log and their sites, which open from My sites, not the project list
-    executionEmployee: { design: "hhhhhhhhhhhhhhhhhh hhhh", execution: "ddodddddddddodoooo oodd" },
+    executionEmployee: { design: "hhhhhhhhhhhhhhhhhh hhhh h", execution: "ddodddddddddodoooo oodd d" },
     // the website's staff belong to no business
-    websiteAdmin:      { design: "hhhhhhhhhhhhhhhhhh hhhh", execution: "hhhhhhhhhhhhhhhhhh hhhh" },
+    websiteAdmin:      { design: "hhhhhhhhhhhhhhhhhh hhhh h", execution: "hhhhhhhhhhhhhhhhhh hhhh h" },
 };
 
 const LETTER: Record<string, Outcome> = { o: "open", h: "home", d: "denied" };
@@ -69,10 +69,10 @@ describe("the permission matrix", () => {
             Object.fromEntries(companyRoutes.map((r) => [r.path, r.access(permissionsOf(personas[name])) ? "open" : "denied"]));
         // a domain admin manages settings in their business: the company's Settings need the company area too
         const onlyInbox = {
-            overview: "denied", overhead: "denied", salaries: "denied", "project-pay": "denied", schedules: "denied", website: "open", proton: "denied", settings: "denied",
+            overview: "denied", overhead: "denied", salaries: "denied", "project-pay": "denied", schedules: "denied", "time-off": "denied", website: "open", proton: "denied", settings: "denied",
             profile: "open", notifications: "open", messages: "open", "assistant/:chatId?": "open", help: "open",
         };
-        expect(company("superAdmin")).toEqual({ ...onlyInbox, overview: "open", overhead: "open", salaries: "open", "project-pay": "open", schedules: "open", proton: "open", settings: "open" });
+        expect(company("superAdmin")).toEqual({ ...onlyInbox, overview: "open", overhead: "open", salaries: "open", "project-pay": "open", schedules: "open", "time-off": "open", proton: "open", settings: "open" });
         for (const name of ["designAdmin", "executionAdmin", "designEmployee", "executionEmployee"] as PersonaName[]) {
             expect(company(name), name).toEqual(onlyInbox);
         }

@@ -18,6 +18,7 @@ import { fmtDateY } from "@/shared/format/time";
 import useDebounce from "@/shared/hooks/useDebounce";
 import Icon from "@/shared/icons/Icon";
 import PersonActions from "../../design/people/PersonActions";
+import { OffBadge } from "../../shared/timeOff/OffBadge";
 import InviteModal from "../../shared/people/InviteModal";
 import { personName, usePeople, type EmployeeSummary } from "../../shared/people/peopleApi";
 
@@ -47,17 +48,21 @@ export default function CompanyPeople({ domain }: { domain?: Domain | "website" 
     const [inviting, setInviting] = useState(false);
     const topRef = useRef<HTMLDivElement>(null);
     const typed = useDebounce({ value: search.trim(), debounceTimeMs: 300 });
-    const query = usePeople({ search: typed, status: status === "all" ? undefined : status, ...whereParams(where), page, pageSize: PAGE });
+    // ?person=<id> (from a security alert) lists only that person, with their actions at hand
+    const [params, setParams] = useSearchParams();
+    const personParam = Number(params.get("person"));
+    const only = Number.isInteger(personParam) && personParam > 0 ? personParam : undefined;
+    const query = usePeople({ id: only, search: typed, status: status === "all" ? undefined : status, ...whereParams(where), page, pageSize: PAGE });
     const list = query.data;
     const canInvite = permissions.hasAny(P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN);
     // ?invite=1 (from search) opens the invitation
-    const [params, setParams] = useSearchParams();
     const asked = params.get("invite") === "1" && canInvite;
     const closeInvite = () => {
         setInviting(false);
         if (asked) { params.delete("invite"); setParams(params, { replace: true }); }
     };
     // a filter starts again from the first page
+    const showEveryone = () => { params.delete("person"); setParams(params, { replace: true }); setPage(1); };
     const filter = <T,>(set: (v: T) => void) => (v: T) => { set(v); setPage(1); };
 
     return (
@@ -76,6 +81,12 @@ export default function CompanyPeople({ domain }: { domain?: Domain | "website" 
                 )}
                 {canInvite && <button className="btn btn-primary btn-sm" onClick={() => setInviting(true)}><Icon name="userPlus" />{domain === "website" ? "Add staff" : "Add person"}</button>}
             </div>
+
+            {only && (
+                <p className="hint" style={{ marginBottom: 10 }}>
+                    Showing one person · <button type="button" className="link" onClick={showEveryone}>Show everyone</button>
+                </p>
+            )}
 
             <div className="panel">
                 {loadFailed(query) ? <div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the people" /></div>
@@ -121,7 +132,7 @@ function PersonRow({ person: p, business, team }: { person: EmployeeSummary; bus
                 {p.status === "invited" ? <StatusBadge status="invited" />
                     : p.status === "deactivated" ? <span className="badge badge-archived"><Icon name="lock" />{p.leftOn ? `Left ${fmtDateY(p.leftOn)}` : "Deactivated"}</span>
                         : p.sessionsRevokedAt ? <span className="badge badge-hold" title={`Sessions ended ${fmtDateY(p.sessionsRevokedAt)}`}><Icon name="lock" />Sign-in suspended</span>
-                            : <Presence online={p.online} lastSeenAt={p.lastSeenAt} />}
+                            : <span className="row wrap" style={{ gap: 6 }}><Presence online={p.online} lastSeenAt={p.lastSeenAt} /><OffBadge userId={p.id} /></span>}
             </td>
             <td className="muted nowrap">{p.joinedOn ? fmtDateY(p.joinedOn) : "-"}</td>
             <td className="r"><PersonActions account={{ id: p.id, name, role: p.role, domain: p.domain, status: p.status, leftOn: p.leftOn, sessionsRevokedAt: p.sessionsRevokedAt }} /></td>

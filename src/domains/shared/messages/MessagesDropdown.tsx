@@ -3,6 +3,7 @@ import { AREAS } from "@/app/routing/areas";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
+import { OffBadge } from "../timeOff/OffBadge";
 import Avatar from "@/shared/components/Identity/Avatar";
 import { relTime } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
@@ -40,7 +41,7 @@ export default function MessagesDropdown({ messagesPath, close }: { messagesPath
                                                 {c.unreadMention && <> <span className="msg-mention-flag">@</span></>}
                                             </div>
                                             <div className="muted trunc" style={{ fontSize: "11.5px" }}>{c.type !== "dm" ? `${firstName(last.sender.name)}: ` : ""}{snippet(last)}</div>
-                                            <div className="notif-meta">{relTime(last.createdAt)}</div>
+                                            <div className="notif-meta">{relTime(last.createdAt)}{c.person && <> <OffBadge userId={c.person.id} /></>}</div>
                                         </div>
                                         {c.unread > 0 && <span className="dot dot-on" style={{ marginTop: 6 }} aria-label="Unread" />}
                                     </div>

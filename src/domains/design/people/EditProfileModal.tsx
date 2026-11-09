@@ -115,8 +115,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
         && (!(overtimeRate > 0) ? "Enter the overtime rate." : overtimeRate > (pay?.amount ?? 0) && "The overtime rate can't be more than the salary.");
     const emailError = emailChanged && !isEmail(email) && "Enter an email like name@company.com.";
     const passwordError = self && emailChanged && !password && "Enter your password to change your sign-in address.";
-    // a Design employee's hours are counted in their department: they always have one
-    const needsDepartment = manages && person.domain === "design" && person.role === "employee";
+    // a Design employee's hours are counted in their department, and a Design admin looks after one: both always have one
+    const needsDepartment = manages && person.domain === "design" && (person.role === "employee" || person.role === "admin");
     const departmentError = needsDepartment && !teamId && "Choose the department they work in.";
     // what the API says about the address or the password is shown next to that field
     const refused = emailCall.error ? toApiError(emailCall.error) : null;

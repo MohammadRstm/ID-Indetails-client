@@ -22,7 +22,7 @@ export const PERMISSION_SECTIONS: PermissionSection[] = [
     {
         title: "Work",
         groups: [
-            { title: "Own hours", codes: [P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN] },
+            { title: "Own hours", codes: [P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN, P.TIME_OFF_REQUEST] },
             { title: "Department's hours", codes: [P.WORK_ENTRY_VIEW_ALL, P.WORK_ENTRY_COMMENT] },
             { title: "Site work", codes: [P.MATERIAL_CREATE, P.MATERIAL_MANAGE, P.LABOUR_REPORT_CREATE, P.LABOUR_REPORT_MANAGE, P.SITE_LOG_CREATE, P.SITE_LOG_VIEW_ALL] },
         ],
@@ -55,7 +55,7 @@ export const PERMISSION_SECTIONS: PermissionSection[] = [
         title: "Company",
         groups: [
             { title: "Company overview & expenses", codes: [P.COMPANY_VIEW, P.OVERHEAD_MANAGE, P.OVERHEAD_CATEGORY_MANAGE] },
-            { title: "Payroll & schedules", codes: [P.SALARY_VIEW, P.HOURS_EXCUSE, P.SCHEDULE_MANAGE, P.WORKING_TIME_MANAGE] },
+            { title: "Payroll & schedules", codes: [P.SALARY_VIEW, P.HOURS_EXCUSE, P.TIME_OFF_DECIDE, P.SCHEDULE_MANAGE, P.WORKING_TIME_MANAGE] },
             { title: "Company settings & rates", codes: [P.COMPANY_SETTINGS_MANAGE, P.EXCHANGE_RATE_MANAGE] },
             { title: "Announcements", codes: [P.MESSAGE_ANNOUNCE] },
         ],
@@ -69,8 +69,8 @@ export const PERMISSION_SECTIONS: PermissionSection[] = [
     },
 ];
 
-/** Logging one's own hours: employees only, so it isn't offered for admins (the API drops it for them). */
-export const OWN_WORK: string[] = [P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN];
+/** Logging one's own hours and asking for time off: employees only, so it isn't offered for admins (the API drops it for them). */
+export const OWN_WORK: string[] = [P.WORK_ENTRY_CREATE, P.WORK_ENTRY_VIEW_OWN, P.TIME_OFF_REQUEST];
 
 export const ROLE_LABEL: Record<string, string> = { super_admin: "Super admin", admin: "Admin", employee: "Employee" };
 

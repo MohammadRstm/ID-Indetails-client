@@ -60,6 +60,49 @@ describe("General meetings", () => {
         await waitFor(() => expect(sent).toEqual([expect.objectContaining({ topic: "Partners' review", domain: null, attendeeIds: [4] })]));
     });
 
+    it("show who is on time off that day, and don't let them be picked", async () => {
+        const asked: URLSearchParams[] = [];
+        const sent: unknown[] = [];
+        renderApp("/company/overview?tab=meetings", rana,
+            people,
+            http.get("/api/time-off/away", ({ request }) => {
+                asked.push(new URL(request.url).searchParams);
+                return HttpResponse.json([{ userId: 4, firstDay: "2026-09-29", lastDay: "2026-10-02" }]);
+            }),
+            http.get("/api/meetings", () => HttpResponse.json(fixtures.meetings)),
+            http.post("/api/meetings", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(general, { status: 201 }); }),
+            ...companyHandlers, ...projectHandlers);
+        await userEvent.click((await screen.findAllByRole("button", { name: /new meeting/i }))[0]);
+        const dialog = await screen.findByRole("dialog", { name: "New meeting" });
+        await userEvent.click(within(dialog).getByLabelText("Attendees"));
+        const away = await screen.findByRole("button", { name: /Sarah Haddad/ });
+        await waitFor(() => expect(away).toBeDisabled());
+        expect(away).toHaveAttribute("title", "On time off that day");
+        expect(within(away).getByText("Off")).toBeInTheDocument();
+        expect(asked.some((q) => q.get("from") === "2026-09-30" && q.get("to") === "2026-09-30")).toBe(true);
+
+        // someone who is in, is not blocked
+        expect(screen.getByRole("button", { name: /Omar Fares/ })).toBeEnabled();
+        await userEvent.click(away);
+        await userEvent.click(screen.getByRole("button", { name: /Omar Fares/ }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Schedule meeting" }));
+        await waitFor(() => expect(sent).toEqual([expect.objectContaining({ attendeeIds: [6] })]));
+    });
+
+    it("show the API's refusal when someone on time off was added anyway", async () => {
+        renderApp("/company/overview?tab=meetings", rana,
+            people,
+            http.get("/api/meetings", () => HttpResponse.json(fixtures.meetings)),
+            http.post("/api/meetings", () => HttpResponse.json({ type: "unprocessable", code: "meeting_attendee_off", message: "Sarah Haddad is on time off that day." }, { status: 422 })),
+            ...companyHandlers, ...projectHandlers);
+        await userEvent.click((await screen.findAllByRole("button", { name: /new meeting/i }))[0]);
+        const dialog = await screen.findByRole("dialog", { name: "New meeting" });
+        await userEvent.click(within(dialog).getByLabelText("Attendees"));
+        await userEvent.click(await screen.findByRole("button", { name: /Sarah Haddad/ }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Schedule meeting" }));
+        expect(await within(dialog).findByText("Sarah Haddad is on time off that day.")).toBeInTheDocument();
+    });
+
     it("are a tab of a domain admin's overview", async () => {
         renderApp("/design/overview", nadia, ...overviewHandlers, ...companyHandlers, ...projectHandlers);
         expect(await screen.findByRole("tab", { name: "Meetings" })).toBeInTheDocument();

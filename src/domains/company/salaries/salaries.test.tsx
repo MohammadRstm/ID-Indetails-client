@@ -296,6 +296,39 @@ describe("A person's salary", () => {
         expect(await within(drawer).findByRole("alert")).toHaveTextContent("Hours can't be excused for a future month.");
     });
 
+    it("lists a month's time off as decided elsewhere, and prices an hourly person's paid days", async () => {
+        const off = { requestId: 5, firstDay: "2026-09-14", lastDay: "2026-09-15", isPaid: true, days: ["2026-09-14", "2026-09-15"] };
+        renderApp("/company/salaries", rana,
+            http.get("/api/company/salaries/6", () => HttpResponse.json({ ...salaries.rami, timeOff: [off], timeOffPay: 180 })),
+            ...salaryHandlers);
+        const drawer = await openDetails("Rami Aoun");
+        const line = (await within(drawer).findByText(/^Time off · Sep 14–Sep 15 · 2 days · Paid$/)).closest(".hl-excuse-row") as HTMLElement;
+        expect(within(line).getByText("Decided on Company › Time off")).toBeInTheDocument();
+        expect(within(line).queryByRole("button", { name: "Remove" })).not.toBeInTheDocument();
+        expect(within(drawer).getByText("Paid time off").parentElement).toHaveTextContent(money.exact(180));
+    });
+
+    it("leaves out the paid time off line when there is no pay for it", async () => {
+        renderApp("/company/salaries", rana, ...salaryHandlers);
+        const drawer = await openDetails("Rami Aoun");
+        expect(await within(drawer).findByText("Behind so far")).toBeInTheDocument();
+        expect(within(drawer).queryByText("Paid time off")).not.toBeInTheDocument();
+    });
+
+    it("can't excuse a day that is on time off", async () => {
+        const off = { requestId: 6, firstDay: "2026-09-03", lastDay: "2026-09-03", isPaid: false, days: ["2026-09-03"] };
+        renderApp("/company/salaries", rana,
+            http.get("/api/company/salaries/3", () => HttpResponse.json({ ...salaries.sarah, timeOff: [off] })),
+            ...salaryHandlers);
+        const drawer = await openDetails("Sarah Haddad");
+        expect(await within(drawer).findByText(/^Time off · Sep 3–Sep 3 · 1 day · Unpaid$/)).toBeInTheDocument();
+        await userEvent.click(within(drawer).getByRole("button", { name: "Excuse hours or days…" }));
+        await userEvent.click(within(drawer).getByRole("tab", { name: "Days off" }));
+        expect(within(drawer).getByRole("button", { name: "Sep 3" })).toBeDisabled();
+        expect(within(drawer).getByRole("button", { name: "Sep 3" })).toHaveAttribute("title", "On time off");
+        expect(within(drawer).getByRole("button", { name: "Sep 4" })).toBeEnabled();
+    });
+
     it("removes an excuse", async () => {
         const removed: string[] = [];
         const excused = { ...salaries.rami, excuses: [{ id: 41, month: "2026-09-01", kind: "whole_month" as const, minutes: null, days: [], isPaid: true, note: "Unpaid leave after the project", createdAt: "2026-09-02T08:00:00Z", createdById: 1 }] };
