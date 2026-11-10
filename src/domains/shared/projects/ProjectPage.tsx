@@ -8,7 +8,6 @@ import { useDomain } from "@/app/routing/domainContext";
 import { useCurrentUser, fullName } from "@/app/session/useSession";
 import { MissingRecord } from "@/app/pages/NotFound";
 import { useDiscussionSummary } from "@/portal/discussion/discussionApi";
-import { ProjectTile } from "@/shared/components/Data/Bits";
 import { StatusBadge } from "@/shared/components/Data/Pills";
 import Tabs from "@/shared/components/Data/Tabs";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -40,6 +39,7 @@ import PaymentHistoryModal from "./PaymentHistoryModal";
 import BlockedChangeModal from "./BlockedChangeModal";
 import BoqHost from "../../execution/boqs/BoqHost";
 import { AskPocketModal, MoveToPocketModal } from "../../execution/pocket/PocketActions";
+import ProjectPhoto from "./ProjectPhoto";
 import CompleteProjectModal from "./CompleteProjectModal";
 import DeleteProjectModal from "./DeleteProjectModal";
 import { useUrlFlag } from "@/shared/hooks/useUrlFlag";
@@ -195,7 +195,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     // an Execution client site moves money with the pocket money: part of its profit in, or a request for some back
     const canUsePocket = site && !!m && project.billingType === "client";
     const openMoney = (action: "payment" | "client" | "expense" | "pricing" | "to-pocket" | "ask-pocket") => { params.set("money", action); setParams(params); };
-    const closeMoney = () => { params.delete("money"); setParams(params, { replace: true }); };
+    const closeMoney = () => { params.delete("money"); params.delete("round"); setParams(params, { replace: true }); };
     // a change the profit floor refused, opened from its notification, for whoever sees the money to decide
     const blocked = permissions.has(P.FINANCIAL_VIEW) ? Number(params.get("blocked")) || null : null;
     const closeBlocked = () => { params.delete("blocked"); setParams(params, { replace: true }); };
@@ -245,7 +245,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
 
             <div className="page-head">
                 <div className="row start" style={{ gap: 13, minWidth: 0 }}>
-                    <ProjectTile icon={project.icon} tint={project.tint} size="lg" />
+                    <ProjectPhoto project={project} canEdit={permissions.has(P.PROJECT_EDIT)} />
                     <div style={{ minWidth: 0 }}>
                         <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
                             <h1 className="page-title">{project.title}</h1>
@@ -407,7 +407,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {moneyAction === "history" && hasPaymentHistory && <PaymentHistoryModal project={project} onClose={closeMoney} />}
             {moneyAction === "pricing" && canEditPricing && <PricingModal project={project} onClose={closeMoney} />}
             {moneyAction === "expense" && canAddExpense && <ExpenseModal project={project} onClose={closeMoney} />}
-            {moneyAction === "to-pocket" && canUsePocket && <MoveToPocketModal project={project} onClose={closeMoney} />}
+            {moneyAction === "to-pocket" && canUsePocket && <MoveToPocketModal project={project} roundOff={params.get("round") === "1"} onClose={closeMoney} />}
             {moneyAction === "ask-pocket" && canUsePocket && <AskPocketModal project={project} onClose={closeMoney} />}
             <BillingModalHost project={project} />
             {site && <BoqHost project={project} />}

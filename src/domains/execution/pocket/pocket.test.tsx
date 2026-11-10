@@ -135,6 +135,26 @@ describe("a site's pocket money", () => {
         await waitFor(() => expect(sent).toEqual([{ projectId: site.project.id, amount: 1500, note: "Set aside" }]));
     });
 
+    it("rounds the site's profit off to a whole thousand in a click", async () => {
+        const sent: unknown[] = [];
+        renderApp(`/execution/projects/${site.project.id}`, personas.superAdmin,
+            http.post("/api/execution/pocket/contributions", async ({ request: r }) => { sent.push(await r.json()); return HttpResponse.json(pocket); }),
+            ...siteHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+        await userEvent.click(await screen.findByRole("button", { name: "Move to pocket money" }));
+        const dialog = await screen.findByRole("dialog", { name: "Move to pocket money" });
+        // a profit of 9,664: moving 664 leaves 9,000
+        await userEvent.click(within(dialog).getByRole("button", { name: `Round it off: move ${money.exact(664)}, leaving ${money.exact(9000)}` }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Move to pocket" }));
+        await waitFor(() => expect(sent).toEqual([{ projectId: site.project.id, amount: 664 }]));
+    });
+
+    it("opens from the round-off suggestion with the amount worked out from the profit now", async () => {
+        renderApp(`/execution/projects/${site.project.id}?money=to-pocket&round=1`, personas.superAdmin, ...siteHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "Move to pocket money" });
+        expect(within(dialog).getByLabelText("Amount")).toHaveValue("664");
+    });
+
     it("asks the pocket for money for the site", async () => {
         const sent: unknown[] = [];
         renderApp(`/execution/projects/${site.project.id}`, personas.superAdmin,

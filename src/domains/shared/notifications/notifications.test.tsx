@@ -47,6 +47,10 @@ group("A notification's words", () => {
         expect(describe(note("profit_low", { projectTitle: project.title, marginPct: 8 }, { project }), admin))
             .toMatchObject({ text: "Studio Nour brand space is close to zero profit", sub: "8% margin left", route: "/design/projects/5" });
         expect(describe(note("profit_at_zero", { projectTitle: project.title, marginPct: -3 }, { project }), admin).text).toBe("Studio Nour brand space is at zero profit or below");
+        // a move left a site's profit off a whole thousand: the suggestion opens the move form with the round-off, and names no amount
+        expect(describe(note("pocket_round_off", {}, { project: site, subjectType: "project", subjectId: 7 }), admin)).toMatchObject({
+            text: "Achrafieh Towers lobby's profit can be rounded off", sub: "Move what's over its last whole thousand into the pocket money", route: "/execution/projects/7?money=to-pocket&round=1",
+        });
     });
 
     it("speak to the reader: requirements open the project's tab, and those who log work hear about logging", () => {

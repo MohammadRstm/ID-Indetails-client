@@ -68,3 +68,12 @@ export function useDenyPocketRequest() {
         onSuccess: done,
     });
 }
+
+/**
+ * What is over the profit's last whole thousand, so moving it leaves a round number: $243,459 gives $459, $4,900 gives
+ * $900. Nothing when the profit is already round, or under a thousand (moving it would leave nothing). The API's
+ * PocketRules.RoundOff.
+ */
+export function roundOffOf(profit: number) {
+    return profit < 1000 ? 0 : Math.round((profit % 1000) * 100) / 100;
+}
