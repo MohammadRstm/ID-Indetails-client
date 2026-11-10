@@ -53,7 +53,7 @@ function saving(id: number, start: unknown, returns: unknown = start) {
 }
 
 describe("a site's bills of quantities", () => {
-    it("add up the price, and list the client BOQs, the VOs and everyone's drafts for whoever manages the site's pricing", async () => {
+    it("add up the price, and list the client BOQs, the VOs and the submitted drafts for whoever manages the site's pricing", async () => {
         renderApp(boqsTab, karim, ...siteHandlers);
         const p = await panel();
         const price = await within(p).findByRole("group", { name: "Price" });
@@ -70,9 +70,10 @@ describe("a site's bills of quantities", () => {
         for (const text of ["Lobby works", "Agreed", "$17,000", "3 lines", "emailed Oct 3"]) expect(agreed).toHaveTextContent(text);
         const vo = within(p).getByRole("button", { name: "Open VO-2026-001" });
         for (const text of ["Fence", "Fence along the north side", "Draft", "$6,500"]) expect(vo).toHaveTextContent(text);
-        // the drafts of everyone, with their authors
+        // the drafts engineers submitted, with their authors
         expect(within(p).getByText("Internal drafts")).toBeInTheDocument();
         expect(within(p).getByRole("button", { name: "Open Karim's quantities" })).toHaveTextContent("by Karim Test");
+        expect(within(p).getByRole("button", { name: "Open Karim's quantities" })).toHaveTextContent("Submitted");
         expect(within(p).getByRole("button", { name: "Open Nadia's quantities" })).toHaveTextContent("by Nadia Test");
         for (const name of ["New draft", "New client BOQ", "New VO"]) expect(within(p).getByRole("button", { name })).toBeEnabled();
     });
@@ -114,12 +115,15 @@ describe("a site's bills of quantities", () => {
     });
 
     it("show someone who writes drafts their own, and nothing else to write", async () => {
-        const mine = { client: boqs.list.client, vos: [], internal: [summaryOf(boqs.draftMine)], price: boqs.list.price };
-        renderApp(boqsTab, author, listOf(mine), ...siteHandlers);
+        // a private draft is its author's alone to change
+        const privateMine = { ...boqs.draftMine, submittedAt: null };
+        const mine = { client: boqs.list.client, vos: [], internal: [summaryOf(privateMine)], price: boqs.list.price };
+        renderApp(boqsTab, author, listOf(mine), http.get("/api/boqs/51", () => HttpResponse.json(privateMine)), ...siteHandlers);
         const p = await panel();
         const row = await within(p).findByRole("button", { name: "Open Karim's quantities" });
         expect(within(p).getByText("My drafts")).toBeInTheDocument();
         expect(row).not.toHaveTextContent("by Karim Test");
+        expect(row).toHaveTextContent("Private");
         expect(within(p).getByRole("button", { name: "New draft" })).toBeEnabled();
         for (const name of ["New client BOQ", "New VO"]) expect(within(p).queryByRole("button", { name })).not.toBeInTheDocument();
 

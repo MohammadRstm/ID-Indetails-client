@@ -43,6 +43,20 @@ describe("the route table", () => {
         expect(website(withPermissions(personas.designAdmin, { grant: [P.WEBSITE_ANALYTICS_VIEW] }))).toEqual(["Analytics", "Staff"]);
     });
 
+    it("lists the BOQs page for whoever writes BOQ drafts but doesn't manage the pricing, in their own business", () => {
+        const designAuthor = withPermissions(personas.designEmployee, { grant: [P.BOQ_CREATE] });
+        expect(navLabels(designAuthor, "design")).toEqual(["Projects", "My work", "Meetings", "Time off", "BOQs", "Profile"]);
+        // boq:create no longer opens Execution
+        expect(permissionsOf(designAuthor).canSeeDomain("execution")).toBe(false);
+        expect(navLabels(withPermissions(personas.executionEmployee, { grant: [P.BOQ_CREATE] }), "execution")).toEqual(["Daily log", "My sites", "BOQs", "Profile"]);
+        // without it, and for the super admin who manages the pricing from the site's page, there is none
+        expect(navLabels(personas.designEmployee, "design")).not.toContain("BOQs");
+        expect(navLabels(personas.executionEmployee, "execution")).not.toContain("BOQs");
+        expect(navLabels(personas.superAdmin, "execution")).not.toContain("BOQs");
+        expect(canOpen(permissionsOf(designAuthor), "design", "boq-sites/12")).toBe(true);
+        expect(canOpen(permissionsOf(personas.designEmployee), "design", "boq-sites/12")).toBe(false);
+    });
+
     it("follows personal grants and revokes, not the role", () => {
         // the money is the super admins' until one of them hands it to an admin
         expect(navLabels(withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING }), "design")).toContain("Financials");

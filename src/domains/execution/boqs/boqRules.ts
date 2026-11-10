@@ -1,6 +1,6 @@
 import { toApiError } from "@/api/errors";
 import { plural } from "@/shared/format/labels";
-import type { BoqDeliveryChannel, BoqKind, BoqList, BoqSummary } from "./boqsApi";
+import type { BoqDeliveryChannel, BoqKind, BoqLineChange, BoqList, BoqSummary } from "./boqsApi";
 
 export const KIND_LABEL: Record<BoqKind, string> = { internal: "Internal draft", client: "Client BOQ", vo: "VO" };
 
@@ -19,6 +19,9 @@ const REFUSALS: Record<string, string> = {
     boq_empty: "This BOQ has no lines. Add some and save before sending or agreeing it.",
     boq_internal: "An internal draft is never sent or agreed. Make a client BOQ from it instead.",
     boq_negative_rate: "Only a VO can have a negative rate.",
+    boq_already_submitted: "This draft is already submitted. Reload it to see where it stands.",
+    boq_not_submitted: "This draft isn't submitted, so there is nothing to withdraw or keep.",
+    boq_not_internal: "Only an internal draft is submitted to its site.",
     boq_execution_only: "BOQs belong to Execution sites that have a client.",
     email_delivery_failed: "The email couldn't be sent, so nothing was recorded as sent. Try again, or download the PDF and send it yourself.",
 };
@@ -65,3 +68,22 @@ export function agreeBlock(boq: Pick<BoqSummary, "kind" | "lineCount">, list: Bo
 export function withdrawBlock(boq: Pick<BoqSummary, "kind">, list: BoqList | undefined): string | null {
     return boq.kind === "client" && list?.vos.some((v) => v.status === "agreed") ? "Withdraw the agreed VOs first." : null;
 }
+
+/**
+ * A value of a changed line as the person reads it. The API sends the values as typed (invariant decimal strings, the
+ * waste as a fraction); this only formats them for display: nothing is worked out from them.
+ */
+export function changeValue(field: string, value: string | null): string {
+    if (value == null || value === "") return "none";
+    if (field === "wasteRate") return `${Math.round(Number(value) * 10000) / 100}%`;
+    if (field === "quantity" || field === "rate") return Number(value).toLocaleString("en-US", { maximumFractionDigits: 4 });
+    return value;
+}
+
+/** The changed lines of a submitted draft by the line they are now (a removed line is no longer there). */
+export function changesByLine(changes: BoqLineChange[] | null | undefined): Map<number, BoqLineChange> {
+    return new Map((changes ?? []).flatMap((c) => (c.lineId == null ? [] : [[c.lineId, c] as const])));
+}
+
+/** The lines others took out of a submitted draft since it was submitted. */
+export const removedLines = (changes: BoqLineChange[] | null | undefined) => (changes ?? []).filter((c) => c.kind === "removed");

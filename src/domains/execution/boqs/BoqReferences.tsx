@@ -4,9 +4,8 @@ import { plural } from "@/shared/format/labels";
 import { money } from "@/shared/format/money";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import type { Project } from "../../shared/projects/projectsApi";
 import { boqTotal, KIND_LABEL } from "./boqRules";
-import { useBoq, type Boq, type BoqList, type BoqSummary } from "./boqsApi";
+import { useBoq, type Boq, type BoqList, type BoqSummary, type BoqSite } from "./boqsApi";
 
 const cents = (amount: number) => money.exact(amount, "USD", { cents: true, twoDecimals: true });
 const quantityText = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -17,7 +16,7 @@ const percentText = (fraction: number) => `${Math.round(fraction * 10000) / 100}
  * BOQs and the VOs. Clicking one opens it here, read-only and scrolling on its own, so it can be read line by line while
  * the client BOQ is written above; clicking it again closes it. Lines are copied with "Copy lines from…".
  */
-export default function BoqReferences({ project, boq, list }: { project: Project; boq: Boq; list: BoqList | undefined }) {
+export default function BoqReferences({ project, boq, list }: { project: BoqSite; boq: Boq; list: BoqList | undefined }) {
     const others = [...(list?.internal ?? []), ...(list?.client ?? []), ...(list?.vos ?? [])].filter((b) => b.id !== boq.id && b.lineCount > 0);
     const [open, setOpen] = useState<number | null>(null);
     if (others.length === 0) return null;
@@ -43,7 +42,7 @@ export default function BoqReferences({ project, boq, list }: { project: Project
     );
 }
 
-function OpenBoq({ project, summary }: { project: Project; summary: BoqSummary }) {
+function OpenBoq({ project, summary }: { project: BoqSite; summary: BoqSummary }) {
     const query = useBoq(project.id, summary.id);
     const boq = query.data;
     return (

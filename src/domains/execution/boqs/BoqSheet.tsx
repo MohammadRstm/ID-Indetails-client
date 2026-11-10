@@ -12,7 +12,6 @@ import { fmtDateY } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import type { Project } from "../../shared/projects/projectsApi";
 import { useBoqAccess } from "./boqAccess";
 import { AgreeBoqModal, WithdrawBoqModal } from "./BoqAgreementModals";
 import { draftOf, fitSigned, hasProblems, isDirty, lineUsed, problemsOf, requestOf, withBlankLines, withNewLine, withServerProblems, type Draft, type LineDraft } from "./boqDraft";
@@ -20,12 +19,12 @@ import { BoqDeliveries, BoqTotals } from "./BoqFigures";
 import BoqLinesTable from "./BoqLinesTable";
 import BoqReferences from "./BoqReferences";
 import { useBoqLinks } from "./boqLinks";
-import { agreeBlock, agreedClient, boqErrorMessage, boqTotal, emptyBlock, isNotChosen, KIND_LABEL, withdrawBlock } from "./boqRules";
-import { BOQ_MAX_LINES, BOQ_REASON_MAX, BOQ_TITLE_MAX, downloadBoqPdf, useBoq, useBoqs, useDeleteBoq, useDuplicateBoq, useSaveBoq, type Boq, type BoqAdjustmentType } from "./boqsApi";
+import { agreeBlock, agreedClient, boqErrorMessage, boqTotal, changesByLine, emptyBlock, isNotChosen, KIND_LABEL, removedLines, withdrawBlock } from "./boqRules";
+import { BOQ_MAX_LINES, BOQ_REASON_MAX, BOQ_TITLE_MAX, downloadBoqPdf, useBoq, useBoqs, useDeleteBoq, useDuplicateBoq, useKeepBoqChanges, useSaveBoq, useSubmitBoq, useWithdrawBoqSubmission, type Boq, type BoqAdjustmentType, type BoqSite } from "./boqsApi";
 import CopyLinesModal from "./CopyLinesModal";
 import SendBoqModal from "./SendBoqModal";
 
-type Dialog = "agree" | "withdraw" | "send" | "copy" | "delete" | null;
+type Dialog = "agree" | "withdraw" | "send" | "copy" | "delete" | "submit" | null;
 
 const SAVE_FIRST = "Save your changes first.";
 
@@ -34,13 +33,16 @@ const SAVE_FIRST = "Save your changes first.";
  * sheet into blank rows that are left out when it is saved, then the permits, which carry no supervision or TVA), the
  * work's adjustment and its figures, worked out as it is typed. An agreed BOQ opens read-only.
  */
-export default function BoqSheet({ project, boq, onClose }: { project: Project; boq: Boq; onClose: () => void }) {
+export default function BoqSheet({ project, boq, onClose }: { project: BoqSite; boq: Boq; onClose: () => void }) {
     const access = useBoqAccess(project);
     const links = useBoqLinks();
     const list = useBoqs(project.id, true).data;
     const save = useSaveBoq(project.id, boq.id);
     const duplicate = useDuplicateBoq();
     const remove = useDeleteBoq(project.id);
+    const submitDraft = useSubmitBoq(project.id);
+    const withdrawDraft = useWithdrawBoqSubmission(project.id);
+    const keepChanges = useKeepBoqChanges(project.id);
     const errors = useFormErrors();
     // blank rows to type into, for whoever can change it
     const draftFor = (from: Boq) => { const d = draftOf(from); return access.canEdit(from) ? { ...d, lines: withBlankLines(d.lines) } : d; };
@@ -62,6 +64,14 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
     const notChosen = isNotChosen(boq, list);
     const decides = access.canDecide(boq);
     const blocked = emptyBlock(boq);
+    // an internal draft is private to its author until they submit it; others may change it once it is
+    const internal = boq.kind === "internal";
+    const submittedAt = internal ? boq.submittedAt : null;
+    const changes = boq.changes ?? [];
+    const changed = changes.length > 0;
+    const removed = removedLines(boq.changes);
+    const authorWatches = access.canWithdrawSubmission(boq);
+    const draftBadge = submittedAt == null ? "Private" : changed ? "Changed" : "Submitted";
     const changedMeanwhile = toApiError(save.error).code === "boq_changed";
     const edited = () => { if (save.error) save.reset(); };
     /** Starts over from a save: the draft, the figures and the save the next one checks against. */
@@ -113,6 +123,19 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
             startFrom(data);
         });
     }
+    /** Takes the draft back from the site, or keeps what others changed: the editor starts over from the answer. */
+    function handOver(action: "withdraw" | "keep") {
+        const run = action === "withdraw" ? withdrawDraft : keepChanges;
+        run.mutate(boq.id, {
+            onSuccess: (saved) => {
+                startFrom(saved);
+                toast(action === "withdraw"
+                    ? { text: `${name} withdrawn`, sub: "Only you see it now", icon: "checkCircle" }
+                    : { text: "Changes kept", sub: `${name} stays submitted with them`, icon: "checkCircle" });
+            },
+            onError: (e) => toast({ text: action === "withdraw" ? "It wasn't withdrawn" : "The changes weren't kept", sub: boqErrorMessage(e), icon: "alert" }),
+        });
+    }
     function pdf() {
         downloadBoqPdf(boq).catch((e) => toast({ text: "The PDF wasn't downloaded", sub: boqErrorMessage(e), icon: "alert" }));
     }
@@ -123,7 +146,7 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
     const workUsed = work.filter(lineUsed).length;
     const full = draft.lines.filter(lineUsed).length >= BOQ_MAX_LINES;
     const tableProps = {
-        readOnly: !editable, problems: shown, errors, onChange: changeLine, onMove: move,
+        readOnly: !editable, changes: changesByLine(boq.changes), problems: shown, errors, onChange: changeLine, onMove: move,
         onRemove: (i: number) => change({ lines: withBlankLines(draft.lines.filter((_, at) => at !== i)) }),
     };
 
@@ -131,7 +154,7 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
         <Modal size="xl" title={name} sub={`${KIND_LABEL[boq.kind]}${boq.number ? ` · ${boq.title}` : ""} · ${project.title}`} onClose={close}
             headTools={
                 <span className="row" style={{ gap: 8 }}>
-                    <span className={cx("badge", agreed && "badge-active")}>{agreed ? "Agreed" : notChosen ? "Not chosen" : "Draft"}</span>
+                    <span className={cx("badge", agreed && "badge-active")}>{agreed ? "Agreed" : internal ? draftBadge : notChosen ? "Not chosen" : "Draft"}</span>
                     {(access.canDuplicate(boq) || editable || access.canDownload(boq)) && (
                         <MenuButton icon="dots" label="More actions" align="right" width={210}>
                             {(done) => (
@@ -139,7 +162,7 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
                                     {access.canDuplicate(boq) && <button className="pop-item" disabled={dirty || duplicate.isPending} title={dirty ? SAVE_FIRST : undefined} onClick={() => { done(); copy(); }}><Icon name="file" />Duplicate</button>}
                                     {editable && <button className="pop-item" disabled={dirty} title={dirty ? SAVE_FIRST : undefined} onClick={() => { done(); setDialog("copy"); }}><Icon name="list" />Copy lines from…</button>}
                                     {access.canDownload(boq) && <button className="pop-item" disabled={dirty} title={dirty ? SAVE_FIRST : undefined} onClick={() => { done(); pdf(); }}><Icon name="download" />Download PDF</button>}
-                                    {editable && <button className="pop-item" onClick={() => { done(); setDialog("delete"); }}><Icon name="trash" />Delete draft</button>}
+                                    {access.canDelete(boq) && <button className="pop-item" onClick={() => { done(); setDialog("delete"); }}><Icon name="trash" />Delete draft</button>}
                                 </div>
                             )}
                         </MenuButton>
@@ -162,6 +185,15 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
                     {decides && agreed && (
                         <button className="btn" disabled={!!withdrawBlock(boq, list)} title={withdrawBlock(boq, list) ?? undefined} onClick={() => setDialog("withdraw")}><Icon name="x" />Withdraw agreement</button>
                     )}
+                    {access.canSubmit(boq) && (
+                        <button className="btn" disabled={dirty || boq.lineCount === 0} title={dirty ? SAVE_FIRST : boq.lineCount === 0 ? "Add lines and save first." : undefined} onClick={() => setDialog("submit")}><Icon name="send" />Submit</button>
+                    )}
+                    {authorWatches && changed && (
+                        <button className="btn" disabled={dirty || keepChanges.isPending} title={dirty ? SAVE_FIRST : undefined} onClick={() => handOver("keep")}><Icon name="checkCircle" />Keep the changes</button>
+                    )}
+                    {authorWatches && (
+                        <button className="btn" disabled={dirty || withdrawDraft.isPending} title={dirty ? SAVE_FIRST : undefined} onClick={() => handOver("withdraw")}><Icon name="x" />Withdraw</button>
+                    )}
                     {editable && <button className="btn btn-primary" disabled={save.isPending} onClick={submit}>{save.isPending ? "Saving…" : "Save"}</button>}
                 </>
             }>
@@ -180,7 +212,26 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
                     <div className="grow"><b>Not chosen.</b> {chosen?.number ?? "Another client BOQ"} is the agreed one. This stays a draft, to change, send or keep.</div>
                 </div>
             )}
-            {!agreed && !editable && (
+            {authorWatches && (
+                <div className={cx("banner", changed && "hold")} style={{ marginBottom: 14 }}>
+                    <Icon name={changed ? "alert" : "info"} />
+                    <div className="grow">
+                        {changed
+                            ? <><b>Changed since you submitted it.</b> The site&apos;s pricing managers or owner changed this draft: the changes are marked below. Keep them, or withdraw the draft to make it private again.</>
+                            : <><b>Submitted on {fmtDateY(submittedAt!)}:</b> the site&apos;s pricing managers and owner see it and may change it.{!editable && " Withdraw it to change it yourself."}</>}
+                    </div>
+                </div>
+            )}
+            {submittedAt != null && !authorWatches && access.reviews && (
+                <div className="banner" style={{ marginBottom: 14 }}>
+                    <Icon name="info" />
+                    <div className="grow">
+                        <b>Submitted by {boq.author.name}</b> on {fmtDateY(submittedAt)}. They are told when it is changed.
+                        {changed && " It has been changed since: the changes are marked below."}
+                    </div>
+                </div>
+            )}
+            {!agreed && !editable && !authorWatches && (
                 <div className="banner" style={{ marginBottom: 14 }}>
                     <Icon name="info" />
                     <div className="grow">{access.open ? "You can read this BOQ but not change it." : "The site is closed: a BOQ can't be changed until it is reopened."}</div>
@@ -190,7 +241,7 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
             <div className="field">
                 <label className="label required" htmlFor="boq-title">Title</label>
                 <input id="boq-title" className="input" value={draft.title} disabled={!editable} onChange={(e) => change({ title: e.target.value })} onBlur={errors.touch("title")} />
-                <div className="hint">{boq.kind === "internal" ? "Only you and whoever manages the site's pricing see it." : "The client sees it on the PDF."} At most {BOQ_TITLE_MAX} characters.</div>
+                <div className="hint">{!internal ? "The client sees it on the PDF." : submittedAt ? "You, the site's pricing managers and its owner see it." : "Only you see it until you submit it."} At most {BOQ_TITLE_MAX} characters.</div>
                 <FieldError message={errors.show("title", problems.title) ?? fields.title} />
             </div>
             {boq.kind === "vo" && (
@@ -227,6 +278,9 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
                         <div className="hint mt-s">Charged as they are: no supervision, no TVA and no adjustment on them. Their real cost goes in the expenses.</div>
                     </>
                 )}
+            {removed.length > 0 && (
+                <div className="hint mt-s"><b>Removed since you submitted it:</b> {removed.map((c) => c.description).join(", ")}</div>
+            )}
             <FieldError message={shown.lines} />
             {boq.kind !== "vo" && editable && <div className="hint mt-s">A negative unit cost is only allowed on a VO.</div>}
 
@@ -263,6 +317,17 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
                 <CopyLinesModal project={project} boq={boq} list={list}
                     onCopied={(saved) => { startFrom(saved); setDialog(null); }} onClose={() => setDialog(null)} />
             )}
+            {dialog === "submit" && (
+                <SubmitBoqModal name={name} owner={project.owner?.name} pending={submitDraft.isPending} error={submitDraft.error}
+                    onSubmit={() => submitDraft.mutate(boq.id, {
+                        onSuccess: (saved) => {
+                            startFrom(saved);
+                            setDialog(null);
+                            toast({ text: `${name} submitted`, sub: `To ${project.title}. You can withdraw it any time`, icon: "checkCircle" });
+                        },
+                    })}
+                    onClose={() => { submitDraft.reset(); setDialog(null); }} />
+            )}
             {dialog === "delete" && (
                 <DeleteBoqModal name={name} pending={remove.isPending} error={remove.error}
                     onDelete={() => remove.mutate(boq.id, {
@@ -270,6 +335,26 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
                     })}
                     onClose={() => setDialog(null)} />
             )}
+        </Modal>
+    );
+}
+
+function SubmitBoqModal({ name, owner, pending, error, onSubmit, onClose }: {
+    name: string; owner?: string; pending: boolean; error: unknown; onSubmit: () => void; onClose: () => void;
+}) {
+    return (
+        <Modal size="sm" title={`Submit ${name}?`} onClose={pending ? undefined : onClose}
+            foot={
+                <>
+                    <div className="grow muted" style={{ fontSize: 12 }}>{error != null && <span className="err"><Icon name="alert" />{boqErrorMessage(error)}</span>}</div>
+                    <button className="btn" disabled={pending} onClick={onClose}>Cancel</button>
+                    <button className="btn btn-primary" disabled={pending} onClick={onSubmit}>{pending ? "Submitting…" : "Submit"}</button>
+                </>
+            }>
+            <p style={{ margin: 0 }}>
+                The site&apos;s pricing managers{owner ? ` and its owner, ${owner},` : " and its owner"} will see this draft and may change it. You are told when they do.
+            </p>
+            <p style={{ margin: "8px 0 0" }}>While it is submitted you can read it but not change it. You can withdraw it at any time to make it private again.</p>
         </Modal>
     );
 }

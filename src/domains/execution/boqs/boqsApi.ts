@@ -3,6 +3,7 @@ import { downloadFile } from "@/api/download";
 import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
 import type { Schemas } from "@/api/types";
+import type { Project } from "../../shared/projects/projectsApi";
 
 export type BoqList = Schemas["BoqListResponse"];
 export type BoqSummary = Schemas["BoqSummaryResponse"];
@@ -13,6 +14,23 @@ export type BoqLineNature = Schemas["BoqLineNature"];
 export type BoqKind = Schemas["BoqKind"];
 export type BoqAdjustmentType = Schemas["BoqAdjustmentType"];
 export type BoqDeliveryChannel = Schemas["DeliveryChannel"];
+/** What changed in a submitted draft since it was submitted or last kept: an added, removed or changed line. */
+export type BoqLineChange = Schemas["BoqLineChangeResponse"];
+export type BoqFieldChange = Schemas["BoqFieldChangeResponse"];
+/** A site as a BOQ author sees it: its name and location, nothing else (GET /api/boq-sites). */
+export type BoqAuthorSite = Schemas["BoqSiteResponse"];
+
+/**
+ * The little the BOQ screens need to know about a site: the full project on the site's page, or an author's site from
+ * the BOQ sites list (an active Execution client site, with no client or owner shown).
+ */
+export type BoqSite = Pick<Project, "id" | "title" | "status" | "billingType" | "domain">
+    & Partial<Pick<Project, "client" | "owner" | "finalizedAt" | "money">>;
+
+/** An author's site as a BoqSite. */
+export const toBoqSite = (site: BoqAuthorSite): BoqSite => ({
+    id: site.id, title: site.title, status: site.status, billingType: "client", domain: "execution",
+});
 
 /*
  * What the API accepts (BoqRules): longer text is refused, so forms stop at the same limits.
@@ -25,6 +43,23 @@ export const BOQ_UNIT_MAX = 20;
 export const BOQ_MAX_LINES = 1000;
 /** What an email's or a recorded delivery's note may hold. */
 export const BOQ_NOTE_MAX = 500;
+
+/** The sites a BOQ author writes drafts for: Execution's active client sites (boq:create). */
+export function useBoqSites() {
+    return useQuery({
+        queryKey: keys.boqSites.list(),
+        queryFn: async () => (await http.get<BoqAuthorSite[]>("/boq-sites")).data,
+    });
+}
+
+/** One such site. */
+export function useBoqSite(id: number) {
+    return useQuery({
+        queryKey: keys.boqSites.detail(id),
+        queryFn: async () => (await http.get<BoqAuthorSite>(`/boq-sites/${id}`)).data,
+        enabled: Number.isInteger(id) && id > 0,
+    });
+}
 
 /** Under the project, so a change to the site (its price, its status) refreshes them. */
 const boqsKey = (projectId: number) => [...keys.projects.detail(projectId), "boqs"] as const;
@@ -106,6 +141,33 @@ export function useDuplicateBoq() {
     return useMutation({
         mutationFn: async (id: number) => (await http.post<Boq>(`/boqs/${id}/duplicate`)).data,
         onSuccess: refresh,
+    });
+}
+
+/** The author hands a private draft to the site's pricing managers and owner. */
+export function useSubmitBoq(projectId: number) {
+    const saved = useSaved(projectId);
+    return useMutation({
+        mutationFn: async (id: number) => (await http.post<Boq>(`/boqs/${id}/submit`)).data,
+        onSuccess: saved,
+    });
+}
+
+/** The author takes a submitted draft back: private again. */
+export function useWithdrawBoqSubmission(projectId: number) {
+    const saved = useSaved(projectId);
+    return useMutation({
+        mutationFn: async (id: number) => (await http.post<Boq>(`/boqs/${id}/withdraw-submission`)).data,
+        onSuccess: saved,
+    });
+}
+
+/** The author accepts what others changed in their submitted draft: later changes compare against this version. */
+export function useKeepBoqChanges(projectId: number) {
+    const saved = useSaved(projectId);
+    return useMutation({
+        mutationFn: async (id: number) => (await http.post<Boq>(`/boqs/${id}/keep`)).data,
+        onSuccess: saved,
     });
 }
 
