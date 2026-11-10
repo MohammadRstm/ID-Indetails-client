@@ -1,6 +1,6 @@
 import { P } from "@/app/permissions/codes";
 import {
-    and, everyone, formula, has, hasAny, list, note, only, or, para, sees, type Article,
+    and, everyone, formula, has, hasAny, link, links, list, note, only, or, para, sees, type Article,
 } from "../helpModel";
 
 const money = has(P.FINANCIAL_VIEW);
@@ -157,6 +157,50 @@ export const explainedMoney: Article[] = [
             ),
         ],
         related: ["profit-margin", "project-cost", "site-money"],
+    },
+    {
+        id: "project-risks",
+        title: "Projects at risk: what each risk means",
+        category: "money",
+        who: money,
+        summary: "The Insights tab on Financials lists the client projects with a money risk, the most pressing first. Each risk says what was found and names the rule that found it.",
+        ask: ["projects at risk", "risks", "risk register", "at risk", "money running out", "runway", "projected loss", "losing money", "refused change waiting", "department over budget", "settled at a loss", "which projects are in trouble"],
+        blocks: [
+            para("**Financials → Insights** checks every active or on-hold client project against the rules below and lists the ones where a rule fired, the most pressing first. A project finished in the last 12 months is checked only for a settlement. Internal work is never at risk of a loss, so it isn't checked."),
+            list(
+                "**Profit at zero**: the agreed profit is at zero or below.",
+                "**Projected loss**: at the pace so far (the cost so far ÷ progress), the profit at completion would be zero or below. It's an estimate, made from 5% along.",
+                "**Close to zero**: a margin of 10% or less.",
+                "**Refused change waiting**: a change the profit floor refused is still waiting to be forced through or dismissed.",
+                "**No exchange rate**: some costs have no exchange rate on their day, so they're left out of the cost and the profit.",
+                "**Settled at a loss**: a project finished with what the client owed excused or written off, ending at zero profit or below.",
+            ),
+            only(sees("execution"), para("**Money running out** (a site): what the client paid has already been spent, or will be within a few weeks at today's crew and day rate.")),
+            only(sees("design"), para("**Department over budget** (Design): a department's labour cost has passed its budget, its share of the price plus its variation orders.")),
+            note("Nothing is called a risk unless one of these rules fired. Each risk shows its rule with the numbers in force, and **How the risks are found** says what was assumed and what was left out."),
+            links(link("Open Insights", { business: "financials?tab=insights" })),
+        ],
+        related: ["project-insights", "unusual-spending", "profit-margin"],
+    },
+    {
+        id: "unusual-spending",
+        title: "Spending by category, and unusual spending",
+        category: "money",
+        who: money,
+        summary: "The Insights tab on Financials shows each month's spending by category, and lists what the owner's rules call unusual in it.",
+        ask: ["unusual spending", "spending by category", "spending trends", "monthly spending", "expense anomalies", "unusual month", "unit cost jump", "same amount twice", "duplicate expense", "typed twice", "spending spike"],
+        blocks: [
+            para("**Spending by category** shows each month's expenses in USD, at the rate of the day they were spent: project expenses on Design, site expenses on Execution. Internal projects count too; labour doesn't. Pick 6, 12 or 24 months. This month runs to today."),
+            para("**Unusual spending** lists what one of these rules found, newest first:"),
+            list(
+                "**Unusual month**: a category's month far above its average over the months before, and big enough to matter.",
+                "**Unit cost jump**: on a site, an item bought at a unit cost well above its last purchases. Only expenses entered as a quantity × a unit cost have one.",
+                "**Same amount twice**: expenses on one project for the same item, amount and currency, close together. Maybe one was typed twice.",
+            ),
+            note("Each row shows its rule with the thresholds in force. Spending with no exchange rate on its day is in no figure: it's shown apart, until its rate is added."),
+            links(link("Open Insights", { business: "financials?tab=insights" })),
+        ],
+        related: ["project-risks", "site-costs", "exchange-rates"],
     },
     {
         id: "execution-pricing",

@@ -27,6 +27,13 @@ describe("Proton's UI commands", () => {
             .toEqual({ kind: "go", path: "/design/projects?client=3", label: "It" });
         expect(stepOf(command({ type: "open_page", page: "company_overview" }), superAdmin, null))
             .toEqual({ kind: "go", path: "/company/overview", label: "It" });
+        // the Financials page's tabs, its Insights tab included
+        for (const tab of ["billing", "costs", "insights"]) {
+            expect(stepOf(command({ type: "open_page", page: "financials", domain: "execution", tab }), superAdmin, "execution"))
+                .toEqual({ kind: "go", path: `/execution/financials?tab=${tab}`, label: "It" });
+        }
+        expect(stepOf(command({ type: "open_page", page: "financials", domain: "design", tab: "risks" }), superAdmin, "design"))
+            .toEqual({ kind: "go", path: "/design/financials", label: "It" });
         expect(stepOf(command({ type: "refresh" }), designAdmin, "design")).toEqual({ kind: "refresh" });
     });
 
