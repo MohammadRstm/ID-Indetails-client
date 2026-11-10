@@ -27,8 +27,8 @@ export const projects: Article[] = [
         title: "Changing a project's details, owner or client",
         category: "projects",
         who: has(P.PROJECT_EDIT),
-        summary: "On the project, open More → Edit details. The owner can also be changed from the project's header.",
-        ask: ["edit project", "rename project", "change owner", "project owner", "change client", "project details", "change dates"],
+        summary: "On the project, open More → Edit details. The owner can also be changed from the project's header, and the project's photo by clicking its tile.",
+        ask: ["edit project", "rename project", "change owner", "project owner", "change client", "project details", "change dates", "project photo", "project picture", "project image"],
         blocks: [
             steps(step("Open the project, then **More → Edit details**.", "Projects", "the project", "More")),
             list(
@@ -36,6 +36,7 @@ export const projects: Article[] = [
                 "The new owner is told.",
                 "Once a project has an invoice or a payment, it can't move to another client or become internal: invoices and payments keep the client they were made for.",
                 "A finished project can't be edited until it is reopened.",
+                "Click the project's tile beside its name to **Choose a photo** from your device. It then shows instead of the icon on the project's page, the projects list and wherever the project is listed. **Change photo** or **Take the photo off** go back to it there. Whoever sees the business sees the photo.",
             ),
             only(and(sees("design"), has(P.FINANCIAL_VIEW)), para("The customer payment (a Design project's agreed revenue) is the first thing on the **Financials** tab: its pencil changes it, with why it changes, and **History** lists every change. **More → Client & type** turns an internal project into client work, or client work into internal.")),
         ],

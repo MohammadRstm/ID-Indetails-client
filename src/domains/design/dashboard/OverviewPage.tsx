@@ -112,7 +112,7 @@ function OverviewPage({ domain, tabs }: { domain: Domain; tabs: ReactNode }) {
     const d = dashboard.data;
     const s = summary.data;
     const projects = new Map<number, ProjectInfo>((projectList.data?.items ?? []).map((p) => [p.id, {
-        icon: p.icon, tint: p.tint, activity: activityLevelOf(p.work?.activityLevel), targetDate: p.targetDate,
+        icon: p.icon, tint: p.tint, photo: p.photoFileId, activity: activityLevelOf(p.work?.activityLevel), targetDate: p.targetDate,
     }]));
     const online = (peopleWork.data ?? []).filter((r) => r.online && r.status === "active");
     const count = (status: string) => (o ?? d)?.projectsByStatus.find((x) => x.status === status)?.count ?? 0;

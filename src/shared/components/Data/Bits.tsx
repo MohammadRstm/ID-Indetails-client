@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useFileUrl } from "@/shared/files/useFileUrl";
 import { lastSeen } from "@/shared/format/time";
 import { icons, type IconName } from "@/shared/icons/icons";
 import Icon from "@/shared/icons/Icon";
@@ -36,8 +37,17 @@ export function Presence({ online, lastSeenAt }: { online: boolean; lastSeenAt?:
     );
 }
 
-/** A project's coloured tile with its icon (the prototype's UI.Tile). */
-export function ProjectTile({ icon, tint, size }: { icon?: string | null; tint?: string | null; size?: "sm" | "lg" }) {
+/** A project's coloured tile with its icon (the prototype's UI.Tile), or the project's own photo when it has one. */
+export function ProjectTile({ icon, tint, size, photo }: { icon?: string | null; tint?: string | null; size?: "sm" | "lg"; photo?: number | null }) {
+    // the icon shows while the photo loads, and stays if it can't be read
+    const picture = useFileUrl(photo, size === "lg" ? 160 : 96).url;
+    if (picture) {
+        return (
+            <span className={cx("ptile", "ptile-photo", size)}>
+                <img src={picture} alt="" />
+            </span>
+        );
+    }
     return (
         <span className={cx("ptile", size)} style={{ background: tint || "var(--accent)" }}>
             <Icon name={icon && Object.hasOwn(icons, icon) ? (icon as IconName) : "folder"} />

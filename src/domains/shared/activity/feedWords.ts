@@ -86,7 +86,10 @@ const WORDS: Record<string, Words> = {
 
     // projects
     project_created: { icon: "plus", text: (e) => `created project ${project(e)}` },
-    project_updated: { icon: "edit", text: (e) => `updated ${project(e)}'s details` },
+    project_updated: {
+        icon: "edit",
+        text: (e, p) => (p.change === "photo" ? `changed ${project(e)}'s photo` : p.change === "photo_removed" ? `took ${project(e)}'s photo off` : `updated ${project(e)}'s details`),
+    },
     project_owner_set: {
         icon: "user",
         text: (e, p, names) => {

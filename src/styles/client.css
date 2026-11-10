@@ -176,6 +176,12 @@ table { line-height: normal; font-weight: normal; }
 /* A dialog whose height changes as it's used (a form in steps) stays at the top instead of re-centring. */
 .scrim-top > .modal { margin-top: 0; }
 .side { height: 100dvh; }
+/* A project's own photo fills its tile; on its page the tile is the button that changes it */
+.ptile-photo { background: var(--surface-3); overflow: hidden; }
+.ptile-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ptile-btn { padding: 0; border: 0; background: none; border-radius: 11px; cursor: pointer; display: grid; }
+.ptile-btn:hover .ptile, .ptile-btn.on .ptile { box-shadow: 0 0 0 3px var(--accent-soft); }
+
 /* Home sits at the bottom of the sidebar, just above the user, however long the list above it */
 .side-home { margin-top: auto; padding: 10px 10px 9px; }
 .side-home + .side-foot { margin-top: 0; }

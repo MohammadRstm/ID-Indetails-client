@@ -165,7 +165,7 @@ function PeopleWork() {
                                                     <td>{r.status === "invited" ? <StatusBadge status="invited" /> : <span className="row wrap" style={{ gap: 6 }}><Presence online={r.online} lastSeenAt={r.lastSeenAt} /><OffBadge userId={r.id} /></span>}</td>
                                                     <td>
                                                         {r.focus ? (
-                                                            <div className="pname"><ProjectTile icon={focus?.icon} tint={focus?.tint} size="sm" /><span className="trunc" style={{ maxWidth: 150 }}>{r.focus.title}</span></div>
+                                                            <div className="pname"><ProjectTile icon={focus?.icon} tint={focus?.tint} photo={focus?.photoFileId} size="sm" /><span className="trunc" style={{ maxWidth: 150 }}>{r.focus.title}</span></div>
                                                         ) : <span className="muted">-</span>}
                                                     </td>
                                                     <td className="r mono">{r.weekMinutes ? fmtDur(r.weekMinutes) : <span className="muted">-</span>}</td>
