@@ -40,6 +40,15 @@ export function useArchiveAccountLabel() {
     });
 }
 
+/** Deletes a label nothing is filed under (super admin); one that payments or expenses carry comes back as account_label_in_use. */
+export function useDeleteAccountLabel() {
+    const invalidate = useInvalidate();
+    return useMutation({
+        mutationFn: async (id: number) => { await http.delete(`/account-labels/${id}`); },
+        onSuccess: () => { void invalidate(keys.accountLabels.all); },
+    });
+}
+
 /** Sets the order of the labels from the ids, first to last (super admin). */
 export function useReorderAccountLabels() {
     const invalidate = useInvalidate();

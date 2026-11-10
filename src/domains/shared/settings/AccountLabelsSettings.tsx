@@ -7,14 +7,15 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Icon from "@/shared/icons/Icon";
 import {
-    ACCOUNT_LABEL_NAME_MAX, useAccountLabels, useArchiveAccountLabel, useReorderAccountLabels, useSaveAccountLabel, type AccountLabel,
+    ACCOUNT_LABEL_NAME_MAX, useAccountLabels, useArchiveAccountLabel, useDeleteAccountLabel, useReorderAccountLabels, useSaveAccountLabel, type AccountLabel,
 } from "../accountLabels/accountLabelsApi";
 import { saved } from "./settingsToasts";
 
 /**
  * The company's account labels (Concrete, Finishing, Permits…): one list for every business, picked on a payment or an
  * expense to say which account it belongs to. Only whoever manages the company's settings (a super admin) sees it. An
- * archived label can't be picked any more, but what already uses it keeps it; the archived ones are listed last.
+ * archived label can't be picked any more, but what already uses it keeps it; the archived ones are listed last. A label
+ * nothing is filed under yet can be deleted outright; one in use can only be archived, so nothing loses its label.
  */
 export default function AccountLabelsSettings() {
     const labels = useAccountLabels(true);
@@ -58,12 +59,14 @@ export default function AccountLabelsSettings() {
     );
 }
 
-/** One label: its name, renamed in place, archived or restored and moved; or the new label being named. */
+/** One label: its name, renamed in place, archived or restored, deleted when nothing uses it, and moved; or the new label being named. */
 function LabelRow({ label, onUp, onDown, onDone }: {
     label: AccountLabel | null; onUp?: () => void; onDown?: () => void; onDone?: () => void;
 }) {
     const save = useSaveAccountLabel();
     const archive = useArchiveAccountLabel();
+    const remove = useDeleteAccountLabel();
+    const [confirming, setConfirming] = useState(false);
     const [name, setName] = useState<string | null>(label ? null : "");
     const [touched, setTouched] = useState(false);
     const editing = name != null;
@@ -97,7 +100,10 @@ function LabelRow({ label, onUp, onDown, onDone }: {
                     <>
                         <div style={{ fontWeight: 600, opacity: label!.archived ? 0.6 : 1 }}>{label!.name}</div>
                         {label!.archived && <p>Archived: it can't be picked any more.</p>}
-                        {archive.error != null && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(archive.error)}</div>}
+                        {!label!.inUse && !label!.archived && <p>Nothing is filed under it yet.</p>}
+                        {(archive.error ?? remove.error) != null && (
+                            <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(archive.error ?? remove.error)}</div>
+                        )}
                     </>
                 )}
             </div>
@@ -105,6 +111,13 @@ function LabelRow({ label, onUp, onDown, onDone }: {
                 <div className="row" style={{ gap: 6 }}>
                     <button className="btn btn-sm btn-primary" disabled={save.isPending} onClick={submit}>{label ? "Save" : "Add"}</button>
                     <button className="btn btn-sm" onClick={stop}>Cancel</button>
+                </div>
+            ) : confirming ? (
+                <div className="row" style={{ gap: 6 }}>
+                    <span className="muted" style={{ fontSize: 12 }}>Delete {label!.name} for good?</span>
+                    <button className="btn btn-sm btn-danger" disabled={remove.isPending}
+                        onClick={() => remove.mutate(label!.id, { onSuccess: saved("Label deleted", label!.name), onSettled: () => setConfirming(false) })}>Delete</button>
+                    <button className="btn btn-sm" onClick={() => setConfirming(false)}>Keep</button>
                 </div>
             ) : (
                 <div className="row" style={{ gap: 6 }}>
@@ -119,6 +132,10 @@ function LabelRow({ label, onUp, onDown, onDone }: {
                         onClick={() => archive.mutate({ id: label!.id, archive: !label!.archived }, { onSuccess: saved(label!.archived ? "Label restored" : "Label archived", label!.name) })}>
                         {label!.archived ? "Restore" : "Archive"}
                     </button>
+                    {/* payments or expenses filed under it keep it: it can only be archived */}
+                    {!label!.inUse && (
+                        <button className="btn btn-sm btn-quiet" onClick={() => { remove.reset(); archive.reset(); setConfirming(true); }}>Delete</button>
+                    )}
                 </div>
             )}
         </div>
