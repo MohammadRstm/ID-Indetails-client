@@ -11,9 +11,9 @@ type Label = Schemas["AccountLabelResponse"];
 
 const page = "/design/settings?section=labels";
 const start = (): Label[] => [
-    { id: 1, name: "Concrete", position: 1, archived: false },
-    { id: 2, name: "Finishing", position: 2, archived: false },
-    { id: 3, name: "Permits", position: 3, archived: true },
+    { id: 1, name: "Concrete", position: 1, archived: false, inUse: true },
+    { id: 2, name: "Finishing", position: 2, archived: false, inUse: false },
+    { id: 3, name: "Permits", position: 3, archived: true, inUse: true },
 ];
 
 /** The labels API over a list in memory, keeping each call's method, path and body. */
@@ -29,7 +29,7 @@ function labelsApi(labels: Label[] = start()) {
             const { name } = (await request.json()) as { name: string };
             calls.push({ call: "POST", body: { name } });
             if (labels.some((l) => l.name.toLowerCase() === name.toLowerCase())) return taken;
-            const added = { id: 10, name, position: labels.length + 1, archived: false };
+            const added = { id: 10, name, position: labels.length + 1, archived: false, inUse: false };
             labels.push(added);
             return HttpResponse.json(added, { status: 201 });
         }),
@@ -48,6 +48,15 @@ function labelsApi(labels: Label[] = start()) {
             const label = labels.find((l) => l.id === +String(params.id))!;
             label.name = name;
             return HttpResponse.json(label);
+        }),
+        http.delete("/api/account-labels/:id", ({ params }) => {
+            calls.push({ call: `DELETE ${String(params.id)}` });
+            const index = labels.findIndex((l) => l.id === +String(params.id));
+            if (labels[index].inUse) {
+                return HttpResponse.json({ type: "business_rule", code: "account_label_in_use", message: "Payments or expenses are filed under this label, so it can't be deleted. Archive it instead." }, { status: 422 });
+            }
+            labels.splice(index, 1);
+            return new HttpResponse(null, { status: 204 });
         }),
         http.post("/api/account-labels/:id/:action", ({ params }) => {
             calls.push({ call: `POST ${String(params.id)} ${String(params.action)}` });
@@ -155,6 +164,42 @@ describe("the account labels in Settings", () => {
         await userEvent.click(within(permits).getByRole("button", { name: "Restore" }));
         await waitFor(() => expect(api.calls).toContainEqual({ call: "POST 3 restore" }));
         expect(await screen.findByText("Label restored")).toBeInTheDocument();
+    });
+
+    it("deletes a label nothing is filed under after asking, and offers only archiving for one in use", async () => {
+        const api = labelsApi();
+        renderApp(page, personas.superAdmin, ...api.handlers, ...settingsHandlers);
+        const concrete = (await screen.findByText("Concrete")).closest(".switch-row") as HTMLElement;
+        // payments carry Concrete, and Permits though archived: neither can be deleted
+        expect(within(concrete).queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+        const permits = screen.getByText("Permits").closest(".switch-row") as HTMLElement;
+        expect(within(permits).queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+
+        const finishing = screen.getByText("Finishing").closest(".switch-row") as HTMLElement;
+        expect(within(finishing).getByText("Nothing is filed under it yet.")).toBeInTheDocument();
+        await userEvent.click(within(finishing).getByRole("button", { name: "Delete" }));
+        expect(within(finishing).getByText("Delete Finishing for good?")).toBeInTheDocument();
+        // keeping it changes nothing
+        await userEvent.click(within(finishing).getByRole("button", { name: "Keep" }));
+        expect(api.calls).not.toContainEqual({ call: "DELETE 2" });
+
+        await userEvent.click(within(finishing).getByRole("button", { name: "Delete" }));
+        await userEvent.click(within(finishing).getByRole("button", { name: "Delete" }));
+        await waitFor(() => expect(api.calls).toContainEqual({ call: "DELETE 2" }));
+        expect(await screen.findByText("Label deleted")).toBeInTheDocument();
+        await waitFor(() => expect(rows()).toEqual(["Concrete", "Permits"]));
+    });
+
+    it("shows why a label that came into use meanwhile can't be deleted", async () => {
+        const labels = start();
+        const api = labelsApi(labels);
+        renderApp(page, personas.superAdmin, ...api.handlers, ...settingsHandlers);
+        const finishing = (await screen.findByText("Finishing")).closest(".switch-row") as HTMLElement;
+        // a payment was filed under it after the page loaded
+        labels[1].inUse = true;
+        await userEvent.click(within(finishing).getByRole("button", { name: "Delete" }));
+        await userEvent.click(within(finishing).getByRole("button", { name: "Delete" }));
+        expect(await screen.findByText(/so it can't be deleted\. Archive it instead/)).toBeInTheDocument();
     });
 
     it("moves a label up or down, sending the whole order", async () => {

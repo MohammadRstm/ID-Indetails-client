@@ -97,6 +97,16 @@ export function useUpdateProject(id: number) {
     });
 }
 
+/** Sets the project's own photo from an uploaded file, or takes it off (null), back to its icon tile (project:edit). */
+export function useSetProjectPhoto(id: number) {
+    const invalidate = useInvalidate();
+    return useMutation({
+        mutationFn: async (fileId: number | null) =>
+            (fileId == null ? await http.delete<Project>(`/projects/${id}/photo`) : await http.put<Project>(`/projects/${id}/photo`, { fileId })).data,
+        onSuccess: () => { void invalidate(keys.projects.all, keys.activity.all); },
+    });
+}
+
 /** A status change the API allows from each status. */
 export type StatusAction = "hold" | "resume" | "complete" | "archive" | "reopen";
 

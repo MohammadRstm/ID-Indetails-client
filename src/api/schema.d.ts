@@ -106,7 +106,26 @@ export interface paths {
             };
         };
         post?: never;
-        delete?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -12620,6 +12639,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{projectId}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["AttachFileRequest"];
+                    "application/json": components["schemas"]["AttachFileRequest"];
+                    "text/json": components["schemas"]["AttachFileRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectResponse"];
+                        "text/json": components["schemas"]["ProjectResponse"];
+                        "text/plain": components["schemas"]["ProjectResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectResponse"];
+                        "text/json": components["schemas"]["ProjectResponse"];
+                        "text/plain": components["schemas"]["ProjectResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{projectId}/supervision-withdrawals": {
         parameters: {
             query?: never;
@@ -16443,6 +16530,7 @@ export interface components {
             archived: boolean;
             /** Format: int64 */
             id: number;
+            inUse: boolean;
             name: string;
             /** Format: int32 */
             position: number;
@@ -20184,6 +20272,8 @@ export interface components {
             location: null | string;
             money: null | components["schemas"]["ProjectMoneyResponse"];
             owner: components["schemas"]["ProjectOwnerResponse"];
+            /** Format: int64 */
+            photoFileId: null | number;
             /** Format: int32 */
             progressPct: number;
             staff: null | components["schemas"]["PersonRefResponse"][];
@@ -20211,6 +20301,8 @@ export interface components {
             location: null | string;
             money: null | components["schemas"]["ProjectListMoneyResponse"];
             owner: components["schemas"]["ProjectOwnerResponse"];
+            /** Format: int64 */
+            photoFileId: null | number;
             /** Format: int32 */
             progressPct: number;
             /** Format: date */

@@ -67,6 +67,7 @@ export const icons = {
   attach: '<path d="M16.8 7.2 9.6 14.4a2.8 2.8 0 0 0 4 4l6.6-6.6a4.6 4.6 0 1 0-6.5-6.5l-6.9 6.9a6.4 6.4 0 0 0 9 9.1"/>',
   briefcase: '<rect x="3.6" y="7.4" width="16.8" height="12.2" rx="2.2"/><path d="M9 7.4V6a1.8 1.8 0 0 1 1.8-1.8h2.4A1.8 1.8 0 0 1 15 6v1.4"/><path d="M3.6 13h16.8"/>',
   list: '<path d="M9 7h11"/><path d="M9 12h11"/><path d="M9 17h11"/><circle class="f" cx="5" cy="7" r="1.2"/><circle class="f" cx="5" cy="12" r="1.2"/><circle class="f" cx="5" cy="17" r="1.2"/>',
+  home: '<path d="M3.8 11 12 4.2l8.2 6.8"/><path d="M6 9.4v10.2h12V9.4"/><path d="M10 19.6v-5.2h4v5.2"/>',
   grid: '<rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/>',
   refresh: '<path d="M19.6 12a7.6 7.6 0 1 1-2.4-5.6"/><path d="M17.6 3.4v3.8h-3.8"/>',
   shield: '<path d="M12 3.6 19 6.2v5.6c0 4.2-2.9 7.2-7 8.6-4.1-1.4-7-4.4-7-8.6V6.2z"/>',

@@ -24,7 +24,7 @@ import { costPartsOf, costWords, projectCostOf } from "../../shared/finance/cost
 import type { FinanceClient, FinanceMonth, FinanceProjects, FinanceSummary } from "../../shared/finance/financeApi";
 import { clickable } from "@/shared/utils/clickable";
 
-export type Tile = { icon: string | null; tint: string | null };
+export type Tile = { icon: string | null; tint: string | null; photo?: number | null };
 type FinanceProject = Schemas["FinanceProjectResponse"];
 
 const monthLabel = (m: string) => MONTHS[+m.slice(5, 7) - 1];
@@ -37,7 +37,7 @@ function useOpener() {
     return (path: string) => (canOpen(permissions, domain, path) ? () => navigate(`/${domain}/${path}`) : undefined);
 }
 
-const Tile = ({ tile }: { tile: Tile | undefined }) => <ProjectTile icon={tile?.icon} tint={tile?.tint} size="sm" />;
+const Tile = ({ tile }: { tile: Tile | undefined }) => <ProjectTile icon={tile?.icon} tint={tile?.tint} photo={tile?.photo} size="sm" />;
 
 /** A load that failed with nothing to show, and its retry. */
 export type Failure = { error: unknown; retry: () => void } | null;

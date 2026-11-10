@@ -258,7 +258,7 @@ export const company: Article[] = [
             "services", "offices", "locations", "social links", "instagram", "contact form", "contact email", "favicon", "publish project"],
         blocks: [
             steps(
-                step("Open the **Website** card on All areas, or go straight there if the website is all you look after.", "All areas", "Website"),
+                step("Open the **Website** card on Home, or go straight there if the website is all you look after.", "Home", "Website"),
                 step("Add a project with **New project**. **Link a system project** fills the form in, and keeps its status and year up to date."),
                 step("Add the **card picture** (tall, for the project's card in the moving strip and the Projects grid), the **page picture** (wide, across the top of its own page), the place and a description, then switch on **Published**."),
                 step("Choose the projects in the **Moving strip**, up to 20, in order."),
@@ -310,7 +310,7 @@ export const company: Article[] = [
         blocks: [
             list(
                 "The website's staff are admins who look after the website and nothing else: they sign in straight to it, and see no projects, clients or money.",
-                "Someone in Design or Execution given “View the company website's content”, “Edit the company website” or the website's visitor statistics keeps their business and also gets the **Website** card on All areas.",
+                "Someone in Design or Execution given “View the company website's content”, “Edit the company website” or the website's visitor statistics keeps their business and also gets the **Website** card on Home.",
                 "Social media will be a service of its own, the same way.",
             ),
             only(has(P.EMPLOYEE_INVITE), steps(

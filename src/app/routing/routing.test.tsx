@@ -170,7 +170,17 @@ describe("the guards", () => {
         // employees never see their own pay
         expect(within(nav).queryByText("My pay")).not.toBeInTheDocument();
         expect(within(nav).queryByText("Financials")).not.toBeInTheDocument();
-        expect(within(nav).queryByText("All areas")).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Home" })).not.toBeInTheDocument();
+    });
+
+    it("keeps Home at the bottom of the sidebar for whoever has several areas, and it opens the start screen", async () => {
+        renderApp("/design/projects", personas.superAdmin);
+        const home = await screen.findByRole("button", { name: "Home" });
+        // outside the list of pages, so it stays put however long the list grows
+        expect(within(screen.getByRole("navigation")).queryByRole("button", { name: "Home" })).not.toBeInTheDocument();
+        expect(home).toHaveClass("btn-primary");
+        await userEvent.click(home);
+        expect(await screen.findByRole("heading", { name: "What would you like to manage?" })).toBeInTheDocument();
     });
 
     it("lands a super admin on the launcher", async () => {
@@ -209,7 +219,7 @@ describe("the guards", () => {
         expect(window.location.pathname).toBe("/website/projects");
         const nav = screen.getByRole("navigation");
         expect(within(nav).getByText("Contact & social")).toBeInTheDocument();
-        expect(within(nav).queryByText("All areas")).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Home" })).not.toBeInTheDocument();
         expect(within(nav).queryByText("Staff")).not.toBeInTheDocument();
     });
 

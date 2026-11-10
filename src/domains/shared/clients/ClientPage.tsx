@@ -355,7 +355,7 @@ function ClientProjects({ client, projects, loading, error, onRetry }: ClientPro
                 key: "project", header: "Project",
                 cell: (p) => (
                     <div className="pname">
-                        <ProjectTile icon={tiles.get(p.projectId)?.icon} tint={tiles.get(p.projectId)?.tint} size="sm" />
+                        <ProjectTile icon={tiles.get(p.projectId)?.icon} tint={tiles.get(p.projectId)?.tint} photo={tiles.get(p.projectId)?.photoFileId} size="sm" />
                         <span className="trunc" style={{ fontWeight: 600 }}>{p.title}</span>
                     </div>
                 ),

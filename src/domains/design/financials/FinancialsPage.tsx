@@ -66,7 +66,7 @@ function FinancialsPage({ domain }: { domain: Domain }) {
     const { summary, monthly, projects, clients } = useFinanceOverview(domain, { ...range, months: Math.max(4, Math.min(13, period.months)) }, true);
     const costs = useFinanceCosts(domain, range, tab === "costs");
     const invoiceCount = useInvoices({ domain, pageSize: 1 }).data?.totalCount;
-    const tiles = new Map<number, Tile>((useProjects({ domain, pageSize: 100 }, usePermissions().has(P.PROJECT_VIEW)).data?.items ?? []).map((p) => [p.id, { icon: p.icon, tint: p.tint }]));
+    const tiles = new Map<number, Tile>((useProjects({ domain, pageSize: 100 }, usePermissions().has(P.PROJECT_VIEW)).data?.items ?? []).map((p) => [p.id, { icon: p.icon, tint: p.tint, photo: p.photoFileId }]));
     const s = summary.data;
     // Design spends on its employees' hours and expenses; a site on site expenses and ground labour
     const costTiles = domain === "design"

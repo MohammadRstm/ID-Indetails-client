@@ -108,13 +108,14 @@ export function SiteLogBrowser({ mine, sites, people, projectId, userId, title =
                 <div className="grow"><div className="panel-title">{title}</div>{data && <div className="panel-sub">{data.totalCount} {data.totalCount === 1 ? "log" : "logs"}</div>}</div>
             </div>
             <div className="panel-body">
+                {/* one line: the selects would otherwise fill the width and push each filter onto a line of its own */}
                 <div className="row wrap" style={{ gap: 8 }}>
                     <SearchInput value={search} onChange={reset(setSearch)} placeholder="Search the logs" width={200} aria-label="Search the logs" />
                     {sites && !projectId && (
-                        <Select value={site} onChange={reset(setSite)} aria-label="Filter by site" options={[{ value: "", label: "All sites" }, ...sites]} />
+                        <Select style={{ width: 180 }} value={site} onChange={reset(setSite)} aria-label="Filter by site" options={[{ value: "", label: "All sites" }, ...sites]} />
                     )}
                     {people && !userId && (
-                        <Select value={person} onChange={reset(setPerson)} aria-label="Filter by person" options={[{ value: "", label: "Everyone" }, ...people]} />
+                        <Select style={{ width: 170 }} value={person} onChange={reset(setPerson)} aria-label="Filter by person" options={[{ value: "", label: "Everyone" }, ...people]} />
                     )}
                     <DateInput className="input" style={{ width: 140 }} value={from} max={to || undefined} onChange={reset(setFrom)} placeholder="From" aria-label="From day" />
                     <DateInput className="input" style={{ width: 140 }} value={to} min={from || undefined} onChange={reset(setTo)} placeholder="To" aria-label="To day" />

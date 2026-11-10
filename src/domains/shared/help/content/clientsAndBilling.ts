@@ -187,6 +187,7 @@ export const billing: Article[] = [
                 "Labels are the company's own short list, kept in Settings by a super admin. The same labels file site expenses.",
                 "Pick one in **Account label** when you record a payment, Design or Execution. It is optional.",
                 "A label that has been archived can't be picked any more. A payment keeps the one it already has, shown as archived, and can be cleared.",
+                "A label nothing is filed under yet can be deleted in Settings; one already on a payment or an expense can only be archived, so nothing loses its label.",
                 "A label changes no amount, invoice, TVA or profit. On an Execution site it decides the row a payment counts in under **Rest in account by label**.",
             ),
             only(has(P.PAYMENT_RECORD, P.FINANCIAL_VIEW), steps(

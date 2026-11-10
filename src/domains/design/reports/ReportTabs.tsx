@@ -26,7 +26,7 @@ import { useReportEntries, type ReportScope, type WorkReport } from "./reportsAp
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
 
-export type Tile = { icon: string | null; tint: string | null };
+export type Tile = { icon: string | null; tint: string | null; photo?: number | null };
 export type ReportPerson = Person & { team?: string | null };
 
 export type TabProps = {
@@ -79,7 +79,7 @@ export function OverviewTab({ report, label, tiles, people }: TabProps) {
                     <RankBars showPct onClick={(it) => open(`projects/${it.id}`)?.()}
                         items={report.byProject.slice(0, 8).map((p) => ({
                             id: p.projectId, label: p.title, value: p.minutes,
-                            node: <><ProjectTile icon={tiles.get(p.projectId)?.icon} tint={tiles.get(p.projectId)?.tint} size="sm" /><span className="trunc">{p.title}</span></>,
+                            node: <><ProjectTile icon={tiles.get(p.projectId)?.icon} tint={tiles.get(p.projectId)?.tint} photo={tiles.get(p.projectId)?.photo} size="sm" /><span className="trunc">{p.title}</span></>,
                         }))} />
                 </Figure>
                 <Figure title="Hours by client" sub={`Where our capacity went · ${label}`}
@@ -107,7 +107,7 @@ export function OverviewTab({ report, label, tiles, people }: TabProps) {
                         <tbody>
                             {report.completedProjects.map((p) => (
                                 <tr key={p.projectId} className={cx(open(`projects/${p.projectId}`) && "click")} {...clickable(open(`projects/${p.projectId}`))}>
-                                    <td><div className="pname"><ProjectTile icon={tiles.get(p.projectId)?.icon} tint={tiles.get(p.projectId)?.tint} size="sm" /><b>{p.title}</b></div></td>
+                                    <td><div className="pname"><ProjectTile icon={tiles.get(p.projectId)?.icon} tint={tiles.get(p.projectId)?.tint} photo={tiles.get(p.projectId)?.photo} size="sm" /><b>{p.title}</b></div></td>
                                     <td className="muted nowrap">{fmtDateY(p.startDate)}</td>
                                     <td className="muted nowrap">{fmtDateY(p.completedOn)}</td>
                                     <td className="r num">{p.days}</td>
@@ -140,7 +140,7 @@ export function ProjectsTab({ report, label, tiles }: TabProps) {
                     <tbody>
                         {report.byProject.map((p) => (
                             <tr key={p.projectId} className={cx(open(`projects/${p.projectId}`) && "click")} {...clickable(open(`projects/${p.projectId}`))}>
-                                <td><div className="pname"><ProjectTile icon={tiles.get(p.projectId)?.icon} tint={tiles.get(p.projectId)?.tint} size="sm" /><b className="trunc">{p.title}</b></div></td>
+                                <td><div className="pname"><ProjectTile icon={tiles.get(p.projectId)?.icon} tint={tiles.get(p.projectId)?.tint} photo={tiles.get(p.projectId)?.photo} size="sm" /><b className="trunc">{p.title}</b></div></td>
                                 <td><StatusBadge status={p.status} /></td>
                                 <td className="r mono">{fmtH(p.minutes)}</td>
                                 <td className="r num">{p.entries}</td>

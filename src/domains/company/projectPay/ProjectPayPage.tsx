@@ -27,7 +27,7 @@ import { loadFailed } from "@/api/queryState";
 import HelpHint from "@/domains/shared/help/HelpHint";
 
 type Totals = { currency: string; total: number }[];
-type Tile = { icon: string | null; tint: string | null };
+type Tile = { icon: string | null; tint: string | null; photo?: number | null };
 
 const UNITS: { value: PayUnit; label: string }[] = [{ value: "week", label: "Week" }, { value: "month", label: "Month" }, { value: "quarter", label: "Quarter" }];
 const hrs = (m: number) => (m ? fmtH(m) : "-");
@@ -57,7 +57,7 @@ export default function ProjectPayPage() {
     const totals = byCurrency(r?.totals ?? []);
     const entries = groups.reduce((t, g) => t + entriesOf(g), 0);
     const hidden = r ? r.designProjects - groups.length : 0;
-    const tiles = new Map<number, Tile>(projects.map((p) => [p.id, { icon: p.icon, tint: p.tint }]));
+    const tiles = new Map<number, Tile>(projects.map((p) => [p.id, { icon: p.icon, tint: p.tint, photo: p.photoFileId }]));
 
     function changeUnit(next: PayUnit) {
         if (next === unit) return;
@@ -183,7 +183,7 @@ function ProjectPanel({ project: g, tile, canOpenProject }: { project: ProjectPa
     return (
         <div className="panel mt pp-project">
             <div className="panel-head pp-head">
-                <ProjectTile icon={tile?.icon} tint={tile?.tint} size="sm" />
+                <ProjectTile icon={tile?.icon} tint={tile?.tint} photo={tile?.photo} size="sm" />
                 <div className="grow" style={{ minWidth: 0 }}>
                     {canOpenProject
                         ? <button className="pp-title trunc" title={`Open ${g.title} in Design`} onClick={() => navigate(`/design/projects/${g.projectId}`)}>{g.title}</button>

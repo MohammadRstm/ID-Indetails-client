@@ -150,9 +150,9 @@ describe("the sheet", () => {
 
 describe("the account label cell", () => {
     const labels = [
-        { id: 1, name: "Concrete", position: 1, archived: false },
-        { id: 2, name: "Finishing", position: 2, archived: false },
-        { id: 4, name: "Old", position: 3, archived: true },
+        { id: 1, name: "Concrete", position: 1, archived: false, inUse: true },
+        { id: 2, name: "Finishing", position: 2, archived: false, inUse: false },
+        { id: 4, name: "Old", position: 3, archived: true, inUse: true },
     ];
 
     it("offers no label and the labels that can still be picked", () => {

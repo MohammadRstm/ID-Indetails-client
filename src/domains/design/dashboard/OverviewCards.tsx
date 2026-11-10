@@ -25,7 +25,7 @@ import type { Followup } from "./followups";
 import type { Overview } from "./overviewApi";
 import { clickable } from "@/shared/utils/clickable";
 
-export type ProjectInfo = { icon: string | null; tint: string | null; activity: number; targetDate: string | null };
+export type ProjectInfo = { icon: string | null; tint: string | null; photo?: number | null; activity: number; targetDate: string | null };
 
 /** Opens a page of the domain when the viewer may; otherwise leaves the row still. */
 function useOpener() {
@@ -35,7 +35,7 @@ function useOpener() {
     return (path: string) => (canOpen(permissions, domain, path) ? () => navigate(`/${domain}/${path}`) : undefined);
 }
 
-const Tile = ({ info }: { info: ProjectInfo | undefined }) => <ProjectTile icon={info?.icon} tint={info?.tint} size="sm" />;
+const Tile = ({ info }: { info: ProjectInfo | undefined }) => <ProjectTile icon={info?.icon} tint={info?.tint} photo={info?.photo} size="sm" />;
 const monthLabel = (m: string) => MONTHS[+m.slice(5, 7) - 1];
 
 /** "Hours logged per week": this period's weeks against the same weeks of the one before. */

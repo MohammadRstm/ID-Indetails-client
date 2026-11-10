@@ -9,18 +9,22 @@ import { money } from "@/shared/format/money";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import type { Project } from "../../shared/projects/projectsApi";
-import { POCKET_NOTE_MAX, useAskPocket, useContributeToPocket } from "./pocketApi";
+import { POCKET_NOTE_MAX, roundOffOf, useAskPocket, useContributeToPocket } from "./pocketApi";
 
 /** The site's profit, as the API checks it. */
 function profitOf(project: Project) {
     return project.money?.profit ?? 0;
 }
 
-/** Part of a site's money moved into the pocket money: less than its profit, so it stays above zero. */
-export function MoveToPocketModal({ project, onClose }: { project: Project; onClose: () => void }) {
+/**
+ * Part of a site's money moved into the pocket money: less than its profit, so it stays above zero. The round-off
+ * (what leaves the profit a whole thousand) is a click away, and already filled in when opened from its suggestion.
+ */
+export function MoveToPocketModal({ project, roundOff = false, onClose }: { project: Project; roundOff?: boolean; onClose: () => void }) {
     const move = useContributeToPocket();
     const profit = profitOf(project);
-    const [amount, setAmount] = useState(0);
+    const rounding = roundOffOf(profit);
+    const [amount, setAmount] = useState(roundOff ? rounding : 0);
     const [note, setNote] = useState("");
     const errors = useFormErrors();
     const amountError = amount <= 0 ? "Enter an amount."
@@ -53,6 +57,11 @@ export function MoveToPocketModal({ project, onClose }: { project: Project; onCl
                 <div className="hint">
                     The site's profit is {money.exact(profit)}. What you move lowers it; what the client owes doesn't change.
                 </div>
+                {rounding > 0 ? (
+                    <button type="button" className="btn btn-sm btn-quiet mt-s" onClick={() => setAmount(rounding)}>
+                        <Icon name="target" />Round it off: move {money.exact(rounding)}, leaving {money.exact(profit - rounding)}
+                    </button>
+                ) : roundOff && <div className="hint">The profit is already a whole thousand: there is nothing to round off.</div>}
                 <FieldError message={errors.show("amount", amountError)} />
             </div>
             <div className="field mt">

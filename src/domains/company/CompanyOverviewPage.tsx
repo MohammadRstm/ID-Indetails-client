@@ -209,7 +209,7 @@ function Figures({ tabs }: { tabs: ReactNode }) {
                 </div>
                 <div className="page-actions">
                     <BoardButton editing={editing} onToggle={() => setEditing((e) => !e)} />
-                    <button className="btn" onClick={() => navigate("/company")}><Icon name="grid" />All areas</button>
+                    <button className="btn" onClick={() => navigate("/company")}><Icon name="home" />Home</button>
                 </div>
             </div>
 

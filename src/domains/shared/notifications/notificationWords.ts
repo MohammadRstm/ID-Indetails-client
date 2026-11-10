@@ -228,6 +228,13 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 sub: note.actor ? `Asked by ${who} · approve or deny it` : "Raised by the system · approve or deny it",
                 icon: "card", route: "/execution/pocket",
             };
+        case "pocket_round_off":
+            // no amount in a notification: the form works the round-off out from the profit when it opens
+            return {
+                text: `${title}'s profit can be rounded off`,
+                sub: "Move what's over its last whole thousand into the pocket money",
+                icon: "card", route: project ? `${project}?money=to-pocket&round=1` : "/execution/pocket",
+            };
         case "client_added":
             return { text: `${s(p.organisation) || s(p.name) || "A client"} added as a client`, sub: by, icon: "briefcase", clientId: note.subjectId ?? undefined };
 

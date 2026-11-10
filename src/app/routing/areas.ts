@@ -18,7 +18,7 @@ export function areasOf(permissions: Permissions): Area[] {
     return areas;
 }
 
-/** More than one area: they start on the launcher and have "All areas" in the sidebar. */
+/** More than one area: they start on the launcher and have "Home" at the bottom of the sidebar. */
 export function hasSeveralAreas(permissions: Permissions): boolean {
     return areasOf(permissions).length > 1;
 }

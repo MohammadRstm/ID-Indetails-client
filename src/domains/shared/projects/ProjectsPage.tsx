@@ -136,7 +136,7 @@ function ProjectTable({ section }: { section: boolean }) {
             key: "project", header: "Project", width: "22%",
             cell: (p) => (
                 <div className="pname">
-                    <ProjectTile icon={p.icon} tint={p.tint} />
+                    <ProjectTile icon={p.icon} tint={p.tint} photo={p.photoFileId} />
                     <div style={{ minWidth: 0 }}>
                         <div className="row" style={{ gap: 6 }}>
                             <span className="trunc" style={{ fontWeight: 650, fontSize: 13 }}>{p.title}</span>
