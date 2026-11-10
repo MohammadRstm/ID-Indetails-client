@@ -17,6 +17,12 @@ export const keys = {
         insights: (id: number) => ["projects", "detail", id, "insights"] as const,
         scenario: (id: number, levers: object) => ["projects", "detail", id, "insights", "scenario", levers] as const,
     },
+    /** The Execution client sites a BOQ author writes drafts for. */
+    boqSites: {
+        all: ["boq-sites"] as const,
+        list: () => ["boq-sites", "list"] as const,
+        detail: (id: number) => ["boq-sites", "detail", id] as const,
+    },
     requirements: {
         all: ["requirements"] as const,
         project: (projectId: number) => ["requirements", projectId] as const,

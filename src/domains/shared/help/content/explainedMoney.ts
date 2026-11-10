@@ -248,7 +248,7 @@ export const explainedMoney: Article[] = [
         ask: ["boq", "bill of quantities", "bills of quantities", "vo", "variation order", "variation", "client boq", "internal draft", "agreed boq", "work price"],
         blocks: [
             list(
-                "**Internal draft**: a working BOQ one person writes. Its author sees only their own; whoever manages the site's pricing sees every one. It is never sent.",
+                "**Internal draft**: a working BOQ one person writes. It is private to its author until they submit it; then the site's pricing managers and its owner see it and may change it. It is never sent.",
                 "**Client BOQ** (BQ-2026-001): the one sent to the client, built by a super admin, often from the drafts. It stays a draft until it is agreed, and only one can be agreed on a site.",
                 "**VO** (VO-2026-001): a variation order, with the reason for it. It changes the price after the client BOQ is agreed, and can lower it with a negative rate.",
             ),
@@ -269,7 +269,7 @@ export const explainedMoney: Article[] = [
             list(
                 "A rate is how many LBP one US dollar buys, from a date. The rate for a day is the latest one dated on or before it.",
                 "**Payments**: the rate entered with them (or the day's rate).",
-                "**Costs** (expenses, site expenses): the rate of their day.",
+                "**Costs** (expenses, site expenses): the rate of their day. An LBP expense can't be recorded for a day before the first LBP rate; the daily rate added each morning keeps that from happening.",
                 "**Invoices**: the rate of their issue day; they're always in USD.",
                 "**Company expenses**, **fixed salaries**, **paid leave** and the **overtime premium**: the rate on the 1st of the month.",
                 "An amount with no rate for its day is listed apart as unconverted, never counted as 0.",

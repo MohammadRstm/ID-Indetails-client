@@ -14,9 +14,8 @@ import { cx } from "@/shared/utils/cx";
 import { isEmail } from "@/shared/utils/email";
 import { channelsOf, waLink } from "../../shared/billing/channels";
 import { useClient } from "../../shared/clients/clientsApi";
-import type { Project } from "../../shared/projects/projectsApi";
 import { boqErrorMessage, boqTotal } from "./boqRules";
-import { BOQ_NOTE_MAX, downloadBoqPdf, useEmailBoq, useRecordBoqDelivery, type Boq } from "./boqsApi";
+import { BOQ_NOTE_MAX, downloadBoqPdf, useEmailBoq, useRecordBoqDelivery, type Boq, type BoqSite } from "./boqsApi";
 
 type Way = "email" | "whatsapp" | "download";
 
@@ -25,7 +24,7 @@ type Way = "email" | "whatsapp" | "download";
  * with it ready, and the send is recorded), or the PDF downloaded to send some other way (recorded too). It can be
  * sent as often as needed, and a send that fails records nothing.
  */
-export default function SendBoqModal({ project, boq, onClose }: { project: Project; boq: Boq; onClose: () => void }) {
+export default function SendBoqModal({ project, boq, onClose }: { project: BoqSite; boq: Boq; onClose: () => void }) {
     const company = useCompanySettings().data;
     const client = useClient(project.client?.id).data;
     const email = useEmailBoq(project.id);

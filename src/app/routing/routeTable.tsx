@@ -5,6 +5,8 @@ import type { Domain, Permissions } from "@/app/permissions/permissions";
 import type { IconName } from "@/shared/icons/icons";
 import {
     ActivityPage,
+    BoqSitePage,
+    BoqSitesPage,
     ClientPage,
     ClientsPage,
     CompanyExpensesPage,
@@ -91,6 +93,8 @@ const all = (...codes: Parameters<Permissions["hasAll"]>): AccessRule => ({ p })
 const any = (...codes: Parameters<Permissions["hasAny"]>): AccessRule => ({ p }) => p.hasAny(...codes);
 const designOnly = (rule: AccessRule): AccessRule => (ctx) => ctx.domain === "design" && rule(ctx);
 const executionOnly = (rule: AccessRule): AccessRule => (ctx) => ctx.domain === "execution" && rule(ctx);
+/** Writes BOQ drafts but doesn't manage pricing: whoever manages it uses the site's own page. */
+const boqAuthor: AccessRule = ({ p }) => p.has(P.BOQ_CREATE) && !p.has(P.PROJECT_PRICING_MANAGE);
 
 /** Anything a settings page lets someone manage. */
 const SETTINGS_CODES = [
@@ -190,6 +194,17 @@ export const domainRoutes: DomainRoute[] = [
         path: "time-off",
         nav: { label: "Time off", icon: "sun" },
         employee: { element: <TimeOffPage />, access: designOnly(all(P.TIME_OFF_REQUEST)) },
+    },
+    {
+        // the active Execution client sites an author writes BOQ drafts for, in either business: only their own drafts show
+        path: "boq-sites",
+        nav: { label: "BOQs", icon: "file" },
+        admin: { element: <BoqSitesPage />, access: boqAuthor },
+    },
+    {
+        path: "boq-sites/:id",
+        navKey: "boq-sites",
+        admin: { element: <BoqSitePage />, access: boqAuthor },
     },
     {
         path: "activity",

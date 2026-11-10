@@ -7,12 +7,11 @@ import { money } from "@/shared/format/money";
 import { fmtDate } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { clickable } from "@/shared/utils/clickable";
-import type { Project } from "../../shared/projects/projectsApi";
 import { pctOf } from "../projects/siteMoney";
 import { useBoqAccess } from "./boqAccess";
 import { useBoqLinks } from "./boqLinks";
 import { agreedClient, boqTotal, isNotChosen, SENT } from "./boqRules";
-import { useBoqs, type BoqKind, type BoqList, type BoqSummary } from "./boqsApi";
+import { useBoqs, type BoqKind, type BoqList, type BoqSummary, type BoqSite } from "./boqsApi";
 import NewBoqModal from "./NewBoqModal";
 
 const cents = (n: number) => money.exact(n, "USD", { cents: true });
@@ -20,10 +19,11 @@ const cents = (n: number) => money.exact(n, "USD", { cents: true });
 /**
  * A client site's bills of quantities, on its own BOQs tab: the price they add up to, the client BOQs (once one is
  * agreed the others read "Not chosen"), the VOs that change it afterwards, and the internal drafts the client BOQ is
- * built from. Each person sees what their permissions give: their own drafts (everyone's for whoever manages the
- * site's pricing), and the client's BOQs, VOs and price for whoever sees money.
+ * built from. Each person sees what their permissions give: their own drafts, private or submitted (and, for whoever
+ * manages the site's pricing or owns the site, the drafts engineers submitted), and the client's BOQs, VOs and price for
+ * whoever sees money.
  */
-export default function BoqPanel({ project }: { project: Project }) {
+export default function BoqPanel({ project }: { project: BoqSite }) {
     const access = useBoqAccess(project);
     const links = useBoqLinks();
     const query = useBoqs(project.id, access.seesBoqs);
@@ -31,7 +31,8 @@ export default function BoqPanel({ project }: { project: Project }) {
     if (!access.seesBoqs) return null;
     const list = query.data;
     const chosen = agreedClient(list);
-    const showDrafts = access.writesDrafts || access.manages;
+    const reviews = access.manages || access.isOwner;
+    const showDrafts = access.writesDrafts || reviews;
 
     return (
         <section className="panel mt" aria-label="Bills of quantities">
@@ -61,8 +62,8 @@ export default function BoqPanel({ project }: { project: Project }) {
                                 </>
                             )}
                             {showDrafts && (
-                                <Section title={access.manages ? "Internal drafts" : "My drafts"} boqs={list.internal} list={list} onOpen={links.open}
-                                    showAuthor={access.manages} empty="No drafts yet." />
+                                <Section title={reviews ? "Internal drafts" : "My drafts"} boqs={list.internal} list={list} onOpen={links.open}
+                                    showAuthor={reviews} empty={reviews ? "No drafts submitted yet." : "No drafts yet."} />
                             )}
                         </>
                     )}
@@ -104,6 +105,9 @@ function Section({ title, boqs, list, onOpen, empty, showAuthor }: {
     );
 }
 
+/** An internal draft's place: private to its author, submitted to the site, or changed by others since. */
+const draftState = (boq: BoqSummary) => (boq.submittedAt == null ? "Private" : boq.changed ? "Changed" : "Submitted");
+
 function Row({ boq, list, showAuthor, onOpen }: { boq: BoqSummary; list: BoqList; showAuthor?: boolean; onOpen: () => void }) {
     const notChosen = isNotChosen(boq, list);
     const sent = boq.lastDelivery ? `${SENT[boq.lastDelivery.channel]} ${fmtDate(boq.lastDelivery.sentAt)}` : null;
@@ -123,7 +127,7 @@ function Row({ boq, list, showAuthor, onOpen }: { boq: BoqSummary; list: BoqList
                 <div className="muted trunc" style={{ fontSize: "11.5px" }}>{detail.join(" · ")}</div>
             </div>
             {boq.status === "agreed" ? <span className="badge badge-active"><Icon name="checkCircle" />Agreed</span>
-                : <span className="badge">{notChosen ? "Not chosen" : "Draft"}</span>}
+                : <span className="badge">{boq.kind === "internal" ? draftState(boq) : notChosen ? "Not chosen" : "Draft"}</span>}
             <span className="mono boq-row-total">{cents(boqTotal(boq))}</span>
         </div>
     );

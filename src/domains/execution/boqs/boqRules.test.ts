@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "@/api/errors";
 import { boqs, summaryOf } from "@/test/fixtures/boqs";
-import { agreeBlock, agreedClient, boqErrorMessage, copyableBoqs, emptyBlock, isNotChosen, sourceLabel, withdrawBlock } from "./boqRules";
+import { agreeBlock, agreedClient, boqErrorMessage, changesByLine, changeValue, copyableBoqs, emptyBlock, isNotChosen, removedLines, sourceLabel, withdrawBlock } from "./boqRules";
 
 const [agreed, draft] = boqs.list.client;
 const [fence] = boqs.list.vos;
@@ -18,6 +18,9 @@ describe("the API's refusals about BOQs", () => {
         expect(refusal("boq_empty")).toBe("This BOQ has no lines. Add some and save before sending or agreeing it.");
         expect(refusal("boq_internal")).toBe("An internal draft is never sent or agreed. Make a client BOQ from it instead.");
         expect(refusal("boq_negative_rate")).toBe("Only a VO can have a negative rate.");
+        expect(refusal("boq_already_submitted")).toBe("This draft is already submitted. Reload it to see where it stands.");
+        expect(refusal("boq_not_submitted")).toBe("This draft isn't submitted, so there is nothing to withdraw or keep.");
+        expect(refusal("boq_not_internal")).toBe("Only an internal draft is submitted to its site.");
         expect(refusal("boq_execution_only")).toBe("BOQs belong to Execution sites that have a client.");
         expect(boqErrorMessage(new ApiError(503, { code: "email_delivery_failed", message: "Mail is down." })))
             .toBe("The email couldn't be sent, so nothing was recorded as sent. Try again, or download the PDF and send it yourself.");
@@ -68,5 +71,32 @@ describe("what can be done with a BOQ, from the site's list", () => {
         expect(sourceLabel(agreed)).toBe("BQ-2026-001 · Lobby works · Client BOQ, 3 lines");
         expect(sourceLabel(fence)).toBe("VO-2026-001 · Fence · VO, 1 line");
         expect(sourceLabel(summaryOf(boqs.draftMine))).toBe("Karim's quantities · Internal draft, 3 lines");
+    });
+});
+
+describe("what others changed in a submitted draft", () => {
+    const changes = [
+        { kind: "changed", lineId: 401, description: "Demolition", fields: [{ field: "wasteRate", before: "0.05", after: "0.1" }] },
+        { kind: "added", lineId: 403, description: "Painting", fields: [] },
+        { kind: "removed", lineId: null, description: "Tiles", fields: [] },
+    ];
+
+    it("is told by the API's values, formatted only for reading", () => {
+        expect(changeValue("wasteRate", "0.05")).toBe("5%");
+        expect(changeValue("wasteRate", "0.125")).toBe("12.5%");
+        expect(changeValue("quantity", "1200.5")).toBe("1,200.5");
+        expect(changeValue("rate", "22.5")).toBe("22.5");
+        expect(changeValue("unit", "m²")).toBe("m²");
+        expect(changeValue("code", null)).toBe("none");
+        expect(changeValue("description", "")).toBe("none");
+    });
+
+    it("is found by the line it is now, with the removed ones apart", () => {
+        const byLine = changesByLine(changes);
+        expect([...byLine.keys()]).toEqual([401, 403]);
+        expect(byLine.get(401)?.kind).toBe("changed");
+        expect(removedLines(changes).map((c) => c.description)).toEqual(["Tiles"]);
+        expect(changesByLine(null).size).toBe(0);
+        expect(removedLines(undefined)).toEqual([]);
     });
 });

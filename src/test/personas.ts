@@ -17,7 +17,7 @@ const COMPANY_ONLY: PermissionCode[] = [
 /** The website's own: its staff hold them, and anyone else only when granted (which opens the Website area). */
 const WEBSITE: PermissionCode[] = [P.WEBSITE_VIEW, P.WEBSITE_MANAGE, P.WEBSITE_ANALYTICS_VIEW];
 const EXECUTION_ONLY: PermissionCode[] = [
-    P.PROJECT_PRICING_MANAGE, P.BOQ_CREATE, P.MATERIAL_CREATE, P.MATERIAL_MANAGE,
+    P.PROJECT_PRICING_MANAGE, P.MATERIAL_CREATE, P.MATERIAL_MANAGE,
     P.LABOUR_REPORT_CREATE, P.LABOUR_REPORT_MANAGE, P.SITE_LOG_CREATE, P.SITE_LOG_VIEW_ALL,
 ];
 /** Money, hiring and writing to everyone in Announcements: super admins only, unless granted. */

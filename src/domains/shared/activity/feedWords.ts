@@ -47,6 +47,8 @@ const excused = (p: Payload) => {
 /** The days of a time-off event: " from Oct 12 to Oct 16". */
 const offDays = (p: Payload) => (str(p.firstDay) && str(p.lastDay) ? ` from ${fmtDate(str(p.firstDay)!)} to ${fmtDate(str(p.lastDay)!)}` : "");
 const withPay = (p: Payload) => (p.isPaid === true ? " with pay" : p.isPaid === false ? " without pay" : "");
+/** An engineer's internal draft by its title. */
+const draftOf = (p: Payload) => (str(p.title) ? `the draft "${str(p.title)}"` : "a BOQ draft");
 /** A BOQ or VO by its number (BQ-2026-001), or by its kind when the event carries none. */
 const boq = (p: Payload) => str(p.number) ?? (p.kind === "vo" ? "a VO" : "a client BOQ");
 /** What a payment's account label changed from and to, as the event carries them (names, or null for none). */
@@ -203,6 +205,9 @@ const WORDS: Record<string, Words> = {
         text: (e, p) => `removed ${e.amount == null ? "a record of" : `${money.fmt(e.amount)} of`} supervision taken${takenOn(p)} from ${project(e)}`,
     },
     boq_created: { icon: "file", text: (e, p) => `drafted ${boq(p)} for ${project(e)}${dash(e.amount)}` },
+    boq_submitted: { icon: "send", text: (e, p) => `submitted ${draftOf(p)} to ${project(e)}` },
+    boq_submission_withdrawn: { icon: "x", text: (e, p) => `withdrew ${draftOf(p)} from ${project(e)}` },
+    boq_changes_kept: { icon: "checkCircle", text: (e, p) => `kept the changes made to ${draftOf(p)} on ${project(e)}` },
     boq_sent: {
         icon: "send",
         text: (e, p) => `sent ${boq(p)} to ${client(e)}${p.channel === "whatsapp" ? " on WhatsApp" : p.channel === "email" ? " by email" : ""}`,
@@ -210,7 +215,14 @@ const WORDS: Record<string, Words> = {
     boq_agreed: { icon: "checkCircle", text: (e, p) => `agreed ${boq(p)} on ${project(e)}${dash(e.amount)}` },
     boq_agreement_withdrawn: { icon: "x", text: (e, p) => `withdrew the agreement of ${boq(p)} on ${project(e)}${str(p.reason) ? ` - ${str(p.reason)}` : ""}` },
     billing_settings_updated: { icon: "settings", text: () => "updated the billing settings" },
-    exchange_rate_set: { icon: "card", text: (e, p) => `set the ${str(p.currency) ?? "exchange"} rate${e.amount == null ? "" : ` to ${e.amount.toLocaleString("en-US")} per USD`}` },
+    // the daily feed's rate has no actor, so it says on its own what happened
+    exchange_rate_set: {
+        icon: "card",
+        text: (e, p) => {
+            const rate = e.amount == null ? "" : ` to ${e.amount.toLocaleString("en-US")} per USD`;
+            return p.automatic === true ? `The ${str(p.currency) ?? "exchange"} rate was set automatically${rate}` : `set the ${str(p.currency) ?? "exchange"} rate${rate}`;
+        },
+    },
 
     // people
     employee_updated: { icon: "edit", text: (e, _p, names) => (e.subjectId === e.actor?.id ? "updated their profile" : `updated ${subject(e, names)}'s profile`) },

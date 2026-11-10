@@ -103,6 +103,11 @@ describe("what the activity feed says", () => {
         expect(boq("boq_agreement_withdrawn", { kind: "client", number: "BQ-2026-001", reason: "The client changed the scope" }))
             .toBe("withdrew the agreement of BQ-2026-001 on Achrafieh Towers lobby - The client changed the scope");
         expect(boq("boq_agreement_withdrawn", { kind: "vo", number: "VO-2026-001" })).toBe("withdrew the agreement of VO-2026-001 on Achrafieh Towers lobby");
+        // an engineer's internal draft is named by its title
+        expect(boq("boq_submitted", { title: "Lobby quantities", lines: 12 })).toBe('submitted the draft "Lobby quantities" to Achrafieh Towers lobby');
+        expect(boq("boq_submitted", null)).toBe("submitted a BOQ draft to Achrafieh Towers lobby");
+        expect(boq("boq_submission_withdrawn", { title: "Lobby quantities" })).toBe('withdrew the draft "Lobby quantities" from Achrafieh Towers lobby');
+        expect(boq("boq_changes_kept", { title: "Lobby quantities" })).toBe('kept the changes made to the draft "Lobby quantities" on Achrafieh Towers lobby');
     });
 
     it("words a site expense in its own currency, dollars when the event carries none", () => {
@@ -147,6 +152,15 @@ describe("what the activity feed says", () => {
         expect(published({ added: 0, updated: 3, removed: 0 }).text).toBe("published the client portal of Beit Misk show apartment (3 updated)");
         expect(published({ added: 0, updated: 0, removed: 0 }).text).toBe("published the client portal of Beit Misk show apartment");
         expect(published(null).text).toBe("published the client portal of Beit Misk show apartment");
+    });
+
+    it("words an exchange rate set by someone, and one the daily feed added with nobody behind it", () => {
+        const rate = (extra: Partial<FeedEvent>) => say(event("exchange_rate_set", { group: "billing", project: null, client: null, subjectType: "exchange_rate", subjectId: 7, ...extra }));
+        expect(rate({ amount: 89500, payload: { currency: "LBP", effectiveFrom: "2026-09-30" } })).toBe("set the LBP rate to 89,500 per USD");
+        expect(rate({ payload: { currency: "LBP", effectiveFrom: "2026-09-30" } })).toBe("set the LBP rate");
+        const fed = { actor: null, payload: { currency: "LBP", effectiveFrom: "2026-09-30", automatic: true, source: "exchangerate-api" } };
+        expect(rate({ ...fed, amount: 89700 })).toBe("The LBP rate was set automatically to 89,700 per USD");
+        expect(rate(fed)).toBe("The LBP rate was set automatically");
     });
 
     it("says something for a kind it doesn't know", () => {

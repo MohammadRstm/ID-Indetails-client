@@ -68,5 +68,5 @@ export const SITE_COLORS = { received: "var(--heat-3)", siteExpenses: "var(--hea
 export const pctOf = (ratio: number) => `${Math.round(ratio * 1000) / 10}%`;
 
 /** Open for site records (expenses and labour): not closed, and not finalised, as the API's SiteRules has it. */
-export const isSiteOpen = (project: Project) =>
+export const isSiteOpen = (project: Pick<Project, "status"> & Partial<Pick<Project, "finalizedAt" | "money">>) =>
     project.status !== "completed" && project.status !== "archived" && !project.finalizedAt && !project.money?.isLocked;

@@ -365,12 +365,17 @@ function LbpRate() {
             description={
                 <>
                     A payment can be received in LBP and converted at the rate of its day. Both amounts are kept, and payments already recorded keep their rate.
-                    {earlier.length > 0 && <span className="muted"> Before: {earlier.map((r) => `${fmtNumber(r.ratePerUsd)} from ${fmtDateY(r.effectiveFrom)}`).join(" · ")}.</span>}
+                    {earlier.length > 0 && <span className="muted"> Before: {earlier.map((r) => `${fmtNumber(r.ratePerUsd)} from ${fmtDateY(r.effectiveFrom)}${r.automatic ? " (added automatically)" : ""}`).join(" · ")}.</span>}
                     {add.error != null && <span className="err"> {errorMessage(add.error)}</span>}
                     {editing && !editing.rate && <span className="err"> Enter how many LBP make a dollar.</span>}
                     {editing && editing.rate !== "" && editing.rate > 0 && !dayOk(editing.from) && (
                         <span className="err"> {firstDay ? `Pick a day from ${fmtDateY(firstDay)} to today.` : "Pick a day up to today."}</span>
                     )}
+                    {/* the feed's terms ask for the credit wherever its rates are shown */}
+                    <span className="hint mt-s" style={{ display: "block" }}>
+                        The LBP rate is added automatically each morning. A rate more than 10% away from the last one isn't added, and needs entering by hand.{" "}
+                        <a className="link" href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Rates By Exchange Rate API</a>
+                    </span>
                 </>
             }
             control={editing ? (
@@ -386,6 +391,7 @@ function LbpRate() {
             ) : (
                 <div className="row" style={{ gap: 8 }}>
                     <span className="badge cur-chip">{current ? `LBP · ${fmtNumber(current.ratePerUsd)}/$` : "No rate yet"}</span>
+                    {current?.automatic && <span className="badge">Added automatically</span>}
                     {canSet && (firstDay && firstDay > today
                         ? <span className="muted" style={{ fontSize: 12 }}>Set today · the next change can apply from tomorrow</span>
                         : <button className="btn btn-sm" onClick={() => setEditing({ rate: current?.ratePerUsd ?? "", from: today })}>Change</button>)}
