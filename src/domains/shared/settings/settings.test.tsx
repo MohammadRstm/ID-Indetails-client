@@ -301,6 +301,34 @@ describe("invoicing settings", () => {
         expect(within(row).queryByRole("button", { name: "Change" })).not.toBeInTheDocument();
     });
 
+    it("mark the rates the daily feed added, and credit the feed", async () => {
+        const rates = [
+            { ...billing.rates[0], id: 3, ratePerUsd: 89700, effectiveFrom: "2026-09-29", automatic: true },
+            { ...billing.rates[0], id: 2, ratePerUsd: 89600, effectiveFrom: "2026-09-28", automatic: true },
+            { ...billing.rates[0], id: 1, ratePerUsd: 89500, effectiveFrom: "2026-09-01", automatic: false },
+        ];
+        renderApp(page("finance"), rana, http.get("/api/exchange-rates", () => HttpResponse.json(rates)), ...settingsHandlers);
+        const row = (await screen.findByText("Payments in another currency")).closest(".switch-row") as HTMLElement;
+        expect(await within(row).findByText("LBP · 89,700/$")).toBeInTheDocument();
+        expect(within(row).getByText("Added automatically")).toHaveClass("badge");
+        // the earlier ones: the feed's marked, the one entered by hand not
+        const before = within(row).getByText(/^Before:/);
+        expect(before).toHaveTextContent("89,600 from Sep 28, 2026 (added automatically) · 89,500 from Sep 1, 2026.");
+        expect(within(row).getByText(/The LBP rate is added automatically each morning\./)).toBeInTheDocument();
+        const credit = within(row).getByRole("link", { name: "Rates By Exchange Rate API" });
+        expect(credit).toHaveAttribute("href", "https://www.exchangerate-api.com");
+        expect(credit).toHaveAttribute("target", "_blank");
+        expect(credit).toHaveAttribute("rel", "noopener noreferrer");
+    });
+
+    it("leave a rate entered by hand unmarked", async () => {
+        renderApp(page("finance"), rana, ...settingsHandlers);
+        const row = (await screen.findByText("Payments in another currency")).closest(".switch-row") as HTMLElement;
+        expect(await within(row).findByText(/LBP · /)).toBeInTheDocument();
+        expect(within(row).queryByText("Added automatically")).not.toBeInTheDocument();
+        expect(within(row).getByRole("link", { name: "Rates By Exchange Rate API" })).toBeInTheDocument();
+    });
+
     it("leave the LBP rate fixed for an admin", async () => {
         renderApp(page("finance"), moneyNadia, ...settingsHandlers);
         const row = (await screen.findByText("Payments in another currency")).closest(".switch-row") as HTMLElement;

@@ -89,6 +89,7 @@ export const company: Article[] = [
             steps(step("Open **Settings → Finance**, find the exchange rate, choose **Change**, and enter the rate and the day it applies from.", "Settings", "Finance")),
             list(
                 "A rate is never edited: a new one applies from its day, and earlier days keep theirs.",
+                "The LBP rate is added automatically each morning. A rate more than 10% away from the last one isn't added, so enter that one here by hand.",
                 "Each amount is converted at the rate in force on its own day.",
                 "An amount with no rate for its day isn't counted as 0: it's listed apart as unconverted until a rate covers it.",
             ),
