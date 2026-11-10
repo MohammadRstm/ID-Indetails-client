@@ -7,9 +7,8 @@ import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
-import type { Project } from "../../shared/projects/projectsApi";
 import { boqErrorMessage, copyableBoqs, sourceLabel } from "./boqRules";
-import { BOQ_REASON_MAX, BOQ_TITLE_MAX, useCreateBoq, type BoqKind, type BoqList } from "./boqsApi";
+import { BOQ_REASON_MAX, BOQ_TITLE_MAX, useCreateBoq, type BoqKind, type BoqList, type BoqSite } from "./boqsApi";
 
 const HEADINGS: Record<BoqKind, string> = { internal: "New draft", client: "New client BOQ", vo: "New VO" };
 const DEFAULT_TITLES: Record<BoqKind, string> = { internal: "Internal draft", client: "Client BOQ", vo: "Variation order" };
@@ -19,7 +18,7 @@ const DEFAULT_TITLES: Record<BoqKind, string> = { internal: "Internal draft", cl
  * BOQ). The title is optional; a VO says why it is needed. The editor opens on it once it is made.
  */
 export default function NewBoqModal({ project, kind, list, onClose, onCreated }: {
-    project: Project; kind: BoqKind; list: BoqList | undefined; onClose: () => void; onCreated: (id: number) => void;
+    project: BoqSite; kind: BoqKind; list: BoqList | undefined; onClose: () => void; onCreated: (id: number) => void;
 }) {
     const create = useCreateBoq(project.id);
     const [title, setTitle] = useState("");

@@ -7,10 +7,9 @@ import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
-import type { Project } from "../../shared/projects/projectsApi";
 import BoqFailure from "./BoqFailure";
 import { boqTotal } from "./boqRules";
-import { BOQ_REASON_MAX, useAgreeBoq, useWithdrawBoqAgreement, type Boq } from "./boqsApi";
+import { BOQ_REASON_MAX, useAgreeBoq, useWithdrawBoqAgreement, type Boq, type BoqSite } from "./boqsApi";
 
 const cents = (n: number) => money.exact(n, "USD", { cents: true });
 const nameOf = (boq: Boq) => boq.number ?? boq.title;
@@ -19,7 +18,7 @@ const nameOf = (boq: Boq) => boq.number ?? boq.title;
  * "Agree BQ-2026-001?": the confirmation names the BOQ and its total. Agreeing locks it and makes its total part
  * of the site's work price; the figures are the API's, from the BOQ as last saved. The profit floor can refuse it.
  */
-export function AgreeBoqModal({ project, boq, onClose }: { project: Project; boq: Boq; onClose: () => void }) {
+export function AgreeBoqModal({ project, boq, onClose }: { project: BoqSite; boq: Boq; onClose: () => void }) {
     const agree = useAgreeBoq(project.id);
     const vo = boq.kind === "vo";
 
@@ -55,7 +54,7 @@ export function AgreeBoqModal({ project, boq, onClose }: { project: Project; boq
 }
 
 /** Withdraws an agreement, with why: the BOQ is a draft again and its total leaves the work price. The profit floor can refuse it. */
-export function WithdrawBoqModal({ project, boq, onClose }: { project: Project; boq: Boq; onClose: () => void }) {
+export function WithdrawBoqModal({ project, boq, onClose }: { project: BoqSite; boq: Boq; onClose: () => void }) {
     const withdraw = useWithdrawBoqAgreement(project.id);
     const [reason, setReason] = useState("");
     const errors = useFormErrors();

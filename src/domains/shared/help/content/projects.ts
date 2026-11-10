@@ -1,5 +1,5 @@
 import { P } from "@/app/permissions/codes";
-import { and, has, hasAny, link, links, list, not, note, only, para, sees, step, steps, type Article } from "../helpModel";
+import { and, has, link, links, list, not, note, only, or, para, sees, step, steps, type Article } from "../helpModel";
 
 export const projects: Article[] = [
     {
@@ -291,8 +291,8 @@ export const projects: Article[] = [
         id: "write-boq",
         title: "Writing a BOQ",
         category: "projects",
-        who: and(sees("execution"), hasAny(P.BOQ_CREATE, P.PROJECT_PRICING_MANAGE)),
-        summary: "On the site's Financials tab, Bills of quantities lists the drafts, the client BOQ and the VOs. Open one to write its lines, then save.",
+        who: or(has(P.BOQ_CREATE), and(sees("execution"), has(P.PROJECT_PRICING_MANAGE))),
+        summary: "On the site's Financials tab (or on your BOQs page), Bills of quantities lists the drafts, the client BOQ and the VOs. Open one to write its lines, then save.",
         ask: ["write boq", "new boq", "boq lines", "internal draft", "draft boq", "boq waste", "boq adjustment", "copy lines", "duplicate boq", "bill of quantities"],
         blocks: [
             steps(
@@ -302,7 +302,7 @@ export const projects: Article[] = [
                 step("**Save**. The server works out each line's final quantity and total, and the BOQ's total."),
             ),
             list(
-                "**My drafts** are yours alone. Whoever manages the site's pricing sees everyone's, with their authors.",
+                "**My drafts** are yours alone until you submit them. Whoever manages the site's pricing, and the site's owner, see the drafts that were submitted, with their authors.",
                 "**Copy lines** takes some or all of the lines of another BOQ you can see; **Duplicate** makes a copy of a whole one.",
                 "A negative rate is only allowed on a VO, where it lowers the price.",
                 "The whole BOQ can be adjusted: by a percentage (-5 for 5% off), or to a new total.",
@@ -310,7 +310,31 @@ export const projects: Article[] = [
             only(has(P.PROJECT_PRICING_MANAGE), para("**New client BOQ** starts the BOQ the client will receive, empty or copied from a draft. **New VO** appears once a client BOQ is agreed, and asks for the reason.")),
             note("An agreed BOQ can't be changed or deleted. Withdraw its agreement first."),
         ],
-        related: ["boqs", "agree-boq"],
+        related: ["boqs", "submit-boq", "agree-boq"],
+    },
+    {
+        id: "submit-boq",
+        title: "Submitting a BOQ draft to a site",
+        category: "projects",
+        who: or(has(P.BOQ_CREATE), and(sees("execution"), has(P.PROJECT_PRICING_MANAGE))),
+        summary: "A draft is private until you submit it. Submitted, the site's pricing managers and owner see it and may change it; you can withdraw it any time.",
+        ask: ["submit boq", "submit draft", "withdraw draft", "withdraw boq draft", "keep changes", "boq changed", "private draft", "boqs page", "boq sites", "who sees my draft"],
+        blocks: [
+            only(has(P.BOQ_CREATE), steps(
+                step("Open **BOQs** in the sidebar and choose the site. You see its name and location, and only your own drafts."),
+                step("Choose **New draft**, write its lines and **Save**."),
+                step("When it is ready, choose **Submit** and confirm. The site's pricing managers and its owner are told."),
+            )),
+            list(
+                "A private draft is yours alone. You can change it, and you are the only one who can delete it.",
+                "Once submitted, the site's pricing managers and owner read it and may change it. You can read it but not change it.",
+                "**Withdraw** takes it back: it is private again, and you can change it and submit it again.",
+                "When someone changes your submitted draft you are told. Open it to see what changed: **Changed since you submitted it** shows each changed value (the old one struck through), the lines added, and the lines removed. **Keep the changes** accepts them; later changes are compared with that version. Or **Withdraw** it.",
+            ),
+            only(has(P.PROJECT_PRICING_MANAGE), para("You see only the drafts that were submitted. The site's owner sees them too, and both of you may change one: its author is told when you do.")),
+            note("Only active Execution sites with a client take BOQs. Your BOQs page lists those, in either business, and shows nothing else of the site."),
+        ],
+        related: ["write-boq", "boqs"],
     },
     {
         id: "agree-boq",

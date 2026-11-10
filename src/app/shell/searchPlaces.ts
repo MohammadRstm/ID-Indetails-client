@@ -223,6 +223,13 @@ export const PLACES: Place[] = [
         targets: (ctx) => inBusinesses(ctx, "projects", "execution").map((t) => ({ ...t, sub: "on each site" })),
     },
     {
+        // for whoever writes BOQ drafts without managing the pricing; they reach Execution's sites in either business
+        key: "boq-sites", icon: "file", label: "Open BOQs",
+        words: ["boqs", "boq", "bill of quantities", "bills of quantities", "quantities", "quantity", "estimate", "draft", "my drafts",
+            "submit a draft", "submit boq", "write a boq", "takeoff"],
+        targets: (ctx) => inBusinesses(ctx, "boq-sites"),
+    },
+    {
         key: "meetings", icon: "calendar", label: "Open meetings",
         words: ["meetings", "meeting", "calls", "call", "appointments", "appointment", "calendar", "schedule a meeting", "client meeting",
             "site visit", "minutes", "agenda"],

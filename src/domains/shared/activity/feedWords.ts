@@ -47,6 +47,8 @@ const excused = (p: Payload) => {
 /** The days of a time-off event: " from Oct 12 to Oct 16". */
 const offDays = (p: Payload) => (str(p.firstDay) && str(p.lastDay) ? ` from ${fmtDate(str(p.firstDay)!)} to ${fmtDate(str(p.lastDay)!)}` : "");
 const withPay = (p: Payload) => (p.isPaid === true ? " with pay" : p.isPaid === false ? " without pay" : "");
+/** An engineer's internal draft by its title. */
+const draftOf = (p: Payload) => (str(p.title) ? `the draft "${str(p.title)}"` : "a BOQ draft");
 /** A BOQ or VO by its number (BQ-2026-001), or by its kind when the event carries none. */
 const boq = (p: Payload) => str(p.number) ?? (p.kind === "vo" ? "a VO" : "a client BOQ");
 /** What a payment's account label changed from and to, as the event carries them (names, or null for none). */
@@ -203,6 +205,9 @@ const WORDS: Record<string, Words> = {
         text: (e, p) => `removed ${e.amount == null ? "a record of" : `${money.fmt(e.amount)} of`} supervision taken${takenOn(p)} from ${project(e)}`,
     },
     boq_created: { icon: "file", text: (e, p) => `drafted ${boq(p)} for ${project(e)}${dash(e.amount)}` },
+    boq_submitted: { icon: "send", text: (e, p) => `submitted ${draftOf(p)} to ${project(e)}` },
+    boq_submission_withdrawn: { icon: "x", text: (e, p) => `withdrew ${draftOf(p)} from ${project(e)}` },
+    boq_changes_kept: { icon: "checkCircle", text: (e, p) => `kept the changes made to ${draftOf(p)} on ${project(e)}` },
     boq_sent: {
         icon: "send",
         text: (e, p) => `sent ${boq(p)} to ${client(e)}${p.channel === "whatsapp" ? " on WhatsApp" : p.channel === "email" ? " by email" : ""}`,

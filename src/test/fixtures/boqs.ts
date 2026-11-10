@@ -33,20 +33,22 @@ const lobbyLines = (first: number): Line[] => [
 
 const summary = (over: Partial<Summary>): Summary => ({
     id: 31, kind: "client", number: "BQ-2026-001", title: "Lobby works", author: rana, status: "draft", totalUsd: 17000, lineCount: 3, reason: null,
-    createdAt: "2026-10-01T09:00:00Z", updatedAt: "2026-10-02T09:00:00Z", agreedAt: null, agreedBy: null, lastDelivery: null, permitsUsd: 0, ...over,
+    createdAt: "2026-10-01T09:00:00Z", updatedAt: "2026-10-02T09:00:00Z", agreedAt: null, agreedBy: null, lastDelivery: null, permitsUsd: 0, submittedAt: null, changed: false, ...over,
 });
 
 const agreedSummary = summary({ status: "agreed", agreedAt: "2026-10-05T09:00:00Z", agreedBy: rana, lastDelivery: { channel: "email", sentAt: "2026-10-03T09:00:00Z" } });
 const optionB = summary({ id: 32, number: "BQ-2026-002", title: "Lobby works, option B" });
 const fence = summary({ id: 41, kind: "vo", number: "VO-2026-001", title: "Fence", reason: "Fence along the north side", totalUsd: 6500, lineCount: 1 });
-const mine = summary({ id: 51, kind: "internal", number: null, title: "Karim's quantities", author: karim, totalUsd: 16500 });
-const theirs = summary({ id: 52, kind: "internal", number: null, title: "Nadia's quantities", author: nadia, totalUsd: 17500, lineCount: 1 });
+/** Internal drafts are submitted, so the site's pricing managers see them; a private one is its author's alone. */
+const SUBMITTED_AT = "2026-10-04T09:00:00Z";
+const mine = summary({ id: 51, kind: "internal", number: null, title: "Karim's quantities", author: karim, totalUsd: 16500, submittedAt: SUBMITTED_AT });
+const theirs = summary({ id: 52, kind: "internal", number: null, title: "Nadia's quantities", author: nadia, totalUsd: 17500, lineCount: 1, submittedAt: SUBMITTED_AT });
 
 /** A BOQ as the API answers it: its figures are the API's, so they are written out, not worked out here. */
 const detail = (s: Summary, lines: Line[], figures: { supervisionUsd: number; clientTotalUsd: number }, over: Partial<Detail> = {}): Detail => ({
     ...s, projectId: 7, adjustmentType: "none", adjustmentValue: null, lines, subtotalUsd: s.totalUsd, adjustmentUsd: 0,
     supervisionRate: 0.1, supervisionUsd: figures.supervisionUsd, tvaRate: 0, tvaUsd: 0, clientTotalUsd: figures.clientTotalUsd,
-    deliveries: [], ...over,
+    deliveries: [], changes: null, ...over,
 });
 
 const price = (over: Partial<NonNullable<List["price"]>> = {}): NonNullable<List["price"]> => ({
@@ -79,12 +81,15 @@ export const boqs = {
     /** Every BOQ in full, by id. */
     detail: { 31: agreed, 32: draftB, 41: vo, 42: permitVo, 51: draftMine, 52: draftTheirs } as Record<number, Detail>,
     agreed, draftB, vo, permitVo, draftMine, draftTheirs, lobbyLines,
+    /** When the internal drafts were submitted. */
+    submittedAt: SUBMITTED_AT,
 };
 
 /** The summary of a BOQ, for the lists. */
 export const summaryOf = (d: Detail): Summary => ({
     id: d.id, kind: d.kind, number: d.number, title: d.title, author: d.author, status: d.status, totalUsd: d.totalUsd, lineCount: d.lines.length, reason: d.reason,
     createdAt: d.createdAt, updatedAt: d.updatedAt, agreedAt: d.agreedAt, agreedBy: d.agreedBy, lastDelivery: d.lastDelivery, permitsUsd: d.permitsUsd,
+    submittedAt: d.submittedAt, changed: (d.changes?.length ?? 0) > 0,
 });
 
 export const boqHandlers = [

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { FieldError } from "@/shared/components/Forms/Field";
 import { BOQ_NUMBER, BOQ_PERCENT, type NumberShape } from "@/shared/format/limits";
 import { money } from "@/shared/format/money";
@@ -7,7 +7,8 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { BOQ_CODES, type BoqCode } from "./boqCodes";
 import { fitSigned, lineFigures, lineUsed, type DraftProblems, type LineDraft } from "./boqDraft";
-import type { BoqLineNature } from "./boqsApi";
+import { changeValue } from "./boqRules";
+import type { BoqLineChange, BoqLineNature } from "./boqsApi";
 
 type Field = "code" | "description" | "quantity" | "waste" | "unit" | "rate";
 type Dir = "next" | "prev" | "up" | "down" | "left" | "right";
@@ -51,6 +52,8 @@ type Props = {
     onRemove: (index: number) => void;
     /** Ten more blank rows, when Enter is pressed on the last cell of the last one. */
     onGrow?: () => void;
+    /** What others changed in a submitted draft since it was submitted, by line: shown on the lines, never worked out here. */
+    changes?: ReadonlyMap<number, BoqLineChange>;
 };
 
 function focusCell(root: HTMLElement | null, r: number, c: number) {
@@ -66,7 +69,7 @@ function focusCell(root: HTMLElement | null, r: number, c: number) {
  * quantity and total of each line are worked out as it is typed. Errors show under the line, as it is left or once a
  * save was tried. A line moves within its part.
  */
-export default function BoqLinesTable({ label, nature, lines, first, readOnly, problems, errors, onChange, onMove, onRemove, onGrow }: Props) {
+export default function BoqLinesTable({ label, nature, lines, first, readOnly, problems, errors, onChange, onMove, onRemove, onGrow, changes }: Props) {
     const ref = useRef<HTMLTableElement>(null);
     const cols = nature === "permit" ? PERMIT : WORK;
     const inputs = cols.filter((c): c is Extract<Col, { field: Field }> => "field" in c);
@@ -102,6 +105,9 @@ export default function BoqLinesTable({ label, nature, lines, first, readOnly, p
 
     function cell(l: LineDraft, r: number, n: number, col: Extract<Col, { field: Field }>, c: number) {
         const text = l[col.field];
+        // the value it had when the draft was submitted, when others have changed it since
+        const before = l.id == null ? undefined : changes?.get(l.id)?.fields.find((f) => f.field === (col.field === "waste" ? "wasteRate" : col.field));
+        const was = before ? <del className="boq-was" title={`Was ${changeValue(before.field, before.before)}`}>{changeValue(before.field, before.before)}</del> : null;
         const bad = errors.show(`${l.key}:${col.field}`, problems.line[l.key]?.[col.field]);
         const numeric = col.shape != null;
         const aria = nature === "permit" && col.field !== "rate" ? `Permit ${col.label.toLowerCase()} ${n}` : `${col.label} ${n}`;
@@ -110,7 +116,7 @@ export default function BoqLinesTable({ label, nature, lines, first, readOnly, p
         };
         if (col.field === "code") {
             return (
-                <CodeCell key={col.field} {...shared} value={text}
+                <CodeCell key={col.field} {...shared} value={text} was={was}
                     onChange={(v) => onChange(l.key, { code: v })}
                     onPick={(code) => onChange(l.key, {
                         code: code.code,
@@ -121,7 +127,8 @@ export default function BoqLinesTable({ label, nature, lines, first, readOnly, p
             );
         }
         return (
-            <td key={col.field} className={cx("sh-cell", numeric && "r", bad && "bad")}>
+            <td key={col.field} className={cx("sh-cell", numeric && "r", bad && "bad", before && "boq-changed")}>
+                {was}
                 <input className={cx("sh-in", numeric && "mono")} data-r={r} data-c={c} aria-label={aria} aria-invalid={bad ? true : undefined}
                     value={text} disabled={readOnly} autoComplete="off" spellCheck={false} inputMode={numeric ? "decimal" : undefined}
                     onBlur={shared.onLeave}
@@ -156,9 +163,13 @@ export default function BoqLinesTable({ label, nature, lines, first, readOnly, p
                         const blank = !lineUsed(l);
                         const said = (Object.keys(problems.line[l.key] ?? {}) as Field[])
                             .map((f) => errors.show(`${l.key}:${f}`, problems.line[l.key]?.[f])).filter((m): m is string => !!m);
+                        const change = l.id == null ? undefined : changes?.get(l.id);
+                        const moved = change?.fields.find((f) => f.field === "nature");
+                        const note = change?.kind === "added" ? `${name} ${n} since you submitted it`
+                            : moved ? `${name} ${n}: was ${changeValue("nature", moved.before).toLowerCase()}, now ${changeValue("nature", moved.after).toLowerCase()}` : null;
                         return (
                             <Fragment key={l.key}>
-                                <tr className={cx("sh-row", blank && "sh-blank")}>
+                                <tr className={cx("sh-row", blank && "sh-blank", change?.kind === "added" && "boq-added")}>
                                     <td className="sh-n">{n}</td>
                                     {cols.map((col) => ("figure" in col
                                         ? <td key={col.figure} className="r mono sh-total">{figure(l, col.figure)}</td>
@@ -175,6 +186,14 @@ export default function BoqLinesTable({ label, nature, lines, first, readOnly, p
                                         </td>
                                     )}
                                 </tr>
+                                {note && (
+                                    <tr className="boq-line-note">
+                                        <td colSpan={cols.length + (readOnly ? 1 : 2)}>
+                                            <span className={cx("badge", change?.kind === "added" && "badge-active")}>{change?.kind === "added" ? "Added" : "Moved"}</span>
+                                            <span className="muted"> {note}</span>
+                                        </td>
+                                    </tr>
+                                )}
                                 {said.length > 0 && (
                                     <tr className="boq-line-err">
                                         <td colSpan={cols.length + (readOnly ? 1 : 2)} style={{ padding: "4px 12px", height: "auto" }}>
@@ -213,6 +232,8 @@ function codesFor(text: string): BoqCode[] {
 }
 
 type CodeCellProps = {
+    /** The value it had when the draft was submitted, struck through above the new one. */
+    was?: ReactNode;
     r: number;
     c: number;
     aria: string;
@@ -230,7 +251,7 @@ type CodeCellProps = {
  * Enter takes the one chosen and goes on to the next cell, Esc closes the list. Picking one also fills in the work
  * it names and its unit, where nothing is typed yet. Without a choice made with the arrows, Enter keeps what was typed.
  */
-function CodeCell({ r, c, aria, value, bad, readOnly, onChange, onPick, onLeave, onNav }: CodeCellProps) {
+function CodeCell({ r, c, aria, value, was, bad, readOnly, onChange, onPick, onLeave, onNav }: CodeCellProps) {
     const [open, setOpen] = useState(false);
     const [hi, setHi] = useState(0);
     // a code chosen with the arrows; until then Enter keeps what was typed
@@ -270,7 +291,8 @@ function CodeCell({ r, c, aria, value, bad, readOnly, onChange, onPick, onLeave,
     }
 
     return (
-        <td className={cx("sh-cell", bad && "bad", open && options.length > 0 && "open")}>
+        <td className={cx("sh-cell", bad && "bad", !!was && "boq-changed", open && options.length > 0 && "open")}>
+            {was}
             <input className="sh-in" data-r={r} data-c={c} aria-label={aria} aria-invalid={bad ? true : undefined}
                 role="combobox" aria-expanded={open && options.length > 0} aria-autocomplete="list"
                 value={value} disabled={readOnly} autoComplete="off" spellCheck={false}
