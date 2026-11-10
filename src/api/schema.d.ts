@@ -919,6 +919,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/boq-sites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqSiteResponse"][];
+                        "text/json": components["schemas"]["BoqSiteResponse"][];
+                        "text/plain": components["schemas"]["BoqSiteResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/boq-sites/{projectId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqSiteResponse"];
+                        "text/json": components["schemas"]["BoqSiteResponse"];
+                        "text/plain": components["schemas"]["BoqSiteResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/boqs/{boqId}": {
         parameters: {
             query?: never;
@@ -1219,6 +1295,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/boqs/{boqId}/keep": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boqId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqDetailResponse"];
+                        "text/json": components["schemas"]["BoqDetailResponse"];
+                        "text/plain": components["schemas"]["BoqDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/boqs/{boqId}/pdf": {
         parameters: {
             query?: never;
@@ -1254,6 +1369,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/boqs/{boqId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boqId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqDetailResponse"];
+                        "text/json": components["schemas"]["BoqDetailResponse"];
+                        "text/plain": components["schemas"]["BoqDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/boqs/{boqId}/withdraw-agreement": {
         parameters: {
             query?: never;
@@ -1279,6 +1433,45 @@ export interface paths {
                     "text/json": components["schemas"]["WithdrawBoqAgreementRequest"];
                 };
             };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqDetailResponse"];
+                        "text/json": components["schemas"]["BoqDetailResponse"];
+                        "text/plain": components["schemas"]["BoqDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/boqs/{boqId}/withdraw-submission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boqId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
             responses: {
                 /** @description OK */
                 200: {
@@ -16643,6 +16836,7 @@ export interface components {
             agreedAt: null | string;
             agreedBy: null | components["schemas"]["PersonRefResponse"];
             author: components["schemas"]["PersonRefResponse"];
+            changes: null | components["schemas"]["BoqLineChangeResponse"][];
             /** Format: double */
             clientTotalUsd: null | number;
             /** Format: date-time */
@@ -16662,6 +16856,8 @@ export interface components {
             projectId: number;
             reason: null | string;
             status: components["schemas"]["BoqStatus"];
+            /** Format: date-time */
+            submittedAt: null | string;
             /** Format: double */
             subtotalUsd: number;
             /** Format: double */
@@ -16678,12 +16874,24 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        BoqFieldChangeResponse: {
+            after: null | string;
+            before: null | string;
+            field: string;
+        };
         /** @enum {unknown} */
         BoqKind: "internal" | "client" | "vo";
         BoqLastDeliveryResponse: {
             channel: components["schemas"]["DeliveryChannel"];
             /** Format: date-time */
             sentAt: string;
+        };
+        BoqLineChangeResponse: {
+            description: string;
+            fields: components["schemas"]["BoqFieldChangeResponse"][];
+            kind: string;
+            /** Format: int64 */
+            lineId: null | number;
         };
         /** @enum {unknown} */
         BoqLineNature: "work" | "permit";
@@ -16735,6 +16943,13 @@ export interface components {
             /** Format: double */
             workUsd: number;
         };
+        BoqSiteResponse: {
+            /** Format: int64 */
+            id: number;
+            location: null | string;
+            status: components["schemas"]["ProjectStatus"];
+            title: string;
+        };
         /** @enum {unknown} */
         BoqStatus: "draft" | "agreed";
         BoqSummaryResponse: {
@@ -16742,6 +16957,7 @@ export interface components {
             agreedAt: null | string;
             agreedBy: null | components["schemas"]["PersonRefResponse"];
             author: components["schemas"]["PersonRefResponse"];
+            changed: boolean;
             /** Format: date-time */
             createdAt: string;
             /** Format: int64 */
@@ -16755,6 +16971,8 @@ export interface components {
             permitsUsd: number;
             reason: null | string;
             status: components["schemas"]["BoqStatus"];
+            /** Format: date-time */
+            submittedAt: null | string;
             title: string;
             /** Format: double */
             totalUsd: number;

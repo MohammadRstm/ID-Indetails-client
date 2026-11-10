@@ -9,16 +9,15 @@ import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import { plural } from "@/shared/format/labels";
 import Icon from "@/shared/icons/Icon";
-import type { Project } from "../../shared/projects/projectsApi";
 import { boqErrorMessage, copyableBoqs, sourceLabel } from "./boqRules";
-import { useBoq, useCopyBoqLines, type Boq, type BoqList } from "./boqsApi";
+import { useBoq, useCopyBoqLines, type Boq, type BoqList, type BoqSite } from "./boqsApi";
 
 /**
  * Appends lines of another BOQ the caller can see to this draft: all of them, or the ones ticked. The lines are
  * copied as they are, quantities and waste included, and the draft is saved with them.
  */
 export default function CopyLinesModal({ project, boq, list, onCopied, onClose }: {
-    project: Project; boq: Boq; list: BoqList | undefined; onCopied: (saved: Boq) => void; onClose: () => void;
+    project: BoqSite; boq: Boq; list: BoqList | undefined; onCopied: (saved: Boq) => void; onClose: () => void;
 }) {
     const copy = useCopyBoqLines(project.id, boq.id);
     const sources = copyableBoqs(list).filter((b) => b.id !== boq.id);

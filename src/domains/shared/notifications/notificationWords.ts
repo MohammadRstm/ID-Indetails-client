@@ -337,6 +337,18 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             return { text: `${s(p.name) || who} is off until ${fmtDate(s(p.lastDay))}`, icon: "calendar", route: `/design/people/${n(p.userId)}` };
         case "time_off_back":
             return { text: `${s(p.name) || who} is back at work today`, icon: "calendar", route: `/design/people/${n(p.userId)}` };
+        case "boq_submitted":
+            return {
+                text: `${s(p.authorName) || who} submitted ${s(p.title) ? `the draft “${s(p.title)}”` : "a BOQ draft"} on ${title}`,
+                sub: "You can read it and change it", icon: "file",
+                route: project && note.subjectId ? `${project}?part=boqs&boq=${note.subjectId}` : project,
+            };
+        case "boq_draft_edited":
+            return {
+                text: `${s(p.editorName) || who} changed your BOQ draft${s(p.title) ? ` “${s(p.title)}”` : ""} on ${s(p.projectTitle) || title || "a site"}`,
+                sub: "Open it to see what changed: keep the changes or withdraw it", icon: "file",
+                route: reader.domain && n(p.projectId) && note.subjectId ? `/${reader.domain}/boq-sites/${n(p.projectId)}?boq=${note.subjectId}` : undefined,
+            };
         default:
             return { text: note.kind.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()), icon: "bell", route: project };
     }

@@ -28,21 +28,21 @@ function outcome(user: CurrentUser, domain: Domain, path: string): Outcome {
 const PATHS = [
     "overview", "projects", "projects/:id", "clients", "clients/:id", "people", "people/:id", "financials",
     "my-work", "meetings", "activity", "reports", "profile", "settings", "notifications", "messages", "assistant/:chatId?", "help",
-    "daily-log", "sites", "site-logs", "pocket", "time-off",
+    "daily-log", "sites", "site-logs", "pocket", "time-off", "boq-sites", "boq-sites/:id",
 ] as const;
 
 // one letter per path, in PATHS order: o open, h home, d denied (everyone here has Proton, so its page opens in their business)
 // admins set meetings from a tab on their Overview, super admins from the company overview: no Meetings page for them
 const MATRIX: Record<PersonaName, Record<Domain, string>> = {
-    superAdmin:        { design: "oooooooohhoohooooo hhdd h", execution: "ooooodoohhddhooooo hhoo h" },
+    superAdmin:        { design: "oooooooohhoohooooo hhdd h dd", execution: "ooooodoohhddhooooo hhoo h dd" },
     // admins: no Financials until a super admin hands them the money
-    designAdmin:       { design: "ooooooodhhoohooooo hhdd h", execution: "hhhhhhhhhhhhhhhhhh hhhh h" },
-    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhh hhhh h", execution: "ooooododhhddhooooo hhod h" },
-    designEmployee:    { design: "doodddddooddodoooo dddd o", execution: "hhhhhhhhhhhhhhhhhh hhhh h" },
+    designAdmin:       { design: "ooooooodhhoohooooo hhdd h dd", execution: "hhhhhhhhhhhhhhhhhh hhhh h hh" },
+    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhh hhhh h hh", execution: "ooooododhhddhooooo hhod h dd" },
+    designEmployee:    { design: "doodddddooddodoooo dddd o dd", execution: "hhhhhhhhhhhhhhhhhh hhhh h hh" },
     // site staff: their daily log and their sites, which open from My sites, not the project list
-    executionEmployee: { design: "hhhhhhhhhhhhhhhhhh hhhh h", execution: "ddodddddddddodoooo oodd d" },
+    executionEmployee: { design: "hhhhhhhhhhhhhhhhhh hhhh h hh", execution: "ddodddddddddodoooo oodd d dd" },
     // the website's staff belong to no business
-    websiteAdmin:      { design: "hhhhhhhhhhhhhhhhhh hhhh h", execution: "hhhhhhhhhhhhhhhhhh hhhh h" },
+    websiteAdmin:      { design: "hhhhhhhhhhhhhhhhhh hhhh h hh", execution: "hhhhhhhhhhhhhhhhhh hhhh h hh" },
 };
 
 const LETTER: Record<string, Outcome> = { o: "open", h: "home", d: "denied" };
@@ -59,6 +59,22 @@ describe("the permission matrix", () => {
             });
         }
     }
+
+    it("opens the BOQs pages to whoever writes BOQ drafts in either business, unless they manage the pricing", () => {
+        // boq:create is granted per person and doesn't open Execution: a Design employee holding it keeps to Design
+        const designAuthor = withPermissions(personas.designEmployee, { grant: [P.BOQ_CREATE] });
+        const executionAuthor = withPermissions(personas.executionEmployee, { grant: [P.BOQ_CREATE] });
+        const admin = withPermissions(personas.designAdmin, { grant: [P.BOQ_CREATE] });
+        const manager = withPermissions(personas.designAdmin, { grant: [P.BOQ_CREATE, P.PROJECT_PRICING_MANAGE] });
+        for (const path of ["boq-sites", "boq-sites/:id"]) {
+            expect(outcome(designAuthor, "design", path), path).toBe("open");
+            expect(outcome(designAuthor, "execution", path), path).toBe("home");
+            expect(outcome(executionAuthor, "execution", path), path).toBe("open");
+            expect(outcome(admin, "design", path), path).toBe("open");
+            // whoever manages the pricing uses the site's own page
+            expect(outcome(manager, "design", path), path).toBe("denied");
+        }
+    });
 
     it("covers every route", () => {
         expect([...PATHS].sort()).toEqual(domainRoutes.map((r) => r.path).sort());

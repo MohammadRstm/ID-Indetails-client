@@ -219,7 +219,7 @@ export const explainedMoney: Article[] = [
         ask: ["boq", "bill of quantities", "bills of quantities", "vo", "variation order", "variation", "client boq", "internal draft", "agreed boq", "work price"],
         blocks: [
             list(
-                "**Internal draft**: a working BOQ one person writes. Its author sees only their own; whoever manages the site's pricing sees every one. It is never sent.",
+                "**Internal draft**: a working BOQ one person writes. It is private to its author until they submit it; then the site's pricing managers and its owner see it and may change it. It is never sent.",
                 "**Client BOQ** (BQ-2026-001): the one sent to the client, built by a super admin, often from the drafts. It stays a draft until it is agreed, and only one can be agreed on a site.",
                 "**VO** (VO-2026-001): a variation order, with the reason for it. It changes the price after the client BOQ is agreed, and can lower it with a negative rate.",
             ),

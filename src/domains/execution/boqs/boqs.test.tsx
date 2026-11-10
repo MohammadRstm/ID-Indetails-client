@@ -53,7 +53,7 @@ function saving(id: number, start: unknown, returns: unknown = start) {
 }
 
 describe("a site's bills of quantities", () => {
-    it("add up the price, and list the client BOQs, the VOs and everyone's drafts for whoever manages the site's pricing", async () => {
+    it("add up the price, and list the client BOQs, the VOs and the submitted drafts for whoever manages the site's pricing", async () => {
         renderApp(boqsTab, karim, ...siteHandlers);
         const p = await panel();
         const price = await within(p).findByRole("group", { name: "Price" });
@@ -70,9 +70,10 @@ describe("a site's bills of quantities", () => {
         for (const text of ["Lobby works", "Agreed", "$17,000", "3 lines", "emailed Oct 3"]) expect(agreed).toHaveTextContent(text);
         const vo = within(p).getByRole("button", { name: "Open VO-2026-001" });
         for (const text of ["Fence", "Fence along the north side", "Draft", "$6,500"]) expect(vo).toHaveTextContent(text);
-        // the drafts of everyone, with their authors
+        // the drafts engineers submitted, with their authors
         expect(within(p).getByText("Internal drafts")).toBeInTheDocument();
         expect(within(p).getByRole("button", { name: "Open Karim's quantities" })).toHaveTextContent("by Karim Test");
+        expect(within(p).getByRole("button", { name: "Open Karim's quantities" })).toHaveTextContent("Submitted");
         expect(within(p).getByRole("button", { name: "Open Nadia's quantities" })).toHaveTextContent("by Nadia Test");
         for (const name of ["New draft", "New client BOQ", "New VO"]) expect(within(p).getByRole("button", { name })).toBeEnabled();
     });
@@ -114,12 +115,15 @@ describe("a site's bills of quantities", () => {
     });
 
     it("show someone who writes drafts their own, and nothing else to write", async () => {
-        const mine = { client: boqs.list.client, vos: [], internal: [summaryOf(boqs.draftMine)], price: boqs.list.price };
-        renderApp(boqsTab, author, listOf(mine), ...siteHandlers);
+        // a private draft is its author's alone to change
+        const privateMine = { ...boqs.draftMine, submittedAt: null };
+        const mine = { client: boqs.list.client, vos: [], internal: [summaryOf(privateMine)], price: boqs.list.price };
+        renderApp(boqsTab, author, listOf(mine), http.get("/api/boqs/51", () => HttpResponse.json(privateMine)), ...siteHandlers);
         const p = await panel();
         const row = await within(p).findByRole("button", { name: "Open Karim's quantities" });
         expect(within(p).getByText("My drafts")).toBeInTheDocument();
         expect(row).not.toHaveTextContent("by Karim Test");
+        expect(row).toHaveTextContent("Private");
         expect(within(p).getByRole("button", { name: "New draft" })).toBeEnabled();
         for (const name of ["New client BOQ", "New VO"]) expect(within(p).queryByRole("button", { name })).not.toBeInTheDocument();
 
@@ -275,6 +279,39 @@ describe("the BOQ editor", () => {
         expect(within(dialog).getByText("Not chosen", { selector: ".badge" })).toBeInTheDocument();
         // it stays a draft to change
         expect(within(dialog).getByLabelText("Description 1")).toBeEnabled();
+    });
+
+    it("opens the site's other BOQs under a client draft, one at a time, to read while it is written", async () => {
+        const dialog = await open(32, "BQ-2026-002");
+        const others = await within(dialog).findByRole("region", { name: "Other BOQs" });
+        const tabs = within(others).getAllByRole("tab");
+        // the engineers' drafts first, then the other client BOQ and the VO; never the one being written
+        expect(tabs.map((t) => t.textContent)).toEqual([
+            expect.stringContaining("Karim's quantities"), expect.stringContaining("Nadia's quantities"),
+            expect.stringContaining("BQ-2026-001"), expect.stringContaining("VO-2026-001"),
+        ]);
+        expect(within(others).queryByRole("tab", { name: /BQ-2026-002/ })).not.toBeInTheDocument();
+
+        await userEvent.click(tabs[0]);
+        const opened = await within(others).findByRole("table", { name: "Lines of Karim's quantities" });
+        expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+        const tiles = within(opened).getByText("Porcelain tiles").closest("tr") as HTMLElement;
+        expect(tiles).toHaveTextContent("10%");
+        expect(tiles).toHaveTextContent(money.exact(5940, "USD", { cents: true, twoDecimals: true }));
+        // to read: nothing in it can be typed into
+        expect(within(opened).queryByRole("textbox")).not.toBeInTheDocument();
+
+        // another one takes its place, and clicking the open one again closes it
+        await userEvent.click(tabs[1]);
+        expect(await within(others).findByRole("table", { name: "Lines of Nadia's quantities" })).toBeInTheDocument();
+        expect(within(others).queryByRole("table", { name: "Lines of Karim's quantities" })).not.toBeInTheDocument();
+        await userEvent.click(tabs[1]);
+        expect(within(others).queryByRole("table")).not.toBeInTheDocument();
+    });
+
+    it("doesn't offer the other BOQs under an internal draft", async () => {
+        const draft = await open(51, "Karim's quantities");
+        expect(within(draft).queryByRole("region", { name: "Other BOQs" })).not.toBeInTheDocument();
     });
 
     it("works out a line's figures and the totals as it is typed, and keeps the API's once it is saved", async () => {

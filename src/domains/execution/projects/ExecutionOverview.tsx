@@ -2,6 +2,7 @@ import { useSearchParams } from "react-router";
 import { P } from "@/app/permissions/codes";
 import type { Permissions } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
+import { useCurrentUser } from "@/app/session/useSession";
 import { Avatars } from "@/shared/components/Identity/People";
 import { cx } from "@/shared/utils/cx";
 import BillingBand from "../../shared/billing/BillingBand";
@@ -27,15 +28,15 @@ const PART_LABELS: Record<SitePart, string> = {
 /**
  * The parts of a site's Financials tab this person may open, in order. Everyone who sees the site has its expenses
  * (site staff report labour there) and its site staff (with their daily logs); the overview needs financial:view, the other money parts
- * financial:view on a client site, and the BOQs whoever writes drafts, sees money or manages the pricing.
+ * financial:view on a client site, and the BOQs whoever writes drafts, sees money, manages the pricing or owns the site.
  */
-function siteParts(project: Project, permissions: Permissions): SitePart[] {
+function siteParts(project: Project, permissions: Permissions, myId: number): SitePart[] {
     const client = project.billingType === "client" && project.client != null;
     const money = client && permissions.has(P.FINANCIAL_VIEW);
     return [
         ...(permissions.has(P.FINANCIAL_VIEW) ? ["overview"] as const : []),
         ...(money ? ["payments", "accounts"] as const : []),
-        ...(client && permissions.hasAny(P.BOQ_CREATE, P.FINANCIAL_VIEW, P.PROJECT_PRICING_MANAGE) ? ["boqs"] as const : []),
+        ...(client && (permissions.hasAny(P.BOQ_CREATE, P.FINANCIAL_VIEW, P.PROJECT_PRICING_MANAGE) || project.owner.id === myId) ? ["boqs"] as const : []),
         ...(money ? ["supervision"] as const : []),
         "expenses",
         "staff",
@@ -45,8 +46,9 @@ function siteParts(project: Project, permissions: Permissions): SitePart[] {
 /** An Execution site's Financials tab: its parts as sub-tabs, the one open in the link (?part=). */
 export function ExecutionFinancials({ project }: { project: Project }) {
     const permissions = usePermissions();
+    const me = useCurrentUser();
     const [params, setParams] = useSearchParams();
-    const parts = siteParts(project, permissions);
+    const parts = siteParts(project, permissions, me.id);
     const requested = params.get("part") as SitePart | null;
     const part = requested && parts.includes(requested) ? requested : parts[0];
     const pick = (next: SitePart) => {

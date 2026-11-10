@@ -769,6 +769,14 @@ button.pc-comments { border: 0; cursor: pointer; }
   font-size: 15px; font-weight: 650; color: var(--ink); letter-spacing: 0; }
 .boq-sec-head .num { font-size: 12px; font-weight: 550; }
 
+/* A submitted draft others changed: the old value struck through above the new one, an added line tinted and marked */
+.boq-was { display: block; padding: 2px 8px 0; font-size: 10.5px; line-height: 13px; color: var(--ink-3); text-decoration: line-through; }
+.sh-cell.r .boq-was { text-align: right; }
+.sh-cell.boq-changed { background: var(--warn-soft); }
+.sh-cell.boq-changed .sh-in { height: 20px; }
+.sh-row.boq-added td { background: var(--ok-soft); }
+.boq-line-note td { padding: 4px 12px; height: auto; font-size: 12px; }
+
 /* A link that reads as the text it wraps (a person's photo and name), underlined on hover */
 .link-plain { color: inherit; text-decoration: none; }
 .link-plain:hover b { text-decoration: underline; }
@@ -840,3 +848,12 @@ button.pc-comments { border: 0; cursor: pointer; }
   .price-eq-part { flex: 1 1 100%; }
   .price-eq-term { flex: 1; min-width: 0; }
 }
+
+/* Under a client BOQ being written: the site's other BOQs, one opened at a time, read-only and scrolling on its own */
+.boq-refs { border-top: 1px solid var(--line); padding-top: 14px; }
+.boq-ref { overflow: hidden; }
+.boq-ref-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.boq-ref-scroll { max-height: 420px; overflow: auto; }
+.boq-ref-table td { padding: 0 8px; height: 32px; color: var(--ink); }
+.boq-ref-table td.mono { font-family: var(--mono); font-size: 12px; }
+.boq-ref-table tr.boq-ref-permit td { background: var(--surface-2); }

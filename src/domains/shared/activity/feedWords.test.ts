@@ -103,6 +103,11 @@ describe("what the activity feed says", () => {
         expect(boq("boq_agreement_withdrawn", { kind: "client", number: "BQ-2026-001", reason: "The client changed the scope" }))
             .toBe("withdrew the agreement of BQ-2026-001 on Achrafieh Towers lobby - The client changed the scope");
         expect(boq("boq_agreement_withdrawn", { kind: "vo", number: "VO-2026-001" })).toBe("withdrew the agreement of VO-2026-001 on Achrafieh Towers lobby");
+        // an engineer's internal draft is named by its title
+        expect(boq("boq_submitted", { title: "Lobby quantities", lines: 12 })).toBe('submitted the draft "Lobby quantities" to Achrafieh Towers lobby');
+        expect(boq("boq_submitted", null)).toBe("submitted a BOQ draft to Achrafieh Towers lobby");
+        expect(boq("boq_submission_withdrawn", { title: "Lobby quantities" })).toBe('withdrew the draft "Lobby quantities" from Achrafieh Towers lobby');
+        expect(boq("boq_changes_kept", { title: "Lobby quantities" })).toBe('kept the changes made to the draft "Lobby quantities" on Achrafieh Towers lobby');
     });
 
     it("words a site expense in its own currency, dollars when the event carries none", () => {

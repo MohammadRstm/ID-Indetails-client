@@ -87,6 +87,17 @@ group("A notification's words", () => {
         expect(describe(note("something_new", {}), designer).text).toBe("Something new");
     });
 
+    it("tell the site's pricing managers a BOQ draft was submitted, and its author that someone changed it", () => {
+        const lobby = { id: 7, title: "Achrafieh Towers lobby", domain: "execution", icon: null, tint: null };
+        const manager: Reader = { userId: 1, isAdmin: true, logsWork: false, domain: "execution" };
+        const submitted = note("boq_submitted", { authorName: "Sarah Haddad", title: "Lobby quantities" }, { project: lobby, subjectType: "boq", subjectId: 51 });
+        expect(describe(submitted, manager)).toMatchObject({ text: "Sarah Haddad submitted the draft “Lobby quantities” on Achrafieh Towers lobby", route: "/execution/projects/7?part=boqs&boq=51" });
+        // the author's link opens their draft on the BOQs page of their own business
+        const edited = note("boq_draft_edited", { editorName: "Rana Test", title: "Lobby quantities", projectId: 7, projectTitle: "Achrafieh Towers lobby" }, { subjectType: "boq", subjectId: 51 });
+        expect(describe(edited, designer)).toMatchObject({ text: "Rana Test changed your BOQ draft “Lobby quantities” on Achrafieh Towers lobby", route: "/design/boq-sites/7?boq=51" });
+        expect(describe(edited, { ...designer, domain: "execution" })).toMatchObject({ route: "/execution/boq-sites/7?boq=51" });
+    });
+
     it("tell super admins, the employee and the department about time off", () => {
         const sup: Reader = { ...admin, isSuperAdmin: true };
         const ask = { name: "Sarah Haddad", firstDay: "2026-10-12", lastDay: "2026-10-16" };

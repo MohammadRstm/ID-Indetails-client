@@ -14,6 +14,12 @@ export const keys = {
         counts: (domain: string) => ["projects", "counts", domain] as const,
         detail: (id: number) => ["projects", "detail", id] as const,
     },
+    /** The Execution client sites a BOQ author writes drafts for. */
+    boqSites: {
+        all: ["boq-sites"] as const,
+        list: () => ["boq-sites", "list"] as const,
+        detail: (id: number) => ["boq-sites", "detail", id] as const,
+    },
     requirements: {
         all: ["requirements"] as const,
         project: (projectId: number) => ["requirements", projectId] as const,
