@@ -154,6 +154,15 @@ describe("what the activity feed says", () => {
         expect(published(null).text).toBe("published the client portal of Beit Misk show apartment");
     });
 
+    it("words an exchange rate set by someone, and one the daily feed added with nobody behind it", () => {
+        const rate = (extra: Partial<FeedEvent>) => say(event("exchange_rate_set", { group: "billing", project: null, client: null, subjectType: "exchange_rate", subjectId: 7, ...extra }));
+        expect(rate({ amount: 89500, payload: { currency: "LBP", effectiveFrom: "2026-09-30" } })).toBe("set the LBP rate to 89,500 per USD");
+        expect(rate({ payload: { currency: "LBP", effectiveFrom: "2026-09-30" } })).toBe("set the LBP rate");
+        const fed = { actor: null, payload: { currency: "LBP", effectiveFrom: "2026-09-30", automatic: true, source: "exchangerate-api" } };
+        expect(rate({ ...fed, amount: 89700 })).toBe("The LBP rate was set automatically to 89,700 per USD");
+        expect(rate(fed)).toBe("The LBP rate was set automatically");
+    });
+
     it("says something for a kind it doesn't know", () => {
         expect(feedWords(event("something_new"), names)).toEqual({ icon: "info", text: "something new" });
     });

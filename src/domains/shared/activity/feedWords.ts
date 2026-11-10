@@ -215,7 +215,14 @@ const WORDS: Record<string, Words> = {
     boq_agreed: { icon: "checkCircle", text: (e, p) => `agreed ${boq(p)} on ${project(e)}${dash(e.amount)}` },
     boq_agreement_withdrawn: { icon: "x", text: (e, p) => `withdrew the agreement of ${boq(p)} on ${project(e)}${str(p.reason) ? ` - ${str(p.reason)}` : ""}` },
     billing_settings_updated: { icon: "settings", text: () => "updated the billing settings" },
-    exchange_rate_set: { icon: "card", text: (e, p) => `set the ${str(p.currency) ?? "exchange"} rate${e.amount == null ? "" : ` to ${e.amount.toLocaleString("en-US")} per USD`}` },
+    // the daily feed's rate has no actor, so it says on its own what happened
+    exchange_rate_set: {
+        icon: "card",
+        text: (e, p) => {
+            const rate = e.amount == null ? "" : ` to ${e.amount.toLocaleString("en-US")} per USD`;
+            return p.automatic === true ? `The ${str(p.currency) ?? "exchange"} rate was set automatically${rate}` : `set the ${str(p.currency) ?? "exchange"} rate${rate}`;
+        },
+    },
 
     // people
     employee_updated: { icon: "edit", text: (e, _p, names) => (e.subjectId === e.actor?.id ? "updated their profile" : `updated ${subject(e, names)}'s profile`) },

@@ -183,6 +183,25 @@ describe("a project's money", () => {
         await waitFor(() => expect(added).toEqual([{ label: "Taxi to the site", amount: 25, currency: "USD", category: "travel", spentOn: "2026-09-30" }]));
     });
 
+    it("says so when a pound expense has no exchange rate for its day, and keeps the form", async () => {
+        const NO_RATE = "There is no LBP exchange rate in force on 2026-09-30. Add one first, or record the expense in USD.";
+        renderApp(path, admin,
+            http.post(`/api/projects/${project.id}/expenses`, () => HttpResponse.json(
+                { type: "business_rule", code: "exchange_rate_missing", errors: null, traceId: "t", message: NO_RATE }, { status: 422 })),
+            ...projectWorkHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Add expense" }));
+        const dialog = await screen.findByRole("dialog", { name: "Add project expense" });
+        await userEvent.type(within(dialog).getByLabelText("What was it?"), "Plan printing");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Currency" }));
+        await userEvent.click(screen.getByRole("option", { name: "LBP" }));
+        await userEvent.type(within(dialog).getByLabelText("Amount"), "895000");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Add expense" }));
+        // said once, as an alert, as the site expense sheet says it
+        expect(await within(dialog).findByRole("alert")).toHaveTextContent(NO_RATE);
+        expect(within(dialog).getAllByText(NO_RATE)).toHaveLength(1);
+        expect(within(dialog).getByLabelText("What was it?")).toHaveValue("Plan printing");
+    });
+
     it("takes no amount larger than the system keeps, and says so beside it", async () => {
         const added: Array<{ amount: number }> = [];
         renderApp(path, admin,
