@@ -73,7 +73,7 @@ describe("the Website page", () => {
         renderApp("/website/projects", personas.websiteAdmin, ...handlers());
         expect(await screen.findByRole("list", { name: "Moving strip" })).toHaveTextContent("Villa Rizk");
         expect(screen.getByRole("button", { name: /New project/ })).toBeInTheDocument();
-        expect(within(screen.getByRole("navigation")).queryByText("All areas")).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Home" })).not.toBeInTheDocument();
     });
 
     it("lets someone with website:view alone look without changing anything", async () => {

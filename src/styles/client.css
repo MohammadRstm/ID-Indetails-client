@@ -176,6 +176,9 @@ table { line-height: normal; font-weight: normal; }
 /* A dialog whose height changes as it's used (a form in steps) stays at the top instead of re-centring. */
 .scrim-top > .modal { margin-top: 0; }
 .side { height: 100dvh; }
+/* Home sits at the bottom of the sidebar, just above the user, however long the list above it */
+.side-home { margin-top: auto; padding: 10px 10px 9px; }
+.side-home + .side-foot { margin-top: 0; }
 @media (max-width: 640px) {
   .scrim { padding: 12px 8px; }
   .modal { max-height: calc(100dvh - 24px); }

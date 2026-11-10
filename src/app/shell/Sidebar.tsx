@@ -101,16 +101,17 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                         {workspace.map(renderItem)}
                     </div>
                 )}
-                {hasSeveralAreas(permissions) && (
-                    <div>
-                        <div className="nav-sec">Company</div>
-                        <button className="nav-item" onClick={() => { tip.hide(); navigate("/company"); }} {...nameTip("All areas")}>
-                            <Icon name="grid" />
-                            <span className="nav-label">All areas</span>
-                        </button>
-                    </div>
-                )}
             </nav>
+
+            {/* the start screen, where Design, Execution and the company are picked: kept at the bottom however long the list */}
+            {hasSeveralAreas(permissions) && (
+                <div className="side-cta side-home">
+                    <button className="btn btn-primary btn-block" onClick={() => { tip.hide(); navigate("/company"); }} {...nameTip("Home")}>
+                        <Icon name="home" />
+                        <span className="side-cta-label">Home</span>
+                    </button>
+                </div>
+            )}
 
             <div className="side-foot">
                 <Popover

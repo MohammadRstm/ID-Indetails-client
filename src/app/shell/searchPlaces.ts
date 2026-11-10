@@ -442,7 +442,7 @@ export const PLACES: Place[] = [
         targets: (ctx) => when(ctx.p.hasWebsiteArea && ctx.area.kind !== "website", () => [{ path: websiteHome(ctx.p) }]),
     },
     {
-        key: "areas", icon: "grid", label: "All areas",
+        key: "areas", icon: "home", label: "Home",
         words: ["all areas", "areas", "launcher", "switch business", "switch area", "choose business", "home", "start"],
         targets: (ctx) => when(hasSeveralAreas(ctx.p), () => [{ path: "/company" }]),
     },

@@ -76,16 +76,16 @@ export const gettingStarted: Article[] = [
         title: "Moving between Design, Execution and the company",
         category: "start",
         who: severalAreas,
-        summary: "\"All areas\" at the bottom of the sidebar opens the start screen, where you pick Design, Execution or the company.",
-        ask: ["switch business", "switch to execution", "switch to design", "all areas", "company area", "launcher", "change area"],
+        summary: "**Home** at the bottom of the sidebar opens the start screen, where you pick Design, Execution or the company.",
+        ask: ["switch business", "switch to execution", "switch to design", "home", "all areas", "company area", "launcher", "change area"],
         blocks: [
             para("Design and Execution are run separately: inside one business there is no sign of the other. Only the start screen, and the company pages, join them up."),
             steps(
-                step("In the sidebar, under **Company**, choose **All areas**.", "Sidebar"),
+                step("At the bottom of the sidebar, choose **Home**.", "Sidebar"),
                 step("Pick the business, or the company pages."),
             ),
             para("You can also type **Go to Design** or **Go to Execution** in the search (Ctrl+K)."),
-            links(link("Open all areas", { path: "/company" })),
+            links(link("Open Home", { path: "/company" })),
         ],
     },
     {
