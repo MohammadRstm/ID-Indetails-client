@@ -22,6 +22,7 @@ import { companyToday, dayKey, daysBetween, fmtDate, fmtDateY } from "@/shared/f
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { ClientBadge } from "../clients/ClientBits";
+import ProjectInsightsTab from "../finance/insights/ProjectInsightsTab";
 import { ProjectMeetingsTab } from "../meetings/Meetings";
 import { useProjectMeetings } from "../meetings/meetingsApi";
 import { personName, useProjectOwners } from "../people/peopleApi";
@@ -47,7 +48,7 @@ import EditProjectModal from "./EditProjectModal";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useChangeProjectStatus, useProject, useUpdateProject, type Project, type StatusAction } from "./projectsApi";
 
-type TabKey = "financials" | "payments" | "vos" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
+type TabKey = "financials" | "payments" | "vos" | "insights" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal";
 
 /**
  * What goes on a project's Overview tab and Timeline tab, and the domain's own bits of its head. Each domain
@@ -160,6 +161,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         financials: (seesMoney || panels.financialsForAll === true) && panels.financials != null,
         payments: seesMoney && !site && project.billingType === "client" && panels.payments != null,
         vos: seesMoney && !site && project.billingType === "client" && panels.vos != null,
+        // where the profit comes from and what-ifs: a Design client project's, or any site's (internal work tries only costs and delays)
+        insights: seesMoney && (site || project.billingType === "client"),
         overview: panels.hasOverview?.(permissions) ?? true,
         analytics: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.analytics != null,
         contributors: permissions.has(P.WORK_ENTRY_VIEW_ALL) && panels.contributors != null,
@@ -171,7 +174,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
         timeline: timelineTab,
         meetings: true,
     };
-    const tabOrder: TabKey[] = ["financials", "payments", "vos", "overview", "analytics", "contributors", "requirements", "timeline", "meetings", "files", "portal"];
+    const tabOrder: TabKey[] = ["financials", "payments", "vos", "insights", "overview", "analytics", "contributors", "requirements", "timeline", "meetings", "files", "portal"];
     const firstTab = tabOrder.find((k) => allowed[k]) ?? "meetings";
     // A tab the person may not open falls back to their first one, even when the link asks for it.
     const tab: TabKey = requested && allowed[requested] ? requested : firstTab;
@@ -375,6 +378,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                 ...(allowed.financials ? [{ key: "financials" as TabKey, label: "Financials" }] : []),
                 ...(allowed.payments ? [{ key: "payments" as TabKey, label: "Client payments" }] : []),
                 ...(allowed.vos ? [{ key: "vos" as TabKey, label: "Variation orders" }] : []),
+                ...(allowed.insights ? [{ key: "insights" as TabKey, label: "Insights" }] : []),
                 ...(allowed.overview ? [{ key: "overview" as TabKey, label: "Overview" }] : []),
                 ...(allowed.analytics ? [{ key: "analytics" as TabKey, label: "Analytics" }] : []),
                 ...(allowed.contributors ? [{ key: "contributors" as TabKey, label: "Contributors" }] : []),
@@ -394,6 +398,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                         : tab === "financials" && panels.financials ? panels.financials(project)
                         : tab === "payments" && panels.payments ? panels.payments(project)
                         : tab === "vos" && panels.vos ? panels.vos(project)
+                        : tab === "insights" ? <ProjectInsightsTab project={project} />
                             : tab === "analytics" && panels.analytics ? panels.analytics(project)
                                 : tab === "contributors" && panels.contributors ? panels.contributors(project)
                                     : panels.overview(project)}

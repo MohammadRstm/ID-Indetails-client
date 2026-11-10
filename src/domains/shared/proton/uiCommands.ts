@@ -36,7 +36,7 @@ export type UiStep =
 const DOMAINS: readonly Domain[] = ["design", "execution"];
 /** A project page's tabs Proton may name; the page itself falls back to the person's first tab for one they don't have. */
 const SECTIONS = {
-    financials: "financials", payments: "payments", vos: "vos", overview: "overview", analytics: "analytics", contributors: "contributors",
+    financials: "financials", payments: "payments", vos: "vos", insights: "insights", overview: "overview", analytics: "analytics", contributors: "contributors",
     requirements: "requirements", timeline: "timeline", meetings: "meetings", files: "files", portal: "portal",
 } as const;
 /** The parts of the files and client portal tabs: their sections, and on the portal the client's access and the discussion. */
