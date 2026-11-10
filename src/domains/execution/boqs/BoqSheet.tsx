@@ -18,6 +18,7 @@ import { AgreeBoqModal, WithdrawBoqModal } from "./BoqAgreementModals";
 import { draftOf, fitSigned, hasProblems, isDirty, lineUsed, problemsOf, requestOf, withBlankLines, withNewLine, withServerProblems, type Draft, type LineDraft } from "./boqDraft";
 import { BoqDeliveries, BoqTotals } from "./BoqFigures";
 import BoqLinesTable from "./BoqLinesTable";
+import BoqReferences from "./BoqReferences";
 import { useBoqLinks } from "./boqLinks";
 import { agreeBlock, agreedClient, boqErrorMessage, boqTotal, emptyBlock, isNotChosen, KIND_LABEL, withdrawBlock } from "./boqRules";
 import { BOQ_MAX_LINES, BOQ_REASON_MAX, BOQ_TITLE_MAX, downloadBoqPdf, useBoq, useBoqs, useDeleteBoq, useDuplicateBoq, useSaveBoq, type Boq, type BoqAdjustmentType } from "./boqsApi";
@@ -252,6 +253,8 @@ export default function BoqSheet({ project, boq, onClose }: { project: Project; 
 
             <BoqTotals boq={boq} draft={draft} />
             <BoqDeliveries boq={boq} />
+            {/* writing a client BOQ, the engineers' drafts and the site's other BOQs can be opened under it */}
+            {boq.kind === "client" && editable && <BoqReferences project={project} boq={boq} list={list} />}
 
             {dialog === "agree" && <AgreeBoqModal project={project} boq={boq} onClose={() => setDialog(null)} />}
             {dialog === "withdraw" && <WithdrawBoqModal project={project} boq={boq} onClose={() => setDialog(null)} />}

@@ -277,6 +277,39 @@ describe("the BOQ editor", () => {
         expect(within(dialog).getByLabelText("Description 1")).toBeEnabled();
     });
 
+    it("opens the site's other BOQs under a client draft, one at a time, to read while it is written", async () => {
+        const dialog = await open(32, "BQ-2026-002");
+        const others = await within(dialog).findByRole("region", { name: "Other BOQs" });
+        const tabs = within(others).getAllByRole("tab");
+        // the engineers' drafts first, then the other client BOQ and the VO; never the one being written
+        expect(tabs.map((t) => t.textContent)).toEqual([
+            expect.stringContaining("Karim's quantities"), expect.stringContaining("Nadia's quantities"),
+            expect.stringContaining("BQ-2026-001"), expect.stringContaining("VO-2026-001"),
+        ]);
+        expect(within(others).queryByRole("tab", { name: /BQ-2026-002/ })).not.toBeInTheDocument();
+
+        await userEvent.click(tabs[0]);
+        const opened = await within(others).findByRole("table", { name: "Lines of Karim's quantities" });
+        expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+        const tiles = within(opened).getByText("Porcelain tiles").closest("tr") as HTMLElement;
+        expect(tiles).toHaveTextContent("10%");
+        expect(tiles).toHaveTextContent(money.exact(5940, "USD", { cents: true, twoDecimals: true }));
+        // to read: nothing in it can be typed into
+        expect(within(opened).queryByRole("textbox")).not.toBeInTheDocument();
+
+        // another one takes its place, and clicking the open one again closes it
+        await userEvent.click(tabs[1]);
+        expect(await within(others).findByRole("table", { name: "Lines of Nadia's quantities" })).toBeInTheDocument();
+        expect(within(others).queryByRole("table", { name: "Lines of Karim's quantities" })).not.toBeInTheDocument();
+        await userEvent.click(tabs[1]);
+        expect(within(others).queryByRole("table")).not.toBeInTheDocument();
+    });
+
+    it("doesn't offer the other BOQs under an internal draft", async () => {
+        const draft = await open(51, "Karim's quantities");
+        expect(within(draft).queryByRole("region", { name: "Other BOQs" })).not.toBeInTheDocument();
+    });
+
     it("works out a line's figures and the totals as it is typed, and keeps the API's once it is saved", async () => {
         const [first, ...rest] = boqs.draftB.lines;
         const after = {
