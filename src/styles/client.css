@@ -831,3 +831,12 @@ button.pc-comments { border: 0; cursor: pointer; }
   .price-eq-part { flex: 1 1 100%; }
   .price-eq-term { flex: 1; min-width: 0; }
 }
+
+/* Under a client BOQ being written: the site's other BOQs, one opened at a time, read-only and scrolling on its own */
+.boq-refs { border-top: 1px solid var(--line); padding-top: 14px; }
+.boq-ref { overflow: hidden; }
+.boq-ref-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.boq-ref-scroll { max-height: 420px; overflow: auto; }
+.boq-ref-table td { padding: 0 8px; height: 32px; color: var(--ink); }
+.boq-ref-table td.mono { font-family: var(--mono); font-size: 12px; }
+.boq-ref-table tr.boq-ref-permit td { background: var(--surface-2); }
