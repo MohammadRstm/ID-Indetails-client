@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { errorMessage, toApiError } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
@@ -8,6 +9,7 @@ import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { companyToday } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
+import Icon from "@/shared/icons/Icon";
 import type { Project } from "../../../shared/projects/projectsApi";
 import { useAddExpense } from "./moneyApi";
 import FilledNote from "@/domains/shared/proton/FilledNote";
@@ -43,6 +45,8 @@ export default function ExpenseModal({ project, onClose }: { project: Project; o
     });
     const labelError = !label.trim() && "Say what the money went on.";
     const amountError = !(amount > 0) && "Enter the amount spent.";
+    // a pound expense on a day with no exchange rate: said under the form, as the site expense sheet says it
+    const noRate = toApiError(add.error).code === "exchange_rate_missing";
 
     function submit() {
         if (add.isPending) return;
@@ -59,7 +63,7 @@ export default function ExpenseModal({ project, onClose }: { project: Project; o
         <Modal surfaceId="add_project_expense" title="Add project expense" sub={project.title} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{add.error ? <FormFailure error={add.error} onForced={onClose} /> : "Belongs to this project only - never shared with other projects."}</div>
+                    <div className="grow">{add.error && !noRate ? <FormFailure error={add.error} onForced={onClose} /> : "Belongs to this project only - never shared with other projects."}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={add.isPending} onClick={submit}>Add expense</button>
                 </>
@@ -85,6 +89,12 @@ export default function ExpenseModal({ project, onClose }: { project: Project; o
                 <label className="label required" htmlFor="ex-cat">Category</label>
                 <Select id="ex-cat" value={category} onChange={setCategory} options={EXPENSE_CATEGORIES} />
             </div>
+            {noRate && (
+                <div className="banner attn mt" role="alert">
+                    <Icon name="alert" />
+                    <div className="grow">{errorMessage(add.error)}</div>
+                </div>
+            )}
         </Modal>
     );
 }

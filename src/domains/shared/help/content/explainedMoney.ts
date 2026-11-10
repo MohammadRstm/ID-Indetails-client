@@ -240,7 +240,7 @@ export const explainedMoney: Article[] = [
             list(
                 "A rate is how many LBP one US dollar buys, from a date. The rate for a day is the latest one dated on or before it.",
                 "**Payments**: the rate entered with them (or the day's rate).",
-                "**Costs** (expenses, site expenses): the rate of their day.",
+                "**Costs** (expenses, site expenses): the rate of their day. An LBP expense can't be recorded for a day before the first LBP rate; the daily rate added each morning keeps that from happening.",
                 "**Invoices**: the rate of their issue day; they're always in USD.",
                 "**Company expenses**, **fixed salaries**, **paid leave** and the **overtime premium**: the rate on the 1st of the month.",
                 "An amount with no rate for its day is listed apart as unconverted, never counted as 0.",

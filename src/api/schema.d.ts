@@ -17596,6 +17596,7 @@ export interface components {
         /** @enum {unknown} */
         EntryNotificationMode: "all" | "long" | "digest" | "off";
         ExchangeRateResponse: {
+            automatic: boolean;
             /** Format: date-time */
             createdAt: string;
             currency: string;
