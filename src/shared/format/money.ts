@@ -10,6 +10,8 @@ export type Currency = "USD" | "LBP" | string;
 type ExactOptions = {
     /** Keep the cents (typed amounts, documents). */
     cents?: boolean;
+    /** With cents, always two of them ($451,437.60, $0.00), so amounts that add up line up. */
+    twoDecimals?: boolean;
     /** Negative amounts in brackets instead of a minus sign. */
     paren?: boolean;
 };
@@ -24,7 +26,9 @@ export function exact(amount: number, currency: Currency = "USD", options: Exact
     const value = Math.abs(amount);
     const body = currency === "LBP"
         ? `${fmtNumber(Math.round(value))} LBP`
-        : `$${fmtNumber(options.cents ? Math.round(value * 100) / 100 : Math.round(value))}`;
+        : options.cents && options.twoDecimals
+            ? `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : `$${fmtNumber(options.cents ? Math.round(value * 100) / 100 : Math.round(value))}`;
     return sign(amount < 0, body, options.paren);
 }
 
