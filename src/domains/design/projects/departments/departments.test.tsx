@@ -55,6 +55,25 @@ describe("a Design project's departments", () => {
         expect(within(people[1]).getByText(money.fmt(1300))).toBeInTheDocument();
     });
 
+    it("show labour with no exchange rate on its day beside the cost, never in it, and nothing extra when there's none", async () => {
+        const [architecture, interiors] = projectWork.departments.departments;
+        const withPounds = {
+            ...projectWork.departments,
+            departments: [{ ...architecture, money: { ...architecture.money!, unconverted: [{ currency: "LBP", amount: 4500000 }] } }, interiors],
+        };
+        renderApp(path, rana, http.get("/api/projects/:id/departments", () => HttpResponse.json(withPounds)), ...projectWorkHandlers);
+        const departments = await panel();
+        const row = await within(departments).findByRole("row", { name: "Architecture" });
+        expect(within(row).getByText(money.fmt(6500))).toBeInTheDocument();
+        expect(within(row).getByText("+ 4.5M LBP")).toBeInTheDocument();
+        expect(within(within(departments).getByRole("row", { name: "Interiors" })).queryByText(/LBP/)).not.toBeInTheDocument();
+
+        // beside its cost and its total in the breakdown too
+        await userEvent.click(row);
+        const dialog = await screen.findByRole("dialog", { name: "Architecture" });
+        expect(within(dialog).getAllByText("+ 4.5M LBP")).toHaveLength(2);
+    });
+
     it("take new shares adding up to 100%, with why if you like, from whoever writes the money", async () => {
         const sent: unknown[] = [];
         renderApp(path, rana,
