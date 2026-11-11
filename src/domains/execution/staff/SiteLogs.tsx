@@ -15,38 +15,45 @@ import useDebounce from "@/shared/hooks/useDebounce";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import { dayKey, fmtDayDateY, fmtTime, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import { SITE_LOG_MAX, useEditSiteLog, useSiteLogs, useWriteSiteLog, type SiteLog } from "./siteLogsApi";
+import VoicePlayer from "@/shared/voice/VoicePlayer";
+import { SITE_LOG_EMPTY, SITE_LOG_MAX, useEditSiteLog, useSiteLogs, useWriteSiteLog, type SiteLog } from "./siteLogsApi";
+import { useVoiceNote } from "./useVoiceNote";
+import VoiceNoteField from "./VoiceNoteField";
 
 const PAGE_SIZE = 25;
 
 type Option = { value: string; label: string; disabled?: boolean };
 
-/** "What happened on site today": the site it is about and the words, saved as a log of its own. */
+/** "What happened on site today": the site it is about, the words and/or a voice note, saved as a log of its own. */
 export function WriteSiteLog({ sites, fixedSiteId }: { sites: Option[]; fixedSiteId?: number }) {
     const write = useWriteSiteLog();
     const first = sites.find((s) => !s.disabled)?.value ?? "";
     const [siteId, setSiteId] = useState(fixedSiteId ? String(fixedSiteId) : first);
     const [body, setBody] = useState("");
+    const voice = useVoiceNote();
     const errors = useFormErrors();
     const chosen = fixedSiteId ? String(fixedSiteId) : sites.some((s) => s.value === siteId && !s.disabled) ? siteId : first;
     const closed = sites.filter((s) => s.disabled).length;
     const siteError = !chosen && "Choose the site this is about.";
-    const bodyError = !body.trim() ? "Say what happened." : body.trim().length > SITE_LOG_MAX && `At most ${SITE_LOG_MAX} characters.`;
+    const bodyError = !body.trim() && !voice.hasVoice ? SITE_LOG_EMPTY : body.trim().length > SITE_LOG_MAX && `At most ${SITE_LOG_MAX} characters.`;
 
-    function submit(e?: FormEvent) {
+    async function submit(e?: FormEvent) {
         e?.preventDefault();
-        if (write.isPending) return;
+        if (write.isPending || voice.uploading) return;
         if (siteError || bodyError) return errors.tried();
-        write.mutate({ projectId: +chosen, body: body.trim() }, {
+        let voiceFileId: number | null;
+        try { voiceFileId = await voice.resolve(); } catch { return; } // the field shows why the upload failed
+        write.mutate({ projectId: +chosen, body: body.trim(), voiceFileId }, {
             onSuccess: (log) => {
                 toast({ text: "Log saved", sub: `${log.project.title} · ${fmtTime(log.createdAt)}`, icon: "checkCircle" });
                 setBody("");
+                voice.reset();
             },
         });
     }
 
     return (
-        <form className="panel" onSubmit={submit} aria-label="Write a log">
+        <form className="panel" onSubmit={(e) => void submit(e)} aria-label="Write a log">
             <div className="panel-body">
                 {!fixedSiteId && (
                     <div className="field">
@@ -57,15 +64,16 @@ export function WriteSiteLog({ sites, fixedSiteId }: { sites: Option[]; fixedSit
                     </div>
                 )}
                 <div className={fixedSiteId ? "field" : "field mt"}>
-                    <label className="label required" htmlFor="sl-body">What happened?</label>
+                    <label className="label" htmlFor="sl-body">What happened?</label>
                     <AutoGrowTextarea id="sl-body" className="input" minRows={3} maxRows={12} maxLength={SITE_LOG_MAX} value={body}
                         placeholder="e.g. The concrete shipment arrived with 3 bags missing." onChange={(e) => setBody(e.target.value)} onBlur={errors.touch("body")} />
+                    <VoiceNoteField voice={voice} />
                     <FieldError message={errors.show("body", bodyError)} />
                     <div className="hint">Each log is kept on its own, with the time it was written. You can change it until the end of the day.</div>
                 </div>
                 <div className="row mt" style={{ gap: 10 }}>
                     <span className="grow">{write.error != null && <span className="err"><Icon name="alert" />{errorMessage(write.error)}</span>}</span>
-                    <button type="submit" className="btn btn-primary" disabled={write.isPending}><Icon name="plus" />{write.isPending ? "Saving…" : "Save log"}</button>
+                    <button type="submit" className="btn btn-primary" disabled={write.isPending || voice.uploading}><Icon name="plus" />{write.isPending || voice.uploading ? "Saving…" : "Save log"}</button>
                 </div>
             </div>
         </form>
@@ -153,7 +161,14 @@ function LogRow({ log, showPerson, showSite }: { log: SiteLog; showPerson: boole
     const edit = useEditSiteLog();
     const [editing, setEditing] = useState(false);
     const [body, setBody] = useState(log.body);
-    const error = !body.trim() ? "Say what happened." : body.trim().length > SITE_LOG_MAX && `At most ${SITE_LOG_MAX} characters.`;
+    const voice = useVoiceNote(log.voiceNote);
+    const error = !body.trim() && !voice.hasVoice ? SITE_LOG_EMPTY : body.trim().length > SITE_LOG_MAX && `At most ${SITE_LOG_MAX} characters.`;
+
+    async function save() {
+        let voiceFileId: number | null;
+        try { voiceFileId = await voice.resolve(); } catch { return; } // the field shows why the upload failed
+        edit.mutate({ id: log.id, body: body.trim(), voiceFileId }, { onSuccess: () => setEditing(false) });
+    }
 
     return (
         <li className="site-log">
@@ -165,21 +180,26 @@ function LogRow({ log, showPerson, showSite }: { log: SiteLog; showPerson: boole
                     {log.updatedAt && <> · edited</>}
                 </span>
                 {log.canEdit && !editing && (
-                    <button className="btn btn-sm btn-quiet" onClick={() => { setBody(log.body); setEditing(true); }}><Icon name="edit" />Edit</button>
+                    <button className="btn btn-sm btn-quiet" onClick={() => { setBody(log.body); voice.reset(log.voiceNote); setEditing(true); }}><Icon name="edit" />Edit</button>
                 )}
             </div>
             {editing ? (
                 <div className="mt-s">
                     <AutoGrowTextarea className="input" minRows={2} maxRows={12} maxLength={SITE_LOG_MAX} value={body} aria-label="Change the log"
                         onChange={(e) => setBody(e.target.value)} />
+                    <VoiceNoteField voice={voice} />
                     <FieldError message={error || (edit.error != null ? errorMessage(edit.error) : undefined)} />
                     <div className="row mt-s" style={{ gap: 6, justifyContent: "flex-end" }}>
-                        <button className="btn btn-sm" onClick={() => setEditing(false)}>Cancel</button>
-                        <button className="btn btn-sm btn-primary" disabled={!!error || edit.isPending}
-                            onClick={() => edit.mutate({ id: log.id, body: body.trim() }, { onSuccess: () => setEditing(false) })}>Save</button>
+                        <button className="btn btn-sm" onClick={() => { voice.reset(log.voiceNote); setEditing(false); }}>Cancel</button>
+                        <button className="btn btn-sm btn-primary" disabled={!!error || edit.isPending || voice.uploading} onClick={() => void save()}>Save</button>
                     </div>
                 </div>
-            ) : <div style={{ whiteSpace: "pre-wrap", marginTop: 2 }}>{log.body}</div>}
+            ) : (
+                <>
+                    {log.body && <div style={{ whiteSpace: "pre-wrap", marginTop: 2 }}>{log.body}</div>}
+                    {log.voiceNote && <VoicePlayer fileId={log.voiceNote.id} />}
+                </>
+            )}
         </li>
     );
 }
