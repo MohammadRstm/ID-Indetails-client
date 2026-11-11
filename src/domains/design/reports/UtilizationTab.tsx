@@ -45,7 +45,7 @@ export default function UtilizationTab({ month, thisMonth, onMonth, tabs, people
                 <Stepper label={fmtMonthY(`${month}-01`)} onPrev={() => onMonth(addMonths(month, -1))} onNext={() => onMonth(addMonths(month, 1))}
                     nextDisabled={month >= thisMonth} minWidth={150} />
                 <div className="grow" />
-                {u?.inProgress && <span className="muted" style={{ fontSize: 12.5 }}>This month runs to today.</span>}
+                {u?.inProgress && <span className="muted" style={{ fontSize: 12.5 }}>So far: this month runs to today.</span>}
             </div>
 
             {failed ? <div className="panel"><div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the utilization" /></div></div> : (

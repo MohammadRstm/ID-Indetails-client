@@ -148,7 +148,7 @@ describe("Reports' utilization", () => {
         const departments = await screen.findByRole("table", { name: "Utilization by department" });
         expect(screen.getByRole("tab", { name: "Utilization" })).toHaveAttribute("aria-selected", "true");
         expect(screen.getByText("Utilization · September 2026")).toBeInTheDocument();
-        expect(screen.getByText("This month runs to today.")).toBeInTheDocument();
+        expect(screen.getByText("So far: this month runs to today.")).toBeInTheDocument();
         // the work report's period and export are for its other tabs, and it isn't asked for
         expect(screen.queryByRole("tablist", { name: "Period" })).toBeNull();
         expect(screen.queryByRole("button", { name: "Export" })).toBeNull();
@@ -206,7 +206,7 @@ describe("Reports' utilization", () => {
         await waitFor(() => expect(asked.at(-1)).toBe("2026-08-01"));
         expect(await screen.findByText("Utilization · August 2026")).toBeInTheDocument();
         await waitFor(() => expect(kpi("Hours logged")).toHaveTextContent(fmtH(reports.utilizationAugust.total.loggedMinutes)));
-        expect(screen.queryByText("This month runs to today.")).toBeNull();
+        expect(screen.queryByText("So far: this month runs to today.")).toBeNull();
         expect(screen.getByRole("button", { name: "Next month" })).toBeEnabled();
     });
 
