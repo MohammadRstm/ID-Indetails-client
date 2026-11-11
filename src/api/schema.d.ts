@@ -9464,6 +9464,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{projectId}/boqs/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    AsOf?: string;
+                };
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqProgressResponse"];
+                        "text/json": components["schemas"]["BoqProgressResponse"];
+                        "text/plain": components["schemas"]["BoqProgressResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["RecordBoqProgressRequest"];
+                    "application/json": components["schemas"]["RecordBoqProgressRequest"];
+                    "text/json": components["schemas"]["RecordBoqProgressRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoqProgressResponse"];
+                        "text/json": components["schemas"]["BoqProgressResponse"];
+                        "text/plain": components["schemas"]["BoqProgressResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{projectId}/budget": {
         parameters: {
             query?: never;
@@ -17302,6 +17372,70 @@ export interface components {
             /** Format: double */
             workUsd: number;
         };
+        BoqProgressLineRequest: {
+            /** Format: int64 */
+            boqLineId: number;
+            /** Format: double */
+            executedQuantity: number;
+            note?: null | string;
+        };
+        BoqProgressLineResponse: {
+            /** Format: double */
+            agreedValue: null | number;
+            /** Format: int64 */
+            boqId: number;
+            boqKind: components["schemas"]["BoqKind"];
+            /** Format: int64 */
+            boqLineId: number;
+            boqNumber: null | string;
+            boqTitle: string;
+            code: null | string;
+            description: string;
+            /** Format: date */
+            executedOn: null | string;
+            /** Format: double */
+            executedQuantity: null | number;
+            /** Format: int32 */
+            position: number;
+            /** Format: double */
+            progress: null | number;
+            /** Format: double */
+            quantity: number;
+            takesProgress: boolean;
+            unit: null | string;
+            /** Format: double */
+            unitPrice: null | number;
+            /** Format: double */
+            valueExecuted: null | number;
+        };
+        BoqProgressRecordResponse: {
+            /** Format: int64 */
+            boqLineId: number;
+            /** Format: double */
+            executedQuantity: number;
+            /** Format: int64 */
+            id: number;
+            note: null | string;
+            /** Format: date-time */
+            recordedAt: string;
+            recordedBy: components["schemas"]["PersonRefResponse"];
+            /** Format: date */
+            recordedOn: string;
+        };
+        BoqProgressResponse: {
+            /** Format: double */
+            agreedValue: null | number;
+            /** Format: date */
+            asOf: string;
+            history: components["schemas"]["BoqProgressRecordResponse"][];
+            lines: components["schemas"]["BoqProgressLineResponse"][];
+            /** Format: double */
+            progress: null | number;
+            /** Format: int64 */
+            projectId: number;
+            /** Format: double */
+            valueExecuted: null | number;
+        };
         BoqSiteResponse: {
             /** Format: int64 */
             id: number;
@@ -20569,6 +20703,8 @@ export interface components {
             departments: null | components["schemas"]["DepartmentInsightResponse"][];
             domain: string;
             /** Format: double */
+            executedProgress: null | number;
+            /** Format: double */
             fromPocket: number;
             /** Format: double */
             margin: null | number;
@@ -21539,6 +21675,11 @@ export interface components {
             channel?: components["schemas"]["DeliveryChannel"];
             note?: null | string;
             recipient?: null | string;
+        };
+        RecordBoqProgressRequest: {
+            lines?: components["schemas"]["BoqProgressLineRequest"][];
+            /** Format: date */
+            recordedOn?: null | string;
         };
         RecordDeliveryRequest: {
             channel?: components["schemas"]["DeliveryChannel"];

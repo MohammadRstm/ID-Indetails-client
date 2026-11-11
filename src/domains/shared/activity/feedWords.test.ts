@@ -111,6 +111,9 @@ describe("what the activity feed says", () => {
         expect(boq("boq_sent", { kind: "vo", number: "VO-2026-001", channel: "download" })).toBe("sent VO-2026-001 to Achrafieh Towers SAL");
         expect(boq("boq_agreed", { kind: "client", number: "BQ-2026-001" }, { amount: 17000 })).toBe("agreed BQ-2026-001 on Achrafieh Towers lobby - $17k");
         expect(boq("boq_agreed", { kind: "client", number: "BQ-2026-001" })).toBe("agreed BQ-2026-001 on Achrafieh Towers lobby");
+        expect(boq("boq_progress_recorded", { recordedOn: "2026-10-12", lines: 3 })).toBe("recorded progress on 3 lines of Achrafieh Towers lobby as of Oct 12");
+        expect(boq("boq_progress_recorded", { recordedOn: "2026-10-12", lines: 1 })).toBe("recorded progress on 1 line of Achrafieh Towers lobby as of Oct 12");
+        expect(boq("boq_progress_recorded", {})).toBe("recorded progress on the BOQ lines of Achrafieh Towers lobby");
         expect(boq("boq_agreement_withdrawn", { kind: "client", number: "BQ-2026-001", reason: "The client changed the scope" }))
             .toBe("withdrew the agreement of BQ-2026-001 on Achrafieh Towers lobby - The client changed the scope");
         expect(boq("boq_agreement_withdrawn", { kind: "vo", number: "VO-2026-001" })).toBe("withdrew the agreement of VO-2026-001 on Achrafieh Towers lobby");

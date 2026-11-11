@@ -231,6 +231,14 @@ const WORDS: Record<string, Words> = {
         text: (e, p) => `sent ${boq(p)} to ${client(e)}${p.channel === "whatsapp" ? " on WhatsApp" : p.channel === "email" ? " by email" : ""}`,
     },
     boq_agreed: { icon: "checkCircle", text: (e, p) => `agreed ${boq(p)} on ${project(e)}${dash(e.amount)}` },
+    // executed quantities on a site's agreed BOQ lines: the payload holds the day they stand at and how many lines changed
+    boq_progress_recorded: {
+        icon: "trendUp",
+        text: (e, p) => {
+            const lines = num(p.lines);
+            return `recorded progress on ${lines != null ? `${lines} ${lines === 1 ? "line" : "lines"}` : "the BOQ lines"} of ${project(e)}${str(p.recordedOn) ? ` as of ${fmtDate(str(p.recordedOn)!)}` : ""}`;
+        },
+    },
     boq_agreement_withdrawn: { icon: "x", text: (e, p) => `withdrew the agreement of ${boq(p)} on ${project(e)}${str(p.reason) ? ` - ${str(p.reason)}` : ""}` },
     billing_settings_updated: { icon: "settings", text: () => "updated the billing settings" },
     // the daily feed's rate has no actor, so it says on its own what happened

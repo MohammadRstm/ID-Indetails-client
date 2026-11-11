@@ -124,6 +124,20 @@ describe("a project's insights", () => {
         expect(within(whatIf).getByLabelText("Where the cost goes")).toHaveTextContent("Site expenses");
     });
 
+    it("shows a site's progress by value once its staff have recorded executed quantities", async () => {
+        renderApp(`/execution/projects/${site.project.id}?tab=insights`, karim, ...insightHandlers, ...siteHandlers);
+        const panel = await screen.findByRole("region", { name: "Profitability" });
+        expect(kpi(panel, "Executed (by value)")).toHaveTextContent("42.0%");
+    });
+
+    it("leaves the progress by value out until a line has a record", async () => {
+        renderApp(`/execution/projects/${site.project.id}?tab=insights`, karim,
+            http.get("/api/finance/insights/projects/:id", () => HttpResponse.json({ ...insights.site, executedProgress: null })), ...insightHandlers, ...siteHandlers);
+        const panel = await screen.findByRole("region", { name: "Profitability" });
+        expect(kpi(panel, "Profit so far")).toBeInTheDocument();
+        expect(within(panel).queryByText("Executed (by value)", { selector: ".kpi-label" })).toBeNull();
+    });
+
     it("says why it couldn't load", async () => {
         renderApp(`${path}?tab=insights`, nadia,
             http.get("/api/finance/insights/projects/:id", () => HttpResponse.json({ type: "forbidden", code: "forbidden", message: "Not allowed." }, { status: 403 })),

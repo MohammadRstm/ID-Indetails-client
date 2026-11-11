@@ -24,6 +24,7 @@ import { useEmployee } from "../../design/people/peopleWorkApi";
 import { personName, useDomainPeople } from "../../shared/people/peopleApi";
 import type { Project } from "../../shared/projects/projectsApi";
 import { useProjects } from "../../shared/projects/projectsApi";
+import BoqProgressPanel from "../boqs/BoqProgressPanel";
 import { SiteLogBrowser, WriteSiteLog } from "./SiteLogs";
 import { useMySites, useSetSiteStaff } from "./siteLogsApi";
 
@@ -69,14 +70,14 @@ export function DailyLogPage() {
     );
 }
 
-/** The sites a staff member oversees, newest first: each opens its page, where its weekly labour is reported. */
+/** The sites a staff member oversees, newest first: each opens its page, where its weekly labour is reported and its progress recorded. */
 export function MySitesPage() {
     const sites = useMySites();
     const navigate = useNavigate();
 
     return (
         <div className="page">
-            <PageHead title="My sites" sub="The sites you oversee. Open one to report its weekly ground labour." />
+            <PageHead title="My sites" sub="The sites you oversee. Open one to report its weekly ground labour, or, under Site staff, to write its logs and record its progress." />
             {loadFailed(sites) ? <LoadError error={sites.error} retry={() => sites.refetch()} what="your sites" />
                 : !sites.data ? <SkeletonLines lines={4} />
                     : sites.data.length === 0 ? <Empty art="search" title="You oversee no site yet" text="An admin puts you on a site when it starts." />
@@ -149,8 +150,11 @@ function StaffRow({ person }: { person: { id: number; name: string } }) {
     );
 }
 
-/** A site's staff and its daily logs, in its Site staff part: admins change who oversees it, staff write its logs. */
-export function SiteStaffPanels({ project }: { project: Project }) {
+/**
+ * A site's staff and its daily logs, in its Site staff part: admins change who oversees it, staff write its logs and
+ * record its progress by value (shown here to those who don't have the site's BOQs part, where it otherwise sits).
+ */
+export function SiteStaffPanels({ project, progress = false }: { project: Project; progress?: boolean }) {
     const permissions = usePermissions();
     const me = useCurrentUser();
     const [changing, setChanging] = useState(false);
@@ -184,6 +188,7 @@ export function SiteStaffPanels({ project }: { project: Project }) {
                 )}
             </div>
             {onTeam && open && permissions.has(P.SITE_LOG_CREATE) && <div className="mt"><WriteSiteLog sites={[]} fixedSiteId={project.id} /></div>}
+            {progress && <BoqProgressPanel project={project} />}
             {(readsAll || onTeam) && <SiteLogBrowser mine={!readsAll} projectId={project.id} title="Daily logs" />}
             {changing && <SiteStaffModal project={project} onClose={() => setChanging(false)} />}
         </>

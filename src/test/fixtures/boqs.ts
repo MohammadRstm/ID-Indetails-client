@@ -92,7 +92,47 @@ export const summaryOf = (d: Detail): Summary => ({
     submittedAt: d.submittedAt, changed: (d.changes?.length ?? 0) > 0,
 });
 
+type Progress = Schemas["BoqProgressResponse"];
+type ProgressLine = Schemas["BoqProgressLineResponse"];
+
+/** An agreed line with what was executed on it, and its values (financial:view): written out, as the API answers them. */
+const progressLine = (l: Line, executedQuantity: number | null, executedOn: string | null, progress: number | null, valueExecuted: number): ProgressLine => ({
+    boqLineId: l.id, boqId: 31, boqKind: "client", boqNumber: "BQ-2026-001", boqTitle: "Lobby works", position: l.position, code: l.code,
+    description: l.description, unit: l.unit, quantity: l.finalQuantity, takesProgress: true, executedQuantity, executedOn, progress,
+    unitPrice: l.rate, agreedValue: l.totalUsd, valueExecuted,
+});
+const [demolition, tiles, electrical] = lobbyLines(101);
+
+/**
+ * The lobby's progress by value on 30 September: the demolition done (105 m²), half the tiles laid (99 of 198 m²) and
+ * nothing recorded on the electrical work, so $5,070 executed of the agreed $17,000 (the VO isn't agreed, so it isn't counted).
+ */
+const progressFull: Progress = {
+    projectId: 7, asOf: "2026-09-30",
+    lines: [
+        progressLine(demolition, 105, "2026-09-21", 1, 2100),
+        progressLine(tiles, 99, "2026-09-28", 0.5, 2970),
+        progressLine(electrical, null, null, null, 0),
+    ],
+    agreedValue: 17000, valueExecuted: 5070, progress: 0.2982,
+    history: [
+        { id: 3, boqLineId: 102, recordedOn: "2026-09-28", executedQuantity: 99, note: "North wall tiled", recordedBy: { id: 5, name: "Tarek Nasser" }, recordedAt: "2026-09-28T14:00:00Z" },
+        { id: 2, boqLineId: 101, recordedOn: "2026-09-21", executedQuantity: 105, note: null, recordedBy: { id: 5, name: "Tarek Nasser" }, recordedAt: "2026-09-21T15:00:00Z" },
+        { id: 1, boqLineId: 101, recordedOn: "2026-09-14", executedQuantity: 60, note: null, recordedBy: karim, recordedAt: "2026-09-14T15:00:00Z" },
+    ],
+};
+
+/** The same, as someone without financial:view reads it: quantities and progress, every value null. */
+const progressQuantities: Progress = {
+    ...progressFull,
+    lines: progressFull.lines.map((l) => ({ ...l, unitPrice: null, agreedValue: null, valueExecuted: null })),
+    agreedValue: null, valueExecuted: null,
+};
+
+export const boqProgress = { full: progressFull, quantities: progressQuantities };
+
 export const boqHandlers = [
+    http.get("/api/projects/:id/boqs/progress", () => HttpResponse.json(boqProgress.full)),
     http.get("/api/projects/:id/boqs", () => HttpResponse.json(boqs.list)),
     http.get("/api/boqs/:id", ({ params }) => {
         const found = boqs.detail[Number(params.id)];

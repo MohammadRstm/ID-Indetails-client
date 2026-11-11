@@ -69,6 +69,10 @@ function Profitability({ insight: x }: { insight: ProjectInsight }) {
                         <Kpi label="Profit so far" value={<span className={x.siteCashProfit < 0 ? "down" : "up"}>{money.exact(x.siteCashProfit)}</span>}
                             sub={x.toPocket || x.fromPocket ? "received − spent ± pocket money" : "received − spent"} />
                     )}
+                    {site && x.executedProgress != null && (
+                        <Kpi label={<>Executed (by value)<HelpHint article="boq-progress" label="progress by value">The value of the work executed on the agreed BOQ and VOs, by the quantities the site recorded, against their agreed value.</HelpHint></>}
+                            value={money.pct(x.executedProgress)} sub="work executed ÷ agreed work" />
+                    )}
                 </div>
 
                 <div className="u mt" style={{ marginBottom: 6 }}>{client ? "Where the profit comes from" : "Where the cost comes from"}</div>

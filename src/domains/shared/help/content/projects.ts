@@ -375,6 +375,32 @@ export const projects: Article[] = [
             ),
             note("If agreeing or withdrawing would take the site's profit to zero or below, it isn't saved: you can force it through or dismiss it, as with other changes."),
         ],
-        related: ["boqs", "write-boq"],
+        related: ["boqs", "write-boq", "boq-progress"],
+    },
+    {
+        id: "boq-progress",
+        title: "Progress by value on a site",
+        category: "projects",
+        who: and(sees("execution"), hasAny(P.SITE_LOG_CREATE, P.SITE_LOG_VIEW_ALL, P.FINANCIAL_VIEW, P.PROJECT_PRICING_MANAGE)),
+        summary: "How far a site is, measured by the work executed on its agreed BOQ and VOs: the quantity executed on each line, and the value executed against the agreed value.",
+        ask: ["progress by value", "executed quantity", "executed quantities", "record progress", "site progress", "boq progress", "work done", "how far is the site", "value executed"],
+        blocks: [
+            only(hasAny(P.FINANCIAL_VIEW, P.PROJECT_PRICING_MANAGE, P.SITE_LOG_VIEW_ALL), para("It's under **Progress by value** in the site's **BOQs** part of its Financials tab, or in its **Site staff** part when you don't see the BOQs.")),
+            only(not(hasAny(P.FINANCIAL_VIEW, P.PROJECT_PRICING_MANAGE, P.SITE_LOG_VIEW_ALL)), para("It's in the **Site staff** part of a site you oversee: open the site from **My sites**.")),
+            steps(
+                step("Press **Record progress**."),
+                step("For each line, enter **everything executed so far** in its unit, not just the day's work. Leave the others as they are."),
+                step("Pick the day the quantities stand at (today, or a day before), add a note if it helps, and save."),
+            ),
+            list(
+                "A quantity can be at most twice the line's quantity, so an overrun can be recorded but a typo is caught. It can be lower than before, to correct a mistake.",
+                "Recording a line again on the same day replaces that day's quantity.",
+                "Only the agreed client BOQ and the agreed VOs take progress. A line that takes work away (a negative rate) doesn't.",
+                "**As of** shows the quantities as they stood on any earlier day.",
+            ),
+            only(has(P.FINANCIAL_VIEW), formula("Progress by value = Σ executed quantity × unit price ÷ the agreed value", "Each line's unit price is its rate with its BOQ's adjustment spread over it, net of TVA and without supervision.")),
+            note("Every figure is worked out by the server. Nothing can be recorded once the site is finished."),
+        ],
+        related: ["boqs", "daily-log"],
     },
 ];

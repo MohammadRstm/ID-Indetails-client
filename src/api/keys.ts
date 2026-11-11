@@ -18,6 +18,8 @@ export const keys = {
         scenario: (id: number, levers: object) => ["projects", "detail", id, "insights", "scenario", levers] as const,
         /** Its cost budget, each line against what it has cost: under the project, so every change to its costs refreshes it. */
         budget: (id: number) => ["projects", "detail", id, "budget"] as const,
+        /** A site's progress by value on a day (or every day, without one): under its BOQs, so agreeing or withdrawing one refreshes it. */
+        boqProgress: (id: number, asOf?: string) => ["projects", "detail", id, "boqs", "progress", ...(asOf ? [asOf] : [])] as const,
     },
     /** The Execution client sites a BOQ author writes drafts for. */
     boqSites: {
