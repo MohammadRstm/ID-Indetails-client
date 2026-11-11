@@ -857,3 +857,10 @@ button.pc-comments { border: 0; cursor: pointer; }
 .boq-ref-table td { padding: 0 8px; height: 32px; color: var(--ink); }
 .boq-ref-table td.mono { font-family: var(--mono); font-size: 12px; }
 .boq-ref-table tr.boq-ref-permit td { background: var(--surface-2); }
+
+/* The company overview's Expenses row: the parts fold away under it, indented and lighter */
+.co-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; }
+.co-chev { display: inline-flex; transition: transform 0.15s; }
+.co-toggle[aria-expanded="true"] .co-chev { transform: rotate(90deg); }
+.co-sub { border-top: 1px solid var(--line); }
+.co-sub .co-line.sub { padding-left: 22px; font-size: 12.5px; color: var(--ink-3); }
