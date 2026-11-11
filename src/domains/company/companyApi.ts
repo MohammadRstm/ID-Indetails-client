@@ -147,7 +147,6 @@ export function useOneOffs(month: string, enabled = true) {
     return useQuery({
         queryKey: [...overheadKey, "one-offs", month],
         queryFn: async () => (await http.get<OneOffList>("/company/overhead/one-offs", { params: { month } })).data,
-        placeholderData: keepPreviousData,
         enabled,
     });
 }
