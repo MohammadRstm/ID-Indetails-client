@@ -34,6 +34,13 @@ describe("Proton's UI commands", () => {
         }
         expect(stepOf(command({ type: "open_page", page: "financials", domain: "design", tab: "risks" }), superAdmin, "design"))
             .toEqual({ kind: "go", path: "/design/financials", label: "It" });
+        // the Reports page's Utilization tab; a Financials tab means nothing there
+        expect(stepOf(command({ type: "open_page", page: "reports", domain: "design", tab: "utilization" }), superAdmin, "design"))
+            .toEqual({ kind: "go", path: "/design/reports?tab=utilization", label: "It" });
+        expect(stepOf(command({ type: "open_page", page: "reports", domain: "design", tab: "insights" }), superAdmin, "design"))
+            .toEqual({ kind: "go", path: "/design/reports", label: "It" });
+        expect(stepOf(command({ type: "open_page", page: "financials", domain: "design", tab: "utilization" }), superAdmin, "design"))
+            .toEqual({ kind: "go", path: "/design/financials", label: "It" });
         expect(stepOf(command({ type: "refresh" }), designAdmin, "design")).toEqual({ kind: "refresh" });
     });
 

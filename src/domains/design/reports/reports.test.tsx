@@ -1,8 +1,10 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
+import { money } from "@/shared/format/money";
+import { fmtH } from "@/shared/format/time";
 import { fixtures } from "@/test/fixtures";
 import { reportHandlers, reports } from "@/test/fixtures/reports";
 import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
@@ -131,5 +133,107 @@ describe("Reports", () => {
     it("needs report:view", async () => {
         renderApp("/design/reports", withPermissions(nadia, { revoke: [P.REPORT_VIEW] }), ...reportHandlers);
         expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
+    });
+});
+
+describe("Reports' utilization", () => {
+    const u = reports.utilization;
+    const kpi = (label: string) => screen.getByText(label, { selector: ".kpi-label" }).closest(".kpi") as HTMLElement;
+
+    it("shows each department's and each person's hours in the month, as the API gives them", async () => {
+        let askedForWork = false;
+        renderApp("/design/reports?tab=utilization", nadia,
+            http.get("/api/reports/work", () => { askedForWork = true; return HttpResponse.json(reports.work); }),
+            ...reportHandlers);
+        const departments = await screen.findByRole("table", { name: "Utilization by department" });
+        expect(screen.getByRole("tab", { name: "Utilization" })).toHaveAttribute("aria-selected", "true");
+        expect(screen.getByText("Utilization · September 2026")).toBeInTheDocument();
+        expect(screen.getByText("This month runs to today.")).toBeInTheDocument();
+        // the work report's period and export are for its other tabs, and it isn't asked for
+        expect(screen.queryByRole("tablist", { name: "Period" })).toBeNull();
+        expect(screen.queryByRole("button", { name: "Export" })).toBeNull();
+        expect(askedForWork).toBe(false);
+
+        expect(kpi("Hours logged")).toHaveTextContent(fmtH(u.total.loggedMinutes));
+        expect(kpi("Expected hours")).toHaveTextContent(fmtH(u.total.expectedMinutes));
+        expect(kpi("Excused")).toHaveTextContent(fmtH(u.total.excusedMinutes));
+        expect(kpi("Overtime")).toHaveTextContent(fmtH(u.total.overtimeMinutes));
+        expect(screen.getAllByText(money.pct(u.total.utilization)).some((el) => el.closest(".kpi"))).toBe(true);
+
+        const departmentRows = within(departments).getAllByRole("row").slice(1);
+        expect(departmentRows.map((r) => r.querySelector("td")?.textContent)).toEqual(["Architecture", "Interiors", "Visualisation"]);
+        for (const text of ["3", fmtH(29700), fmtH(30240), fmtH(960), fmtH(1500), money.pct(1.0143)]) expect(departmentRows[0]).toHaveTextContent(text);
+
+        const people = screen.getByRole("table", { name: "Utilization by person" });
+        const elie = within(people).getByRole("row", { name: "Elie Khalil" });
+        for (const text of ["Architecture", fmtH(11340), fmtH(10080), fmtH(1260), money.pct(1.125)]) expect(elie).toHaveTextContent(text);
+        expect(screen.getByRole("note", { name: "How utilization is worked out" })).toHaveTextContent("A department is the person's department today.");
+    });
+
+    it("opens a person onto the projects their hours went to, and never shows money beside anyone", async () => {
+        renderApp("/design/reports?tab=utilization", nadia, ...reportHandlers);
+        const people = await screen.findByRole("table", { name: "Utilization by person" });
+        await userEvent.click(within(people).getByRole("button", { name: "Show Elie Khalil's projects" }));
+        const elie = within(people).getByRole("table", { name: "Elie Khalil's projects" });
+        const [loft, beach] = within(elie).getAllByRole("row").slice(1);
+        for (const text of ["Gemmayze loft renovation", fmtH(7380), money.pct(0.6508)]) expect(loft).toHaveTextContent(text);
+        expect(beach).toHaveTextContent("Batroun beach house");
+        expect(within(people).getByRole("button", { name: "Hide Elie Khalil's projects" })).toHaveAttribute("aria-expanded", "true");
+
+        await userEvent.click(within(people).getByRole("button", { name: "Show Rami Aoun's projects" }));
+        expect(within(people).getByText("No hours logged on a project in this month.")).toBeInTheDocument();
+        await userEvent.click(within(people).getByRole("button", { name: "Show Yara Mansour's projects" }));
+
+        // hours only, even for someone who sees the money
+        expect(people.textContent).not.toMatch(/\$|USD|LBP/);
+        expect(screen.getByRole("table", { name: "Utilization by department" }).textContent).not.toMatch(/\$|USD|LBP/);
+    });
+
+    it("asks for the month picked, and never a future one", async () => {
+        const asked: (string | null)[] = [];
+        renderApp("/design/reports?tab=utilization", nadia,
+            http.get("/api/reports/utilization", ({ request }) => {
+                const month = new URL(request.url).searchParams.get("month");
+                asked.push(month);
+                return HttpResponse.json(month?.startsWith("2026-08") ? reports.utilizationAugust : u);
+            }),
+            ...reportHandlers);
+        await screen.findByRole("table", { name: "Utilization by person" });
+        expect(asked[0]).toBe("2026-09-01");
+        expect(screen.getByRole("button", { name: "Next month" })).toBeDisabled();
+
+        await userEvent.click(screen.getByRole("button", { name: "Previous month" }));
+        await waitFor(() => expect(asked.at(-1)).toBe("2026-08-01"));
+        expect(await screen.findByText("Utilization · August 2026")).toBeInTheDocument();
+        await waitFor(() => expect(kpi("Hours logged")).toHaveTextContent(fmtH(reports.utilizationAugust.total.loggedMinutes)));
+        expect(screen.queryByText("This month runs to today.")).toBeNull();
+        expect(screen.getByRole("button", { name: "Next month" })).toBeEnabled();
+    });
+
+    it("opens from its tab beside the others", async () => {
+        renderApp("/design/reports", nadia, ...reportHandlers);
+        await screen.findByText("1,037");
+        await userEvent.click(screen.getByRole("tab", { name: "Utilization" }));
+        expect(await screen.findByRole("table", { name: "Utilization by department" })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Previous month" })).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("tab", { name: "Overview" }));
+        expect(await screen.findByText("1,037")).toBeInTheDocument();
+    });
+
+    it("says why when it doesn't load, and tries again", async () => {
+        let failing = true;
+        renderApp("/design/reports?tab=utilization", nadia,
+            http.get("/api/reports/utilization", () => (failing
+                ? HttpResponse.json({ type: "forbidden", code: "forbidden", message: "Not allowed." }, { status: 403 })
+                : HttpResponse.json(u))),
+            ...reportHandlers);
+        expect(await screen.findByText(/Couldn't load the utilization\./)).toBeInTheDocument();
+        // the month and the tabs stay, to move on from it
+        expect(screen.getByRole("button", { name: "Previous month" })).toBeInTheDocument();
+        expect(screen.getByRole("tab", { name: "Overview" })).toBeInTheDocument();
+
+        failing = false;
+        await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+        expect(await screen.findByRole("table", { name: "Utilization by person" })).toBeInTheDocument();
     });
 });
