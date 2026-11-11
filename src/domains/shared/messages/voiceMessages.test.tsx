@@ -86,7 +86,8 @@ describe("Voice messages", () => {
             http.get("/api/files/91", () => new HttpResponse(new Blob(["x"], { type: "audio/webm" }))),
             ...messageHandlers);
         const thread = await screen.findByRole("button", { name: "Play voice note" }).then(() => document.querySelector(".msg-thread") as HTMLElement);
-        expect(thread.querySelector("img")).toBeNull();
+        // the voice note isn't shown as a picture (the sender's avatar is the only image)
+        expect(thread.querySelector("img.msg-att")).toBeNull();
         await waitFor(() => expect(within(thread).getByRole("button", { name: "Play voice note" })).toBeEnabled());
         await userEvent.click(within(thread).getByRole("button", { name: "Play voice note" }));
         expect(voice.play).toHaveBeenCalled();
