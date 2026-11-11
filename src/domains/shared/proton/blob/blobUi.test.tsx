@@ -32,7 +32,7 @@ function proton(available = usage) {
 }
 
 const blob = () => screen.findByRole("button", { name: /^Proton, / });
-const stored = () => JSON.parse(localStorage.getItem("proton:blob") ?? "{}") as { side?: string; y?: number };
+const stored = () => JSON.parse(localStorage.getItem("proton:blob") ?? "{}") as { side?: string; y?: number; look?: string };
 
 afterEach(() => {
     resetProton();
@@ -109,6 +109,23 @@ describe("Proton's blob", () => {
         await user.click(within(panel).getByRole("button", { name: "Proton options" }));
         await user.click(within(panel).getByRole("menuitem", { name: "Move to the left" }));
         expect(stored().side).toBe("left");
+    });
+
+    it("is the orb unless the classic blob is chosen from its menu, and remembers the choice", async () => {
+        renderApp("/design/help", personas.designAdmin, ...proton().handlers);
+        const user = userEvent.setup();
+        const button = await blob();
+        expect(button).toHaveClass("is-orb");
+
+        await user.click(button);
+        const panel = await screen.findByRole("dialog", { name: "Proton" });
+        await user.click(within(panel).getByRole("button", { name: "Proton options" }));
+        await user.click(within(panel).getByRole("menuitemcheckbox", { name: "Show the classic blob" }));
+        expect(stored().look).toBe("blob");
+        expect(await blob()).not.toHaveClass("is-orb");
+
+        await user.click(within(panel).getByRole("button", { name: "Proton options" }));
+        expect(within(panel).getByRole("menuitemcheckbox", { name: "Show the orb" })).toHaveAttribute("aria-checked", "true");
     });
 
     it("can be asked from the command palette", async () => {
