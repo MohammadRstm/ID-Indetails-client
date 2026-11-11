@@ -2457,6 +2457,136 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/company/overhead/one-offs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    month?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OneOffExpenseListResponse"];
+                        "text/json": components["schemas"]["OneOffExpenseListResponse"];
+                        "text/plain": components["schemas"]["OneOffExpenseListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SaveOneOffExpenseRequest"];
+                    "application/json": components["schemas"]["SaveOneOffExpenseRequest"];
+                    "text/json": components["schemas"]["SaveOneOffExpenseRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OneOffExpenseResponse"];
+                        "text/json": components["schemas"]["OneOffExpenseResponse"];
+                        "text/plain": components["schemas"]["OneOffExpenseResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company/overhead/one-offs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SaveOneOffExpenseRequest"];
+                    "application/json": components["schemas"]["SaveOneOffExpenseRequest"];
+                    "text/json": components["schemas"]["SaveOneOffExpenseRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OneOffExpenseResponse"];
+                        "text/json": components["schemas"]["OneOffExpenseResponse"];
+                        "text/plain": components["schemas"]["OneOffExpenseResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/company/overview": {
         parameters: {
             query?: never;
@@ -17484,6 +17614,8 @@ export interface components {
             /** Format: double */
             netProfit: number;
             /** Format: double */
+            oneOffExpenses: number;
+            /** Format: double */
             overhead: number;
             /** Format: double */
             overtimePremium: number;
@@ -17507,6 +17639,8 @@ export interface components {
             cost: number;
             domains: components["schemas"]["DomainOverviewResponse"][];
             /** Format: double */
+            expenses: number;
+            /** Format: double */
             fixedSalaries: number;
             /** Format: date */
             from: string;
@@ -17516,6 +17650,8 @@ export interface components {
             invoiced: number;
             /** Format: double */
             netProfit: number;
+            /** Format: double */
+            oneOffExpenses: number;
             /** Format: double */
             outstanding: number;
             /** Format: double */
@@ -17533,6 +17669,7 @@ export interface components {
             unconvertedAdminSalaries: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedFixedSalaries: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedInvoices: components["schemas"]["UnconvertedInvoicesResponse"][];
+            unconvertedOneOffExpenses: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedOverhead: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedOvertimePremium: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedPaidLeave: components["schemas"]["CurrencyTotalResponse"][];
@@ -19167,6 +19304,27 @@ export interface components {
             projectId: number;
             projectTitle: string;
         };
+        OneOffExpenseListResponse: {
+            isOpen: boolean;
+            items: components["schemas"]["OneOffExpenseResponse"][];
+            /** Format: date */
+            month: string;
+            totals: components["schemas"]["CurrencyTotalResponse"][];
+        };
+        OneOffExpenseResponse: {
+            /** Format: double */
+            amount: number;
+            canEdit: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            currency: string;
+            group: components["schemas"]["OverheadGroupSummaryResponse"];
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: date */
+            spentOn: string;
+        };
         OutsideScopeResponse: {
             /** Format: date */
             from: string;
@@ -19222,6 +19380,7 @@ export interface components {
         OverheadMonthResponse: {
             /** Format: date */
             month: string;
+            oneOffTotals: components["schemas"]["CurrencyTotalResponse"][];
             totals: components["schemas"]["CurrencyTotalResponse"][];
         };
         OverheadResponse: {
@@ -21730,6 +21889,16 @@ export interface components {
             quietFromMinute?: null | number;
             /** Format: int32 */
             quietToMinute?: null | number;
+        };
+        SaveOneOffExpenseRequest: {
+            /** Format: double */
+            amount?: number;
+            currency?: string;
+            /** Format: int64 */
+            groupId?: number;
+            name?: string;
+            /** Format: date */
+            spentOn?: string;
         };
         SaveProtonMemoryRequest: {
             /** Format: uuid */
