@@ -5063,6 +5063,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/insights/projects/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectInsightResponse"];
+                        "text/json": components["schemas"]["ProjectInsightResponse"];
+                        "text/plain": components["schemas"]["ProjectInsightResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/insights/projects/{id}/scenario": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    DelayWeeks?: number;
+                    ExtraCost?: number;
+                    ExtraCostSource?: components["schemas"]["CostSource"];
+                    SettleOwed?: components["schemas"]["OwedSettlement"];
+                    SupervisionRate?: number;
+                    TvaRate?: number;
+                    VoAmount?: number;
+                };
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectScenarioResponse"];
+                        "text/json": components["schemas"]["ProjectScenarioResponse"];
+                        "text/plain": components["schemas"]["ProjectScenarioResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/hour-excuses/{excuseId}": {
         parameters: {
             query?: never;
@@ -16985,6 +17071,13 @@ export interface components {
             logoFileId: null | number;
             name: null | string;
         };
+        /** @enum {unknown} */
+        BridgeStepKind: "base_price" | "variation_orders" | "settlement" | "paid_ahead" | "supervision" | "permits" | "labour" | "expenses" | "site_expenses" | "ground_labour" | "pocket";
+        BridgeStepResponse: {
+            /** Format: double */
+            amount: number;
+            kind: components["schemas"]["BridgeStepKind"];
+        };
         CashWeekResponse: {
             /** Format: double */
             groundLabour: number;
@@ -17626,6 +17719,24 @@ export interface components {
         DenyPocketRequestRequest: {
             note?: null | string;
         };
+        DepartmentInsightResponse: {
+            /** Format: double */
+            budget: number;
+            /** Format: double */
+            cost: number;
+            /** Format: int64 */
+            id: null | number;
+            /** Format: double */
+            labourShare: null | number;
+            /** Format: double */
+            left: number;
+            /** Format: int32 */
+            minutes: number;
+            name: string;
+            /** Format: double */
+            share: null | number;
+            unconverted: components["schemas"]["CurrencyAmountResponse"][];
+        };
         DepartmentMoneyResponse: {
             /** Format: double */
             budget: number;
@@ -18156,6 +18267,11 @@ export interface components {
         };
         /** Format: binary */
         IFormFile: string;
+        InsightBasisResponse: {
+            assumptions: string[];
+            leftOut: string[];
+            method: string;
+        };
         InvitationPayRequest: {
             /** Format: double */
             amount?: number;
@@ -19814,6 +19930,8 @@ export interface components {
             lastName: null | string;
             phone: null | string;
         };
+        /** @enum {unknown} */
+        ProfitStanding: "fine" | "close" | "at_zero" | null;
         ProjectBillingResponse: {
             /** Format: double */
             drafts: number;
@@ -20026,6 +20144,49 @@ export interface components {
         ProjectFileUploadCompletedResponse: {
             item: null | components["schemas"]["ProjectFileResponse"];
             usage: components["schemas"]["PortalUsageResponse"];
+        };
+        ProjectInsightResponse: {
+            /** Format: double */
+            agreedProfit: number;
+            /** Format: double */
+            agreedRevenue: number;
+            /** Format: double */
+            agreedWithTva: number;
+            basis: components["schemas"]["InsightBasisResponse"];
+            billingType: components["schemas"]["BillingType"];
+            bridge: components["schemas"]["BridgeStepResponse"][];
+            cost: components["schemas"]["ProjectCostResponse"];
+            departments: null | components["schemas"]["DepartmentInsightResponse"][];
+            domain: string;
+            /** Format: double */
+            fromPocket: number;
+            /** Format: double */
+            margin: null | number;
+            marginKnown: boolean;
+            /** Format: double */
+            owed: number;
+            /** Format: int32 */
+            progressPct: number;
+            projected: null | components["schemas"]["ProjectProjectionResponse"];
+            /** Format: int64 */
+            projectId: number;
+            /** Format: double */
+            received: number;
+            /** Format: double */
+            receivedTva: number;
+            /** Format: double */
+            recognisedToDate: number;
+            /** Format: double */
+            siteCashProfit: null | number;
+            standing: null | components["schemas"]["ProfitStanding"];
+            status: components["schemas"]["ProjectStatus"];
+            /** Format: double */
+            supervisionRate: null | number;
+            title: string;
+            /** Format: double */
+            toPocket: number;
+            /** Format: double */
+            tvaRate: number;
         };
         /** @enum {unknown} */
         ProjectionState: "done" | "losing" | "no_defaults" | "ok";
@@ -20285,6 +20446,18 @@ export interface components {
             team: null | components["schemas"]["SiteTeamResponse"];
             tint: null | string;
             title: string;
+        };
+        ProjectScenarioResponse: {
+            after: components["schemas"]["ScenarioFiguresResponse"];
+            basis: components["schemas"]["InsightBasisResponse"];
+            before: components["schemas"]["ScenarioFiguresResponse"];
+            floorWouldRefuse: boolean;
+            /** Format: double */
+            profitChange: number;
+            /** Format: int64 */
+            projectId: number;
+            /** Format: double */
+            weeklyCost: null | number;
         };
         /** @enum {unknown} */
         ProjectSort: "start" | "activity" | "hours" | "progress" | "name" | "client";
@@ -20667,7 +20840,7 @@ export interface components {
         /** @enum {unknown} */
         ProtonProjectPart: "presentation" | "model" | "drawing" | "access" | "discussion" | "overview" | "payments" | "accounts" | "boqs" | "supervision" | "expenses" | "labour" | "staff" | null;
         /** @enum {unknown} */
-        ProtonProjectSection: "financials" | "payments" | "vos" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal" | null;
+        ProtonProjectSection: "financials" | "payments" | "vos" | "insights" | "overview" | "analytics" | "contributors" | "requirements" | "timeline" | "meetings" | "files" | "portal" | null;
         /** @enum {unknown} */
         ProtonQuickReply: "yes" | "no" | "design" | "execution" | "today" | "this_week" | "last_week" | "this_month" | "last_month" | "this_quarter" | "last_quarter" | "this_year" | "last_year";
         ProtonQuickReplyOption: {
@@ -21431,6 +21604,21 @@ export interface components {
             projectId?: number;
             /** Format: date-time */
             startedAt?: string;
+        };
+        ScenarioFiguresResponse: {
+            /** Format: double */
+            agreedProfit: number;
+            /** Format: double */
+            agreedRevenue: number;
+            /** Format: double */
+            agreedWithTva: number;
+            /** Format: double */
+            cost: number;
+            /** Format: double */
+            margin: null | number;
+            /** Format: double */
+            owed: number;
+            standing: null | components["schemas"]["ProfitStanding"];
         };
         ScheduleDayFill: {
             /** Format: int32 */

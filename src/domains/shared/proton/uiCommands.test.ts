@@ -14,7 +14,7 @@ describe("Proton's UI commands", () => {
         expect(stepOf(command({ type: "open_project", id: 42, domain: "design", section: "requirements" }), designAdmin, "design"))
             .toEqual({ kind: "go", path: "/design/projects/42?tab=requirements", label: "It" });
         // the project page's newer tabs
-        for (const section of ["financials", "payments", "vos", "analytics", "contributors"]) {
+        for (const section of ["financials", "payments", "vos", "insights", "analytics", "contributors"]) {
             expect(stepOf(command({ type: "open_project", id: 42, domain: "design", section }), designAdmin, "design"))
                 .toEqual({ kind: "go", path: `/design/projects/42?tab=${section}`, label: "It" });
         }
@@ -71,6 +71,8 @@ describe("the page context", () => {
         // a Design client project's client payments and variation orders
         expect(pageContextOf("/design/projects/42", "?tab=vos")).toMatchObject({ entityType: "project", section: "vos", part: null });
         expect(pageContextOf("/design/projects/42", "?tab=payments")).toMatchObject({ section: "payments" });
+        // a Design client project's or a site's insights
+        expect(pageContextOf("/execution/projects/7", "?tab=insights")).toMatchObject({ entityType: "project", section: "insights", part: null });
         // a part another tab doesn't have, or no tab at all, names none
         expect(pageContextOf("/design/projects/42", "?tab=files&part=discussion")?.part).toBeNull();
         expect(pageContextOf("/design/projects/42", "?part=access")?.part).toBeNull();

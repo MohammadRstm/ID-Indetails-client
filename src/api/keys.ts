@@ -13,6 +13,9 @@ export const keys = {
         totals: (params: object) => ["projects", "totals", params] as const,
         counts: (domain: string) => ["projects", "counts", domain] as const,
         detail: (id: number) => ["projects", "detail", id] as const,
+        /** Its profitability and its what-ifs: under the project, so every change to it refreshes them. */
+        insights: (id: number) => ["projects", "detail", id, "insights"] as const,
+        scenario: (id: number, levers: object) => ["projects", "detail", id, "insights", "scenario", levers] as const,
     },
     /** The Execution client sites a BOQ author writes drafts for. */
     boqSites: {

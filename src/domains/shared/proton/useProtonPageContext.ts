@@ -27,7 +27,7 @@ const WEBSITE_PAGES: Record<string, Page> = {
     notifications: "notifications", messages: "messages", help: "help",
 };
 const RECORDS: Record<string, Schemas["ProtonRefType"]> = { projects: "project", clients: "client", people: "person" };
-const SECTIONS: readonly Section[] = ["financials", "payments", "vos", "overview", "analytics", "contributors", "requirements", "timeline", "meetings", "files", "portal"];
+const SECTIONS: readonly Section[] = ["financials", "payments", "vos", "insights", "overview", "analytics", "contributors", "requirements", "timeline", "meetings", "files", "portal"];
 const PARTS: Partial<Record<Section, readonly Part[]>> = {
     files: ["presentation", "model", "drawing"],
     portal: ["presentation", "model", "drawing", "access", "discussion"],
