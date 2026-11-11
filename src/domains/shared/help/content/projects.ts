@@ -1,5 +1,5 @@
 import { P } from "@/app/permissions/codes";
-import { and, has, link, links, list, not, note, only, or, para, sees, step, steps, type Article } from "../helpModel";
+import { and, formula, has, hasAny, link, links, list, not, note, only, or, para, sees, step, steps, type Article } from "../helpModel";
 
 export const projects: Article[] = [
     {
@@ -78,6 +78,23 @@ export const projects: Article[] = [
             only(has(P.FINANCIAL_VIEW), para("Progress also drives the money figures that look ahead: revenue earned so far, and the projected cost and profit.")),
         ],
         related: ["project-status", "profit-margin"],
+    },
+    {
+        id: "planned-hours",
+        title: "Planned hours and progress by department",
+        category: "projects",
+        who: and(sees("design"), has(P.PROJECT_VIEW)),
+        summary: "A Design project's departments can each be given the hours they're expected to put in. Those who see the hours logged see how far along each department is.",
+        ask: ["planned hours", "plan hours", "hours plan", "hours budget", "department progress", "hours left", "over the planned hours", "estimate hours"],
+        blocks: [
+            para("Planned hours are hours, not money: they're kept apart from a department's budget (its share of the price)."),
+            only(hasAny(P.FINANCIAL_VIEW, P.WORK_ENTRY_VIEW_ALL),
+                formula("Progress = hours logged in the department ÷ its planned hours", "40h planned and 50h logged: 125%, shown in amber once it passes 100%.")),
+            only(not(hasAny(P.FINANCIAL_VIEW, P.WORK_ENTRY_VIEW_ALL)), para("You see each department's planned hours on the project's Overview.")),
+            only(has(P.FINANCIAL_VIEW), para("They're under **Departments** on the project's Financials tab, and on its Insights tab.")),
+            only(has(P.PROJECT_EDIT), para("To plan them, press **Plan hours**, give each department its hours (leave one empty for no plan) and save. Each change is in the project's activity.")),
+        ],
+        related: ["progress", "project-budget"],
     },
     {
         id: "manage-requirements",
