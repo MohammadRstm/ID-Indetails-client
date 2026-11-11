@@ -13,13 +13,20 @@ export function stubVoice({ micBlocked = false }: { micBlocked?: boolean } = {})
         : vi.fn().mockResolvedValue({ getTracks: () => [{ stop: stopTrack }] });
     Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia } });
 
+    const recorders: FakeRecorder[] = [];
     class FakeRecorder {
         static isTypeSupported = (type: string) => type === "audio/webm;codecs=opus";
         state: "inactive" | "recording" = "inactive";
         mimeType = "audio/webm;codecs=opus";
         ondataavailable: ((e: { data: Blob }) => void) | null = null;
         onstop: (() => void) | null = null;
-        constructor(public stream: unknown, public options: unknown) { recorders.push(this); }
+        stream: unknown;
+        options: unknown;
+        constructor(stream: unknown, options: unknown) {
+            this.stream = stream;
+            this.options = options;
+            recorders.push(this);
+        }
         start() { this.state = "recording"; }
         stop() {
             this.state = "inactive";
@@ -27,7 +34,6 @@ export function stubVoice({ micBlocked = false }: { micBlocked?: boolean } = {})
             this.onstop?.();
         }
     }
-    const recorders: FakeRecorder[] = [];
     vi.stubGlobal("MediaRecorder", FakeRecorder);
 
     const play = vi.fn().mockResolvedValue(undefined);
