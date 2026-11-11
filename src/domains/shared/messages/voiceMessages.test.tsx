@@ -6,6 +6,7 @@ import { message, messageHandlers, messages, people } from "@/test/fixtures/mess
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import { savedVoice, stubVoice } from "@/test/voice";
+import { snippet } from "./messageText";
 
 const rana = personas.superAdmin;
 let voice: ReturnType<typeof stubVoice>;
@@ -77,7 +78,7 @@ describe("Voice messages", () => {
         expect(screen.getByRole("button", { name: "Send" })).toBeInTheDocument();
     });
 
-    it("play a voice note in the thread, and say 'Voice message' in the list", async () => {
+    it("play a voice note in the thread, and call it a voice message in previews", async () => {
         const note = message(91, people.nadia, null, "2026-09-30T08:30:00Z", { attachments: [savedVoice(91)] });
         const conversations = messages.conversations.map((c) => (c.type === "dm" ? { ...c, lastMessage: note } : c));
         renderApp("/design/messages?with=2", rana,
@@ -91,6 +92,7 @@ describe("Voice messages", () => {
         await waitFor(() => expect(within(thread).getByRole("button", { name: "Play voice note" })).toBeEnabled());
         await userEvent.click(within(thread).getByRole("button", { name: "Play voice note" }));
         expect(voice.play).toHaveBeenCalled();
-        expect(within(document.querySelector(".msg-sidebar") as HTMLElement).getByText(/Voice message/)).toBeInTheDocument();
+        // previews (the header's messages menu) describe a voice-only message; the page's list shows no previews
+        expect(snippet(note)).toBe("🎤 Voice message");
     });
 });
