@@ -44,7 +44,8 @@ const FILE_PARTS = ["presentation", "model", "drawing"] as const;
 const PORTAL_PARTS = [...FILE_PARTS, "access", "discussion"] as const;
 /** The parts of an Execution site's Financials tab; ground labour is a view of its expenses part. */
 const SITE_PARTS = ["overview", "payments", "accounts", "boqs", "supervision", "expenses", "labour", "staff"] as const;
-const TABS = ["overview", "projects", "clients", "billing", "costs"] as const;
+/** The Financials page's tabs. */
+const TABS = ["overview", "projects", "clients", "billing", "costs", "insights"] as const;
 
 /** The values object each form takes in a fill: a fill naming one form with another's values is dropped. */
 const FILLS: Record<FormFill["form"], keyof FormFill> = {

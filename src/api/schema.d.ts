@@ -5063,6 +5063,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/insights/{domain}/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Months?: number;
+                };
+                header?: never;
+                path: {
+                    domain: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ExpenseTrendsResponse"];
+                        "text/json": components["schemas"]["ExpenseTrendsResponse"];
+                        "text/plain": components["schemas"]["ExpenseTrendsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/insights/{domain}/risks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    domain: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectRisksResponse"];
+                        "text/json": components["schemas"]["ProjectRisksResponse"];
+                        "text/plain": components["schemas"]["ProjectRisksResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/finance/insights/projects/{id}": {
         parameters: {
             query?: never;
@@ -18026,6 +18106,34 @@ export interface components {
         };
         /** @enum {unknown} */
         ExcuseKind: "minutes" | "days" | "whole_month";
+        /** @enum {unknown} */
+        ExpenseAnomalyKind: "category_high" | "unit_cost_jump" | "same_amount_twice";
+        ExpenseAnomalyResponse: {
+            /** Format: double */
+            baseline: null | number;
+            category: null | string;
+            expenseIds: number[];
+            fact: string;
+            item: null | string;
+            kind: components["schemas"]["ExpenseAnomalyKind"];
+            /** Format: date */
+            on: string;
+            /** Format: int32 */
+            pct: null | number;
+            /** Format: int64 */
+            projectId: null | number;
+            projectTitle: null | string;
+            rule: string;
+            /** Format: double */
+            usd: null | number;
+        };
+        ExpenseCategoryMonthResponse: {
+            /** Format: double */
+            baseline: null | number;
+            category: string;
+            /** Format: double */
+            usd: number;
+        };
         ExpenseItemResponse: {
             /** Format: double */
             amount: number;
@@ -18046,6 +18154,13 @@ export interface components {
             items: components["schemas"]["ExpenseResponse"][];
             totals: components["schemas"]["CurrencyTotalResponse"][];
         };
+        ExpenseMonthResponse: {
+            categories: components["schemas"]["ExpenseCategoryMonthResponse"][];
+            /** Format: date */
+            month: string;
+            /** Format: double */
+            total: number;
+        };
         ExpenseResponse: {
             /** Format: double */
             amount: number;
@@ -18059,6 +18174,14 @@ export interface components {
             note: null | string;
             /** Format: date */
             spentOn: string;
+        };
+        ExpenseTrendsResponse: {
+            anomalies: components["schemas"]["ExpenseAnomalyResponse"][];
+            basis: components["schemas"]["InsightBasisResponse"];
+            categories: string[];
+            domain: string;
+            months: components["schemas"]["ExpenseMonthResponse"][];
+            unconverted: components["schemas"]["CurrencyAmountResponse"][];
         };
         FileCommentFill: {
             body: null | string;
@@ -20447,6 +20570,32 @@ export interface components {
             tint: null | string;
             title: string;
         };
+        ProjectRiskGroupResponse: {
+            /** Format: int64 */
+            projectId: number;
+            risks: components["schemas"]["ProjectRiskResponse"][];
+            status: components["schemas"]["ProjectStatus"];
+            title: string;
+        };
+        /** @enum {unknown} */
+        ProjectRiskKind: "profit_at_zero" | "short_runway" | "projected_loss" | "profit_close" | "blocked_change" | "department_over_budget" | "unconverted_costs" | "settlement_at_zero";
+        ProjectRiskResponse: {
+            /** Format: double */
+            amount: null | number;
+            fact: string;
+            kind: components["schemas"]["ProjectRiskKind"];
+            rule: string;
+        };
+        ProjectRisksResponse: {
+            basis: components["schemas"]["InsightBasisResponse"];
+            /** Format: int32 */
+            checked: number;
+            counts: components["schemas"]["RiskCountResponse"][];
+            domain: string;
+            projects: components["schemas"]["ProjectRiskGroupResponse"][];
+            /** Format: date */
+            today: string;
+        };
         ProjectScenarioResponse: {
             after: components["schemas"]["ScenarioFiguresResponse"];
             basis: components["schemas"]["InsightBasisResponse"];
@@ -20730,7 +20879,7 @@ export interface components {
             questions: number;
         };
         /** @enum {unknown} */
-        ProtonFinancialsTab: "overview" | "projects" | "clients" | "billing" | "costs" | null;
+        ProtonFinancialsTab: "overview" | "projects" | "clients" | "billing" | "costs" | "insights" | null;
         /** @enum {unknown} */
         ProtonForm: "client" | "meeting" | "new_project" | "edit_project" | "report_bug" | "invite" | "message" | "log_work" | "requirement" | "work_entry_comment" | "report_options" | "team" | "profile" | "file_rename" | "file_comment" | "portal_intro" | "portal_message" | "website_project" | "website_service" | "website_location" | "website_social_link" | "company_details" | "company_expense" | "materials" | "invoice" | "payment" | "project_expense" | "labour_week" | "schedule" | "hour_excuse";
         ProtonFormFill: {
@@ -21285,6 +21434,11 @@ export interface components {
         ResetPasswordRequest: {
             password?: string;
             token?: string;
+        };
+        RiskCountResponse: {
+            kind: components["schemas"]["ProjectRiskKind"];
+            /** Format: int32 */
+            projects: number;
         };
         RunningProjectResponse: {
             /** Format: int32 */

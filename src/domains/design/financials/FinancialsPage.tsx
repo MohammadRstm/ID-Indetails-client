@@ -23,13 +23,14 @@ import BillingTab from "../../shared/billing/BillingTab";
 import { useInvoices } from "../../shared/billing/billingApi";
 import { costPartsOf, costWords } from "../../shared/finance/costParts";
 import { useFinanceCosts, useFinanceOverview } from "../../shared/finance/financeApi";
+import DomainInsightsTab from "../../shared/finance/insights/DomainInsightsTab";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { ClientsTab, CostsTab, OverviewTab, ProjectsTab, type Failure, type Tile } from "./FinanceTabs";
 import HelpHint from "@/domains/shared/help/HelpHint";
 
 type PeriodKey = "quarter" | "year" | "all";
-type Tab = "overview" | "projects" | "clients" | "billing" | "costs";
-const TABS: Tab[] = ["overview", "projects", "clients", "billing", "costs"];
+type Tab = "overview" | "projects" | "clients" | "billing" | "costs" | "insights";
+const TABS: Tab[] = ["overview", "projects", "clients", "billing", "costs", "insights"];
 
 /** "All time" asks from a day before any project; the API's own default is this quarter. */
 const ALL_TIME = "2000-01-01";
@@ -117,6 +118,7 @@ function FinancialsPage({ domain }: { domain: Domain }) {
                         { key: "clients", label: "Clients", count: clients.data?.length ?? null },
                         { key: "billing", label: "Billing", count: invoiceCount ?? null },
                         { key: "costs", label: "Costs" },
+                        { key: "insights", label: "Insights" },
                     ]} />
 
                     {tab === "overview" && (s ? <OverviewTab summary={s} months={monthly.data} projects={projects.data} label={period.label} tiles={tiles}
@@ -126,6 +128,8 @@ function FinancialsPage({ domain }: { domain: Domain }) {
                     {tab === "clients" && <ClientsTab clients={clients.data} projects={projects.data} failed={{ clients: failureOf(clients), projects: failureOf(projects) }} />}
                     {tab === "billing" && <BillingTab domain={domain} tiles={tiles} />}
                     {tab === "costs" && <CostsTab costs={costs.data} error={costs.isError && !costs.data ? costs.error : null} retry={() => costs.refetch()} tiles={tiles} />}
+                    {/* the risks and spending trends load only once this tab is open */}
+                    {tab === "insights" && <DomainInsightsTab domain={domain} tiles={tiles} />}
                 </>
             )}
             <BillingModalHost />

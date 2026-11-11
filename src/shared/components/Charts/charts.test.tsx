@@ -4,6 +4,7 @@ import TipHost from "@/shared/components/Overlays/TipHost";
 import { tip } from "@/shared/components/Overlays/tip";
 import { CalendarHeat, HourHeat } from "./Heat";
 import LineChart from "./LineChart";
+import StackedColumns from "./StackedColumns";
 import Waterfall from "./Waterfall";
 
 // Regressions: these charts had no accessible name, and the tooltip a keyboard focus opens wasn't announced.
@@ -15,6 +16,19 @@ describe("charts for screen readers", () => {
 
         rerender(<LineChart series={series} />);
         expect(screen.getByRole("img", { name: "Line chart: Revenue, Cost" })).toBeInTheDocument();
+    });
+
+    it("name stacked columns by their title, or by their parts, and show each part in the legend", () => {
+        const series = [{ label: "Materials", color: "var(--heat-4)" }, { label: "Fees", color: "var(--heat-1)" }];
+        const data = [{ label: "Aug", values: [300, 100], total: 400 }, { label: "Sep", values: [0, 250], total: 250 }];
+        const { container, rerender } = render(<StackedColumns series={series} data={data} title="Spending by category" />);
+        expect(screen.getByRole("img", { name: "Spending by category" })).toBeInTheDocument();
+        expect([...container.querySelectorAll(".legend span")].map((s) => s.textContent)).toEqual(["Materials", "Fees"]);
+        // a part with nothing in a month draws nothing
+        expect(container.querySelectorAll("path.mark")).toHaveLength(3);
+
+        rerender(<StackedColumns series={series} data={data} />);
+        expect(screen.getByRole("img", { name: "Stacked columns: Materials, Fees" })).toBeInTheDocument();
     });
 
     it("read a waterfall's steps out", () => {
