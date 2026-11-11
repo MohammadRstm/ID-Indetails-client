@@ -16,8 +16,10 @@ import MenuButton from "@/shared/components/Overlays/MenuButton";
 import { money } from "@/shared/format/money";
 import { addDays, companyToday, fmtDate, fmtDateY, fmtMonthY, MONTHS, partsOf } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import { useCancelOverhead, useCompanyMonths, useCompanyYear, useOverhead, useOverheadMonths, type CompanyMonth, type OverheadLine } from "./companyApi";
+import { useCancelOverhead, useCompanyMonths, useCompanyYear, useOneOffs, useOverhead, useOverheadMonths, type CompanyMonth, type OneOff, type OverheadLine } from "./companyApi";
 import { YEARS_BACK } from "./companyPeriod";
+import OneOffModal from "./OneOffModal";
+import OneOffPanel from "./OneOffPanel";
 import OverheadModal from "./OverheadModal";
 import OverheadGroupsModal from "./OverheadGroupsModal";
 import { loadFailed } from "@/api/queryState";
@@ -50,12 +52,20 @@ export default function CompanyExpensesPage() {
     const monthsQuery = seesCompany ? months : overheadMonths;
     const cancel = useCancelOverhead();
     const [editing, setEditing] = useState<OverheadLine | true | null>(null);
-    // ?add=1 (from search) opens the new expense form
+    const [editingOneOff, setEditingOneOff] = useState<OneOff | true | null>(null);
+    // this month's one-offs, for the tile
+    const thisOneOffs = useOneOffs(companyToday().slice(0, 7));
+    // ?add=1 (from search) opens the new recurring expense form, ?add=one-off the one-off form
     const [params, setParams] = useSearchParams();
     const asked = params.get("add") === "1" && canEdit;
+    const askedOneOff = params.get("add") === "one-off" && canEdit;
     const closeEditing = () => {
         setEditing(null);
         if (asked || params.has("edit")) { params.delete("add"); params.delete("edit"); setParams(params, { replace: true }); }
+    };
+    const closeOneOff = () => {
+        setEditingOneOff(null);
+        if (askedOneOff) { params.delete("add"); setParams(params, { replace: true }); }
     };
     const o = overhead.data;
     // ?edit={id} opens that expense's window (Proton fills it there)
@@ -80,6 +90,18 @@ export default function CompanyExpensesPage() {
     const current = list[list.length - 1];
     const currentCost = current ? current.labour + current.expenses + current.materials + current.groundLabour + current.overhead : 0;
 
+    /** "Add expense" asks which kind: one that repeats every month, or a cost paid once. */
+    const addMenu = (buttonClass: string) => (
+        <MenuButton icon="plus" text="Add expense" label="Add expense" buttonClass={buttonClass} align="right" width={230}>
+            {(close) => (
+                <div>
+                    <button className="pop-item" onClick={() => { close(); setEditing(true); }}><Icon name="refresh" />Recurring monthly expense</button>
+                    <button className="pop-item" onClick={() => { close(); setEditingOneOff(true); }}><Icon name="calendar" />One-off expense</button>
+                </div>
+            )}
+        </MenuButton>
+    );
+
     function toggle(line: OverheadLine) {
         const resume = line.isCancelled;
         cancel.mutate({ id: line.id, resume }, {
@@ -95,17 +117,17 @@ export default function CompanyExpensesPage() {
             <div className="page-head">
                 <div>
                     <h1 className="page-title">Company expenses</h1>
-                    <div className="page-sub">Recurring costs the company carries - never charged to a project, a client or a business.</div>
+                    <div className="page-sub">Recurring and one-off costs the company carries - never charged to a project, a client or a business.</div>
                 </div>
                 <div className="page-actions">
                     {permissions.has(P.COMPANY_VIEW) && <button className="btn" onClick={() => navigate("/company/overview")}><Icon name="chartTile" />Company overview</button>}
-                    {canEdit && <button className="btn btn-primary" onClick={() => setEditing(true)}><Icon name="plus" />Add expense</button>}
+                    {canEdit && addMenu("btn btn-primary")}
                 </div>
             </div>
 
             {loadFailed(overhead) ? <div className="panel"><div className="panel-body"><LoadError error={overhead.error} retry={() => overhead.refetch()} what="the company's expenses" /></div></div> : (
                 <>
-                    <KpiStrip loading={!o || (!perMonthRows && !loadFailed(monthsQuery))} items={[
+                    <KpiStrip loading={!o || (!perMonthRows && !loadFailed(monthsQuery)) || (!thisOneOffs.data && !loadFailed(thisOneOffs))} items={[
                         {
                             key: "month", label: "Company expenses per month", value: money.fmt(perMonth),
                             sub: <span>{active.length} recurring lines{others(o?.monthTotals ?? []).length > 0 && <> · <MixedCurrency amounts={others(o!.monthTotals)} /></>}</span>,
@@ -114,6 +136,10 @@ export default function CompanyExpensesPage() {
                             key: `group-${g.id}`, label: g.name, value: money.fmt(g.total),
                             sub: <span>{Math.round((g.total / (perMonth || 1)) * 100)}% of company expenses</span>,
                         })),
+                        {
+                            key: "one-off", label: "One-off this month", value: money.fmt(usd(thisOneOffs.data?.totals ?? [])),
+                            sub: <span>{thisOneOffs.data?.items.length ?? 0} paid once{others(thisOneOffs.data?.totals ?? []).length > 0 && <> · <MixedCurrency amounts={others(thisOneOffs.data!.totals)} /></>}</span>,
+                        },
                         { key: "year", label: "Last 13 months", value: <Money short value={year} />, sub: <span>charged to the company</span> },
                         ...(seesCompany ? [{
                             key: "share", label: "Share of this month's cost", value: currentCost ? `${Math.round(((current?.overhead ?? 0) / currentCost) * 100)}%` : "-",
@@ -124,7 +150,7 @@ export default function CompanyExpensesPage() {
 
                     <div className={seesCompany ? "grid g-8-4 mt" : "mt"}>
                         {seesCompany && <Figure title={`What company expenses do to each month · ${chartYear}`}
-                            sub="The company's net profit, after company expenses, fixed salaries, paid leave and the overtime premium, against what it would have been without them."
+                            sub="The company's net profit, after company expenses, one-off expenses, fixed salaries, paid leave and the overtime premium, against what it would have been without them."
                             tools={
                                 <div className="row" style={{ gap: 4 }}>
                                     <button className="icon-btn" aria-label="Previous year" disabled={chartYear <= thisYear - YEARS_BACK} onClick={() => setChartYear((y) => y - 1)}><Icon name="chevronLeft" /></button>
@@ -133,8 +159,8 @@ export default function CompanyExpensesPage() {
                                 </div>
                             }
                             table={{
-                                cols: [{ label: "Month" }, { label: "Company expenses", right: true }, { label: "Fixed salaries", right: true }, { label: "Paid leave", right: true }, { label: "Overtime premium", right: true }, { label: "Profit before", right: true }, { label: "Net profit", right: true }],
-                                rows: yearList.map((m) => [fmtMonthY(m.month), money.fmt(m.overhead), money.fmt(salariesOf(m)), money.fmt(paidLeaveOf(m)), money.fmt(premiumOf(m)), money.fmt(m.profitBeforeOverhead), money.fmt(netOf(m))]),
+                                cols: [{ label: "Month" }, { label: "Company expenses", right: true }, { label: "One-off expenses", right: true }, { label: "Fixed salaries", right: true }, { label: "Paid leave", right: true }, { label: "Overtime premium", right: true }, { label: "Profit before", right: true }, { label: "Net profit", right: true }],
+                                rows: yearList.map((m) => [fmtMonthY(m.month), money.fmt(m.overhead), money.fmt(oneOffOf(m)), money.fmt(salariesOf(m)), money.fmt(paidLeaveOf(m)), money.fmt(premiumOf(m)), money.fmt(m.profitBeforeOverhead), money.fmt(netOf(m))]),
                             }}>
                             {loadFailed(yearMonths) ? <LoadError error={yearMonths.error} retry={() => yearMonths.refetch()} what={`${chartYear}'s months`} />
                                 : !yearMonths.data ? <SkeletonLines lines={7} /> : (
@@ -144,15 +170,15 @@ export default function CompanyExpensesPage() {
                                         { label: "Net profit", area: true, points: yearList.map((m) => ({ y: netOf(m), label: monthLabel(m.month), tip: fmtMonthY(m.month) })) },
                                     ]} />
                                     <div className="chart-note">
-                                        The gap between the two lines is company expenses, fixed salaries, paid leave and the overtime premium
-                                        - {money.fmt(yearList.reduce((t, m) => t + m.overhead + salariesOf(m) + paidLeaveOf(m) + premiumOf(m), 0))} in {chartYear}{chartYear === thisYear ? " so far" : ""},
+                                        The gap between the two lines is company expenses, one-off expenses, fixed salaries, paid leave and the overtime premium
+                                        - {money.fmt(yearList.reduce((t, m) => t + m.overhead + oneOffOf(m) + salariesOf(m) + paidLeaveOf(m) + premiumOf(m), 0))} in {chartYear}{chartYear === thisYear ? " so far" : ""},
                                         carried by the company rather than by any one project.
                                     </div>
                                 </>
                             )}
                         </Figure>}
                         <div className="stack">
-                            <Figure title="Company expenses per month" sub="Moves as subscriptions start and stop.">
+                            <Figure title="Company expenses per month" sub="Recurring expenses only, as subscriptions start and stop. One-off expenses are listed below.">
                                 {!perMonthRows ? <SkeletonLines lines={4} /> : year === 0 ? <p className="muted" style={{ padding: "8px 0" }}>No company expenses in the last 13 months.</p> : (
                                     <Columns height={150} labelEvery={3} format={(v) => money.short(v)} seriesLabel="Company expenses"
                                         data={perMonthRows.map((m) => ({ label: monthLabel(m.month), tip: fmtMonthY(m.month), value: m.overhead }))} />
@@ -174,7 +200,7 @@ export default function CompanyExpensesPage() {
                             {(canEdit || canSort) && (
                                 <div className="panel-tools">
                                     {canSort && <button className="btn btn-sm" onClick={() => setManaging(true)}><Icon name="list" />Categories</button>}
-                                    {canEdit && <button className="btn btn-sm btn-primary" onClick={() => setEditing(true)}><Icon name="plus" />Add expense</button>}
+                                    {canEdit && addMenu("btn btn-sm btn-primary")}
                                 </div>
                             )}
                         </div>
@@ -220,15 +246,19 @@ export default function CompanyExpensesPage() {
                         )}
                         <div className="panel-foot"><span className="muted">Cancelling a line stops it after this month - past months keep the cost they carried.</span></div>
                     </div>
+
+                    <OneOffPanel onEdit={setEditingOneOff} />
                 </>
             )}
             {managing && <OverheadGroupsModal onClose={() => setManaging(false)} />}
             {(editing || asked || linkedLine) && <OverheadModal line={editing && editing !== true ? editing : linkedLine} onClose={closeEditing} />}
+            {(editingOneOff || askedOneOff) && <OneOffModal item={editingOneOff && editingOneOff !== true ? editingOneOff : null} onClose={closeOneOff} />}
         </div>
     );
 }
 
 // An API from before these salaries were in each month sends none of these fields: the net profit is then the profit after overhead.
+const oneOffOf = (m: CompanyMonth) => m.oneOffExpenses ?? 0;
 const salariesOf = (m: CompanyMonth) => m.fixedSalaries ?? 0;
 const paidLeaveOf = (m: CompanyMonth) => m.paidLeave ?? 0;
 const premiumOf = (m: CompanyMonth) => m.overtimePremium ?? 0;
