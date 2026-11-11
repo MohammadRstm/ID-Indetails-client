@@ -43,6 +43,10 @@ export const shellHandlers = [
     // nobody takes part in a project's discussion unless a test says so
     http.get("/api/projects/:id/portal/discussion", () => HttpResponse.json({ type: "not_found", code: "not_found", message: "Not found." }, { status: 404 })),
     http.get("/api/portal/projects/:id/discussion", () => HttpResponse.json({ type: "not_found", code: "not_found", message: "Not found." }, { status: 404 })),
+    // a project has no cost budget unless a test says so (its Financials tab asks for it)
+    http.get("/api/projects/:id/budget", ({ params }) => HttpResponse.json({
+        projectId: Number(params.id), domain: "design", current: null, lines: [], uncovered: 0, unconverted: [], history: [],
+    })),
     http.get("/api/search/counts", () => HttpResponse.json({ projects: 7, clients: 5, people: 9 })),
     http.get("/api/projects", () => HttpResponse.json({ items: [], page: 1, pageSize: 1, totalCount: 7 })),
     http.get("/api/clients", () => HttpResponse.json({ items: [], page: 1, pageSize: 1, totalCount: 5 })),

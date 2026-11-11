@@ -12,6 +12,7 @@ import type { Project } from "../../shared/projects/projectsApi";
 import LabourPanel from "../labour/LabourPanel";
 import ExpensesPanel from "../expenses/ExpensesPanel";
 import AccountSection from "../account/AccountSection";
+import BudgetPanel from "../../shared/finance/budget/BudgetPanel";
 import SupervisionTab from "../account/SupervisionTab";
 import BoqPanel from "../boqs/BoqPanel";
 import LabourHealth from "./LabourHealth";
@@ -97,6 +98,7 @@ function SiteOverview({ project }: { project: Project }) {
                     <SiteMoneyPanel project={project}
                         onRecordPayment={client && permissions.has(P.PAYMENT_RECORD) ? () => links.recordPayment() : undefined}
                         onEditPricing={canPrice ? open("pricing") : undefined} />
+                    <BudgetPanel project={project} />
                 </>
             )}
         </>
