@@ -1,7 +1,7 @@
 import { P } from "@/app/permissions/codes";
 import { or as orFact } from "../helpFacts";
 import {
-    and, formula, has, list, note, only, or, para, sees, tracksOwnHours, type Article,
+    and, formula, has, link, links, list, note, only, or, para, sees, tracksOwnHours, type Article,
 } from "../helpModel";
 
 /** They log Design work. */
@@ -184,6 +184,27 @@ export const explainedPay: Article[] = [
             only(tracksOwnHours, para("You're told when hours of yours are excused, and they show in your hours balance.")),
         ],
         related: ["deductions", "hours-balance"],
+    },
+    {
+        id: "utilization",
+        title: "Utilization: logged against expected hours",
+        category: "pay",
+        who: and(sees("design"), has(P.REPORT_VIEW)),
+        summary: "The Utilization tab on Reports shows how much of their expected hours Design employees logged in a month, for each department and each person, and where each person's hours went.",
+        ask: ["utilization", "utilisation", "logged vs expected", "capacity", "who is under", "who is over", "expected hours", "department hours", "project mix"],
+        blocks: [
+            formula("Utilization = hours logged ÷ (expected hours − excused hours)", "160 hours expected, 8 excused and 144 logged: 144 ÷ 152, about 95%."),
+            list(
+                "**Expected hours**: the required hours of the month's working days, from the day someone joined up to the day they left.",
+                "**Excused**: excused hours and days, paid or unpaid, and time off come off what there was to log.",
+                "**Overtime**: time past each day's required hours, as employees see it. It can take utilization past 100%.",
+                "A department is the one the person is in today.",
+            ),
+            para("Pick a month: never a future one. This month runs to today. Open a person to see the projects their hours went to, and each one's share."),
+            note("Utilization is about hours only, never pay: no salary, shortfall or overtime paid is shown. Admins and site staff don't log hours, so they aren't listed."),
+            links(link("Open Utilization", { business: "reports?tab=utilization", only: "design" })),
+        ],
+        related: ["working-day", "excuses", "overtime"],
     },
     {
         id: "joining-leaving",

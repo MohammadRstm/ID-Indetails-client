@@ -5104,6 +5104,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/insights/{domain}/labour": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Months?: number;
+                };
+                header?: never;
+                path: {
+                    domain: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LabourInsightResponse"];
+                        "text/json": components["schemas"]["LabourInsightResponse"];
+                        "text/plain": components["schemas"]["LabourInsightResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/finance/insights/{domain}/risks": {
         parameters: {
             query?: never;
@@ -14326,6 +14367,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/utilization": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Month?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UtilizationResponse"];
+                        "text/json": components["schemas"]["UtilizationResponse"];
+                        "text/plain": components["schemas"]["UtilizationResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/work": {
         parameters: {
             query?: never;
@@ -18620,6 +18700,49 @@ export interface components {
             current: null | components["schemas"]["LabourDefaultResponse"];
             history: components["schemas"]["LabourDefaultResponse"][];
         };
+        LabourDepartmentResponse: {
+            /** Format: double */
+            labourShare: null | number;
+            name: string;
+            /** Format: int64 */
+            teamId: null | number;
+            totals: components["schemas"]["LabourTotalsResponse"];
+        };
+        LabourInsightResponse: {
+            basis: components["schemas"]["InsightBasisResponse"];
+            departments: components["schemas"]["LabourDepartmentResponse"][];
+            domain: string;
+            months: components["schemas"]["LabourMonthResponse"][];
+            projects: components["schemas"]["LabourProjectResponse"][];
+            total: components["schemas"]["LabourTotalsResponse"];
+            unconverted: components["schemas"]["CurrencyAmountResponse"][];
+        };
+        LabourMonthResponse: {
+            /** Format: date */
+            month: string;
+            totals: components["schemas"]["LabourTotalsResponse"];
+        };
+        LabourProjectResponse: {
+            billingType: components["schemas"]["BillingType"];
+            /** Format: double */
+            labourShare: null | number;
+            /** Format: int64 */
+            projectId: number;
+            title: string;
+            totals: components["schemas"]["LabourTotalsResponse"];
+        };
+        LabourTotalsResponse: {
+            /** Format: double */
+            cost: number;
+            /** Format: int32 */
+            minutes: number;
+            /** Format: double */
+            outsideScopeCost: number;
+            /** Format: int32 */
+            outsideScopeMinutes: number;
+            /** Format: double */
+            outsideScopeShare: null | number;
+        };
         LabourWeekFill: {
             days: null | components["schemas"]["LabourDayFill"][];
             /**
@@ -20879,7 +21002,7 @@ export interface components {
             questions: number;
         };
         /** @enum {unknown} */
-        ProtonFinancialsTab: "overview" | "projects" | "clients" | "billing" | "costs" | "insights" | null;
+        ProtonPageTab: "overview" | "projects" | "clients" | "billing" | "costs" | "insights" | "utilization" | null;
         /** @enum {unknown} */
         ProtonForm: "client" | "meeting" | "new_project" | "edit_project" | "report_bug" | "invite" | "message" | "log_work" | "requirement" | "work_entry_comment" | "report_options" | "team" | "profile" | "file_rename" | "file_comment" | "portal_intro" | "portal_message" | "website_project" | "website_service" | "website_location" | "website_social_link" | "company_details" | "company_expense" | "materials" | "invoice" | "payment" | "project_expense" | "labour_week" | "schedule" | "hour_excuse";
         ProtonFormFill: {
@@ -21108,7 +21231,7 @@ export interface components {
             settingsSection: null | components["schemas"]["ProtonSettingsSection"];
             sounds: null | boolean;
             surface: null | components["schemas"]["ProtonSurface"];
-            tab: null | components["schemas"]["ProtonFinancialsTab"];
+            tab: null | components["schemas"]["ProtonPageTab"];
             theme: null | components["schemas"]["ProtonTheme"];
             type: components["schemas"]["ProtonUiCommandType"];
         };
@@ -22427,6 +22550,54 @@ export interface components {
         };
         /** @enum {unknown} */
         UserStatus: "invited" | "active" | "deactivated";
+        UtilizationDepartmentResponse: {
+            hours: components["schemas"]["UtilizationTotalsResponse"];
+            name: string;
+            /** Format: int32 */
+            people: number;
+            /** Format: int64 */
+            teamId: null | number;
+        };
+        UtilizationPersonResponse: {
+            department: null | string;
+            hours: components["schemas"]["UtilizationTotalsResponse"];
+            name: string;
+            projects: components["schemas"]["UtilizationProjectResponse"][];
+            /** Format: int64 */
+            userId: number;
+        };
+        UtilizationProjectResponse: {
+            /** Format: int32 */
+            minutes: number;
+            /** Format: int64 */
+            projectId: number;
+            /** Format: double */
+            share: number;
+            title: string;
+        };
+        UtilizationResponse: {
+            basis: components["schemas"]["InsightBasisResponse"];
+            departments: components["schemas"]["UtilizationDepartmentResponse"][];
+            inProgress: boolean;
+            /** Format: date */
+            month: string;
+            people: components["schemas"]["UtilizationPersonResponse"][];
+            total: components["schemas"]["UtilizationTotalsResponse"];
+        };
+        UtilizationTotalsResponse: {
+            /** Format: int32 */
+            availableMinutes: number;
+            /** Format: int32 */
+            excusedMinutes: number;
+            /** Format: int32 */
+            expectedMinutes: number;
+            /** Format: int32 */
+            loggedMinutes: number;
+            /** Format: int32 */
+            overtimeMinutes: number;
+            /** Format: double */
+            utilization: null | number;
+        };
         VoidRequest: {
             reason?: string;
         };

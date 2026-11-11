@@ -10,6 +10,8 @@ export type ProjectRiskKind = Schemas["ProjectRiskKind"];
 export type ExpenseTrends = Schemas["ExpenseTrendsResponse"];
 export type ExpenseAnomaly = Schemas["ExpenseAnomalyResponse"];
 export type ExpenseAnomalyKind = Schemas["ExpenseAnomalyKind"];
+export type LabourInsight = Schemas["LabourInsightResponse"];
+export type LabourTotals = Schemas["LabourTotalsResponse"];
 
 /** How many months of spending can be shown, ending with this one. The API takes 1 to 24 and shows 12 unless asked. */
 export const TREND_MONTHS = [6, 12, 24] as const;
@@ -31,6 +33,20 @@ export function useExpenseTrends(domain: Domain, months: TrendMonths, enabled = 
         queryFn: async () => (await http.get<ExpenseTrends>(`/finance/insights/${domain}/expenses`, { params: { months } })).data,
         enabled,
         // another number of months keeps the last figures up while it loads
+        placeholderData: keepPreviousData,
+    });
+}
+
+/**
+ * Design's labour over the months picked: its cost and hours by month, by project and by department, with the part
+ * logged outside the agreed scope. Never a person's (financial:view, Design only).
+ */
+export function useDomainLabour(domain: Domain, months: TrendMonths, enabled = true) {
+    return useQuery({
+        queryKey: keys.finance.labour(domain, months),
+        queryFn: async () => (await http.get<LabourInsight>(`/finance/insights/${domain}/labour`, { params: { months } })).data,
+        // Execution has no logged hours: its labour is weekly crews, on each site
+        enabled: enabled && domain === "design",
         placeholderData: keepPreviousData,
     });
 }

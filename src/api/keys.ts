@@ -67,6 +67,8 @@ export const keys = {
         /** Its projects' risks and its spending trends: under the domain's money, so every change to it refreshes them. */
         risks: (domain: string) => ["finance", domain, "insights", "risks"] as const,
         expenseTrends: (domain: string, months: number) => ["finance", domain, "insights", "expenses", months] as const,
+        /** Its labour cost and hours by month, project and department. Built from logged work too, which refreshes the finance keys. */
+        labour: (domain: string, months: number) => ["finance", domain, "insights", "labour", months] as const,
     },
     /** A person's own work: their day, entries, summaries, overtime, hours and pay. */
     work: {
@@ -84,6 +86,8 @@ export const keys = {
         /** Reports are built from logged work, so they refresh with it. */
         report: (params: object) => ["work", "report", params] as const,
         reportEntries: (params: object) => ["work", "report-entries", params] as const,
+        /** The Reports page's utilization: a month's logged against expected hours, which excuses change as well. */
+        utilization: (month: string) => ["work", "utilization", month] as const,
     },
     settings: {
         domain: (domain: string) => ["settings", "domain", domain] as const,

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 import { downloadFile } from "@/api/download";
 import { errorMessage } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
@@ -18,9 +19,11 @@ import { useProjects } from "../../shared/projects/projectsApi";
 import { usePeopleWork } from "../people/peopleWorkApi";
 import { EntriesTab, MoneyTab, OverviewTab, PeopleTab, ProjectsTab, type ReportPerson, type Tile } from "./ReportTabs";
 import { useWorkReport, type ReportScope } from "./reportsApi";
+import UtilizationTab from "./UtilizationTab";
 import { loadFailed } from "@/api/queryState";
 
-type Tab = "overview" | "projects" | "people" | "money" | "entries";
+type Tab = "overview" | "projects" | "people" | "utilization" | "money" | "entries";
+const TABS: Tab[] = ["overview", "projects", "people", "utilization", "money", "entries"];
 
 /** The days a report covers, as the prototype's Reports page picks them. */
 function rangeOf(period: PeriodKind, year: number, quarter: number, today: string): { from: string; to: string; label: string } {
@@ -38,7 +41,13 @@ export default function ReportsPage() {
     const permissions = usePermissions();
     const today = companyToday();
     const now = quarterOf(today);
-    const [tab, setTab] = useState<Tab>("overview");
+    // the tab is in the link (?tab=utilization), so Proton, Help and a shared link can open it
+    const [params, setParams] = useSearchParams();
+    const requested = params.get("tab") as Tab | null;
+    const tab: Tab = requested && TABS.includes(requested) ? requested : "overview";
+    const setTab = (t: Tab) => { params.set("tab", t); setParams(params, { replace: true }); };
+    const thisMonth = today.slice(0, 7);
+    const [month, setMonth] = useState(thisMonth);
     const [period, setPeriod] = useState<PeriodKind>("quarter");
     const [quarter, setQuarter] = useState(String(now.quarter));
     const [year, setYear] = useState(String(now.year));
@@ -46,6 +55,7 @@ export default function ReportsPage() {
     const [personId, setPersonId] = useState("all");
     const seesWork = permissions.has(P.WORK_ENTRY_VIEW_ALL);
     const seesMoney = permissions.has(P.FINANCIAL_VIEW);
+    const seesUtilization = permissions.has(P.REPORT_VIEW);
 
     const range = rangeOf(period, +year, +quarter, today);
     const scope: ReportScope = {
@@ -53,7 +63,10 @@ export default function ReportsPage() {
         projectId: projectId === "all" ? undefined : +projectId,
         userId: personId === "all" ? undefined : +personId,
     };
-    const query = useWorkReport(scope);
+    const shownTab: Tab = (tab === "money" && !seesMoney) || (tab === "entries" && !seesWork) || (tab === "utilization" && !seesUtilization) ? "overview" : tab;
+    const utilization = shownTab === "utilization";
+    // the utilization is a month of its own: the work report's period doesn't apply to it
+    const query = useWorkReport(scope, !utilization);
     const projects = useProjects({ domain: "design", pageSize: 100 }, permissions.has(P.PROJECT_VIEW)).data?.items ?? [];
     const peopleWork = usePeopleWork(seesWork).data ?? [];
     const tiles = new Map<number, Tile>(projects.map((p) => [p.id, { icon: p.icon, tint: p.tint, photo: p.photoFileId }]));
@@ -62,8 +75,18 @@ export default function ReportsPage() {
 
     const project = projects.find((p) => String(p.id) === projectId);
     const person = peopleWork.find((p) => String(p.id) === personId);
-    const sub = ["Company-wide analysis", range.label, project?.title, person?.name].filter(Boolean).join(" · ");
-    const shownTab: Tab = (tab === "money" && !seesMoney) || (tab === "entries" && !seesWork) ? "overview" : tab;
+    const sub = utilization ? `Utilization · ${fmtMonthY(`${month}-01`)}` : ["Company-wide analysis", range.label, project?.title, person?.name].filter(Boolean).join(" · ");
+
+    const tabs = (
+        <Tabs value={shownTab} onChange={setTab} items={[
+            { key: "overview" as const, label: "Overview" },
+            { key: "projects" as const, label: "By project", count: r?.byProject.length ?? null },
+            { key: "people" as const, label: "By employee", count: r?.byPerson.length ?? null },
+            ...(seesUtilization ? [{ key: "utilization" as const, label: "Utilization" }] : []),
+            ...(seesMoney ? [{ key: "money" as const, label: "Money" }] : []),
+            ...(seesWork ? [{ key: "entries" as const, label: "Work entries", count: r?.entryCount ?? null }] : []),
+        ]} />
+    );
 
     async function exportCsv() {
         try {
@@ -76,56 +99,54 @@ export default function ReportsPage() {
     return (
         <div className="page">
             <PageHead title="Reports" sub={sub}
-                actions={seesWork && <button className="btn" onClick={exportCsv}><Icon name="download" />Export</button>} />
+                actions={seesWork && !utilization && <button className="btn" onClick={exportCsv}><Icon name="download" />Export</button>} />
 
-            <div className="filters">
-                <Segmented value={period} onChange={setPeriod} aria-label="Period" options={[
-                    { value: "quarter", label: "Quarter" }, { value: "month", label: "This month" }, { value: "30d", label: "Last 30 days" }, { value: "year", label: "Year" },
-                ]} />
-                {period === "quarter" && (
-                    <ChipGroup value={quarter} onChange={setQuarter} aria-label="Quarter" options={["1", "2", "3", "4"].map((q) => ({ value: q, label: `Q${q}` }))} />
-                )}
-                {(period === "quarter" || period === "year") && (
-                    <Select className="select sm" style={{ width: 92 }} aria-label="Year" value={year} onChange={setYear}
-                        options={[now.year, now.year - 1].map((y) => ({ value: String(y), label: String(y) }))} />
-                )}
-                <div className="grow" />
-                <Select className="select sm" style={{ width: 190 }} aria-label="Project" value={projectId} onChange={setProjectId}
-                    options={[{ value: "all", label: "All projects" }, ...projects.map((p) => ({ value: String(p.id), label: p.title }))]} />
-                {seesWork && (
-                    <Select className="select sm" style={{ width: 175 }} aria-label="Employee" value={personId} onChange={setPersonId}
-                        options={[{ value: "all", label: "All employees" }, ...peopleWork.map((p) => ({ value: String(p.id), label: p.name }))]} />
-                )}
-            </div>
-
-            {loadFailed(query) ? <div className="panel"><div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the report" /></div></div> : (
+            {utilization ? <UtilizationTab month={month} thisMonth={thisMonth} onMonth={setMonth} tabs={tabs} people={people} /> : (
                 <>
-                    <KpiStrip loading={!r} items={[
-                        { key: "hours", label: "Hours logged", value: fmtNumber(Math.round((r?.totalMinutes ?? 0) / 60)), unit: "h" },
-                        { key: "entries", label: "Work entries", value: fmtNumber(r?.entryCount ?? 0) },
-                        { key: "projects", label: "Projects with activity", value: r?.projectCount ?? 0 },
-                        { key: "people", label: "People logging", value: r?.peopleCount ?? 0 },
-                        { key: "avg", label: "Average entry", value: r?.entryCount ? fmtDur(r.averageEntryMinutes) : "-" },
-                        {
-                            key: "busiest", label: "Busiest week", value: r?.busiestWeek?.minutes ? fmtH(r.busiestWeek.minutes) : "-",
-                            sub: <span>{r?.busiestWeek?.minutes ? `week of ${fmtDate(r.busiestWeek.weekStart)}` : "no work in range"}</span>,
-                        },
-                    ]} />
+                    <div className="filters">
+                        <Segmented value={period} onChange={setPeriod} aria-label="Period" options={[
+                            { value: "quarter", label: "Quarter" }, { value: "month", label: "This month" }, { value: "30d", label: "Last 30 days" }, { value: "year", label: "Year" },
+                        ]} />
+                        {period === "quarter" && (
+                            <ChipGroup value={quarter} onChange={setQuarter} aria-label="Quarter" options={["1", "2", "3", "4"].map((q) => ({ value: q, label: `Q${q}` }))} />
+                        )}
+                        {(period === "quarter" || period === "year") && (
+                            <Select className="select sm" style={{ width: 92 }} aria-label="Year" value={year} onChange={setYear}
+                                options={[now.year, now.year - 1].map((y) => ({ value: String(y), label: String(y) }))} />
+                        )}
+                        <div className="grow" />
+                        <Select className="select sm" style={{ width: 190 }} aria-label="Project" value={projectId} onChange={setProjectId}
+                            options={[{ value: "all", label: "All projects" }, ...projects.map((p) => ({ value: String(p.id), label: p.title }))]} />
+                        {seesWork && (
+                            <Select className="select sm" style={{ width: 175 }} aria-label="Employee" value={personId} onChange={setPersonId}
+                                options={[{ value: "all", label: "All employees" }, ...peopleWork.map((p) => ({ value: String(p.id), label: p.name }))]} />
+                        )}
+                    </div>
 
-                    <Tabs value={shownTab} onChange={setTab} items={[
-                        { key: "overview" as const, label: "Overview" },
-                        { key: "projects" as const, label: "By project", count: r?.byProject.length ?? null },
-                        { key: "people" as const, label: "By employee", count: r?.byPerson.length ?? null },
-                        ...(seesMoney ? [{ key: "money" as const, label: "Money" }] : []),
-                        ...(seesWork ? [{ key: "entries" as const, label: "Work entries", count: r?.entryCount ?? null }] : []),
-                    ]} />
+                    {loadFailed(query) ? <div className="panel"><div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the report" /></div></div> : (
+                        <>
+                            <KpiStrip loading={!r} items={[
+                                { key: "hours", label: "Hours logged", value: fmtNumber(Math.round((r?.totalMinutes ?? 0) / 60)), unit: "h" },
+                                { key: "entries", label: "Work entries", value: fmtNumber(r?.entryCount ?? 0) },
+                                { key: "projects", label: "Projects with activity", value: r?.projectCount ?? 0 },
+                                { key: "people", label: "People logging", value: r?.peopleCount ?? 0 },
+                                { key: "avg", label: "Average entry", value: r?.entryCount ? fmtDur(r.averageEntryMinutes) : "-" },
+                                {
+                                    key: "busiest", label: "Busiest week", value: r?.busiestWeek?.minutes ? fmtH(r.busiestWeek.minutes) : "-",
+                                    sub: <span>{r?.busiestWeek?.minutes ? `week of ${fmtDate(r.busiestWeek.weekStart)}` : "no work in range"}</span>,
+                                },
+                            ]} />
 
-                    {shownTab === "entries" ? <EntriesTab scope={scope} label={range.label} people={people} />
-                        : !r ? <div className="panel"><div className="panel-body"><SkeletonLines lines={8} /></div></div>
-                            : shownTab === "projects" ? <ProjectsTab report={r} label={range.label} tiles={tiles} people={people} />
-                                : shownTab === "people" ? <PeopleTab report={r} label={range.label} tiles={tiles} people={people} />
-                                    : shownTab === "money" ? <MoneyTab report={r} label={range.label} tiles={tiles} people={people} />
-                                        : <OverviewTab report={r} label={range.label} tiles={tiles} people={people} />}
+                            {tabs}
+
+                            {shownTab === "entries" ? <EntriesTab scope={scope} label={range.label} people={people} />
+                                : !r ? <div className="panel"><div className="panel-body"><SkeletonLines lines={8} /></div></div>
+                                    : shownTab === "projects" ? <ProjectsTab report={r} label={range.label} tiles={tiles} people={people} />
+                                        : shownTab === "people" ? <PeopleTab report={r} label={range.label} tiles={tiles} people={people} />
+                                            : shownTab === "money" ? <MoneyTab report={r} label={range.label} tiles={tiles} people={people} />
+                                                : <OverviewTab report={r} label={range.label} tiles={tiles} people={people} />}
+                        </>
+                    )}
                 </>
             )}
         </div>
