@@ -55,7 +55,13 @@ function printInFrame(objectUrl: string): Promise<boolean> {
             frame.remove();
             URL.revokeObjectURL(objectUrl);
         };
+        // a frame the browser refuses may never load: give up after a while and open the tab instead
+        const refused = setTimeout(() => {
+            frame.remove();
+            resolve(false);
+        }, 15_000);
         frame.onload = () => {
+            clearTimeout(refused);
             try {
                 const printing = frame.contentWindow;
                 if (!printing) throw new Error("The frame has no window");
