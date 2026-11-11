@@ -6,6 +6,7 @@ import DayRuler from "@/shared/components/Charts/DayRuler";
 import Figure from "@/shared/components/Charts/Figure";
 import { CalendarHeat, HourHeat } from "@/shared/components/Charts/Heat";
 import LineChart from "@/shared/components/Charts/LineChart";
+import StackedColumns from "@/shared/components/Charts/StackedColumns";
 import Waterfall from "@/shared/components/Charts/Waterfall";
 import { Banner, Bar, Presence, ProjectTile, Signal } from "@/shared/components/Data/Bits";
 import { Kpi, KpiStrip } from "@/shared/components/Data/Kpi";
@@ -156,6 +157,10 @@ export default function KitGallery() {
                     <StatusBar segments={[{ label: "Active", value: 8, color: "var(--accent)" }, { label: "On hold", value: 2, color: "var(--warn-mark)" }, { label: "Completed", value: 5, color: "var(--done)" }]} />
                     <div className="mt"><CompositionBar parts={[{ label: "Employee labour", value: 18400, color: "var(--heat-3)" }, { label: "Project expenses", value: 2300, color: "var(--heat-1)" }]} /></div>
                     <div className="mt"><Spark values={[3, 5, 2, 7, 6, 8, 4, 9]} /></div>
+                </Panel>
+                <Panel title="Stacked columns">
+                    <StackedColumns format={(v) => money.short(v)} series={[{ label: "Materials", color: "var(--heat-4)" }, { label: "Contractor", color: "var(--heat-1)" }, { label: "Other", color: "var(--ghost)" }]}
+                        data={[{ label: "Jul", values: [2400, 900, 150], total: 3450 }, { label: "Aug", values: [1800, 0, 300], total: 2100 }, { label: "Sep", values: [3100, 1600, 0], total: 4700 }]} />
                 </Panel>
                 <Panel title="Waterfall"><Waterfall steps={[{ label: "Value", value: 48000, kind: "start" }, { label: "Labour", value: 22000, kind: "cost", sub: "1,240h" }, { label: "Expenses", value: 2300, kind: "cost" }, { label: "Profit", value: 0, kind: "result" }]} /></Panel>
                 <Panel title="Calendar"><CalendarHeat weeks={20} value={(d) => (d.charCodeAt(9) % 5) * 110} note="Hours logged per day" /></Panel>

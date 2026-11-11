@@ -13,6 +13,9 @@ export const keys = {
         totals: (params: object) => ["projects", "totals", params] as const,
         counts: (domain: string) => ["projects", "counts", domain] as const,
         detail: (id: number) => ["projects", "detail", id] as const,
+        /** Its profitability and its what-ifs: under the project, so every change to it refreshes them. */
+        insights: (id: number) => ["projects", "detail", id, "insights"] as const,
+        scenario: (id: number, levers: object) => ["projects", "detail", id, "insights", "scenario", levers] as const,
     },
     /** The Execution client sites a BOQ author writes drafts for. */
     boqSites: {
@@ -61,6 +64,9 @@ export const keys = {
         billing: (domain: string, months: number) => ["finance", domain, "billing", months] as const,
         attention: (domain: string) => ["finance", domain, "attention"] as const,
         costs: (domain: string, params: object) => ["finance", domain, "costs", params] as const,
+        /** Its projects' risks and its spending trends: under the domain's money, so every change to it refreshes them. */
+        risks: (domain: string) => ["finance", domain, "insights", "risks"] as const,
+        expenseTrends: (domain: string, months: number) => ["finance", domain, "insights", "expenses", months] as const,
     },
     /** A person's own work: their day, entries, summaries, overtime, hours and pay. */
     work: {

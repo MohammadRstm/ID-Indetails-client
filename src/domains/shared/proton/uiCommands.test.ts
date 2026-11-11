@@ -14,7 +14,7 @@ describe("Proton's UI commands", () => {
         expect(stepOf(command({ type: "open_project", id: 42, domain: "design", section: "requirements" }), designAdmin, "design"))
             .toEqual({ kind: "go", path: "/design/projects/42?tab=requirements", label: "It" });
         // the project page's newer tabs
-        for (const section of ["financials", "payments", "vos", "analytics", "contributors"]) {
+        for (const section of ["financials", "payments", "vos", "insights", "analytics", "contributors"]) {
             expect(stepOf(command({ type: "open_project", id: 42, domain: "design", section }), designAdmin, "design"))
                 .toEqual({ kind: "go", path: `/design/projects/42?tab=${section}`, label: "It" });
         }
@@ -27,6 +27,13 @@ describe("Proton's UI commands", () => {
             .toEqual({ kind: "go", path: "/design/projects?client=3", label: "It" });
         expect(stepOf(command({ type: "open_page", page: "company_overview" }), superAdmin, null))
             .toEqual({ kind: "go", path: "/company/overview", label: "It" });
+        // the Financials page's tabs, its Insights tab included
+        for (const tab of ["billing", "costs", "insights"]) {
+            expect(stepOf(command({ type: "open_page", page: "financials", domain: "execution", tab }), superAdmin, "execution"))
+                .toEqual({ kind: "go", path: `/execution/financials?tab=${tab}`, label: "It" });
+        }
+        expect(stepOf(command({ type: "open_page", page: "financials", domain: "design", tab: "risks" }), superAdmin, "design"))
+            .toEqual({ kind: "go", path: "/design/financials", label: "It" });
         expect(stepOf(command({ type: "refresh" }), designAdmin, "design")).toEqual({ kind: "refresh" });
     });
 
@@ -71,6 +78,8 @@ describe("the page context", () => {
         // a Design client project's client payments and variation orders
         expect(pageContextOf("/design/projects/42", "?tab=vos")).toMatchObject({ entityType: "project", section: "vos", part: null });
         expect(pageContextOf("/design/projects/42", "?tab=payments")).toMatchObject({ section: "payments" });
+        // a Design client project's or a site's insights
+        expect(pageContextOf("/execution/projects/7", "?tab=insights")).toMatchObject({ entityType: "project", section: "insights", part: null });
         // a part another tab doesn't have, or no tab at all, names none
         expect(pageContextOf("/design/projects/42", "?tab=files&part=discussion")?.part).toBeNull();
         expect(pageContextOf("/design/projects/42", "?part=access")?.part).toBeNull();
