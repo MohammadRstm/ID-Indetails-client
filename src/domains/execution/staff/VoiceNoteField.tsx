@@ -1,7 +1,6 @@
 import { useState } from "react";
 import Icon from "@/shared/icons/Icon";
 import RecordingBar from "@/shared/voice/RecordingBar";
-import { useBlobUrl } from "@/shared/voice/useBlobUrl";
 import VoicePlayer from "@/shared/voice/VoicePlayer";
 import type { VoiceNote } from "./useVoiceNote";
 
@@ -9,7 +8,6 @@ import type { VoiceNote } from "./useVoiceNote";
 export default function VoiceNoteField({ voice }: { voice: VoiceNote }) {
     const { rec } = voice;
     const [asking, setAsking] = useState(false);
-    const recordedUrl = useBlobUrl(voice.recording);
 
     async function start() {
         setAsking(true);
@@ -23,7 +21,7 @@ export default function VoiceNoteField({ voice }: { voice: VoiceNote }) {
                     onDone={() => void voice.finishRecording()} onDiscard={rec.discard} />
             ) : voice.recording || voice.kept ? (
                 <div className="row" style={{ gap: 8 }}>
-                    <VoicePlayer fileId={voice.recording ? undefined : voice.kept?.id} src={voice.recording ? recordedUrl : undefined} />
+                    <VoicePlayer fileId={voice.recording ? undefined : voice.kept?.id} src={voice.recording ?? undefined} />
                     <button type="button" className="btn btn-sm btn-quiet" onClick={voice.remove}><Icon name="trash" />Remove</button>
                 </div>
             ) : (

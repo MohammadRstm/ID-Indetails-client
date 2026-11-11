@@ -7,6 +7,7 @@ import type { Schemas } from "@/api/types";
 import recordsJson from "@/test/fixtures/site/siteRecords.json";
 import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
+import { savedVoice, stubVoice } from "@/test/voice";
 
 const records = recordsJson as unknown as Schemas["SiteRecordsResponse"];
 const tarek = personas.executionEmployee;
@@ -22,7 +23,7 @@ const sites = [
     { id: 31, title: "Dbayeh marina villa", clientName: "Marina SAL", status: "hold", location: null, assignedAt: "2026-08-01T08:00:00Z" },
 ];
 const log = (id: number, body: string, createdAt: string, canEdit = false, project = sites[0]) => ({
-    id, project: { id: project.id, title: project.title }, person: { id: tarek.id, name: "Tarek Nasser" }, body, createdAt, updatedAt: null, canEdit,
+    id, project: { id: project.id, title: project.title }, person: { id: tarek.id, name: "Tarek Nasser" }, body, createdAt, updatedAt: null, canEdit, voiceNote: null as unknown,
 });
 const myLogs = [
     log(3, "The glue shipment is delayed until tomorrow.", "2026-09-30T14:00:00Z", true),
@@ -63,13 +64,13 @@ describe("a site staff member's daily log", () => {
             ...siteHandlers);
         const form = await screen.findByRole("form", { name: "Write a log" });
         await userEvent.click(within(form).getByRole("button", { name: "Save log" }));
-        expect(within(form).getByText("Say what happened.")).toBeInTheDocument();
+        expect(within(form).getByText("Write what happened or record a voice note.")).toBeInTheDocument();
         expect(sent).toEqual([]);
         await userEvent.click(within(form).getByLabelText("Site"));
         await userEvent.click(screen.getByRole("option", { name: "Dbayeh marina villa" }));
         await userEvent.type(within(form).getByLabelText("What happened?"), "  Tiles delivered, two boxes cracked.  ");
         await userEvent.click(within(form).getByRole("button", { name: "Save log" }));
-        await waitFor(() => expect(sent).toEqual([{ projectId: 31, body: "Tiles delivered, two boxes cracked." }]));
+        await waitFor(() => expect(sent).toEqual([{ projectId: 31, body: "Tiles delivered, two boxes cracked.", voiceFileId: null }]));
         await waitFor(() => expect(within(form).getByLabelText("What happened?")).toHaveValue(""));
     });
 
@@ -89,7 +90,64 @@ describe("a site staff member's daily log", () => {
         await userEvent.clear(box);
         await userEvent.type(box, "The glue arrives on Friday.");
         await userEvent.click(within(today).getByRole("button", { name: "Save" }));
-        await waitFor(() => expect(sent).toEqual([{ id: 3, body: "The glue arrives on Friday." }]));
+        await waitFor(() => expect(sent).toEqual([{ id: 3, body: "The glue arrives on Friday.", voiceFileId: null }]));
+    });
+
+    it("saves a log that is only a voice note, and says what is missing when there is neither", async () => {
+        const voice = stubVoice();
+        const sent: unknown[] = [];
+        renderApp("/execution/daily-log", tarek,
+            http.get("/api/me/sites", () => HttpResponse.json(sites)),
+            http.post("/api/files/voice", () => HttpResponse.json(savedVoice(44), { status: 201 })),
+            http.post("/api/projects/:id/site-logs", async ({ params, request }) => {
+                sent.push({ projectId: Number(params.id), ...(await request.json() as object) });
+                return HttpResponse.json({ ...log(9, "", "2026-09-30T09:00:00Z", true), voiceNote: savedVoice(44) }, { status: 201 });
+            }),
+            ...siteHandlers);
+        const form = await screen.findByRole("form", { name: "Write a log" });
+        // the words are no longer marked required
+        expect(within(form).getByText("What happened?")).not.toHaveClass("required");
+        await userEvent.click(within(form).getByRole("button", { name: "Save log" }));
+        expect(within(form).getByText("Write what happened or record a voice note.")).toBeInTheDocument();
+        await userEvent.click(within(form).getByRole("button", { name: "Record a voice note" }));
+        await userEvent.click(await within(form).findByRole("button", { name: "Done" }));
+        // recorded: a player with Remove, and the error is gone, live
+        expect(await within(form).findByRole("button", { name: "Play voice note" })).toBeInTheDocument();
+        expect(within(form).queryByText("Write what happened or record a voice note.")).not.toBeInTheDocument();
+        await userEvent.click(within(form).getByRole("button", { name: "Save log" }));
+        await waitFor(() => expect(sent).toEqual([{ projectId: 30, body: "", voiceFileId: 44 }]));
+        // saved: the form is empty again
+        expect(await within(form).findByRole("button", { name: "Record a voice note" })).toBeInTheDocument();
+        expect(voice.stopTrack).toHaveBeenCalled();
+        voice.restore();
+    });
+
+    it("plays a log's voice note, and lets today's be removed in an edit", async () => {
+        const voice = stubVoice();
+        const sent: unknown[] = [];
+        const withVoice = { ...log(5, "", "2026-09-30T08:00:00Z", true), voiceNote: savedVoice(61) };
+        renderApp("/execution/daily-log", tarek,
+            http.get("/api/me/sites", () => HttpResponse.json(sites)),
+            http.get("/api/me/site-logs", () => HttpResponse.json(page([withVoice, myLogs[2]]))),
+            http.get("/api/files/61", () => new HttpResponse(new Blob(["x"], { type: "audio/webm" }))),
+            http.put("/api/site-logs/:id", async ({ params, request }) => {
+                sent.push({ id: Number(params.id), ...(await request.json() as object) });
+                return HttpResponse.json({ ...withVoice, body: "Poured the slab.", voiceNote: null });
+            }),
+            ...siteHandlers);
+        const today = await screen.findByRole("list", { name: "Logs of Wednesday, September 30, 2026" });
+        await waitFor(() => expect(within(today).getByRole("button", { name: "Play voice note" })).toBeEnabled());
+        await userEvent.click(within(today).getByRole("button", { name: "Play voice note" }));
+        expect(voice.play).toHaveBeenCalled();
+        await userEvent.click(within(today).getByRole("button", { name: "Edit" }));
+        // a log with only a voice note keeps its place; removing it leaves nothing, so the words are asked for
+        await userEvent.click(within(today).getByRole("button", { name: "Remove" }));
+        expect(within(today).getByText("Write what happened or record a voice note.")).toBeInTheDocument();
+        expect(within(today).getByRole("button", { name: "Save" })).toBeDisabled();
+        await userEvent.type(within(today).getByLabelText("Change the log"), "Poured the slab.");
+        await userEvent.click(within(today).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(sent).toEqual([{ id: 5, body: "Poured the slab.", voiceFileId: null }]));
+        voice.restore();
     });
 
     it("asks the API for the site, the days and the words picked", async () => {
