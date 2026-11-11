@@ -93,11 +93,11 @@ export function useVoiceRecorder(): VoiceRecorder {
         setSeconds(0);
         setBlob(null);
         setState("recording");
+        let elapsed = 0;
         timer.current = setInterval(() => {
-            setSeconds((s) => {
-                if (s + 1 >= MAX_VOICE_SECONDS && rec.state === "recording") rec.stop();
-                return s + 1;
-            });
+            elapsed += 1;
+            setSeconds(elapsed);
+            if (elapsed >= MAX_VOICE_SECONDS && rec.state === "recording") rec.stop();
         }, 1000);
     }, [release]);
 

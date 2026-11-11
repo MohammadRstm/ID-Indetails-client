@@ -10,6 +10,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Avatar from "@/shared/components/Identity/Avatar";
 import { PersonName } from "@/shared/components/Identity/People";
 import MediaLightbox from "@/shared/components/Overlays/MediaLightbox";
+import VoicePlayer from "@/shared/voice/VoicePlayer";
 import { useFileUrl } from "@/shared/files/useFileUrl";
 import { dayKey, fmtDayDate, fmtDayDateY, fmtRange, fmtTime, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -30,6 +31,7 @@ const ROLE: Record<string, string> = { super_admin: "Super admin", admin: "Admin
 
 function Media({ file, className, onOpen }: { file: File; className?: string; onOpen?: () => void }) {
     const { url } = useFileUrl(file.id);
+    if (file.kind === "audio" || file.mimeType.startsWith("audio/")) return <VoicePlayer fileId={file.id} />;
     if (!url) return <div className={cx("msg-att", className)} style={{ width: 180, height: 120, background: "var(--surface-3)" }} />;
     return file.kind === "video" || file.mimeType.startsWith("video/")
         ? <video className="msg-att" src={url} controls />
