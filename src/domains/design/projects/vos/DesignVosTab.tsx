@@ -14,7 +14,7 @@ import Icon from "@/shared/icons/Icon";
 import type { Project } from "../../../shared/projects/projectsApi";
 import NewDesignVoModal from "./NewDesignVoModal";
 import SendDesignVoModal from "./SendDesignVoModal";
-import { downloadDesignVoPdf, useCancelDesignVo, useConfirmDesignVo, useDesignVos, useSetDesignVoTva, type DesignVo } from "./designVosApi";
+import { downloadDesignVoPdf, printDesignVoPdf, useCancelDesignVo, useConfirmDesignVo, useDesignVos, useSetDesignVoTva, type DesignVo } from "./designVosApi";
 
 const STATUS: Record<DesignVo["status"], { label: string; cls: string }> = {
     pending: { label: "Waiting for the client", cls: "badge-hold" },
@@ -104,6 +104,7 @@ function VoRow({ vo, writes, projectTva, onSend }: { vo: DesignVo; writes: boole
                         {(close) => (
                             <div>
                                 <button className="pop-item" onClick={() => { close(); void downloadDesignVoPdf(vo); }}><Icon name="download" />Download PDF</button>
+                                <button className="pop-item" onClick={() => { close(); printDesignVoPdf(vo).catch((e) => toast({ text: "The PDF wasn't printed", sub: errorMessage(e), icon: "alert" })); }}><Icon name="print" />Print</button>
                                 {writes && vo.status !== "cancelled" && <button className="pop-item" onClick={() => { close(); onSend(); }}><Icon name="send" />Send to the client</button>}
                                 {writes && vo.status !== "cancelled" && projectTva > 0 && (
                                     <button className="pop-item" onClick={() => { close(); switchTva(); }}><Icon name="edit" />{taxed ? "Take the TVA off" : "Add the TVA"}</button>
