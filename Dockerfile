@@ -24,7 +24,7 @@ FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine AS runtime
 # as a full upgrade could replace nginx.org's nginx
 # with Alpine's.
 USER root
-RUN apk upgrade --no-cache pcre2 brotli-libs curl libcurl libexpat zlib musl musl-utils && rm -f /etc/nginx/conf.d/default.conf
+RUN apk upgrade --no-cache pcre2 brotli-libs curl libcurl libexpat zlib musl musl-utils libxslt && rm -f /etc/nginx/conf.d/default.conf
 # The site and its security headers are templates, filled in when the container starts with API_UPSTREAM and
 # CONTENT_STORE_ORIGIN. The nginx image only fills in variables that are set, which is why the latter has a default below.
 COPY deploy/nginx/default.conf.template /etc/nginx/templates/default.conf.template
