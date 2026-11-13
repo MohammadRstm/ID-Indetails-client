@@ -77,8 +77,8 @@ describe("where the blob sits", () => {
     });
 
     it("remembers the person's choices, and ignores what it can't read", () => {
-        savePrefs({ side: "left", y: 0.25, calm: true, tucked: false });
-        expect(loadPrefs()).toEqual({ side: "left", y: 0.25, calm: true, tucked: false });
+        savePrefs({ side: "left", y: 0.25, calm: true, tucked: false, look: "blob" });
+        expect(loadPrefs()).toEqual({ side: "left", y: 0.25, calm: true, tucked: false, look: "blob" });
         localStorage.setItem("proton:blob", "{bad");
         expect(loadPrefs()).toEqual(DEFAULT_PREFS);
         localStorage.setItem("proton:blob", JSON.stringify({ side: "up", y: 7 }));

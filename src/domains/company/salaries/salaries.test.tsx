@@ -1,12 +1,15 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+import { printFile } from "@/api/download";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { money } from "@/shared/format/money";
 import { salaries, salaryHandlers } from "@/test/fixtures/salaries";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
+
+vi.mock("@/api/download", async (original) => ({ ...(await original<typeof import("@/api/download")>()), printFile: vi.fn(async () => undefined) }));
 
 const rana = personas.superAdmin;
 const sep = salaries.september;
@@ -127,6 +130,29 @@ describe("Salaries", () => {
         expect(await screen.findByText("Exported 13 employees")).toBeInTheDocument();
         expect(screen.getByText("salaries-2026-09.csv · every page, as filtered")).toBeInTheDocument();
         expect(asked[0].get("month")).toBe("2026-09");
+    });
+
+    it("download and print the month's PDF as filtered", async () => {
+        vi.mocked(printFile).mockClear();
+        URL.createObjectURL = vi.fn(() => "blob:salaries-pdf");
+        URL.revokeObjectURL = vi.fn();
+        const asked: URLSearchParams[] = [];
+        renderApp("/company/salaries", rana,
+            http.get("/api/company/salaries/pdf", ({ request }) => {
+                asked.push(new URL(request.url).searchParams);
+                return new HttpResponse("%PDF", { headers: { "content-type": "application/pdf", "content-disposition": 'attachment; filename="salaries-2026-09.pdf"' } });
+            }),
+            ...salaryHandlers);
+        await screen.findByText("Elie Khalil");
+        await userEvent.click(screen.getByRole("button", { name: "Admins" }));
+        await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
+        await waitFor(() => expect(asked).toHaveLength(1));
+        expect(asked[0].get("month")).toBe("2026-09");
+        expect(asked[0].get("role")).toBe("admin");
+        expect(URL.createObjectURL).toHaveBeenCalled();
+
+        await userEvent.click(screen.getByRole("button", { name: "Print" }));
+        await waitFor(() => expect(printFile).toHaveBeenCalledWith("/company/salaries/pdf", { month: "2026-09", domain: null, role: "admin", search: null }, "salaries-2026-09.pdf"));
     });
 
     it("are out of reach without salary:view", async () => {

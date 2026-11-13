@@ -301,16 +301,20 @@ table { line-height: normal; font-weight: normal; }
 :root {
   --proton-body-1:#7FD9CF; --proton-body-2:#0C6B69; --proton-fur:#3FA79D; --proton-glow:rgba(54,176,166,.55);
   --proton-eye:#04211E; --proton-sheen:rgba(255,255,255,.55);
+  /* the orb's glow is drawn as a tint on a light page and as added light on a dark one */
+  --proton-orb-light: 1;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --proton-body-1:#8EE6DB; --proton-body-2:#1F8C84; --proton-fur:#4CC3B8; --proton-glow:rgba(76,195,184,.5);
     --proton-eye:#04211E; --proton-sheen:rgba(255,255,255,.45);
+    --proton-orb-light: 0;
   }
 }
 :root[data-theme="dark"] {
   --proton-body-1:#8EE6DB; --proton-body-2:#1F8C84; --proton-fur:#4CC3B8; --proton-glow:rgba(76,195,184,.5);
   --proton-eye:#04211E; --proton-sheen:rgba(255,255,255,.45);
+  --proton-orb-light: 0;
 }
 .proton-blob[data-mood="asleep"] { --proton-body-1:#B9C9C6; --proton-body-2:#5E7471; --proton-fur:#8A9E9B; --proton-glow:rgba(138,158,155,.3); }
 .proton-blob[data-mood="error"] { --proton-body-1:#F2B8A8; --proton-body-2:#B4553F; --proton-fur:#D07A64; --proton-glow:rgba(208,122,100,.45); }
@@ -337,6 +341,15 @@ table { line-height: normal; font-weight: normal; }
 .proton-eyes.closed path { fill: none; stroke: var(--proton-eye); stroke-width: 2.6; stroke-linecap: round; }
 .proton-blob[data-mood="thinking"] .proton-glow, .proton-blob[data-mood="working"] .proton-glow { animation-duration: 1.6s; }
 .proton-blob.still, .proton-blob.still * { animation: none !important; }
+/* Proton as an orb (the default look): its canvas spills past the button so the glow has room, and clicks still reach
+   the button. Its lift under the pointer is drawn by the orb itself: a CSS filter here would drop its glow. */
+.proton-orb { position: absolute; inset: -30%; width: 160%; height: 160%; display: block; pointer-events: none; }
+/* The orb's preview in the component kit (development only): a dark and a light page side by side */
+.orb-stages { display: flex; flex-wrap: wrap; gap: 12px; }
+.orb-stage { flex: 1 1 240px; min-height: 220px; display: flex; align-items: center; justify-content: center; gap: 48px; border-radius: var(--r2); }
+.orb-stage.dark { background: radial-gradient(circle at 50% 60%, #140a24, #06030b 70%); --proton-orb-light: 0; }
+.orb-stage.light { background: #f6f5f8; border: 1px solid var(--line); --proton-orb-light: 1; }
+.orb-holder { position: relative; flex: none; }
 .proton-unseen { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--now);
   color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; box-shadow: 0 0 0 2px var(--surface); }
 
@@ -857,6 +870,13 @@ button.pc-comments { border: 0; cursor: pointer; }
 .boq-ref-table td { padding: 0 8px; height: 32px; color: var(--ink); }
 .boq-ref-table td.mono { font-family: var(--mono); font-size: 12px; }
 .boq-ref-table tr.boq-ref-permit td { background: var(--surface-2); }
+
+/* The company overview's Expenses row: the parts fold away under it, indented and lighter */
+.co-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; }
+.co-chev { display: inline-flex; transition: transform 0.15s; }
+.co-toggle[aria-expanded="true"] .co-chev { transform: rotate(90deg); }
+.co-sub { border-top: 1px solid var(--line); }
+.co-sub .co-line.sub { padding-left: 22px; font-size: 12.5px; color: var(--ink-3); }
 
 /* Voice notes: the player (in a chat bubble or a daily log) and the recording bar above a composer. */
 .voice-player { display: flex; align-items: center; gap: 8px; min-width: 220px; max-width: 320px; margin-top: 4px; }

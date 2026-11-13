@@ -84,6 +84,10 @@ export default function ProtonPanel({
                             <button className="pop-item" role="menuitemcheckbox" aria-checked={prefs.calm} onClick={() => { onPrefs({ calm: !prefs.calm }); close(); }}>
                                 {prefs.calm ? "Lively animations" : "Calm animations"}
                             </button>
+                            <button className="pop-item" role="menuitemcheckbox" aria-checked={prefs.look === "blob"}
+                                onClick={() => { onPrefs({ look: prefs.look === "blob" ? "orb" : "blob" }); close(); }}>
+                                {prefs.look === "blob" ? "Show the orb" : "Show the classic blob"}
+                            </button>
                             <button className="pop-item" role="menuitem" onClick={() => { close(); goToChat(); }}>
                                 Go to chat
                             </button>
