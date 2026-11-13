@@ -2,6 +2,7 @@ import { P, type PermissionCode } from "@/app/permissions/codes";
 import type { Domain, Permissions } from "@/app/permissions/permissions";
 import { hasSeveralAreas } from "@/app/routing/areas";
 import type { ShellArea } from "@/app/shell/useArea";
+import type { SettingsSection } from "../settings/settingsSections";
 import type { HelpFacts } from "./helpFacts";
 
 /*
@@ -28,7 +29,7 @@ export type LinkTo =
     /** A page of the Website area ("services"). */
     | { website: string }
     /** A Settings section, in the company area for those who reach it. */
-    | { settings: string }
+    | { settings: SettingsSection }
     /** A fixed path ("/change-password"). */
     | { path: string }
     /** The reader's own profile. */

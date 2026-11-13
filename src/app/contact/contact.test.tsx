@@ -150,11 +150,13 @@ describe("an error's Contact the developer link", () => {
 
     it("comes only with an unexpected failure's reference, and opens the window about it", async () => {
         const undo = hostContact();
-        render(<><FieldError message="Something went wrong on our side. Please try again later. (ref 4bf92f35)" /><FieldError message="Pick a project." /><Opened /></>);
+        const { unmount } = render(<><FieldError message="Something went wrong on our side. Please try again later. (ref 4bf92f35)" /><FieldError message="Pick a project." /><Opened /></>);
         expect(screen.getAllByRole("button", { name: "Contact the developer" })).toHaveLength(1);
 
         await userEvent.click(screen.getByRole("button", { name: "Contact the developer" }));
         expect(screen.getByRole("status")).toHaveTextContent(/^4bf92f35 at \d{4}-/);
+        // without a host, the link becomes WhatsApp, which needs the app around it
+        unmount();
         undo();
     });
 });
