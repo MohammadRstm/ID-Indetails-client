@@ -3,6 +3,9 @@ import { errorMessage } from "@/api/errors";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Icon from "@/shared/icons/Icon";
 import { uploadFile } from "@/domains/design/work/workApi";
+import RecordingBar from "@/shared/voice/RecordingBar";
+import { uploadVoice } from "@/shared/voice/uploadVoice";
+import { useVoiceRecorder } from "@/shared/voice/useVoiceRecorder";
 import { clearDraft, onDraft, peekDraft } from "@/domains/shared/proton/formFill";
 import type { Contact } from "./messagesApi";
 
@@ -23,7 +26,8 @@ const MAX_FILES = 10;
 
 /**
  * Writing a message (the prototype's Composer): text, photos and videos, and in a group "@" to mention
- * someone. Files upload as soon as they are picked; Enter sends.
+ * someone. Files upload as soon as they are picked; Enter sends. With nothing written, the microphone button
+ * turns the row into a recorder: Send uploads the voice note and sends it as a message of its own.
  */
 export default function Composer({ members, meId, sending, error, onSend, draftKey }: ComposerProps) {
     const [text, setText] = useState(() => (draftKey ? peekDraft(draftKey) : null) ?? "");
@@ -48,6 +52,11 @@ export default function Composer({ members, meId, sending, error, onSend, draftK
     const [mentionQuery, setMentionQuery] = useState<string | null>(null);
     const [mentioned, setMentioned] = useState<Contact[]>([]);
     const fileRef = useRef<HTMLInputElement>(null);
+    const rec = useVoiceRecorder();
+    const [asking, setAsking] = useState(false);
+    const [sendingVoice, setSendingVoice] = useState(false);
+    // a voice note that uploaded but whose message failed to send isn't uploaded again on a retry
+    const uploadedVoice = useRef<number | null>(null);
 
     const candidates = members && mentionQuery != null
         ? members.filter((p) => p.id !== meId && p.name.toLowerCase().includes(mentionQuery.toLowerCase())).slice(0, 6)
@@ -105,7 +114,42 @@ export default function Composer({ members, meId, sending, error, onSend, draftK
         }
     }
 
-    const problem = uploadError ?? (error ? errorMessage(error) : null);
+    async function startRecording() {
+        setUploadError(null);
+        setAsking(true);
+        try { await rec.start(); } finally { setAsking(false); }
+    }
+
+    async function sendVoice() {
+        if (sendingVoice || sending) return;
+        setUploadError(null);
+        setSendingVoice(true);
+        try {
+            let id = uploadedVoice.current;
+            if (id == null) {
+                const blob = await rec.finish();
+                if (!blob) return;
+                id = (await uploadVoice(blob)).id;
+                uploadedVoice.current = id;
+            }
+            await onSend({ body: "", mentionIds: [], attachmentIds: [id] });
+            uploadedVoice.current = null;
+            rec.discard();
+        } catch (e) {
+            // a failed send shows under the composer from `error`; a failed upload is shown here. The recording stays for a retry
+            if (uploadedVoice.current == null) setUploadError(errorMessage(e));
+        } finally {
+            setSendingVoice(false);
+        }
+    }
+
+    function discardVoice() {
+        uploadedVoice.current = null;
+        rec.discard();
+    }
+
+    const recording = rec.state !== "idle";
+    const problem = uploadError ?? rec.error ?? (error ? errorMessage(error) : null);
     return (
         <div className="msg-composer-wrap">
             {files.length > 0 && (
@@ -127,17 +171,27 @@ export default function Composer({ members, meId, sending, error, onSend, draftK
                     ))}
                 </div>
             )}
+            {recording ? (
+                <div className="msg-composer">
+                    <RecordingBar seconds={rec.seconds} stopped={rec.state === "recorded"} doneLabel="Send" busy={sendingVoice || sending}
+                        onDone={() => void sendVoice()} onDiscard={discardVoice} />
+                </div>
+            ) : (
             <div className="msg-composer">
                 <input ref={fileRef} type="file" accept="image/*,video/*" multiple hidden onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
                 <button className="icon-btn" aria-label="Attach file" disabled={files.length >= MAX_FILES} onClick={() => fileRef.current?.click()}><Icon name="attach" /></button>
                 <input className="input grow" placeholder="Message…" aria-label="Message" value={text}
                     onChange={(e) => onText(e.target.value, e.target.selectionStart)}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (!fromProton.current) void send(); } }} />
+                {text.trim() === "" && files.length === 0 && (
+                    <button className="icon-btn" aria-label="Record a voice note" disabled={asking} onClick={() => void startRecording()}><Icon name="mic" /></button>
+                )}
                 <button className="btn btn-primary btn-sm" disabled={!canSend} onClick={() => void send()} aria-label="Send"><Icon name="send" /></button>
             </div>
-            {(problem || uploading > 0) && (
+            )}
+            {(problem || uploading > 0 || sendingVoice) && (
                 <div className={problem ? "err mt-s" : "muted mt-s"} style={{ fontSize: "11.5px" }} role={problem ? "alert" : undefined}>
-                    {problem ? <><Icon name="alert" />{problem}</> : "Uploading…"}
+                    {problem ? <><Icon name="alert" />{problem}</> : sendingVoice ? "Sending…" : "Uploading…"}
                 </div>
             )}
         </div>
