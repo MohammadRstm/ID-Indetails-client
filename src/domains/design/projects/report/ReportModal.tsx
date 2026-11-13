@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { downloadFile, fetchBlob, saveBlob } from "@/api/download";
+import { downloadFile, fetchBlob, printFile, saveBlob } from "@/api/download";
 import { parseCsv } from "@/shared/format/csv";
 import { errorMessage } from "@/api/errors";
 import { http } from "@/api/http";
@@ -139,6 +139,17 @@ export default function ReportModal({ project, onClose }: { project: Project; on
             setWorking(false);
         }
     }
+    // prints exactly what Download PDF would save
+    async function print() {
+        setWorking(true);
+        try {
+            await printFile(`/projects/${project.id}/report`, { kind, from: range.from, to: range.to, sections }, fileName);
+        } catch (e) {
+            toast({ text: "The report wasn't printed", sub: errorMessage(e), icon: "alert" });
+        } finally {
+            setWorking(false);
+        }
+    }
     // the very file the download saves, fetched once for the preview
     const csvName = `project-${slug(project.title)}-${range.from}-to-${range.to}.csv`;
     const csvFile = useQuery({
@@ -168,6 +179,7 @@ export default function ReportModal({ project, onClose }: { project: Project; on
                 <>
                     <div className="grow"><span className="muted">{client ? "Safe to share - no costs, rates, profit or margin" : "Internal - contains cost and profit information"}</span></div>
                     <button className="btn" onClick={onClose}>Close</button>
+                    <button className="btn" disabled={working} onClick={print}><Icon name="print" />Print</button>
                     <button className="btn btn-primary" disabled={working} onClick={pdf}><Icon name="download" />{working ? "Generating…" : "Download PDF"}</button>
                 </>
             )}>

@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse, type RequestHandler } from "msw";
+import { printFile } from "@/api/download";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { money } from "@/shared/format/money";
@@ -8,6 +9,8 @@ import { boqs, summaryOf } from "@/test/fixtures/boqs";
 import { site, siteHandlers } from "@/test/fixtures/site";
 import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
+
+vi.mock("@/api/download", async (original) => ({ ...(await original<typeof import("@/api/download")>()), printFile: vi.fn(async () => undefined) }));
 
 // An Execution admin a super admin has handed the money to: admins don't hold it by default, and with it the BOQs
 const karim = withPermissions(personas.executionAdmin, { grant: MONEY_AND_HIRING });
@@ -742,6 +745,14 @@ describe("what is done with a BOQ", () => {
         await userEvent.click(await screen.findByRole("button", { name: "Download PDF" }));
         await waitFor(() => expect(asked).toEqual(["31"]));
         expect(URL.createObjectURL).toHaveBeenCalled();
+    });
+
+    it("prints the PDF of a client BOQ", async () => {
+        vi.mocked(printFile).mockClear();
+        const dialog = await open(31, "BQ-2026-001", karim);
+        await userEvent.click(within(dialog).getByRole("button", { name: "More actions" }));
+        await userEvent.click(await screen.findByRole("button", { name: "Print" }));
+        await waitFor(() => expect(printFile).toHaveBeenCalledWith("/boqs/31/pdf", undefined, expect.stringMatching(/\.pdf$/)));
     });
 });
 

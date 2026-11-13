@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+import { printFile } from "@/api/download";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { money } from "@/shared/format/money";
@@ -10,6 +11,8 @@ import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
 import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 import { invoiceStateOf } from "./invoiceStatus";
+
+vi.mock("@/api/download", async (original) => ({ ...(await original<typeof import("@/api/download")>()), printFile: vi.fn(async () => undefined) }));
 
 // A Design admin a super admin has handed the money to: admins don't hold it by default
 const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
@@ -247,6 +250,14 @@ describe("a project's billing", () => {
         expect(within(dialog).queryByText("More than this invoice is owed.")).not.toBeInTheDocument();
         await userEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
         await waitFor(() => expect(recorded).toEqual([expect.objectContaining({ amount: 1234.56, invoiceId: owing.id })]));
+    });
+
+    it("prints the invoice's PDF", async () => {
+        vi.mocked(printFile).mockClear();
+        renderApp(`${path}?invoice=${inv.id}`, admin, ...handlers);
+        const dialog = await screen.findByRole("dialog", { name: inv.number! });
+        await userEvent.click(within(dialog).getByRole("button", { name: "Print" }));
+        await waitFor(() => expect(printFile).toHaveBeenCalledWith(`/invoices/${inv.id}/pdf`, undefined, expect.stringMatching(/\.pdf$/)));
     });
 
     it("voids a sent invoice with its reason", async () => {

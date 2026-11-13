@@ -52,7 +52,7 @@ are part of the same app and need nothing more from nginx.
 - **gzip** for the app's text files.
 - **Security headers** on every app response:
   - a strict `Content-Security-Policy` (same-origin only, plus `data:` and `blob:` images and media for avatars and
-    uploads, inline styles for the toast library, and `CONTENT_STORE_ORIGIN` for the client portal's files);
+    uploads, `blob:` frames for printing a PDF, inline styles for the toast library, and `CONTENT_STORE_ORIGIN` for the client portal's files);
   - `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` and `frame-ancestors`;
   - `Permissions-Policy` (no camera, location or payment; the microphone only on the app's own origin, for talking
     to Proton) and `Cross-Origin-Opener-Policy`.
