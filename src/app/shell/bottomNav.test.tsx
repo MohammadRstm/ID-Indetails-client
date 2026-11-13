@@ -158,7 +158,8 @@ describe("the bottom bar on a phone", () => {
 
         await user.click(within(await bar()).getByRole("button", { name: "Chat" }));
         await waitFor(() => expect(window.location.pathname).toBe("/design/messages"));
-        expect(within(await bar()).getByRole("button", { name: "Chat" })).toHaveAttribute("aria-current", "page");
+        // the address changes a moment before the page does
+        await waitFor(() => expect(within(screen.getByRole("navigation", { name: "Quick links" })).getByRole("button", { name: "Chat" })).toHaveAttribute("aria-current", "page"));
     });
 
     it("opens the search from the launcher too", async () => {
