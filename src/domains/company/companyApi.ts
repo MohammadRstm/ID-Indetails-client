@@ -137,3 +137,43 @@ export function useCancelOverhead() {
         onSuccess: refresh,
     });
 }
+
+export type OneOffList = Schemas["OneOffExpenseListResponse"];
+export type OneOff = Schemas["OneOffExpenseResponse"];
+export type OneOffBody = Schemas["SaveOneOffExpenseRequest"];
+
+/** The one-off expenses of a month ("yyyy-MM", never a future one), newest day first, with totals per currency. */
+export function useOneOffs(month: string, enabled = true) {
+    return useQuery({
+        queryKey: [...overheadKey, "one-offs", month],
+        queryFn: async () => (await http.get<OneOffList>("/company/overhead/one-offs", { params: { month } })).data,
+        enabled,
+    });
+}
+
+/** Records a cost paid once, dated this month up to today (overhead:manage). */
+export function useAddOneOff() {
+    const refresh = useRefreshCompany();
+    return useMutation({
+        mutationFn: async (body: OneOffBody) => (await http.post<OneOff>("/company/overhead/one-offs", body)).data,
+        onSuccess: refresh,
+    });
+}
+
+/** Changes a one-off while its month is open (overhead:manage). */
+export function useChangeOneOff(id: number) {
+    const refresh = useRefreshCompany();
+    return useMutation({
+        mutationFn: async (body: OneOffBody) => (await http.put<OneOff>(`/company/overhead/one-offs/${id}`, body)).data,
+        onSuccess: refresh,
+    });
+}
+
+/** Removes a one-off while its month is open (overhead:manage). */
+export function useRemoveOneOff() {
+    const refresh = useRefreshCompany();
+    return useMutation({
+        mutationFn: async (id: number) => { await http.delete(`/company/overhead/one-offs/${id}`); },
+        onSuccess: refresh,
+    });
+}

@@ -37,9 +37,9 @@ const SUBS: Record<Exclude<Tab, "overview">, string> = {
     meetings: "General meetings, and the meetings of both businesses' projects",
 };
 
-function Line({ label, value, strong, rule, tone }: { label: string; value: number; strong?: boolean; rule?: boolean; tone?: "auto" }) {
+function Line({ label, value, strong, rule, sub, tone }: { label: string; value: number; strong?: boolean; rule?: boolean; sub?: boolean; tone?: "auto" }) {
     return (
-        <div className={cx("co-line", strong && "strong", rule && "rule")}>
+        <div className={cx("co-line", strong && "strong", rule && "rule", sub && "sub")}>
             <span>{label}</span>
             <b className="mono"><Money value={value} tone={tone ?? ""} /></b>
         </div>
@@ -97,6 +97,8 @@ function Figures({ tabs }: { tabs: ReactNode }) {
     const permissions = usePermissions();
     const [choice, setChoice] = useState<PeriodChoice>(lastChoice);
     const [editing, setEditing] = useState(false);
+    // the expenses' parts are folded away every time the page opens, and aren't remembered
+    const [expensesOpen, setExpensesOpen] = useState(false);
     const today = companyToday();
     const period = companyPeriod(choice, today);
     const overview = useCompanyOverview({ from: period.from, to: period.to });
@@ -111,9 +113,9 @@ function Figures({ tabs }: { tabs: ReactNode }) {
                 <div>
                     <div className="panel-title">
                         What the company keeps
-                        <HelpHint article="company-figures" label="what the company keeps">Both businesses' profit, minus company expenses, fixed salaries, paid leave and the overtime premium for the period.</HelpHint>
+                        <HelpHint article="company-figures" label="what the company keeps">Both businesses' profit, minus the company's expenses (recurring and one-off expenses, fixed salaries, paid leave and the overtime premium) for the period.</HelpHint>
                     </div>
-                    <div className="panel-sub">{period.label}. Each business earns its own profit. Company expenses, fixed salaries, paid leave and the overtime premium belong to no project, so they come out once, here.</div>
+                    <div className="panel-sub">{period.label}. Each business earns its own profit. The company's expenses (recurring and one-off expenses, fixed salaries, paid leave and the overtime premium) belong to no project, so they come out once, here.</div>
                 </div>
             </div>
             <div className="panel-body">
@@ -121,21 +123,33 @@ function Figures({ tabs }: { tabs: ReactNode }) {
                     <div className="co-sheet">
                         {t.domains.map((d) => <Line key={d.domain} label={`${label(d.domain)} profit`} value={d.profit} tone="auto" />)}
                         <Line label="Combined" value={t.grossProfit} rule />
-                        <Line label="Company expenses" value={-t.overhead} />
-                        <Line label="Fixed salaries" value={-t.fixedSalaries} />
-                        <Line label="Paid leave" value={-t.paidLeave} />
-                        <Line label="Overtime premium" value={-t.overtimePremium} />
+                        <div className="co-line">
+                            <button type="button" className="co-toggle" aria-expanded={expensesOpen} aria-controls="co-expenses-lines"
+                                aria-label={`${expensesOpen ? "Hide" : "Show"} what the expenses are made of`} onClick={() => setExpensesOpen((o) => !o)}>
+                                <span className="co-chev"><Icon name="chevronRight" /></span>
+                                <span>Expenses</span>
+                            </button>
+                            <b className="mono"><Money value={-t.expenses} /></b>
+                        </div>
+                        <div id="co-expenses-lines" className="co-sub" hidden={!expensesOpen}>
+                            <Line sub label="Recurring company expenses" value={-t.overhead} />
+                            <Line sub label="One-off expenses" value={-t.oneOffExpenses} />
+                            <Line sub label="Fixed salaries" value={-t.fixedSalaries} />
+                            <Line sub label="Paid leave" value={-t.paidLeave} />
+                            <Line sub label="Overtime premium" value={-t.overtimePremium} />
+                        </div>
                         <Line label="Company net profit" value={t.netProfit} strong tone="auto" />
                     </div>
                 )}
                 {t && t.unconvertedOverhead.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedOverhead.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
+                {t && t.unconvertedOneOffExpenses.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedOneOffExpenses.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
                 {t && t.unconvertedFixedSalaries.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedFixedSalaries.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
                 {t && t.unconvertedPaidLeave.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedPaidLeave.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
                 {t && t.unconvertedOvertimePremium.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedOvertimePremium.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
                 <p className="hint mt">
                     Revenue is the money received from clients in this window, on the day it arrived; costs are the labour, expenses, site expenses and site labour dated inside it.
                     Company expenses are the monthly pool of subscriptions and running costs, counted day by day for the {days} day{days === 1 ? "" : "s"} shown
-                    - never charged to a project or a client. Fixed salaries are the pay of everyone who logs no hours (admins, super admins and site staff), so no project carries it: they are counted the same way.
+                    - never charged to a project or a client. One-off expenses are costs paid once, such as a refrigerator or a repair, counted in full on the day they were spent. Fixed salaries are the pay of everyone who logs no hours (admins, super admins and site staff), so no project carries it: they are counted the same way.
                     Paid leave is what Design staff were paid for paid time off, on a salary or hourly pay, which no project carries either.
                     The overtime premium is what salaries paid for overtime past the month's threshold, beyond the hourly rate their projects carry those hours at.
                     Everyone else's pay is already in the businesses' costs, through the hours they log.
