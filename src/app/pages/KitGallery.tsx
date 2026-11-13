@@ -33,6 +33,7 @@ import Modal, { Drawer } from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { addMonths, companyToday, fmtMonthY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import OrbPreview from "@/domains/shared/proton/orb/OrbPreview";
 
 /*
  * Development only (/dev/kit): every shared component with sample data, to compare with the prototype and
@@ -66,6 +67,10 @@ export default function KitGallery() {
     return (
         <div className="page" style={{ maxWidth: 1200, margin: "0 auto" }}>
             <PageHead title="Component kit" sub="Every shared component, with sample data." actions={<button className="btn btn-primary" onClick={() => toast({ text: "Saved", sub: "A toast confirms what you just did." })}><Icon name="check" />Toast</button>} />
+
+            <Panel title="Proton's orb" sub="Every mood, a simulated voice, or your microphone through the meter Proton's voice uses">
+                <OrbPreview />
+            </Panel>
 
             <Tabs value={tab} onChange={setTab} items={[{ key: "overview", label: "Overview" }, { key: "requirements", label: "Requirements", count: 4 }, { key: "timeline", label: "Timeline" }]} />
 

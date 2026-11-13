@@ -3,6 +3,7 @@ import { onSessionReset } from "@/app/session/sessionReset";
 import { setAssistantOpen } from "@/shared/components/Overlays/assistantLayer";
 import { emptyChat, loadChat, saveChat, type ProtonChat } from "./protonChat";
 import { plainText } from "./protonText";
+import type { OrbSignal } from "./orb/orbLook";
 
 /*
  * Proton lives outside any one page: this holds the chat, whether the panel is open, the answer being written, and
@@ -127,11 +128,22 @@ export const stopped = () => set({ askedAt: null, status: null, draft: null, tal
  * How loudly the voice model speaks, read by the blob's animation each frame. Kept out of the store's state: it
  * changes every frame while the voice speaks, and nothing on screen but the blob's mouth depends on it.
  */
-let speech = { until: 0, level: 0 };
+let speech: { until: number; level: number; bands: OrbSignal["bands"] } = { until: 0, level: 0, bands: null };
 
-/** The voice model is speaking this loudly: the blob's mouth follows it, without re-rendering anything. */
-export const spoke = (level: number) => {
-    speech = { until: Date.now() + 150, level: Math.min(1, Math.max(0.3, level)) };
+/**
+ * The voice model is speaking this loudly: the blob's mouth follows it, without re-rendering anything. `bands` are
+ * the voice's low, middle and high parts (0–1), which the orb turns into waves round its ring.
+ */
+export const spoke = (level: number, bands?: OrbSignal["bands"]) => {
+    speech = { until: Date.now() + 150, level: Math.min(1, Math.max(0.3, level)), bands: bands ?? null };
+};
+
+/** How loudly the person speaks into the microphone in a voice conversation, read by the orb each frame. */
+let hearing = { until: 0, level: 0 };
+
+/** The person is speaking this loudly (0–1): the orb leans in while it listens. */
+export const personSpoke = (level: number) => {
+    hearing = { until: Date.now() + 150, level: Math.min(1, Math.max(0, level)) };
 };
 
 /** A confirmed change went through. */
@@ -141,6 +153,13 @@ export const dismissPeek = () => set({ peek: null });
 
 /** How loudly the blob talks at `now`, read by its animation each frame: the voice speaking, or text arriving. */
 export const voiceAt = (now: number) => (now < speech.until ? speech.level : now < state.talkingUntil ? state.voice : 0);
+
+/** What the orb hears and says at `now`: Proton's voice (and its bands, when real audio plays) and the person's. */
+export const orbSignalAt = (now: number): OrbSignal => ({
+    speak: voiceAt(now),
+    bands: now < speech.until ? speech.bands : null,
+    hear: now < hearing.until ? hearing.level : 0,
+});
 
 /*
  * Which person's Proton this is: it moves on whenever the session is reset (sign-out, or another account signing in

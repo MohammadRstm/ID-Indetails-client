@@ -11,12 +11,13 @@ export type ReportScope = { from: string; to: string; projectId?: number; userId
 const clean = (p: object) => Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined && v !== ""));
 
 /** Logged work in a range, cut every way the Reports page shows it (report:view; money needs financial:view). */
-export function useWorkReport(scope: ReportScope) {
+export function useWorkReport(scope: ReportScope, enabled = true) {
     const params = clean(scope);
     return useQuery({
         queryKey: keys.work.report(params),
         queryFn: async () => (await http.get<WorkReport>("/reports/work", { params })).data,
         placeholderData: keepPreviousData,
+        enabled,
     });
 }
 
@@ -33,5 +34,21 @@ export function useReportEntries(scope: ReportScope & { search?: string }, enabl
         getNextPageParam: (last) => (last.page * last.pageSize < last.totalCount ? last.page + 1 : undefined),
         placeholderData: keepPreviousData,
         enabled,
+    });
+}
+
+export type Utilization = Schemas["UtilizationResponse"];
+export type UtilizationTotals = Schemas["UtilizationTotalsResponse"];
+export type UtilizationPerson = Schemas["UtilizationPersonResponse"];
+
+/** A month's utilization: Design employees' logged against expected hours, by person and department. Hours only (report:view). */
+export function useUtilization(month: string, enabled = true) {
+    return useQuery({
+        queryKey: keys.work.utilization(month),
+        // the API takes any day of the month
+        queryFn: async () => (await http.get<Utilization>("/reports/utilization", { params: { month: `${month}-01` } })).data,
+        enabled,
+        // another month keeps the last figures up while it loads
+        placeholderData: keepPreviousData,
     });
 }

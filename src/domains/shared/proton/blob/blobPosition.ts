@@ -5,6 +5,9 @@
 
 export type BlobSide = "left" | "right";
 
+/** How Proton looks: the animated orb, or the classic blob it replaced (kept for whoever prefers it). */
+export type ProtonLook = "orb" | "blob";
+
 export type BlobPrefs = {
     side: BlobSide;
     /** 0 at the top of the free area, 1 at the bottom. */
@@ -13,11 +16,12 @@ export type BlobPrefs = {
     calm: boolean;
     /** Tucked into the edge, showing only a small tab. */
     tucked: boolean;
+    look: ProtonLook;
 };
 
 export type Box = { x: number; y: number; width: number; height: number };
 
-export const DEFAULT_PREFS: BlobPrefs = { side: "right", y: 1, calm: false, tucked: false };
+export const DEFAULT_PREFS: BlobPrefs = { side: "right", y: 1, calm: false, tucked: false, look: "orb" };
 
 /** Kept clear of the top bar. */
 const TOP = 70;
@@ -33,6 +37,8 @@ export function loadPrefs(): BlobPrefs {
             y: typeof stored.y === "number" && stored.y >= 0 && stored.y <= 1 ? stored.y : DEFAULT_PREFS.y,
             calm: stored.calm === true,
             tucked: stored.tucked === true,
+            // the orb unless the classic blob was chosen
+            look: stored.look === "blob" ? "blob" : "orb",
         };
     } catch {
         return DEFAULT_PREFS;
