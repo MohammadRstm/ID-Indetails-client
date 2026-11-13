@@ -1,7 +1,9 @@
+import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { blobPath, POINTS, radiiAt, springStep } from "./blobShape";
 import { clearOf, DEFAULT_PREFS, loadPrefs, placeOf, savePrefs, snapOf } from "./blobPosition";
 import { isLively, moodName, moodOf, WORKING_AFTER_MS, type MoodInputs } from "./protonMood";
+import { useBlobDrag } from "./useBlobDrag";
 
 const calm: MoodInputs = { available: true, askedAt: null, talkingUntil: 0, errorUntil: 0, happyUntil: 0, cardOpen: false, composing: false };
 
@@ -74,6 +76,48 @@ describe("where the blob sits", () => {
         const blob = { x: 1120, y: 720, width: 64, height: 64 };
         expect(clearOf(blob, [{ x: 1000, y: 700, width: 180, height: 40 }], viewport)).toBe(700 - 64 - 8);
         expect(clearOf(blob, [{ x: 0, y: 0, width: 100, height: 100 }], viewport)).toBe(720);
+    });
+
+    describe("with a phone's header and bottom bar", () => {
+        // a 60px header (and the status bar) above, the 56px bar (and the home indicator) below: the free area starts 16px under the
+        // header and ends 16px over the bar
+        const phone = { width: 390, height: 800, top: 76, bottom: 56 };
+
+        it("lifts a height saved at the foot of the screen to sit just above the bar", () => {
+            const lowest = placeOf({ side: "right", y: 1 }, phone, 64);
+            expect(lowest).toEqual({ x: 310, y: 664 });
+            expect(lowest.y + 64 + 16).toBe(phone.height - phone.bottom);
+            // without the bar it would have been 56px lower: a saved position is a share of the free area, so it follows
+            expect(placeOf({ side: "right", y: 1 }, { width: 390, height: 800, top: 76 }, 64).y).toBe(720);
+        });
+
+        it("keeps the top of the free area under the header", () => {
+            expect(placeOf({ side: "left", y: 0 }, phone, 64)).toEqual({ x: 16, y: 76 });
+        });
+
+        it("saves where it is dropped as a share of the free area, so it lands where it was let go", () => {
+            expect(snapOf(100, 76 + 294, phone, 64)).toEqual({ side: "left", y: 0.5 });
+            expect(snapOf(300, 2000, phone, 64)).toEqual({ side: "right", y: 1 });
+            const spot = placeOf({ side: "right", y: 0.25 }, phone, 64);
+            expect(snapOf(spot.x, spot.y, phone, 64)).toEqual({ side: "right", y: 0.25 });
+        });
+
+        it("moves off what it covers without going under the bar", () => {
+            const blob = { x: 310, y: 664, width: 64, height: 64 };
+            // room above: just above the thing
+            expect(clearOf(blob, [{ x: 300, y: 700, width: 90, height: 40 }], phone)).toBe(700 - 64 - 8);
+            // no room anywhere above: below it, but never lower than just over the bar
+            expect(clearOf(blob, [{ x: 300, y: 60, width: 90, height: 700 }], phone)).toBe(664);
+            expect(clearOf(blob, [{ x: 300, y: 60, width: 90, height: 700 }], { height: 800, top: 76 })).toBe(720);
+        });
+    });
+
+    it("can't be dragged onto the bottom bar", () => {
+        const { result } = renderHook(() => useBlobDrag({ x: 310, y: 400 }, 64, () => {}, () => {}, 56));
+        const event = (extra: object) => ({ button: 0, pointerId: 1, pointerType: "touch", currentTarget: { setPointerCapture: () => {} }, ...extra }) as never;
+        act(() => result.current.handlers.onPointerDown(event({ clientX: 300, clientY: 400 })));
+        act(() => result.current.handlers.onPointerMove(event({ clientX: 300, clientY: 5000 })));
+        expect(result.current.dragAt?.y).toBe(window.innerHeight - 56 - 64);
     });
 
     it("remembers the person's choices, and ignores what it can't read", () => {

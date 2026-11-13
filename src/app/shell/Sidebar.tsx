@@ -142,14 +142,14 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                                     <div className="muted trunc" style={{ fontSize: "11.5px" }}>{user.email}</div>
                                 </div>
                             </div>
-                            {peopleItem && (
-                                <button className="pop-item" onClick={() => { close(); navigate(`${base}/people`); }}>
-                                    <Icon name="user" />Browse employees
-                                </button>
-                            )}
                             {profilePath && (
                                 <button className="pop-item" onClick={() => { close(); navigate(profilePath); }}>
                                     <Icon name="user" />My profile
+                                </button>
+                            )}
+                            {peopleItem && (
+                                <button className="pop-item" onClick={() => { close(); navigate(`${base}/people`); }}>
+                                    <Icon name="user" />Browse employees
                                 </button>
                             )}
                             {settingsItem && (

@@ -21,11 +21,19 @@ export type BlobPrefs = {
 
 export type Box = { x: number; y: number; width: number; height: number };
 
+/**
+ * The window the blob moves in. `top` is how far down its free area starts (below the top bar) and `bottom` how much
+ * is kept clear at the foot (a phone's bottom bar): both measured from the page's styles (--top-h and --bottom-nav-h),
+ * and the wide-screen defaults when not given.
+ */
+export type Frame = { width: number; height: number; top?: number; bottom?: number };
+
 export const DEFAULT_PREFS: BlobPrefs = { side: "right", y: 1, calm: false, tucked: false, look: "orb" };
 
-/** Kept clear of the top bar. */
+/** Kept clear of the top bar: its 54px and a margin. */
 const TOP = 70;
-const MARGIN = 16;
+/** The gap kept between the blob and the window's edges. */
+export const MARGIN = 16;
 const KEY = "proton:blob";
 
 export function loadPrefs(): BlobPrefs {
@@ -53,21 +61,23 @@ export function savePrefs(prefs: BlobPrefs) {
     }
 }
 
-/** The blob's top-left corner in the window for these choices. */
-export function placeOf(prefs: Pick<BlobPrefs, "side" | "y">, viewport: { width: number; height: number }, size: number): { x: number; y: number } {
-    const span = Math.max(0, viewport.height - TOP - MARGIN - size);
+/** The blob's top-left corner in the window for these choices. A height saved low sits just above the bottom bar. */
+export function placeOf(prefs: Pick<BlobPrefs, "side" | "y">, viewport: Frame, size: number): { x: number; y: number } {
+    const top = viewport.top ?? TOP;
+    const span = Math.max(0, viewport.height - top - MARGIN - (viewport.bottom ?? 0) - size);
     return {
         x: prefs.side === "left" ? MARGIN : Math.max(MARGIN, viewport.width - MARGIN - size),
-        y: TOP + span * prefs.y,
+        y: top + span * prefs.y,
     };
 }
 
 /** Where a blob dropped at (x, y) settles: the nearer edge, at that height. */
-export function snapOf(x: number, y: number, viewport: { width: number; height: number }, size: number): Pick<BlobPrefs, "side" | "y"> {
-    const span = Math.max(1, viewport.height - TOP - MARGIN - size);
+export function snapOf(x: number, y: number, viewport: Frame, size: number): Pick<BlobPrefs, "side" | "y"> {
+    const top = viewport.top ?? TOP;
+    const span = Math.max(1, viewport.height - top - MARGIN - (viewport.bottom ?? 0) - size);
     return {
         side: x + size / 2 < viewport.width / 2 ? "left" : "right",
-        y: Math.min(1, Math.max(0, (y - TOP) / span)),
+        y: Math.min(1, Math.max(0, (y - top) / span)),
     };
 }
 
@@ -77,12 +87,13 @@ const overlaps = (a: Box, b: Box) => a.x < b.x + b.width && b.x < a.x + a.width 
  * The height the blob moves to so it doesn't cover what the person is working with (the focused field, a dialog's
  * buttons, the message composer): just above the first thing it would hide, or just below if there's no room above.
  */
-export function clearOf(blob: Box, obstacles: Box[], viewport: { height: number }): number {
+export function clearOf(blob: Box, obstacles: Box[], viewport: Pick<Frame, "height" | "top" | "bottom">): number {
+    const top = viewport.top ?? TOP;
     let y = blob.y;
     for (const obstacle of obstacles) {
         if (!overlaps({ ...blob, y }, obstacle)) continue;
         const above = obstacle.y - blob.height - 8;
-        y = above >= TOP ? above : Math.min(obstacle.y + obstacle.height + 8, viewport.height - blob.height - MARGIN);
+        y = above >= top ? above : Math.min(obstacle.y + obstacle.height + 8, viewport.height - (viewport.bottom ?? 0) - blob.height - MARGIN);
     }
     return y;
 }

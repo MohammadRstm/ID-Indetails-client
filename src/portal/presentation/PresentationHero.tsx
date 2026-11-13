@@ -4,7 +4,7 @@ import { fmtDateY } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
 import PresentationLightbox from "./PresentationLightbox";
 import type { MediaItem, PortalPresentation, PresentationHero as Hero } from "./presentationTypes";
-import { usePhone } from "./usePhone";
+import { useIsPhone } from "@/shared/hooks/useIsPhone";
 
 type Props = {
     presentation: PortalPresentation;
@@ -26,7 +26,7 @@ const paragraphsOf = (text: string | null) => (text ?? "").split(/\n\s*\n/).map(
  */
 export default function PresentationHero({ presentation, onBroken }: Props) {
     const { heroes, title, status, publishedAt, summary } = presentation;
-    const phone = usePhone();
+    const phone = useIsPhone();
     // an image that fails to load gives way to the next; with none left, the calm block
     const [failed, setFailed] = useState<string[]>([]);
     const [viewing, setViewing] = useState<number | null>(null);
