@@ -68,7 +68,7 @@ describe("deleting a project made by mistake", () => {
 });
 
 describe("the projects list's filters", () => {
-    it("are dropdowns, and All leaves the archived projects out until Archived is chosen", async () => {
+    it("are in one panel, and All leaves the archived projects out until Archived is chosen", async () => {
         const asked: URLSearchParams[] = [];
         renderApp("/design/projects", rana,
             http.get("/api/projects", ({ request }) => {
@@ -81,16 +81,16 @@ describe("the projects list's filters", () => {
         await waitFor(() => expect(asked.length).toBeGreaterThan(0));
         expect(asked.at(-1)!.get("excludeArchived")).toBe("true");
         expect(asked.at(-1)!.get("status")).toBeNull();
-        // no buttons for the statuses or the quarters any more
+        // the statuses and the quarters are not on the page itself: they are in the Filters panel
         expect(screen.queryByRole("button", { name: "Q1" })).not.toBeInTheDocument();
 
-        await userEvent.click(screen.getByLabelText("Status"));
-        await userEvent.click(within(screen.getByRole("listbox")).getByRole("option", { name: /^Archived/ }));
+        await userEvent.click(screen.getByRole("button", { name: "Filters" }));
+        const panel = await screen.findByRole("dialog", { name: "Filters" });
+        await userEvent.click(within(panel).getByRole("button", { name: /^Archived/ }));
         await waitFor(() => expect(asked.at(-1)!.get("status")).toBe("archived"));
         expect(asked.at(-1)!.get("excludeArchived")).toBeNull();
 
-        await userEvent.click(screen.getByLabelText("Quarter"));
-        await userEvent.click(within(screen.getByRole("listbox")).getByRole("option", { name: "Q2" }));
+        await userEvent.click(within(panel).getByRole("button", { name: "Q2" }));
         await waitFor(() => expect(asked.at(-1)!.get("quarter")).toBe("2"));
         expect(asked.at(-1)!.get("year")).not.toBeNull();
     });

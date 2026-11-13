@@ -23,8 +23,9 @@ export default function PortalTopBar() {
             <div className="row" style={{ gap: 10 }}>
                 <span className="muted trunc portal-who">{accountName(account)}</span>
                 <PortalBell />
-                <button type="button" className="btn btn-sm" onClick={() => openContact()} title="Contact the developer"><Icon name="mail" />Contact</button>
-                <button type="button" className="btn btn-sm" onClick={() => void signOut()}><Icon name="logout" />Sign out</button>
+                {/* a narrow phone shows the icons only: the words stay for screen readers */}
+                <button type="button" className="btn btn-sm" onClick={() => openContact()} title="Contact the developer"><Icon name="mail" /><span className="portal-btn-label">Contact</span></button>
+                <button type="button" className="btn btn-sm" onClick={() => void signOut()}><Icon name="logout" /><span className="portal-btn-label">Sign out</span></button>
             </div>
         </header>
     );
