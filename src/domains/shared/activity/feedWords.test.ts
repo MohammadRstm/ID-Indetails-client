@@ -20,6 +20,17 @@ describe("what the activity feed says", () => {
         expect(say(event("progress_set"))).toBe("updated Beit Misk show apartment's progress");
     });
 
+    it("says which department's hours were planned or cleared, and which budget version was set", () => {
+        const plan = (plannedMinutes: number | null, prevPlannedMinutes: number | null) =>
+            event("department_plan_set", { payload: { teamId: 12, department: "Architecture", plannedMinutes, prevPlannedMinutes } });
+        expect(say(plan(2400, null))).toBe("planned 40h for Architecture on Beit Misk show apartment");
+        expect(say(plan(3000, 2400))).toBe("planned 50h for Architecture on Beit Misk show apartment (was 40h)");
+        expect(say(plan(null, 2400))).toBe("cleared the planned hours of Architecture on Beit Misk show apartment");
+
+        expect(say(event("budget_set", { amount: 12000, payload: { version: 2 } }))).toBe("set budget version 2 for Beit Misk show apartment - $12k");
+        expect(say(event("budget_set", { payload: { version: 1 } }))).toBe("set budget version 1 for Beit Misk show apartment");
+    });
+
     it("names the people an event is about", () => {
         expect(say(event("project_owner_set", { payload: { ownerId: 3, prevOwnerId: 4 } }))).toBe("made Sarah Haddad the owner of Beit Misk show apartment (was Omar Fares)");
         expect(say(event("pay_changed", { subjectType: "user", subjectId: 9, payload: { effectiveFrom: "2026-10-01" } }))).toBe("changed Yara Mansour's pay from Oct 1");

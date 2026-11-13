@@ -2,11 +2,13 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { P } from "@/app/permissions/codes";
 import { describe as words, type Reader } from "@/domains/shared/notifications/notificationWords";
 import { money } from "@/shared/format/money";
 import { note } from "@/test/fixtures/notifications";
 import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
-import { personas } from "@/test/personas";
+import { work } from "@/test/fixtures/work";
+import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
 const project = projectWork.project;
@@ -125,6 +127,100 @@ describe("a Design project's departments", () => {
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
         await waitFor(() => expect(screen.queryByRole("dialog", { name: "Departments" })).toBeNull());
         expect(sent).toEqual([{ departmentIds: [13] }, { departmentIds: [13, 12] }]);
+    });
+});
+
+describe("a Design project's planned hours", () => {
+    /** The bar beside a progress figure: amber once more is logged than planned. */
+    const barOf = (figure: HTMLElement) => figure.previousElementSibling as HTMLElement;
+
+    it("show each department's hours against those planned, with the API's progress, amber once past the plan", async () => {
+        renderApp(path, rana, ...projectWorkHandlers);
+        const departments = await panel();
+        const architecture = await within(departments).findByRole("row", { name: "Architecture" });
+        expect(within(architecture).getByText("50h of 40h")).toBeInTheDocument();
+        expect(barOf(within(architecture).getByText("125%"))).toHaveClass("warn");
+
+        const interiors = within(departments).getByRole("row", { name: "Interiors" });
+        expect(within(interiors).getByText("8h of 16h")).toBeInTheDocument();
+        expect(barOf(within(interiors).getByText("50%"))).not.toHaveClass("warn");
+    });
+
+    it("show an employee each department's planned hours on the Overview, but not how far along they are", async () => {
+        const sarah = personas.designEmployee;
+        const withDepartments = { ...project, departments: [{ id: 12, name: "Architecture" }, { id: 13, name: "Interiors" }], departmentsName: null };
+        // as the API shows them to someone who sees neither the money nor everyone's hours
+        const asSarahSees = {
+            name: null,
+            departments: projectWork.departments.departments.map((d) => ({ ...d, share: null, money: null, loggedMinutes: null, progress: null })),
+            other: null,
+        };
+        renderApp(path, sarah,
+            http.get(`/api/projects/${project.id}`, () => HttpResponse.json(withDepartments)),
+            http.get("/api/projects/:id/departments", () => HttpResponse.json(asSarahSees)),
+            http.get("/api/me/projects/:id/work", () => HttpResponse.json({ ...work.projectWork, projectId: project.id })),
+            http.get("/api/me/projects", () => HttpResponse.json([{ ...work.myProjects[0], id: project.id }])),
+            ...projectWorkHandlers);
+        const planned = await screen.findByRole("region", { name: "Planned hours" });
+        expect(within(await within(planned).findByRole("row", { name: "Architecture" })).getByText("40h")).toBeInTheDocument();
+        expect(within(within(planned).getByRole("row", { name: "Interiors" })).getByText("16h")).toBeInTheDocument();
+        expect(within(planned).queryByText(/%/)).toBeNull();
+        expect(within(planned).queryByText(/ of /)).toBeNull();
+        expect(within(planned).queryByRole("button", { name: "Plan hours" })).toBeNull();
+    });
+
+    it("are planned per department, sending only the ones changed, an emptied one cleared, and say what the API refuses beside its field", async () => {
+        const sent: unknown[] = [];
+        renderApp(path, rana,
+            http.put("/api/projects/:id/departments/plan", async ({ request }) => {
+                sent.push(await request.json());
+                return sent.length === 1
+                    ? HttpResponse.json({
+                        type: "validation_failed", code: "validation_failed", message: "Some fields need attention.",
+                        errors: { "departments[0].plannedHours": ["Planned hours are at most two decimal places."] },
+                    }, { status: 400 })
+                    : HttpResponse.json(projectWork.departments);
+            }),
+            ...projectWorkHandlers);
+        await userEvent.click(await within(await panel()).findByRole("button", { name: "Plan hours" }));
+        const dialog = await screen.findByRole("dialog", { name: "Planned hours" });
+        const architecture = within(dialog).getByLabelText("Architecture");
+        const interiors = within(dialog).getByLabelText("Interiors");
+        expect(architecture).toHaveValue("40");
+        expect(interiors).toHaveValue("16");
+
+        // nothing changed yet
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        expect(within(dialog).getByText("The planned hours are already these: change one of them.")).toBeInTheDocument();
+
+        // checked as it's typed
+        await userEvent.clear(architecture);
+        await userEvent.type(architecture, "abc");
+        expect(within(dialog).getByText("Enter hours above 0, or leave it empty for no plan.")).toBeInTheDocument();
+        await userEvent.clear(architecture);
+        await userEvent.type(architecture, "45.5");
+        expect(within(dialog).queryByText("Enter hours above 0, or leave it empty for no plan.")).toBeNull();
+        await userEvent.clear(interiors);
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        expect(await within(dialog).findByText("Planned hours are at most two decimal places.")).toBeInTheDocument();
+        expect(sent).toEqual([{ departments: [{ teamId: 12, plannedHours: 45.5 }, { teamId: 13, plannedHours: null }] }]);
+
+        // a change clears the refusal; Interiors stays left as it is now
+        await userEvent.clear(architecture);
+        await userEvent.type(architecture, "45");
+        expect(within(dialog).queryByText("Planned hours are at most two decimal places.")).toBeNull();
+        await userEvent.type(interiors, "16");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: "Planned hours" })).toBeNull());
+        expect(sent[1]).toEqual({ departments: [{ teamId: 12, plannedHours: 45 }] });
+        expect(await screen.findByText("Planned hours saved")).toBeInTheDocument();
+    });
+
+    it("can't be planned without project:edit", async () => {
+        renderApp(path, withPermissions(rana, { revoke: [P.PROJECT_EDIT] }), ...projectWorkHandlers);
+        const departments = await panel();
+        await within(departments).findByRole("row", { name: "Architecture" });
+        expect(within(departments).queryByRole("button", { name: "Plan hours" })).toBeNull();
     });
 });
 
