@@ -7,13 +7,14 @@ import { useReducedMotion } from "@/shared/hooks/useReducedMotion";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import BlobFigure from "./blob/BlobFigure";
+import OrbFigure from "./orb/OrbFigure";
 import { clearOf, loadPrefs, placeOf, savePrefs, snapOf, type BlobPrefs, type Box } from "./blob/blobPosition";
 import { moodName, moodOf, STILL_LOOKING_AFTER_MS, WORKING_AFTER_MS } from "./blob/protonMood";
 import { useBlobDrag } from "./blob/useBlobDrag";
 import ProtonPanel, { type PanelLayout } from "./ProtonPanel";
 import { useProtonUsage, type ProtonUsage } from "./protonApi";
 import { newestCards } from "./protonChat";
-import { closeProton, dismissPeek, openProton, startFor, useProton, voiceAt, type ProtonState } from "./protonStore";
+import { closeProton, dismissPeek, openProton, orbSignalAt, startFor, useProton, voiceAt, type ProtonState } from "./protonStore";
 import { useProtonShared } from "./protonContext";
 import { useVoice, voiceActive } from "./protonVoice";
 
@@ -142,7 +143,7 @@ function ProtonDock() {
             )}
             <button
                 ref={blob}
-                className={cx("proton-blob", prefs.tucked && !proton.open && "tucked", still && "still", drag.dragAt && "dragging")}
+                className={cx("proton-blob", prefs.look === "orb" && "is-orb", prefs.tucked && !proton.open && "tucked", still && "still", drag.dragAt && "dragging")}
                 style={{ left: at.x, top: at.y, width: BLOB, height: BLOB }}
                 data-mood={mood}
                 aria-label={moodName(mood)}
@@ -151,7 +152,9 @@ function ProtonDock() {
                 {...drag.handlers}
                 onKeyDown={onBlobKey}
             >
-                <BlobFigure mood={mood} voiceAt={voiceAt} still={still} />
+                {prefs.look === "orb"
+                    ? <OrbFigure mood={mood} signalAt={orbSignalAt} voiceAt={voiceAt} still={still} />
+                    : <BlobFigure mood={mood} voiceAt={voiceAt} still={still} />}
                 {proton.unseen > 0 && <span className="proton-unseen" aria-hidden="true">{proton.unseen}</span>}
             </button>
             {/* read out once a reply is in, never while it is still being written */}

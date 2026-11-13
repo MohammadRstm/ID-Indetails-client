@@ -1,10 +1,8 @@
 import { useState, type ReactNode } from "react";
-import { Link } from "react-router";
 import { loadFailed } from "@/api/queryState";
 import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
-import { canOpen } from "@/app/routing/routeTable";
 import HelpHint from "@/domains/shared/help/HelpHint";
 import Figure from "@/shared/components/Charts/Figure";
 import StackedColumns from "@/shared/components/Charts/StackedColumns";
@@ -18,7 +16,8 @@ import { ChipGroup, Segmented } from "@/shared/components/Forms/Filters";
 import { money } from "@/shared/format/money";
 import { fmtDateY, fmtMonthY, MONTHS } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
-import { BasisNote } from "./InsightParts";
+import { BasisNote, ProjectLink } from "./InsightParts";
+import LabourPanel from "./LabourPanel";
 import {
     anomalyLabel, categoryColors, categoryName, riskOf, TREND_MONTHS, useDomainRisks, useExpenseTrends,
     type ExpenseAnomaly, type ExpenseTrends, type ProjectRiskGroup, type ProjectRiskKind, type ProjectRisks, type TrendMonths,
@@ -31,7 +30,7 @@ const monthLabel = (m: string) => MONTHS[+m.slice(5, 7) - 1];
 
 /**
  * The Financials page's Insights tab, for whoever sees the money: the domain's client projects at risk, its spending by
- * category month by month, and what the owner's rules call unusual in it. Every figure and every judgement is the
+ * category month by month, what the owner's rules call unusual in it, and on Design its labour. Every figure and every judgement is the
  * API's; nothing here is added up or decided.
  */
 export default function DomainInsightsTab({ domain, tiles }: { domain: Domain; tiles?: Tiles }) {
@@ -42,16 +41,10 @@ export default function DomainInsightsTab({ domain, tiles }: { domain: Domain; t
         <>
             <Risks domain={domain} tiles={tiles} />
             <Spending domain={domain} months={months} onMonths={setMonths} />
+            {/* Design's labour runs on logged hours; Execution's crews are on each site */}
+            {domain === "design" && <LabourPanel domain={domain} tiles={tiles} />}
         </>
     );
-}
-
-/** A project's title, linking to its page (at the tab given) when the viewer may open it. */
-function ProjectLink({ domain, id, title, query }: { domain: Domain; id: number; title: string; query: string }) {
-    const permissions = usePermissions();
-    const path = `projects/${id}`;
-    if (!canOpen(permissions, domain, path)) return <span style={{ fontWeight: 600 }}>{title}</span>;
-    return <Link to={`/${domain}/${path}?${query}`} style={{ fontWeight: 600 }}>{title}</Link>;
 }
 
 /** The domain's client projects with a risk, the most pressing first, filtered by kind with the API's counts. */

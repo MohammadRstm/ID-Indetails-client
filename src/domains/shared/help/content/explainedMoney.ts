@@ -203,6 +203,25 @@ export const explainedMoney: Article[] = [
         related: ["project-risks", "site-costs", "exchange-rates"],
     },
     {
+        id: "labour-insights",
+        title: "Labour by month, department and project",
+        category: "money",
+        who: and(money, sees("design")),
+        summary: "On Design, the Insights tab on Financials shows what the logged hours cost, month by month, by department and by project, and how much of it was outside the agreed scope.",
+        ask: ["labour cost", "labour by department", "labour by project", "department cost", "hours cost", "outside the scope", "out of scope", "scope creep", "where do the hours go", "labour trends"],
+        blocks: [
+            para("**Labour** prices each hour logged on a Design project at the person's rate on the day, in USD at that day's exchange rate, paid breaks included. Internal projects count too. Pick 6, 12 or 24 months. This month runs to today."),
+            list(
+                "**Outside the scope**: the hours logged as asked for beyond what was agreed, and their share of the cost.",
+                "**Labour by department**: each department's hours and cost, and its share of the whole. Hours logged by people in no department are grouped together.",
+                "**Labour by project**: each project's hours and cost, the costliest first.",
+            ),
+            note("No figure here is about one person: labour is shown by department and by project only. Labour with no exchange rate on its day is in no cost; it's shown apart, until its rate is added."),
+            links(link("Open Insights", { business: "financials?tab=insights", only: "design" })),
+        ],
+        related: ["project-cost", "unusual-spending", "utilization"],
+    },
+    {
         id: "execution-pricing",
         title: "How an Execution site's price is worked out",
         category: "money",

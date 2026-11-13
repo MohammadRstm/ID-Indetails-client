@@ -1,4 +1,8 @@
+import { Link } from "react-router";
 import type { Schemas } from "@/api/types";
+import type { Domain } from "@/app/permissions/permissions";
+import { usePermissions } from "@/app/permissions/usePermissions";
+import { canOpen } from "@/app/routing/routeTable";
 import { cx } from "@/shared/utils/cx";
 import { STANDINGS, type ProfitStanding } from "./insightsApi";
 
@@ -18,4 +22,12 @@ export function BasisNote({ basis, label }: { basis: Schemas["InsightBasisRespon
             {basis.leftOut.length > 0 && <div>Left out: {basis.leftOut.join(" ")}</div>}
         </div>
     );
+}
+
+/** A project's title, linking to its page (at the tab given) when the viewer may open it. */
+export function ProjectLink({ domain, id, title, query }: { domain: Domain; id: number; title: string; query: string }) {
+    const permissions = usePermissions();
+    const path = `projects/${id}`;
+    if (!canOpen(permissions, domain, path)) return <span style={{ fontWeight: 600 }}>{title}</span>;
+    return <Link to={`/${domain}/${path}?${query}`} style={{ fontWeight: 600 }}>{title}</Link>;
 }

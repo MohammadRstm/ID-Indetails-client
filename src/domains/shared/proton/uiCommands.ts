@@ -46,6 +46,8 @@ const PORTAL_PARTS = [...FILE_PARTS, "access", "discussion"] as const;
 const SITE_PARTS = ["overview", "payments", "accounts", "boqs", "supervision", "expenses", "labour", "staff"] as const;
 /** The Financials page's tabs. */
 const TABS = ["overview", "projects", "clients", "billing", "costs", "insights"] as const;
+/** The Reports page's tabs Proton may open by name: its others are all about the period picked there. */
+const REPORT_TABS = ["utilization"] as const;
 
 /** The values object each form takes in a fill: a fill naming one form with another's values is dropped. */
 const FILLS: Record<FormFill["form"], keyof FormFill> = {
@@ -156,6 +158,7 @@ export function stepOf(command: unknown, p: Permissions, current: Domain | null)
             }
             const query = c.page === "projects" && isId(c.clientId) ? `?client=${c.clientId}`
                 : c.page === "financials" && has(TABS, c.tab) ? `?tab=${c.tab}`
+                : c.page === "reports" && has(REPORT_TABS, c.tab) ? `?tab=${c.tab}`
                 : "";
             return domainPath(c.domain, `${page.path}${query}`);
         }

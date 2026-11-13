@@ -5,7 +5,7 @@ import { onSessionReset } from "@/app/session/sessionReset";
 import { endVoiceSession, startVoiceSession, type ProtonReply } from "./protonApi";
 import { parseBlocks } from "./protonFigures";
 import { plainText } from "./protonText";
-import { spoke } from "./protonStore";
+import { personSpoke, spoke } from "./protonStore";
 
 /*
  * Talking to Proton. The voice model (GPT-Live, over WebRTC straight from the browser) only listens and speaks: when
@@ -51,6 +51,8 @@ const HEARD_SETTLE_MS = 400;
 /** A pause in the voice model's speech longer than this starts a new caption. */
 const NEW_CAPTION_MS = 1_500;
 const SPEAKING_LEVEL = 0.02;
+/** The person's microphone above this level counts as their voice, for the orb's listening. */
+const HEARING_LEVEL = 0.015;
 const QUIET_MS = 400;
 const RECONNECT_MS = 1_000;
 
@@ -321,7 +323,7 @@ class VoiceCall {
         void Promise.resolve()
             .then(() => this.audio.play())
             .catch(() => set({ message: "Your browser blocked the sound. Click anywhere on the page to hear Proton." }));
-        // how loudly the voice model speaks, for the "speaking" state and the blob's mouth
+        // how loudly the voice model speaks, for the "speaking" state and the blob's mouth, and the orb's voice waves
         if (typeof AudioContext === "undefined") return;
         try {
             const context = new AudioContext();
@@ -330,13 +332,29 @@ class VoiceCall {
             analyser.fftSize = 512;
             context.createMediaStreamSource(stream).connect(analyser);
             const samples = new Float32Array(analyser.fftSize);
+            const spectrum = new Uint8Array(analyser.frequencyBinCount);
+            const binHz = context.sampleRate / analyser.fftSize;
+            // the person's voice too, measured only (never played back), so the orb can lean in while it listens
+            const microphone = this.microphone ? context.createAnalyser() : null;
+            if (microphone && this.microphone) {
+                microphone.fftSize = 512;
+                context.createMediaStreamSource(this.microphone).connect(microphone);
+            }
+            const mic = new Float32Array(512);
             const tick = () => {
                 analyser.getFloatTimeDomainData(samples);
-                const level = Math.sqrt(samples.reduce((sum, s) => sum + s * s, 0) / samples.length);
+                const level = rms(samples);
                 const now = Date.now();
                 if (level > SPEAKING_LEVEL) {
                     this.quietSince = now;
-                    spoke(Math.min(1, level * 8));
+                    analyser.getByteFrequencyData(spectrum);
+                    spoke(Math.min(1, level * 8), voiceBands(spectrum, binHz));
+                }
+
+                if (microphone && !state.muted) {
+                    microphone.getFloatTimeDomainData(mic);
+                    const loudness = rms(mic);
+                    if (loudness > HEARING_LEVEL) personSpoke(Math.min(1, loudness * 6));
                 }
 
                 const speaking = now - this.quietSince < QUIET_MS;
@@ -472,3 +490,22 @@ onSessionReset(() => {
     state = initial;
     listeners.forEach((l) => l());
 });
+
+const rms = (samples: Float32Array) => Math.sqrt(samples.reduce((sum, s) => sum + s * s, 0) / samples.length);
+
+/**
+ * The voice's low (under 350 Hz), middle (to 2 kHz) and high (to 6 kHz) parts, each 0–1, from the analyser's
+ * spectrum: what makes the orb's ring move with the sound of the words rather than only their loudness.
+ */
+export function voiceBands(spectrum: Uint8Array, binHz: number): [number, number, number] {
+    // each band takes the bins whose centre falls in it, so neighbouring bands never share one
+    const average = (fromHz: number, toHz: number) => {
+        const from = Math.max(1, Math.round(fromHz / binHz));
+        const to = Math.min(spectrum.length, Math.round(toHz / binHz));
+        let sum = 0;
+        for (let i = from; i < to; i++) sum += spectrum[i];
+        return to > from ? sum / (to - from) / 255 : 0;
+    };
+    const clamp = (v: number) => Math.min(1, Math.max(0, v));
+    return [clamp(average(80, 350) * 1.5), clamp(average(350, 2000) * 1.8), clamp(average(2000, 6000) * 2.6)];
+}
