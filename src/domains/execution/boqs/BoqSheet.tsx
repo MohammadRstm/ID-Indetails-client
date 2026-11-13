@@ -20,7 +20,7 @@ import BoqLinesTable from "./BoqLinesTable";
 import BoqReferences from "./BoqReferences";
 import { useBoqLinks } from "./boqLinks";
 import { agreeBlock, agreedClient, boqErrorMessage, boqTotal, changesByLine, emptyBlock, isNotChosen, KIND_LABEL, removedLines, withdrawBlock } from "./boqRules";
-import { BOQ_MAX_LINES, BOQ_REASON_MAX, BOQ_TITLE_MAX, downloadBoqPdf, useBoq, useBoqs, useDeleteBoq, useDuplicateBoq, useKeepBoqChanges, useSaveBoq, useSubmitBoq, useWithdrawBoqSubmission, type Boq, type BoqAdjustmentType, type BoqSite } from "./boqsApi";
+import { BOQ_MAX_LINES, BOQ_REASON_MAX, BOQ_TITLE_MAX, downloadBoqPdf, printBoqPdf, useBoq, useBoqs, useDeleteBoq, useDuplicateBoq, useKeepBoqChanges, useSaveBoq, useSubmitBoq, useWithdrawBoqSubmission, type Boq, type BoqAdjustmentType, type BoqSite } from "./boqsApi";
 import CopyLinesModal from "./CopyLinesModal";
 import SendBoqModal from "./SendBoqModal";
 
@@ -139,6 +139,9 @@ export default function BoqSheet({ project, boq, onClose }: { project: BoqSite; 
     function pdf() {
         downloadBoqPdf(boq).catch((e) => toast({ text: "The PDF wasn't downloaded", sub: boqErrorMessage(e), icon: "alert" }));
     }
+    function print() {
+        printBoqPdf(boq).catch((e) => toast({ text: "The PDF wasn't printed", sub: boqErrorMessage(e), icon: "alert" }));
+    }
 
     const setAdjustment = (adjustment: BoqAdjustmentType) => change({ adjustment, adjustmentValue: "" });
     const work = draft.lines.filter((l) => l.nature === "work");
@@ -162,6 +165,7 @@ export default function BoqSheet({ project, boq, onClose }: { project: BoqSite; 
                                     {access.canDuplicate(boq) && <button className="pop-item" disabled={dirty || duplicate.isPending} title={dirty ? SAVE_FIRST : undefined} onClick={() => { done(); copy(); }}><Icon name="file" />Duplicate</button>}
                                     {editable && <button className="pop-item" disabled={dirty} title={dirty ? SAVE_FIRST : undefined} onClick={() => { done(); setDialog("copy"); }}><Icon name="list" />Copy lines from…</button>}
                                     {access.canDownload(boq) && <button className="pop-item" disabled={dirty} title={dirty ? SAVE_FIRST : undefined} onClick={() => { done(); pdf(); }}><Icon name="download" />Download PDF</button>}
+                                    {access.canDownload(boq) && <button className="pop-item" disabled={dirty} title={dirty ? SAVE_FIRST : undefined} onClick={() => { done(); print(); }}><Icon name="print" />Print</button>}
                                     {access.canDelete(boq) && <button className="pop-item" onClick={() => { done(); setDialog("delete"); }}><Icon name="trash" />Delete draft</button>}
                                 </div>
                             )}

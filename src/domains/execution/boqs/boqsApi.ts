@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { downloadFile } from "@/api/download";
+import { downloadFile, printFile } from "@/api/download";
 import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
 import type { Schemas } from "@/api/types";
@@ -228,3 +228,7 @@ export function useRecordBoqDelivery(projectId: number) {
 /** The PDF of a client BOQ or a VO, as the client receives it. */
 export const downloadBoqPdf = (boq: { id: number; number: string | null }) =>
     downloadFile(`/boqs/${boq.id}/pdf`, `${(boq.number ?? "boq").toLowerCase()}.pdf`);
+
+/** Prints that same PDF. */
+export const printBoqPdf = (boq: { id: number; number: string | null }) =>
+    printFile(`/boqs/${boq.id}/pdf`, undefined, `${(boq.number ?? "boq").toLowerCase()}.pdf`);

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { downloadFile } from "@/api/download";
+import { downloadFile, printFile } from "@/api/download";
 import { errorMessage } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -69,6 +69,14 @@ export default function InvoiceModal({ invoiceId, onClose, onSend, onEdit, onPay
         }
     }
 
+    async function print() {
+        try {
+            await printFile(`/invoices/${inv!.id}/pdf`, undefined, fileName);
+        } catch (e) {
+            toast({ text: "The PDF wasn't printed", sub: errorMessage(e), icon: "alert" });
+        }
+    }
+
     return (
         <Modal size="xl" flush onClose={onClose} title={inv.number ?? "Draft invoice"} sub={`${inv.project.title} · ${inv.client.displayName}`}
             foot={
@@ -79,6 +87,7 @@ export default function InvoiceModal({ invoiceId, onClose, onSend, onEdit, onPay
                         {error && <span className="err"><Icon name="alert" />{errorMessage(error)}</span>}
                     </div>
                     <button className="btn" onClick={pdf}><Icon name="download" />PDF</button>
+                    <button className="btn" onClick={print}><Icon name="print" />Print</button>
                     <button className="btn" onClick={onClose}>Close</button>
                     {state === "draft" ? permissions.has(P.INVOICE_SEND) && <button className="btn btn-primary" onClick={() => onSend(inv)}><Icon name="send" />Send invoice…</button>
                         : state === "paid" || state === "void" ? null

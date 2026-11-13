@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import { fetchBlob, saveBlob } from "@/api/download";
+import { downloadFile, fetchBlob, printFile, saveBlob } from "@/api/download";
 import { errorMessage } from "@/api/errors";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -152,6 +152,20 @@ export default function SalariesPage() {
         }
     }
 
+    // the PDF of the month as filtered, saved or printed; the same people and figures as the CSV
+    async function pdf(print: boolean) {
+        setExporting(true);
+        const query = { month, domain: filters.domain, role: filters.role, search: search || null };
+        try {
+            if (print) await printFile("/company/salaries/pdf", query, `salaries-${month}.pdf`);
+            else await downloadFile("/company/salaries/pdf", `salaries-${month}.pdf`, query);
+        } catch (e) {
+            toast({ text: print ? "The salaries weren't printed" : "The salaries PDF wasn't downloaded", sub: errorMessage(e), icon: "alert" });
+        } finally {
+            setExporting(false);
+        }
+    }
+
     return (
         <div className="page">
             <div className="page-head">
@@ -177,6 +191,8 @@ export default function SalariesPage() {
                             </div>
                             {isThisMonth && <span className="badge badge-hold">In progress · to {fmtDate(today)}</span>}
                             <button className="btn" disabled={!total || exporting} onClick={exportCsv}><Icon name="download" />Export CSV</button>
+                            <button className="btn" disabled={!total || exporting} onClick={() => pdf(false)}><Icon name="download" />Download PDF</button>
+                            <button className="btn" disabled={!total || exporting} onClick={() => pdf(true)}><Icon name="print" />Print</button>
                         </>
                     )}
                 </div>
