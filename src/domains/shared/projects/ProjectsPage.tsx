@@ -12,7 +12,7 @@ import { MarginPill, StatusBadge } from "@/shared/components/Data/Pills";
 import DataTable, { type Column } from "@/shared/components/Data-Tables/DataTable";
 import Pager from "@/shared/components/Data-Tables/Pager";
 import Empty from "@/shared/components/Feedback/Empty";
-import { FilterSep, SearchInput } from "@/shared/components/Forms/Filters";
+import { SearchInput } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import { Avatars } from "@/shared/components/Identity/People";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
@@ -29,8 +29,10 @@ import { useClients } from "../clients/clientsApi";
 import { useDomainPeople, personName } from "../people/peopleApi";
 import CreateProjectModal from "./CreateProjectModal";
 import GreetingHead from "./GreetingHead";
+import ProjectFiltersDrawer from "./ProjectFilters";
+import { activeFilters, type ProjectFilterValues } from "./projectFilters";
 import ProjectStatusItems from "./ProjectStatusItems";
-import { useProjects, useProjectStatusCounts, useProjectTotals, type ProjectListParams, type ProjectSort, type ProjectStatus, type ProjectSummary } from "./projectsApi";
+import { useProjects, useProjectStatusCounts, useProjectTotals, type ProjectListParams, type ProjectSort, type ProjectSummary } from "./projectsApi";
 import { loadFailed } from "@/api/queryState";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import HelpHint from "@/domains/shared/help/HelpHint";
@@ -45,9 +47,6 @@ const SORTS: { value: ProjectSort; label: string }[] = [
     { value: "client", label: "Client" },
 ];
 const PAGE_SIZE = 50;
-
-/** "Active (12)": a status with its count, once known. */
-const withCount = (label: string, count: number | undefined) => (count == null ? label : `${label} (${count})`);
 
 /**
  * The projects page, for everyone, its parts by permission. Someone who logs work (work_entry:view_own) is
@@ -96,13 +95,10 @@ function ProjectTable({ section }: { section: boolean }) {
     const seesWork = permissions.has(P.WORK_ENTRY_VIEW_ALL);
 
     const [search, setSearch] = useState("");
-    const [status, setStatus] = useState<ProjectStatus | "all">("all");
-    const [quarter, setQuarter] = useState<number | null>(null);
     const thisYear = +companyToday().slice(0, 4);
-    const [year, setYear] = useState(thisYear);
-    const [type, setType] = useState<"all" | "client" | "internal">("all");
-    const [client, setClient] = useState(params.get("client") ?? "all");
-    const [owner, setOwner] = useState("all");
+    // every filter but the search is chosen in the Filters panel
+    const [filtered, setFiltered] = useState<ProjectFilterValues>({ status: "all", quarter: null, year: thisYear, type: "all", client: params.get("client") ?? "all", owner: "all" });
+    const [filtersOpen, setFiltersOpen] = useState(false);
     const [sort, setSort] = useState<ProjectSort>("activity");
     const [page, setPage] = useState(1);
     const debounced = useDebounce({ value: search, debounceTimeMs: 250 });
@@ -110,14 +106,14 @@ function ProjectTable({ section }: { section: boolean }) {
     const filters: ProjectListParams = {
         domain,
         search: debounced.trim() || undefined,
-        status: status === "all" ? undefined : status,
+        status: filtered.status === "all" ? undefined : filtered.status,
         // archived projects show only once Archived is chosen
-        excludeArchived: status === "all" ? true : undefined,
-        clientId: client !== "all" && client !== "internal" ? +client : undefined,
-        billingType: client === "internal" ? "internal" : type === "all" ? undefined : type,
-        ownerId: owner === "all" ? undefined : +owner,
-        year: quarter ? year : undefined,
-        quarter: quarter ?? undefined,
+        excludeArchived: filtered.status === "all" ? true : undefined,
+        clientId: filtered.client !== "all" && filtered.client !== "internal" ? +filtered.client : undefined,
+        billingType: filtered.client === "internal" ? "internal" : filtered.type === "all" ? undefined : filtered.type,
+        ownerId: filtered.owner === "all" ? undefined : +filtered.owner,
+        year: filtered.quarter ? filtered.year : undefined,
+        quarter: filtered.quarter ?? undefined,
         sort,
     };
     const list = useProjects({ ...filters, page, pageSize: PAGE_SIZE });
@@ -129,7 +125,23 @@ function ProjectTable({ section }: { section: boolean }) {
     const people = useDomainPeople(domain, permissions.has(P.EMPLOYEE_VIEW), { status: "active" });
 
     const reset = (fn: () => void) => { fn(); setPage(1); };
-    const clearFilters = () => reset(() => { setSearch(""); setStatus("all"); setQuarter(null); setOwner("all"); setType("all"); setClient("all"); });
+    const changeFilters = (patch: Partial<ProjectFilterValues>) => reset(() => setFiltered((current) => ({ ...current, ...patch })));
+    const turnFiltersOff = () => changeFilters({ status: "all", quarter: null, type: "all", client: "all", owner: "all" });
+    const clearAll = () => reset(() => { setSearch(""); setFiltered((current) => ({ ...current, status: "all", quarter: null, type: "all", client: "all", owner: "all" })); });
+    const on = activeFilters(filtered, {
+        client: (id) => clients.data?.items.find((c) => String(c.id) === id)?.displayName ?? "Client",
+        owner: (id) => { const person = people.data?.find((p) => String(p.id) === id); return person ? personName(person) : "Owner"; },
+    });
+    // the choices of the long lists, for whoever may see clients or people
+    const clientOptions = permissions.has(P.CLIENT_VIEW) ? [
+        { value: "all", label: "All clients" },
+        ...(site ? [] : [{ value: "internal", label: "Internal (no client)" }]),
+        ...(clients.data?.items ?? []).map((c) => ({ value: String(c.id), label: c.displayName })),
+    ] : null;
+    const ownerOptions = permissions.has(P.EMPLOYEE_VIEW) ? [
+        { value: "all", label: "All owners" },
+        ...(people.data ?? []).map((p) => ({ value: String(p.id), label: personName(p) })),
+    ] : null;
 
     const columns: Column<ProjectSummary>[] = [
         {
@@ -250,44 +262,30 @@ function ProjectTable({ section }: { section: boolean }) {
 
             <div className="filters">
                 <SearchInput value={search} onChange={(v) => reset(() => setSearch(v))} placeholder="Search projects" />
-                <Select className="select sm" style={{ width: 150 }} aria-label="Status" value={status} onChange={(v) => reset(() => setStatus(v as ProjectStatus | "all"))} options={[
-                    { value: "all", label: withCount("All", counts.all) },
-                    { value: "active", label: withCount("Active", counts.active) },
-                    { value: "hold", label: withCount("On hold", counts.hold) },
-                    { value: "completed", label: withCount("Completed", counts.completed) },
-                    { value: "archived", label: withCount("Archived", counts.archived) },
-                ]} />
-                <FilterSep />
-                <Select className="select sm" style={{ width: 112 }} aria-label="Quarter" value={quarter ? String(quarter) : "any"}
-                    onChange={(v) => reset(() => setQuarter(v === "any" ? null : +v))}
-                    options={[{ value: "any", label: "Any time" }, ...[1, 2, 3, 4].map((q) => ({ value: String(q), label: `Q${q}` }))]} />
-                <Select className="select sm" style={{ width: 88 }} aria-label="Year" value={String(year)}
-                    options={[thisYear, thisYear - 1].map((y) => ({ value: String(y), label: String(y) }))} onChange={(v) => reset(() => setYear(+v))} />
-                {seesMoney && !site && (
-                    <>
-                        <FilterSep />
-                        <Select className="select sm" style={{ width: 120 }} aria-label="Type" value={type} onChange={(v) => reset(() => setType(v as typeof type))} options={[
-                            { value: "all", label: "All work" }, { value: "client", label: "Client" }, { value: "internal", label: "Internal" },
-                        ]} />
-                    </>
-                )}
-                {permissions.has(P.CLIENT_VIEW) && (
-                    <Select className="select sm" style={{ width: 175 }} aria-label="Client" value={client} onChange={(v) => reset(() => setClient(v))} options={[
-                        { value: "all", label: "All clients" },
-                        ...(site ? [] : [{ value: "internal", label: "Internal (no client)" }]),
-                        ...(clients.data?.items ?? []).map((c) => ({ value: String(c.id), label: c.displayName })),
-                    ]} />
-                )}
+                {/* status, time, type, client and owner: all in one panel, grouped */}
+                <button type="button" className={cx("btn", on.length > 0 && "btn-filtered")} aria-haspopup="dialog" onClick={() => setFiltersOpen(true)}
+                    aria-label={on.length > 0 ? `Filters, ${on.length} on` : "Filters"}>
+                    <Icon name="filter" />Filters{on.length > 0 && <span className="filter-count" aria-hidden="true">{on.length}</span>}
+                </button>
                 <div className="grow" />
-                {permissions.has(P.EMPLOYEE_VIEW) && (
-                    <Select className="select sm" style={{ width: 160 }} aria-label="Owner" value={owner} onChange={(v) => reset(() => setOwner(v))} options={[
-                        { value: "all", label: "All owners" },
-                        ...(people.data ?? []).map((p) => ({ value: String(p.id), label: personName(p) })),
-                    ]} />
-                )}
                 <Select className="select sm" style={{ width: 165 }} aria-label="Sort" value={sort} onChange={(v) => reset(() => setSort(v))}
                     options={SORTS.filter((s) => seesWork || s.value !== "hours").map((s) => ({ value: s.value, label: `Sort: ${s.label}` }))} />
             </div>
+            {on.length > 0 && (
+                <div className="filter-chips" role="group" aria-label="Filters that are on">
+                    {on.map((filter) => (
+                        <button key={filter.key} type="button" className="chip on" aria-label={`Remove filter: ${filter.label}`} onClick={() => changeFilters(filter.clear)}>
+                            {filter.label}<Icon name="x" />
+                        </button>
+                    ))}
+                    <button type="button" className="btn btn-quiet btn-sm" onClick={turnFiltersOff}>Clear all</button>
+                </div>
+            )}
+            {filtersOpen && (
+                <ProjectFiltersDrawer values={filtered} onChange={changeFilters} onClear={turnFiltersOff} onClose={() => setFiltersOpen(false)}
+                    counts={counts} years={[thisYear, thisYear - 1]} showType={seesMoney && !site} clients={clientOptions} owners={ownerOptions}
+                    matching={list.data?.totalCount} anyOn={on.length > 0} />
+            )}
 
             <div className="panel">
                 <DataTable
@@ -303,7 +301,7 @@ function ProjectTable({ section }: { section: boolean }) {
                 />
                 {list.data && list.data.items.length === 0 && (
                     <Empty art="search" title="No projects match these filters" text="Try a different quarter or status, or clear the search."
-                        action={<button className="btn" onClick={clearFilters}>Clear filters</button>} />
+                        action={<button className="btn" onClick={clearAll}>Clear filters</button>} />
                 )}
                 {list.data && list.data.items.length > 0 && (
                     <div className="panel-foot">
