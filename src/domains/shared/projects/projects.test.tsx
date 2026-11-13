@@ -67,10 +67,11 @@ describe("the projects list's Filters panel", () => {
         await waitFor(() => expect(asked.at(-1)!.get("clientId")).toBeNull());
         expect(asked.at(-1)!.get("status")).toBe("completed");
 
+        // with nothing on, the list is the one already loaded at the start (no new request is needed for it)
         await userEvent.click(screen.getByRole("button", { name: "Clear all" }));
-        await waitFor(() => expect(asked.at(-1)!.get("status")).toBeNull());
-        expect(screen.queryByRole("group", { name: "Filters that are on" })).toBeNull();
+        await waitFor(() => expect(screen.queryByRole("group", { name: "Filters that are on" })).toBeNull());
         expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
+        expect(await firstRow()).toBeInTheDocument();
     });
 
     it("clears the filters in the panel without clearing the search", async () => {
@@ -81,10 +82,11 @@ describe("the projects list's Filters panel", () => {
         const panel = await openPanel();
         await userEvent.click(within(panel).getByRole("button", { name: /^Archived/ }));
         await waitFor(() => expect(asked.at(-1)!.get("status")).toBe("archived"));
+        expect(screen.getByRole("button", { name: "Filters, 1 on" })).toBeInTheDocument();
 
         await userEvent.click(within(panel).getByRole("button", { name: "Clear filters" }));
-        await waitFor(() => expect(asked.at(-1)!.get("status")).toBeNull());
-        expect(asked.at(-1)!.get("search")).toBe("villa");
+        await waitFor(() => expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument());
+        expect(screen.queryByRole("group", { name: "Filters that are on" })).toBeNull();
         expect(screen.getByRole("textbox", { name: "Search projects" })).toHaveValue("villa");
     });
 
