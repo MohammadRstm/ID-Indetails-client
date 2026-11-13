@@ -134,6 +134,18 @@ table { line-height: normal; font-weight: normal; }
     padding: 11px 13px; border: 1px solid var(--line); border-radius: var(--r2); background: var(--surface-2); }
 .bug-direct .btn { text-decoration: none; }
 
+/* Placing a profile picture: the picture moves behind a circle until it sits the way the person wants it, then it is cut
+   to that square. The window is 240px wide (PhotoPositioner.tsx), which fits the narrowest phone's window. */
+.photo-pos { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.photo-pos-view { position: relative; width: 240px; height: 240px; overflow: hidden; border-radius: var(--r2); background: var(--surface-3);
+  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.photo-pos-view:active { cursor: grabbing; }
+.photo-pos-view:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.photo-pos-view img { position: absolute; left: 0; top: 0; max-width: none; pointer-events: none; }
+.photo-pos-mask { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .92); box-shadow: 0 0 0 999px rgba(9, 15, 16, .55); pointer-events: none; }
+.photo-pos-tools { display: flex; align-items: center; gap: 10px; width: 240px; }
+.photo-pos-tools input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent); }
+
 /* Messages keeps the chats on the left and the open one on the right at every width (the prototype stacked them
    on narrow screens). A phone has room for one at a time, as in WhatsApp: the chats, or the open chat with a way back. */
 .msg-back { display: none; }
