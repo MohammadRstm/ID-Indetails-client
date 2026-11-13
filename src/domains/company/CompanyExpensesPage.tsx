@@ -150,7 +150,7 @@ export default function CompanyExpensesPage() {
 
                     <div className={seesCompany ? "grid g-8-4 mt" : "mt"}>
                         {seesCompany && <Figure title={`What company expenses do to each month · ${chartYear}`}
-                            sub="The company's net profit, after company expenses, one-off expenses, fixed salaries, paid leave and the overtime premium, against what it would have been without them."
+                            sub="The company's net profit, after company expenses, one-off expenses, fixed salaries, paid leave, the overtime premium and advances written off, against what it would have been without them."
                             tools={
                                 <div className="row" style={{ gap: 4 }}>
                                     <button className="icon-btn" aria-label="Previous year" disabled={chartYear <= thisYear - YEARS_BACK} onClick={() => setChartYear((y) => y - 1)}><Icon name="chevronLeft" /></button>
@@ -159,8 +159,8 @@ export default function CompanyExpensesPage() {
                                 </div>
                             }
                             table={{
-                                cols: [{ label: "Month" }, { label: "Company expenses", right: true }, { label: "One-off expenses", right: true }, { label: "Fixed salaries", right: true }, { label: "Paid leave", right: true }, { label: "Overtime premium", right: true }, { label: "Profit before", right: true }, { label: "Net profit", right: true }],
-                                rows: yearList.map((m) => [fmtMonthY(m.month), money.fmt(m.overhead), money.fmt(oneOffOf(m)), money.fmt(salariesOf(m)), money.fmt(paidLeaveOf(m)), money.fmt(premiumOf(m)), money.fmt(m.profitBeforeOverhead), money.fmt(netOf(m))]),
+                                cols: [{ label: "Month" }, { label: "Company expenses", right: true }, { label: "One-off expenses", right: true }, { label: "Fixed salaries", right: true }, { label: "Paid leave", right: true }, { label: "Overtime premium", right: true }, { label: "Advances written off", right: true }, { label: "Profit before", right: true }, { label: "Net profit", right: true }],
+                                rows: yearList.map((m) => [fmtMonthY(m.month), money.fmt(m.overhead), money.fmt(oneOffOf(m)), money.fmt(salariesOf(m)), money.fmt(paidLeaveOf(m)), money.fmt(premiumOf(m)), money.fmt(writeOffOf(m)), money.fmt(m.profitBeforeOverhead), money.fmt(netOf(m))]),
                             }}>
                             {loadFailed(yearMonths) ? <LoadError error={yearMonths.error} retry={() => yearMonths.refetch()} what={`${chartYear}'s months`} />
                                 : !yearMonths.data ? <SkeletonLines lines={7} /> : (
@@ -170,8 +170,8 @@ export default function CompanyExpensesPage() {
                                         { label: "Net profit", area: true, points: yearList.map((m) => ({ y: netOf(m), label: monthLabel(m.month), tip: fmtMonthY(m.month) })) },
                                     ]} />
                                     <div className="chart-note">
-                                        The gap between the two lines is company expenses, one-off expenses, fixed salaries, paid leave and the overtime premium
-                                        - {money.fmt(yearList.reduce((t, m) => t + m.overhead + oneOffOf(m) + salariesOf(m) + paidLeaveOf(m) + premiumOf(m), 0))} in {chartYear}{chartYear === thisYear ? " so far" : ""},
+                                        The gap between the two lines is company expenses, one-off expenses, fixed salaries, paid leave, the overtime premium and advances written off
+                                        - {money.fmt(yearList.reduce((t, m) => t + m.overhead + oneOffOf(m) + salariesOf(m) + paidLeaveOf(m) + premiumOf(m) + writeOffOf(m), 0))} in {chartYear}{chartYear === thisYear ? " so far" : ""},
                                         carried by the company rather than by any one project.
                                     </div>
                                 </>
@@ -262,4 +262,5 @@ const oneOffOf = (m: CompanyMonth) => m.oneOffExpenses ?? 0;
 const salariesOf = (m: CompanyMonth) => m.fixedSalaries ?? 0;
 const paidLeaveOf = (m: CompanyMonth) => m.paidLeave ?? 0;
 const premiumOf = (m: CompanyMonth) => m.overtimePremium ?? 0;
+const writeOffOf = (m: CompanyMonth) => m.advanceWriteOffs ?? 0;
 const netOf = (m: CompanyMonth) => m.netProfit ?? m.profitAfterOverhead;

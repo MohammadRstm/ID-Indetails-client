@@ -41,9 +41,20 @@ describe("the Company overview", () => {
         expect(within(keeps).getByText("Paid leave").closest(".co-line")).toHaveTextContent(money.fmt(o.paidLeave));
         // and the overtime premium past a salary's threshold, which projects carry at the hourly rate only
         expect(within(keeps).getByText("Overtime premium").closest(".co-line")).toHaveTextContent(money.fmt(o.overtimePremium));
+        // no advance was written off, so there is no line for it
+        expect(within(keeps).queryByText("Advances written off")).toBeNull();
         const across = screen.getByText("Across both").closest(".panel") as HTMLElement;
         expect(within(across).getByText("Clients served").closest(".cost-row")).toHaveTextContent(String(o.clientsServed));
         expect(screen.getAllByRole("button", { name: "Manage" })).toHaveLength(2);
+    });
+
+    it("lists the advances written off under the expenses, with what stayed in another currency, once there are some", async () => {
+        const written = { ...o, advanceWriteOffs: 75, unconvertedAdvanceWriteOffs: [{ currency: "LBP", total: 9_000_000 }] };
+        renderApp("/company/overview", rana, http.get("/api/company/overview", () => HttpResponse.json(written)), ...companyHandlers);
+        const keeps = (await screen.findByText("What the company keeps")).closest(".panel") as HTMLElement;
+        await userEvent.click(await within(keeps).findByRole("button", { name: "Show what the expenses are made of" }));
+        expect(within(keeps).getByText("Advances written off").closest(".co-line")).toHaveTextContent(money.fmt(75));
+        expect(within(keeps).getByText(`+ ${money.short(9_000_000, "LBP")}`)).toBeInTheDocument();
     });
 
     it("folds the expenses away again each time the page opens", async () => {
@@ -362,6 +373,7 @@ describe("Company expenses", () => {
         await userEvent.click(within(screen.getByText(/· 2025$/).closest(".panel") as HTMLElement).getByRole("button", { name: "Table" }));
         expect(await screen.findByText("September 2025")).toBeInTheDocument();
         expect(screen.getByRole("columnheader", { name: "One-off expenses" })).toBeInTheDocument();
+        expect(screen.getByRole("columnheader", { name: "Advances written off" })).toBeInTheDocument();
         expect(screen.queryByText("January 2026")).toBeNull();
     });
 

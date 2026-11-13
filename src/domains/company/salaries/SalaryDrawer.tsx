@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { AREAS } from "@/app/routing/areas";
 import { canOpen } from "@/app/routing/routeTable";
+import { useCurrentUser } from "@/app/session/useSession";
 import { ProjectTile } from "@/shared/components/Data/Bits";
 import { Kpi } from "@/shared/components/Data/Kpi";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -12,12 +14,16 @@ import Avatar from "@/shared/components/Identity/Avatar";
 import { Drawer } from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { companyToday, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange } from "@/shared/format/time";
+import Icon from "@/shared/icons/Icon";
 import { clickable } from "@/shared/utils/clickable";
 import { cx } from "@/shared/utils/cx";
 import { hasFixedSalary } from "@/domains/design/pay/payRules";
 import { useMyOvertime } from "@/domains/design/work/workApi";
 import { policyOn, useWorkingTime } from "@/domains/shared/settings/settingsApi";
+import { AdvanceStatusBadge } from "./AdvanceStatusBadge";
+import { amountOf, monthKey } from "./advanceMonths";
 import ExcuseHours from "./ExcuseHours";
+import { GiveAdvanceModal } from "./SalaryAdvanceWindows";
 import { useSalary, type SalaryDetail, type SalaryRow } from "./salariesApi";
 import { loadFailed } from "@/api/queryState";
 
@@ -45,8 +51,14 @@ export default function SalaryDrawer({ row, month, multiplier, onClose }: Salary
     const d = detail.data;
     const domain = row.domain as Domain | null;
     const profile = domain && canOpen(permissions, domain, `people/${row.userId}`) ? `/${domain}/people/${row.userId}` : null;
+    const me = useCurrentUser();
+    const [giving, setGiving] = useState(false);
+    // the API refuses an advance on one's own salary, so the button is left out of one's own row
+    const canGive = permissions.has(P.SALARY_ADVANCE_MANAGE) && me.id !== row.userId;
+    const advancesLink = (id?: number) => { onClose(); navigate(id == null ? "/company/salaries?view=advances" : `/company/salaries?view=advances&advance=${id}`); };
 
     return (
+        <>
         <Drawer title={row.name} onClose={onClose}
             head={
                 <div className="row" style={{ gap: 11 }}>
@@ -66,8 +78,11 @@ export default function SalaryDrawer({ row, month, multiplier, onClose }: Salary
             {loadFailed(detail) ? <LoadError error={detail.error} retry={() => detail.refetch()} what={`${row.name.split(" ")[0]}'s pay`} />
                 : !d ? <SkeletonLines lines={8} />
                     : <DetailBody detail={d} month={month} multiplier={multiplier} canExcuse={permissions.has(P.HOURS_EXCUSE)} seesWork={permissions.has(P.WORK_ENTRY_VIEW_ALL)}
+                        canGive={canGive} onGive={() => setGiving(true)} onAdvances={advancesLink}
                         openProject={(id) => canOpen(permissions, "design", `projects/${id}`) ? () => { onClose(); navigate(`/design/projects/${id}`); } : null} />}
         </Drawer>
+        {giving && <GiveAdvanceModal person={{ id: row.userId, name: row.name }} currency={row.currency} onClose={() => setGiving(false)} />}
+        </>
     );
 }
 
@@ -77,11 +92,16 @@ type BodyProps = {
     multiplier: number;
     canExcuse: boolean;
     seesWork: boolean;
+    /** Whether this person may be given an advance from here, and what to do about advances. */
+    canGive: boolean;
+    onGive: () => void;
+    /** Opens the Advances view, on one advance when it is given. */
+    onAdvances: (id?: number) => void;
     /** How to open a project from the list, when this person may. */
     openProject: (projectId: number) => (() => void) | null;
 };
 
-function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openProject }: BodyProps) {
+function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, canGive, onGive, onAdvances, openProject }: BodyProps) {
     const s = d.salary;
     const cur = s.currency;
     const ruled = s.expectedMinutes != null;
@@ -175,6 +195,7 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openPro
                 )}
             </div>
 
+            {(canGive || (d.advances ?? []).length > 0) && <AdvanceSection detail={d} month={month} canGive={canGive} onGive={onGive} onAdvances={onAdvances} />}
             {s.tracksHours && d.projects.length > 0 && <HoursByProject detail={d} multiplier={multiplier} openProject={openProject} />}
             {s.tracksHours && seesWork && <OvertimeDays userId={s.userId} month={month} />}
         </>
@@ -306,6 +327,39 @@ function OvertimeDays({ userId, month }: { userId: number; month: string }) {
                             ))}
                         </div>
                     )}
+        </div>
+    );
+}
+
+/** The person's salary advances: each one's status, amount and what it takes this month, and a way to give another. */
+function AdvanceSection({ detail: d, month, canGive, onGive, onAdvances }: { detail: SalaryDetail; month: string; canGive: boolean; onGive: () => void; onAdvances: (id?: number) => void }) {
+    const advances = d.advances ?? [];
+    return (
+        <div className="mt">
+            <div className="spread">
+                <div className="u">Salary advance</div>
+                <div className="row" style={{ gap: 8 }}>
+                    {advances.length > 0 && <button type="button" className="btn btn-sm btn-quiet" onClick={() => onAdvances()}>See all</button>}
+                    {canGive && <button type="button" className="btn btn-sm" onClick={onGive}><Icon name="plus" />Give an advance</button>}
+                </div>
+            </div>
+            {advances.length === 0 ? <div className="hint mt-s">No salary advances.</div> : (
+                <div className="pay-lines mt-s">
+                    {advances.map((a) => {
+                        const thisMonth = a.months.find((m) => monthKey(m.month) === month.slice(0, 7));
+                        const takes = thisMonth ? (thisMonth.closed && thisMonth.taken != null ? thisMonth.taken : thisMonth.planned) : null;
+                        return (
+                            <div key={a.id} {...clickable(() => onAdvances(a.id))} className="click" style={{ alignItems: "center" }}>
+                                <span className="row wrap" style={{ gap: 8 }}>
+                                    <AdvanceStatusBadge advance={{ status: a.status, left: a.left, settledKind: a.settlement?.kind }} />
+                                    <span className="mono">{amountOf(a.amount, a.currency)}</span>
+                                </span>
+                                <span className="mono muted">{takes != null ? `−${amountOf(takes, a.currency)} this month` : "nothing this month"}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }

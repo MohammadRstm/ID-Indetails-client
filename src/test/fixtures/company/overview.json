@@ -55,6 +55,8 @@
   "unconvertedPaidLeave": [],
   "overtimePremium": 0,
   "unconvertedOvertimePremium": [],
+  "advanceWriteOffs": 0,
+  "unconvertedAdvanceWriteOffs": [],
   "adminSalaries": 2500,
   "unconvertedAdminSalaries": [],
   "netProfit": 9054.15,

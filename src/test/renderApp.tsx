@@ -26,6 +26,8 @@ const nothingLogged = [
     // nobody has asked for time off, and nobody is away, unless a test says so
     http.get("/api/me/time-off", () => HttpResponse.json([])),
     http.get("/api/time-off/away", () => HttpResponse.json([])),
+    // nobody has asked for a salary advance, and anyone may, unless a test says so
+    http.get("/api/me/salary-advances", () => HttpResponse.json({ canAsk: true, cannotAskBecause: null, currency: "USD", items: [] })),
 ];
 
 /** The API calls every signed-in page makes (settings, branding, badges, counts), answered with calm defaults. */

@@ -137,6 +137,7 @@ function Figures({ tabs }: { tabs: ReactNode }) {
                             <Line sub label="Fixed salaries" value={-t.fixedSalaries} />
                             <Line sub label="Paid leave" value={-t.paidLeave} />
                             <Line sub label="Overtime premium" value={-t.overtimePremium} />
+                            {(t.advanceWriteOffs ?? 0) > 0 && <Line sub label="Advances written off" value={-t.advanceWriteOffs} />}
                         </div>
                         <Line label="Company net profit" value={t.netProfit} strong tone="auto" />
                     </div>
@@ -146,12 +147,14 @@ function Figures({ tabs }: { tabs: ReactNode }) {
                 {t && t.unconvertedFixedSalaries.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedFixedSalaries.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
                 {t && t.unconvertedPaidLeave.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedPaidLeave.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
                 {t && t.unconvertedOvertimePremium.length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedOvertimePremium.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
+                {t && (t.unconvertedAdvanceWriteOffs ?? []).length > 0 && <div className="mt-s"><MixedCurrency amounts={t.unconvertedAdvanceWriteOffs.map((u) => ({ currency: u.currency, amount: u.total }))} /></div>}
                 <p className="hint mt">
                     Revenue is the money received from clients in this window, on the day it arrived; costs are the labour, expenses, site expenses and site labour dated inside it.
                     Company expenses are the monthly pool of subscriptions and running costs, counted day by day for the {days} day{days === 1 ? "" : "s"} shown
                     - never charged to a project or a client. One-off expenses are costs paid once, such as a refrigerator or a repair, counted in full on the day they were spent. Fixed salaries are the pay of everyone who logs no hours (admins, super admins and site staff), so no project carries it: they are counted the same way.
                     Paid leave is what Design staff were paid for paid time off, on a salary or hourly pay, which no project carries either.
                     The overtime premium is what salaries paid for overtime past the month's threshold, beyond the hourly rate their projects carry those hours at.
+                    Advances written off are salary advances nobody paid back, counted on the day each was written off.
                     Everyone else's pay is already in the businesses' costs, through the hours they log.
                 </p>
             </div>

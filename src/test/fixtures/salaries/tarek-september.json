@@ -38,9 +38,12 @@
     "fullMonthEstimate": 1500,
     "overtimePaidMinutes": 0,
     "overtimeThresholdMinutes": null,
-    "countedMinutes": null
+    "countedMinutes": null,
+    "advanceRepayment": null,
+    "toHandOver": 1500
   },
   "inProgress": true,
+  "advances": [],
   "paidBreakDays": 0,
   "paidBreakPay": 0,
   "deductionMinutes": 0,
