@@ -13,6 +13,110 @@ import { renderApp } from "@/test/renderApp";
 const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const firstRow = async () => (await screen.findByText("Haddad Holdings HQ fit-out")).closest("tr")!;
 
+describe("the projects list's Filters panel", () => {
+    const openPanel = async () => {
+        await userEvent.click(await screen.findByRole("button", { name: /^Filters/ }));
+        return screen.findByRole("dialog", { name: "Filters" });
+    };
+    const headings = (panel: HTMLElement) => within(panel).getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+    /** What the page asks the API for, the newest request last. */
+    function listRequests() {
+        const asked: URLSearchParams[] = [];
+        const handler = http.get("/api/projects", ({ request }) => {
+            const q = new URL(request.url).searchParams;
+            if (q.get("pageSize") !== "1") asked.push(q);
+            return HttpResponse.json(fixtures.projects);
+        });
+        return { asked, handler };
+    }
+
+    it("holds every filter in one button, grouped, instead of a row of dropdowns", async () => {
+        renderApp("/design/projects", admin, ...projectHandlers);
+        await firstRow();
+        for (const label of ["Status", "Quarter", "Year", "Type", "Client", "Owner"]) expect(screen.queryByLabelText(label)).toBeNull();
+        // only the search, the Filters button and the sort are on the page
+        expect(screen.getByRole("textbox", { name: "Search projects" })).toBeInTheDocument();
+        expect(screen.getByLabelText("Sort")).toBeInTheDocument();
+        expect(headings(await openPanel())).toEqual(["Status", "When", "Type", "Client", "Owner"]);
+    });
+
+    it("leaves out the groups the person may not use", async () => {
+        renderApp("/design/projects", withPermissions(admin, { revoke: [P.FINANCIAL_VIEW, P.CLIENT_VIEW, P.EMPLOYEE_VIEW] }), ...projectHandlers);
+        await firstRow();
+        expect(headings(await openPanel())).toEqual(["Status", "When"]);
+    });
+
+    it("narrows the list as choices are made, names what is on in chips under the bar, and takes one off", async () => {
+        const { asked, handler } = listRequests();
+        renderApp("/design/projects", admin, handler, ...projectHandlers);
+        await firstRow();
+        const panel = await openPanel();
+        await userEvent.click(await within(panel).findByRole("radio", { name: "Cedar Bank SAL" }));
+        await userEvent.click(within(panel).getByRole("button", { name: /^Completed/ }));
+        await waitFor(() => expect(asked.at(-1)!.get("clientId")).toBe("3"));
+        expect(asked.at(-1)!.get("status")).toBe("completed");
+
+        // the panel ends by saying how many projects are left, and closes
+        await userEvent.click(within(panel).getByRole("button", { name: /^Show \d+ projects?$/ }));
+        expect(screen.queryByRole("dialog", { name: "Filters" })).toBeNull();
+        expect(screen.getByRole("button", { name: "Filters, 2 on" })).toBeInTheDocument();
+        const chips = screen.getByRole("group", { name: "Filters that are on" });
+        expect(within(chips).getAllByRole("button").map((b) => b.getAttribute("aria-label"))).toEqual(["Remove filter: Completed", "Remove filter: Cedar Bank SAL", null]);
+
+        await userEvent.click(within(chips).getByRole("button", { name: "Remove filter: Cedar Bank SAL" }));
+        await waitFor(() => expect(asked.at(-1)!.get("clientId")).toBeNull());
+        expect(asked.at(-1)!.get("status")).toBe("completed");
+
+        await userEvent.click(screen.getByRole("button", { name: "Clear all" }));
+        await waitFor(() => expect(asked.at(-1)!.get("status")).toBeNull());
+        expect(screen.queryByRole("group", { name: "Filters that are on" })).toBeNull();
+        expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
+    });
+
+    it("clears the filters in the panel without clearing the search", async () => {
+        const { asked, handler } = listRequests();
+        renderApp("/design/projects", admin, handler, ...projectHandlers);
+        await firstRow();
+        await userEvent.type(screen.getByRole("textbox", { name: "Search projects" }), "villa");
+        const panel = await openPanel();
+        await userEvent.click(within(panel).getByRole("button", { name: /^Archived/ }));
+        await waitFor(() => expect(asked.at(-1)!.get("status")).toBe("archived"));
+
+        await userEvent.click(within(panel).getByRole("button", { name: "Clear filters" }));
+        await waitFor(() => expect(asked.at(-1)!.get("status")).toBeNull());
+        expect(asked.at(-1)!.get("search")).toBe("villa");
+        expect(screen.getByRole("textbox", { name: "Search projects" })).toHaveValue("villa");
+    });
+
+    it("asks for a year only once a quarter is chosen", async () => {
+        const { asked, handler } = listRequests();
+        renderApp("/design/projects", admin, handler, ...projectHandlers);
+        await firstRow();
+        const panel = await openPanel();
+        expect(within(panel).queryByRole("group", { name: "Year" })).toBeNull();
+        await userEvent.click(within(panel).getByRole("button", { name: "Q3" }));
+        expect(within(await within(panel).findByRole("group", { name: "Year" })).getAllByRole("button")).toHaveLength(2);
+        await waitFor(() => expect(asked.at(-1)!.get("quarter")).toBe("3"));
+        expect(asked.at(-1)!.get("year")).not.toBeNull();
+    });
+
+    it("scrolls a long list of clients inside the panel, and finds one by name", async () => {
+        const many = Array.from({ length: 12 }, (_, i) => ({ ...fixtures.clients.items[0], id: 100 + i, displayName: `Client ${i + 1}` }));
+        renderApp("/design/projects", admin, http.get("/api/clients", () => HttpResponse.json({ ...fixtures.clients, items: many, totalCount: 12 })), ...projectHandlers);
+        await firstRow();
+        const panel = await openPanel();
+        const find = await within(panel).findByRole("textbox", { name: "Find a client" });
+        const clients = within(panel).getByRole("radiogroup", { name: "Client" });
+        expect(within(clients).getAllByRole("radio")).toHaveLength(14);
+        await userEvent.type(find, "client 11");
+        expect(within(clients).getAllByRole("radio").map((r) => r.textContent)).toEqual(["Client 11"]);
+        await userEvent.clear(find);
+        await userEvent.type(find, "zzz");
+        expect(within(clients).queryByRole("radio")).toBeNull();
+        expect(within(clients).getByText(/Nothing matches/)).toBeInTheDocument();
+    });
+});
+
 describe("the projects list", () => {
     it("shows the money to people with financial:view", async () => {
         renderApp("/design/projects", admin, ...projectHandlers);
