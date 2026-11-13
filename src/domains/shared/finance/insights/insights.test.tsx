@@ -94,6 +94,23 @@ describe("a project's insights", () => {
         expect(within(departments).getByRole("row", { name: "Other hours" })).toHaveTextContent("In no budget");
     });
 
+    it("shows each department's hours against those planned, as the API works out its progress, and a dash with no plan", async () => {
+        renderApp(`${path}?tab=insights`, nadia, ...insightHandlers, ...projectWorkHandlers);
+        const departments = await screen.findByRole("region", { name: "Departments" });
+        const architecture = within(departments).getByRole("row", { name: "Architecture" });
+        expect(within(architecture).getByText("100h of 80h")).toBeInTheDocument();
+        expect(within(architecture).getByText("125%").previousElementSibling).toHaveClass("warn");
+        expect(within(within(departments).getByRole("row", { name: "Interiors" })).queryByText(/ of /)).toBeNull();
+        expect(within(within(departments).getByRole("row", { name: "Other hours" })).queryByText(/ of /)).toBeNull();
+    });
+
+    it("leaves the planned hours out while no department has a plan", async () => {
+        const unplanned = { ...design, departments: design.departments!.map((d) => ({ ...d, plannedMinutes: null, progress: null })) };
+        renderApp(`${path}?tab=insights`, nadia, http.get("/api/finance/insights/projects/:id", () => HttpResponse.json(unplanned)), ...insightHandlers, ...projectWorkHandlers);
+        const departments = await screen.findByRole("region", { name: "Departments" });
+        expect(within(departments).queryByRole("columnheader", { name: "Planned hours" })).toBeNull();
+    });
+
     it("shows a site's profit so far and its own steps, with no departments", async () => {
         renderApp(`/execution/projects/${site.project.id}?tab=insights`, karim, ...insightHandlers, ...siteHandlers);
         const panel = await screen.findByRole("region", { name: "Profitability" });
@@ -105,6 +122,20 @@ describe("a project's insights", () => {
         const whatIf = screen.getByRole("region", { name: "What if" });
         expect(within(whatIf).getByLabelText("Supervision")).toBeInTheDocument();
         expect(within(whatIf).getByLabelText("Where the cost goes")).toHaveTextContent("Site expenses");
+    });
+
+    it("shows a site's progress by value once its staff have recorded executed quantities", async () => {
+        renderApp(`/execution/projects/${site.project.id}?tab=insights`, karim, ...insightHandlers, ...siteHandlers);
+        const panel = await screen.findByRole("region", { name: "Profitability" });
+        expect(kpi(panel, "Executed (by value)")).toHaveTextContent("42.0%");
+    });
+
+    it("leaves the progress by value out until a line has a record", async () => {
+        renderApp(`/execution/projects/${site.project.id}?tab=insights`, karim,
+            http.get("/api/finance/insights/projects/:id", () => HttpResponse.json({ ...insights.site, executedProgress: null })), ...insightHandlers, ...siteHandlers);
+        const panel = await screen.findByRole("region", { name: "Profitability" });
+        expect(kpi(panel, "Profit so far")).toBeInTheDocument();
+        expect(within(panel).queryByText("Executed (by value)", { selector: ".kpi-label" })).toBeNull();
     });
 
     it("says why it couldn't load", async () => {

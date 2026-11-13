@@ -20,7 +20,7 @@ const design: Schemas["ProjectInsightResponse"] = {
     agreedRevenue: 26000, agreedWithTva: 26000,
     cost: { labour: 1915.48, expenses: 155, siteExpenses: 0, groundLabour: 0, total: 2070.48, unconverted: [], unpricedLabourMinutes: 0 },
     agreedProfit: 23929.52, margin: 0.9204, marginKnown: true, standing: "fine",
-    progressPct: 25, recognisedToDate: 6500, projected: { cost: 8281.92, profit: 17718.08, margin: 0.6815 },
+    progressPct: 25, executedProgress: null, recognisedToDate: 6500, projected: { cost: 8281.92, profit: 17718.08, margin: 0.6815 },
     received: 0, receivedTva: 0, owed: 26000, siteCashProfit: null, toPocket: 0, fromPocket: 0, supervisionRate: null, tvaRate: 0,
     bridge: [
         { kind: "base_price", amount: 18000 },
@@ -28,11 +28,12 @@ const design: Schemas["ProjectInsightResponse"] = {
         { kind: "labour", amount: -1915.48 },
         { kind: "expenses", amount: -155 },
     ],
-    // Interiors' hours include some paid in pounds with no rate on their day; the last row is hours in no department
+    // Interiors' hours include some paid in pounds with no rate on their day; the last row is hours in no department.
+    // Architecture has 80h planned and is past them; Interiors has no plan
     departments: [
-        { id: 12, name: "Architecture", share: 0.6, budget: 15600, cost: 1300, left: 14300, minutes: 6000, labourShare: 0.679, unconverted: [] },
-        { id: 13, name: "Interiors", share: 0.4, budget: 10400, cost: 515.48, left: 9884.52, minutes: 2910, labourShare: 0.269, unconverted: [{ amount: 4500000, currency: "LBP" }] },
-        { id: null, name: "Other hours", share: null, budget: 0, cost: 100, left: -100, minutes: 600, labourShare: 0.052, unconverted: [] },
+        { id: 12, name: "Architecture", share: 0.6, budget: 15600, cost: 1300, left: 14300, minutes: 6000, labourShare: 0.679, unconverted: [], plannedMinutes: 4800, progress: 1.25 },
+        { id: 13, name: "Interiors", share: 0.4, budget: 10400, cost: 515.48, left: 9884.52, minutes: 2910, labourShare: 0.269, unconverted: [{ amount: 4500000, currency: "LBP" }], plannedMinutes: null, progress: null },
+        { id: null, name: "Other hours", share: null, budget: 0, cost: 100, left: -100, minutes: 600, labourShare: 0.052, unconverted: [], plannedMinutes: null, progress: null },
     ],
     basis: { method: METHOD, assumptions: [MARGIN_RULE, PROJECTION], leftOut: [] },
 };
@@ -43,7 +44,8 @@ const site: Schemas["ProjectInsightResponse"] = {
     agreedRevenue: 18700, agreedWithTva: 18700,
     cost: { labour: 0, expenses: 0, siteExpenses: 6036, groundLabour: 3000, total: 9036, unconverted: [], unpricedLabourMinutes: 0 },
     agreedProfit: 9664, margin: 0.5168, marginKnown: true, standing: "fine",
-    progressPct: 33, recognisedToDate: 6250.66, projected: { cost: 27381.82, profit: -8681.82, margin: -0.4643 },
+    // progress by value: 42% of the agreed BOQ and VO work executed, by the site's recorded quantities
+    progressPct: 33, executedProgress: 0.42, recognisedToDate: 6250.66, projected: { cost: 27381.82, profit: -8681.82, margin: -0.4643 },
     received: 10000, receivedTva: 0, owed: 8700, siteCashProfit: 964, toPocket: 0, fromPocket: 0, supervisionRate: 0.1, tvaRate: 0,
     bridge: [
         { kind: "base_price", amount: 15000 },

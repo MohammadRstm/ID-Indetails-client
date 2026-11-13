@@ -12,8 +12,10 @@ import type { Project } from "../../shared/projects/projectsApi";
 import LabourPanel from "../labour/LabourPanel";
 import ExpensesPanel from "../expenses/ExpensesPanel";
 import AccountSection from "../account/AccountSection";
+import BudgetPanel from "../../shared/finance/budget/BudgetPanel";
 import SupervisionTab from "../account/SupervisionTab";
 import BoqPanel from "../boqs/BoqPanel";
+import BoqProgressPanel from "../boqs/BoqProgressPanel";
 import LabourHealth from "./LabourHealth";
 import SiteMoneyPanel from "./SiteMoneyPanel";
 import { SiteStaffPanels } from "../staff/StaffPages";
@@ -29,6 +31,8 @@ const PART_LABELS: Record<SitePart, string> = {
  * The parts of a site's Financials tab this person may open, in order. Everyone who sees the site has its expenses
  * (site staff report labour there) and its site staff (with their daily logs); the overview needs financial:view, the other money parts
  * financial:view on a client site, and the BOQs whoever writes drafts, sees money, manages the pricing or owns the site.
+ * The site's progress by value sits in its BOQs part, or in its Site staff part for those who don't have the BOQs
+ * (Execution admins who read every site, and the site's own staff, who record it).
  */
 function siteParts(project: Project, permissions: Permissions, myId: number): SitePart[] {
     const client = project.billingType === "client" && project.client != null;
@@ -71,9 +75,9 @@ export function ExecutionFinancials({ project }: { project: Project }) {
             {part === "overview" ? <SiteOverview project={project} />
                 : part === "payments" ? <><BillingBand project={project} /><ProjectPayments project={project} /></>
                     : part === "accounts" ? <AccountSection project={project} onSupervision={() => pick("supervision")} />
-                        : part === "boqs" ? <BoqPanel project={project} />
+                        : part === "boqs" ? <><BoqPanel project={project} /><BoqProgressPanel project={project} /></>
                             : part === "supervision" ? <SupervisionTab project={project} />
-                                : part === "staff" ? <SiteStaffPanels project={project} />
+                                : part === "staff" ? <SiteStaffPanels project={project} progress={!parts.includes("boqs")} />
                                     : <SiteExpenses project={project} />}
         </>
     );
@@ -97,6 +101,7 @@ function SiteOverview({ project }: { project: Project }) {
                     <SiteMoneyPanel project={project}
                         onRecordPayment={client && permissions.has(P.PAYMENT_RECORD) ? () => links.recordPayment() : undefined}
                         onEditPricing={canPrice ? open("pricing") : undefined} />
+                    <BudgetPanel project={project} />
                 </>
             )}
         </>
