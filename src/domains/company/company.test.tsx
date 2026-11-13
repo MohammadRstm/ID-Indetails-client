@@ -24,6 +24,17 @@ describe("the Company overview", () => {
         expect(await within(keeps).findByText("Design profit")).toBeInTheDocument();
         expect(within(keeps).getByText("Execution profit")).toBeInTheDocument();
         expect(within(keeps).getByText("Company net profit").closest(".co-line")).toHaveTextContent(money.fmt(o.netProfit));
+        // everything that comes off the profit is one Expenses row, folded away until it is opened
+        expect(within(keeps).getByText("Expenses").closest(".co-line")).toHaveTextContent(money.fmt(o.expenses));
+        const toggle = within(keeps).getByRole("button", { name: "Show what the expenses are made of" });
+        expect(toggle).toHaveAttribute("aria-expanded", "false");
+        expect(within(keeps).getByText("Fixed salaries").closest("#co-expenses-lines")).toHaveAttribute("hidden");
+        await userEvent.click(toggle);
+        expect(within(keeps).getByRole("button", { name: "Hide what the expenses are made of" })).toHaveAttribute("aria-expanded", "true");
+        expect(within(keeps).getByText("Fixed salaries").closest("#co-expenses-lines")).not.toHaveAttribute("hidden");
+        expect(within(keeps).getByText("Recurring company expenses").closest(".co-line")).toHaveTextContent(money.fmt(o.overhead));
+        // a cost paid once is counted in full, on the day it was spent
+        expect(within(keeps).getByText("One-off expenses").closest(".co-line")).toHaveTextContent(money.fmt(o.oneOffExpenses));
         // everyone who logs no hours is on a fixed salary, so their pay comes off here, under the company's expenses
         expect(within(keeps).getByText("Fixed salaries").closest(".co-line")).toHaveTextContent(money.fmt(o.fixedSalaries));
         // and so does what Design staff were paid for paid time off
@@ -33,6 +44,15 @@ describe("the Company overview", () => {
         const across = screen.getByText("Across both").closest(".panel") as HTMLElement;
         expect(within(across).getByText("Clients served").closest(".cost-row")).toHaveTextContent(String(o.clientsServed));
         expect(screen.getAllByRole("button", { name: "Manage" })).toHaveLength(2);
+    });
+
+    it("folds the expenses away again each time the page opens", async () => {
+        const first = renderApp("/company/overview", rana, ...companyHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Show what the expenses are made of" }));
+        expect(screen.getByRole("button", { name: "Hide what the expenses are made of" })).toBeInTheDocument();
+        first.unmount();
+        renderApp("/company/overview", rana, ...companyHandlers);
+        expect(await screen.findByRole("button", { name: "Show what the expenses are made of" })).toHaveAttribute("aria-expanded", "false");
     });
 
     it("measures the window picked", async () => {
@@ -81,6 +101,7 @@ describe("Company expenses", () => {
             http.post("/api/company/overhead", async ({ request }) => { added.push(await request.json()); return HttpResponse.json(company.overhead.lines[0], { status: 201 }); }),
             ...companyHandlers);
         await userEvent.click((await screen.findAllByRole("button", { name: "Add expense" }))[0]);
+        await userEvent.click(screen.getByRole("button", { name: "Recurring monthly expense" }));
         const dialog = await screen.findByRole("dialog", { name: "Add recurring expense" });
         await userEvent.type(within(dialog).getByLabelText("Name"), "Office cleaning");
         await userEvent.type(within(dialog).getByLabelText("Monthly cost"), "87.5");
@@ -92,6 +113,129 @@ describe("Company expenses", () => {
         await userEvent.click(screen.getByRole("option", { name: "Rent & utilities" }));
         await userEvent.click(within(dialog).getByRole("button", { name: "Add expense" }));
         await waitFor(() => expect(added).toEqual([{ name: "Office cleaning", amount: 87.5, currency: "USD", groupId: 3 }]));
+    });
+
+    it("are added as a one-off, dated this month, with live errors beside each field", async () => {
+        const added: unknown[] = [];
+        renderApp("/company/overhead", rana,
+            http.post("/api/company/overhead/one-offs", async ({ request }) => { added.push(await request.json()); return HttpResponse.json(company.oneOffs.items[0], { status: 201 }); }),
+            ...companyHandlers);
+        await userEvent.click((await screen.findAllByRole("button", { name: "Add expense" }))[0]);
+        await userEvent.click(screen.getByRole("button", { name: "One-off expense" }));
+        const dialog = await screen.findByRole("dialog", { name: "Add one-off expense" });
+        // nothing is sent while something is missing, and each field says what
+        await userEvent.click(within(dialog).getByRole("button", { name: "Add expense" }));
+        expect(within(dialog).getByText("Name the expense.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Enter what it cost.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Choose the category.")).toBeInTheDocument();
+        expect(added).toEqual([]);
+        // and the errors go as they are put right
+        await userEvent.type(within(dialog).getByLabelText("Name"), "Refrigerator");
+        expect(within(dialog).queryByText("Name the expense.")).toBeNull();
+        await userEvent.type(within(dialog).getByLabelText("Amount"), "450");
+        expect(within(dialog).queryByText("Enter what it cost.")).toBeNull();
+        await userEvent.click(within(dialog).getByLabelText("Category"));
+        await userEvent.click(screen.getByRole("option", { name: "Office supplies" }));
+        expect(within(dialog).queryByText("Choose the category.")).toBeNull();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Add expense" }));
+        // the day is today, the last day a one-off can be dated
+        await waitFor(() => expect(added).toEqual([{ name: "Refrigerator", groupId: 8, currency: "USD", amount: 450, spentOn: "2026-09-30" }]));
+    });
+
+    it("show the server's reason when a one-off is refused", async () => {
+        renderApp("/company/overhead", rana,
+            http.post("/api/company/overhead/one-offs", () => HttpResponse.json({ code: "one_off_outside_this_month", message: "A one-off expense is dated this month, up to today." }, { status: 400 })),
+            ...companyHandlers);
+        await userEvent.click((await screen.findAllByRole("button", { name: "Add expense" }))[0]);
+        await userEvent.click(screen.getByRole("button", { name: "One-off expense" }));
+        const dialog = await screen.findByRole("dialog", { name: "Add one-off expense" });
+        await userEvent.type(within(dialog).getByLabelText("Name"), "Repair");
+        await userEvent.type(within(dialog).getByLabelText("Amount"), "20");
+        await userEvent.click(within(dialog).getByLabelText("Category"));
+        await userEvent.click(screen.getByRole("option", { name: "Office supplies" }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Add expense" }));
+        expect(await within(dialog).findByText("A one-off expense is dated this month, up to today.")).toBeInTheDocument();
+    });
+
+    it("open the one-off form from ?add=one-off", async () => {
+        renderApp("/company/overhead?add=one-off", rana, ...companyHandlers);
+        expect(await screen.findByRole("dialog", { name: "Add one-off expense" })).toBeInTheDocument();
+        expect(screen.queryByRole("dialog", { name: "Add recurring expense" })).toBeNull();
+    });
+
+    it("list the month's one-offs, newest day first, and let this month's be changed or removed", async () => {
+        const changed: unknown[] = [];
+        const removed: string[] = [];
+        const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+        renderApp("/company/overhead", rana,
+            http.put("/api/company/overhead/one-offs/:id", async ({ params, request }) => { changed.push([params.id, await request.json()]); return HttpResponse.json(company.oneOffs.items[0]); }),
+            http.delete("/api/company/overhead/one-offs/:id", ({ params }) => { removed.push(String(params.id)); return new HttpResponse(null, { status: 204 }); }),
+            ...companyHandlers);
+        const panel = (await screen.findByText("One-off expenses", { selector: ".panel-title" })).closest(".panel") as HTMLElement;
+        await within(panel).findByText("Refrigerator");
+        expect(within(panel).getAllByRole("row").slice(1).map((r) => r.querySelector("b")?.textContent)).toEqual(["Refrigerator", "Printer repair"]);
+        expect(within(panel).getByText("Office supplies")).toBeInTheDocument();
+        expect(panel.querySelector(".panel-foot")).toHaveTextContent(money.fmt(570));
+        // this month's tile adds them up too
+        expect(screen.getByText("One-off this month", { selector: ".kpi-label" }).closest(".kpi")).toHaveTextContent(money.fmt(570));
+
+        await userEvent.click(within(panel).getByRole("button", { name: "Printer repair actions" }));
+        await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit one-off expense" });
+        const amount = within(dialog).getByLabelText("Amount");
+        await userEvent.clear(amount);
+        await userEvent.type(amount, "135");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(changed).toEqual([["6", { name: "Printer repair", groupId: 9, currency: "USD", amount: 135, spentOn: "2026-09-12" }]]));
+
+        await userEvent.click(within(panel).getByRole("button", { name: "Refrigerator actions" }));
+        await userEvent.click(screen.getByRole("button", { name: "Remove" }));
+        expect(confirm).toHaveBeenCalled();
+        await waitFor(() => expect(removed).toEqual(["7"]));
+        confirm.mockRestore();
+    });
+
+    it("keep a one-off when its removal isn't confirmed", async () => {
+        const removed: string[] = [];
+        const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+        renderApp("/company/overhead", rana,
+            http.delete("/api/company/overhead/one-offs/:id", ({ params }) => { removed.push(String(params.id)); return new HttpResponse(null, { status: 204 }); }),
+            ...companyHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Refrigerator actions" }));
+        await userEvent.click(screen.getByRole("button", { name: "Remove" }));
+        expect(confirm).toHaveBeenCalled();
+        expect(removed).toEqual([]);
+        confirm.mockRestore();
+    });
+
+    it("step through the months of one-offs, a closed month read-only and no month in the future", async () => {
+        const asked: string[] = [];
+        renderApp("/company/overhead", rana,
+            http.get("/api/company/overhead/one-offs", ({ request }) => {
+                const month = new URL(request.url).searchParams.get("month") ?? "";
+                asked.push(month);
+                return HttpResponse.json(month === "2026-08" ? company.closedOneOffs : company.oneOffs);
+            }),
+            ...companyHandlers);
+        const panel = (await screen.findByText("One-off expenses", { selector: ".panel-title" })).closest(".panel") as HTMLElement;
+        await within(panel).findByText("Refrigerator");
+        expect(within(panel).getByRole("button", { name: "Next month" })).toBeDisabled();
+        await userEvent.click(within(panel).getByRole("button", { name: "Previous month" }));
+        expect(await within(panel).findByText("Water cooler")).toBeInTheDocument();
+        expect(within(panel).getByText("August 2026")).toBeInTheDocument();
+        expect(asked).toContain("2026-08");
+        // nothing to change in a month that has closed, and the panel says why
+        expect(within(panel).queryByRole("button", { name: "Water cooler actions" })).toBeNull();
+        expect(within(panel).getByText("This month has closed, so its one-off expenses can't be changed.")).toBeInTheDocument();
+        await userEvent.click(within(panel).getByRole("button", { name: "Next month" }));
+        expect(await within(panel).findByText("Refrigerator")).toBeInTheDocument();
+    });
+
+    it("say so when a month has no one-offs", async () => {
+        renderApp("/company/overhead", rana,
+            http.get("/api/company/overhead/one-offs", () => HttpResponse.json({ month: "2026-09-01", isOpen: true, items: [], totals: [] })),
+            ...companyHandlers);
+        expect(await screen.findByText("No one-off expenses in September 2026.")).toBeInTheDocument();
     });
 
     it("show this month's biggest categories, and let a super admin manage the categories", async () => {
@@ -217,6 +361,7 @@ describe("Company expenses", () => {
         // the table lists that year's months only
         await userEvent.click(within(screen.getByText(/· 2025$/).closest(".panel") as HTMLElement).getByRole("button", { name: "Table" }));
         expect(await screen.findByText("September 2025")).toBeInTheDocument();
+        expect(screen.getByRole("columnheader", { name: "One-off expenses" })).toBeInTheDocument();
         expect(screen.queryByText("January 2026")).toBeNull();
     });
 
