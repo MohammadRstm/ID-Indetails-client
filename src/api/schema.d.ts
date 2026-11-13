@@ -17109,6 +17109,12 @@ export interface components {
             amount?: number;
             note?: null | string;
         };
+        ApproveSalaryAdvanceRequest: {
+            /** Format: double */
+            amount?: null | number;
+            months?: components["schemas"]["PlannedMonthRequest"][];
+            note?: null | string;
+        };
         ApproveTimeOffRequest: {
             isPaid?: boolean;
             note?: null | string;
@@ -17123,6 +17129,11 @@ export interface components {
             suggestion?: null | number;
             text?: string;
             voice?: null | components["schemas"]["ProtonVoiceTurnRequest"];
+        };
+        AskSalaryAdvanceRequest: {
+            /** Format: double */
+            amount?: number;
+            reason?: string;
         };
         AskTimeOffRequest: {
             /** Format: date */
@@ -17757,6 +17768,8 @@ export interface components {
         };
         CompanyMonthResponse: {
             /** Format: double */
+            advanceWriteOffs: number;
+            /** Format: double */
             expenses: number;
             /** Format: double */
             fixedSalaries: number;
@@ -17788,6 +17801,8 @@ export interface components {
         CompanyOverviewResponse: {
             /** Format: double */
             adminSalaries: number;
+            /** Format: double */
+            advanceWriteOffs: number;
             /** Format: int32 */
             clientsServed: number;
             /** Format: double */
@@ -17824,6 +17839,7 @@ export interface components {
             /** Format: date */
             to: string;
             unconvertedAdminSalaries: components["schemas"]["CurrencyTotalResponse"][];
+            unconvertedAdvanceWriteOffs: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedFixedSalaries: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedInvoices: components["schemas"]["UnconvertedInvoicesResponse"][];
             unconvertedOneOffExpenses: components["schemas"]["CurrencyTotalResponse"][];
@@ -19374,6 +19390,38 @@ export interface components {
             /** Format: int32 */
             projects: number;
         };
+        MySalaryAdvanceResponse: {
+            /** Format: double */
+            amount: number;
+            /** Format: double */
+            askedAmount: null | number;
+            /** Format: date-time */
+            cancelledAt: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            currency: string;
+            /** Format: date-time */
+            decidedAt: null | string;
+            decisionNote: null | string;
+            /** Format: date */
+            givenOn: null | string;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            left: null | number;
+            months: components["schemas"]["SalaryAdvanceMonthResponse"][];
+            reason: null | string;
+            settledKind: null | components["schemas"]["SalaryAdvanceSettlement"];
+            /** Format: date */
+            settledOn: null | string;
+            status: components["schemas"]["SalaryAdvanceStatus"];
+        };
+        MySalaryAdvancesResponse: {
+            canAsk: boolean;
+            cannotAskBecause: null | string;
+            currency: null | string;
+            items: components["schemas"]["MySalaryAdvanceResponse"][];
+        };
         MyScheduleDayResponse: {
             /** Format: date */
             date: string;
@@ -19989,6 +20037,12 @@ export interface components {
             description?: string;
             /** Format: date */
             sendOn?: string;
+        };
+        PlannedMonthRequest: {
+            /** Format: double */
+            amount: number;
+            /** Format: date */
+            month: string;
         };
         PocketContributionRequest: {
             /** Format: double */
@@ -21640,6 +21694,16 @@ export interface components {
             receivedOn?: null | string;
             reference?: null | string;
         };
+        RecordSalaryAdvanceRequest: {
+            /** Format: double */
+            amount?: number;
+            /** Format: date */
+            givenOn?: null | string;
+            months?: components["schemas"]["PlannedMonthRequest"][];
+            note?: null | string;
+            /** Format: int64 */
+            userId?: number;
+        };
         RefreshRequest: {
             installedApp?: boolean;
         };
@@ -21815,6 +21879,7 @@ export interface components {
             title: string;
         };
         SalariesResponse: {
+            advances: components["schemas"]["SalaryAdvanceSummaryResponse"];
             inProgress: boolean;
             /** Format: date */
             month: string;
@@ -21825,6 +21890,89 @@ export interface components {
             totals: components["schemas"]["SalaryTotalResponse"][];
             withoutPay: components["schemas"]["PersonWithoutPayResponse"][];
         };
+        SalaryAdvanceMonthResponse: {
+            closed: boolean;
+            /** Format: date */
+            month: string;
+            /** Format: double */
+            planned: number;
+            /** Format: double */
+            taken: null | number;
+        };
+        SalaryAdvanceMonthsRequest: {
+            months?: components["schemas"]["PlannedMonthRequest"][];
+        };
+        SalaryAdvanceNoteRequest: {
+            note?: null | string;
+        };
+        SalaryAdvancePersonResponse: {
+            departmentName: null | string;
+            domain: null | string;
+            /** Format: int64 */
+            id: number;
+            /** Format: date */
+            leftOn: null | string;
+            name: string;
+            /** Format: int64 */
+            photoFileId: null | number;
+            role: string;
+        };
+        SalaryAdvanceResponse: {
+            /** Format: double */
+            amount: number;
+            /** Format: double */
+            askedAmount: null | number;
+            behind: boolean;
+            canCancel: boolean;
+            canChange: boolean;
+            canDecide: boolean;
+            /** Format: date-time */
+            cancelledAt: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            currency: string;
+            /** Format: date-time */
+            decidedAt: null | string;
+            decidedByName: null | string;
+            decisionNote: null | string;
+            /** Format: date */
+            givenOn: null | string;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            left: null | number;
+            months: components["schemas"]["SalaryAdvanceMonthResponse"][];
+            person: components["schemas"]["SalaryAdvancePersonResponse"];
+            reason: null | string;
+            recordedByName: null | string;
+            /** Format: double */
+            repaid: null | number;
+            settlement: null | components["schemas"]["SalaryAdvanceSettlementResponse"];
+            status: components["schemas"]["SalaryAdvanceStatus"];
+            unsettled: boolean;
+        };
+        /** @enum {unknown} */
+        SalaryAdvanceSettlement: "cash" | "written_off";
+        SalaryAdvanceSettlementResponse: {
+            /** Format: double */
+            amount: number;
+            kind: components["schemas"]["SalaryAdvanceSettlement"];
+            note: null | string;
+            settledByName: null | string;
+            /** Format: date */
+            settledOn: string;
+        };
+        /** @enum {unknown} */
+        SalaryAdvanceStatus: "pending" | "approved" | "declined" | "withdrawn" | "cancelled";
+        SalaryAdvanceSummaryResponse: {
+            left: components["schemas"]["CurrencyAmountResponse"][];
+            /** Format: int32 */
+            pending: number;
+            /** Format: int32 */
+            unsettled: number;
+        };
+        /** @enum {unknown} */
+        SalaryAdvanceView: "pending" | "open" | "closed";
         SalaryDayResponse: {
             /** Format: date */
             date: string;
@@ -21832,6 +21980,7 @@ export interface components {
             requiredMinutes: number;
         };
         SalaryDetailResponse: {
+            advances: components["schemas"]["SalaryAdvanceResponse"][];
             /** Format: int32 */
             deductionMinutes: number;
             excuses: components["schemas"]["HourExcuseResponse"][];
@@ -21868,6 +22017,8 @@ export interface components {
             title: string;
         };
         SalaryRowResponse: {
+            /** Format: double */
+            advanceRepayment: null | number;
             /** Format: double */
             amount: number;
             /** Format: double */
@@ -21920,6 +22071,8 @@ export interface components {
             shortMinutes: null | number;
             team: null | components["schemas"]["TeamSummaryResponse"];
             /** Format: double */
+            toHandOver: number;
+            /** Format: double */
             total: number;
             tracksHours: boolean;
             /** Format: int64 */
@@ -21951,6 +22104,8 @@ export interface components {
         };
         SalaryTotalResponse: {
             /** Format: double */
+            advanceRepayment: number;
+            /** Format: double */
             basePay: number;
             currency: string;
             /** Format: double */
@@ -21961,6 +22116,8 @@ export interface components {
             overtimePay: number;
             /** Format: int32 */
             people: number;
+            /** Format: double */
+            toHandOver: number;
             /** Format: double */
             total: number;
         };
@@ -22271,6 +22428,10 @@ export interface components {
             /** Format: int32 */
             startMinute?: number;
             workDays?: number[];
+        };
+        SettleSalaryAdvanceRequest: {
+            kind?: components["schemas"]["SalaryAdvanceSettlement"];
+            note?: null | string;
         };
         /** @enum {unknown} */
         SiteExpenseCategory: "materials" | "contractor" | "equipment" | "fees" | "other";

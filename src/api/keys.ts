@@ -43,6 +43,10 @@ export const keys = {
         all: ["employees"] as const,
         list: (params: object) => ["employees", "list", params] as const,
     },
+    /** Someone's own salary advances. Everyone's sit under Salaries (["company", "salaries", "advances"]). */
+    advances: {
+        mine: ["advances", "mine"] as const,
+    },
     timeOff: {
         all: ["time-off"] as const,
         mine: () => ["time-off", "mine"] as const,
