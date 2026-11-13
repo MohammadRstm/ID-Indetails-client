@@ -9670,6 +9670,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{projectId}/budget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectBudgetResponse"];
+                        "text/json": components["schemas"]["ProjectBudgetResponse"];
+                        "text/plain": components["schemas"]["ProjectBudgetResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SetProjectBudgetRequest"];
+                    "application/json": components["schemas"]["SetProjectBudgetRequest"];
+                    "text/json": components["schemas"]["SetProjectBudgetRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectBudgetResponse"];
+                        "text/json": components["schemas"]["ProjectBudgetResponse"];
+                        "text/plain": components["schemas"]["ProjectBudgetResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{projectId}/complete": {
         parameters: {
             query?: never;
@@ -20505,6 +20573,41 @@ export interface components {
             received: number;
             unconvertedInvoices: components["schemas"]["UnconvertedInvoicesResponse"][];
         };
+        ProjectBudgetLineResponse: {
+            /** Format: double */
+            amount: number;
+            category: null | string;
+            /** Format: double */
+            cost: number;
+            /** Format: double */
+            left: number;
+            name: string;
+            /** Format: int64 */
+            teamId: null | number;
+        };
+        ProjectBudgetResponse: {
+            current: null | components["schemas"]["ProjectBudgetVersionResponse"];
+            domain: string;
+            history: components["schemas"]["ProjectBudgetVersionResponse"][];
+            lines: components["schemas"]["ProjectBudgetLineResponse"][];
+            /** Format: int64 */
+            projectId: number;
+            /** Format: double */
+            uncovered: number;
+            unconverted: components["schemas"]["CurrencyAmountResponse"][];
+        };
+        ProjectBudgetVersionResponse: {
+            /** Format: date */
+            effectiveFrom: string;
+            reason: string;
+            /** Format: date-time */
+            setAt: string;
+            setByName: string;
+            /** Format: double */
+            total: number;
+            /** Format: int32 */
+            version: number;
+        };
         ProjectClientResponse: {
             displayName: string;
             /** Format: int64 */
@@ -22401,6 +22504,19 @@ export interface components {
         SetPaymentLabelRequest: {
             /** Format: int64 */
             accountLabelId?: null | number;
+        };
+        SetProjectBudgetLineRequest: {
+            /** Format: double */
+            amount: number;
+            category?: null | string;
+            /** Format: int64 */
+            teamId?: null | number;
+        };
+        SetProjectBudgetRequest: {
+            /** Format: date */
+            effectiveFrom?: null | string;
+            lines: components["schemas"]["SetProjectBudgetLineRequest"][];
+            reason: string;
         };
         SetProjectDepartmentsRequest: {
             departmentIds?: number[];
