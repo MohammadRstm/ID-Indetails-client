@@ -24,9 +24,13 @@ export function useTypingInField(): boolean {
         const onOut = (e: FocusEvent) => setTyping(takesText(e.relatedTarget));
         document.addEventListener("focusin", onIn);
         document.addEventListener("focusout", onOut);
+        // a field taken off the page while it has the keyboard (a window that closes) sends no focusout: look again then
+        const gone = new MutationObserver(() => setTyping(takesText(document.activeElement)));
+        gone.observe(document.body, { childList: true, subtree: true });
         return () => {
             document.removeEventListener("focusin", onIn);
             document.removeEventListener("focusout", onOut);
+            gone.disconnect();
         };
     }, []);
     return typing;
