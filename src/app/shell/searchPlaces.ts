@@ -3,6 +3,7 @@ import { DOMAINS, type Domain, type Permissions } from "@/app/permissions/permis
 import { hasSeveralAreas } from "@/app/routing/areas";
 import { domainHome, websiteHome } from "@/app/routing/home";
 import { canOpen, companyRoutes, websiteRoutes } from "@/app/routing/routeTable";
+import { seesSettingsSection, type SettingsSection } from "@/domains/shared/settings/settingsSections";
 import { DOMAIN_LABEL } from "@/shared/format/labels";
 import type { IconName } from "@/shared/icons/icons";
 import { myProfilePath } from "./profilePath";
@@ -76,8 +77,9 @@ function inThisArea(ctx: Where, path: string): Target[] {
     return inBusinesses(ctx, path);
 }
 
-/** A Settings section: in the company area for those who reach it, otherwise in the business. */
-export function settings(ctx: Where, section: string): Target[] {
+/** A Settings section the person has: in the company area for those who reach it, otherwise in the business. */
+export function settings(ctx: Where, section: SettingsSection): Target[] {
+    if (!seesSettingsSection(ctx.p, section)) return [];
     if (ctx.area.kind === "company") return company(ctx, `settings?section=${section}`);
     return inBusinesses(ctx, `settings?section=${section}`);
 }
@@ -87,7 +89,7 @@ const when = (ok: boolean, targets: () => Target[]): Target[] => (ok ? targets()
 /** Teams: a company overview tab for those who see the company, a business's Settings section otherwise. */
 function teams(ctx: PlaceContext): Target[] {
     if (ctx.p.has(P.COMPANY_VIEW)) return company(ctx, "overview?tab=teams");
-    return inBusinesses(ctx, "settings?section=teams");
+    return seesSettingsSection(ctx.p, "teams") ? inBusinesses(ctx, "settings?section=teams") : [];
 }
 
 /** Everyone in the company for those who see it; a business's employees for its admins. */
@@ -257,7 +259,8 @@ export const PLACES: Place[] = [
         key: "company-details", icon: "building", label: "Company details",
         words: ["company details", "company settings", "company name", "logo", "company logo", "change logo", "address", "website",
             "branding", "letterhead", "week start", "first day of the week", "time format", "24 hour", "12 hour", "default currency"],
-        targets: (ctx) => settings(ctx, "general"),
+        // everyone has the section for its theme: the company's details are for whoever may change them
+        targets: (ctx) => when(ctx.p.has(P.COMPANY_SETTINGS_MANAGE), () => settings(ctx, "general")),
     },
     {
         key: "time-settings", icon: "clock", label: "Time tracking settings",

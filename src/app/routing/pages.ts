@@ -52,6 +52,7 @@ export const BoqSitePage = page(() => import("@/domains/execution/boqs/BoqSitePa
 export const PocketPage = page(() => import("@/domains/execution/pocket/PocketPage"));
 export const SettingsPage = page(() => import("@/domains/shared/settings/SettingsPage"));
 export const CompanySettingsPage = named(() => import("@/domains/shared/settings/SettingsPage"), "CompanySettingsPage");
+export const WebsiteSettingsPage = named(() => import("@/domains/shared/settings/SettingsPage"), "WebsiteSettingsPage");
 export const CompanyProfilePage = page(() => import("@/domains/company/profile/CompanyProfilePage"));
 export const CompanyExpensesPage = page(() => import("@/domains/company/CompanyExpensesPage"));
 export const CompanyOverviewPage = page(() => import("@/domains/company/CompanyOverviewPage"));

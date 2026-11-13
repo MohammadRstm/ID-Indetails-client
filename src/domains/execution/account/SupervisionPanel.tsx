@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { errorMessage, toApiError } from "@/api/errors";
+import { toApiError } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { loadFailed } from "@/api/queryState";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -131,7 +132,7 @@ function RecordSupervisionModal({ project, onClose }: { project: Project; onClos
             foot={
                 <>
                     <div className="grow muted" style={{ fontSize: 12 }}>
-                        {take.error && !fieldRefused ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(take.error)}</span> : null}
+                        {take.error && !fieldRefused ? <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={take.error} /></span> : null}
                     </div>
                     <button className="btn" disabled={take.isPending} onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={take.isPending} onClick={submit}><Icon name="check" />{take.isPending ? "Saving…" : "Record"}</button>
@@ -181,7 +182,7 @@ function RemoveSupervisionModal({ project, withdrawal, onClose }: { project: Pro
         <Modal size="sm" title="Remove supervision taken" sub={project.title} onClose={remove.isPending ? undefined : onClose}
             foot={
                 <>
-                    <div className="grow">{remove.error ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(remove.error)}</span> : null}</div>
+                    <div className="grow">{remove.error ? <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={remove.error} /></span> : null}</div>
                     <button className="btn" disabled={remove.isPending} onClick={onClose}>Keep it</button>
                     <button className="btn btn-danger" disabled={remove.isPending} onClick={submit}>{remove.isPending ? "Removing…" : "Remove"}</button>
                 </>

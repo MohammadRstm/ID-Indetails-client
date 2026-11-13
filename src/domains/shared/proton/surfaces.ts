@@ -13,7 +13,7 @@ export type SurfaceTarget = { kind: "go"; path: string } | { kind: "opener"; id:
 export type Ask = { p: Permissions; domain: Domain | null; id: number | null; section: string | null; tab: string | null; itemId?: number | null };
 
 /** The settings sections and company tabs a link may name: the pages' own. */
-const SETTINGS = ["general", "time", "finance", "projects", "notifications", "teams", "admins", "data", "labels"] as const;
+const SETTINGS = ["general", "time", "finance", "projects", "notifications", "teams", "admins", "data", "labels", "contact"] as const;
 const COMPANY_TABS = ["overview", "people", "teams"] as const;
 
 export const inArea = (a: Ask, path: string, allowed = true): SurfaceTarget | null =>

@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { z } from "zod";
 import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 import { loadFailed } from "@/api/queryState";
@@ -150,7 +151,7 @@ function CommentRow({ projectId, itemId, comment, writable }: RowProps) {
                         <button type="button" className="btn btn-sm btn-quiet" disabled={remove.isPending} onClick={() => setDoing(null)}>Cancel</button>
                         <button type="button" className="btn btn-sm btn-danger" disabled={remove.isPending} onClick={() => void confirmDelete()}>Delete comment</button>
                     </span>
-                    {remove.isError && <span className="err" role="alert"><Icon name="alert" />{errorMessage(remove.error)}</span>}
+                    {remove.isError && <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={remove.error} /></span>}
                 </div>
             )}
         </li>

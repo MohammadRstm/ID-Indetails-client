@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import type { Schemas } from "@/api/types";
 import type { Domain } from "@/app/permissions/permissions";
 import { AREAS } from "@/app/routing/areas";
@@ -92,7 +92,7 @@ export default function ScheduleModal({ person, companyWeek, onClose }: Schedule
                 <>
                     <div className="grow">
                         {save.isError
-                            ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(save.error)}</span>
+                            ? <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={save.error} /></span>
                             : <><b className="mono">{fmtH(weekMinutes(days, brk))}</b> required a week{brk ? `, after a ${fmtH(brk)} break a day` : ""}{same ? " · same as the company default" : ""}</>}
                     </div>
                     {person.isOwn && <button className="btn" disabled={save.isPending} onClick={() => submit(true)}>Use company default</button>}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -117,7 +117,7 @@ function WeekEditor({ wt }: { wt: WorkingTime }) {
                 </div>
             )}
             {days.length === 0 && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" />Pick at least one working day.</div>}
-            {setWt.error != null && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(setWt.error)}</div>}
+            {setWt.error != null && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" /><ErrorMessage error={setWt.error} /></div>}
         </div>
     );
 }

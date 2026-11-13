@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { http } from "@/api/http";
 import type { Schemas } from "@/api/types";
 import { P } from "@/app/permissions/codes";
@@ -107,7 +107,7 @@ function Compose({ entryId, author, domain, canSeeTeam }: { entryId: number; aut
                             <span>Also send to the <b>{team.name}</b> group chat <span className="msg-mention">@all</span></span>
                         </label>
                     )}
-                    <span className="grow">{add.error ? <span className="err"><Icon name="alert" />{errorMessage(add.error)}</span> : null}</span>
+                    <span className="grow">{add.error ? <span className="err"><Icon name="alert" /><ErrorMessage error={add.error} /></span> : null}</span>
                     <button className="btn btn-sm btn-quiet" disabled={!text} onClick={() => { setText(""); setSend(false); }}>Cancel</button>
                     <button className="btn btn-sm btn-primary" disabled={!text.trim() || add.isPending} onClick={submit}>Comment</button>
                 </div>

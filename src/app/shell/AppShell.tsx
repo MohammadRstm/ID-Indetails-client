@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Outlet, useLocation } from "react-router";
+import ContactHost from "@/app/contact/ContactHost";
+import { sendFromStaff } from "@/app/contact/contactApi";
 import CrashScreen from "@/app/pages/CrashScreen";
 import { load } from "@/app/routing/pages";
 import { errorMessage } from "@/api/errors";
@@ -15,6 +17,7 @@ import PushBanner from "@/app/pwa/PushBanner";
 import { useAppBadge, usePushSync } from "@/app/pwa/push";
 import { useCurrentUser } from "@/app/session/useSession";
 import UpdateBanner from "@/app/pwa/UpdateBanner";
+import ContactBanner from "./ContactBanner";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import { formatsRemembered, useCompanySettings, useUnreadBadges } from "./shellQueries";
@@ -110,6 +113,7 @@ export default function AppShell() {
                 <UpdateBanner />
                 <InstallBanner />
                 <PushBanner />
+                <ContactBanner area={area} />
                 {/* a page that fails keeps the shell around it, and moving to another page clears it */}
                 <ErrorBoundary FallbackComponent={CrashScreen} resetKeys={[location.pathname]}>
                     <Suspense fallback={<PageLoading />}>
@@ -124,6 +128,7 @@ export default function AppShell() {
                 </ErrorBoundary>
             )}
             <LogWorkHost />
+            <ContactHost send={sendFromStaff} proton />
             <InstallSteps />
         </div>
     );

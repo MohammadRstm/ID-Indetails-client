@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { errorMessage, toApiError } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -41,7 +42,7 @@ const other = (d: string | null): Domain => (d === "design" ? "execution" : "des
 function Foot({ error, busy, label, danger, disabled, onCancel, onGo }: { error: unknown; busy: boolean; label: string; danger?: boolean; disabled?: boolean; onCancel: () => void; onGo: () => void }) {
     return (
         <>
-            <div className="grow">{error ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(error)}</span> : null}</div>
+            <div className="grow">{error ? <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={error} /></span> : null}</div>
             <button className="btn" onClick={onCancel}>Cancel</button>
             <button className={danger ? "btn btn-danger" : "btn btn-primary"} disabled={busy || disabled} onClick={onGo}>{label}</button>
         </>

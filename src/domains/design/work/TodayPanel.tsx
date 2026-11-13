@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { errorMessage } from "@/api/errors";
+import { ErrorText } from "@/shared/components/Feedback/ErrorText";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import Skeleton from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
@@ -200,7 +201,7 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                     <div className="row wrap mt" style={{ gap: 10 }}>
                         <AttachmentChip state={attachment} />
                         <span className="grow">
-                            {error || save.error ? <span className="err"><Icon name="alert" />{error ?? errorMessage(save.error)}</span> : null}
+                            {error || save.error ? <span className="err"><Icon name="alert" /><ErrorText text={error ?? errorMessage(save.error)} /></span> : null}
                         </span>
                         <button type="submit" className="btn btn-primary" disabled={!slot || attachment.uploading || save.isPending}><Icon name="plus" />Add log</button>
                     </div>

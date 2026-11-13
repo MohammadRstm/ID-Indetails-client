@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import type { Schemas } from "@/api/types";
 import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
@@ -321,7 +322,7 @@ function Invoicing({ domain, billing: b }: { domain: Domain; billing: BillingSet
                     <div className="grow">
                         <div style={{ fontWeight: 600 }}>Bank details printed on every invoice</div>
                         <BankFields bank={bank} onChange={setBank} errors={errors} />
-                        {save.error != null && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(save.error)}</div>}
+                        {save.error != null && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" /><ErrorMessage error={save.error} /></div>}
                     </div>
                     <div className="stack" style={{ gap: 6 }}>
                         <button className="btn btn-sm btn-primary" disabled={save.isPending}
@@ -366,7 +367,7 @@ function LbpRate() {
                 <>
                     A payment can be received in LBP and converted at the rate of its day. Both amounts are kept, and payments already recorded keep their rate.
                     {earlier.length > 0 && <span className="muted"> Before: {earlier.map((r) => `${fmtNumber(r.ratePerUsd)} from ${fmtDateY(r.effectiveFrom)}${r.automatic ? " (added automatically)" : ""}`).join(" · ")}.</span>}
-                    {add.error != null && <span className="err"> {errorMessage(add.error)}</span>}
+                    {add.error != null && <span className="err"> <ErrorMessage error={add.error} /></span>}
                     {editing && !editing.rate && <span className="err"> Enter how many LBP make a dollar.</span>}
                     {editing && editing.rate !== "" && editing.rate > 0 && !dayOk(editing.from) && (
                         <span className="err"> {firstDay ? `Pick a day from ${fmtDateY(firstDay)} to today.` : "Pick a day up to today."}</span>

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { downloadFile, fetchBlob, printFile, saveBlob } from "@/api/download";
 import { parseCsv } from "@/shared/format/csv";
 import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { http } from "@/api/http";
 import { keys } from "@/api/keys";
 import type { Paged, Schemas } from "@/api/types";
@@ -500,7 +501,7 @@ function CsvPreview({ file, name, retry }: {
             <div className="csv-title"><Icon name="file" /><b>CSV</b><span className="muted mono">{name}</span></div>
             {file.isError ? (
                 <div className="load-err">
-                    <span className="err">{errorMessage(file.error)}</span> <button className="link" onClick={retry}>Try again</button>
+                    <span className="err"><ErrorMessage error={file.error} /></span> <button className="link" onClick={retry}>Try again</button>
                 </div>
             ) : !file.data ? <p className="muted">Preparing the preview…</p>
                 : body.length === 0 ? <p className="muted">No work was logged in this range: the file would hold only its column names.</p> : (

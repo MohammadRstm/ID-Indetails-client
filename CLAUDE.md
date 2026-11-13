@@ -60,6 +60,7 @@ A feature usually needs the API and the client together: one `MR-<Topic>` branch
   - put the query key in `src/api/keys.ts`;
   - make the mutations that change that data invalidate it, e.g. billing changes also invalidate `keys.box`.
 - **Forms** show each validation error live, next to its field (`useFormErrors`, `FieldError`). Money amounts use `AmountField`, which shows commas as you type.
+- **Errors on screen:** show a failed request's message with `<ErrorMessage error={…} />` (or `ErrorText` for a message you already have, from `shared/components/Feedback/ErrorText.tsx`), so an unexpected failure links to Contact the developer. `FieldError`, `LoadError` and toasts already do.
 
 ### Working on the user's machines
 
@@ -88,7 +89,7 @@ This file is how every new session learns the project, so keep it true:
   - Edit JSON fixtures in `src/test/fixtures` by hand, with minimal diffs. Re-serialising them rewrites the whole file.
 - **ESLint `react-refresh/only-export-components`:** a component file exports only components. Put helpers and constants in a `*Api.ts` or a plain `.ts` file.
 - **`clickable(..., "link")`** sets `role="link"`. Wrap the element in another element if it must also be a `listitem`.
-- **Execution employees** (site staff) see only Daily log, My sites and Profile. Design-only pages use `designOnly(...)` in the route table, and Execution-only pages use `executionOnly(...)`.
+- **Execution employees** (site staff) see only Daily log, My sites, Profile and Settings (Appearance and Contact). Design-only pages use `designOnly(...)` in the route table, and Execution-only pages use `executionOnly(...)`.
 
 ## Commands
 

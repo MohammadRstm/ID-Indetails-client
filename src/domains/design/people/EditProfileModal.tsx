@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillChange, useProtonForm } from "@/domains/shared/proton/formFill";
 import { errorMessage, toApiError } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { toast } from "@/shared/components/Feedback/toast";
@@ -174,7 +175,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
             foot={
                 <>
                     <div className="grow muted">
-                        {error ? <span className="err"><Icon name="alert" />{errorMessage(error)}</span>
+                        {error ? <span className="err"><Icon name="alert" /><ErrorMessage error={error} /></span>
                             : self ? "Position, department and pay are set by your admin." : "Changes are recorded; pay changes apply forward only."}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>

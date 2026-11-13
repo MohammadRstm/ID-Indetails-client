@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { loadFailed } from "@/api/queryState";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -198,7 +198,7 @@ function SiteStaffModal({ project, onClose }: { project: Project; onClose: () =>
         <Modal title="Site staff" sub={project.title} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{save.error != null && <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span>}</div>
+                    <div className="grow">{save.error != null && <span className="err"><Icon name="alert" /><ErrorMessage error={save.error} /></span>}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={save.isPending} onClick={() => {
                         save.mutate(chosen, { onSuccess: () => { toast({ text: "Site staff saved", sub: project.title, icon: "checkCircle" }); onClose(); } });

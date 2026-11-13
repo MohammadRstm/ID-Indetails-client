@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { errorMessage, toApiError } from "@/api/errors";
+import { toApiError } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
@@ -92,7 +93,7 @@ export default function ExpenseModal({ project, onClose }: { project: Project; o
             {noRate && (
                 <div className="banner attn mt" role="alert">
                     <Icon name="alert" />
-                    <div className="grow">{errorMessage(add.error)}</div>
+                    <div className="grow"><ErrorMessage error={add.error} /></div>
                 </div>
             )}
         </Modal>

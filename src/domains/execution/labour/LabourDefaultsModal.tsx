@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import NumberField from "@/shared/components/Forms/NumberField";
@@ -46,7 +46,7 @@ export default function LabourDefaultsModal({ project, defaults, onClose }: { pr
         <Modal title="Labour defaults" sub={project.title} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{set.error ? <span className="err"><Icon name="alert" />{errorMessage(set.error)}</span> : editable ? `Applies from today, ${fmtDate(today)}` : ""}</div>
+                    <div className="grow">{set.error ? <span className="err"><Icon name="alert" /><ErrorMessage error={set.error} /></span> : editable ? `Applies from today, ${fmtDate(today)}` : ""}</div>
                     <button className="btn" onClick={onClose}>{editable ? "Cancel" : "Close"}</button>
                     {editable && <button id="ld-save" className="btn btn-primary" disabled={!changed || set.isPending} onClick={save}>Save defaults</button>}
                 </>

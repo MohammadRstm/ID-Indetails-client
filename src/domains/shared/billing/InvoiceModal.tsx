@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { downloadFile, printFile } from "@/api/download";
 import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { CostRow } from "@/shared/components/Data/Money";
@@ -84,7 +85,7 @@ export default function InvoiceModal({ invoiceId, onClose, onSend, onEdit, onPay
                     <div className="grow row" style={{ gap: 10 }}>
                         <InvoiceStatusPill invoice={inv} />
                         <span className="mono" style={{ fontSize: "12.5px" }}>{money.fmt(inv.total)}{balance > 0.5 && state !== "draft" ? ` · ${money.fmt(balance)} due` : ""}</span>
-                        {error && <span className="err"><Icon name="alert" />{errorMessage(error)}</span>}
+                        {error && <span className="err"><Icon name="alert" /><ErrorMessage error={error} /></span>}
                     </div>
                     <button className="btn" onClick={pdf}><Icon name="download" />PDF</button>
                     <button className="btn" onClick={print}><Icon name="print" />Print</button>

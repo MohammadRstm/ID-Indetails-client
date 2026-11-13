@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { loadFailed } from "@/api/queryState";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -51,7 +52,7 @@ export default function AccountLabelsSettings() {
                             ))}
                             {archived.map((l) => <LabelRow key={l.id} label={l} />)}
                             {!active.length && !archived.length && !adding && <Empty art="search" title="No account labels yet" text="Add the first one: payments and expenses can then be booked to it." />}
-                            {reorder.error != null && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(reorder.error)}</div>}
+                            {reorder.error != null && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" /><ErrorMessage error={reorder.error} /></div>}
                         </>
                     )}
             </div>
@@ -102,7 +103,7 @@ function LabelRow({ label, onUp, onDown, onDone }: {
                         {label!.archived && <p>Archived: it can't be picked any more.</p>}
                         {!label!.inUse && !label!.archived && <p>Nothing is filed under it yet.</p>}
                         {(archive.error ?? remove.error) != null && (
-                            <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(archive.error ?? remove.error)}</div>
+                            <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" /><ErrorMessage error={archive.error ?? remove.error} /></div>
                         )}
                     </>
                 )}

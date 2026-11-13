@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { useFileUrl } from "@/shared/files/useFileUrl";
 import Icon from "@/shared/icons/Icon";
 import type { AttachmentState } from "./attachments";
@@ -36,7 +36,7 @@ export function AttachmentField({ state }: { state: AttachmentState }) {
                     <Icon name="attach" />{state.uploading ? "Uploading…" : "Attach an image or video"}
                 </button>
             )}
-            {state.error && <div className="err mt-s"><Icon name="alert" />{errorMessage(state.error)}</div>}
+            {state.error && <div className="err mt-s"><Icon name="alert" /><ErrorMessage error={state.error} /></div>}
             {picker.input}
         </div>
     );
@@ -56,7 +56,7 @@ export function AttachmentChip({ state }: { state: AttachmentState }) {
                     <Icon name="attach" />{state.uploading ? "Uploading…" : "Attach a file"}
                 </button>
             )}
-            {state.error && <span className="err"><Icon name="alert" />{errorMessage(state.error)}</span>}
+            {state.error && <span className="err"><Icon name="alert" /><ErrorMessage error={state.error} /></span>}
             {picker.input}
         </>
     );

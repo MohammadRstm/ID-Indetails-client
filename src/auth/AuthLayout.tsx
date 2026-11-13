@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { whatsAppLink } from "@/app/contact/contact";
 import Logo from "@/shared/components/Identity/Logo";
 import { useBranding } from "@/shared/components/Identity/useBranding";
 
@@ -8,7 +9,7 @@ type AuthLayoutProps = {
     children: ReactNode;
 };
 
-/** The prototype's sign-in card: logo, a heading, and the form under it. */
+/** The prototype's sign-in card: logo, a heading, and the form under it, with the developer's WhatsApp for anyone stuck. */
 export default function AuthLayout({ title, sub, children }: AuthLayoutProps) {
     const branding = useBranding();
     return (
@@ -27,6 +28,14 @@ export default function AuthLayout({ title, sub, children }: AuthLayoutProps) {
                         {sub && <p className="muted" style={{ marginTop: 4 }}>{sub}</p>}
                     </div>
                     {children}
+                    {branding.data?.supportWhatsApp && (
+                        <p className="hint">
+                            Trouble signing in?{" "}
+                            <a className="link" href={whatsAppLink(branding.data.supportWhatsApp, "Contact the developer (ID InDetails)")} target="_blank" rel="noreferrer">
+                                WhatsApp the developer
+                            </a>
+                        </p>
+                    )}
                 </div>
             </div>
         </div>

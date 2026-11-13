@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { errorMessage, toApiError } from "@/api/errors";
+import { toApiError } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
@@ -109,7 +110,7 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
             foot={
                 <>
                     <div className="grow mono" style={{ fontSize: "12.5px" }}>
-                        {record.error && !labelError ? <span className="err"><Icon name="alert" />{errorMessage(record.error)}</span>
+                        {record.error && !labelError ? <span className="err"><Icon name="alert" /><ErrorMessage error={record.error} /></span>
                             : currency === "USD" ? money.exact(usd) : `${money.exact(value, "LBP")} = ${money.exact(usd)}`}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>

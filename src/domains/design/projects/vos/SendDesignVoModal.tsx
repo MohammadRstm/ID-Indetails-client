@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { toast } from "@/shared/components/Feedback/toast";
 import { FieldError } from "@/shared/components/Forms/Field";
 import { Segmented } from "@/shared/components/Forms/Filters";
@@ -46,7 +46,7 @@ export default function SendDesignVoModal({ project, vo, onClose }: { project: P
         <Modal size="md" title={`Send ${vo.number}`} sub={`${project.client?.displayName ?? "the client"} · ${vo.title}`} onClose={busy ? undefined : onClose}
             foot={
                 <>
-                    <div className="grow">{email.error ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(email.error)}</span> : null}</div>
+                    <div className="grow">{email.error ? <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={email.error} /></span> : null}</div>
                     <button className="btn" onClick={onClose} disabled={busy}>{vo.status === "pending" ? "Later" : "Cancel"}</button>
                     <button className="btn btn-primary" onClick={() => void send()} disabled={busy}>
                         <Icon name={way === "email" ? "send" : "download"} />{way === "email" ? "Email it" : "Download PDF"}

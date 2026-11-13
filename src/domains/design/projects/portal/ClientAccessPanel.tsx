@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { loadFailed } from "@/api/queryState";
 import Panel from "@/shared/components/Data/Panel";
 import { Badge } from "@/shared/components/Data/Pills";
@@ -128,7 +129,7 @@ export default function ClientAccessPanel({ project }: { project: Project }) {
                 <Modal title="End this client's access?" sub={ending.name ?? ending.email} onClose={() => setEnding(null)}
                     foot={
                         <>
-                            <div className="grow">{revokeAccess.error ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(revokeAccess.error)}</span> : null}</div>
+                            <div className="grow">{revokeAccess.error ? <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={revokeAccess.error} /></span> : null}</div>
                             <button type="button" className="btn" onClick={() => setEnding(null)}>Keep access</button>
                             <button type="button" className="btn btn-danger" disabled={revokeAccess.isPending}
                                 onClick={() => revokeAccess.mutate(ending.accessId!, {

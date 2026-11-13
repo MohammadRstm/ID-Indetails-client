@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { loadFailed } from "@/api/queryState";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
@@ -38,7 +38,7 @@ export default function DeleteProjectModal({ project, onClose }: { project: Proj
         <Modal size="sm" title={`Delete ${project.title}?`} onClose={remove.isPending ? undefined : onClose}
             foot={
                 <>
-                    <div className="grow muted" style={{ fontSize: 12 }}>{remove.error != null && <span className="err"><Icon name="alert" />{errorMessage(remove.error)}</span>}</div>
+                    <div className="grow muted" style={{ fontSize: 12 }}>{remove.error != null && <span className="err"><Icon name="alert" /><ErrorMessage error={remove.error} /></span>}</div>
                     <button className="btn" disabled={remove.isPending} onClick={onClose}>Cancel</button>
                     <button className="btn btn-danger" disabled={!d?.canDelete || !named || remove.isPending} onClick={confirm}>
                         <Icon name="trash" />{remove.isPending ? "Deleting…" : "Delete project"}

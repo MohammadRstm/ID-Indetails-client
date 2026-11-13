@@ -1,5 +1,6 @@
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import { ErrorText } from "./ErrorText";
 import { dismissToast, holdToast, releaseToast, useToasts } from "./toast";
 
 /**
@@ -17,7 +18,8 @@ export default function Toasts() {
                     <Icon name={t.icon ?? "checkCircle"} />
                     <div className="grow">
                         <div>{t.text}</div>
-                        {t.sub && <div className="toast-sub">{t.sub}</div>}
+                        {/* a failure on the server links to Contact the developer */}
+                        {t.sub && <div className="toast-sub"><ErrorText text={t.sub} /></div>}
                     </div>
                     {t.actionLabel && (
                         <button onClick={() => { t.action?.(); dismissToast(t.id); }}>{t.actionLabel}</button>

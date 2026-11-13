@@ -30,7 +30,7 @@ const nothingLogged = [
 
 /** The API calls every signed-in page makes (settings, branding, badges, counts), answered with calm defaults. */
 export const shellHandlers = [
-    http.get("/api/company/branding", () => HttpResponse.json({ name: "ID-Indetails", hasLogo: false })),
+    http.get("/api/company/branding", () => HttpResponse.json({ name: "ID-Indetails", hasLogo: false, logoFileId: null, supportWhatsApp: "96171317958" })),
     http.get("/api/company/settings", () => HttpResponse.json({
         isSetUp: true, name: "ID-Indetails", address: null, website: null, logoFileId: null,
         timeZone: "Asia/Beirut", weekStart: 1, use24HourTime: false, defaultCurrency: "USD", updatedAt: null,

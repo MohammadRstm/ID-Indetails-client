@@ -8529,6 +8529,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ReportBugRequest"];
+                    "application/json": components["schemas"]["ReportBugRequest"];
+                    "text/json": components["schemas"]["ReportBugRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/invitations/accept": {
         parameters: {
             query?: never;
@@ -17397,6 +17436,7 @@ export interface components {
             /** Format: int64 */
             logoFileId: null | number;
             name: null | string;
+            supportWhatsApp: string;
         };
         /** @enum {unknown} */
         BridgeStepKind: "base_price" | "variation_orders" | "settlement" | "paid_ahead" | "supervision" | "permits" | "labour" | "expenses" | "site_expenses" | "ground_labour" | "pocket";
@@ -17830,6 +17870,12 @@ export interface components {
         CompleteProjectRequest: {
             keepPaidAhead?: boolean;
             settleOwed?: null | components["schemas"]["OwedSettlement"];
+        };
+        ContactErrorRequest: {
+            /** Format: date-time */
+            at?: string;
+            message?: null | string;
+            ref?: null | string;
         };
         /** @enum {unknown} */
         ContactKind: "email" | "phone";
@@ -21352,7 +21398,7 @@ export interface components {
             unit: components["schemas"]["ProtonUnit"];
         };
         /** @enum {unknown} */
-        ProtonSettingsSection: "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "admins" | "data" | "labels" | null;
+        ProtonSettingsSection: "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "admins" | "data" | "labels" | "contact" | null;
         ProtonSourceResponse: {
             comparedWith: null | string;
             label: string;
@@ -21615,15 +21661,15 @@ export interface components {
         };
         ReportBugFill: {
             description: null | string;
-            steps: null | string;
-            title: null | string;
+            details: null | string;
         };
         ReportBugRequest: {
             description?: string;
+            details?: null | string;
+            error?: null | components["schemas"]["ContactErrorRequest"];
+            installedApp?: null | boolean;
             page?: null | string;
             recentErrors?: components["schemas"]["ReportedErrorRequest"][];
-            steps?: null | string;
-            title?: string;
         };
         ReportClientResponse: {
             /** Format: int64 */
