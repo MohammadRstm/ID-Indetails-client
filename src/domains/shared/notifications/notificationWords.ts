@@ -57,6 +57,9 @@ export function describe(note: Notification, reader: Reader): NotificationView {
     const logsWork = reader.logsWork && d === "design";
     // pages about the reader themself: an employee's own profile or pay; admins have none of their own
     const mine = !reader.isAdmin && reader.domain ? `/${reader.domain}/profile` : undefined;
+    // an admin's own page is among the people they manage; a super admin's is in the company area
+    const myPage = reader.isSuperAdmin ? "/company/profile" : mine ?? (reader.domain ? `/${reader.domain}/people/${reader.userId}` : undefined);
+    const advances = (id?: number) => `/company/salaries?view=advances${id ? `&advance=${id}` : ""}`;
     const by = note.actor ? `By ${who}` : undefined;
     // admins keep meetings on their Overview's tab, super admins on the company overview's, Design employees on a page
     const meetings = reader.isSuperAdmin ? "/company/overview?tab=meetings"
@@ -337,6 +340,19 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             return { text: `${s(p.name) || who} is off until ${fmtDate(s(p.lastDay))}`, icon: "calendar", route: `/design/people/${n(p.userId)}` };
         case "time_off_back":
             return { text: `${s(p.name) || who} is back at work today`, icon: "calendar", route: `/design/people/${n(p.userId)}` };
+        // salary advances: never an amount. Super admins decide, the person hears the outcome
+        case "salary_advance_requested":
+            return { text: `${s(p.name) || who} asks for a salary advance.`, sub: "Approve or decline it", icon: "card", route: advances(note.subjectId ?? undefined) };
+        case "salary_advance_withdrawn":
+            return { text: `${s(p.name) || who} took back their request for a salary advance.`, icon: "card", route: advances(note.subjectId ?? undefined) };
+        case "salary_advance_approved":
+            return { text: "Your salary advance was approved.", sub: by, icon: "checkCircle", route: myPage };
+        case "salary_advance_declined":
+            return { text: "Your request for a salary advance was declined.", sub: by, icon: "card", route: myPage };
+        case "salary_advance_recorded":
+            return { text: "A salary advance was recorded for you.", sub: by, icon: "card", route: myPage };
+        case "salary_advance_unsettled":
+            return { text: `${s(p.name) || who} left with a salary advance still to pay back.`, sub: "Settle what is left", icon: "alert", route: advances() };
         case "boq_submitted":
             return {
                 text: `${s(p.authorName) || who} submitted ${s(p.title) ? `the draft “${s(p.title)}”` : "a BOQ draft"} on ${title}`,

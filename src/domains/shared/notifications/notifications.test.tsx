@@ -122,6 +122,26 @@ group("A notification's words", () => {
         expect(describe(note("time_off_back", { name: "Sarah Haddad", userId: 4 }), admin)).toMatchObject({ text: "Sarah Haddad is back at work today", route: "/design/people/4" });
     });
 
+    it("tell who decides about a salary advance, and the person its outcome, without an amount", () => {
+        const sup: Reader = { ...admin, isSuperAdmin: true };
+        const ask = { name: "Sarah Haddad" };
+        const advances = "/company/salaries?view=advances";
+        expect(describe(note("salary_advance_requested", ask, { subjectType: "salary_advance", subjectId: 12 }), sup))
+            .toMatchObject({ text: "Sarah Haddad asks for a salary advance.", route: `${advances}&advance=12` });
+        expect(describe(note("salary_advance_withdrawn", ask, { subjectType: "salary_advance", subjectId: 12 }), sup))
+            .toMatchObject({ text: "Sarah Haddad took back their request for a salary advance.", route: `${advances}&advance=12` });
+        expect(describe(note("salary_advance_unsettled", ask, { subjectType: "salary_advance", subjectId: 12 }), sup))
+            .toMatchObject({ text: "Sarah Haddad left with a salary advance still to pay back.", route: advances });
+
+        expect(describe(note("salary_advance_approved", {}), designer)).toMatchObject({ text: "Your salary advance was approved.", route: "/design/profile" });
+        expect(describe(note("salary_advance_declined", {}), designer)).toMatchObject({ text: "Your request for a salary advance was declined.", route: "/design/profile" });
+        expect(describe(note("salary_advance_recorded", {}), designer)).toMatchObject({ text: "A salary advance was recorded for you.", route: "/design/profile" });
+        // an admin's own page is among their people, a super admin's in the company area
+        expect(describe(note("salary_advance_approved", {}), admin).route).toBe("/design/people/2");
+        expect(describe(note("salary_advance_approved", {}), sup).route).toBe("/company/profile");
+        expect(describe(note("salary_advance_recorded", { amount: 400 }), designer).text).not.toMatch(/\d/);
+    });
+
     it("tell staff what a client wrote in a project's portal, and open its discussion", () => {
         const discussion = "/design/projects/5?tab=portal&part=discussion";
         const payload = { projectTitle: project.title, authorName: "Rania Aoun" };

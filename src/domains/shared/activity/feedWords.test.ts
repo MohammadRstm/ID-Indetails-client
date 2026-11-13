@@ -52,6 +52,20 @@ describe("what the activity feed says", () => {
         expect(off("time_off_ended", { endedOn: "2026-10-14" })).toBe("Sarah Haddad's time off was cut short on Oct 14");
     });
 
+    it("words salary advances for the people who decide them, without amounts", () => {
+        const sarah = { subjectType: "user", subjectId: 3, project: null, client: null };
+        const advance = (kind: string, payload: object = {}) => say(event(kind, { ...sarah, payload: { advanceId: 5, status: "approved", settledKind: null, ...payload } }));
+        expect(advance("salary_advance_requested")).toBe("asked for a salary advance");
+        expect(advance("salary_advance_withdrawn")).toBe("took back their request for a salary advance");
+        expect(advance("salary_advance_approved")).toBe("approved Sarah Haddad's salary advance");
+        expect(advance("salary_advance_declined")).toBe("declined Sarah Haddad's request for a salary advance");
+        expect(advance("salary_advance_recorded")).toBe("recorded a salary advance for Sarah Haddad");
+        expect(advance("salary_advance_months_changed")).toBe("changed the months of Sarah Haddad's salary advance");
+        expect(advance("salary_advance_cancelled")).toBe("cancelled Sarah Haddad's salary advance");
+        expect(advance("salary_advance_settled", { settledKind: "cash" })).toBe("settled what was left of Sarah Haddad's salary advance in cash");
+        expect(advance("salary_advance_settled", { settledKind: "written_off" })).toBe("wrote off the rest of Sarah Haddad's salary advance");
+    });
+
     it("says what was excused from a person's hours, and whether it is paid", () => {
         const sarah = { subjectType: "user", subjectId: 3 };
         const excuse = (payload: object, kind = "hours_excused") => say(event(kind, { ...sarah, project: null, payload: { month: "2026-09-01", isPaid: true, ...payload } }));

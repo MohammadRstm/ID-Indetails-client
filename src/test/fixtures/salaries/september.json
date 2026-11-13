@@ -43,7 +43,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 80,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 1346.67
       },
       {
         "userId": 5,
@@ -84,7 +86,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 140,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 2044
       },
       {
         "userId": 7,
@@ -125,7 +129,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 830,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 1636.5
       },
       {
         "userId": 2,
@@ -163,7 +169,9 @@
         "fullMonthEstimate": 3200,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 3200
       },
       {
         "userId": 4,
@@ -204,7 +212,9 @@
         "fullMonthEstimate": 2038.46,
         "overtimePaidMinutes": 200,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 2038.46
       },
       {
         "userId": 6,
@@ -245,7 +255,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 2118.67
       },
       {
         "userId": 3,
@@ -286,7 +298,9 @@
         "fullMonthEstimate": 1822.5,
         "overtimePaidMinutes": 130,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 1822.5
       },
       {
         "userId": 9,
@@ -327,7 +341,9 @@
         "fullMonthEstimate": 1600,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 1600
       },
       {
         "userId": 12,
@@ -368,7 +384,9 @@
         "fullMonthEstimate": 1100,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 1100
       },
       {
         "userId": 10,
@@ -406,7 +424,9 @@
         "fullMonthEstimate": 2800,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 2800
       }
     ],
     "page": 1,
@@ -421,7 +441,9 @@
       "overtimePay": 224.13,
       "deduction": 0,
       "total": 23706.8,
-      "earnedSoFar": 22758.53
+      "earnedSoFar": 22758.53,
+      "advanceRepayment": 0,
+      "toHandOver": 23706.8
     }
   ],
   "summary": {
@@ -434,6 +456,11 @@
     "shortMinutes": 930,
     "expectedMinutes": 61740,
     "overtimePaidMinutes": 1380
+  },
+  "advances": {
+    "pending": 0,
+    "left": [],
+    "unsettled": 0
   },
   "withoutPay": []
 }

@@ -63,6 +63,7 @@ export const P = {
     HOURS_EXCUSE: "hours:excuse",
     TIME_OFF_REQUEST: "time_off:request",
     TIME_OFF_DECIDE: "time_off:decide",
+    SALARY_ADVANCE_MANAGE: "salary_advance:manage",
     MESSAGE_ANNOUNCE: "message:announce",
     PROTON_USE: "proton:use",
     PROTON_BUDGET_MANAGE: "proton_budget:manage",

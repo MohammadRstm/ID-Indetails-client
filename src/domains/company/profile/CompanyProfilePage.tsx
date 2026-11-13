@@ -10,6 +10,7 @@ import { fmtDateY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import EditProfileModal from "../../design/people/EditProfileModal";
 import MyPermissionsModal from "../../shared/settings/MyPermissionsModal";
+import MySalaryAdvances from "../salaries/MySalaryAdvances";
 
 /**
  * The signed-in person's own profile in the company area, where super admins work: who they are, what they
@@ -64,6 +65,8 @@ export default function CompanyProfilePage() {
                         control={<button className="btn btn-sm" onClick={() => setViewingPermissions(true)}><Icon name="shield" />View {plural(me.permissions.length, "permission")}</button>} />
                 </div>
             </div>
+
+            <MySalaryAdvances />
 
             {viewingPermissions && <MyPermissionsModal onClose={() => setViewingPermissions(false)} />}
             {editing && (

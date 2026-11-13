@@ -21,6 +21,7 @@ import { hasFixedSalary } from "@/domains/design/pay/payRules";
 import type { Schemas } from "@/api/types";
 import { Banner } from "@/shared/components/Data/Bits";
 import SalaryDrawer, { LinkedSalaryDrawer } from "./SalaryDrawer";
+import SalaryAdvances from "./SalaryAdvances";
 import SalaryYear from "./SalaryYear";
 import { useSalaries, type SalaryRole, type SalaryRow } from "./salariesApi";
 import { clickable } from "@/shared/utils/clickable";
@@ -81,6 +82,9 @@ export default function SalariesPage() {
     const thisMonth = today.slice(0, 7);
     const thisYear = Number(today.slice(0, 4));
     const byYear = params.get("view") === "year";
+    const byAdvances = params.get("view") === "advances";
+    // &advance={id} opens one advance (a notification links to it)
+    const openAdvance = Number(params.get("advance")) || null;
     const month = monthOf(params.get("month"), thisMonth);
     const year = yearOf(params.get("year"), thisYear);
     const [domain, setDomain] = useState<Domain | "all">("all");
@@ -114,7 +118,12 @@ export default function SalariesPage() {
 
     const goMonth = (m: string) => { setPage(1); setParams(m === thisMonth ? {} : { month: m }, { replace: true }); };
     const goYear = (y: number) => setParams(y === thisYear ? { view: "year" } : { view: "year", year: String(y) }, { replace: true });
+    const goAdvances = () => setParams({ view: "advances" }, { replace: true });
+    const openOneAdvance = (id: number | null) => setParams(id == null ? { view: "advances" } : { view: "advances", advance: String(id) }, { replace: true });
     const filter = (next: () => void) => { next(); setPage(1); };
+    // what comes off for salary advances shows up once anyone has one that month (any page, not only this one)
+    const hasAdvances = rows.some((x) => x.advanceRepayment != null) || totals.some((t) => t.advanceRepayment > 0);
+    const advances = r?.advances;
     function toggleExplain() {
         const next = !explain;
         setExplain(next);
@@ -174,9 +183,10 @@ export default function SalariesPage() {
                     <div className="page-sub">What each employee is owed for the month - hours from their work entries, pay from their pay records. Separate from project labour cost.</div>
                 </div>
                 <div className="page-actions">
-                    <Segmented aria-label="Show" value={byYear ? "year" : "month"} onChange={(v) => (v === "year" ? goYear(Number(month.slice(0, 4))) : goMonth(thisMonth))}
-                        options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
-                    {byYear ? (
+                    <Segmented aria-label="Show" value={byAdvances ? "advances" : byYear ? "year" : "month"}
+                        onChange={(v) => (v === "year" ? goYear(Number(month.slice(0, 4))) : v === "advances" ? goAdvances() : goMonth(thisMonth))}
+                        options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }, { value: "advances", label: "Advances" }]} />
+                    {byAdvances ? null : byYear ? (
                         <div className="row" style={{ gap: 4 }}>
                             <button className="icon-btn" aria-label="Previous year" disabled={year <= 2000} onClick={() => goYear(year - 1)}><Icon name="chevronLeft" /></button>
                             <b style={{ minWidth: 60, textAlign: "center" }}>{year}</b>
@@ -198,7 +208,7 @@ export default function SalariesPage() {
                 </div>
             </div>
 
-            {byYear ? (
+            {byAdvances ? <SalaryAdvances openId={openAdvance} onOpen={openOneAdvance} /> : byYear ? (
                 <div className="panel">
                     <div className="panel-head">
                         <div className="grow">
@@ -231,6 +241,15 @@ export default function SalariesPage() {
                             sub: <span className={sum.shortPeople ? "down" : ""}>{sum.shortPeople ? `${fmtH(sum.shortMinutes)}${isThisMonth ? " behind in total" : " short, flagged"}` : "everyone worked their hours"}</span>,
                         }] : []),
                         { key: "rate", label: "Overtime rate", value: `×${multiplier}`, sub: <span>{multiplier === 1 ? "the overtime rate as it is" : "of the overtime rate"}</span> },
+                        ...(advances?.left ?? []).map((l) => ({
+                            key: `advance-left-${l.currency}`, label: `Advances still to repay${(advances?.left.length ?? 0) > 1 ? ` · ${l.currency}` : ""}`,
+                            value: cash(l.amount, l.currency),
+                            sub: <span>{advances?.unsettled ? `${advances.unsettled} left unsettled` : "still coming off pay"}</span>,
+                        })),
+                        ...(advances && advances.pending > 0 ? [{
+                            key: "advance-requests", label: "Advance requests", value: String(advances.pending),
+                            sub: <button type="button" className="link" onClick={goAdvances}>Open the Advances view</button>,
+                        }] : []),
                     ]} />
 
                     <div className="panel mt" ref={anchor}>
@@ -274,18 +293,27 @@ export default function SalariesPage() {
                                                     <th className="r">Base pay<HelpHint article="pay" label="base pay">The month's pay as a monthly amount: the salary, or for hourly pay, the rate × the month's paid hours.</HelpHint></th>
                                                     <th className="r">Hourly pay<HelpHint article="pay" label="hourly pay">What an hour is worth this month: a salary ÷ the month's paid hours, so it changes with the number of working days.</HelpHint></th>
                                                     <th className="r">Overtime pay<HelpHint article="pay" label="overtime pay">At the overtime rate × the multiplier. A salary is paid only the overtime counted past its threshold (184 hours, or the month's expected hours if more): everything logged plus paid leave.</HelpHint></th>
-                                                    <th className="r">To pay<HelpHint article="pay" label="to pay">What they are owed. While the month runs, a salary shows what it has earned so far, with the full month under it.</HelpHint></th><th />
+                                                    <th className="r">To pay<HelpHint article="pay" label="to pay">What they are owed. While the month runs, a salary shows what it has earned so far, with the full month under it.</HelpHint></th>
+                                                    {hasAdvances && (
+                                                        <>
+                                                            <th className="r">Advance<HelpHint article="pay" label="advance">What comes off this month for salary advances.</HelpHint></th>
+                                                            <th className="r">To hand over<HelpHint article="pay" label="to hand over">To pay less the advance: the cash to hand over.</HelpHint></th>
+                                                        </>
+                                                    )}
+                                                    <th />
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {rows.map((row) => <SalaryLine key={row.userId} row={row} running={isThisMonth} onOpen={() => setOpen(row)} />)}
+                                                {rows.map((row) => <SalaryLine key={row.userId} row={row} running={isThisMonth} advances={hasAdvances} onOpen={() => setOpen(row)} />)}
                                             </tbody>
                                             {total > 0 && sum && (
                                                 <tfoot>
                                                     <tr className="tfoot-head">
                                                         <th>Totals</th>
                                                         <th className="r">Expected</th><th className="r">In hours</th><th className="r">Made up</th><th className="r">Overtime</th><th>Short</th>
-                                                        <th colSpan={2} /><th className="r">Overtime pay</th><th className="r">To pay</th><th />
+                                                        <th colSpan={2} /><th className="r">Overtime pay</th><th className="r">To pay</th>
+                                                        {hasAdvances && <><th className="r">Advance</th><th className="r">To hand over</th></>}
+                                                        <th />
                                                     </tr>
                                                     {totals.map((t, i) => (
                                                         <tr key={t.currency} className="tfoot-row">
@@ -314,6 +342,12 @@ export default function SalariesPage() {
                                                                 {cash(isThisMonth ? t.earnedSoFar : t.total, t.currency)}
                                                                 {isThisMonth && <div className="muted" style={{ fontSize: "10.5px", fontWeight: 400 }}>of {cash(t.total, t.currency)} full month</div>}
                                                             </td>
+                                                            {hasAdvances && (
+                                                                <>
+                                                                    <td className="r mono">{t.advanceRepayment > 0 ? `−${cash(t.advanceRepayment, t.currency)}` : <span className="muted">-</span>}</td>
+                                                                    <td className="r mono" style={{ fontWeight: 700 }}>{cash(t.toHandOver, t.currency)}</td>
+                                                                </>
+                                                            )}
                                                             <td />
                                                         </tr>
                                                     ))}
@@ -337,7 +371,7 @@ export default function SalariesPage() {
     );
 }
 
-function SalaryLine({ row: r, running, onOpen }: { row: SalaryRow; running: boolean; onOpen: () => void }) {
+function SalaryLine({ row: r, running, advances, onOpen }: { row: SalaryRow; running: boolean; advances: boolean; onOpen: () => void }) {
     const ruled = r.expectedMinutes != null;
     const otLogged = r.overtimeMinutes + r.madeUpMinutes;
     const monthly = r.basis === "monthly";
@@ -395,6 +429,12 @@ function SalaryLine({ row: r, running, onOpen }: { row: SalaryRow; running: bool
                 )}
                 {r.deduction > 0 && <div className="down" style={{ fontSize: "10.5px", fontWeight: 400 }}>−{cash(r.deduction, r.currency)} {r.flagged ? "short" : "unpaid"}</div>}
             </td>
+            {advances && (
+                <>
+                    <td className="r mono nowrap">{r.advanceRepayment != null ? `−${cash(r.advanceRepayment, r.currency)}` : <span className="muted">-</span>}</td>
+                    <td className="r mono nowrap" style={{ fontWeight: 700 }}>{cash(r.toHandOver, r.currency)}</td>
+                </>
+            )}
             <td className="r"><button className="btn btn-sm" onClick={(e) => { e.stopPropagation(); onOpen(); }}>View details</button></td>
         </tr>
     );

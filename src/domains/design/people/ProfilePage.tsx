@@ -28,6 +28,7 @@ import { quarterOf, quarterStart } from "@/shared/format/periods";
 import { dayKey, fmtDate, fmtDateY, fmtDayDateY, fmtDur, fmtH, fmtNumber, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import MySalaryAdvances from "../../company/salaries/MySalaryAdvances";
 import { currentPay } from "../pay/payRules";
 import { HoursBalance, MyHoursBalance } from "../pay/HoursBalance";
 import EntryModal from "../projects/EntryModal";
@@ -172,6 +173,9 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                     )}
                 </div>
             </div>
+
+            {/* the person's own advances, never someone else's */}
+            {own && <MySalaryAdvances />}
 
             {execution ? (
                 (self || permissions.has(P.EMPLOYEE_VIEW)) && (
