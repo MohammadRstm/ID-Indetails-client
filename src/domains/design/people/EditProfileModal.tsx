@@ -10,6 +10,7 @@ import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { FieldError } from "@/shared/components/Forms/Field";
 import PhoneField from "@/shared/components/Forms/PhoneField";
+import PhotoPositioner from "@/shared/components/Forms/PhotoPositioner";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import Avatar from "@/shared/components/Identity/Avatar";
@@ -64,6 +65,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     const changeMyEmail = useChangeMyEmail();
     const emailCall = self ? changeMyEmail : changeEmail;
     const fileRef = useRef<HTMLInputElement>(null);
+    // a photo just picked, being placed by hand before it goes up
+    const [placing, setPlacing] = useState<File | null>(null);
 
     const [name, setName] = useState(`${person.firstName ?? ""} ${person.lastName ?? ""}`.trim());
     const [phone, setPhone] = useState(person.phone ?? "");
@@ -195,7 +198,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                     <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => {
                         const f = e.target.files?.[0];
                         e.target.value = "";
-                        if (f) pick(f);
+                        if (f) setPlacing(f);
                     }} />
                 </div>
                 <div className="grow stack">
@@ -298,6 +301,9 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                     )}
                 </div>
             </div>
+            {placing && (
+                <PhotoPositioner file={placing} onCancel={() => setPlacing(null)} onDone={(photo) => { setPlacing(null); void pick(photo); }} />
+            )}
         </Modal>
     );
 }

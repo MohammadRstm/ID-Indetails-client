@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -294,6 +294,54 @@ describe("Someone's profile", () => {
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
         expect(within(dialog).getByText("Choose the department they work in.")).toBeInTheDocument();
         expect(updates).toEqual([]);
+    });
+
+    it("lets the person place a new photo before it goes up, and sets the square they placed", async () => {
+        // jsdom opens no pictures and draws nothing: a wide photo, and a canvas that records what is cut from it
+        const draw = vi.fn();
+        vi.stubGlobal("createImageBitmap", vi.fn(async () => ({ width: 2000, height: 1000, close: () => {} })));
+        URL.createObjectURL = vi.fn(() => "blob:photo");
+        URL.revokeObjectURL = vi.fn();
+        vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({ drawImage: draw } as never);
+        vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((done) => done(new Blob(["square"], { type: "image/webp" })));
+        const uploads: string[] = [];
+        const photos: unknown[] = [];
+        try {
+            renderApp("/design/people/9", nadia,
+                // (the body isn't read here: jsdom's FormData isn't one msw can always parse; the unit test of the window checks the file)
+                http.post("/api/files", ({ request }) => {
+                    uploads.push(request.headers.get("content-type") ?? "");
+                    return HttpResponse.json({ id: 77, name: "photo.webp", mimeType: "image/webp", kind: "image", sizeBytes: 6, createdAt: "2026-09-30T09:00:00Z" }, { status: 201 });
+                }),
+                http.put("/api/employees/9", () => HttpResponse.json(yara)),
+                http.put("/api/employees/9/photo", async ({ request }) => { photos.push(await request.json()); return HttpResponse.json(yara); }),
+                ...peopleHandlers);
+            await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+            const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
+            fireEvent.change(dialog.querySelector("input[type=file]") as HTMLInputElement, { target: { files: [new File(["pixels"], "yara.jpg", { type: "image/jpeg" })] } });
+
+            // nothing goes up until it is placed
+            const placing = await screen.findByRole("dialog", { name: "Position your photo" });
+            expect(uploads).toEqual([]);
+            fireEvent.keyDown(within(placing).getByRole("group"), { key: "ArrowRight" });
+            await userEvent.click(within(placing).getByRole("button", { name: "Use this photo" }));
+
+            // the square cut from where it was placed goes up, not the photo as picked
+            await waitFor(() => expect(draw).toHaveBeenCalled());
+            await waitFor(() => expect(uploads).toHaveLength(1));
+            expect(uploads[0]).toMatch(/^multipart\/form-data/);
+            const [, x, y, side] = draw.mock.calls[0] as number[];
+            expect(x).toBeCloseTo(500 - 8 / 0.24, 3);
+            expect(y).toBeCloseTo(0, 3);
+            expect(side).toBeCloseTo(1000, 3);
+            await waitFor(() => expect(screen.queryByRole("dialog", { name: "Position your photo" })).not.toBeInTheDocument());
+
+            await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+            await waitFor(() => expect(photos).toEqual([{ fileId: 77 }]));
+        } finally {
+            vi.unstubAllGlobals();
+            vi.restoreAllMocks();
+        }
     });
 
     it("saves an admin's edit, and new pay from a date", async () => {
