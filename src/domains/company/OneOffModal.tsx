@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
@@ -53,7 +53,7 @@ export default function OneOffModal({ item, onClose }: { item: OneOff | null; on
             foot={
                 <>
                     <div className="grow">
-                        {error ? <span className="err"><Icon name="alert" />{errorMessage(error)}</span>
+                        {error ? <span className="err"><Icon name="alert" /><ErrorMessage error={error} /></span>
                             : "It comes out of the company's profit on that day, and never goes to a project."}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>

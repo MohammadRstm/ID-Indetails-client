@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
@@ -107,7 +107,7 @@ export default function AutoInvoiceModal({ project, onClose }: { project: Projec
             foot={
                 <>
                     <div className="grow muted" style={{ fontSize: "11.5px" }}>
-                        {create.error ? <span className="err"><Icon name="alert" />{errorMessage(create.error)}</span>
+                        {create.error ? <span className="err"><Icon name="alert" /><ErrorMessage error={create.error} /></span>
                             : sendTo ? `Each is numbered and emailed to ${sendTo} with its PDF from 9:00 on its day${rows.some((r) => r.sendOn === today) ? " - today's as soon as you schedule them" : ""}. Until then each is a draft you can still change.`
                                 : "On each one's day you're reminded to send it yourself, on WhatsApp or as a PDF."}
                     </div>

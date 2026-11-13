@@ -12,22 +12,26 @@ import { revealInStrip } from "@/shared/utils/revealInStrip";
 import AccessSettings from "./AccessSettings";
 import AccountLabelsSettings from "./AccountLabelsSettings";
 import CompanySettingsSection from "./CompanySettings";
+import ContactSection from "./ContactSection";
 import DataSettings from "./DataSettings";
 import FinanceSettings from "./FinanceSettings";
 import { NotificationSettings, ProjectSettings } from "./RuleSettings";
 import TeamsSettings from "./TeamsSettings";
 import TimeSettings from "./TimeSettings";
 
-type Section = "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "labels" | "admins" | "data";
+type Section = "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "labels" | "admins" | "data" | "contact";
 
 // Teams is the API's, not the prototype's: the prototype had them fixed.
 const SECTIONS: [Section, string, IconName][] = [
     ["general", "Company", "building"], ["time", "Time tracking", "clock"], ["finance", "Finance", "card"], ["projects", "Projects", "projects"],
     ["notifications", "Notifications", "bell"], ["teams", "Departments", "people"], ["labels", "Account labels", "list"], ["admins", "Admins & access", "shield"], ["data", "Data & export", "database"],
+    ["contact", "Contact", "mail"],
 ];
 /** The same whichever business is being looked at. */
-const COMPANY_WIDE: Section[] = ["general", "labels", "admins"];
-/** What lets someone change each section: it shows only to them. The first one's appearance is everyone's. */
+const COMPANY_WIDE: Section[] = ["general", "labels", "admins", "contact"];
+/** What the Website area's Settings have: it is no business, so none of a business's sections. */
+const WEBSITE: Section[] = ["general", "contact"];
+/** What lets someone change each section: it shows only to them. The first one's appearance, and Contact, are everyone's. */
 const MANAGED_BY: Record<Section, PermissionCode[] | null> = {
     general: null,
     time: [P.DOMAIN_SETTINGS_MANAGE, P.WORKING_TIME_MANAGE],
@@ -38,6 +42,7 @@ const MANAGED_BY: Record<Section, PermissionCode[] | null> = {
     labels: [P.COMPANY_SETTINGS_MANAGE],
     admins: [P.EMPLOYEE_INVITE, P.EMPLOYEE_INVITE_SUPER_ADMIN, P.PERMISSION_MANAGE],
     data: [P.WORK_ENTRY_VIEW_ALL],
+    contact: null,
 };
 
 type Choice = { domains: Domain[]; pick: (domain: Domain) => void };
@@ -45,6 +50,11 @@ type Choice = { domains: Domain[]; pick: (domain: Domain) => void };
 /** A business's Settings, in its own area. */
 export default function SettingsPage() {
     return <Settings domain={useDomain()} />;
+}
+
+/** The Website area's Settings: how the app looks, and Contact the developer. */
+export function WebsiteSettingsPage() {
+    return <Settings domain={null} />;
 }
 
 /**
@@ -68,14 +78,15 @@ export function CompanySettingsPage() {
 /**
  * The prototype's P.AdminSettings. Each section shows to whoever may change something in it (MANAGED_BY):
  * the domain's rules, billing and teams for its admins, the company's name, week, working time, exchange
- * rates and anyone's permissions for a super admin. The theme is everyone's. Whoever reaches the company
- * overview manages the teams there instead.
+ * rates and anyone's permissions for a super admin. The theme and Contact the developer are everyone's, so everyone
+ * has Settings. Whoever reaches the company overview manages the teams there instead. Without a business (the
+ * Website area), only the theme and Contact.
  */
-function Settings({ domain, choice }: { domain: Domain; choice?: Choice }) {
+function Settings({ domain, choice }: { domain: Domain | null; choice?: Choice }) {
     const permissions = usePermissions();
     const [params, setParams] = useSearchParams();
     const sections = SECTIONS
-        .filter(([k]) => (k !== "teams" || !permissions.has(P.COMPANY_VIEW)) && (MANAGED_BY[k] == null || permissions.hasAny(...MANAGED_BY[k])))
+        .filter(([k]) => (domain != null || WEBSITE.includes(k)) && (k !== "teams" || !permissions.has(P.COMPANY_VIEW)) && (MANAGED_BY[k] == null || permissions.hasAny(...MANAGED_BY[k])))
         // without the company's settings to change, the first section is only the theme
         .map(([k, label, icon]): [Section, string, IconName] => (k === "general" && !permissions.has(P.COMPANY_SETTINGS_MANAGE) ? [k, "Appearance", "sun"] : [k, label, icon]));
     const requested = params.get("section") as Section | null;
@@ -102,7 +113,7 @@ function Settings({ domain, choice }: { domain: Domain; choice?: Choice }) {
                     </nav>
                 </div>
                 <div>
-                    {choice && !COMPANY_WIDE.includes(section) && choice.domains.length > 1 && (
+                    {choice && domain && !COMPANY_WIDE.includes(section) && choice.domains.length > 1 && (
                         <div className="row" style={{ gap: 10, marginBottom: 12 }}>
                             <span className="u">Business</span>
                             <Segmented aria-label="Business" value={domain} onChange={choice.pick}
@@ -110,14 +121,15 @@ function Settings({ domain, choice }: { domain: Domain; choice?: Choice }) {
                         </div>
                     )}
                     {section === "general" && <CompanySettingsSection />}
-                    {section === "time" && <TimeSettings domain={domain} />}
-                    {section === "finance" && <FinanceSettings domain={domain} />}
-                    {section === "projects" && <ProjectSettings domain={domain} />}
-                    {section === "notifications" && <NotificationSettings domain={domain} />}
-                    {section === "teams" && <TeamsSettings domain={domain} />}
+                    {domain && section === "time" && <TimeSettings domain={domain} />}
+                    {domain && section === "finance" && <FinanceSettings domain={domain} />}
+                    {domain && section === "projects" && <ProjectSettings domain={domain} />}
+                    {domain && section === "notifications" && <NotificationSettings domain={domain} />}
+                    {domain && section === "teams" && <TeamsSettings domain={domain} />}
                     {section === "labels" && <AccountLabelsSettings />}
-                    {section === "admins" && <AccessSettings domain={domain} />}
-                    {section === "data" && <DataSettings domain={domain} />}
+                    {domain && section === "admins" && <AccessSettings domain={domain} />}
+                    {domain && section === "data" && <DataSettings domain={domain} />}
+                    {section === "contact" && <ContactSection />}
                 </div>
             </div>
         </div>

@@ -1,5 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 import { FieldError } from "@/shared/components/Forms/Field";
@@ -231,7 +231,7 @@ export default function MentionComposer({
             {failure != null && (
                 <div className="err" role="alert">
                     <Icon name="alert" />
-                    <span>{errorMessage(failure)} <button type="button" className="link" onClick={() => void send()}>Retry</button></span>
+                    <span><ErrorMessage error={failure} /> <button type="button" className="link" onClick={() => void send()}>Retry</button></span>
                 </div>
             )}
             <div className="dp-composer-foot">

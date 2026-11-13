@@ -10,7 +10,7 @@ import MediaLightbox from "@/shared/components/Overlays/MediaLightbox";
 import Modal from "@/shared/components/Overlays/Modal";
 import { fmtDayDateY, fmtDur, fmtRange, relTime } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import EntryComments from "../work/EntryComments";
 import { ScopeCheck, ScopeTag } from "../work/Scope";
 import { useSetEntryScope } from "../work/workApi";
@@ -77,7 +77,7 @@ export default function EntryModal({ entryId, onClose, overDrawer }: EntryModalP
                             <div className="mt">
                                 <ScopeCheck checked={scope.isPending ? !!scope.variables?.outsideScope : e.outsideScope} disabled={scope.isPending}
                                     onChange={(outsideScope) => scope.mutate({ id: e.id, outsideScope }, { onSuccess: () => void detail.refetch() })} />
-                                {scope.error != null && <div className="err"><Icon name="alert" />{errorMessage(scope.error)}</div>}
+                                {scope.error != null && <div className="err"><Icon name="alert" /><ErrorMessage error={scope.error} /></div>}
                             </div>
                         ) : e.outsideScope && <div className="mt"><ScopeTag /></div>}
                         <EntryComments entryId={e.id} author={e.person} domain="design" />

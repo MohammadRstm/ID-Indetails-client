@@ -168,17 +168,18 @@ export const gettingStarted: Article[] = [
     },
     {
         id: "report-bug",
-        title: "Reporting a problem",
+        title: "Contacting the developer",
         category: "start",
         who: everyone,
-        summary: "Choose Report a bug in the menu under your name. Say what went wrong; the page you were on is sent with it.",
-        ask: ["report a bug", "bug", "problem", "something is wrong", "error", "not working", "feedback", "contact support"],
+        summary: "Choose Contact the developer in the menu under your name, or Settings → Contact. Say what you were trying to do and what happened.",
+        ask: ["contact the developer", "report a bug", "bug", "problem", "something is wrong", "error", "not working", "feedback", "contact support", "whatsapp"],
         blocks: [
             steps(
-                step("Open the menu under your name (or your photo at the top right) and choose **Report a bug**."),
-                step("Fill in **What went wrong** and **What happened**, and the steps to make it happen again if you know them."),
+                step("Open the menu under your name (or your photo at the top right) and choose **Contact the developer**. It opens **Settings → Contact**."),
+                step("Fill in **What were you trying to do, and what happened?**, and anything else that helps, then press **Send**. Or press **WhatsApp** to message the developer instead."),
             ),
-            para("The report goes to the developer by email, with the page you were on. You can send a few an hour."),
+            para("When something goes wrong on our side, the message ends with a reference, such as (ref 4bf92f35), and a **Contact the developer** link. It opens the form with that reference and the time already in it, so the developer can find what happened."),
+            para("The message goes to the developer by email, with the page you were on, and you get a copy. Replies come to your email. You can send a few an hour."),
         ],
     },
 ];

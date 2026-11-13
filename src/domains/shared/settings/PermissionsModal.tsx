@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import type { Schemas } from "@/api/types";
 import type { PermissionCode } from "@/app/permissions/codes";
 import { NEEDS, neededBy } from "@/app/permissions/needs";
@@ -122,7 +122,7 @@ export default function PermissionsModal({ person, onClose }: { person: Target; 
             foot={
                 <>
                     <div className="grow muted" style={{ fontSize: 12 }}>
-                        {update.error ? <span className="err"><Icon name="alert" />{errorMessage(update.error)}</span>
+                        {update.error ? <span className="err"><Icon name="alert" /><ErrorMessage error={update.error} /></span>
                             : changes.length ? `${changes.length} change${changes.length === 1 ? "" : "s"} to save` : "Tick or untick a permission to change it."}
                     </div>
                     <button className="btn" onClick={onClose}>{locked || self ? "Close" : "Cancel"}</button>

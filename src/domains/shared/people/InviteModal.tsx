@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import type { Schemas } from "@/api/types";
 import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
@@ -158,7 +158,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
             sub={`They get an invitation and appear in the ${fixed === "website" ? "staff" : fixed ? "employee" : "people"} list straight away.`} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{invite.error ? <span className="err"><Icon name="alert" />{errorMessage(invite.error)}</span> : null}</div>
+                    <div className="grow">{invite.error ? <span className="err"><Icon name="alert" /><ErrorMessage error={invite.error} /></span> : null}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={invite.isPending} onClick={send}>{invite.isPending ? "Sending…" : "Send invitation"}</button>
                 </>

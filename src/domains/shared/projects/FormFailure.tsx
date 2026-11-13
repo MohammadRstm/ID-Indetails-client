@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { errorMessage, toApiError } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { toast } from "@/shared/components/Feedback/toast";
@@ -18,7 +19,7 @@ export default function FormFailure({ error, onForced }: { error: unknown; onFor
     const id = failure.code === "profit_floor" ? failure.blockedChangeId : null;
 
     if (id == null || !permissions.has(P.FINANCIAL_VIEW)) {
-        return <span className="err"><Icon name="alert" />{errorMessage(error)}</span>;
+        return <span className="err"><Icon name="alert" /><ErrorMessage error={error} /></span>;
     }
 
     if (!sure) {

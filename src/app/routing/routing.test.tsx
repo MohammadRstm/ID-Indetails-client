@@ -24,9 +24,10 @@ describe("the route table", () => {
         // Execution runs on site, not on a clock: no Employees list, Activity or Reports.
         expect(navLabels(personas.executionAdmin, "execution"))
             .toEqual(["Dashboard", "Projects", "Clients", "Daily logs", "Settings"]);
-        expect(navLabels(personas.designEmployee, "design")).toEqual(["Projects", "My work", "Meetings", "Time off", "Profile"]);
+        // everyone has Settings: the theme and Contact the developer
+        expect(navLabels(personas.designEmployee, "design")).toEqual(["Projects", "My work", "Meetings", "Time off", "Profile", "Settings"]);
         // site staff: what happens on their sites, and the sites themselves
-        expect(navLabels(personas.executionEmployee, "execution")).toEqual(["Daily log", "My sites", "Profile"]);
+        expect(navLabels(personas.executionEmployee, "execution")).toEqual(["Daily log", "My sites", "Profile", "Settings"]);
         expect(navLabels(personas.superAdmin, "execution"))
             .toEqual(["Dashboard", "Pocket money", "Projects", "Clients", "Daily logs", "Financials", "Settings"]);
         expect(companyNav(permissionsOf(personas.superAdmin)).map((i) => i.label))
@@ -34,21 +35,21 @@ describe("the route table", () => {
         expect(companyNav(permissionsOf(personas.designAdmin))).toEqual([]);
         // the website is an area of its own: its pages, and its staff for whoever may see people
         const website = (u: typeof personas.superAdmin) => websiteNav(permissionsOf(u)).map((i) => i.label);
-        expect(website(personas.superAdmin)).toEqual(["Projects", "Analytics", "Services", "Locations", "Contact & social", "Site", "Staff"]);
-        expect(website(personas.websiteAdmin)).toEqual(["Projects", "Analytics", "Services", "Locations", "Contact & social", "Site"]);
+        expect(website(personas.superAdmin)).toEqual(["Projects", "Analytics", "Services", "Locations", "Contact & social", "Site", "Staff", "Settings"]);
+        expect(website(personas.websiteAdmin)).toEqual(["Projects", "Analytics", "Services", "Locations", "Contact & social", "Site", "Settings"]);
         expect(website(personas.designAdmin)).toEqual([]);
         // the visitors are a permission of their own: editing the website doesn't show them, and seeing them alone opens only them
         expect(website(withPermissions(personas.designAdmin, { grant: [P.WEBSITE_MANAGE] })))
-            .toEqual(["Projects", "Services", "Locations", "Contact & social", "Site", "Staff"]);
-        expect(website(withPermissions(personas.designAdmin, { grant: [P.WEBSITE_ANALYTICS_VIEW] }))).toEqual(["Analytics", "Staff"]);
+            .toEqual(["Projects", "Services", "Locations", "Contact & social", "Site", "Staff", "Settings"]);
+        expect(website(withPermissions(personas.designAdmin, { grant: [P.WEBSITE_ANALYTICS_VIEW] }))).toEqual(["Analytics", "Staff", "Settings"]);
     });
 
     it("lists the BOQs page for whoever writes BOQ drafts but doesn't manage the pricing, in their own business", () => {
         const designAuthor = withPermissions(personas.designEmployee, { grant: [P.BOQ_CREATE] });
-        expect(navLabels(designAuthor, "design")).toEqual(["Projects", "My work", "Meetings", "Time off", "BOQs", "Profile"]);
+        expect(navLabels(designAuthor, "design")).toEqual(["Projects", "My work", "Meetings", "Time off", "BOQs", "Profile", "Settings"]);
         // boq:create no longer opens Execution
         expect(permissionsOf(designAuthor).canSeeDomain("execution")).toBe(false);
-        expect(navLabels(withPermissions(personas.executionEmployee, { grant: [P.BOQ_CREATE] }), "execution")).toEqual(["Daily log", "My sites", "BOQs", "Profile"]);
+        expect(navLabels(withPermissions(personas.executionEmployee, { grant: [P.BOQ_CREATE] }), "execution")).toEqual(["Daily log", "My sites", "BOQs", "Profile", "Settings"]);
         // without it, and for the super admin who manages the pricing from the site's page, there is none
         expect(navLabels(personas.designEmployee, "design")).not.toContain("BOQs");
         expect(navLabels(personas.executionEmployee, "execution")).not.toContain("BOQs");
@@ -68,7 +69,7 @@ describe("the route table", () => {
         expect(navLabels(noActivity, "design")).not.toContain("Activity");
         // an employee given activity:view gets the page, and loses it again when it is taken back
         const watcher = withPermissions(personas.designEmployee, { grant: [P.ACTIVITY_VIEW] });
-        expect(navLabels(watcher, "design")).toEqual(["Projects", "My work", "Meetings", "Time off", "Activity", "Profile"]);
+        expect(navLabels(watcher, "design")).toEqual(["Projects", "My work", "Meetings", "Time off", "Activity", "Profile", "Settings"]);
         expect(navLabels(withPermissions(watcher, { revoke: [P.ACTIVITY_VIEW] }), "design")).not.toContain("Activity");
         expect(navLabels(withPermissions(personas.executionEmployee, { grant: [P.ACTIVITY_VIEW] }), "execution")).not.toContain("Activity");
     });
@@ -76,10 +77,9 @@ describe("the route table", () => {
     it("gives an employee each admin page as soon as a permission opens it, and takes it away again", () => {
         const employee = personas.designEmployee;
         const plus = (...grant: (typeof P)[keyof typeof P][]) => navLabels(withPermissions(employee, { grant }), "design");
-        expect(plus(P.REPORT_VIEW)).toEqual(["Overview", "Projects", "My work", "Meetings", "Time off", "Reports", "Profile"]);
+        expect(plus(P.REPORT_VIEW)).toEqual(["Overview", "Projects", "My work", "Meetings", "Time off", "Reports", "Profile", "Settings"]);
         expect(plus(P.CLIENT_VIEW)).toContain("Clients");
         expect(plus(P.FINANCIAL_VIEW)).toContain("Financials");
-        expect(plus(P.TEAM_MANAGE)).toContain("Settings");
         // the Employees list, with everyone's hours once they may see them
         expect(plus(P.EMPLOYEE_VIEW)).toContain("Employees");
         expect(canOpen(permissionsOf(withPermissions(employee, { grant: [P.EMPLOYEE_VIEW] })), "design", "people/12")).toBe(true);

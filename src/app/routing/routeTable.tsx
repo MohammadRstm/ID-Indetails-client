@@ -43,6 +43,7 @@ import {
     WebsiteLocationsPage,
     WebsiteProjectsPage,
     WebsiteServicesPage,
+    WebsiteSettingsPage,
     WebsiteSitePage,
     WebsiteStaffPage,
 } from "./pages";
@@ -95,19 +96,6 @@ const designOnly = (rule: AccessRule): AccessRule => (ctx) => ctx.domain === "de
 const executionOnly = (rule: AccessRule): AccessRule => (ctx) => ctx.domain === "execution" && rule(ctx);
 /** Writes BOQ drafts but doesn't manage pricing: whoever manages it uses the site's own page. */
 const boqAuthor: AccessRule = ({ p }) => p.has(P.BOQ_CREATE) && !p.has(P.PROJECT_PRICING_MANAGE);
-
-/** Anything a settings page lets someone manage. */
-const SETTINGS_CODES = [
-    P.DOMAIN_SETTINGS_MANAGE,
-    P.BILLING_SETTINGS_MANAGE,
-    P.EXCHANGE_RATE_MANAGE,
-    P.COMPANY_SETTINGS_MANAGE,
-    P.WORKING_TIME_MANAGE,
-    P.TEAM_MANAGE,
-    P.EMPLOYEE_INVITE,
-    P.EMPLOYEE_INVITE_SUPER_ADMIN,
-    P.PERMISSION_MANAGE,
-] as const;
 
 export const domainRoutes: DomainRoute[] = [
     {
@@ -224,9 +212,10 @@ export const domainRoutes: DomainRoute[] = [
         employee: { element: <MyProfilePage />, access: signedIn },
     },
     {
+        // everyone's: the theme and Contact the developer, and each section someone may change
         path: "settings",
         nav: { label: "Settings", icon: "settings", section: "workspace" },
-        admin: { element: <SettingsPage />, access: any(...SETTINGS_CODES) },
+        admin: { element: <SettingsPage />, access: signedIn },
     },
     {
         path: "notifications",
@@ -264,7 +253,7 @@ export const companyRoutes: CompanyRoute[] = [
     // the assistant's cost and budget: super admins only, everyone else sees just their question allowance
     { path: "proton", nav: { label: "Proton", icon: "compass", section: "workspace" }, element: <ProtonBudgetPage />, access: (p) => p.has(P.PROTON_BUDGET_MANAGE) },
     // the company's own settings and each business's, for whoever reaches the company area
-    { path: "settings", nav: { label: "Settings", icon: "settings", section: "workspace" }, element: <CompanySettingsPage />, access: (p) => p.has(P.COMPANY_VIEW) && p.hasAny(...SETTINGS_CODES) },
+    { path: "settings", nav: { label: "Settings", icon: "settings", section: "workspace" }, element: <CompanySettingsPage />, access: (p) => p.has(P.COMPANY_VIEW) },
     { path: "profile", element: <CompanyProfilePage />, access: () => true },
     { path: "notifications", element: <NotificationsPage />, access: () => true },
     { path: "messages", element: <MessagesPage />, access: () => true },
@@ -288,6 +277,8 @@ export const websiteRoutes: CompanyRoute[] = [
     { path: "site", nav: { label: "Site", icon: "browser" }, element: <WebsiteSitePage />, access: website },
     // the website's own staff, for whoever may see people
     { path: "staff", nav: { label: "Staff", icon: "people", section: "workspace" }, element: <WebsiteStaffPage />, access: (p) => p.has(P.EMPLOYEE_VIEW) },
+    // the theme and Contact the developer
+    { path: "settings", nav: { label: "Settings", icon: "settings", section: "workspace" }, element: <WebsiteSettingsPage />, access: () => true },
     { path: "profile", element: <CompanyProfilePage />, access: () => true },
     { path: "notifications", element: <NotificationsPage />, access: () => true },
     { path: "messages", element: <MessagesPage />, access: () => true },

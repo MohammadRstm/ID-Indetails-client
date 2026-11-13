@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { loadFailed } from "@/api/queryState";
-import { errorMessage, toApiError } from "@/api/errors";
+import { toApiError } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import FormFailure from "@/domains/shared/projects/FormFailure";
@@ -146,7 +147,7 @@ export default function ExpenseSheet({ project, onClose }: { project: Project; o
             {noRate && (
                 <div className="banner attn" role="alert" style={{ margin: "10px 16px 0" }}>
                     <Icon name="alert" />
-                    <div className="grow">{errorMessage(add.error)}</div>
+                    <div className="grow"><ErrorMessage error={add.error} /></div>
                 </div>
             )}
             <FilledNote fields={proton.filled} />

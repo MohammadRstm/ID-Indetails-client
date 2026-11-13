@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { downloadFile } from "@/api/download";
 import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { useCurrentUser } from "@/app/session/useSession";
 import { useCompanySettings } from "@/app/shell/shellQueries";
 import { toast } from "@/shared/components/Feedback/toast";
@@ -73,7 +74,7 @@ export default function SendInvoiceModal({ invoice: inv, onClose }: { invoice: I
             foot={
                 <>
                     <div className="grow muted" style={{ fontSize: "11.5px" }}>
-                        {send.error ? <span className="err"><Icon name="alert" />{errorMessage(send.error)}</span>
+                        {send.error ? <span className="err"><Icon name="alert" /><ErrorMessage error={send.error} /></span>
                             : first ? "Sending issues the invoice and starts the payment clock." : "Already sent - this records another delivery."}
                     </div>
                     <button className="btn" disabled={send.isPending} onClick={onClose}>Cancel</button>

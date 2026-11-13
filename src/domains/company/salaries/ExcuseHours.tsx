@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { FieldError } from "@/shared/components/Forms/Field";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import NumberField from "@/shared/components/Forms/NumberField";
@@ -197,7 +198,7 @@ export default function ExcuseHours({ detail, month, canExcuse }: ExcuseHoursPro
                         </div>
                     )}
                     {unpaid && <div className="hint mt-s">Unpaid time comes off the salary at its hourly rate; an unpaid day off costs the full paid day, break included.</div>}
-                    {add.isError && <div className="err mt-s" role="alert"><Icon name="alert" />{errorMessage(add.error)}</div>}
+                    {add.isError && <div className="err mt-s" role="alert"><Icon name="alert" /><ErrorMessage error={add.error} /></div>}
                 </div>
             ))}
         </div>

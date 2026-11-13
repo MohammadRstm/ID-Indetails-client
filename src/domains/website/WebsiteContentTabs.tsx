@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { loadFailed } from "@/api/queryState";
 import Panel from "@/shared/components/Data/Panel";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -407,7 +408,7 @@ function UnderConstruction({ content }: { content: WebsiteContent }) {
                     onClose={() => setConfirming(false)}
                     foot={
                         <>
-                            <div className="grow">{set.error ? <span className="err"><Icon name="alert" />{errorMessage(set.error)}</span> : null}</div>
+                            <div className="grow">{set.error ? <span className="err"><Icon name="alert" /><ErrorMessage error={set.error} /></span> : null}</div>
                             <button className="btn" onClick={() => setConfirming(false)}>Cancel</button>
                             <button className="btn btn-primary" disabled={set.isPending} onClick={confirm}>
                                 {set.isPending ? "Saving…" : down ? "Bring it back" : "Put it under construction"}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { toast } from "@/shared/components/Feedback/toast";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import Modal from "@/shared/components/Overlays/Modal";
@@ -25,7 +25,7 @@ export default function BlockedChangeModal({ id, onClose }: { id: number; onClos
 
     const foot = c?.status === "pending" ? (
         <>
-            <div className="grow">{failure ? <span className="err"><Icon name="alert" />{errorMessage(failure)}</span> : sure ? "It will take the project to zero profit or below." : null}</div>
+            <div className="grow">{failure ? <span className="err"><Icon name="alert" /><ErrorMessage error={failure} /></span> : sure ? "It will take the project to zero profit or below." : null}</div>
             {sure ? (
                 <>
                     <button className="btn" disabled={busy} onClick={() => setSure(false)}>Cancel</button>

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { errorMessage, toApiError } from "@/api/errors";
+import { toApiError } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import AccountLabelSelect from "@/domains/shared/accountLabels/AccountLabelSelect";
@@ -63,7 +64,7 @@ function ApplyModal({ payment, onClose }: { payment: Payment; onClose: () => voi
         <Modal title="Apply to an invoice" sub={`${money.fmt(payment.amountUsd)} received ${fmtDate(payment.receivedOn)} · ${payment.project.title}`} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{apply.error ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(apply.error)}</span> : null}</div>
+                    <div className="grow">{apply.error ? <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={apply.error} /></span> : null}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={!chosen || apply.isPending} onClick={go}>Apply</button>
                 </>
@@ -109,7 +110,7 @@ function LabelModal({ payment, onClose }: { payment: Payment; onClose: () => voi
         <Modal title="Label payment" sub={`${money.fmt(payment.amountUsd)} received ${fmtDate(payment.receivedOn)} · ${payment.project.title}`} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{set.error && !labelError ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(set.error)}</span> : null}</div>
+                    <div className="grow">{set.error && !labelError ? <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={set.error} /></span> : null}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={set.isPending} onClick={go}>Save</button>
                 </>
@@ -141,7 +142,7 @@ function VoidModal({ payment, onClose }: { payment: Payment; onClose: () => void
         <Modal title="Void payment" sub={`${money.fmt(payment.amountUsd)} received ${fmtDate(payment.receivedOn)} · ${payment.project.title}`} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{voidIt.error ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(voidIt.error)}</span> : null}</div>
+                    <div className="grow">{voidIt.error ? <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={voidIt.error} /></span> : null}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-danger" disabled={voidIt.isPending} onClick={go}>Void payment</button>
                 </>

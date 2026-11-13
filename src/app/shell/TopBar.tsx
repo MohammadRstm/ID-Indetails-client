@@ -1,22 +1,21 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { openContact } from "@/app/contact/contact";
 import { P } from "@/app/permissions/codes";
 import { accessLabel } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
 import ThemeToggle from "@/shared/components/Buttons/ThemeToggle";
 import Avatar from "@/shared/components/Identity/Avatar";
-import { registerOpener } from "@/shared/components/Overlays/assistantLayer";
 import Popover from "@/shared/components/Overlays/Popover";
 import MessagesDropdown from "@/domains/shared/messages/MessagesDropdown";
 import NotificationBell from "@/domains/shared/notifications/NotificationBell";
 import TimerControl from "@/domains/design/work/TimerControl";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import { contactPath } from "./contactPath";
 import { myProfilePath } from "./profilePath";
 import InstallMenuItem from "@/app/pwa/InstallMenuItem";
 import PushMenuItem from "@/app/pwa/PushMenuItem";
-import ReportBugModal from "./ReportBugModal";
 import { useArrivalChime } from "@/domains/shared/messages/messageSounds";
 import { useUnreadBadges } from "./shellQueries";
 import { areaBase, type ShellArea } from "./useArea";
@@ -28,9 +27,6 @@ export default function TopBar({ area, onMenu, onSearch, sideShown = true }: Top
     const permissions = usePermissions();
     const user = useCurrentUser();
     const { signOut } = useSession();
-    const [reporting, setReporting] = useState(false);
-    // Proton can open the bug report when the person asks it to
-    useEffect(() => registerOpener("report_bug", () => setReporting(true)), []);
     const badges = useUnreadBadges();
     // a message arriving anywhere chimes once, wherever the person is in the app
     useArrivalChime(badges.messages?.unread);
@@ -38,6 +34,12 @@ export default function TopBar({ area, onMenu, onSearch, sideShown = true }: Top
     const me = { name: fullName(user), photoFileId: user.photoFileId, online: true };
     const unreadMessages = badges.messages?.unread ?? 0;
     const profilePath = myProfilePath(permissions, area, user.id);
+    // Settings → Contact where the person has Settings, otherwise the Contact window
+    const contact = () => {
+        const path = contactPath(permissions, area);
+        if (path) navigate(path);
+        else openContact();
+    };
 
     return (
         <header className="top">
@@ -111,8 +113,8 @@ export default function TopBar({ area, onMenu, onSearch, sideShown = true }: Top
                             <button className="pop-item" onClick={() => { close(); navigate(`${base}/help`); }}>
                                 <Icon name="help" />Help
                             </button>
-                            <button className="pop-item" onClick={() => { close(); setReporting(true); }}>
-                                <Icon name="flag" />Report a bug
+                            <button className="pop-item" onClick={() => { close(); contact(); }}>
+                                <Icon name="mail" />Contact the developer
                             </button>
                             <PushMenuItem close={close} />
                             <InstallMenuItem close={close} />
@@ -124,7 +126,6 @@ export default function TopBar({ area, onMenu, onSearch, sideShown = true }: Top
                     )}
                 </Popover>
             </div>
-            {reporting && <ReportBugModal onClose={() => setReporting(false)} />}
         </header>
     );
 }

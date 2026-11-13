@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -93,7 +93,7 @@ function TeamRow({ domain, team, canEdit, onDone }: { domain: Domain; team: Team
                         <p>{plural(team!.memberCount, "person", "people")}</p>
                     </>
                 )}
-                {error != null && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(error)}</div>}
+                {error != null && <div className="err mt-s" style={{ fontSize: 12 }}><Icon name="alert" /><ErrorMessage error={error} /></div>}
             </div>
             {canEdit && (editing ? (
                 <div className="row" style={{ gap: 6 }}>

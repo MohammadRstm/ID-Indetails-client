@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { useNavigate } from "react-router";
+import { openContact } from "@/app/contact/contact";
 import { P } from "@/app/permissions/codes";
 import { accessLabel } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -13,10 +13,10 @@ import { tip } from "@/shared/components/Overlays/tip";
 import Icon from "@/shared/icons/Icon";
 import { openLogWork } from "@/domains/design/work/logWorkStore";
 import { cx } from "@/shared/utils/cx";
+import { contactPath } from "./contactPath";
 import { myProfilePath } from "./profilePath";
 import InstallMenuItem from "@/app/pwa/InstallMenuItem";
 import PushMenuItem from "@/app/pwa/PushMenuItem";
-import ReportBugModal from "./ReportBugModal";
 import { useCompanySettings, useNavCounts } from "./shellQueries";
 import { areaBase, type ShellArea } from "./useArea";
 
@@ -39,7 +39,6 @@ export default function Sidebar({ area }: { area: ShellArea }) {
     const permissions = usePermissions();
     const user = useCurrentUser();
     const { signOut } = useSession();
-    const [reporting, setReporting] = useState(false);
     const company = useCompanySettings();
     const domain = area.kind === "domain" ? area.domain : null;
     const counts = useNavCounts(domain, permissions);
@@ -56,6 +55,12 @@ export default function Sidebar({ area }: { area: ShellArea }) {
     const peopleItem = items.find((item) => item.key === "people");
     const profilePath = myProfilePath(permissions, area, user.id);
     const settingsItem = workspace.find((item) => item.key === "settings");
+    // Settings → Contact where the person has Settings, otherwise the Contact window
+    const contact = () => {
+        const path = contactPath(permissions, area);
+        if (path) navigate(path);
+        else openContact();
+    };
 
     const countOf = (item: NavItem) => (item.count ? counts[item.count] : undefined);
     const renderItem = (item: NavItem) => {
@@ -155,8 +160,8 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                             <button className="pop-item" onClick={() => { close(); navigate(`${base}/help`); }}>
                                 <Icon name="help" />Help
                             </button>
-                            <button className="pop-item" onClick={() => { close(); setReporting(true); }}>
-                                <Icon name="flag" />Report a bug
+                            <button className="pop-item" onClick={() => { close(); contact(); }}>
+                                <Icon name="mail" />Contact the developer
                             </button>
                             <PushMenuItem close={close} />
                             <InstallMenuItem close={close} />
@@ -168,7 +173,6 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                     )}
                 </Popover>
             </div>
-            {reporting && <ReportBugModal onClose={() => setReporting(false)} />}
         </aside>
     );
 }

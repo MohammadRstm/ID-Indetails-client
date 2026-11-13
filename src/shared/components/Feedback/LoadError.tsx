@@ -1,5 +1,5 @@
-import { errorMessage } from "@/api/errors";
 import Icon from "@/shared/icons/Icon";
+import { ErrorMessage } from "./ErrorText";
 
 type LoadErrorProps = {
     error: unknown;
@@ -19,7 +19,7 @@ export default function LoadError({ error, retry, what }: LoadErrorProps) {
             <Icon name="alert" />
             <span>
                 {what ? `Couldn't load ${what}. ` : ""}
-                {errorMessage(error)}
+                <ErrorMessage error={error} />
                 {retry && (
                     <>
                         {" "}

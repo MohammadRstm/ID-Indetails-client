@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { loadFailed } from "@/api/queryState";
 import Pager from "@/shared/components/Data-Tables/Pager";
 import Empty from "@/shared/components/Feedback/Empty";
@@ -72,7 +73,7 @@ export function WriteSiteLog({ sites, fixedSiteId }: { sites: Option[]; fixedSit
                     <div className="hint">Each log is kept on its own, with the time it was written. You can change it until the end of the day.</div>
                 </div>
                 <div className="row mt" style={{ gap: 10 }}>
-                    <span className="grow">{write.error != null && <span className="err"><Icon name="alert" />{errorMessage(write.error)}</span>}</span>
+                    <span className="grow">{write.error != null && <span className="err"><Icon name="alert" /><ErrorMessage error={write.error} /></span>}</span>
                     <button type="submit" className="btn btn-primary" disabled={write.isPending || voice.uploading}><Icon name="plus" />{write.isPending || voice.uploading ? "Saving…" : "Save log"}</button>
                 </div>
             </div>

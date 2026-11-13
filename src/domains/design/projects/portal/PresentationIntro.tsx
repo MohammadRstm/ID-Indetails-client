@@ -3,6 +3,7 @@ import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillChange, useProtonForm } from "@/domains/shared/proton/formFill";
 import { z } from "zod";
 import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import Panel from "@/shared/components/Data/Panel";
 import { toast } from "@/shared/components/Feedback/toast";
 import Field, { FieldError } from "@/shared/components/Forms/Field";
@@ -168,7 +169,7 @@ function HeroPicker({ projectId, pictures, heroFiles, onClose }: PickerProps) {
         <Modal title="Add a hero image" sub="Any JPG, PNG or WebP image chosen for the client. It goes after the others." size="md" onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{add.error ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(add.error)}</span> : null}</div>
+                    <div className="grow">{add.error ? <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={add.error} /></span> : null}</div>
                     <button type="button" className="btn" onClick={onClose}>Cancel</button>
                 </>
             }>
