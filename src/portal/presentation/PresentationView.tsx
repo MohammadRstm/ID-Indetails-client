@@ -10,7 +10,7 @@ import {
     isMedia, runFor, runOf, SECTION_LABEL, SECTIONS, sectionAnchor,
     type GetLink, type MediaItem, type MediaRun, type PortalPresentation, type PortalSection, type PresentationComments, type PresentationItem,
 } from "./presentationTypes";
-import { usePhone } from "./usePhone";
+import { useIsPhone } from "@/shared/hooks/useIsPhone";
 
 type Props = {
     presentation: PortalPresentation;
@@ -33,7 +33,7 @@ type Props = {
  * one at a time.
  */
 export default function PresentationView({ presentation, getLink, banner, onLinkExpired, comments }: Props) {
-    const phone = usePhone();
+    const phone = useIsPhone();
     const reducedMotion = useReducedMotion();
     const root = useRef<HTMLDivElement>(null);
     // when the page last asked for the presentation again because a link didn't load

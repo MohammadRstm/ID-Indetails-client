@@ -1,12 +1,9 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Outlet, useLocation } from "react-router";
 import ContactHost from "@/app/contact/ContactHost";
 import { sendFromStaff } from "@/app/contact/contactApi";
 import CrashScreen from "@/app/pages/CrashScreen";
-import { load } from "@/app/routing/pages";
-import { errorMessage } from "@/api/errors";
-import { toast } from "@/shared/components/Feedback/toast";
 import Skeleton, { SkeletonKpis, SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { cx } from "@/shared/utils/cx";
 import { LogWorkHost } from "@/domains/design/work/LogWorkHost";
@@ -17,14 +14,13 @@ import PushBanner from "@/app/pwa/PushBanner";
 import { useAppBadge, usePushSync } from "@/app/pwa/push";
 import { useCurrentUser } from "@/app/session/useSession";
 import UpdateBanner from "@/app/pwa/UpdateBanner";
+import BottomNav from "./BottomNav";
 import ContactBanner from "./ContactBanner";
+import SearchPalette from "./SearchPalette";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import { formatsRemembered, useCompanySettings, useUnreadBadges } from "./shellQueries";
 import { useArea } from "./useArea";
-
-// opened with ⌘K, so it loads then
-const CommandPalette = lazy(load(() => import("./CommandPalette")));
 
 const SIDE_KEY = "hourline.sidebar";
 
@@ -120,13 +116,10 @@ export default function AppShell() {
                         {formatsKnown ? <Outlet /> : <PageLoading />}
                     </Suspense>
                 </ErrorBoundary>
+                {/* phones: the bar and the room it takes under the page */}
+                <BottomNav area={area} onSearch={() => setPalette(true)} />
             </div>
-            {palette && (
-                // a failure closes the palette only, not the whole app around it
-                <ErrorBoundary fallback={null} onError={(e) => { setPalette(false); toast({ text: "Search didn't open", sub: errorMessage(e), icon: "alert" }); }}>
-                    <Suspense fallback={null}><CommandPalette area={area} onClose={() => setPalette(false)} /></Suspense>
-                </ErrorBoundary>
-            )}
+            {palette && <SearchPalette area={area} onClose={() => setPalette(false)} />}
             <LogWorkHost />
             <ContactHost send={sendFromStaff} proton />
             <InstallSteps />

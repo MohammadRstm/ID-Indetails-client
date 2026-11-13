@@ -11,6 +11,16 @@ table { line-height: normal; font-weight: normal; }
    of reach. It opens upwards instead. */
 .side-foot .pop { top: auto; bottom: calc(100% + 6px); }
 
+/* The top bar's height is written once, here, for everything that sits under it or beside it (the page's own height in
+   Messages and Proton, the toasts, the anchors a link scrolls to, and the Proton blob, which measures it). A phone's
+   header is taller and pads for the notch; its bottom bar is the other way up (0 where there is none). */
+:root { --top-h: 54px; --bottom-nav-h: 0px; }
+.top { height: var(--top-h); }
+.msg-full-page { height: calc(100vh - var(--top-h)); }
+.toasts { top: calc(var(--top-h) + 12px); }
+@media (max-width: 520px) { .toasts { top: calc(var(--top-h) + 8px); } }
+.pg-anchor { scroll-margin-top: calc(var(--top-h) + 22px); }
+
 /* The menu button shows at every width (the prototype's was phone-only): on a wider screen it hides the sidebar,
    giving the page the whole width, and shows it again. */
 .hamburger { display: grid; }
@@ -138,7 +148,10 @@ table { line-height: normal; font-weight: normal; }
    on narrow screens). A phone has room for one at a time, as in WhatsApp: the chats, or the open chat with a way back. */
 .msg-back { display: none; }
 @media (max-width: 640px) {
-  .msg-full-page { height: calc(100dvh - 54px); }
+  /* the list leaves room for the bottom bar (the page's spacer is under it); an open chat has no bar, and its composer
+     keeps clear of the home indicator */
+  .msg-full-page { height: calc(100dvh - var(--top-h) - var(--bottom-nav-h)); }
+  .msg-full-page.reading { height: calc(100dvh - var(--top-h)); padding-bottom: env(safe-area-inset-bottom, 0px); }
   .msg-sidebar { width: 100%; border-right: none; }
   .msg-page.reading .msg-sidebar, .msg-page:not(.reading) .msg-thread { display: none; }
   .msg-back { display: inline-grid; margin-left: -6px; }
@@ -381,7 +394,7 @@ table { line-height: normal; font-weight: normal; }
 .proton-chart-figure { margin: 0; }
 
 /* Proton's own page: the saved chats beside the chat, which reads in a centred column */
-.proton-page { display: grid; grid-template-columns: 280px 1fr; height: calc(100vh - 54px); min-height: 0; }
+.proton-page { display: grid; grid-template-columns: 280px 1fr; height: calc(100vh - var(--top-h)); min-height: 0; }
 .proton-page-list { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); background: var(--surface); }
 .proton-page-list-head { display: flex; flex-direction: column; gap: 8px; padding: 14px; border-bottom: 1px solid var(--line); }
 .proton-page-chats { flex: 1; overflow-y: auto; padding: 6px; }
@@ -402,8 +415,8 @@ table { line-height: normal; font-weight: normal; }
 .proton-page-foot .proton-voice { border-top: 0; padding: 0 0 8px; background: none; }
 .proton-locked { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 13px; }
 @media (max-width: 760px) {
-  .proton-page { grid-template-columns: 1fr; height: calc(100dvh - 54px); }
-  .proton-page-list { position: fixed; z-index: 60; top: 54px; bottom: 0; left: 0; width: min(320px, 86vw); transform: translateX(-102%);
+  .proton-page { grid-template-columns: 1fr; height: calc(100dvh - var(--top-h)); }
+  .proton-page-list { position: fixed; z-index: 60; top: var(--top-h); bottom: 0; left: 0; width: min(320px, 86vw); transform: translateX(-102%);
     transition: transform .18s ease; box-shadow: var(--shadow-3); }
   .proton-page-list.open { transform: none; }
   .proton-page-list-toggle { display: inline-flex; }
@@ -896,3 +909,47 @@ button.pc-comments { border: 0; cursor: pointer; }
 .voice-recording .voice-clock { font-size: 13px; font-variant-numeric: tabular-nums; }
 @keyframes voice-pulse { 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { .voice-dot { animation: none; } }
+
+/* ---------------- the phone's header and bottom bar ----------------
+   At 640px and below (useIsPhone, the width the layout above already switches at). The header is 60px of 44px buttons
+   with the page's name beside the menu; Search, Messages and the bell are in the bar. Both pad for the notch, the status
+   bar and the home indicator (index.html's viewport-fit=cover lets the page reach under them). The bar is under the
+   drawer's dimming (39), so the menu, windows, Proton (108) and the toasts all draw over it. */
+@media (max-width: 640px) {
+  :root {
+    --top-h: calc(60px + env(safe-area-inset-top, 0px));
+    --bottom-nav-h: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+  .top { gap: 2px; padding: env(safe-area-inset-top, 0px) calc(6px + env(safe-area-inset-right, 0px)) 0 calc(6px + env(safe-area-inset-left, 0px)); }
+  .top > .icon-btn, .top-actions > .icon-btn, .top-actions > .pop-host > .icon-btn { width: 44px; height: 44px; }
+  .top .icon-btn .ic { width: 22px; height: 22px; }
+  .top-title { flex: 1 1 auto; min-width: 0; padding: 0 4px; font-size: 17px; font-weight: 650; letter-spacing: -.01em; line-height: 1.2; }
+  .top-actions { margin-left: 0; }
+  .launcher { min-height: calc(100dvh - var(--bottom-nav-h)); }
+
+  /* the client portal has no bar: its header only grows, so the bell and Sign out are 44px to tap and the name and the
+     count are easy to read */
+  .portal-top { padding-top: calc(10px + env(safe-area-inset-top, 0px)); gap: 8px; }
+  .portal-top .row { gap: 6px; }
+  .portal-top .logo-name { font-size: 16px; }
+  .portal-top .icon-btn { width: 44px; height: 44px; }
+  .portal-top .icon-btn .ic { width: 22px; height: 22px; }
+  .portal-top .btn-sm { min-height: 44px; padding-inline: 14px; }
+  .portal-top .pn-count { top: 3px; right: 1px; min-width: 20px; height: 20px; padding: 0 5px; font-size: 12px; line-height: 20px; }
+}
+@media (max-width: 480px) {
+  .portal-top .btn-sm { width: 44px; padding: 0; }
+  .portal-btn-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+.bottom-nav-spacer { flex: none; height: var(--bottom-nav-h); }
+.bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 34; display: flex; height: var(--bottom-nav-h); box-sizing: border-box;
+  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  background: var(--surface); border-top: 1px solid var(--line); }
+.bn-tab { flex: 1 1 0; min-width: 0; min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  padding: 0 2px; border: 0; background: none; color: var(--ink-3); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; }
+.bn-tab.on { color: var(--accent); }
+.bn-ic { position: relative; display: grid; place-items: center; }
+.bn-ic .ic { width: 24px; height: 24px; }
+.bn-tab .msg-badge { top: -5px; right: -10px; }
+.bn-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.1; }

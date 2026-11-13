@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { AREAS } from "@/app/routing/areas";
 import { useCurrentUser } from "@/app/session/useSession";
+import { useHideBottomNav } from "@/app/shell/bottomNavState";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
@@ -42,6 +43,8 @@ export default function MessagesPage() {
     const [search, setSearch] = useState("");
     // on a phone: the open chat rather than the list, once one is picked (or the link names one)
     const [reading, setReading] = useState(() => chatFrom(params) != null);
+    // the open chat has the whole screen: the phone's bottom bar steps aside
+    useHideBottomNav(reading);
     const conversations = useConversations();
     const contacts = useContacts();
     const presence = usePresence();
@@ -78,7 +81,7 @@ export default function MessagesPage() {
     const count = (c: Conversation | undefined) => (c && c.unread > 0 ? <span className={cx("msg-count", c.unreadMention && "mention")}>{c.unreadMention ? "@" : c.unread}</span> : null);
 
     return (
-        <div className="msg-full-page">
+        <div className={cx("msg-full-page", reading && "reading")}>
             <div className={cx("msg-page", reading && "reading")}>
                 <div className="msg-sidebar">
                     <div className="search" style={{ margin: "0 0 10px" }}>
