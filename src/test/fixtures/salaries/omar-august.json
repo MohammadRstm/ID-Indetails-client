@@ -9,7 +9,6 @@
       "id": 12,
       "name": "Architecture"
     },
-    "basis": "monthly",
     "amount": 2000,
     "currency": "USD",
     "hourlyRate": 11.5387,
@@ -44,8 +43,6 @@
   },
   "inProgress": false,
   "advances": [],
-  "paidBreakDays": 0,
-  "paidBreakPay": 0,
   "deductionMinutes": 10080,
   "missedDays": [
     "2026-08-03",
@@ -73,7 +70,6 @@
   "overtimeWork": [],
   "excuses": [],
   "timeOff": [],
-  "timeOffPay": 0,
   "workingDays": [
     {
       "date": "2026-08-03",

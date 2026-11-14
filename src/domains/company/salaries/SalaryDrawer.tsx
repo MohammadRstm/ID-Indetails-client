@@ -19,7 +19,6 @@ import { clickable } from "@/shared/utils/clickable";
 import { cx } from "@/shared/utils/cx";
 import { hasFixedSalary } from "@/domains/design/pay/payRules";
 import { useMyOvertime } from "@/domains/design/work/workApi";
-import { policyOn, useWorkingTime } from "@/domains/shared/settings/settingsApi";
 import { AdvanceStatusBadge } from "./AdvanceStatusBadge";
 import { amountOf, monthKey } from "./advanceMonths";
 import ExcuseHours from "./ExcuseHours";
@@ -105,7 +104,6 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, canGive
     const s = d.salary;
     const cur = s.currency;
     const ruled = s.expectedMinutes != null;
-    const monthly = s.basis === "monthly";
     const otLogged = s.overtimeMinutes + s.madeUpMinutes;
     const short = s.shortMinutes ?? 0;
     const wholeMonth = d.excuses.find((x) => x.kind === "whole_month");
@@ -145,7 +143,7 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, canGive
                     <div className="mt-s"><ExcuseHours detail={d} month={month} canExcuse={canExcuse} /></div>
                 </div>
             )}
-            {!ruled && monthly && (canExcuse || d.excuses.length > 0) && (
+            {!ruled && (canExcuse || d.excuses.length > 0) && (
                 <div className="mt">
                     <div className="u" style={{ marginBottom: 6 }}>Unpaid leave</div>
                     <ExcuseHours detail={d} month={month} canExcuse={canExcuse} />
@@ -155,16 +153,12 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, canGive
             <div className="mt">
                 <div className="u" style={{ marginBottom: 6 }}>How the pay adds up</div>
                 <div className="pay-lines">
-                    {monthly ? (
-                        <div>
-                            <span>{s.proRated
-                                ? `Monthly salary ${cash(s.amount, cur)}, pro-rated · employed ${s.workingDaysPaid} of ${s.workingDays} working days${s.leftOn ? `, left ${fmtDate(s.leftOn)}` : ""}`
-                                : "Monthly salary"}</span>
-                            <span className="mono">{cash(s.basePay + s.deduction, cur)}</span>
-                        </div>
-                    ) : (
-                        <HourlyLines detail={d} month={month} />
-                    )}
+                    <div>
+                        <span>{s.proRated
+                            ? `Monthly salary ${cash(s.amount, cur)}, pro-rated · employed ${s.workingDaysPaid} of ${s.workingDays} working days${s.leftOn ? `, left ${fmtDate(s.leftOn)}` : ""}`
+                            : "Monthly salary"}</span>
+                        <span className="mono">{cash(s.basePay + s.deduction, cur)}</span>
+                    </div>
                     {s.deduction > 0 && (
                         <div className="down">
                             <span>{wholeMonth && !wholeMonth.isPaid ? "Whole month unpaid"
@@ -184,15 +178,13 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, canGive
                     )}
                     <div className="pay-total"><span>To pay</span><span className="mono">{cash(s.total, cur)}</span></div>
                 </div>
-                {monthly && (
-                    <div className="hint mt-s">
-                        Salaried: {s.proRated ? "the salary is pro-rated by the working days they were employed" : "the salary is paid in full"}.
-                        {" "}An hour this month is {cash(s.amount, cur)} ÷ the month's paid hours = {cash(s.hourlyRate, cur, true)}/h (it prices any deduction)
-                        {s.tracksHours ? `; overtime is paid at the overtime rate set with the pay, ${cash(s.overtimeRate, cur, true)}/h (the salary ÷ 184 unless set otherwise), whatever the month` : ""}
-                        {s.overtimeThresholdMinutes != null ? `, and only for the hours counted past ${fmtH(s.overtimeThresholdMinutes)} (everything logged plus paid leave; the latest overtime is the part paid)` : ""}.
-                        {s.deduction > 0 && d.missedDays.length > 0 && !d.inProgress ? " A whole day missed costs the full paid day, its break included." : ""}
-                    </div>
-                )}
+                <div className="hint mt-s">
+                    Salaried: {s.proRated ? "the salary is pro-rated by the working days they were employed" : "the salary is paid in full"}.
+                    {" "}An hour this month is {cash(s.amount, cur)} ÷ the month's paid hours = {cash(s.hourlyRate, cur, true)}/h (it prices any deduction)
+                    {s.tracksHours ? `; overtime is paid at the overtime rate set with the pay, ${cash(s.overtimeRate, cur, true)}/h (the salary ÷ 184 unless set otherwise), whatever the month` : ""}
+                    {s.overtimeThresholdMinutes != null ? `, and only for the hours counted past ${fmtH(s.overtimeThresholdMinutes)} (everything logged plus paid leave; the latest overtime is the part paid)` : ""}.
+                    {s.deduction > 0 && d.missedDays.length > 0 && !d.inProgress ? " A whole day missed costs the full paid day, its break included." : ""}
+                </div>
             </div>
 
             {(canGive || (d.advances ?? []).length > 0) && <AdvanceSection detail={d} month={month} canGive={canGive} onGive={onGive} onAdvances={onAdvances} />}
@@ -247,44 +239,12 @@ function HoursByProject({ detail: d, multiplier, openProject }: { detail: Salary
                 </table>
             </div>
             <div className="hint mt-s">
-                {s.basis === "monthly" && s.overtimeThresholdMinutes != null
+                {s.overtimeThresholdMinutes != null
                     ? "Every hour, overtime too, is priced at the salary's rate that month: the overtime pay is for the month as a whole, so no project carries it."
-                    : s.basis === "monthly"
-                    ? `Hours are priced at the salary's rate that month, overtime at the overtime rate${multiplier !== 1 ? ` ×${multiplier}` : ""}.`
-                    : `Hours are priced at their rate on the day worked${multiplier !== 1 ? `, overtime at ×${multiplier}` : ""}.`}
-                {s.basis === "monthly"
-                    ? " The salary is paid whatever the projects, and its deductions belong to none, so these don't add up to it."
-                    : (d.paidBreakPay > 0 ? " Paid breaks belong to no project, so these don't add up to the pay." : "")}
+                    : `Hours are priced at the salary's rate that month, overtime at the overtime rate${multiplier !== 1 ? ` ×${multiplier}` : ""}.`}
+                {" The salary is paid whatever the projects, and its deductions belong to none, so these don't add up to it."}
             </div>
         </div>
-    );
-}
-
-/** Hours at the rate of the day they were worked, and the paid break of each working day worked. */
-function HourlyLines({ detail: d, month }: { detail: SalaryDetail; month: string }) {
-    const s = d.salary;
-    const cur = s.currency;
-    // the company's break that month (not the viewer's own schedule, which a salary:view holder may not have)
-    const breakMinutes = policyOn(useWorkingTime().data, `${month.slice(0, 7)}-01`)?.breakMinutes ?? 0;
-    return (
-        <>
-            <div>
-                <span>Normal hours · {fmtH(s.normalMinutes)}{s.madeUpMinutes ? ` + ${fmtH(s.madeUpMinutes)} made up from overtime` : ""} at {cash(s.hourlyRate, cur, true)}/h</span>
-                <span className="mono">{cash(s.basePay - d.paidBreakPay, cur)}</span>
-            </div>
-            {d.paidBreakPay > 0 && (
-                <div>
-                    <span>Paid breaks · {d.paidBreakDays} working day{d.paidBreakDays === 1 ? "" : "s"}{breakMinutes ? ` × ${fmtH(breakMinutes)}` : ""}</span>
-                    <span className="mono">{cash(d.paidBreakPay, cur)}</span>
-                </div>
-            )}
-            {d.timeOffPay > 0 && (
-                <div>
-                    <span>Paid time off</span>
-                    <span className="mono">{cash(d.timeOffPay, cur)}</span>
-                </div>
-            )}
-        </>
     );
 }
 

@@ -9,7 +9,6 @@
       "id": 13,
       "name": "Interiors"
     },
-    "basis": "monthly",
     "amount": 1800,
     "currency": "USD",
     "hourlyRate": 10.3848,
@@ -44,8 +43,6 @@
   },
   "inProgress": true,
   "advances": [],
-  "paidBreakDays": 0,
-  "paidBreakPay": 0,
   "deductionMinutes": 0,
   "missedDays": [
     "2026-09-15"
@@ -150,7 +147,6 @@
   ],
   "excuses": [],
   "timeOff": [],
-  "timeOffPay": 0,
   "workingDays": [
     {
       "date": "2026-09-01",

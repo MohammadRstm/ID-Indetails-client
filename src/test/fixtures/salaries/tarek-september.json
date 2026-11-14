@@ -9,7 +9,6 @@
       "id": 15,
       "name": "Site"
     },
-    "basis": "monthly",
     "amount": 1500,
     "currency": "USD",
     "hourlyRate": 8.654,
@@ -44,14 +43,11 @@
   },
   "inProgress": true,
   "advances": [],
-  "paidBreakDays": 0,
-  "paidBreakPay": 0,
   "deductionMinutes": 0,
   "missedDays": [],
   "overtimeWork": [],
   "excuses": [],
   "timeOff": [],
-  "timeOffPay": 0,
   "workingDays": [
     {
       "date": "2026-09-01",

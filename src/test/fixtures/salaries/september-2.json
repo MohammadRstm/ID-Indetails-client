@@ -14,7 +14,6 @@
           "id": 8,
           "name": "Procurement"
         },
-        "basis": "monthly",
         "amount": 1200,
         "currency": "USD",
         "hourlyRate": 6.9232,
@@ -57,7 +56,6 @@
           "id": 15,
           "name": "Site"
         },
-        "basis": "monthly",
         "amount": 1500,
         "currency": "USD",
         "hourlyRate": 8.654,
@@ -100,7 +98,6 @@
           "id": 15,
           "name": "Site"
         },
-        "basis": "monthly",
         "amount": 1300,
         "currency": "USD",
         "hourlyRate": 7.5001,
@@ -153,7 +150,6 @@
   ],
   "summary": {
     "people": 13,
-    "onMonthlySalary": 9,
     "normalMinutes": 57880,
     "overtimeMinutes": 4310,
     "madeUpMinutes": 2930,

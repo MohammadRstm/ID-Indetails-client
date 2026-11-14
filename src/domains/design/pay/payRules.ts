@@ -18,7 +18,7 @@ export const suggestedOvertimeRate = (salary: number, hours = OVERTIME_HOURS) =>
 /** Admins and super admins are paid a fixed monthly salary: they log no hours. */
 export const hasFixedSalary = (role: string) => role !== "employee";
 
-/** Execution's site staff log no hours either, so they are paid by the month too (the API refuses an hourly pay). */
+/** Execution's site staff log no hours either, so like admins they earn no overtime. */
 export const paidMonthlyOnly = (role: string, domain: string | null | undefined) => hasFixedSalary(role) || domain === "execution";
 
 /** The pay in force on a day: the latest that has started. */

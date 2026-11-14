@@ -344,7 +344,7 @@ function CostPanel({ userId, first, entries }: { userId: number; first: string; 
                                     <div className="kpi-val">{c?.hourlyRate ? <><Money short value={c.hourlyRate.amount} currency={c.hourlyRate.currency} />/h</> : "-"}</div>
                                     <div className="kpi-delta"><span>{!c?.hourlyRate ? ""
                                         : c.hourlyRate.currency !== "USD" ? `paid in ${c.hourlyRate.currency} - not converted`
-                                        : current?.basis === "monthly" ? "this month: the salary ÷ its paid hours" : "internal cost"}</span></div>
+                                        : "this month: the salary ÷ its paid hours"}</span></div>
                                 </div>
                                 <div className="kpi"><div className="kpi-label">Labour cost (all time)</div><div className="kpi-val">{show(c?.allTime)}</div></div>
                                 <div className="kpi"><div className="kpi-label">This quarter</div><div className="kpi-val">{show(c?.thisQuarter)}</div></div>
@@ -353,7 +353,7 @@ function CostPanel({ userId, first, entries }: { userId: number; first: string; 
                                 <div className="mt">
                                     <div className="u" style={{ marginBottom: 4 }}>Pay history</div>
                                     {history.map((r, i) => (
-                                        <CostRow key={r.id} label={`${money.fmt(r.amount, r.currency)} ${r.basis === "monthly" ? "a month" : "per hour"}`} meta={`from ${fmtDateY(r.effectiveFrom)}${r.note ? ` · ${r.note}` : ""}`} value={i === 0 ? "current" : ""} />
+                                        <CostRow key={r.id} label={`${money.fmt(r.amount, r.currency)} a month`} meta={`from ${fmtDateY(r.effectiveFrom)}${r.note ? ` · ${r.note}` : ""}`} value={i === 0 ? "current" : ""} />
                                     ))}
                                     <p className="hint mt-s">Hours are priced at the pay in force the day they were worked; a salary's at that month's rate, the salary ÷ the month's paid hours.</p>
                                 </div>

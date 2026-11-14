@@ -53,12 +53,12 @@ export const people: Article[] = [
         title: "Setting someone's pay",
         category: "people",
         who: has(P.EMPLOYEE_PAY_MANAGE),
-        summary: "Edit profile → pay: pick monthly or hourly, the amount, and the day it applies from. Each change is kept in their pay history.",
+        summary: "Edit profile → pay: the monthly salary and the day it applies from. Each change is kept in their pay history.",
         ask: ["set pay", "change salary", "raise", "pay rise", "hourly rate", "monthly salary", "pay history", "salary change"],
         blocks: [
             steps(
                 step("Open their profile, **Edit profile**, then the pay.", "Profile", "Edit profile"),
-                step("Pick **monthly** or **hourly**, the amount (USD or LBP), and the day it **applies from**."),
+                step("Enter the **monthly salary** (USD or LBP) and the day it **applies from**."),
             ),
             list(
                 "A change applies from its day: today or earlier, and after their last change. Pay changes are never edited, only followed by a newer one.",
@@ -83,7 +83,7 @@ export const people: Article[] = [
             list(
                 "A new role replaces their permissions with the role's, and drops any permission given or taken away by hand.",
                 "**Position** starts as their current job title: change it to the new one, or leave it as it is.",
-                "A promotion or demotion doesn't change pay: set the new salary in **Edit profile**, from the date it applies. An admin is paid a monthly salary, so someone paid by the hour gets one before becoming an admin.",
+                "A promotion or demotion doesn't change pay: set the new salary in **Edit profile**, from the date it applies.",
                 "You can only give a role whose permissions you hold yourself.",
                 "If the new role would give back a permission that was taken from them by hand, that needs the right to manage permissions.",
                 "Nobody changes their own role, and the last active super admin always stays one.",

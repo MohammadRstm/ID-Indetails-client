@@ -43,7 +43,7 @@ describe("Project pay", () => {
         expect(within(villa).getAllByRole("row").map((r) => r.classList.contains("pp-dept") ? r.textContent : null).filter(Boolean))
             .toEqual(["Interiors", "Visualisation"]);
         expect(within(rowOf(villa, "Sarah Haddad")).getByText(`salary ${money.exact(1800)}/mo`)).toBeInTheDocument();
-        expect(within(rowOf(villa, "Lina Saad")).getByText("hourly")).toBeInTheDocument();
+        expect(within(rowOf(villa, "Lina Saad")).getByText(`salary ${money.exact(2112)}/mo`)).toBeInTheDocument();
         expect(within(villa).getByText("Pay", { selector: ".pp-chip span" }).parentElement).toHaveTextContent(money.exact(280.2));
     });
 

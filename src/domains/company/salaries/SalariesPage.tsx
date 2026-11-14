@@ -231,7 +231,7 @@ export default function SalariesPage() {
                                 ? <span>of {cash(t.total, t.currency)} for the full month, as things stand</span>
                                 : <span>{cash(t.basePay, t.currency)} base · {cash(t.overtimePay, t.currency)} overtime</span>,
                         })),
-                        { key: "people", label: "Employees", value: String(sum?.people ?? 0), sub: <span>{sum?.onMonthlySalary ?? 0} on a monthly salary</span> },
+                        { key: "people", label: "Employees", value: String(sum?.people ?? 0), sub: <span>on a monthly salary</span> },
                         {
                             key: "hours", label: "Hours worked", value: fmtH((sum?.normalMinutes ?? 0) + (sum?.overtimeMinutes ?? 0)),
                             sub: <span>{fmtH(sum?.normalMinutes ?? 0)} in schedule · <span className="ot-text">{fmtH(sum?.overtimeMinutes ?? 0)} overtime</span>{sum?.madeUpMinutes ? ` · ${fmtH(sum.madeUpMinutes)} made up` : ""}</span>,
@@ -374,7 +374,6 @@ export default function SalariesPage() {
 function SalaryLine({ row: r, running, advances, onOpen }: { row: SalaryRow; running: boolean; advances: boolean; onOpen: () => void }) {
     const ruled = r.expectedMinutes != null;
     const otLogged = r.overtimeMinutes + r.madeUpMinutes;
-    const monthly = r.basis === "monthly";
     // a salary while the month runs: what it has earned so far, with the full month as things stand
     const accruing = running && r.fullMonthEstimate != null;
     const paidHours = r.hourlyRate > 0 ? Math.round(r.monthlyPay / r.hourlyRate) : 0;
@@ -404,12 +403,12 @@ function SalaryLine({ row: r, running, advances, onOpen }: { row: SalaryRow; run
             <td className="r mono nowrap">
                 {cash(r.monthlyPay, r.currency)}
                 <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }}>
-                    {hasFixedSalary(r.role) ? "fixed salary" : monthly ? "monthly salary" : `hourly · ${paidHours}h month`}
+                    {hasFixedSalary(r.role) ? "fixed salary" : "monthly salary"}
                 </div>
             </td>
-            <td className="r mono nowrap" title={monthly ? `${cash(r.monthlyPay, r.currency)} ÷ ${paidHours} paid hours this month` : undefined}>
+            <td className="r mono nowrap" title={`${cash(r.monthlyPay, r.currency)} ÷ ${paidHours} paid hours this month`}>
                 {cash(r.hourlyRate, r.currency, true)}/h
-                <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }}>{monthly ? `÷ ${paidHours}h this month` : "their rate"}</div>
+                <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }}>÷ {paidHours}h this month</div>
             </td>
             <td className="r mono">
                 {r.overtimePay ? cash(r.overtimePay, r.currency) : "-"}

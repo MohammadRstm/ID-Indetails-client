@@ -11,11 +11,9 @@ import DateInput from "@/shared/components/Forms/DateInput";
 import { FieldError } from "@/shared/components/Forms/Field";
 import PhoneField from "@/shared/components/Forms/PhoneField";
 import PhotoPositioner from "@/shared/components/Forms/PhotoPositioner";
-import { Segmented } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Modal from "@/shared/components/Overlays/Modal";
-import { money } from "@/shared/format/money";
 import { companyToday, fmtDateY } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
@@ -92,23 +90,23 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     const [password, setPassword] = useState("");
     const emailChanged = changesEmail && email.trim().toLowerCase() !== person.email.toLowerCase();
     // pay, once its history has loaded; a salary's overtime rate follows the salary (null) until it is typed over
-    const [pay, setPay] = useState<{ basis: "hourly" | "monthly"; amount: number; currency: string; overtimeRate: number | null } | null>(null);
+    const [pay, setPay] = useState<{ amount: number; currency: string; overtimeRate: number | null } | null>(null);
     const [from, setFrom] = useState(today);
     // admins and super admins are paid a fixed monthly salary
     const salaried = hasFixedSalary(person.role ?? "employee");
-    // site staff log no hours, so they are paid by the month too
+    // site staff log no hours either, so they earn no overtime
     const monthlyOnly = paidMonthlyOnly(person.role ?? "employee", person.domain);
     if (pays && pay == null && history.data) {
         // a rate an admin set by hand stays until it is changed
-        const typed = terms?.basis === "monthly" && terms.overtimeRate !== suggestedOvertimeRate(terms.amount, overtimeHours) ? terms.overtimeRate : null;
-        setPay({ basis: monthlyOnly ? "monthly" : terms?.basis ?? "hourly", amount: terms?.amount ?? 0, currency: terms?.currency ?? "USD", overtimeRate: typed });
+        const typed = terms && terms.overtimeRate !== suggestedOvertimeRate(terms.amount, overtimeHours) ? terms.overtimeRate : null;
+        setPay({ amount: terms?.amount ?? 0, currency: terms?.currency ?? "USD", overtimeRate: typed });
     }
-    // only a salaried Design employee earns overtime at a rate of its own; the API gives everyone else its suggestion
-    const setsOvertime = !!pay && pay.basis === "monthly" && !monthlyOnly;
+    // only a Design employee earns overtime at a rate of its own; the API gives everyone else its suggestion
+    const setsOvertime = !!pay && !monthlyOnly;
     const overtimeRate = pay ? pay.overtimeRate ?? suggestedOvertimeRate(pay.amount, overtimeHours) : 0;
     // someone with no pay yet (an invited admin) keeps none until an amount is typed
     const payChanged = !!pay && (terms
-        ? pay.basis !== terms.basis || pay.currency !== terms.currency || Math.abs(pay.amount - terms.amount) > 0.004
+        ? pay.currency !== terms.currency || Math.abs(pay.amount - terms.amount) > 0.004
             || (setsOvertime && Math.abs(overtimeRate - terms.overtimeRate) > 0.004)
         : pay.amount > 0);
     const errors = useFormErrors();
@@ -157,7 +155,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
             if (editsDetails && photo !== person.photoFileId) await setPhoto.mutateAsync(photo);
             if (payChanged && pay) {
                 await changePay.mutateAsync({
-                    basis: pay.basis, amount: pay.amount, currency: pay.currency, ...(setsOvertime ? { overtimeRate } : {}), effectiveFrom: from,
+                    amount: pay.amount, currency: pay.currency, ...(setsOvertime ? { overtimeRate } : {}), effectiveFrom: from,
                 });
             }
             const emailNote = !emailChanged ? null
@@ -264,11 +262,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                     {pays && pay && (
                         <div className="field">
                             <div className="spread" style={{ alignItems: "center" }}>
-                                <label className="label" htmlFor="ep-pay" style={{ margin: 0 }}>{salaried ? "Monthly salary" : "Pay"}</label>
-                                {salaried ? <span className="badge">Fixed salary</span> : monthlyOnly ? <span className="badge">Per month</span> : (
-                                    <Segmented value={pay.basis} onChange={(basis) => setPay({ ...pay, basis })} aria-label="Pay basis"
-                                        options={[{ value: "hourly", label: "Per hour" }, { value: "monthly", label: "Per month" }]} />
-                                )}
+                                <label className="label" htmlFor="ep-pay" style={{ margin: 0 }}>Monthly salary</label>
+                                {salaried && <span className="badge">Fixed salary</span>}
                             </div>
                             <div className="grid g-2 mt-s">
                                 <div className="field">
@@ -276,8 +271,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                                     <FieldError message={errors.show("pay", payError)} />
                                     <div className="hint">
                                         {salaried ? "Admins and super admins are paid a fixed monthly salary: they log no hours, so no overtime."
-                                            : pay.basis === "monthly" ? "Monthly salary."
-                                            : (pay.amount ? `= ${money.fmt(pay.amount * overtimeHours, pay.currency)} for a month of ${overtimeHours} hours; overtime at this rate × the multiplier` : "Paid per hour worked.")}
+                                            : monthlyOnly ? "Site staff log no hours, so no overtime." : "An hour of it is the salary ÷ the month's paid hours."}
                                     </div>
                                 </div>
                                 <div className="field">

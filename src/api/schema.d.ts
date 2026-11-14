@@ -17504,7 +17504,6 @@ export interface components {
         ChangePayRequest: {
             /** Format: double */
             amount?: number;
-            basis?: components["schemas"]["PayBasis"];
             currency?: string;
             /** Format: date */
             effectiveFrom?: null | string;
@@ -18714,7 +18713,6 @@ export interface components {
         InvitationPayRequest: {
             /** Format: double */
             amount?: number;
-            basis?: components["schemas"]["PayBasis"];
             currency?: string;
             /** Format: date */
             effectiveFrom?: null | string;
@@ -19845,8 +19843,6 @@ export interface components {
             /** Format: int32 */
             totalCount: number;
         };
-        /** @enum {unknown} */
-        PayBasis: "hourly" | "monthly";
         PaymentFill: {
             /** Format: double */
             amount: null | number;
@@ -19896,7 +19892,6 @@ export interface components {
         PayResponse: {
             /** Format: double */
             amount: number;
-            basis: components["schemas"]["PayBasis"];
             /** Format: date-time */
             createdAt: string;
             /** Format: int64 */
@@ -20875,7 +20870,6 @@ export interface components {
             tvaRate: null | number;
         };
         ProjectPayPersonResponse: {
-            basis: null | components["schemas"]["PayBasis"];
             currency: string;
             email: string;
             /** Format: int32 */
@@ -21987,15 +21981,9 @@ export interface components {
             inProgress: boolean;
             missedDays: string[];
             overtimeWork: components["schemas"]["OvertimeWorkResponse"][];
-            /** Format: int32 */
-            paidBreakDays: number;
-            /** Format: double */
-            paidBreakPay: number;
             projects: components["schemas"]["SalaryProjectResponse"][];
             salary: components["schemas"]["SalaryRowResponse"];
             timeOff: components["schemas"]["MonthTimeOffResponse"][];
-            /** Format: double */
-            timeOffPay: number;
             workingDays: components["schemas"]["SalaryDayResponse"][];
         };
         SalaryProjectResponse: {
@@ -22023,7 +22011,6 @@ export interface components {
             amount: number;
             /** Format: double */
             basePay: number;
-            basis: components["schemas"]["PayBasis"];
             behind: boolean;
             /** Format: int32 */
             countedMinutes: null | number;
@@ -22090,8 +22077,6 @@ export interface components {
             /** Format: int32 */
             normalMinutes: number;
             /** Format: int32 */
-            onMonthlySalary: number;
-            /** Format: int32 */
             overtimeMinutes: number;
             /** Format: int32 */
             overtimePaidMinutes: number;
@@ -22124,7 +22109,6 @@ export interface components {
         SalaryYearMonthResponse: {
             /** Format: double */
             amount: number;
-            basis: components["schemas"]["PayBasis"];
             currency: string;
             /** Format: date */
             month: string;

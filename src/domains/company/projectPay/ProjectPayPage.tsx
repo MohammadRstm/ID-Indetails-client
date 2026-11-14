@@ -221,7 +221,7 @@ function ProjectPanel({ project: g, tile, canOpenProject }: { project: ProjectPa
 function PersonRow({ row }: { row: ProjectPayPerson }) {
     const cur = row.currency;
     const note = !row.priced ? "no pay record"
-        : `${row.basis === "monthly" && row.monthlySalary != null ? `salary ${money.exact(row.monthlySalary, cur)}/mo` : "hourly"}${row.rateChanged ? " · rate changed" : ""}`;
+        : `salary ${money.exact(row.monthlySalary ?? 0, cur)}/mo${row.rateChanged ? " · rate changed" : ""}`;
     return (
         <tr className="pp-emp">
             <td>
@@ -239,7 +239,7 @@ function PersonRow({ row }: { row: ProjectPayPerson }) {
             <td className="r mono">{hrs(row.normalMinutes + row.overtimeMinutes)}</td>
             <td className="r nowrap">
                 <span className="mono">{money.exact(row.hourlyRate, cur, { cents: true })}/h</span>
-                <div className="muted pp-note" title={row.basis === "monthly" && row.monthlySalary != null ? `${money.exact(row.monthlySalary, cur)} a month ÷ the month's paid hours` : undefined}>{note}</div>
+                <div className="muted pp-note" title={row.monthlySalary != null ? `${money.exact(row.monthlySalary, cur)} a month ÷ the month's paid hours` : undefined}>{note}</div>
             </td>
             <td className="r mono pp-pay">{money.exact(row.pay, cur)}</td>
         </tr>

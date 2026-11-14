@@ -89,6 +89,7 @@ This file is how every new session learns the project, so keep it true:
   - Edit JSON fixtures in `src/test/fixtures` by hand, with minimal diffs. Re-serialising them rewrites the whole file.
 - **ESLint `react-refresh/only-export-components`:** a component file exports only components. Put helpers and constants in a `*Api.ts` or a plain `.ts` file.
 - **`clickable(..., "link")`** sets `role="link"`. Wrap the element in another element if it must also be a `listitem`.
+- **Pay** is a monthly salary for everyone: there is no hourly pay (15 November 2026). Admins, super admins and site staff earn no overtime (`paidMonthlyOnly` in `domains/design/pay/payRules.ts`).
 - **Execution employees** (site staff) see only Daily log, My sites, Profile and Settings (Appearance and Contact). Design-only pages use `designOnly(...)` in the route table, and Execution-only pages use `executionOnly(...)`.
 
 ## Commands

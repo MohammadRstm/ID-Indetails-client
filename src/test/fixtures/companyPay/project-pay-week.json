@@ -25,7 +25,6 @@
             "id": 13,
             "name": "Interiors"
           },
-          "basis": "hourly",
           "entries": 4,
           "normalMinutes": 570,
           "overtimeMinutes": 30,
@@ -36,7 +35,7 @@
           "priced": true,
           "photoFileId": null,
           "position": "Interior designer",
-          "monthlySalary": null
+          "monthlySalary": 2112
         },
         {
           "userId": 3,
@@ -46,7 +45,6 @@
             "id": 13,
             "name": "Interiors"
           },
-          "basis": "monthly",
           "entries": 5,
           "normalMinutes": 380,
           "overtimeMinutes": 110,
@@ -67,7 +65,6 @@
             "id": 14,
             "name": "Visualisation"
           },
-          "basis": "monthly",
           "entries": 4,
           "normalMinutes": 490,
           "overtimeMinutes": 0,
@@ -103,7 +100,6 @@
             "id": 12,
             "name": "Architecture"
           },
-          "basis": "hourly",
           "entries": 7,
           "normalMinutes": 750,
           "overtimeMinutes": 60,
@@ -114,7 +110,7 @@
           "priced": true,
           "photoFileId": null,
           "position": "Draughtsman",
-          "monthlySalary": null
+          "monthlySalary": 1408
         },
         {
           "userId": 6,
@@ -124,7 +120,6 @@
             "id": 14,
             "name": "Visualisation"
           },
-          "basis": "hourly",
           "entries": 2,
           "normalMinutes": 280,
           "overtimeMinutes": 0,
@@ -135,7 +130,7 @@
           "priced": true,
           "photoFileId": null,
           "position": "3D visualiser",
-          "monthlySalary": null
+          "monthlySalary": 2464
         },
         {
           "userId": 4,
@@ -145,7 +140,6 @@
             "id": 12,
             "name": "Architecture"
           },
-          "basis": "monthly",
           "entries": 2,
           "normalMinutes": 150,
           "overtimeMinutes": 30,
@@ -166,7 +160,6 @@
             "id": 12,
             "name": "Architecture"
           },
-          "basis": "hourly",
           "entries": 2,
           "normalMinutes": 150,
           "overtimeMinutes": 0,
@@ -177,7 +170,7 @@
           "priced": true,
           "photoFileId": null,
           "position": "Junior architect",
-          "monthlySalary": null
+          "monthlySalary": 1584
         }
       ]
     },
@@ -202,7 +195,6 @@
             "id": 12,
             "name": "Architecture"
           },
-          "basis": "hourly",
           "entries": 6,
           "normalMinutes": 540,
           "overtimeMinutes": 30,
@@ -213,7 +205,7 @@
           "priced": true,
           "photoFileId": null,
           "position": "Junior architect",
-          "monthlySalary": null
+          "monthlySalary": 1584
         },
         {
           "userId": 4,
@@ -223,7 +215,6 @@
             "id": 12,
             "name": "Architecture"
           },
-          "basis": "monthly",
           "entries": 4,
           "normalMinutes": 410,
           "overtimeMinutes": 0,
@@ -244,7 +235,6 @@
             "id": 14,
             "name": "Visualisation"
           },
-          "basis": "monthly",
           "entries": 2,
           "normalMinutes": 270,
           "overtimeMinutes": 0,
@@ -280,7 +270,6 @@
             "id": 13,
             "name": "Interiors"
           },
-          "basis": "monthly",
           "entries": 4,
           "normalMinutes": 450,
           "overtimeMinutes": 0,
@@ -301,7 +290,6 @@
             "id": 12,
             "name": "Architecture"
           },
-          "basis": "monthly",
           "entries": 2,
           "normalMinutes": 270,
           "overtimeMinutes": 0,
@@ -322,7 +310,6 @@
             "id": 12,
             "name": "Architecture"
           },
-          "basis": "hourly",
           "entries": 1,
           "normalMinutes": 60,
           "overtimeMinutes": 0,
@@ -333,7 +320,7 @@
           "priced": true,
           "photoFileId": null,
           "position": "Draughtsman",
-          "monthlySalary": null
+          "monthlySalary": 1408
         }
       ]
     },
@@ -358,7 +345,6 @@
             "id": 13,
             "name": "Interiors"
           },
-          "basis": "hourly",
           "entries": 2,
           "normalMinutes": 270,
           "overtimeMinutes": 30,
@@ -369,7 +355,7 @@
           "priced": true,
           "photoFileId": null,
           "position": "Interior designer",
-          "monthlySalary": null
+          "monthlySalary": 2112
         },
         {
           "userId": 6,
@@ -379,7 +365,6 @@
             "id": 14,
             "name": "Visualisation"
           },
-          "basis": "hourly",
           "entries": 1,
           "normalMinutes": 150,
           "overtimeMinutes": 0,
@@ -390,7 +375,7 @@
           "priced": true,
           "photoFileId": null,
           "position": "3D visualiser",
-          "monthlySalary": null
+          "monthlySalary": 2464
         }
       ]
     },
@@ -415,7 +400,6 @@
             "id": 14,
             "name": "Visualisation"
           },
-          "basis": "monthly",
           "entries": 2,
           "normalMinutes": 210,
           "overtimeMinutes": 0,
@@ -436,7 +420,6 @@
             "id": 12,
             "name": "Architecture"
           },
-          "basis": "hourly",
           "entries": 1,
           "normalMinutes": 150,
           "overtimeMinutes": 0,
@@ -447,7 +430,7 @@
           "priced": true,
           "photoFileId": null,
           "position": "Junior architect",
-          "monthlySalary": null
+          "monthlySalary": 1584
         }
       ]
     }

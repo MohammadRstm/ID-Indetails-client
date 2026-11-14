@@ -14,8 +14,7 @@
           "id": 12,
           "name": "Architecture"
         },
-        "basis": "hourly",
-        "amount": 8,
+        "amount": 1344,
         "currency": "USD",
         "hourlyRate": 8,
         "overtimeRate": 8,
@@ -57,8 +56,7 @@
           "id": 13,
           "name": "Interiors"
         },
-        "basis": "hourly",
-        "amount": 12,
+        "amount": 2016,
         "currency": "USD",
         "hourlyRate": 12,
         "overtimeRate": 12,
@@ -100,8 +98,7 @@
           "id": 12,
           "name": "Architecture"
         },
-        "basis": "hourly",
-        "amount": 9,
+        "amount": 1512,
         "currency": "USD",
         "hourlyRate": 9,
         "overtimeRate": 9,
@@ -140,7 +137,6 @@
         "role": "admin",
         "domain": "design",
         "team": null,
-        "basis": "monthly",
         "amount": 3200,
         "currency": "USD",
         "hourlyRate": 18.4619,
@@ -183,7 +179,6 @@
           "id": 12,
           "name": "Architecture"
         },
-        "basis": "monthly",
         "amount": 2000,
         "currency": "USD",
         "hourlyRate": 11.5387,
@@ -226,8 +221,7 @@
           "id": 14,
           "name": "Visualisation"
         },
-        "basis": "hourly",
-        "amount": 14,
+        "amount": 2352,
         "currency": "USD",
         "hourlyRate": 14,
         "overtimeRate": 14,
@@ -269,7 +263,6 @@
           "id": 13,
           "name": "Interiors"
         },
-        "basis": "monthly",
         "amount": 1800,
         "currency": "USD",
         "hourlyRate": 10.3848,
@@ -312,7 +305,6 @@
           "id": 14,
           "name": "Visualisation"
         },
-        "basis": "monthly",
         "amount": 1600,
         "currency": "USD",
         "hourlyRate": 9.2309,
@@ -355,7 +347,6 @@
           "id": 15,
           "name": "Site"
         },
-        "basis": "monthly",
         "amount": 1100,
         "currency": "USD",
         "hourlyRate": 6.3463,
@@ -395,7 +386,6 @@
         "role": "admin",
         "domain": "execution",
         "team": null,
-        "basis": "monthly",
         "amount": 2800,
         "currency": "USD",
         "hourlyRate": 16.1542,
@@ -448,7 +438,6 @@
   ],
   "summary": {
     "people": 13,
-    "onMonthlySalary": 9,
     "normalMinutes": 0,
     "overtimeMinutes": 0,
     "madeUpMinutes": 0,

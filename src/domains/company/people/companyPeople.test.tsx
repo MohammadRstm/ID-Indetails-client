@@ -127,14 +127,14 @@ describe("the company's people", () => {
         await userEvent.click(within(dialog).getByLabelText("Department"));
         await userEvent.click(screen.getByRole("option", { name: "Site" }));
         expect(within(dialog).getByText("Enter their pay per month.")).toBeInTheDocument();
-        await userEvent.type(within(dialog).getByLabelText("Pay"), "900");
+        await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "900");
         // site staff log no hours, so they earn no overtime: the API keeps its suggested rate quietly
         expect(within(dialog).queryByLabelText("Overtime rate")).not.toBeInTheDocument();
         await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
         expect(await screen.findByRole("dialog", { name: "Invitation sent" })).toBeInTheDocument();
         expect(sent).toEqual([{
             email: "sami@id-indetails.test", role: "employee", domainCode: "execution", teamId: 15, position: null,
-            pay: { basis: "monthly", amount: 900, currency: "USD" },
+            pay: { amount: 900, currency: "USD" },
         }]);
     });
 
@@ -152,12 +152,11 @@ describe("the company's people", () => {
         await userEvent.click(within(row).getByRole("button", { name: "More actions" }));
         await userEvent.click(screen.getByRole("button", { name: "Edit profile and pay…" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit Sami's profile" });
-        // a super admin's pay is a salary: no choice of hourly pay
+        // a super admin's pay is a fixed salary
         expect(await within(dialog).findByText("Fixed salary")).toBeInTheDocument();
-        expect(within(dialog).queryByRole("tablist", { name: "Pay basis" })).not.toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "4500");
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-        await waitFor(() => expect(pays).toEqual([{ basis: "monthly", amount: 4500, currency: "USD", effectiveFrom: "2026-09-30" }]));
+        await waitFor(() => expect(pays).toEqual([{ amount: 4500, currency: "USD", effectiveFrom: "2026-09-30" }]));
     });
 
     it("changes another super admin's sign-in address, saying next to it when the address is taken", async () => {
