@@ -92,7 +92,7 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
                                         options={overtimeOpts} />
                                 } />
                             <SwitchRow title="Salaried overtime is paid"
-                                description={<>A salary's overtime is paid only for the hours counted past this in a month (everything logged, plus paid leave), or past the month's expected hours when those are more. Joining mid-month doesn't lower it. Hourly pay isn't affected, and employees still see all their overtime; only Salaries shows what is paid. It also sets a salary's suggested overtime rate (the salary ÷ these hours).{!canTime && <OnlyFor who="a super admin" />}</>}
+                                description={<>A salary's overtime is paid only for the hours counted past this in a month (everything logged, plus paid leave), or past the month's expected hours when those are more. Joining mid-month doesn't lower it. Employees still see all their overtime; only Salaries shows what is paid. It also sets a salary's suggested overtime rate (the salary ÷ these hours).{!canTime && <OnlyFor who="a super admin" />}</>}
                                 control={
                                     <Select className="select sm" style={{ width: 150 }} aria-label="Salaried overtime is paid" disabled={!canTime || setWt.isPending} value={String(threshold)}
                                         onChange={(v) => setWt.mutate(overtime.body({ overtimeThresholdHours: +v }), { onSuccess: saved("Overtime threshold updated", overtime.when), onError: notSaved })}
