@@ -231,7 +231,7 @@ export default function SalariesPage() {
                                 ? <span>of {cash(t.total, t.currency)} for the full month, as things stand</span>
                                 : <span>{cash(t.basePay, t.currency)} base · {cash(t.overtimePay, t.currency)} overtime</span>,
                         })),
-                        { key: "people", label: "Employees", value: String(sum?.people ?? 0), sub: <span>{sum?.onMonthlySalary ?? 0} on a monthly salary</span> },
+                        { key: "people", label: "Employees", value: String(sum?.people ?? 0), sub: <span>on a monthly salary</span> },
                         {
                             key: "hours", label: "Hours worked", value: fmtH((sum?.normalMinutes ?? 0) + (sum?.overtimeMinutes ?? 0)),
                             sub: <span>{fmtH(sum?.normalMinutes ?? 0)} in schedule · <span className="ot-text">{fmtH(sum?.overtimeMinutes ?? 0)} overtime</span>{sum?.madeUpMinutes ? ` · ${fmtH(sum.madeUpMinutes)} made up` : ""}</span>,
@@ -258,7 +258,7 @@ export default function SalariesPage() {
                                 <div className="panel-title">Employees</div>
                                 {explain && <div className="panel-sub">
                                     Everyone owes their scheduled hours each month. Overtime first makes up any hours short (paid as normal), the rest is paid as overtime;
-                                    a salary loses the hours still short at the end of the month. Hourly: hours × rate. Monthly: the salary, whatever the month's length;
+                                    a salary loses the hours still short at the end of the month. Everyone is paid a monthly salary, whatever the month's length;
                                     an hour of it is the salary ÷ the month's paid hours, and overtime is paid at the rate set with the pay (the salary ÷ 184 unless set otherwise).
                                     From November 2026 a salary's overtime is paid only for the hours counted past 184 in the month (everything logged plus paid leave),
                                     or past the month's expected hours when those are more. Admins and super admins are paid a fixed salary.
@@ -290,7 +290,7 @@ export default function SalariesPage() {
                                                     <th className="r">Made up<HelpHint article="hours-balance" label="made up">Overtime that covered missing hours, paid as normal hours.</HelpHint></th>
                                                     <th className="r">Overtime<HelpHint article="overtime" label="overtime">Overtime logged, after making up missing hours. A salary is paid only what is past its threshold: see Overtime pay.</HelpHint></th>
                                                     <th>Short<HelpHint article="deductions" label="short">Hours still missing. On a monthly salary they come off the pay once the month ends, unless excused.</HelpHint></th>
-                                                    <th className="r">Base pay<HelpHint article="pay" label="base pay">The month's pay as a monthly amount: the salary, or for hourly pay, the rate × the month's paid hours.</HelpHint></th>
+                                                    <th className="r">Base pay<HelpHint article="pay" label="base pay">The month's pay as a monthly amount: the salary.</HelpHint></th>
                                                     <th className="r">Hourly pay<HelpHint article="pay" label="hourly pay">What an hour is worth this month: a salary ÷ the month's paid hours, so it changes with the number of working days.</HelpHint></th>
                                                     <th className="r">Overtime pay<HelpHint article="pay" label="overtime pay">At the overtime rate × the multiplier. A salary is paid only the overtime counted past its threshold (184 hours, or the month's expected hours if more): everything logged plus paid leave.</HelpHint></th>
                                                     <th className="r">To pay<HelpHint article="pay" label="to pay">What they are owed. While the month runs, a salary shows what it has earned so far, with the full month under it.</HelpHint></th>
@@ -374,7 +374,6 @@ export default function SalariesPage() {
 function SalaryLine({ row: r, running, advances, onOpen }: { row: SalaryRow; running: boolean; advances: boolean; onOpen: () => void }) {
     const ruled = r.expectedMinutes != null;
     const otLogged = r.overtimeMinutes + r.madeUpMinutes;
-    const monthly = r.basis === "monthly";
     // a salary while the month runs: what it has earned so far, with the full month as things stand
     const accruing = running && r.fullMonthEstimate != null;
     const paidHours = r.hourlyRate > 0 ? Math.round(r.monthlyPay / r.hourlyRate) : 0;
@@ -404,12 +403,12 @@ function SalaryLine({ row: r, running, advances, onOpen }: { row: SalaryRow; run
             <td className="r mono nowrap">
                 {cash(r.monthlyPay, r.currency)}
                 <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }}>
-                    {hasFixedSalary(r.role) ? "fixed salary" : monthly ? "monthly salary" : `hourly · ${paidHours}h month`}
+                    {hasFixedSalary(r.role) ? "fixed salary" : "monthly salary"}
                 </div>
             </td>
-            <td className="r mono nowrap" title={monthly ? `${cash(r.monthlyPay, r.currency)} ÷ ${paidHours} paid hours this month` : undefined}>
+            <td className="r mono nowrap" title={`${cash(r.monthlyPay, r.currency)} ÷ ${paidHours} paid hours this month`}>
                 {cash(r.hourlyRate, r.currency, true)}/h
-                <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }}>{monthly ? `÷ ${paidHours}h this month` : "their rate"}</div>
+                <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }}>÷ {paidHours}h this month</div>
             </td>
             <td className="r mono">
                 {r.overtimePay ? cash(r.overtimePay, r.currency) : "-"}

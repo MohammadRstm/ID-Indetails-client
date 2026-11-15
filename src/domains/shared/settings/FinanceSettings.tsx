@@ -85,14 +85,14 @@ export default function FinanceSettings({ domain }: { domain: Domain }) {
                                     options={[{ value: "USD", label: "USD" }, { value: "LBP", label: "LBP" }]} />
                             } />
                             <SwitchRow title={<>Overtime pay rate<HelpHint article="overtime" label="overtime">Time outside someone's hours, all of a day off, and time past what the day requires.</HelpHint></>}
-                                description={<>What an overtime hour (outside someone's hours, on a day off, or past the day's required hours) is paid, as a multiple of the overtime rate set with each person's pay (an hourly rate itself; for a salary, the salary ÷ {threshold || 184} unless set otherwise). Used by Salaries, Project pay and project labour cost.{!canTime && <OnlyFor who="a super admin" />}</>}
+                                description={<>What an overtime hour (outside someone's hours, on a day off, or past the day's required hours) is paid, as a multiple of the overtime rate set with each person's pay (the salary ÷ {threshold || 184} unless set otherwise). Used by Salaries, Project pay and project labour cost.{!canTime && <OnlyFor who="a super admin" />}</>}
                                 control={
                                     <Select className="select sm" style={{ width: 150 }} aria-label="Overtime pay rate" disabled={!canTime || setWt.isPending} value={String(overtime.latest.overtimeMultiplier)}
                                         onChange={(v) => setWt.mutate(overtime.body({ overtimeMultiplier: +v }), { onSuccess: saved("Overtime rate updated", overtime.when), onError: notSaved })}
                                         options={overtimeOpts} />
                                 } />
                             <SwitchRow title="Salaried overtime is paid"
-                                description={<>A salary's overtime is paid only for the hours counted past this in a month (everything logged, plus paid leave), or past the month's expected hours when those are more. Joining mid-month doesn't lower it. Hourly pay isn't affected, and employees still see all their overtime; only Salaries shows what is paid. It also sets a salary's suggested overtime rate (the salary ÷ these hours).{!canTime && <OnlyFor who="a super admin" />}</>}
+                                description={<>A salary's overtime is paid only for the hours counted past this in a month (everything logged, plus paid leave), or past the month's expected hours when those are more. Joining mid-month doesn't lower it. Employees still see all their overtime; only Salaries shows what is paid. It also sets a salary's suggested overtime rate (the salary ÷ these hours).{!canTime && <OnlyFor who="a super admin" />}</>}
                                 control={
                                     <Select className="select sm" style={{ width: 150 }} aria-label="Salaried overtime is paid" disabled={!canTime || setWt.isPending} value={String(threshold)}
                                         onChange={(v) => setWt.mutate(overtime.body({ overtimeThresholdHours: +v }), { onSuccess: saved("Overtime threshold updated", overtime.when), onError: notSaved })}

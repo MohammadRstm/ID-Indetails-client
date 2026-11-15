@@ -143,7 +143,7 @@ function StaffRow({ person }: { person: { id: number; name: string } }) {
         <tr>
             <td>{profile ? <Link to={profile} className="link-plain" title={`Open ${person.name}'s profile`}>{who}</Link> : who}</td>
             <td className="muted trunc">{employee?.email ?? "-"}</td>
-            <td className="r mono nowrap">{pay ? `${money.exact(pay.amount, pay.currency)} / ${pay.basis === "monthly" ? "month" : "hour"}` : <span className="muted">-</span>}</td>
+            <td className="r mono nowrap">{pay ? `${money.exact(pay.amount, pay.currency)} / month` : <span className="muted">-</span>}</td>
             <td className="r muted nowrap">Not counted yet</td>
         </tr>
     );

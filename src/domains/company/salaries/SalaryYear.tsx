@@ -79,7 +79,7 @@ function YearLine({ row: r, months, onMonth }: { row: SalaryYearRow; months: str
                         <div className="trunc" style={{ fontWeight: 600 }}>{r.name}</div>
                         <div className="muted trunc" style={{ fontSize: "11.5px" }}>
                             {r.domain ? AREAS[r.domain as Domain]?.label ?? r.domain : "Company"}
-                            {latest && ` · ${latest.basis === "monthly" ? `${money.exact(latest.amount, latest.currency)} / mo` : `${money.exact(latest.amount, latest.currency, { cents: true })} / h`}`}
+                            {latest && ` · ${money.exact(latest.amount, latest.currency)} / mo`}
                         </div>
                     </div>
                 </div>

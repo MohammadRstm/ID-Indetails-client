@@ -38,12 +38,12 @@ describe("Salaries", () => {
         expect(kpi("Earned so far")).toHaveTextContent(money.exact(sep.totals[0].earnedSoFar));
         expect(kpi("Earned so far")).toHaveTextContent(`of ${money.exact(sep.totals[0].total)} for the full month`);
         // each person: the month's pay as a monthly amount, the hour it gives this month, and what is earned so far
-        const salaried = sep.rows.items.find((x) => x.basis === "monthly" && x.fullMonthEstimate != null && !x.proRated)!;
+        const salaried = sep.rows.items.find((x) => x.fullMonthEstimate != null && !x.proRated)!;
         const line = rowOf(salaried.name);
         expect(line).toHaveTextContent(money.exact(salaried.monthlyPay));
         expect(line).toHaveTextContent(`÷ ${Math.round(salaried.monthlyPay / salaried.hourlyRate)}h this month`);
         expect(line).toHaveTextContent(`${money.exact(salaried.earnedSoFar)}so far · ${money.exact(salaried.fullMonthEstimate!)} full month`);
-        expect(kpi("Employees")).toHaveTextContent("9 on a monthly salary");
+        expect(kpi("Employees")).toHaveTextContent("on a monthly salary");
         expect(kpi("Behind so far")).toHaveTextContent("2");
         expect(within(table()).getAllByRole("row").filter((r) => r.querySelector(".av, .av-fb"))).toHaveLength(10);
         expect(within(rowOf("Rami Aoun")).getByText("13h 40m behind")).toBeInTheDocument();
@@ -204,7 +204,7 @@ describe("Salaries", () => {
 describe("A person's salary", () => {
     it("show what a salary's overtime is paid past its threshold, under the overtime pay", async () => {
         const row = {
-            ...sep.rows.items[0], basis: "monthly", overtimeMinutes: 41 * 60, overtimePaidMinutes: 4 * 60,
+            ...sep.rows.items[0], overtimeMinutes: 41 * 60, overtimePaidMinutes: 4 * 60,
             overtimeThresholdMinutes: 184 * 60, countedMinutes: 188 * 60, overtimePay: 38.28,
         };
         const under = { ...row, userId: 99, name: "Lina Short", email: "lina@hourline.test", overtimePaidMinutes: 0, countedMinutes: 170 * 60, overtimePay: 0 };
@@ -262,11 +262,10 @@ describe("A person's salary", () => {
         expect(within(drawer).queryByText("Where the hours went")).not.toBeInTheDocument();
     });
 
-    it("prices hourly work with each day's paid break", async () => {
+    it("shows the working days with nothing logged", async () => {
         renderApp("/company/salaries", rana, ...salaryHandlers);
         const drawer = await openDetails("Rami Aoun");
         expect(await within(drawer).findByText("Behind so far")).toBeInTheDocument();
-        expect(within(drawer).getByText(/Paid breaks · 18 working days/).parentElement).toHaveTextContent(money.exact(252));
         expect(within(drawer).getByText("Working days with nothing logged, not excused").parentElement).toHaveTextContent("3");
     });
 
@@ -287,8 +286,8 @@ describe("A person's salary", () => {
         const drawer = await openDetails("Rami Aoun");
         await userEvent.click(await within(drawer).findByRole("button", { name: "Excuse hours or days…" }));
         expect(within(drawer).getByLabelText("Hours")).toHaveValue("13.67");
-        // hourly pay has nothing to lose, so there is no paid or unpaid choice
-        expect(within(drawer).queryByRole("tab", { name: "Unpaid" })).not.toBeInTheDocument();
+        // excused time is paid unless it is marked unpaid
+        expect(within(drawer).getByRole("tab", { name: "Unpaid" })).toBeInTheDocument();
         await userEvent.type(within(drawer).getByLabelText("Reason"), "Public holiday");
         await userEvent.click(within(drawer).getByRole("button", { name: "Excuse 13h 40m" }));
         await waitFor(() => expect(sent).toEqual([{ id: "6", month: "2026-09", kind: "minutes", minutes: 820, days: [], isPaid: true, note: "Public holiday" }]));
@@ -322,23 +321,15 @@ describe("A person's salary", () => {
         expect(await within(drawer).findByRole("alert")).toHaveTextContent("Hours can't be excused for a future month.");
     });
 
-    it("lists a month's time off as decided elsewhere, and prices an hourly person's paid days", async () => {
+    it("lists a month's time off as decided elsewhere", async () => {
         const off = { requestId: 5, firstDay: "2026-09-14", lastDay: "2026-09-15", isPaid: true, days: ["2026-09-14", "2026-09-15"] };
         renderApp("/company/salaries", rana,
-            http.get("/api/company/salaries/6", () => HttpResponse.json({ ...salaries.rami, timeOff: [off], timeOffPay: 180 })),
+            http.get("/api/company/salaries/6", () => HttpResponse.json({ ...salaries.rami, timeOff: [off] })),
             ...salaryHandlers);
         const drawer = await openDetails("Rami Aoun");
         const line = (await within(drawer).findByText(/^Time off · Sep 14–Sep 15 · 2 days · Paid$/)).closest(".hl-excuse-row") as HTMLElement;
         expect(within(line).getByText("Decided on Company › Time off")).toBeInTheDocument();
         expect(within(line).queryByRole("button", { name: "Remove" })).not.toBeInTheDocument();
-        expect(within(drawer).getByText("Paid time off").parentElement).toHaveTextContent(money.exact(180));
-    });
-
-    it("leaves out the paid time off line when there is no pay for it", async () => {
-        renderApp("/company/salaries", rana, ...salaryHandlers);
-        const drawer = await openDetails("Rami Aoun");
-        expect(await within(drawer).findByText("Behind so far")).toBeInTheDocument();
-        expect(within(drawer).queryByText("Paid time off")).not.toBeInTheDocument();
     });
 
     it("can't excuse a day that is on time off", async () => {
