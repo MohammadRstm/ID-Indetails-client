@@ -58,7 +58,7 @@ export default function BlockedChangeModal({ id, onClose }: { id: number; onClos
                     </div>
                     {pay && c.projects ? (
                         <div className="tbl-wrap mt">
-                            <table className="tbl tbl-min" aria-label="Projects it reaches">
+                            <table className="tbl" aria-label="Projects it reaches">
                                 <thead><tr><th>Project</th><th className="r">Profit today</th><th className="r">If forced</th></tr></thead>
                                 <tbody>
                                     {c.projects.map((p) => (
