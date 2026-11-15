@@ -502,6 +502,7 @@ describe("Someone's profile", () => {
         renderApp("/design/people/9", withPermissions(nadia, { revoke: [P.EMPLOYEE_MANAGE] }),
             http.put("/api/employees/9", () => { updated = true; return HttpResponse.json(yara); }),
             http.post("/api/employees/9/pay", async ({ request }) => { pays.push(await request.json()); return HttpResponse.json(people.payHistory[0]); }),
+            previews(),
             ...peopleHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
@@ -509,6 +510,8 @@ describe("Someone's profile", () => {
         expect(within(dialog).queryByLabelText("Position")).not.toBeInTheDocument();
         await userEvent.clear(pay);
         await userEvent.type(pay, "1800");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        await within(dialog).findByRole("table", { name: "Salary by month" });
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
 
         await waitFor(() => expect(pays).toHaveLength(1));
