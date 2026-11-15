@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillChange, useProtonForm } from "@/domains/shared/proton/formFill";
 import { errorMessage, toApiError } from "@/api/errors";
-import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { toast } from "@/shared/components/Feedback/toast";
@@ -23,6 +22,7 @@ import type { Schemas } from "@/api/types";
 import { CURRENCY_WARNING, currentPay, hasFixedSalary, paidMonthlyOnly, suggestedOvertimeRate } from "../pay/payRules";
 import { useOvertimeHours } from "@/domains/shared/settings/settingsApi";
 import { uploadFile } from "../work/workApi";
+import FormFailure from "@/domains/shared/projects/FormFailure";
 import PayPreview from "./PayPreview";
 import { useChangeEmail, useChangeMyEmail, useChangePay, usePayHistory, usePreviewPay, useSetPhoto, useTeams, useUpdateEmployee, useUpdateMyProfile } from "./peopleWorkApi";
 
@@ -194,7 +194,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
             foot={
                 <>
                     <div className="grow muted">
-                        {error ? <span className="err"><Icon name="alert" /><ErrorMessage error={error} /></span>
+                        {error ? <FormFailure error={error} onForced={onClose} />
                             : shown ? "Nothing is saved until you press Save."
                                 : self ? "Position, department and pay are set by your admin." : "Changes are recorded; a pay change replaces any pay set from its day on."}
                     </div>

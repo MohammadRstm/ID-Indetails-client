@@ -42,6 +42,14 @@ group("A notification's words", () => {
         const site = { ...project, id: 7, title: "Achrafieh Towers lobby", domain: "execution" };
         const agreeing = note("change_blocked", { projectTitle: site.title, kind: "boq_agree" }, { actor: nadia, project: site, subjectType: "blocked_change", subjectId: 9 });
         expect(describe(agreeing, admin)).toMatchObject({ sub: "Agreeing a BOQ or VO by Nadia Karam · force it or dismiss it", route: "/execution/projects/7?blocked=9" });
+        // a held pay change, for the super admins: whose pay, the hardest-hit project and how many more, never an amount
+        const held = note("pay_change_held", { personName: "Yara Mansour", effectiveFrom: "2026-06-15", projectTitle: project.title, projectCount: 2 },
+            { actor: nadia, project, subjectType: "blocked_change", subjectId: 11 });
+        expect(describe(held, admin)).toMatchObject({
+            text: "Yara Mansour's pay change was held at zero profit",
+            sub: "It would take Studio Nour brand space and 1 more to zero profit or below · asked by Nadia Karam · force it or dismiss it",
+            route: "/design/projects/5?blocked=11",
+        });
         const withdrawing = note("change_blocked", { projectTitle: site.title, kind: "boq_withdraw" }, { actor: nadia, project: site, subjectType: "blocked_change", subjectId: 9 });
         expect(describe(withdrawing, admin).sub).toBe("Withdrawing the agreement of a BOQ or VO by Nadia Karam · force it or dismiss it");
         expect(describe(note("profit_low", { projectTitle: project.title, marginPct: 8 }, { project }), admin))
