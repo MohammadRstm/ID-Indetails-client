@@ -36,7 +36,7 @@ const ROLE: Record<string, string> = { super_admin: "super admin", admin: "admin
 const BLOCKED_KIND: Record<string, string> = {
     expense: "An expense", material_add: "New expenses", material_update: "An expense change", labour_week: "A labour week",
     work_entry_create: "Logged hours", work_entry_update: "Changed hours", payment: "A lower payment", pricing: "A lower supervision rate",
-    boq_agree: "Agreeing a BOQ or VO", boq_withdraw: "Withdrawing the agreement of a BOQ or VO",
+    boq_agree: "Agreeing a BOQ or VO", boq_withdraw: "Withdrawing the agreement of a BOQ or VO", pay_change: "A pay change",
 };
 const areaLabel = (d: unknown) => AREAS[d as "design" | "execution"]?.label ?? "";
 
@@ -179,6 +179,15 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 sub: `${BLOCKED_KIND[s(p.kind)] ?? "A change"}${note.actor ? ` by ${who}` : ""} · force it or dismiss it`,
                 icon: "alert", route: project && note.subjectId ? `${project}?blocked=${note.subjectId}` : project,
             };
+        case "pay_change_held": {
+            // super admins only, and never an amount
+            const more = n(p.projectCount) > 1 ? ` and ${n(p.projectCount) - 1} more` : "";
+            return {
+                text: `${s(p.personName) || "Someone"}'s pay change was held at zero profit`,
+                sub: `It would take ${title}${more} to zero profit or below${note.actor ? ` · asked by ${who}` : ""} · force it or dismiss it`,
+                icon: "alert", route: project && note.subjectId ? `${project}?blocked=${note.subjectId}` : project,
+            };
+        }
         case "profit_low":
             return { text: `${title} is close to zero profit`, sub: `${n(p.marginPct)}% margin left`, icon: "trendUp", route: project };
         case "profit_at_zero":

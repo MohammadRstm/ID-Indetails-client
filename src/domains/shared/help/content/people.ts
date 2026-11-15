@@ -65,6 +65,7 @@ export const people: Article[] = [
                 "A change of currency starts on the 1st of a month. Avoid it if you can: an advance in the old currency stops coming off, and months are grouped by their currency.",
                 "A change dated in the past re-prices their work since that day, even in closed months.",
                 "They're told that their pay changed, never the amount.",
+                "A change that would take a running client project to zero profit or below is held: the super admins are asked, and only they can force it through or dismiss it.",
                 "Nobody sets their own pay.",
                 "Admins and super admins are paid a fixed monthly salary, set when they're invited: they log no hours.",
             ),

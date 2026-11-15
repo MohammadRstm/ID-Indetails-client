@@ -17292,7 +17292,7 @@ export interface components {
         /** @enum {unknown} */
         BillingType: "client" | "internal";
         /** @enum {unknown} */
-        BlockedChangeKind: "expense" | "material_add" | "material_update" | "labour_week" | "work_entry_create" | "work_entry_update" | "payment" | "pricing" | "boq_agree" | "boq_withdraw" | "work_entry_department" | "design_vo";
+        BlockedChangeKind: "expense" | "material_add" | "material_update" | "labour_week" | "work_entry_create" | "work_entry_update" | "payment" | "pricing" | "boq_agree" | "boq_withdraw" | "work_entry_department" | "design_vo" | "pay_change";
         BlockedChangeResponse: {
             /** Format: date-time */
             decidedAt: null | string;
@@ -17301,16 +17301,27 @@ export interface components {
             /** Format: int64 */
             id: number;
             kind: components["schemas"]["BlockedChangeKind"];
+            person?: null | components["schemas"]["PersonRefResponse"];
             /** Format: double */
             profitNow: number;
             /** Format: int64 */
             projectId: number;
+            projects?: null | components["schemas"]["BlockedProjectResponse"][];
             projectTitle: string;
             /** Format: date-time */
             requestedAt: string;
             requestedBy: components["schemas"]["PersonRefResponse"];
             status: components["schemas"]["BlockedChangeStatus"];
             summary: string;
+        };
+        BlockedProjectResponse: {
+            /** Format: double */
+            profitIfForced: null | number;
+            /** Format: double */
+            profitNow: number;
+            /** Format: int64 */
+            projectId: number;
+            title: string;
         };
         /** @enum {unknown} */
         BlockedChangeStatus: "pending" | "forced" | "dismissed";
