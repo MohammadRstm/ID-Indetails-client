@@ -153,12 +153,20 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, canGive
             <div className="mt">
                 <div className="u" style={{ marginBottom: 6 }}>How the pay adds up</div>
                 <div className="pay-lines">
-                    <div>
-                        <span>{s.proRated
-                            ? `Monthly salary ${cash(s.amount, cur)}, pro-rated · employed ${s.workingDaysPaid} of ${s.workingDays} working days${s.leftOn ? `, left ${fmtDate(s.leftOn)}` : ""}`
-                            : "Monthly salary"}</span>
-                        <span className="mono">{cash(s.basePay + s.deduction, cur)}</span>
-                    </div>
+                    {d.parts.length > 1 ? d.parts.map((p) => (
+                        // the pay changed this month: each stretch at the salary in force on its days
+                        <div key={p.from}>
+                            <span>{`${fmtDate(p.from)}–${fmtDate(p.to)} at ${cash(p.salary, cur)} a month · ${p.days} working day${p.days === 1 ? "" : "s"}`}</span>
+                            <span className="mono">{cash(p.pay, cur)}</span>
+                        </div>
+                    )) : (
+                        <div>
+                            <span>{s.proRated
+                                ? `Monthly salary ${cash(s.amount, cur)}, pro-rated · employed ${s.workingDaysPaid} of ${s.workingDays} working days${s.leftOn ? `, left ${fmtDate(s.leftOn)}` : ""}`
+                                : "Monthly salary"}</span>
+                            <span className="mono">{cash(s.basePay + s.deduction, cur)}</span>
+                        </div>
+                    )}
                     {s.deduction > 0 && (
                         <div className="down">
                             <span>{wholeMonth && !wholeMonth.isPaid ? "Whole month unpaid"
@@ -179,8 +187,12 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, canGive
                     <div className="pay-total"><span>To pay</span><span className="mono">{cash(s.total, cur)}</span></div>
                 </div>
                 <div className="hint mt-s">
-                    Salaried: {s.proRated ? "the salary is pro-rated by the working days they were employed" : "the salary is paid in full"}.
-                    {" "}An hour this month is {cash(s.amount, cur)} ÷ the month's paid hours = {cash(s.hourlyRate, cur, true)}/h (it prices any deduction)
+                    {d.parts.length > 1
+                        ? "Their pay changed this month: each working day is paid at the salary in force that day."
+                        : `Salaried: ${s.proRated ? "the salary is pro-rated by the working days they were employed" : "the salary is paid in full"}.`}
+                    {d.parts.length > 1
+                        ? ` An hour this month comes to ${cash(s.hourlyRate, cur, true)}/h, the days' rates together (it prices any hours deducted)`
+                        : ` An hour this month is ${cash(s.amount, cur)} ÷ the month's paid hours = ${cash(s.hourlyRate, cur, true)}/h (it prices any deduction)`}
                     {s.tracksHours ? `; overtime is paid at the overtime rate set with the pay, ${cash(s.overtimeRate, cur, true)}/h (the salary ÷ 184 unless set otherwise), whatever the month` : ""}
                     {s.overtimeThresholdMinutes != null ? `, and only for the hours counted past ${fmtH(s.overtimeThresholdMinutes)} (everything logged plus paid leave; the latest overtime is the part paid)` : ""}.
                     {s.deduction > 0 && d.missedDays.length > 0 && !d.inProgress ? " A whole day missed costs the full paid day, its break included." : ""}
