@@ -258,7 +258,7 @@ export default function SalariesPage() {
                                 <div className="panel-title">Employees</div>
                                 {explain && <div className="panel-sub">
                                     Everyone owes their scheduled hours each month. Overtime first makes up any hours short (paid as normal), the rest is paid as overtime;
-                                    a salary loses the hours still short at the end of the month. Hourly: hours × rate. Monthly: the salary, whatever the month's length;
+                                    a salary loses the hours still short at the end of the month. Everyone is paid a monthly salary, whatever the month's length, each working day at the salary in force that day;
                                     an hour of it is the salary ÷ the month's paid hours, and overtime is paid at the rate set with the pay (the salary ÷ 184 unless set otherwise).
                                     From November 2026 a salary's overtime is paid only for the hours counted past 184 in the month (everything logged plus paid leave),
                                     or past the month's expected hours when those are more. Admins and super admins are paid a fixed salary.
@@ -290,8 +290,8 @@ export default function SalariesPage() {
                                                     <th className="r">Made up<HelpHint article="hours-balance" label="made up">Overtime that covered missing hours, paid as normal hours.</HelpHint></th>
                                                     <th className="r">Overtime<HelpHint article="overtime" label="overtime">Overtime logged, after making up missing hours. A salary is paid only what is past its threshold: see Overtime pay.</HelpHint></th>
                                                     <th>Short<HelpHint article="deductions" label="short">Hours still missing. On a monthly salary they come off the pay once the month ends, unless excused.</HelpHint></th>
-                                                    <th className="r">Base pay<HelpHint article="pay" label="base pay">The month's pay as a monthly amount: the salary, or for hourly pay, the rate × the month's paid hours.</HelpHint></th>
-                                                    <th className="r">Hourly pay<HelpHint article="pay" label="hourly pay">What an hour is worth this month: a salary ÷ the month's paid hours, so it changes with the number of working days.</HelpHint></th>
+                                                    <th className="r">Base pay<HelpHint article="pay" label="base pay">The month's pay as a monthly amount: the salary.</HelpHint></th>
+                                                    <th className="r">Hourly pay<HelpHint article="pay" label="hourly pay">What an hour is worth this month: a salary ÷ the month's paid hours, so it changes with the number of working days. In a month whose pay changed, the days' rates together.</HelpHint></th>
                                                     <th className="r">Overtime pay<HelpHint article="pay" label="overtime pay">At the overtime rate × the multiplier. A salary is paid only the overtime counted past its threshold (184 hours, or the month's expected hours if more): everything logged plus paid leave.</HelpHint></th>
                                                     <th className="r">To pay<HelpHint article="pay" label="to pay">What they are owed. While the month runs, a salary shows what it has earned so far, with the full month under it.</HelpHint></th>
                                                     {hasAdvances && (
@@ -403,12 +403,14 @@ function SalaryLine({ row: r, running, advances, onOpen }: { row: SalaryRow; run
             <td className="r mono nowrap">
                 {cash(r.monthlyPay, r.currency)}
                 <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }}>
-                    {hasFixedSalary(r.role) ? "fixed salary" : "monthly salary"}
+                    {hasFixedSalary(r.role) ? "fixed salary" : "monthly salary"}{r.payChanged ? ", changed" : ""}
                 </div>
             </td>
-            <td className="r mono nowrap" title={`${cash(r.monthlyPay, r.currency)} ÷ ${paidHours} paid hours this month`}>
+            <td className="r mono nowrap" title={r.payChanged
+                ? "The pay changed this month: each working day at the salary in force that day, so an hour is the days' rates together"
+                : `${cash(r.monthlyPay, r.currency)} ÷ ${paidHours} paid hours this month`}>
                 {cash(r.hourlyRate, r.currency, true)}/h
-                <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }}>÷ {paidHours}h this month</div>
+                <div className="muted" style={{ fontSize: "10.5px", fontFamily: "inherit" }}>{r.payChanged ? "the days' rates together" : `÷ ${paidHours}h this month`}</div>
             </td>
             <td className="r mono">
                 {r.overtimePay ? cash(r.overtimePay, r.currency) : "-"}

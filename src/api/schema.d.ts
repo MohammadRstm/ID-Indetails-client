@@ -22160,6 +22160,8 @@ export interface components {
             overtimeRate: number;
             /** Format: int32 */
             overtimeThresholdMinutes: null | number;
+            /** @description The pay changed during the month: its days are paid at more than one salary (the detail's parts). */
+            payChanged?: boolean;
             /** Format: int64 */
             photoFileId: null | number;
             position: null | string;
