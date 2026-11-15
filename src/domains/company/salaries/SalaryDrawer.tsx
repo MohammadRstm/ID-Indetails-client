@@ -319,7 +319,8 @@ function AdvanceSection({ detail: d, month, canGive, onGive, onAdvances }: { det
                 <div className="pay-lines mt-s">
                     {advances.map((a) => {
                         const thisMonth = a.months.find((m) => monthKey(m.month) === month.slice(0, 7));
-                        const takes = thisMonth ? (thisMonth.closed && thisMonth.taken != null ? thisMonth.taken : thisMonth.planned) : null;
+                        // what comes off as things stand (re-worked when pay changes), or the plan before it is worked out
+                        const takes = thisMonth ? (thisMonth.taken ?? thisMonth.planned) : null;
                         return (
                             <div key={a.id} {...clickable(() => onAdvances(a.id))} className="click" style={{ alignItems: "center" }}>
                                 <span className="row wrap" style={{ gap: 8 }}>

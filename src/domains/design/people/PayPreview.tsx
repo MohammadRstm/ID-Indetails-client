@@ -32,7 +32,7 @@ export default function PayPreview({ preview, currencyChanged }: { preview: Prev
             {currencyChanged && <div className="banner hold mt-s"><Icon name="alert" /><div>{CURRENCY_WARNING}</div></div>}
 
             <div className="tbl-wrap mt-s">
-                <table className="tbl tbl-min" aria-label="Salary by month">
+                <table className="tbl" aria-label="Salary by month">
                     <thead>
                         <tr>
                             <th>Month</th>
@@ -58,7 +58,7 @@ export default function PayPreview({ preview, currencyChanged }: { preview: Prev
 
             {preview.projects.length > 0 && (
                 <div className="tbl-wrap mt-s">
-                    <table className="tbl tbl-min" aria-label="Projects it re-prices">
+                    <table className="tbl" aria-label="Projects it re-prices">
                         <thead>
                             <tr>
                                 <th>Project</th>
