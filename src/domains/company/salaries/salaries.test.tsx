@@ -262,6 +262,24 @@ describe("A person's salary", () => {
         expect(within(drawer).queryByText("Where the hours went")).not.toBeInTheDocument();
     });
 
+    it("shows each stretch of a month whose pay changed, at its own salary", async () => {
+        const parts = [
+            { from: "2026-09-01", to: "2026-09-14", salary: 2200, overtimeRate: 11.96, days: 10, pay: 1000 },
+            { from: "2026-09-15", to: "2026-09-30", salary: 2640, overtimeRate: 14.35, days: 12, pay: 1440 },
+        ];
+        const changed = { ...sep, rows: { ...sep.rows, items: sep.rows.items.map((x) => (x.name === "Rami Aoun" ? { ...x, payChanged: true } : x)) } };
+        renderApp("/company/salaries", rana,
+            http.get("/api/company/salaries/6", () => HttpResponse.json({ ...salaries.rami, parts })),
+            http.get("/api/company/salaries", () => HttpResponse.json(changed)),
+            ...salaryHandlers);
+        // the list's hour is the days' rates together, not the end-of-month salary ÷ its hours
+        expect(within(await screen.findByText("Rami Aoun").then((n) => n.closest("tr") as HTMLElement)).getByText("the days' rates together")).toBeInTheDocument();
+        const drawer = await openDetails("Rami Aoun");
+        expect((await within(drawer).findByText(/a month · 10 working days$/)).parentElement).toHaveTextContent(money.exact(1000));
+        expect(within(drawer).getByText(/a month · 12 working days$/).parentElement).toHaveTextContent(money.exact(1440));
+        expect(within(drawer).getByText(/Their pay changed this month/)).toBeInTheDocument();
+    });
+
     it("shows the working days with nothing logged", async () => {
         renderApp("/company/salaries", rana, ...salaryHandlers);
         const drawer = await openDetails("Rami Aoun");

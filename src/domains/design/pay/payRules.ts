@@ -21,7 +21,16 @@ export const hasFixedSalary = (role: string) => role !== "employee";
 /** Execution's site staff log no hours either, so like admins they earn no overtime. */
 export const paidMonthlyOnly = (role: string, domain: string | null | undefined) => hasFixedSalary(role) || domain === "execution";
 
-/** The pay in force on a day: the latest that has started. */
+/** The pay in force on a day: the latest active entry that has started (a superseded one was replaced). */
 export function currentPay(history: Schemas["PayResponse"][] | undefined, today: string): Schemas["PayResponse"] | undefined {
-    return (history ?? []).filter((p) => p.effectiveFrom <= today).sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom) || b.id - a.id)[0];
+    return (history ?? [])
+        .filter((p) => p.effectiveFrom <= today && !p.supersededAt)
+        .sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom) || b.id - a.id)[0];
 }
+
+/**
+ * What a change of currency does, said wherever one is made. The API only lets it start on the 1st of a month, so
+ * every month is paid in one currency.
+ */
+export const CURRENCY_WARNING = "Changing currency is rarely right. It starts on the 1st. Any advance in the old currency stops coming off. "
+    + "Months are grouped by their currency. LBP needs an exchange rate in force, or its labour stays unconverted.";

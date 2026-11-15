@@ -4064,6 +4064,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/employees/{userId}/pay/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ChangePayRequest"];
+                    "application/json": components["schemas"]["ChangePayRequest"];
+                    "text/json": components["schemas"]["ChangePayRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PayPreviewResponse"];
+                        "text/json": components["schemas"]["PayPreviewResponse"];
+                        "text/plain": components["schemas"]["PayPreviewResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/employees/{userId}/photo": {
         parameters: {
             query?: never;
@@ -19889,6 +19934,42 @@ export interface components {
             voidedAt: null | string;
             voidReason: null | string;
         };
+        PayPreviewMonthResponse: {
+            /** Format: double */
+            advanceAfter: number;
+            /** Format: double */
+            advanceBefore: number;
+            advanceCurrency: null | string;
+            currencyAfter: null | string;
+            currencyBefore: null | string;
+            /** Format: date */
+            month: string;
+            /** Format: double */
+            salaryAfter: null | number;
+            /** Format: double */
+            salaryBefore: null | number;
+        };
+        PayPreviewProjectResponse: {
+            /** Format: double */
+            labourAfter: number;
+            /** Format: double */
+            labourBefore: number;
+            /** Format: double */
+            profitAfter: number;
+            /** Format: double */
+            profitBefore: number;
+            /** Format: int64 */
+            projectId: number;
+            reachesZero: boolean;
+            title: string;
+        };
+        PayPreviewResponse: {
+            /** Format: date */
+            effectiveFrom: string;
+            months: components["schemas"]["PayPreviewMonthResponse"][];
+            projects: components["schemas"]["PayPreviewProjectResponse"][];
+            replaces: components["schemas"]["PayResponse"][];
+        };
         PayResponse: {
             /** Format: double */
             amount: number;
@@ -19904,6 +19985,10 @@ export interface components {
             note: null | string;
             /** Format: double */
             overtimeRate: number;
+            /** Format: date-time */
+            supersededAt?: null | string;
+            /** Format: int64 */
+            supersededById?: null | number;
         };
         PeriodCostResponse: {
             /** Format: double */
@@ -21981,10 +22066,25 @@ export interface components {
             inProgress: boolean;
             missedDays: string[];
             overtimeWork: components["schemas"]["OvertimeWorkResponse"][];
+            parts: components["schemas"]["SalaryPartResponse"][];
             projects: components["schemas"]["SalaryProjectResponse"][];
             salary: components["schemas"]["SalaryRowResponse"];
             timeOff: components["schemas"]["MonthTimeOffResponse"][];
             workingDays: components["schemas"]["SalaryDayResponse"][];
+        };
+        SalaryPartResponse: {
+            /** Format: int32 */
+            days: number;
+            /** Format: date */
+            from: string;
+            /** Format: double */
+            overtimeRate: number;
+            /** Format: double */
+            pay: number;
+            /** Format: double */
+            salary: number;
+            /** Format: date */
+            to: string;
         };
         SalaryProjectResponse: {
             currency: string;
@@ -22049,6 +22149,8 @@ export interface components {
             overtimeRate: number;
             /** Format: int32 */
             overtimeThresholdMinutes: null | number;
+            /** @description The pay changed during the month: its days are paid at more than one salary (the detail's parts). */
+            payChanged?: boolean;
             /** Format: int64 */
             photoFileId: null | number;
             position: null | string;

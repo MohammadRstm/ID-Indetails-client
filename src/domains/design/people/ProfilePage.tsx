@@ -353,9 +353,11 @@ function CostPanel({ userId, first, entries }: { userId: number; first: string; 
                                 <div className="mt">
                                     <div className="u" style={{ marginBottom: 4 }}>Pay history</div>
                                     {history.map((r) => (
-                                        <CostRow key={r.id} label={`${money.fmt(r.amount, r.currency)} a month`} meta={`from ${fmtDateY(r.effectiveFrom)}${r.note ? ` · ${r.note}` : ""}`} value={r.id === current?.id ? "current" : ""} />
+                                        <CostRow key={r.id} label={`${money.fmt(r.amount, r.currency)} a month`}
+                                            meta={`from ${fmtDateY(r.effectiveFrom)}${r.supersededAt ? ` · replaced on ${fmtDateY(r.supersededAt)}` : ""}${r.note ? ` · ${r.note}` : ""}`}
+                                            value={r.id === current?.id ? "current" : r.supersededAt ? "replaced" : ""} />
                                     ))}
-                                    <p className="hint mt-s">Hours are priced at the pay in force the day they were worked; a salary's at that month's rate, the salary ÷ the month's paid hours.</p>
+                                    <p className="hint mt-s">Each day is paid and priced at the pay in force that day: the salary ÷ that month's paid hours. A change from a day replaces any pay set from then; the replaced entry stays here.</p>
                                 </div>
                             )}
                         </div>

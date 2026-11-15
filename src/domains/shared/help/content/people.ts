@@ -58,10 +58,11 @@ export const people: Article[] = [
         blocks: [
             steps(
                 step("Open their profile, **Edit profile**, then the pay.", "Profile", "Edit profile"),
-                step("Enter the **monthly salary** (USD or LBP) and the day it **applies from**."),
+                step("Enter the **monthly salary** (USD or LBP) and **from when** it applies, then **Review the pay change**: it shows each month's salary and the projects it re-prices. **Save** to make it."),
             ),
             list(
-                "A change applies from its day: today or earlier, and after their last change. Pay changes are never edited, only followed by a newer one.",
+                "A change applies from its day: today or any earlier day, closed months too. It replaces any pay set from that day on, so a mistake is fixed by a change dated on its day; the replaced pay stays in their history.",
+                "A change of currency starts on the 1st of a month. Avoid it if you can: an advance in the old currency stops coming off, and months are grouped by their currency.",
                 "A change dated in the past re-prices their work since that day, even in closed months.",
                 "They're told that their pay changed, never the amount.",
                 "Nobody sets their own pay.",

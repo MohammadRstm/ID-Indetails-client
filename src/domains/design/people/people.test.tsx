@@ -7,10 +7,24 @@ import { people, peopleHandlers } from "@/test/fixtures/people";
 import { workHandlers } from "@/test/fixtures/work";
 import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
+import { money } from "@/shared/format/money";
 
 // A Design admin a super admin has handed the money to: admins don't hold it by default
 const nadia = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const yara = people.employee;
+
+/** The API's preview of a pay change: September's salary before and after, and one project it re-prices. */
+function previews(bodies: unknown[] = [], replaces: unknown[] = []) {
+    return http.post("/api/employees/:id/pay/preview", async ({ request }) => {
+        bodies.push(await request.json());
+        return HttpResponse.json({
+            effectiveFrom: "2026-09-30",
+            replaces,
+            months: [{ month: "2026-09-01", salaryBefore: 1600, currencyBefore: "USD", salaryAfter: 1609.09, currencyAfter: "USD", advanceBefore: 0, advanceAfter: 0, advanceCurrency: null }],
+            projects: [{ projectId: 3, title: "Villa Mounir interiors", labourBefore: 900, labourAfter: 912.5, profitBefore: 4100, profitAfter: 4087.5, reachesZero: false }],
+        });
+    });
+}
 
 // Wednesday 30 September 2026, noon in Beirut
 beforeEach(() => {
@@ -341,12 +355,14 @@ describe("Someone's profile", () => {
         }
     });
 
-    it("saves an admin's edit, and new pay from a date", async () => {
+    it("saves an admin's edit, and new pay from a date once its effect is shown", async () => {
         const updates: unknown[] = [];
         const pays: unknown[] = [];
+        const previewed: unknown[] = [];
         renderApp("/design/people/9", nadia,
             http.put("/api/employees/9", async ({ request }) => { updates.push(await request.json()); return HttpResponse.json(yara); }),
             http.post("/api/employees/9/pay", async ({ request }) => { pays.push(await request.json()); return HttpResponse.json(people.payHistory[0]); }),
+            previews(previewed),
             ...peopleHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
@@ -358,11 +374,58 @@ describe("Someone's profile", () => {
         await userEvent.type(pay, "1800");
         // the overtime rate follows the new salary: 1,800 ÷ 184
         expect(within(dialog).getByLabelText("Overtime rate")).toHaveValue("9.78");
-        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        expect(within(dialog).getByLabelText("From when")).toBeInTheDocument();
 
+        // the first press shows what the change does, and saves nothing yet
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        const months = await within(dialog).findByRole("table", { name: "Salary by month" });
+        expect(within(months).getByText(money.exact(1609.09))).toBeInTheDocument();
+        const projects = within(dialog).getByRole("table", { name: "Projects it re-prices" });
+        expect(within(projects).getByText("Villa Mounir interiors")).toBeInTheDocument();
+        expect(within(projects).getByText(money.exact(4087.5))).toBeInTheDocument();
+        expect(updates).toEqual([]);
+        expect(pays).toEqual([]);
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
         expect(updates).toEqual([{ firstName: "Yara", lastName: "Mansour", phone: yara.phone, position: "Senior visualiser", teamId: yara.team!.id }]);
-        expect(pays).toEqual([{ amount: 1800, currency: "USD", overtimeRate: 9.78, effectiveFrom: "2026-09-30" }]);
+        const body = { amount: 1800, currency: "USD", overtimeRate: 9.78, effectiveFrom: "2026-09-30" };
+        expect(previewed).toEqual([body]);
+        expect(pays).toEqual([body]);
+    });
+
+    it("goes back from the preview to change the pay, and previews it again", async () => {
+        const previewed: unknown[] = [];
+        renderApp("/design/people/9", nadia, previews(previewed), ...peopleHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
+        const pay = await within(dialog).findByLabelText("Monthly salary");
+        await userEvent.clear(pay);
+        await userEvent.type(pay, "1800");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        await within(dialog).findByRole("table", { name: "Salary by month" });
+        await userEvent.click(within(dialog).getByRole("button", { name: "Back" }));
+        await userEvent.clear(within(dialog).getByLabelText("Monthly salary"));
+        await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "1900");
+        // a changed pay needs its own preview
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        await within(dialog).findByRole("table", { name: "Salary by month" });
+        expect(previewed).toHaveLength(2);
+    });
+
+    it("warns against a change of currency, which starts on the 1st", async () => {
+        const previewed: unknown[] = [];
+        renderApp("/design/people/9", nadia, previews(previewed), ...peopleHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
+        await within(dialog).findByLabelText("Monthly salary");
+        await userEvent.click(within(dialog).getAllByRole("button", { name: "Currency" })[0]);
+        await userEvent.click(screen.getByRole("option", { name: "LBP" }));
+        expect(within(dialog).getByText(/Changing currency is rarely right/)).toBeInTheDocument();
+        // today is the 30th: the change can't start until the 1st of a month
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        expect(within(dialog).getByText("A change of currency starts on the 1st of a month.")).toBeInTheDocument();
+        expect(previewed).toEqual([]);
     });
 
     it("changes only the overtime rate, as a pay change with the same salary", async () => {
@@ -370,6 +433,7 @@ describe("Someone's profile", () => {
         renderApp("/design/people/9", nadia,
             http.put("/api/employees/9", () => HttpResponse.json(yara)),
             http.post("/api/employees/9/pay", async ({ request }) => { pays.push(await request.json()); return HttpResponse.json(people.payHistory[0]); }),
+            previews(),
             ...peopleHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
@@ -377,6 +441,8 @@ describe("Someone's profile", () => {
         expect(overtime).toHaveValue("8.7");
         await userEvent.clear(overtime);
         await userEvent.type(overtime, "10");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        await within(dialog).findByRole("table", { name: "Salary by month" });
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
 
         await waitFor(() => expect(pays).toEqual([{ amount: 1600, currency: "USD", overtimeRate: 10, effectiveFrom: "2026-09-30" }]));
@@ -436,6 +502,7 @@ describe("Someone's profile", () => {
         renderApp("/design/people/9", withPermissions(nadia, { revoke: [P.EMPLOYEE_MANAGE] }),
             http.put("/api/employees/9", () => { updated = true; return HttpResponse.json(yara); }),
             http.post("/api/employees/9/pay", async ({ request }) => { pays.push(await request.json()); return HttpResponse.json(people.payHistory[0]); }),
+            previews(),
             ...peopleHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
@@ -443,6 +510,8 @@ describe("Someone's profile", () => {
         expect(within(dialog).queryByLabelText("Position")).not.toBeInTheDocument();
         await userEvent.clear(pay);
         await userEvent.type(pay, "1800");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        await within(dialog).findByRole("table", { name: "Salary by month" });
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
 
         await waitFor(() => expect(pays).toHaveLength(1));

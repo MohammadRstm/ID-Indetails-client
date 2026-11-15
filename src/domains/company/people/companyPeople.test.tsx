@@ -147,6 +147,10 @@ describe("the company's people", () => {
             http.get("/api/employees/43/pay", () => HttpResponse.json([])),
             http.put("/api/employees/43", () => HttpResponse.json(people.employee)),
             http.post("/api/employees/43/pay", async ({ request }) => { pays.push(await request.json()); return HttpResponse.json({}); }),
+            http.post("/api/employees/43/pay/preview", () => HttpResponse.json({
+                effectiveFrom: "2026-09-30", replaces: [], projects: [],
+                months: [{ month: "2026-09-01", salaryBefore: null, currencyBefore: null, salaryAfter: 4500, currencyAfter: "USD", advanceBefore: 0, advanceAfter: 0, advanceCurrency: null }],
+            })),
             ...handlers);
         const row = (await screen.findByText("Sami Khoury")).closest("tr") as HTMLElement;
         await userEvent.click(within(row).getByRole("button", { name: "More actions" }));
@@ -155,6 +159,8 @@ describe("the company's people", () => {
         // a super admin's pay is a fixed salary
         expect(await within(dialog).findByText("Fixed salary")).toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "4500");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        await within(dialog).findByRole("table", { name: "Salary by month" });
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
         await waitFor(() => expect(pays).toEqual([{ amount: 4500, currency: "USD", effectiveFrom: "2026-09-30" }]));
     });

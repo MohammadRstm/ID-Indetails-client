@@ -47,6 +47,7 @@
   "missedDays": [],
   "overtimeWork": [],
   "excuses": [],
+  "parts": [],
   "timeOff": [],
   "workingDays": [
     {

@@ -216,6 +216,14 @@ export function useSetPhoto(userId: number | "me") {
     });
 }
 
+/** What a pay change would do, without making it: the API makes it, measures it and rolls it back. */
+export function usePreviewPay(userId: number) {
+    return useMutation({
+        mutationFn: async (body: Schemas["ChangePayRequest"]) =>
+            (await http.post<Schemas["PayPreviewResponse"]>(`/employees/${userId}/pay/preview`, body)).data,
+    });
+}
+
 export function useChangePay(userId: number) {
     const changed = usePeopleChanged();
     const invalidate = useInvalidate();

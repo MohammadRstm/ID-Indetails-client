@@ -111,7 +111,7 @@ export const explainedPay: Article[] = [
             formula("Overtime rate of a salary = salary ÷ 184, unless set otherwise",
                 "Set with the pay, and the same every month while that pay lasts: a $4,232 salary's overtime starts from $23 an hour. An admin can type another rate when setting the pay, and a pay change gets a new one."),
             list(
-                "The pay in force at the month's end prices the whole month, even after a mid-month raise.",
+                "Each day is paid at the salary in force that day: a raise from the 15th pays the days before it at the old salary and the rest at the new one.",
                 "Pay is per currency and never converted.",
                 "Nothing is stored: a late excuse or a pay change dated in the past changes the figures at once.",
             ),
