@@ -352,8 +352,8 @@ function CostPanel({ userId, first, entries }: { userId: number; first: string; 
                             {history.length > 1 && (
                                 <div className="mt">
                                     <div className="u" style={{ marginBottom: 4 }}>Pay history</div>
-                                    {history.map((r, i) => (
-                                        <CostRow key={r.id} label={`${money.fmt(r.amount, r.currency)} a month`} meta={`from ${fmtDateY(r.effectiveFrom)}${r.note ? ` · ${r.note}` : ""}`} value={i === 0 ? "current" : ""} />
+                                    {history.map((r) => (
+                                        <CostRow key={r.id} label={`${money.fmt(r.amount, r.currency)} a month`} meta={`from ${fmtDateY(r.effectiveFrom)}${r.note ? ` · ${r.note}` : ""}`} value={r.id === current?.id ? "current" : ""} />
                                     ))}
                                     <p className="hint mt-s">Hours are priced at the pay in force the day they were worked; a salary's at that month's rate, the salary ÷ the month's paid hours.</p>
                                 </div>

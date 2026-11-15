@@ -126,7 +126,7 @@ describe("the company's people", () => {
         expect(within(dialog).queryByText("Choose the department they work in.")).not.toBeInTheDocument();
         await userEvent.click(within(dialog).getByLabelText("Department"));
         await userEvent.click(screen.getByRole("option", { name: "Site" }));
-        expect(within(dialog).getByText("Enter their pay per month.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Enter their monthly salary.")).toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "900");
         // site staff log no hours, so they earn no overtime: the API keeps its suggested rate quietly
         expect(within(dialog).queryByLabelText("Overtime rate")).not.toBeInTheDocument();
