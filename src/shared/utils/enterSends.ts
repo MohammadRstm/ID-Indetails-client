@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from "react";
+import { touchScreen } from "./touchScreen";
 
 /**
  * Whether a key press in a chat box sends what is written: Enter on a computer. Shift+Enter, Enter while an input
@@ -7,9 +8,4 @@ import type { KeyboardEvent } from "react";
  */
 export function enterSends(e: KeyboardEvent<HTMLElement>): boolean {
     return e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && !touchScreen();
-}
-
-/** A browser without media queries (a test's jsdom) is a computer. */
-function touchScreen(): boolean {
-    return window.matchMedia?.("(pointer: coarse)").matches ?? false;
 }
