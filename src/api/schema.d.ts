@@ -13401,6 +13401,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/next-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Check?: string;
+                    Domain?: string;
+                    ProjectId?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NextProjectCodeResponse"];
+                        "text/json": components["schemas"]["NextProjectCodeResponse"];
+                        "text/plain": components["schemas"]["NextProjectCodeResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/site-summary": {
         parameters: {
             query?: never;
@@ -18058,6 +18099,7 @@ export interface components {
         };
         CreateProjectRequest: {
             billingType?: components["schemas"]["BillingType"];
+            buildingCode?: null | string;
             /** Format: int64 */
             clientId?: null | number;
             departmentIds?: null | number[];
@@ -18068,6 +18110,7 @@ export interface components {
             location?: null | string;
             /** Format: int64 */
             ownerId?: null | number;
+            projectCode?: null | string;
             /** Format: double */
             projectFee?: null | number;
             /** Format: double */
@@ -18381,8 +18424,12 @@ export interface components {
             weeklySummary: boolean;
         };
         EditProjectFill: {
+            /** @description 1 to 10 letters or digits, usually the name's initials. */
+            buildingCode: null | string;
             description: null | string;
             location: null | string;
+            /** @description ID26Q4001. */
+            projectCode: null | string;
             /** Format: date */
             targetDate: null | string;
             title: null | string;
@@ -19367,6 +19414,7 @@ export interface components {
         MyProjectResponse: {
             acceptsWork: boolean;
             clientName: null | string;
+            code: string;
             contributors: components["schemas"]["ContributorResponse"][];
             /** Format: date-time */
             createdAt: string;
@@ -19523,6 +19571,8 @@ export interface components {
             projects: null | number;
         };
         NewProjectFill: {
+            /** @description Only when the user gives one: 1 to 10 letters or digits. Left out, the form suggests the name's initials. */
+            buildingCode: null | string;
             /**
              * Format: int64
              * @description An id from find or another tool.
@@ -19530,6 +19580,8 @@ export interface components {
             clientId: null | number;
             description: null | string;
             location: null | string;
+            /** @description Only when the user gives one: ID26Q4001. Left out, the form suggests the next code. */
+            projectCode: null | string;
             /** Format: date */
             targetDate: null | string;
             title: null | string;
@@ -19553,6 +19605,10 @@ export interface components {
             unit?: null | string;
             /** Format: double */
             unitCost?: null | number;
+        };
+        NextProjectCodeResponse: {
+            projectCode: string;
+            takenBy: null | components["schemas"]["ProjectCodeHolderResponse"];
         };
         /** @enum {unknown} */
         NotificationCategory: "work" | "requirements" | "projects" | "meetings" | "sites" | "money" | "people" | "messages";
@@ -20601,6 +20657,11 @@ export interface components {
             /** Format: int64 */
             id: number;
         };
+        ProjectCodeHolderResponse: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+        };
         ProjectContributorDetailResponse: {
             /** Format: int32 */
             entries: number;
@@ -21046,7 +21107,9 @@ export interface components {
         ProjectReportSection: "summary" | "info" | "timeline" | "work" | "expenses" | "financials" | "billing" | "client" | "log";
         ProjectResponse: {
             billingType: components["schemas"]["BillingType"];
+            buildingCode: string;
             client: null | components["schemas"]["ProjectClientResponse"];
+            code: string;
             /** Format: date-time */
             completedAt: null | string;
             /** Format: date-time */
@@ -21069,6 +21132,7 @@ export interface components {
             photoFileId: null | number;
             /** Format: int32 */
             progressPct: number;
+            projectCode: string;
             staff: null | components["schemas"]["PersonRefResponse"][];
             /** Format: date */
             startDate: string;
@@ -21123,7 +21187,9 @@ export interface components {
         ProjectStatus: "active" | "hold" | "completed" | "archived";
         ProjectSummaryResponse: {
             billingType: components["schemas"]["BillingType"];
+            buildingCode: string;
             client: null | components["schemas"]["ProjectClientResponse"];
+            code: string;
             description: null | string;
             domain: string;
             icon: null | string;
@@ -21136,6 +21202,7 @@ export interface components {
             photoFileId: null | number;
             /** Format: int32 */
             progressPct: number;
+            projectCode: string;
             /** Format: date */
             startDate: string;
             status: components["schemas"]["ProjectStatus"];
@@ -22464,6 +22531,7 @@ export interface components {
             position: null | string;
         };
         SearchProjectResponse: {
+            code: string;
             domain: string;
             icon: null | string;
             /** Format: int64 */
@@ -23028,11 +23096,13 @@ export interface components {
             tvaRate?: null | number;
         };
         UpdateProjectRequest: {
+            buildingCode?: null | string;
             description?: null | string;
             icon?: null | string;
             location?: null | string;
             /** Format: int64 */
             ownerId?: number;
+            projectCode?: null | string;
             /** Format: date */
             startDate?: null | string;
             /** Format: date */

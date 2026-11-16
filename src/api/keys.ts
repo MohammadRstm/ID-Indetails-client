@@ -12,6 +12,8 @@ export const keys = {
         list: (params: object) => ["projects", "list", params] as const,
         totals: (params: object) => ["projects", "totals", params] as const,
         counts: (domain: string) => ["projects", "counts", domain] as const,
+        /** The project form's suggested code, and who has the one typed: refreshed by every project change. */
+        nextCode: (domain: string, check: string, projectId: number | null) => ["projects", "next-code", domain, check, projectId] as const,
         detail: (id: number) => ["projects", "detail", id] as const,
         /** Its profitability and its what-ifs: under the project, so every change to it refreshes them. */
         insights: (id: number) => ["projects", "detail", id, "insights"] as const,

@@ -117,7 +117,7 @@ export function MyProjectCards() {
     const weekStart = startOfWeek(today), monthStart = `${monthKey(today)}-01`, monthAgo = addDays(today, -30);
     function keep(p: MyProject) {
         const q = fq.trim().toLowerCase();
-        if (q && !p.title.toLowerCase().includes(q) && !(p.clientName ?? "").toLowerCase().includes(q)) return false;
+        if (q && ![p.title, p.code, p.clientName ?? ""].some((text) => text.toLowerCase().includes(q))) return false;
         if (fClient === "internal" ? !!p.clientName : fClient && p.clientName !== fClient) return false;
         const last = p.myLastStartedAt ? dayKey(p.myLastStartedAt) : null;
         if (fLast === "week" && !(last && last >= weekStart)) return false;
@@ -140,7 +140,7 @@ export function MyProjectCards() {
                 <span className="muted" style={{ fontSize: 12 }}>most recently worked on first</span>
             </div>
             <div className="filters">
-                <SearchInput width={230} value={fq} onChange={setFq} placeholder="Search projects or clients" />
+                <SearchInput width={230} value={fq} onChange={setFq} placeholder="Search projects, codes or clients" />
                 <Select className="select sm" style={{ width: 190 }} aria-label="Client" value={fClient} onChange={setFClient} options={[
                     { value: "", label: "All clients" },
                     ...clientNames.map((n) => ({ value: n, label: n })),
@@ -247,6 +247,7 @@ function ProjectCard({ project: p, today, canLog, paused }: { project: MyProject
                     <div className="row" style={{ gap: 7, flexWrap: "wrap" }}>
                         <span className="pcard-title trunc">{p.title}</span>
                         {isNew && <span className="badge badge-new">New</span>}
+                        <span className="muted mono" style={{ fontSize: 11 }}>{p.code}</span>
                     </div>
                     {(p.clientName || p.location) && <div className="muted trunc" style={{ fontSize: "11.5px", marginTop: 2 }}>{[p.clientName && `for ${p.clientName}`, p.location].filter(Boolean).join(" · ")}</div>}
                     <div className="muted clamp2" style={{ fontSize: "11.5px", marginTop: 2 }}>{p.description}</div>

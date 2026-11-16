@@ -3,6 +3,7 @@ import { http, HttpResponse, type RequestHandler } from "msw";
 import App from "@/App";
 import type { CurrentUser } from "@/api/types";
 import { tokenStore } from "@/api/tokenStore";
+import { nextCodeHandler } from "./fixtures";
 import { work } from "./fixtures/work";
 import { server } from "./server";
 
@@ -32,6 +33,8 @@ const nothingLogged = [
 
 /** The API calls every signed-in page makes (settings, branding, badges, counts), answered with calm defaults. */
 export const shellHandlers = [
+    // the project form asks for its suggested code
+    nextCodeHandler,
     http.get("/api/company/branding", () => HttpResponse.json({ name: "ID-Indetails", hasLogo: false, logoFileId: null, supportWhatsApp: "96171317958" })),
     http.get("/api/company/settings", () => HttpResponse.json({
         isSetUp: true, name: "ID-Indetails", address: null, website: null, logoFileId: null,
