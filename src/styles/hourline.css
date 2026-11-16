@@ -1476,15 +1476,18 @@ tr.voided .mono, .cost-row.voided .mono { text-decoration: line-through; }
 .dd-ot { padding: 0 6px; border-radius: 99px; background: var(--warn-soft); color: var(--warn); font-weight: 600; font-size: 10.5px; }
 .dd-label.dd-live .dd-ot { background: rgba(255,255,255,.22); color: inherit; }
 .dd-hint { position: absolute; bottom: 2px; left: 0; font-size: 11px; color: var(--ink-3); }
-.dd .dt-track { cursor: crosshair; touch-action: none; }
+.dd .dt-track { cursor: crosshair; touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 .dd.dragging .dt-track > i.dt-sel { background: color-mix(in srgb, var(--accent) 28%, transparent); }
 
 /* the box after it is drawn: move it, stretch it by its edges; the working day's edges are marked */
-.dt-track > i.dt-sel.grab { cursor: grab; z-index: 3; }
+/* above a selected or focused task, so the handle that reaches over the task before it can still be grabbed */
+.dt-track > i.dt-sel.grab { cursor: grab; z-index: 4; }
 .dd-move .dt-track, .dd-move .dt-track > i.dt-sel.grab { cursor: grabbing; }
 .dd-l .dt-track, .dd-r .dt-track { cursor: ew-resize; }
 .dt-h { position: absolute; top: -3px; bottom: -3px; width: 12px; cursor: ew-resize; z-index: 2; }
 .dt-h.l { left: -7px; } .dt-h.r { right: -7px; }
+/* at either end of the track a handle sits inside the box, where the track doesn't cut it off */
+.dt-sel.at-lo .dt-h.l { left: 0; } .dt-sel.at-hi .dt-h.r { right: 0; }
 .dt-h::after { content: ""; position: absolute; top: 50%; left: 50%; width: 4px; height: 22px; margin: -11px 0 0 -2px; border-radius: 3px; background: var(--accent); box-shadow: 0 0 0 2px var(--surface); }
 .dt-sel.bad .dt-h::after { background: var(--now); }
 .dt-track > i.dt-wd { width: 0; border-left: 1.5px dashed color-mix(in srgb, var(--accent) 70%, transparent); z-index: 1; pointer-events: none; }
@@ -1514,6 +1517,13 @@ tr.voided .mono, .cost-row.voided .mono { text-decoration: line-through; }
 .dt-track > i.dt-e:hover .dt-h.in::after, .dt-track > i.dt-e:focus-visible .dt-h.in::after, .dd-task-l .dt-h.in::after, .dd-task-r .dt-h.in::after { opacity: .9; }
 .dd-task-l .dt-track, .dd-task-r .dt-track { cursor: ew-resize; }
 .dt-track > i.dt-e:focus-visible, .dt-track > i.dt-sel:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--ink), 0 0 0 2px var(--accent-soft); z-index: 4; }
+/* a finger needs more room than a mouse pointer: wider handles on touch screens */
+@media (pointer: coarse) {
+  .dt-h { width: 24px; }
+  .dt-h.l { left: -12px; } .dt-h.r { right: -12px; }
+  .dt-sel.at-lo .dt-h.l { left: 0; } .dt-sel.at-hi .dt-h.r { right: 0; }
+  .dt-track > i.dt-e .dt-h.in { width: 16px; }
+}
 .dd-keys { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-top: 6px; font-size: 11px; color: var(--ink-3); }
 .dd-keys .ic { width: 12px; height: 12px; margin-right: 2px; }
 .dd-keys kbd { font-family: var(--mono); font-size: 10px; padding: 0 5px; border-radius: 4px; border: 1px solid var(--line-2); background: var(--surface-2); color: var(--ink-2); }

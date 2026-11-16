@@ -28,7 +28,7 @@ type DayTrackProps = {
     nowMin?: number | null;
     sel?: Span | null;
     selBad?: boolean;
-    /** The logged entry picked to be deleted (double-clicked, or Enter on it). */
+    /** The logged entry picked to be deleted (clicked, or Enter on it). */
     selected?: number | null;
     editable?: boolean;
     /** A working-day edge an edge is held at, while dragging. */
@@ -121,7 +121,8 @@ export default function DayTrack({
                     );
                 })}
                 {sel && sel.e > sel.s && (
-                    <i className={cx("dt-sel", selBad && "bad", editable && "grab")}
+                    // at either end of the track its handle moves inside the box, where the track doesn't cut it off
+                    <i className={cx("dt-sel", selBad && "bad", editable && "grab", sel.s <= lo && "at-lo", sel.e >= hi && "at-hi")}
                         style={{ left: `${pct(sel.s)}%`, width: `${Math.max(0.6, pct(sel.e) - pct(sel.s))}%` }}
                         tabIndex={editable ? 0 : undefined} role={editable ? "button" : undefined}
                         aria-label={editable ? "This log. Left and right arrows move it; Shift with an arrow changes its end, Alt its start." : undefined}>
