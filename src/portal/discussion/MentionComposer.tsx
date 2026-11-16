@@ -2,6 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type ChangeEvent, 
 import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
+import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
@@ -216,8 +217,9 @@ export default function MentionComposer({
                     ))}
                 </div>
             )}
-            {/* a combobox: "@" offers a list of people, and the option the arrow keys are on is the box's active descendant */}
-            <textarea ref={area} className={cx("textarea dp-input", problem && "bad", suggested && "dp-suggested")} rows={2} value={text}
+            {/* a combobox: "@" offers a list of people, and the option the arrow keys are on is the box's active descendant.
+                It grows with what is written up to eight lines, then scrolls */}
+            <AutoGrowTextarea ref={area} className={cx("textarea dp-input", problem && "bad", suggested && "dp-suggested")} minRows={2} maxRows={8} value={text}
                 placeholder={suggested ?? placeholder} aria-label={label} aria-describedby={suggested ? hintId : undefined}
                 role="combobox" aria-autocomplete="list" aria-expanded={offered} aria-controls={offered ? listId : undefined}
                 aria-activedescendant={offered ? `${listId}-${chosen}` : undefined} aria-invalid={problem ? true : undefined}

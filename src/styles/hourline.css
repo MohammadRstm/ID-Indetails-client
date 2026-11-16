@@ -1075,7 +1075,11 @@ tr.voided .mono, .cost-row.voided .mono { text-decoration: line-through; }
 .cm-thumb { display: block; margin-top: 10px; max-width: 220px; max-height: 150px; border-radius: var(--r1); cursor: zoom-in; }
 
 .msg-composer-wrap { border-top: 1px solid var(--line); padding: 10px 14px; position: relative; }
-.msg-composer { display: flex; align-items: center; gap: 8px; }
+.msg-composer { display: flex; align-items: flex-end; gap: 8px; }
+/* the message box grows to five lines (AutoGrowTextarea): one line is as tall as the buttons, which stay by its last line */
+.msg-composer .autogrow { padding-top: 6px; padding-bottom: 6px; }
+.msg-composer > .icon-btn { margin-bottom: 1px; }
+.msg-composer > .btn-sm { margin-bottom: 3px; }
 .msg-readonly { display: flex; align-items: center; gap: 8px; color: var(--ink-3); font-size: 12.5px; }
 .msg-readonly .ic { width: 15px; height: 15px; }
 .msg-attach-preview { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { errorMessage } from "@/api/errors";
+import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Icon from "@/shared/icons/Icon";
 import { uploadFile } from "@/domains/design/work/workApi";
@@ -26,7 +27,8 @@ const MAX_FILES = 10;
 
 /**
  * Writing a message (the prototype's Composer): text, photos and videos, and in a group "@" to mention
- * someone. Files upload as soon as they are picked; Enter sends. With nothing written, the microphone button
+ * someone. Files upload as soon as they are picked; Enter sends and Shift+Enter starts a new line. The box grows with
+ * what is written, up to five lines, then scrolls. With nothing written, the microphone button
  * turns the row into a recorder: Send uploads the voice note and sends it as a message of its own.
  */
 export default function Composer({ members, meId, sending, error, onSend, draftKey }: ComposerProps) {
@@ -180,9 +182,13 @@ export default function Composer({ members, meId, sending, error, onSend, draftK
             <div className="msg-composer">
                 <input ref={fileRef} type="file" accept="image/*,video/*" multiple hidden onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
                 <button className="icon-btn" aria-label="Attach file" disabled={files.length >= MAX_FILES} onClick={() => fileRef.current?.click()}><Icon name="attach" /></button>
-                <input className="input grow" placeholder="Message…" aria-label="Message" value={text}
+                <AutoGrowTextarea className="input grow" minRows={1} maxRows={5} placeholder="Message…" aria-label="Message" value={text}
                     onChange={(e) => onText(e.target.value, e.target.selectionStart)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (!fromProton.current) void send(); } }} />
+                    onKeyDown={(e) => {
+                        if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return;
+                        e.preventDefault();
+                        if (!fromProton.current) void send();
+                    }} />
                 {text.trim() === "" && files.length === 0 && (
                     <button className="icon-btn" aria-label="Record a voice note" disabled={asking} onClick={() => void startRecording()}><Icon name="mic" /></button>
                 )}

@@ -95,6 +95,19 @@ describe("Messages", () => {
         await waitFor(() => expect(box).toHaveValue(""));
     });
 
+    it("write a message over several lines: Shift+Enter starts a new line and Enter sends it", async () => {
+        const sent: unknown[] = [];
+        renderApp("/design/messages?group=13", rana,
+            http.post("/api/messages/teams/13", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(messages.conversations[1].lastMessage); }),
+            ...messageHandlers);
+        const box = await screen.findByRole("textbox", { name: "Message" });
+        await userEvent.type(box, "First line{Shift>}{Enter}{/Shift}Second line");
+        expect(box).toHaveValue("First line\nSecond line");
+        expect(sent).toEqual([]);
+        await userEvent.type(box, "{Enter}");
+        await waitFor(() => expect(sent).toEqual([{ body: "First line\nSecond line", mentionIds: [], attachmentIds: [] }]));
+    });
+
     it("send a photo, uploaded as soon as it is picked", async () => {
         const sent: unknown[] = [];
         URL.createObjectURL = vi.fn(() => "blob:photo");

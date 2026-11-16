@@ -9,6 +9,7 @@ import DiscussionText from "@/portal/discussion/DiscussionText";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
+import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import Field, { FieldError } from "@/shared/components/Forms/Field";
 import { useForm } from "@/shared/components/Forms/useForm";
 import { Drawer } from "@/shared/components/Overlays/Modal";
@@ -208,7 +209,7 @@ function CommentForm({ id, label, initial = "", submitLabel, onSubmit, onCancel,
         <form className="pf-form" onSubmit={(e) => { e.preventDefault(); void submit(); }} noValidate {...proton.guard}>
             <FilledNote fields={proton.filled} />
             <Field id={id} label={label} error={error}>
-                <textarea id={id} className={cx("textarea dp-input", error && "bad")} rows={3} value={text} autoFocus={initial !== ""}
+                <AutoGrowTextarea id={id} className={cx("textarea dp-input", error && "bad")} minRows={3} maxRows={8} value={text} autoFocus={initial !== ""}
                     aria-invalid={error ? true : undefined} aria-describedby={`${id}-count`} onChange={(e) => form.set("body", e.target.value)} />
             </Field>
             <FieldError message={form.errors.form} />

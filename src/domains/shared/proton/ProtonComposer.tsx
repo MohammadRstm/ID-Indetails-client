@@ -1,4 +1,5 @@
 import { useState, type RefObject } from "react";
+import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import Icon from "@/shared/icons/Icon";
 import { useProtonUsage } from "./protonApi";
 import { useVoice, voiceActive } from "./protonVoice";
@@ -32,18 +33,20 @@ export default function ProtonComposer({ conversation, input, canStartOver, onCo
     return (
         <div className="proton-foot">
             <form className="proton-composer" onSubmit={(e) => { e.preventDefault(); send(); }}>
-                <textarea
+                {/* grows with the question up to five lines, then scrolls; Shift+Enter starts a new line */}
+                <AutoGrowTextarea
                     ref={input}
                     className="input"
                     aria-label="Ask Proton"
                     placeholder="Ask me anything about the company"
-                    rows={2}
+                    minRows={1}
+                    maxRows={5}
                     maxLength={2000}
                     dir="auto"
                     value={text}
                     onChange={(e) => { setText(e.target.value); onComposing(e.target.value.trim().length > 0); }}
                     onBlur={() => onComposing(false)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }}
                 />
                 {canTalk && !conversation.pending && (
                     <button className="btn" type="button" onClick={() => void conversation.talk()} aria-label="Talk to Proton" title="Talk to Proton">
