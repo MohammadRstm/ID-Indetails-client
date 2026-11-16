@@ -79,6 +79,20 @@ export function useProject(id: number) {
     });
 }
 
+/**
+ * The code a new project of the domain would get now, and the project that already has the code being typed
+ * (`check`), if any: not the one being edited (`projectId`). Needs project:create or project:edit.
+ */
+export function useNextProjectCode(domain: string, check: string, projectId: number | null = null) {
+    return useQuery({
+        queryKey: keys.projects.nextCode(domain, check, projectId),
+        queryFn: async () => (await http.get<Schemas["NextProjectCodeResponse"]>("/projects/next-code", {
+            params: clean({ domain, check, projectId }),
+        })).data,
+        placeholderData: keepPreviousData,
+    });
+}
+
 export type CreateProjectBody = Schemas["CreateProjectRequest"];
 
 export function useCreateProject() {

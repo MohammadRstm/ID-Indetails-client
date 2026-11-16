@@ -7,14 +7,18 @@ import Modal from "@/shared/components/Overlays/Modal";
 import { companyToday } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import { useUpdateProject, type Project } from "./projectsApi";
+import ProjectCodeFields from "./ProjectCodeFields";
+import { buildingCodeError, projectCodeError, typedCode } from "./projectCodes";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillChange, useProtonForm } from "@/domains/shared/proton/formFill";
 
-/** A project's details (project:edit): its name, description, where it is, when it started and when it should be done. */
+/** A project's details (project:edit): its name and codes, description, where it is, when it started and when it should be done. */
 export default function EditProjectModal({ project, onClose }: { project: Project; onClose: () => void }) {
     const update = useUpdateProject(project.id);
     const errors = useFormErrors();
     const [title, setTitle] = useState(project.title);
+    const [projectCode, setProjectCode] = useState(project.projectCode);
+    const [buildingCode, setBuildingCode] = useState(project.buildingCode);
     const [description, setDescription] = useState(project.description ?? "");
     const [location, setLocation] = useState(project.location ?? "");
     const [target, setTarget] = useState(project.targetDate ?? "");
@@ -26,26 +30,33 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
         if (!v) return done;
         // the person asked for these changes: each shows what it was until they save
         fillChange(title, v.title, setTitle, "name", done);
+        fillChange(projectCode, v.projectCode && typedCode(v.projectCode), setProjectCode, "project code", done);
+        fillChange(buildingCode, v.buildingCode && typedCode(v.buildingCode), setBuildingCode, "building code", done);
         fillChange(description, v.description, setDescription, "description", done);
         fillChange(location, v.location, setLocation, "location", done);
         fillChange(target, v.targetDate, setTarget, "target date", done);
         return done;
     });
     const titleError = title.trim() === "" && "Give the project a name.";
+    const codeError = projectCodeError(projectCode);
+    const buildingError = buildingCodeError(buildingCode);
     const startError = !start ? "Pick the day the project started." : start > today && "The start date can't be in the future.";
     // the API also refuses a site's start after its first ground labour: shown beside the field until it is changed
-    const startRefused = toApiError(update.error).fieldErrors.startDate;
+    const failure = toApiError(update.error);
+    const startRefused = failure.fieldErrors.startDate;
+    // so is a code another project has taken since
+    const codeRefused = failure.code === "project_code_taken" ? failure.message : failure.fieldErrors.projectCode;
 
     function submit(e?: FormEvent) {
         e?.preventDefault();
         if (update.isPending) return;
-        if (titleError || startError) {
+        if (titleError || codeError || buildingError || startError) {
             errors.tried();
             return;
         }
         // the API replaces the details, so everything this form doesn't change goes back as it was
         update.mutateAsync({
-            title: title.trim(), description: description.trim() || null, location: location.trim() || null,
+            title: title.trim(), projectCode, buildingCode, description: description.trim() || null, location: location.trim() || null,
             icon: project.icon, tint: project.tint, targetDate: target || null, startDate: start, ownerId: project.owner.id,
         }).then(
             () => {
@@ -60,7 +71,7 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
         <Modal surfaceId="edit_project" title="Edit project details" sub={project.title} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{update.error && !startRefused ? <FieldError message={errorMessage(update.error)} /> : null}</div>
+                    <div className="grow">{update.error && !startRefused && !codeRefused ? <FieldError message={errorMessage(update.error)} /> : null}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={update.isPending} onClick={() => submit()}>{update.isPending ? "Saving…" : "Save"}</button>
                 </>
@@ -73,6 +84,9 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
                         <input id="ep-title" className="input" autoFocus value={title} onChange={(e) => setTitle(e.target.value)} onBlur={errors.touch("title")} />
                         <FieldError message={errors.show("title", titleError)} />
                     </div>
+                    <ProjectCodeFields domain={project.domain} projectId={project.id} projectCode={projectCode} buildingCode={buildingCode}
+                        onProjectCode={(code) => { if (update.error) update.reset(); setProjectCode(code); }} onBuildingCode={setBuildingCode}
+                        projectCodeError={codeError} buildingCodeError={buildingError} refused={codeRefused} errors={errors} />
                     <div className="field mt">
                         <label className="label" htmlFor="ep-desc">Description</label>
                         <textarea id="ep-desc" className="textarea" style={{ minHeight: 60 }} placeholder="Optional - what is this project about?"

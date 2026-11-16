@@ -8,9 +8,10 @@ export const projects: Article[] = [
         category: "projects",
         who: has(P.PROJECT_CREATE),
         summary: "New project, at the top of any page, opens the form. Design projects are for a client or internal; Execution sites are always for a client.",
-        ask: ["new project", "create project", "add project", "start a project", "new site", "create site", "internal project"],
+        ask: ["new project", "create project", "add project", "start a project", "new site", "create site", "internal project", "project code", "building code"],
         blocks: [
             steps(step("Choose **New project** in the top bar (or on the Projects page).", "New project")),
+            para("Its **project code** (such as ID26Q4001: the year, the quarter and its number that quarter) and its **building code** (usually the name's initials) are filled in for you as you name it, and you can change either. Together they make its full code, ID26Q4001-VK, which you can search for."),
             only(and(sees("design"), has(P.FINANCIAL_VIEW)), para("**Design:** a client project has a client and the customer payment agreed with them (its revenue). An internal project has neither: it only collects costs.")),
             only(and(sees("design"), not(has(P.FINANCIAL_VIEW))), para("**Design:** a client project has a client; an internal project has none. The customer payment is left to a super admin, who sets it later.")),
             only(and(sees("execution"), has(P.PROJECT_PRICING_MANAGE)), para("**Execution:** a site is always for a client. You set its supervision rate (10% to begin with) and its TVA (11% to begin with). Its work price is not typed in: it is set when a bill of quantities is agreed with the client.")),

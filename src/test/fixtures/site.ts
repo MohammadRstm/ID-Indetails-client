@@ -4,6 +4,7 @@ import { accountLabels, accountLabelsHandler } from "./accountLabels";
 import { accountFigures, accountHandlers } from "./account";
 import { billing } from "./billing";
 import { boqHandlers } from "./boqs";
+import { nextCodeHandler } from "./index";
 import invoicesJson from "./site/invoices.json";
 import labourDefaultsJson from "./site/labourDefaults.json";
 import labourWeekJson from "./site/labourWeek.json";
@@ -60,6 +61,7 @@ export const siteStaff = [
 })) as unknown as Schemas["EmployeeSummaryResponse"][];
 
 export const siteHandlers = [
+    nextCodeHandler,
     http.get("/api/projects/totals", () => HttpResponse.json({})),
     http.get("/api/projects/:id", ({ params }) => HttpResponse.json(losing(params.id) ? site.losingProject : site.project)),
     http.get("/api/projects/:id/site-expenses", ({ params }) => HttpResponse.json(losing(params.id) ? site.openExpenses : site.expenses)),

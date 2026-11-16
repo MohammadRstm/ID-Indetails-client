@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
-import { errorMessage } from "@/api/errors";
+import { errorMessage, toApiError } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { fullName, useCurrentUser } from "@/app/session/useSession";
@@ -24,6 +24,8 @@ import { StaffPicker } from "../../execution/staff/StaffPages";
 import { DepartmentPicker } from "../../design/projects/departments/DepartmentPicker";
 import { useCreateProject } from "./projectsApi";
 import PercentField from "./PercentField";
+import ProjectCodeFields from "./ProjectCodeFields";
+import { buildingCodeError, buildingCodeOf, projectCodeError, typedCode } from "./projectCodes";
 import TvaField from "./TvaField";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
@@ -44,6 +46,9 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const people = useProjectOwners(domain, permissions.has(P.EMPLOYEE_VIEW), permissions.canSeeDomain("design") && permissions.canSeeDomain("execution"));
 
     const [title, setTitle] = useState("");
+    // until typed in (null), each code is its suggestion: the next code of the quarter, and the name's initials
+    const [projectCode, setProjectCode] = useState<string | null>(null);
+    const [buildingCode, setBuildingCode] = useState<string | null>(null);
     const [more, setMore] = useState(false);
     const [description, setDescription] = useState("");
     const [location, setLocation] = useState("");
@@ -71,6 +76,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
         const done: string[] = [];
         if (!v) return done;
         fillEmpty(title, v.title, setTitle, "title", done);
+        fillEmpty(projectCode, v.projectCode && typedCode(v.projectCode), setProjectCode, "project code", done);
+        fillEmpty(buildingCode, v.buildingCode && typedCode(v.buildingCode), setBuildingCode, "building code", done);
         if (v.clientId != null && clientId == null) { setClientId(v.clientId); done.push("client"); }
         fillEmpty(description, v.description, setDescription, "description", done);
         fillEmpty(location, v.location, setLocation, "location", done);
@@ -87,10 +94,16 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const setsTva = billing === "client" && permissions.has(execution ? P.FINANCIAL_VIEW : P.FINANCIAL_WRITE);
     const errors = useFormErrors();
     const titleError = title.trim() === "" && "Give the project a name.";
+    const shownBuildingCode = buildingCode ?? buildingCodeOf(title);
+    const codeError = projectCode != null && projectCodeError(projectCode);
+    const buildingError = buildingCodeError(shownBuildingCode);
+    // the API's refusal of a code (taken since, or not accepted) shows under it, until it is changed
+    const failure = toApiError(create.error);
+    const codeRefused = failure.code === "project_code_taken" ? failure.message : failure.fieldErrors.projectCode;
     const clientError = billing === "client" && clientId == null && "Choose who the project is for, or make it internal.";
     const choosesDepartments = !execution && billing === "client";
     const departmentsError = choosesDepartments && departmentIds.length === 0 && "Choose the departments working on it.";
-    const ok = !titleError && !clientError && !departmentsError;
+    const ok = !titleError && !codeError && !buildingError && !clientError && !departmentsError;
 
     // Who can own it: the domain's admins and the super admins (the creator first, when they are one), never an employee.
     const owners = [
@@ -112,6 +125,9 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
         try {
             const project = await create.mutateAsync({
                 title: title.trim(),
+                // not typed in, the API gives the next code when it saves
+                projectCode,
+                buildingCode: shownBuildingCode,
                 description: description.trim() || null,
                 location: location.trim() || null,
                 domainCode: domain,
@@ -149,7 +165,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
             foot={
                 <>
                     <div className="grow">
-                        {create.error ? <FieldError message={errorMessage(create.error)} />
+                        {create.error && !codeRefused ? <FieldError message={errorMessage(create.error)} />
                             : billing === "client" && client.data ? `For ${client.data.displayName} · starts today · becomes active`
                                 : "Starts today · becomes active"}
                     </div>
@@ -168,6 +184,10 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                         {errors.show("title", titleError) ? <FieldError message={errors.show("title", titleError)} />
                             : <div className="hint">Press Enter to create. You can add details later.</div>}
                     </div>
+
+                    <ProjectCodeFields domain={domain} projectCode={projectCode} buildingCode={buildingCode} suggestedBuildingCode={buildingCodeOf(title)}
+                        onProjectCode={(code) => { if (create.error) create.reset(); setProjectCode(code); }} onBuildingCode={setBuildingCode}
+                        projectCodeError={codeError} buildingCodeError={buildingError} refused={codeRefused} errors={errors} />
 
                     {execution && (
                         <div className="field mt">
