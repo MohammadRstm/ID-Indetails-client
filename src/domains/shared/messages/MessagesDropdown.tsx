@@ -49,7 +49,7 @@ export default function MessagesDropdown({ messagesPath, close }: { messagesPath
                             })}
             </div>
             <div className="pop-foot">
-                <button className="btn btn-sm btn-block btn-quiet" onClick={() => { close(); navigate(messagesPath); }}>Open Messages</button>
+                <button className="btn btn-sm btn-block btn-primary" onClick={() => { close(); navigate(messagesPath); }}>Open Messages</button>
             </div>
         </div>
     );

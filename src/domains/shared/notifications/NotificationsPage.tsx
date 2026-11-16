@@ -46,7 +46,7 @@ export default function NotificationsPage() {
                         : !pages.data ? <div className="mt-s"><SkeletonLines lines={8} /></div> : (
                             <>
                                 {groups.map((g) => (
-                                    <div key={g.key}>
+                                    <div key={g.key} className="notif-stack">
                                         <div className="feed-day">{relDay(g.key)}</div>
                                         {g.items.map((n) => <NotificationItem key={n.id} note={n} />)}
                                     </div>
