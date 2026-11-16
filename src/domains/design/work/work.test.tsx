@@ -19,6 +19,7 @@ beforeEach(() => {
 });
 afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
     localStorage.clear();
 });
 
@@ -228,17 +229,35 @@ describe("deleting a logged task on the Log work timeline", () => {
         expect(sent).toEqual([]);
     });
 
-    it("takes off a task selected with a double-click when Delete is pressed, and never one only clicked", async () => {
+    it("takes off a task selected with a click when Delete is pressed, and never one only focused", async () => {
         const { dialog, task, sent } = await openDay();
-        await userEvent.click(task);
+        act(() => task.focus());
         await userEvent.keyboard("{Delete}");
         expect(shown(dialog, /^Furniture schedule,/)).not.toBeNull();
         expect(task).toHaveAttribute("aria-pressed", "false");
 
-        await userEvent.dblClick(task);
+        await userEvent.click(task);
         expect(task).toHaveAttribute("aria-pressed", "true");
         await userEvent.keyboard("{Delete}");
         expect(shown(dialog, /^Furniture schedule,/)).toBeNull();
+        expect(within(dialog).getByText(/“Furniture schedule” is deleted when you save this log/)).toBeInTheDocument();
+        expect(sent).toEqual([]);
+    });
+
+    it("on a phone, offers Delete when a finger is held on a task, and leaves out the keyboard's help", async () => {
+        vi.stubGlobal("matchMedia", (query: string) => ({
+            matches: query === "(pointer: coarse)", addEventListener: () => {}, removeEventListener: () => {},
+        }));
+        const { dialog, task, sent } = await openDay();
+        expect(within(dialog).getByText(/hold to delete/)).toBeInTheDocument();
+        expect(within(dialog).queryByText(/right-click to delete/)).toBeNull();
+        expect(within(dialog).queryByText(/Keyboard:/)).toBeNull();
+
+        await userEvent.pointer({ keys: "[TouchA>]", target: task });
+        await userEvent.click(await screen.findByRole("menuitem", { name: "Delete this log" }));
+        expect(shown(dialog, /^Furniture schedule,/)).toBeNull();
+        const gone = within(dialog).getByText(/“Furniture schedule” is deleted when you save this log/);
+        expect(gone.textContent).not.toMatch(/Ctrl/);
         expect(sent).toEqual([]);
     });
 
