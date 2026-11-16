@@ -9,6 +9,7 @@ import { fullName, useCurrentUser } from "@/app/session/useSession";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
+import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import Avatar from "@/shared/components/Identity/Avatar";
 import { PersonAvatar, PersonName } from "@/shared/components/Identity/People";
 import { relTime } from "@/shared/format/time";
@@ -99,7 +100,7 @@ function Compose({ entryId, author, domain, canSeeTeam }: { entryId: number; aut
             <Avatar person={{ name: fullName(me), photoFileId: me.photoFileId }} size={30} />
             <div className="grow">
                 <FilledNote fields={proton.filled} />
-                <textarea className="textarea cm-input" rows={2} placeholder="Add a comment…" aria-label="Add a comment" value={text} onChange={(e) => setText(e.target.value)} />
+                <AutoGrowTextarea className="textarea cm-input" minRows={2} maxRows={8} placeholder="Add a comment…" aria-label="Add a comment" value={text} onChange={(e) => setText(e.target.value)} />
                 <div className="cm-actions">
                     {team && (
                         <label className="cm-check">

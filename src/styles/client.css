@@ -318,6 +318,9 @@ table { line-height: normal; font-weight: normal; }
 .proton-foot { display: flex; flex-direction: column; gap: 6px; width: 100%; }
 .proton-composer { display: flex; gap: 8px; align-items: flex-end; }
 .proton-composer textarea { flex: 1; resize: none; }
+/* the question box grows to five lines (AutoGrowTextarea): one line is as tall as the buttons, which stay by its last line */
+.proton-composer .autogrow { padding-top: 6px; padding-bottom: 6px; }
+.proton-composer > .btn { margin-bottom: 1px; }
 .proton-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; min-height: 24px; }
 .proton-action { margin: 4px 0 6px; max-width: 100%; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--r2); background: var(--surface); padding: 10px 12px; }
 .proton-action.strong { border-left-color: var(--now); }

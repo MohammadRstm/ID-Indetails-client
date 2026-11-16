@@ -120,6 +120,7 @@ export const gettingStarted: Article[] = [
                 "Each department has a group chat: the department, its business's admins and the super admins.",
                 "Direct messages are between two people. Use **Find people or groups** to start one.",
                 "In a group, type **@** and a name to mention someone.",
+                "On a computer, **Enter** sends and **Shift+Enter** starts a new line. On a phone, Enter starts a new line and the send button sends. The box grows as you write, up to five lines.",
                 "You can attach files and photos.",
             ),
             only(hasAny(P.MESSAGE_ANNOUNCE), para("You write in Announcements; everyone else only reads it.")),
