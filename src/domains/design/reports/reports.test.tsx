@@ -64,7 +64,7 @@ describe("Reports", () => {
             ...reportHandlers);
         await screen.findByText("1,037");
         await userEvent.click(screen.getByRole("button", { name: "Project" }));
-        await userEvent.click(screen.getByRole("option", { name: project.title }));
+        await userEvent.click(screen.getByRole("option", { name: `${project.code} · ${project.title}` }));
         await waitFor(() => expect(asked.at(-1)?.get("projectId")).toBe(String(project.id)));
         await userEvent.click(screen.getByRole("button", { name: "Employee" }));
         await userEvent.click(screen.getByRole("option", { name: "Yara Mansour" }));

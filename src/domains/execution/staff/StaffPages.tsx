@@ -23,6 +23,7 @@ import { cx } from "@/shared/utils/cx";
 import { useEmployee } from "../../design/people/peopleWorkApi";
 import { personName, useDomainPeople } from "../../shared/people/peopleApi";
 import type { Project } from "../../shared/projects/projectsApi";
+import { projectLabel } from "../../shared/projects/projectCodes";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { SiteLogBrowser, WriteSiteLog } from "./SiteLogs";
 import { useMySites, useSetSiteStaff } from "./siteLogsApi";
@@ -117,7 +118,7 @@ export function SiteLogsPage() {
             <PageHead title="Daily logs" sub="What site staff noted on their sites, newest first. Losses are worked out from these later." />
             <SiteLogBrowser mine={false} title="All logs"
                 people={(people.data ?? []).map((p) => ({ value: String(p.id), label: personName(p) }))}
-                sites={(projects.data?.items ?? []).map((p) => ({ value: String(p.id), label: p.title }))} />
+                sites={(projects.data?.items ?? []).map((p) => ({ value: String(p.id), label: projectLabel(p) }))} />
         </div>
     );
 }

@@ -132,8 +132,9 @@ describe("General meetings", () => {
         expect(within(dialog).queryByLabelText("For")).not.toBeInTheDocument();
 
         await userEvent.click(within(dialog).getByLabelText("About"));
-        expect(screen.queryByRole("option", { name: "Paused villa" })).not.toBeInTheDocument();
-        await userEvent.click(screen.getByRole("option", { name: active.title }));
+        expect(screen.queryByRole("option", { name: /Paused villa/ })).not.toBeInTheDocument();
+        // each project with its code first
+        await userEvent.click(screen.getByRole("option", { name: `${active.code} · ${active.title}` }));
         expect(within(dialog).queryByLabelText("Attendees")).not.toBeInTheDocument();
         await userEvent.click(within(dialog).getByRole("button", { name: "Schedule meeting" }));
         await waitFor(() => expect(sent.map((s) => s.path)).toEqual([`/api/projects/${active.id}/meetings`]));

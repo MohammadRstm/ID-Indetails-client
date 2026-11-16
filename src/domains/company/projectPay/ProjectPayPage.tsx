@@ -20,6 +20,7 @@ import { companyToday, fmtDate, fmtH, fmtNumber } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { policyOn, useWorkingTime } from "@/domains/shared/settings/settingsApi";
+import { projectLabel } from "@/domains/shared/projects/projectCodes";
 import { useProjects } from "@/domains/shared/projects/projectsApi";
 import { periodDates, periodLabel, periodOf, stepPeriod, type PayPeriod, type PayUnit } from "./payPeriod";
 import { useProjectPay, type ProjectPayPerson, type ProjectPayProject } from "./projectPayApi";
@@ -109,7 +110,7 @@ export default function ProjectPayPage() {
                 <div style={{ width: 280 }}>
                     <Select className="select sm" aria-label="Project" value={projectId} onChange={setProjectId}
                         options={[{ value: "all", label: "All Design projects" },
-                            ...projects.map((p) => ({ value: String(p.id), label: `${p.title}${p.status !== "active" ? ` (${p.status})` : ""}` }))]} />
+                            ...projects.map((p) => ({ value: String(p.id), label: `${projectLabel(p)}${p.status !== "active" ? ` (${p.status})` : ""}` }))]} />
                 </div>
             </div>
 
@@ -188,7 +189,7 @@ function ProjectPanel({ project: g, tile, canOpenProject }: { project: ProjectPa
                     {canOpenProject
                         ? <button className="pp-title trunc" title={`Open ${g.title} in Design`} onClick={() => navigate(`/design/projects/${g.projectId}`)}>{g.title}</button>
                         : <div className="pp-title trunc" style={{ cursor: "default" }}>{g.title}</div>}
-                    <div className="panel-sub">{g.client ?? "Internal"} · {people} {people === 1 ? "person" : "people"} · {fmtNumber(entries)} entr{entries === 1 ? "y" : "ies"}</div>
+                    <div className="panel-sub">{g.code && <span className="mono">{g.code} · </span>}{g.client ?? "Internal"} · {people} {people === 1 ? "person" : "people"} · {fmtNumber(entries)} entr{entries === 1 ? "y" : "ies"}</div>
                 </div>
                 <div className="pp-chips">
                     <span className="pp-chip"><span>Hours</span><b className="mono">{fmtH(g.normalMinutes + g.overtimeMinutes)}</b></span>

@@ -78,7 +78,7 @@ describe("Project pay", () => {
         renderApp("/company/project-pay", rana, handler, ...companyPayHandlers);
         await screen.findByText("Villa Mounir interiors", { selector: ".pp-title" });
         await userEvent.click(screen.getByLabelText("Project"));
-        await userEvent.click(await screen.findByRole("option", { name: "Cedar Bank branch refresh" }));
+        await userEvent.click(await screen.findByRole("option", { name: "ID26Q3003-CBBR · Cedar Bank branch refresh" }));
         await waitFor(() => expect(last().get("projectId")).toBe("3"));
     });
 

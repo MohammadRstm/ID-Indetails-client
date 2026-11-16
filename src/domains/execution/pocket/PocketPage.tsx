@@ -23,6 +23,7 @@ import { fmtDateY } from "@/shared/format/time";
 import useDebounce from "@/shared/hooks/useDebounce";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
+import { projectLabel } from "../../shared/projects/projectCodes";
 import { useProjects } from "../../shared/projects/projectsApi";
 import {
     POCKET_NOTE_MAX, useApprovePocketRequest, useDenyPocketRequest, usePocket, usePocketEntries,
@@ -253,7 +254,7 @@ function Transactions() {
                 <div className="row wrap" style={{ gap: 8 }}>
                     <SearchInput value={search} onChange={reset(setSearch)} placeholder="Search site, note or person" width={240} aria-label="Search the transactions" />
                     <Select value={project} onChange={reset(setProject)} aria-label="Filter by site"
-                        options={[{ value: "", label: "All sites" }, ...sites.map((p) => ({ value: String(p.id), label: p.title }))]} />
+                        options={[{ value: "", label: "All sites" }, ...sites.map((p) => ({ value: String(p.id), label: projectLabel(p) }))]} />
                     <DateInput className="input" style={{ width: 140 }} value={from} max={to || undefined} onChange={reset(setFrom)} placeholder="From" aria-label="From day" />
                     <DateInput className="input" style={{ width: 140 }} value={to} min={from || undefined} onChange={reset(setTo)} placeholder="To" aria-label="To day" />
                     {filtered && (

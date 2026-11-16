@@ -17965,6 +17965,7 @@ export interface components {
             weekStart: number;
         };
         CompletedProjectResponse: {
+            code: string;
             /** Format: date */
             completedOn: string;
             /** Format: int32 */
@@ -18182,6 +18183,7 @@ export interface components {
             lastWorkingDay?: null | string;
         };
         DeadlineProjectResponse: {
+            code: string;
             icon: null | string;
             /** Format: int64 */
             id: number;
@@ -18684,6 +18686,7 @@ export interface components {
         FinanceProjectResponse: {
             billingType: components["schemas"]["BillingType"];
             clientName: null | string;
+            code: string;
             cost: components["schemas"]["ProjectCostResponse"];
             /** Format: double */
             costPerHour: number;
@@ -18910,6 +18913,7 @@ export interface components {
             termsDays?: null | number;
         };
         InvoiceProjectResponse: {
+            code: string;
             /** Format: int64 */
             id: number;
             location: null | string;
@@ -19061,6 +19065,7 @@ export interface components {
         };
         LabourProjectResponse: {
             billingType: components["schemas"]["BillingType"];
+            code: string;
             /** Format: double */
             labourShare: null | number;
             /** Format: int64 */
@@ -21053,6 +21058,7 @@ export interface components {
         };
         ProjectPayProjectResponse: {
             client: null | string;
+            code: string;
             /** Format: int32 */
             normalMinutes: number;
             /** Format: int32 */
@@ -21083,6 +21089,7 @@ export interface components {
         /** @enum {unknown} */
         ProjectPayUnit: "week" | "month" | "quarter";
         ProjectProfitResponse: {
+            code: string;
             /** Format: double */
             cost: number;
             /** Format: double */
@@ -21144,6 +21151,7 @@ export interface components {
             title: string;
         };
         ProjectRiskGroupResponse: {
+            code: string;
             /** Format: int64 */
             projectId: number;
             risks: components["schemas"]["ProjectRiskResponse"][];
@@ -21908,6 +21916,7 @@ export interface components {
             status?: number;
         };
         ReportMatrixProjectResponse: {
+            code: string;
             /** Format: int64 */
             projectId: number;
             title: string;
@@ -21959,6 +21968,7 @@ export interface components {
             userId: number;
         };
         ReportProjectResponse: {
+            code: string;
             /** Format: int32 */
             entries: number;
             /** Format: int32 */
@@ -22027,6 +22037,7 @@ export interface components {
             projects: number;
         };
         RunningProjectResponse: {
+            code: string;
             /** Format: int32 */
             days: number;
             /** Format: int64 */
@@ -22165,6 +22176,7 @@ export interface components {
             to: string;
         };
         SalaryProjectResponse: {
+            code: string;
             currency: string;
             /** Format: int32 */
             entries: number;

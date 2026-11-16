@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildingCodeError, buildingCodeOf, fullCode, projectCodeError, typedCode } from "./projectCodes";
+import { buildingCodeError, buildingCodeOf, fullCode, projectCodeError, projectLabel, typedCode } from "./projectCodes";
 
 describe("a project's codes", () => {
     it("suggests the initials of the name as its building code, as the API does", () => {
@@ -27,5 +27,10 @@ describe("a project's codes", () => {
         expect(buildingCodeError("V-K")).toBe("Use 1 to 10 letters (A to Z) or digits.");
         expect(buildingCodeError("ABCDEFGHIJK")).toBe("Use 1 to 10 letters (A to Z) or digits.");
         expect(fullCode("ID26Q4001", "VK")).toBe("ID26Q4001-VK");
+    });
+
+    it("come first where projects are picked from a list", () => {
+        expect(projectLabel({ title: "Villa Kadmous", code: "ID26Q4001-VK" })).toBe("ID26Q4001-VK · Villa Kadmous");
+        expect(projectLabel({ title: "Villa Kadmous" })).toBe("Villa Kadmous");
     });
 });

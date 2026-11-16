@@ -19,6 +19,7 @@ import { useActivityFeed, useActivityToday, type ActivityGroup, type FeedFilters
 import FeedItem from "../../shared/activity/FeedItem";
 import type { FeedEvent } from "../../shared/activity/feedWords";
 import { useClients } from "../../shared/clients/clientsApi";
+import { projectLabel } from "../../shared/projects/projectCodes";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { usePeopleWork } from "../people/peopleWorkApi";
 import { clickable } from "@/shared/utils/clickable";
@@ -84,7 +85,7 @@ export default function ActivityPage() {
                     ]} />
                 )}
                 <Select className="select sm" style={{ width: 190 }} aria-label="Project" value={projectId} onChange={setProjectId}
-                    options={[{ value: "all", label: "All projects" }, ...projects.map((p) => ({ value: String(p.id), label: p.title }))]} />
+                    options={[{ value: "all", label: "All projects" }, ...projects.map((p) => ({ value: String(p.id), label: projectLabel(p) }))]} />
                 {seesWork && (
                     <Select className="select sm" style={{ width: 175 }} aria-label="Employee" value={personId} onChange={setPersonId}
                         options={[{ value: "all", label: "All employees" }, ...rows.map((r) => ({ value: String(r.id), label: r.name }))]} />

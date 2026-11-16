@@ -15,6 +15,7 @@ import Select from "@/shared/components/Forms/Select";
 import { addDays, companyToday, fmtDate, fmtDur, fmtH, fmtMonthY, fmtNumber } from "@/shared/format/time";
 import { quarterEnd, quarterLabel, quarterOf, quarterStart, type PeriodKind } from "@/shared/format/periods";
 import Icon from "@/shared/icons/Icon";
+import { projectLabel } from "../../shared/projects/projectCodes";
 import { useProjects } from "../../shared/projects/projectsApi";
 import { usePeopleWork } from "../people/peopleWorkApi";
 import { EntriesTab, MoneyTab, OverviewTab, PeopleTab, ProjectsTab, type ReportPerson, type Tile } from "./ReportTabs";
@@ -116,7 +117,7 @@ export default function ReportsPage() {
                         )}
                         <div className="grow" />
                         <Select className="select sm" style={{ width: 190 }} aria-label="Project" value={projectId} onChange={setProjectId}
-                            options={[{ value: "all", label: "All projects" }, ...projects.map((p) => ({ value: String(p.id), label: p.title }))]} />
+                            options={[{ value: "all", label: "All projects" }, ...projects.map((p) => ({ value: String(p.id), label: projectLabel(p) }))]} />
                         {seesWork && (
                             <Select className="select sm" style={{ width: 175 }} aria-label="Employee" value={personId} onChange={setPersonId}
                                 options={[{ value: "all", label: "All employees" }, ...peopleWork.map((p) => ({ value: String(p.id), label: p.name }))]} />

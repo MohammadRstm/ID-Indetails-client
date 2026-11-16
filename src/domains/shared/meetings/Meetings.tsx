@@ -29,6 +29,7 @@ import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { personName, usePeople } from "../people/peopleApi";
+import { projectLabel } from "../projects/projectCodes";
 import { useProjects } from "../projects/projectsApi";
 import { useAway } from "../timeOff/timeOffApi";
 import {
@@ -85,7 +86,7 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
     const design = useProjects(list("design"), !project && domains.includes("design"));
     const execution = useProjects(list("execution"), !project && domains.includes("execution"));
     const choices = ([["design", design], ["execution", execution]] as const)
-        .flatMap(([d, q]) => (q.data?.items ?? []).filter((p) => p.status === "active").map((p) => ({ id: p.id, title: p.title, domain: d })));
+        .flatMap(([d, q]) => (q.data?.items ?? []).filter((p) => p.status === "active").map((p) => ({ id: p.id, title: p.title, code: p.code, domain: d })));
     const [about, setAbout] = useState(String(initialProject ?? (canGeneral ? GENERAL : "")));
     const general = canGeneral && about === GENERAL;
     const chosen = general ? undefined : project?.id ?? (about ? +about : choices[0]?.id);
@@ -169,7 +170,7 @@ export function MeetingModal({ domain, project, projectId: initialProject, onClo
                             <Select id="mtg-about" value={general ? GENERAL : String(chosen ?? "")} onChange={setAbout}
                                 options={[
                                     ...(canGeneral ? [{ value: GENERAL, label: "General meeting" }] : []),
-                                    ...choices.map((x) => ({ value: String(x.id), label: domains.length > 1 ? `${x.title} · ${DOMAIN_LABEL[x.domain]}` : x.title })),
+                                    ...choices.map((x) => ({ value: String(x.id), label: domains.length > 1 ? `${projectLabel(x)} · ${DOMAIN_LABEL[x.domain]}` : projectLabel(x) })),
                                     ...(!canGeneral && !choices.length ? [{ value: "", label: design.isPending && execution.isPending ? "Loading…" : "No active projects" }] : []),
                                 ]} />
                             <FieldError message={errors.show("project", projectError)} />

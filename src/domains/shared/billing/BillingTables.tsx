@@ -41,7 +41,7 @@ export function InvoiceTable({ invoices, showProject, showClient, tiles, onOpen 
                             <tr key={inv.id} className={cx("click", voided && "voided")} {...clickable(() => onOpen(inv))}>
                                 <td className="mono nowrap" style={{ fontWeight: 600 }}>{inv.number ?? "Draft"}</td>
                                 {showProject && (
-                                    <td><div className="pname"><ProjectTile icon={tiles?.get(inv.project.id)?.icon} tint={tiles?.get(inv.project.id)?.tint} photo={tiles?.get(inv.project.id)?.photo} size="sm" /><span className="trunc">{inv.project.title}</span></div></td>
+                                    <td><div className="pname"><ProjectTile icon={tiles?.get(inv.project.id)?.icon} tint={tiles?.get(inv.project.id)?.tint} photo={tiles?.get(inv.project.id)?.photo} size="sm" /><div style={{ minWidth: 0 }}><div className="trunc">{inv.project.title}</div>{inv.project.code && <div className="muted mono" style={{ fontSize: 11 }}>{inv.project.code}</div>}</div></div></td>
                                 )}
                                 {showClient && <td className="trunc">{inv.client.displayName}</td>}
                                 <td className="muted nowrap">{inv.issuedAt ? fmtDate(inv.issuedAt) : "-"}</td>
@@ -90,7 +90,7 @@ export function PaymentTable({ payments, showProject, tiles, onOpen, actions }: 
                             <tr key={p.id} className={cx(p.voidedAt && "voided", open && "click")} {...clickable(open)}>
                                 <td className="nowrap">{fmtDateY(p.receivedOn)}</td>
                                 {showProject && (
-                                    <td><div className="pname"><ProjectTile icon={tiles?.get(p.project.id)?.icon} tint={tiles?.get(p.project.id)?.tint} photo={tiles?.get(p.project.id)?.photo} size="sm" /><span className="trunc">{p.project.title}</span></div></td>
+                                    <td><div className="pname"><ProjectTile icon={tiles?.get(p.project.id)?.icon} tint={tiles?.get(p.project.id)?.tint} photo={tiles?.get(p.project.id)?.photo} size="sm" /><div style={{ minWidth: 0 }}><div className="trunc">{p.project.title}</div>{p.project.code && <div className="muted mono" style={{ fontSize: 11 }}>{p.project.code}</div>}</div></div></td>
                                 )}
                                 <td className="mono">{p.invoiceNumber ?? <span className="badge">On account</span>}</td>
                                 <td className="muted">{PAYMENT_METHODS[p.method] ?? p.method}</td>
