@@ -4,6 +4,7 @@ import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Icon from "@/shared/icons/Icon";
 import { uploadFile } from "@/domains/design/work/workApi";
+import { enterSends } from "@/shared/utils/enterSends";
 import RecordingBar from "@/shared/voice/RecordingBar";
 import { uploadVoice } from "@/shared/voice/uploadVoice";
 import { useVoiceRecorder } from "@/shared/voice/useVoiceRecorder";
@@ -27,8 +28,9 @@ const MAX_FILES = 10;
 
 /**
  * Writing a message (the prototype's Composer): text, photos and videos, and in a group "@" to mention
- * someone. Files upload as soon as they are picked; Enter sends and Shift+Enter starts a new line. The box grows with
- * what is written, up to five lines, then scrolls. With nothing written, the microphone button
+ * someone. Files upload as soon as they are picked. On a computer Enter sends and Shift+Enter starts a new line; on a
+ * phone Enter starts a new line and the send button sends. The box grows with what is written, up to five lines, then
+ * scrolls. With nothing written, the microphone button
  * turns the row into a recorder: Send uploads the voice note and sends it as a message of its own.
  */
 export default function Composer({ members, meId, sending, error, onSend, draftKey }: ComposerProps) {
@@ -185,7 +187,7 @@ export default function Composer({ members, meId, sending, error, onSend, draftK
                 <AutoGrowTextarea className="input grow" minRows={1} maxRows={5} placeholder="Message…" aria-label="Message" value={text}
                     onChange={(e) => onText(e.target.value, e.target.selectionStart)}
                     onKeyDown={(e) => {
-                        if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return;
+                        if (!enterSends(e)) return;
                         e.preventDefault();
                         if (!fromProton.current) void send();
                     }} />

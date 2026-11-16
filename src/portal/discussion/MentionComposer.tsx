@@ -6,6 +6,7 @@ import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import { enterSends } from "@/shared/utils/enterSends";
 import { CLIENT_NAME, clientsOf, mentionAt, mentionCandidates, mentionedKeys } from "./textParts";
 import type { DiscussionPerson, Draft } from "./discussionTypes";
 
@@ -193,7 +194,8 @@ export default function MentionComposer({
                 return;
             }
         }
-        if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+        // Enter sends on a computer and is a new line on a phone, where the send button sends
+        if (enterSends(e)) {
             e.preventDefault();
             void send();
         } else if (e.key === "Escape" && onCancel) {

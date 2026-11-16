@@ -15,7 +15,10 @@ beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-09-30T09:00:00Z"));
 });
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+});
 
 describe("Messages", () => {
     it("list team chats and direct messages by who people are, and open the newest chat", async () => {
@@ -105,6 +108,22 @@ describe("Messages", () => {
         expect(box).toHaveValue("First line\nSecond line");
         expect(sent).toEqual([]);
         await userEvent.type(box, "{Enter}");
+        await waitFor(() => expect(sent).toEqual([{ body: "First line\nSecond line", mentionIds: [], attachmentIds: [] }]));
+    });
+
+    it("on a phone, Enter starts a new line and the send button sends", async () => {
+        vi.stubGlobal("matchMedia", (query: string) => ({
+            matches: query === "(pointer: coarse)", addEventListener: () => {}, removeEventListener: () => {},
+        }));
+        const sent: unknown[] = [];
+        renderApp("/design/messages?group=13", rana,
+            http.post("/api/messages/teams/13", async ({ request }) => { sent.push(await request.json()); return HttpResponse.json(messages.conversations[1].lastMessage); }),
+            ...messageHandlers);
+        const box = await screen.findByRole("textbox", { name: "Message" });
+        await userEvent.type(box, "First line{Enter}Second line");
+        expect(box).toHaveValue("First line\nSecond line");
+        expect(sent).toEqual([]);
+        await userEvent.click(within(thread()).getByRole("button", { name: "Send" }));
         await waitFor(() => expect(sent).toEqual([{ body: "First line\nSecond line", mentionIds: [], attachmentIds: [] }]));
     });
 

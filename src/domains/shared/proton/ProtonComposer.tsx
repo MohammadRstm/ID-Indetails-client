@@ -1,6 +1,7 @@
 import { useState, type RefObject } from "react";
 import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import Icon from "@/shared/icons/Icon";
+import { enterSends } from "@/shared/utils/enterSends";
 import { useProtonUsage } from "./protonApi";
 import { useVoice, voiceActive } from "./protonVoice";
 import type { ProtonConversation } from "./useProtonConversation";
@@ -33,7 +34,8 @@ export default function ProtonComposer({ conversation, input, canStartOver, onCo
     return (
         <div className="proton-foot">
             <form className="proton-composer" onSubmit={(e) => { e.preventDefault(); send(); }}>
-                {/* grows with the question up to five lines, then scrolls; Shift+Enter starts a new line */}
+                {/* grows with the question up to five lines, then scrolls. Enter sends on a computer (Shift+Enter is a new line)
+                    and is a new line on a phone */}
                 <AutoGrowTextarea
                     ref={input}
                     className="input"
@@ -46,7 +48,7 @@ export default function ProtonComposer({ conversation, input, canStartOver, onCo
                     value={text}
                     onChange={(e) => { setText(e.target.value); onComposing(e.target.value.trim().length > 0); }}
                     onBlur={() => onComposing(false)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }}
+                    onKeyDown={(e) => { if (enterSends(e)) { e.preventDefault(); send(); } }}
                 />
                 {canTalk && !conversation.pending && (
                     <button className="btn" type="button" onClick={() => void conversation.talk()} aria-label="Talk to Proton" title="Talk to Proton">
