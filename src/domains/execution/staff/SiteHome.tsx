@@ -48,7 +48,7 @@ export function SiteCards() {
     function keep(p: ProjectSummary) {
         const q = fq.trim().toLowerCase();
         const client = p.client?.displayName ?? "";
-        if (q && !p.title.toLowerCase().includes(q) && !client.toLowerCase().includes(q)) return false;
+        if (q && ![p.title, p.code, client].some((text) => text.toLowerCase().includes(q))) return false;
         if (fClient === "internal" ? !!p.client : fClient && client !== fClient) return false;
         const at = lastOf(p), last = at ? dayKey(at) : null;
         if (fLast === "week" && !(last && last >= weekStart)) return false;
@@ -78,7 +78,7 @@ export function SiteCards() {
                 <span className="muted" style={{ fontSize: 12 }}>most recently worked on first</span>
             </div>
             <div className="filters">
-                <SearchInput width={230} value={fq} onChange={setFq} placeholder="Search projects or clients" />
+                <SearchInput width={230} value={fq} onChange={setFq} placeholder="Search projects, codes or clients" />
                 <Select className="select sm" style={{ width: 190 }} aria-label="Client" value={fClient} onChange={setFClient} options={[
                     { value: "", label: "All clients" },
                     ...clientNames.map((n) => ({ value: n, label: n })),
@@ -134,6 +134,7 @@ function SiteCard({ project: p, summary: s, failed, paused }: { project: Project
                 <div className="grow" style={{ minWidth: 0 }}>
                     <div className="row" style={{ gap: 7, flexWrap: "wrap" }}>
                         <span className="pcard-title trunc">{p.title}</span>
+                        <span className="muted mono" style={{ fontSize: 11 }}>{p.code}</span>
                     </div>
                     {(p.client || p.location) && <div className="muted trunc" style={{ fontSize: "11.5px", marginTop: 2 }}>{[p.client && `for ${p.client.displayName}`, p.location].filter(Boolean).join(" · ")}</div>}
                     <div className="muted clamp2" style={{ fontSize: "11.5px", marginTop: 2 }}>{p.description}</div>

@@ -252,6 +252,7 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                     <div style={{ minWidth: 0 }}>
                         <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
                             <h1 className="page-title">{project.title}</h1>
+                            <span className="mono muted" style={{ fontSize: 13 }} title="Project code and building code">{project.code}</span>
                             {canChangeStatus ? (
                                 <MenuButton buttonClass="btn btn-sm" align="left" width={200} label="Project status"
                                     text={<span className="row" style={{ gap: 6 }}><StatusBadge status={project.status} /><Icon name="chevronDown" /></span>}>

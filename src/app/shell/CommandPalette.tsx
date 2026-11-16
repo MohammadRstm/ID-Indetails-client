@@ -125,7 +125,7 @@ function resultItems(data: SearchResponse | undefined, p: Permissions, current: 
     for (const pr of data.projects) {
         if (!p.canSeeDomain(pr.domain) || !canOpen(p, pr.domain, `projects/${pr.id}`)) continue;
         out.push({
-            key: `p${pr.id}`, kind: "Project", label: pr.title, sub: `${PROJECT_STATUS[pr.status]?.label ?? pr.status}${where(pr.domain)}`,
+            key: `p${pr.id}`, kind: "Project", label: pr.title, sub: `${pr.code} · ${PROJECT_STATUS[pr.status]?.label ?? pr.status}${where(pr.domain)}`,
             node: <ProjectTile icon={pr.icon} tint={pr.tint} size="sm" />, go: `/${pr.domain}/projects/${pr.id}`,
         });
     }

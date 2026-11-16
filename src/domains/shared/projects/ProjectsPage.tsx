@@ -144,6 +144,7 @@ function ProjectTable({ section }: { section: boolean }) {
     ] : null;
 
     const columns: Column<ProjectSummary>[] = [
+        { key: "code", header: "Code", mono: true, nowrap: true, cell: (p) => p.code },
         {
             key: "project", header: "Project", width: "22%",
             cell: (p) => (
@@ -261,7 +262,7 @@ function ProjectTable({ section }: { section: boolean }) {
             )}
 
             <div className="filters">
-                <SearchInput value={search} onChange={(v) => reset(() => setSearch(v))} placeholder="Search projects" />
+                <SearchInput value={search} onChange={(v) => reset(() => setSearch(v))} placeholder="Search projects or codes" />
                 {/* status, time, type, client and owner: all in one panel, grouped */}
                 <button type="button" className={cx("btn", on.length > 0 && "btn-filtered")} aria-haspopup="dialog" onClick={() => setFiltersOpen(true)}
                     aria-label={on.length > 0 ? `Filters, ${on.length} on` : "Filters"}>
