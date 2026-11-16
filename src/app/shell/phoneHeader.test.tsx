@@ -70,7 +70,7 @@ describe("the header on a phone", () => {
         renderApp("/design/help", personas.designEmployee);
         await user.click(within(await header()).getByRole("button", { name: "Account" }));
         const rows = menuRows();
-        expect(rows.slice(0, 4)).toEqual(["My profile", "Help", "Dark mode", "Contact the developer"]);
+        expect(rows.slice(0, 5)).toEqual(["My profile", "Salary advances", "Help", "Dark mode", "Contact the developer"]);
         expect(rows.at(-1)).toBe("Sign out");
         // the bell is in the bottom bar, so the menu doesn't repeat it
         expect(rows.some((text) => text.startsWith("Notifications"))).toBe(false);
@@ -92,13 +92,14 @@ describe("the header on a wider screen", () => {
         expect(screen.queryByRole("navigation", { name: "Quick links" })).toBeNull();
     });
 
-    it("puts My profile first in the account menu", async () => {
+    it("puts My profile first in the account menu, with Salary advances under it", async () => {
         const user = userEvent.setup();
         renderApp("/design/projects", personas.designAdmin, ...projectHandlers);
         await user.click(within(await header()).getByRole("button", { name: "Account" }));
         const rows = menuRows();
         expect(rows[0]).toBe("My profile");
-        expect(rows[1]).toMatch(/^Notifications/);
-        expect(rows[2]).toBe("Help");
+        expect(rows[1]).toBe("Salary advances");
+        expect(rows[2]).toMatch(/^Notifications/);
+        expect(rows[3]).toBe("Help");
     });
 });

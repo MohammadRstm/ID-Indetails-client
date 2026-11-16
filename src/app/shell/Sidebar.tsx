@@ -1,9 +1,10 @@
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { openContact } from "@/app/contact/contact";
 import { P } from "@/app/permissions/codes";
 import { accessLabel } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { hasSeveralAreas } from "@/app/routing/areas";
+import { homePath } from "@/app/routing/home";
 import { companyNav, domainNav, websiteNav, type NavItem } from "@/app/routing/routeTable";
 import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
 import Avatar from "@/shared/components/Identity/Avatar";
@@ -14,7 +15,7 @@ import Icon from "@/shared/icons/Icon";
 import { openLogWork } from "@/domains/design/work/logWorkStore";
 import { cx } from "@/shared/utils/cx";
 import { contactPath } from "./contactPath";
-import { myProfilePath } from "./profilePath";
+import { myAdvancesPath, myProfilePath } from "./profilePath";
 import InstallMenuItem from "@/app/pwa/InstallMenuItem";
 import PushMenuItem from "@/app/pwa/PushMenuItem";
 import { useCompanySettings, useNavCounts } from "./shellQueries";
@@ -81,13 +82,14 @@ export default function Sidebar({ area }: { area: ShellArea }) {
 
     return (
         <aside className="side">
-            <div className="side-head">
+            {/* the logo goes home: where the person lands after signing in */}
+            <Link className="side-head" to={homePath(permissions)} aria-label="Home" title="Home" onClick={() => tip.hide()}>
                 <Logo />
                 <div className="logo-text">
                     <div className="logo-name">ID InDetails</div>
                     <div className="logo-sub">{company.data?.name ?? ""}</div>
                 </div>
-            </div>
+            </Link>
 
             {canLog && (
                 <div className="side-cta">
@@ -147,6 +149,9 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                                     <Icon name="user" />My profile
                                 </button>
                             )}
+                            <button className="pop-item" onClick={() => { close(); navigate(myAdvancesPath(permissions, area)); }}>
+                                <Icon name="card" />Salary advances
+                            </button>
                             {peopleItem && (
                                 <button className="pop-item" onClick={() => { close(); navigate(`${base}/people`); }}>
                                     <Icon name="user" />Browse employees

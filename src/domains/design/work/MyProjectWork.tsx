@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router";
-import { errorMessage } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { canOpen } from "@/app/routing/routeTable";
@@ -11,16 +10,16 @@ import Panel from "@/shared/components/Data/Panel";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
-import { toast } from "@/shared/components/Feedback/toast";
 import { Avatars, PersonAvatar } from "@/shared/components/Identity/People";
-import MenuButton from "@/shared/components/Overlays/MenuButton";
 import { fmtDate, fmtDateY, fmtH, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../shared/projects/projectsApi";
+import EntryActions from "./EntryActions";
+import { useDeleteWithUndo } from "./useDeleteWithUndo";
 import EntryRow from "./EntryRow";
 import { openLogWork } from "./logWorkStore";
-import { useDeleteEntry, useMyProjects, useMyProjectWork, useRestoreEntry, type WorkEntry } from "./workApi";
+import { useMyProjects, useMyProjectWork, type WorkEntry } from "./workApi";
 import { loadFailed } from "@/api/queryState";
 
 /*
@@ -113,15 +112,7 @@ export function MyProjectWork({ project }: { project: Project }) {
 function RecentWork({ projectId, entries, total, canLog }: { projectId: number; entries?: WorkEntry[]; total: number; canLog: boolean }) {
     const navigate = useNavigate();
     const myWork = canOpen(usePermissions(), "design", "my-work");
-    const remove = useDeleteEntry();
-    const restore = useRestoreEntry();
-
-    function del(e: WorkEntry) {
-        remove.mutate(e.id, {
-            onSuccess: () => toast({ text: "Entry deleted", icon: "trash", actionLabel: "Undo", action: () => restore.mutate(e.id) }),
-            onError: (err) => toast({ text: "That entry wasn't deleted", sub: errorMessage(err), icon: "alert" }),
-        });
-    }
+    const del = useDeleteWithUndo();
 
     return (
         <Panel title="Your recent work" sub="Every entry keeps the exact start and end time you recorded." bodyStyle={{ paddingTop: 2 }}
@@ -129,16 +120,7 @@ function RecentWork({ projectId, entries, total, canLog }: { projectId: number; 
             foot={total > 12 && myWork && <button className="btn btn-sm btn-quiet" onClick={() => navigate(`/design/my-work?project=${projectId}`)}>See all {total} entries in My work</button>}>
             {!entries ? <SkeletonLines lines={4} /> : entries.slice(0, 12).map((e) => (
                 <EntryRow key={e.id} entry={e} showProject={false} showCreated canAttach
-                    right={e.canEdit && canLog ? (
-                        <MenuButton icon="dots" label="Entry actions" width={170}>
-                            {(close) => (
-                                <div>
-                                    <button className="pop-item" onClick={() => { close(); openLogWork({ edit: e }); }}><Icon name="edit" />Edit entry</button>
-                                    <button className="pop-item" onClick={() => { close(); del(e); }}><Icon name="trash" />Delete</button>
-                                </div>
-                            )}
-                        </MenuButton>
-                    ) : null} />
+                    right={canLog ? <EntryActions entry={e} onDelete={del} /> : null} />
             ))}
             {entries && entries.length === 0 && (
                 <Empty art="time" title="You haven't logged work here yet" text="Record what you did and the exact hours you spent - it takes about ten seconds."

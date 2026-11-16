@@ -37,12 +37,13 @@ export function usePersonWorkSummary(userId: number | null) {
     });
 }
 
-/** Their newest entries. */
-export function usePersonEntries(userId: number | null, pageSize = 18) {
+/** Their newest entries, a page at a time; with a day, only that day's. */
+export function usePersonEntries(userId: number | null, page = 1, pageSize = 10, day: string | null = null) {
+    const range = day ? { from: day, to: day } : {};
     return useQuery({
-        queryKey: userId == null ? keys.work.entries({ page: 1, pageSize }) : [...keys.employees.all, "entries", userId, pageSize],
+        queryKey: userId == null ? keys.work.entries({ page, pageSize, ...range }) : [...keys.employees.all, "entries", userId, page, pageSize, day],
         queryFn: async () => (await http.get<Paged<Schemas["WorkEntryResponse"]>>(userId == null ? "/me/work-entries" : "/work-entries",
-            { params: userId == null ? { page: 1, pageSize } : { userId, page: 1, pageSize } })).data,
+            { params: userId == null ? { page, pageSize, ...range } : { userId, page, pageSize, ...range } })).data,
         placeholderData: keepPreviousData,
     });
 }

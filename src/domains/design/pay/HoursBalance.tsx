@@ -1,6 +1,8 @@
+import { useId, useState } from "react";
 import type { Schemas } from "@/api/types";
 import { fmtDate, fmtDur, fmtH, fmtMonthY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import { cx } from "@/shared/utils/cx";
 import { useMyHours } from "../work/workApi";
 
 type Hours = Schemas["MyHoursResponse"];
@@ -16,27 +18,42 @@ function LedgerStatus({ month: l }: { month: LedgerMonth }) {
 
 /**
  * Month by month: what was owed, what was worked, what overtime covered (the prototype's UI.HoursBalance).
- * Shown to the employee themself, and to super admins on a profile.
+ * Shown to the employee themself, and to super admins on a profile. It starts folded, showing only this month's
+ * standing; its title opens the months.
  */
 export function HoursBalance({ hours, self }: { hours: Hours; self: boolean }) {
+    const [open, setOpen] = useState(false);
+    const bodyId = useId();
     const months = hours.months;
     if (!hours.applies || months.length === 0) return null;
     const cur = months[0];
+    const counted = Math.min(cur.insideMinutes + cur.madeUpMinutes + cur.excusedMinutes, cur.expectedMinutes) || 0;
     return (
-        <div className="panel mt">
+        <div className={cx("panel mt", !open && "hb-shut")}>
             <div className="panel-head">
-                <div className="grow">
-                    <div className="panel-title">Hours balance</div>
-                    <div className="panel-sub">{self
-                        ? "The hours your schedule asks for each month. Overtime first makes up any hours you're short, then counts as overtime."
-                        : "Scheduled hours owed each month. Overtime first makes up missed hours, then is paid as overtime."}</div>
-                </div>
+                <button type="button" className="hb-toggle grow" aria-expanded={open} aria-controls={bodyId} onClick={() => setOpen((o) => !o)}>
+                    <span className="hb-chev"><Icon name="chevronRight" /></span>
+                    <span className="hb-text">
+                        <span className="panel-title">Hours balance</span>
+                        <span className="panel-sub">{self
+                            ? "The hours your schedule asks for each month. Overtime first makes up any hours you're short, then counts as overtime."
+                            : "Scheduled hours owed each month. Overtime first makes up missed hours, then is paid as overtime."}</span>
+                    </span>
+                </button>
+                {/* folded, this month's standing still shows */}
+                {!open && (
+                    <div className="hb-glance">
+                        <span className="muted">{cur.inProgress ? "This month" : fmtMonthY(cur.month)}</span>
+                        <b className="mono">{fmtH(counted)}</b><span className="muted">of {fmtH(cur.expectedMinutes)}</span>
+                        <LedgerStatus month={cur} />
+                    </div>
+                )}
             </div>
-            <div className="panel-body">
+            {open && <div className="panel-body" id={bodyId}>
                 <div className="hl-now">
                     <div>
                         <span className="u">{cur.inProgress ? "This month so far" : fmtMonthY(cur.month)}</span>
-                        {" "}<b className="mono">{fmtH(Math.min(cur.insideMinutes + cur.madeUpMinutes + cur.excusedMinutes, cur.expectedMinutes) || 0)}</b>
+                        {" "}<b className="mono">{fmtH(counted)}</b>
                         {" "}<span className="muted">of {fmtH(cur.expectedMinutes)}</span>
                     </div>
                     <div><LedgerStatus month={cur} /></div>
@@ -66,7 +83,7 @@ export function HoursBalance({ hours, self }: { hours: Hours; self: boolean }) {
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </div>}
         </div>
     );
 }
@@ -105,7 +122,7 @@ export function BehindNotice() {
     }
     if (!lines.length) return null;
     return (
-        <div className="banner attn mt pay-behind" role="status">
+        <div className="banner attn mb pay-behind" role="status">
             <Icon name="clock" />
             <div className="grow">{lines}</div>
         </div>

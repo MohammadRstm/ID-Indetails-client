@@ -1,5 +1,5 @@
 import { OffBadge } from "@/domains/shared/timeOff/OffBadge";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { downloadFile } from "@/api/download";
 import { errorMessage, isStatus } from "@/api/errors";
@@ -15,12 +15,14 @@ import Figure from "@/shared/components/Charts/Figure";
 import { CalendarHeat } from "@/shared/components/Charts/Heat";
 import { Presence, ProjectTile } from "@/shared/components/Data/Bits";
 import { KpiStrip } from "@/shared/components/Data/Kpi";
+import Pager from "@/shared/components/Data-Tables/Pager";
 import { CostRow, Money } from "@/shared/components/Data/Money";
 import { PROJECT_STATUS } from "@/shared/components/Data/status";
 import { StatusBadge } from "@/shared/components/Data/Pills";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import Skeleton, { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
+import DateInput from "@/shared/components/Forms/DateInput";
 import { toast } from "@/shared/components/Feedback/toast";
 import Avatar from "@/shared/components/Identity/Avatar";
 import { money } from "@/shared/format/money";
@@ -28,11 +30,12 @@ import { quarterOf, quarterStart } from "@/shared/format/periods";
 import { dayKey, fmtDate, fmtDateY, fmtDayDateY, fmtDur, fmtH, fmtNumber, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import MySalaryAdvances from "../../company/salaries/MySalaryAdvances";
 import { currentPay } from "../pay/payRules";
 import { HoursBalance, MyHoursBalance } from "../pay/HoursBalance";
 import EntryModal from "../projects/EntryModal";
 import { companyNow } from "../work/day";
+import EntryActions from "../work/EntryActions";
+import { useDeleteWithUndo } from "../work/useDeleteWithUndo";
 import EntryRow from "../work/EntryRow";
 import OvertimePanel from "../work/OvertimePanel";
 import type { WorkEntry } from "../work/workApi";
@@ -174,9 +177,6 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
                 </div>
             </div>
 
-            {/* the person's own advances, never someone else's */}
-            {own && <MySalaryAdvances />}
-
             {execution ? (
                 (self || permissions.has(P.EMPLOYEE_VIEW)) && (
                     <>
@@ -197,13 +197,29 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
     );
 }
 
+/** How many entries Recent work shows at a time. */
+const ENTRIES_PER_PAGE = 10;
+
 /** A Design person's work: totals, overtime, hours balance, cost, activity, weeks, projects and recent work. */
 function DesignWork({ userId, first, self }: { userId: number | null; first: string; self: boolean }) {
     const navigate = useNavigate();
     const [, setParams] = useSearchParams();
     const permissions = usePermissions();
     const summary = usePersonWorkSummary(userId);
-    const entries = usePersonEntries(userId);
+    const [page, setPage] = useState(1);
+    // a day picked shows only that day's entries
+    const [day, setDay] = useState("");
+    const pickDay = (value: string) => { setDay(value); setPage(1); };
+    const entries = usePersonEntries(userId, page, ENTRIES_PER_PAGE, day || null);
+    const recentRef = useRef<HTMLDivElement>(null);
+    // their own entries change here as on My work, while each one's edit window lasts
+    const canChange = self && permissions.has(P.WORK_ENTRY_CREATE);
+    const deleteEntry = useDeleteWithUndo();
+    // the last entry of a later page goes back to the page before
+    const del = (e: WorkEntry) => {
+        if (page > 1 && entries.data?.items.length === 1) setPage(page - 1);
+        deleteEntry(e);
+    };
     const hours = usePersonHours(userId ?? 0, userId != null && permissions.has(P.SALARY_VIEW));
     const s = summary.data;
     const projectPath = (id: number) => `/design/projects/${id}`;
@@ -219,9 +235,10 @@ function DesignWork({ userId, first, self }: { userId: number | null; first: str
     return (
         <>
             <KpiStrip loading={!s} items={[
+                { key: "total", label: "Total hours", value: fmtH(s?.totalMinutes ?? 0), sub: <span>{s?.firstEntryDay ? `since ${fmtDateY(s.firstEntryDay)}` : "no work yet"}</span> },
                 {
-                    key: "total", label: "Total hours", value: fmtH(s?.totalMinutes ?? 0),
-                    sub: <span>{s?.totalOvertimeMinutes ? <><span className="ot-text">{fmtH(s.totalOvertimeMinutes)} overtime</span> · </> : null}{s?.firstEntryDay ? `since ${fmtDateY(s.firstEntryDay)}` : "no work yet"}</span>,
+                    key: "overtime", label: "Overtime", value: <span className={s?.totalOvertimeMinutes ? "ot-text" : undefined}>{fmtH(s?.totalOvertimeMinutes ?? 0)}</span>,
+                    sub: <span>all time, of the total</span>,
                 },
                 { key: "entries", label: "Work entries", value: fmtNumber(s?.entryCount ?? 0), sub: <span>avg {s?.entryCount ? fmtDur(s.totalMinutes / s.entryCount) : "-"}</span> },
                 { key: "quarter", label: "This quarter", value: fmtH(s?.thisQuarterMinutes ?? 0) },
@@ -258,8 +275,14 @@ function DesignWork({ userId, first, self }: { userId: number | null; first: str
             </div>
 
             <div className="grid g-7-5 mt">
-                <div className="panel">
-                    <div className="panel-head"><div><div className="panel-title">Recent work</div><div className="panel-sub">Newest entries, grouped by day.</div></div></div>
+                <div className="panel" ref={recentRef}>
+                    <div className="panel-head">
+                        <div><div className="panel-title">Recent work</div><div className="panel-sub">Newest entries, grouped by day, {ENTRIES_PER_PAGE} to a page.</div></div>
+                        <div className="panel-tools">
+                            <DateInput value={day} onChange={pickDay} max={companyNow().today} placeholder="Find a day" aria-label="Find a day" style={{ width: 150 }} />
+                            {day && <button type="button" className="btn btn-sm btn-quiet" onClick={() => pickDay("")}><Icon name="x" />All days</button>}
+                        </div>
+                    </div>
                     <div className="panel-body" style={{ paddingTop: 2 }}>
                         {loadFailed(entries) ? <LoadError error={entries.error} retry={() => entries.refetch()} what="their entries" />
                             : !entries.data ? <SkeletonLines lines={5} />
@@ -271,10 +294,18 @@ function DesignWork({ userId, first, self }: { userId: number | null; first: str
                                             <span className="day-total mono">{fmtDur(g.minutes)}</span>
                                         </div>
                                         <DayRuler blocks={g.items.map((e) => ({ start: e.startedAt, end: e.endedAt }))} scale={false} />
-                                        <div style={{ marginTop: 6 }}>{g.items.map((e) => <EntryRow key={e.id} entry={e} canAttach={self} onOpen={openEntry} />)}</div>
+                                        <div style={{ marginTop: 6 }}>
+                                            {g.items.map((e) => (
+                                                <EntryRow key={e.id} entry={e} canAttach={self} onOpen={openEntry}
+                                                    right={canChange ? <EntryActions entry={e} onDelete={del} /> : null} />
+                                            ))}
+                                        </div>
                                     </div>
                                 ))}
-                        {entries.data && groups.length === 0 && <Empty art="time" title="No work logged yet" />}
+                        {entries.data && groups.length === 0 && page === 1 && (day
+                            ? <Empty art="time" title={`Nothing logged on ${fmtDayDateY(day)}`} text="Pick another day, or show all days." />
+                            : <Empty art="time" title="No work logged yet" />)}
+                        <Pager page={page} pageSize={ENTRIES_PER_PAGE} total={entries.data?.totalCount ?? 0} onPage={setPage} anchor={recentRef} />
                     </div>
                 </div>
 

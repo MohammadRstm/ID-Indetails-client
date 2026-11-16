@@ -55,7 +55,7 @@ export function MyLogButtons() {
     );
 }
 
-/** Their week, a reminder to log today, hours they are behind on, today's timeline, overtime and hours balance. */
+/** Hours they are behind on, their week, a reminder to log today, today's timeline, overtime and hours balance. */
 export function MyWorkBand() {
     const permissions = usePermissions();
     const { today, minute: nowMin } = companyNow();
@@ -67,13 +67,14 @@ export function MyWorkBand() {
     const s = summary.data;
     return (
         <>
+            {/* first: hours they owe come before how their week is going */}
+            <BehindNotice />
             <WeekPanel summary={s} error={loadFailed(summary) ? summary.error : null} retry={() => summary.refetch()} today={today} />
             {settings?.logReminder && workHours && nowMin >= 15 * 60 && s && !s.todayMinutes && canLog && (
                 <div className="banner attn mt"><Icon name="bell" />
                     <div className="grow"><b>Nothing logged today yet.</b> Add what you worked on before you finish - it takes a few seconds on the timeline below.</div>
                 </div>
             )}
-            <BehindNotice />
             {permissions.has(P.TIME_OFF_REQUEST) && <TimeOffNotice />}
             {canLog && <TodayPanel />}
             <OvertimePanel />

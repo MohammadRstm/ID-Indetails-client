@@ -11,9 +11,9 @@ import { PaymentTable } from "./BillingTables";
 const PAGE_SIZE = 20;
 
 /**
- * A project's client payments, under its invoices: each one, what it paid and the account label it is filed under, so
- * one can be applied, filed or voided from the row's menu (payment:record, payment:void). On a site the label decides
- * the row a payment counts in on the account. Twenty a page.
+ * A project's client payments, under its invoices: each one, what it paid and, on an Execution site, the account label
+ * it is filed under, so one can be applied, filed or voided from the row's menu (payment:record, payment:void). On a
+ * site the label decides the row a payment counts in on the account. Twenty a page.
  */
 export default function ProjectPayments({ project }: { project: Project }) {
     const links = useBillingLinks();
@@ -26,7 +26,9 @@ export default function ProjectPayments({ project }: { project: Project }) {
             <div className="panel-head">
                 <div className="grow">
                     <div className="panel-title">Payments received</div>
-                    <div className="panel-sub">Each payment, the invoice it paid and the account label it is filed under.</div>
+                    <div className="panel-sub">{project.domain === "execution"
+                        ? "Each payment, the invoice it paid and the account label it is filed under."
+                        : "Each payment and the invoice it paid."}</div>
                 </div>
             </div>
             {loadFailed(query) ? <div className="panel-body"><LoadError error={query.error} retry={() => query.refetch()} what="the payments" /></div>

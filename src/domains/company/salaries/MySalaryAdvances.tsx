@@ -138,7 +138,7 @@ function AdvanceRow({ advance, onWithdraw }: { advance: MySalaryAdvance; onWithd
 
 /**
  * The signed-in person's own salary advances: ask for one, follow each request, and see what is still to repay.
- * It never shows what each month took, or who decided. It is hidden for anyone the API doesn't offer it to.
+ * It never shows what each month took, or who decided. For anyone the API doesn't offer it to, it says so.
  */
 export default function MySalaryAdvances() {
     const mine = useMySalaryAdvances();
@@ -146,17 +146,19 @@ export default function MySalaryAdvances() {
     const [withdrawing, setWithdrawing] = useState<MySalaryAdvance | null>(null);
     const data = mine.data;
 
-    if (isStatus(mine.error, 404) || isStatus(mine.error, 403)) return null;
+    if (isStatus(mine.error, 404) || isStatus(mine.error, 403)) {
+        return <div className="panel"><Empty art="time" title="No salary advances for your account" text="Advances are for people paid a salary here." /></div>;
+    }
 
     const reason = data && !data.canAsk ? (CANNOT_ASK[data.cannotAskBecause ?? ""] ?? "You can't ask for an advance right now.") : null;
     return (
-        <div className="panel mt" aria-label="Salary advance">
+        <div className="panel" aria-label="Salary advance">
             <div className="panel-head">
                 <div>
                     <div className="panel-title">Salary advance</div>
                     <div className="panel-sub">Part of your pay handed over early. A super admin approves it, or declines it.</div>
                 </div>
-                <div className="row" style={{ gap: 10 }}>
+                <div className="panel-tools" style={{ gap: 10 }}>
                     {reason && <span className="muted" style={{ fontSize: 11.5 }}>{reason}</span>}
                     <button className="btn btn-primary btn-sm" disabled={!data?.canAsk} title={reason ?? undefined} onClick={() => setAsking(true)}>
                         <Icon name="plus" />Ask for an advance

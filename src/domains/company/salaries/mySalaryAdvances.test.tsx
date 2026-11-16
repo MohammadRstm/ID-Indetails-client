@@ -26,15 +26,15 @@ const mine = (over: Partial<MySalaryAdvances> = {}) =>
     http.get("/api/me/salary-advances", () => HttpResponse.json({ canAsk: true, cannotAskBecause: null, currency: "USD", items: [], ...over }));
 
 describe("the person's own salary advance", () => {
-    it("shows an empty section on My profile with Ask for an advance ready", async () => {
-        renderApp("/design/profile", sarah, ...workHandlers, mine());
+    it("has a page of its own, empty, with Ask for an advance ready", async () => {
+        renderApp("/design/advances", sarah, ...workHandlers, mine());
         expect(await screen.findByText("No salary advances")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Ask for an advance" })).toBeEnabled();
     });
 
     it("asks for an advance, showing each field's error live", async () => {
         const sent: unknown[] = [];
-        renderApp("/design/profile", sarah, ...workHandlers, mine(),
+        renderApp("/design/advances", sarah, ...workHandlers, mine(),
             http.post("/api/me/salary-advances", async ({ request: r }) => { sent.push(await r.json()); return HttpResponse.json(advance(), { status: 201 }); }));
         await userEvent.click(await screen.findByRole("button", { name: "Ask for an advance" }));
         const dialog = await screen.findByRole("dialog", { name: "Ask for an advance" });
@@ -55,7 +55,7 @@ describe("the person's own salary advance", () => {
 
     it("shows what the API refuses next to its field, and a business refusal at the foot", async () => {
         let refuse: Record<string, unknown> = { type: "validation", code: "validation_failed", message: "Invalid.", errors: { amount: ["That is more than you can ask for."] } };
-        renderApp("/design/profile", sarah, ...workHandlers, mine(),
+        renderApp("/design/advances", sarah, ...workHandlers, mine(),
             http.post("/api/me/salary-advances", () => HttpResponse.json(refuse, { status: 422 })));
         await userEvent.click(await screen.findByRole("button", { name: "Ask for an advance" }));
         const dialog = await screen.findByRole("dialog", { name: "Ask for an advance" });
@@ -70,7 +70,7 @@ describe("the person's own salary advance", () => {
     });
 
     it("lists the advances with their months and what is still to repay, and never what a month took", async () => {
-        renderApp("/design/profile", sarah, ...workHandlers, mine({
+        renderApp("/design/advances", sarah, ...workHandlers, mine({
             canAsk: false, cannotAskBecause: "salary_advance_open",
             items: [advance({
                 id: 2, status: "approved", amount: 400, askedAmount: 500, reason: "A medical bill", decisionNote: "Take it off in two months", givenOn: "2026-10-20",
@@ -95,24 +95,24 @@ describe("the person's own salary advance", () => {
     });
 
     it("switches asking off and says why", async () => {
-        renderApp("/design/profile", sarah, ...workHandlers, mine({ canAsk: false, cannotAskBecause: "salary_advance_open", items: [advance({ status: "approved", left: 100 })] }));
+        renderApp("/design/advances", sarah, ...workHandlers, mine({ canAsk: false, cannotAskBecause: "salary_advance_open", items: [advance({ status: "approved", left: 100 })] }));
         expect(await screen.findByText("Your last advance isn't paid back yet.")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Ask for an advance" })).toBeDisabled();
     });
 
     it("says there is no pay yet, and that a request is waiting", async () => {
-        const first = renderApp("/design/profile", sarah, ...workHandlers, mine({ canAsk: false, cannotAskBecause: "salary_advance_no_pay", currency: null }));
+        const first = renderApp("/design/advances", sarah, ...workHandlers, mine({ canAsk: false, cannotAskBecause: "salary_advance_no_pay", currency: null }));
         expect(await screen.findByText("Your pay isn't set yet, so there is nothing to advance.")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Ask for an advance" })).toBeDisabled();
         first.unmount();
 
-        renderApp("/design/profile", sarah, ...workHandlers, mine({ canAsk: false, cannotAskBecause: "salary_advance_pending", items: [advance()] }));
+        renderApp("/design/advances", sarah, ...workHandlers, mine({ canAsk: false, cannotAskBecause: "salary_advance_pending", items: [advance()] }));
         expect(await screen.findByText("Your last request is still waiting for a decision.")).toBeInTheDocument();
     });
 
     it("withdraws a waiting request after asking", async () => {
         const withdrawn: number[] = [];
-        renderApp("/design/profile", sarah, ...workHandlers, mine({ canAsk: false, cannotAskBecause: "salary_advance_pending", items: [advance({ id: 7 })] }),
+        renderApp("/design/advances", sarah, ...workHandlers, mine({ canAsk: false, cannotAskBecause: "salary_advance_pending", items: [advance({ id: 7 })] }),
             http.post("/api/me/salary-advances/:id/withdraw", ({ params }) => { withdrawn.push(Number(params.id)); return HttpResponse.json(advance({ id: 7, status: "withdrawn" })); }));
         await userEvent.click(await screen.findByRole("button", { name: /^Withdraw the request from/ }));
         const dialog = await screen.findByRole("dialog", { name: "Withdraw the request?" });
@@ -122,20 +122,27 @@ describe("the person's own salary advance", () => {
         await waitFor(() => expect(screen.queryByRole("dialog", { name: "Withdraw the request?" })).not.toBeInTheDocument());
     });
 
-    it("is on a super admin's company profile", async () => {
-        renderApp("/company/profile", personas.superAdmin, ...companyHandlers, mine());
+    it("is in the company area for a super admin, from the menu under their name", async () => {
+        renderApp("/company/overview", personas.superAdmin, ...companyHandlers, mine());
+        await userEvent.click(await screen.findByRole("button", { name: "Account" }));
+        await userEvent.click(screen.getByRole("button", { name: "Salary advances" }));
+        await waitFor(() => expect(window.location.pathname).toBe("/company/advances"));
         expect(await screen.findByText("No salary advances")).toBeInTheDocument();
     });
 
-    it("hides the section when the API doesn't offer it", async () => {
-        renderApp("/design/profile", sarah, ...workHandlers,
+    it("says so when the API doesn't offer it", async () => {
+        renderApp("/design/advances", sarah, ...workHandlers,
             http.get("/api/me/salary-advances", () => HttpResponse.json({ type: "forbidden", code: "forbidden", message: "No." }, { status: 403 })));
-        expect(await screen.findByRole("heading", { name: "Sarah Test" })).toBeInTheDocument();
-        await waitFor(() => expect(screen.queryByLabelText("Salary advance")).not.toBeInTheDocument());
-        expect(screen.queryByText(/salary advances/i)).not.toBeInTheDocument();
+        expect(await screen.findByText("No salary advances for your account")).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Ask for an advance" })).not.toBeInTheDocument();
     });
 
-    it("is not on someone else's profile", async () => {
+    it("is no longer on a profile, one's own or someone else's", async () => {
+        const own = renderApp("/design/profile", sarah, ...workHandlers, mine());
+        expect(await screen.findByRole("heading", { name: "Sarah Test" })).toBeInTheDocument();
+        expect(screen.queryByLabelText("Salary advance")).not.toBeInTheDocument();
+        own.unmount();
+
         renderApp("/design/people/9", personas.designAdmin, ...peopleHandlers, mine());
         expect(await screen.findByRole("heading", { name: "Yara Mansour" })).toBeInTheDocument();
         expect(screen.queryByLabelText("Salary advance")).not.toBeInTheDocument();

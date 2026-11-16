@@ -30,7 +30,7 @@ import { useDomainPeople, personName } from "../people/peopleApi";
 import CreateProjectModal from "./CreateProjectModal";
 import GreetingHead from "./GreetingHead";
 import ProjectFiltersDrawer from "./ProjectFilters";
-import { activeFilters, type ProjectFilterValues } from "./projectFilters";
+import { activeFilters, type ProjectFilterValues } from "./projectFilterValues";
 import ProjectStatusItems from "./ProjectStatusItems";
 import { useProjects, useProjectStatusCounts, useProjectTotals, type ProjectListParams, type ProjectSort, type ProjectSummary } from "./projectsApi";
 import { loadFailed } from "@/api/queryState";

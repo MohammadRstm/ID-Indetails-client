@@ -54,6 +54,7 @@ export const SettingsPage = page(() => import("@/domains/shared/settings/Setting
 export const CompanySettingsPage = named(() => import("@/domains/shared/settings/SettingsPage"), "CompanySettingsPage");
 export const WebsiteSettingsPage = named(() => import("@/domains/shared/settings/SettingsPage"), "WebsiteSettingsPage");
 export const CompanyProfilePage = page(() => import("@/domains/company/profile/CompanyProfilePage"));
+export const MySalaryAdvancesPage = page(() => import("@/domains/company/salaries/MySalaryAdvancesPage"));
 export const CompanyExpensesPage = page(() => import("@/domains/company/CompanyExpensesPage"));
 export const CompanyOverviewPage = page(() => import("@/domains/company/CompanyOverviewPage"));
 export const ProjectPayPage = page(() => import("@/domains/company/projectPay/ProjectPayPage"));

@@ -18,11 +18,14 @@ const designPath = `/design/projects/${designProject.id}`;
 const billingPath = "/design/financials?tab=billing";
 const paid = billing.domainPayments.items[0];
 const concrete = { id: 1, name: "Concrete" };
+// account labels are an Execution site's: the payments the label is tested on are a site's
+const sitePaid = { ...paid, domain: "execution" };
+const sitePayments = (items = billing.domainPayments.items) => http.get("/api/payments", () =>
+    HttpResponse.json({ ...billing.domainPayments, items: items.map((p) => ({ ...p, domain: "execution" })) }));
 
 const refusal = (code: string, message: string, errors: Record<string, string[]> | null = null, status = 422) =>
     HttpResponse.json({ type: errors ? "validation" : "business_rule", code, message, errors, traceId: "t" }, { status });
-const withLabel = (accountLabel: typeof concrete | null) => http.get("/api/payments", () =>
-    HttpResponse.json({ ...billing.domainPayments, items: [{ ...paid, accountLabel }, ...billing.domainPayments.items.slice(1)] }));
+const withLabel = (accountLabel: typeof concrete | null) => sitePayments([{ ...paid, accountLabel }, ...billing.domainPayments.items.slice(1)]);
 const band = async () => (await screen.findByText("Client payments", { selector: ".u" })).closest(".panel") as HTMLElement;
 const received = async () => (await screen.findByText("Payments received")).closest(".panel") as HTMLElement;
 const openLabel = async () => {
@@ -40,36 +43,43 @@ afterEach(() => vi.useRealTimers());
 
 describe("recording a payment under an account label", () => {
     const designHandlers = [...billingHandlers, ...projectWorkHandlers];
+    const lobby = site.losingProject;
+    const sitePath = `/execution/projects/${lobby.id}?part=payments`;
+    const onSite = (payment: ReturnType<typeof http.post>) => [
+        http.get("/api/invoices", () => HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 })),
+        http.get("/api/exchange-rates", () => HttpResponse.json([])),
+        payment,
+        ...siteHandlers,
+    ];
+    const post = "/api/projects/:id/payments";
+    const openSiteDialog = async () => {
+        await userEvent.click(within(await band()).getByRole("button", { name: "Record payment" }));
+        const dialog = await screen.findByRole("dialog", { name: "Record a client payment" });
+        await within(dialog).findByText("On account - no invoice yet");
+        await userEvent.type(within(dialog).getByLabelText("Amount received"), "2500");
+        return dialog;
+    };
 
-    it("offers the open labels on a Design project, and files the payment under the one chosen", async () => {
-        const recorded: unknown[] = [];
+    it("has no account label on a Design project, and sends none", async () => {
+        const recorded: Record<string, unknown>[] = [];
         renderApp(`${designPath}?tab=payments`, designAdmin,
-            http.post(`/api/projects/${designProject.id}/payments`, async ({ request }) => { recorded.push(await request.json()); return HttpResponse.json(paid, { status: 201 }); }),
+            http.post(`/api/projects/${designProject.id}/payments`, async ({ request }) => { recorded.push(await request.json() as Record<string, unknown>); return HttpResponse.json(paid, { status: 201 }); }),
             ...designHandlers);
         await userEvent.click(within(await band()).getByRole("button", { name: "Record payment" }));
         const dialog = await screen.findByRole("dialog", { name: "Record a client payment" });
         await within(dialog).findByText(/^Balance on /);
-        await userEvent.click(within(dialog).getByLabelText("Account label"));
-        await screen.findByRole("option", { name: "Concrete" });
-        expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["No label", "Concrete", "Finishing", "Permits"]);
-        await userEvent.click(screen.getByRole("option", { name: "Concrete" }));
+        expect(within(dialog).queryByLabelText("Account label")).not.toBeInTheDocument();
         await userEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
-        await waitFor(() => expect(recorded).toEqual([expect.objectContaining({ accountLabelId: concrete.id })]));
+        await waitFor(() => expect(recorded).toHaveLength(1));
+        expect(recorded[0]).not.toHaveProperty("accountLabelId");
     });
 
-    it("files an Execution site's payment under a label too, and sends none when none is chosen", async () => {
+    it("files an Execution site's payment under a label, and sends none when none is chosen", async () => {
         const recorded: Record<string, unknown>[] = [];
-        const lobby = site.losingProject;
-        renderApp(`/execution/projects/${lobby.id}?part=payments`, karim,
-            http.get("/api/invoices", () => HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 })),
-            http.get("/api/exchange-rates", () => HttpResponse.json([])),
-            http.post("/api/projects/:id/payments", async ({ request }) => { recorded.push(await request.json() as Record<string, unknown>); return HttpResponse.json(paid, { status: 201 }); }),
-            ...siteHandlers);
+        renderApp(sitePath, karim,
+            ...onSite(http.post(post, async ({ request }) => { recorded.push(await request.json() as Record<string, unknown>); return HttpResponse.json(sitePaid, { status: 201 }); })));
         for (const label of ["Finishing", null]) {
-            await userEvent.click(within(await band()).getByRole("button", { name: "Record payment" }));
-            const dialog = await screen.findByRole("dialog", { name: "Record a client payment" });
-            await within(dialog).findByText("On account - no invoice yet");
-            await userEvent.type(within(dialog).getByLabelText("Amount received"), "2500");
+            const dialog = await openSiteDialog();
             if (label) {
                 await userEvent.click(within(dialog).getByLabelText("Account label"));
                 await userEvent.click(await screen.findByRole("option", { name: label }));
@@ -85,12 +95,8 @@ describe("recording a payment under an account label", () => {
 
     it("shows the API's refusal of a label beside the label, until another is picked", async () => {
         const message = "Permits is archived, so a new payment can't be filed under it.";
-        renderApp(`${designPath}?tab=payments`, designAdmin,
-            http.post(`/api/projects/${designProject.id}/payments`, () => refusal("account_label_archived", message)),
-            ...designHandlers);
-        await userEvent.click(within(await band()).getByRole("button", { name: "Record payment" }));
-        const dialog = await screen.findByRole("dialog", { name: "Record a client payment" });
-        await within(dialog).findByText(/^Balance on /);
+        renderApp(sitePath, karim, ...onSite(http.post(post, () => refusal("account_label_archived", message))));
+        const dialog = await openSiteDialog();
         await userEvent.click(within(dialog).getByLabelText("Account label"));
         await userEvent.click(await screen.findByRole("option", { name: "Permits" }));
         await userEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
@@ -102,12 +108,9 @@ describe("recording a payment under an account label", () => {
     });
 
     it("shows a label the API names in a field error beside the label", async () => {
-        renderApp(`${designPath}?tab=payments`, designAdmin,
-            http.post(`/api/projects/${designProject.id}/payments`, () => refusal("validation_failed", "One or more fields are invalid.", { accountLabelId: ["That account label doesn't exist."] }, 400)),
-            ...designHandlers);
-        await userEvent.click(within(await band()).getByRole("button", { name: "Record payment" }));
-        const dialog = await screen.findByRole("dialog", { name: "Record a client payment" });
-        await within(dialog).findByText(/^Balance on /);
+        renderApp(sitePath, karim,
+            ...onSite(http.post(post, () => refusal("validation_failed", "One or more fields are invalid.", { accountLabelId: ["That account label doesn't exist."] }, 400))));
+        const dialog = await openSiteDialog();
         await userEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
         expect(await within(dialog).findByText("That account label doesn't exist.")).toBeInTheDocument();
         expect(within(dialog).queryByText("One or more fields are invalid.")).not.toBeInTheDocument();
@@ -117,7 +120,7 @@ describe("recording a payment under an account label", () => {
 describe("the label on payments", () => {
     const handlers = [...billingHandlers, ...financialsHandlers];
 
-    it("is shown in the payment list, a dash where there is none", async () => {
+    it("is shown in the list of a site's payments, a dash where there is none", async () => {
         renderApp(billingPath, designAdmin, withLabel(concrete), ...handlers);
         const panel = await received();
         expect(await within(panel).findByRole("columnheader", { name: "Account label" })).toBeInTheDocument();
@@ -125,6 +128,13 @@ describe("the label on payments", () => {
         expect(within(rows[1]).getByText("Concrete")).toBeInTheDocument();
         expect(within(rows[2]).queryByText("Concrete")).not.toBeInTheDocument();
         expect(within(rows[2]).getAllByRole("cell")[5]).toHaveTextContent("-");
+    });
+
+    it("has no column in a list of Design payments", async () => {
+        renderApp(billingPath, designAdmin, ...handlers);
+        const panel = await received();
+        await within(panel).findByText("ID-2026-002");
+        expect(within(panel).queryByRole("columnheader", { name: "Account label" })).not.toBeInTheDocument();
     });
 
     it("is shown beside a payment made against an invoice", async () => {
@@ -138,7 +148,7 @@ describe("the label on payments", () => {
 });
 
 describe("the Label action", () => {
-    const handlers = [...billingHandlers, ...financialsHandlers];
+    const handlers = [sitePayments(), ...billingHandlers, ...financialsHandlers];
     const put = (answer: (body: { accountLabelId: number | null }) => Response, calls: unknown[] = []) =>
         http.put("/api/payments/:id/label", async ({ params, request }) => {
             const body = await request.json() as { accountLabelId: number | null };
@@ -150,8 +160,8 @@ describe("the Label action", () => {
         const calls: unknown[] = [];
         let filed: typeof concrete | null = null;
         renderApp(billingPath, designAdmin,
-            http.get("/api/payments", () => HttpResponse.json({ ...billing.domainPayments, items: [{ ...paid, accountLabel: filed }, ...billing.domainPayments.items.slice(1)] })),
-            put((body) => { filed = body.accountLabelId === 1 ? concrete : null; return HttpResponse.json({ ...paid, accountLabel: filed }); }, calls),
+            http.get("/api/payments", () => HttpResponse.json({ ...billing.domainPayments, items: [{ ...sitePaid, accountLabel: filed }, ...billing.domainPayments.items.slice(1).map((p) => ({ ...p, domain: "execution" }))] })),
+            put((body) => { filed = body.accountLabelId === 1 ? concrete : null; return HttpResponse.json({ ...sitePaid, accountLabel: filed }); }, calls),
             ...handlers);
         const dialog = await openLabel();
         expect(within(dialog).getByLabelText("Account label")).toHaveTextContent("No label");
@@ -166,7 +176,7 @@ describe("the Label action", () => {
 
     it("changes a label, clears it, and keeps an archived label of its own on offer as archived", async () => {
         const calls: unknown[] = [];
-        renderApp(billingPath, designAdmin, withLabel({ id: 9, name: "Old permits" }), put(() => HttpResponse.json({ ...paid, accountLabel: null }), calls), ...handlers);
+        renderApp(billingPath, designAdmin, withLabel({ id: 9, name: "Old permits" }), put(() => HttpResponse.json({ ...sitePaid, accountLabel: null }), calls), ...handlers);
         const dialog = await openLabel();
         const select = within(dialog).getByLabelText("Account label");
         await waitFor(() => expect(select).toHaveTextContent("Old permits (archived)"));
@@ -181,7 +191,7 @@ describe("the Label action", () => {
 
     it("sends nothing when the label wasn't changed", async () => {
         const calls: unknown[] = [];
-        renderApp(billingPath, designAdmin, withLabel(concrete), put(() => HttpResponse.json(paid), calls), ...handlers);
+        renderApp(billingPath, designAdmin, withLabel(concrete), put(() => HttpResponse.json(sitePaid), calls), ...handlers);
         const dialog = await openLabel();
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
         await waitFor(() => expect(screen.queryByRole("dialog", { name: "Label payment" })).not.toBeInTheDocument());
@@ -212,9 +222,7 @@ describe("the Label action", () => {
 
     it("isn't offered on a voided payment", async () => {
         const voided = { ...paid, voidedAt: "2026-09-29T09:00:00Z", voidReason: "Recorded twice" };
-        renderApp(billingPath, designAdmin,
-            http.get("/api/payments", () => HttpResponse.json({ ...billing.domainPayments, items: [voided, ...billing.domainPayments.items.slice(1)] })),
-            ...handlers);
+        renderApp(billingPath, designAdmin, sitePayments([voided, ...billing.domainPayments.items.slice(1)]), ...handlers);
         const panel = await received();
         await within(panel).findByText("ID-2026-002");
         // the live payment below it keeps its menu; the voided one has none
@@ -234,5 +242,12 @@ describe("the Label action", () => {
         renderApp(billingPath, designAdmin, ...handlers);
         await userEvent.click(await within(await received()).findByRole("button", { name: "Payment of Sep 28 actions" }));
         expect(screen.getByRole("button", { name: "Label…" })).toBeInTheDocument();
+    });
+
+    it("isn't offered on a Design payment", async () => {
+        renderApp(billingPath, designAdmin, ...billingHandlers, ...financialsHandlers);
+        await userEvent.click(await within(await received()).findByRole("button", { name: "Payment of Sep 28 actions" }));
+        expect(screen.getByRole("button", { name: "Void payment…" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Label…" })).not.toBeInTheDocument();
     });
 });
