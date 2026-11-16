@@ -16,6 +16,7 @@ import {
     PocketPage,
     CompanyOverviewPage,
     CompanyProfilePage,
+    MySalaryAdvancesPage,
     CompanySettingsPage,
     FinancialsRoute,
     HelpPage,
@@ -212,6 +213,11 @@ export const domainRoutes: DomainRoute[] = [
         employee: { element: <MyProfilePage />, access: signedIn },
     },
     {
+        // one's own salary advances, from the menu under one's name: the same page for admins and employees
+        path: "advances",
+        admin: { element: <MySalaryAdvancesPage />, access: signedIn },
+    },
+    {
         // everyone's: the theme and Contact the developer, and each section someone may change
         path: "settings",
         nav: { label: "Settings", icon: "settings", section: "workspace" },
@@ -255,6 +261,7 @@ export const companyRoutes: CompanyRoute[] = [
     // the company's own settings and each business's, for whoever reaches the company area
     { path: "settings", nav: { label: "Settings", icon: "settings", section: "workspace" }, element: <CompanySettingsPage />, access: (p) => p.has(P.COMPANY_VIEW) },
     { path: "profile", element: <CompanyProfilePage />, access: () => true },
+    { path: "advances", element: <MySalaryAdvancesPage />, access: () => true },
     { path: "notifications", element: <NotificationsPage />, access: () => true },
     { path: "messages", element: <MessagesPage />, access: () => true },
     { path: "assistant/:chatId?", element: <ProtonPage />, access: (p) => p.has(P.PROTON_USE) },
@@ -280,6 +287,7 @@ export const websiteRoutes: CompanyRoute[] = [
     // the theme and Contact the developer
     { path: "settings", nav: { label: "Settings", icon: "settings", section: "workspace" }, element: <WebsiteSettingsPage />, access: () => true },
     { path: "profile", element: <CompanyProfilePage />, access: () => true },
+    { path: "advances", element: <MySalaryAdvancesPage />, access: () => true },
     { path: "notifications", element: <NotificationsPage />, access: () => true },
     { path: "messages", element: <MessagesPage />, access: () => true },
     { path: "help", element: <HelpPage />, access: () => true },

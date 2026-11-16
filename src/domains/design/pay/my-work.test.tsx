@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -37,6 +37,53 @@ describe("My work (Design)", () => {
         await waitFor(() => expect(asked).toContain(String(projectId)));
     });
 
+    it("edits and deletes an entry from the list, with Undo on the toast", async () => {
+        const sent: string[] = [];
+        const first = work.entries.items[0];
+        renderApp("/design/my-work", sarah,
+            http.delete("/api/work-entries/:id", ({ params }) => { sent.push(`delete ${params.id}`); return new HttpResponse(null, { status: 204 }); }),
+            http.post("/api/work-entries/:id/restore", ({ params }) => { sent.push(`restore ${params.id}`); return HttpResponse.json(first); }),
+            ...workHandlers);
+        const row = () => screen.getAllByText(first.description).map((el) => el.closest(".entry")).find((el) => el != null) as HTMLElement;
+        await screen.findAllByText(first.description);
+
+        await userEvent.click(within(row()).getByRole("button", { name: "Entry actions" }));
+        await userEvent.click(await screen.findByRole("button", { name: "Edit entry" }));
+        expect(await screen.findByRole("dialog", { name: "Edit work entry" })).toBeInTheDocument();
+        await userEvent.keyboard("{Escape}");
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: "Edit work entry" })).toBeNull());
+
+        await userEvent.click(within(row()).getByRole("button", { name: "Entry actions" }));
+        await userEvent.click(await screen.findByRole("button", { name: "Delete" }));
+        await waitFor(() => expect(sent).toEqual([`delete ${first.id}`]));
+        const toast = (await screen.findByText("Entry deleted")).closest(".toast") as HTMLElement;
+        await userEvent.click(within(toast).getByRole("button", { name: "Undo" }));
+        await waitFor(() => expect(sent).toEqual([`delete ${first.id}`, `restore ${first.id}`]));
+    });
+
+    it("pages the profile's Recent work ten at a time, with Edit and Delete on each entry", async () => {
+        const asked: string[] = [];
+        renderApp("/design/profile", sarah,
+            http.get("/api/me/work-entries", ({ request }) => {
+                const q = new URL(request.url).searchParams;
+                asked.push(`${q.get("page")}/${q.get("pageSize")}${q.get("from") ? ` ${q.get("from")}..${q.get("to")}` : ""}`);
+                return HttpResponse.json({ ...work.entries, items: work.entries.items.slice(0, 10), totalCount: 25 });
+            }),
+            ...workHandlers);
+        await waitFor(() => expect(asked).toContain("1/10"));
+        expect((await screen.findAllByRole("button", { name: "Entry actions" })).length).toBeGreaterThan(0);
+        expect(screen.getByText("Overtime", { selector: ".kpi-label" })).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "2" }));
+        await waitFor(() => expect(asked).toContain("2/10"));
+
+        // a day picked: that day's entries, from the first page
+        await userEvent.type(screen.getByLabelText("Find a day"), "Sep 29, 2026");
+        await userEvent.tab();
+        await waitFor(() => expect(asked).toContain("1/10 2026-09-29..2026-09-29"));
+        await userEvent.click(screen.getByRole("button", { name: "All days" }));
+        await waitFor(() => expect(asked.at(-1)).toBe("1/10"));
+    });
+
     it("shows the week as a calendar", async () => {
         renderApp("/design/my-work", sarah, ...workHandlers);
         await userEvent.click(await screen.findByRole("tab", { name: "Week" }));
@@ -50,7 +97,9 @@ describe("the hours balance on the home page", () => {
     it("flags a month that closed short, and shows the balance", async () => {
         renderApp("/design/projects", sarah, ...workHandlers);
         // August closed short in the fixture: said in hours only, since employees don't see their pay
-        expect(await screen.findByText(/August 2026 closed .* short\./)).toBeInTheDocument();
+        const closed = await screen.findByText(/August 2026 closed .* short\./);
+        // the warning comes first, above the week
+        expect(closed.compareDocumentPosition(await screen.findByText("Your week so far")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
         expect(screen.getByText("Unless it's excused, the month stays marked short.", { exact: false })).toBeInTheDocument();
         expect(screen.queryByText(/salary/)).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: /pay/i })).not.toBeInTheDocument();
@@ -63,7 +112,13 @@ describe("the hours balance on the home page", () => {
         renderApp("/design/projects", sarah,
             http.get("/api/me/hours", () => HttpResponse.json({ ...work.hours, months: [{ ...first, timeOff: [off] }, ...rest] })),
             ...workHandlers);
-        const cell = (await screen.findByText("Hours balance")).closest(".panel")!.querySelector("td[title]");
+        const toggle = await screen.findByRole("button", { name: /^Hours balance/ });
+        // folded at first: this month's standing only
+        expect(toggle).toHaveAttribute("aria-expanded", "false");
+        expect(toggle.closest(".panel")!.querySelector("table")).toBeNull();
+        await userEvent.click(toggle);
+        expect(toggle).toHaveAttribute("aria-expanded", "true");
+        const cell = toggle.closest(".panel")!.querySelector("td[title]");
         expect(cell).toHaveAttribute("title", expect.stringContaining("Time off Sep 14–Sep 15 · 2 days"));
     });
 });

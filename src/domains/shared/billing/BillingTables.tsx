@@ -72,6 +72,8 @@ type PaymentTableProps = {
 
 /** Payments with how they arrived and what they were against (the prototype's BL.PaymentTable). */
 export function PaymentTable({ payments, showProject, tiles, onOpen, actions }: PaymentTableProps) {
+    // account labels are an Execution site's: a list of Design payments has no column for them
+    const labels = payments.some((p) => p.domain === "execution");
     return (
         <div className="tbl-wrap">
             <table className="tbl tbl-min-sm">
@@ -79,7 +81,7 @@ export function PaymentTable({ payments, showProject, tiles, onOpen, actions }: 
                     <tr>
                         <th className="nowrap">Received</th>
                         {showProject && <th>Project</th>}
-                        <th>Invoice</th><th>Method</th><th>Reference</th><th>Account label</th><th className="r">Amount</th>
+                        <th>Invoice</th><th>Method</th><th>Reference</th>{labels && <th>Account label</th>}<th className="r">Amount</th>
                         {actions && <th />}
                     </tr>
                 </thead>
@@ -100,7 +102,7 @@ export function PaymentTable({ payments, showProject, tiles, onOpen, actions }: 
                                         <span className="badge cur-chip" style={{ marginLeft: 6 }} title={`Received as ${money.fmt(p.amount, p.currency)} at ${fmtNumber(p.fxRate)}/$`}>{p.currency}</span>
                                     )}
                                 </td>
-                                <td className="muted trunc">{p.accountLabel?.name ?? "-"}</td>
+                                {labels && <td className="muted trunc">{p.accountLabel?.name ?? "-"}</td>}
                                 <td className="r mono">{money.fmt(p.amountUsd)}</td>
                                 {actions && <td className="r"><PaymentActions payment={p} /></td>}
                             </tr>

@@ -20,10 +20,10 @@ export default function Logo({ size = 27 }: { size?: number }) {
 
     return (
         <svg className="logo-mark" viewBox="0 0 28 28" width={size} height={size} aria-hidden="true">
-            {/* black on white in light mode, white on black in dark: the logo sheet's two ways */}
-            <rect x="0.6" y="0.6" width="26.8" height="26.8" rx="8" fill="var(--ink)" />
+            {/* the mark in white on a black tile in light and dark mode alike, as on the favicon and the app's icon */}
+            <rect x="0.6" y="0.6" width="26.8" height="26.8" rx="8" fill="#000000" />
             <svg x="7.5" y="2.6" width="13" height="22.8" viewBox={COMPANY_MARK_BOX}>
-                <path fill="var(--surface)" d={COMPANY_MARK} />
+                <path fill="#FFFFFF" d={COMPANY_MARK} />
             </svg>
         </svg>
     );

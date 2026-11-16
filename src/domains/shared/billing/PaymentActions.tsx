@@ -24,7 +24,8 @@ export default function PaymentActions({ payment }: { payment: Payment }) {
     const permissions = usePermissions();
     const [dialog, setDialog] = useState<"apply" | "label" | "void" | null>(null);
     const canApply = !payment.voidedAt && payment.invoiceId == null && permissions.has(P.PAYMENT_RECORD);
-    const canLabel = !payment.voidedAt && permissions.hasAll(P.PAYMENT_RECORD, P.FINANCIAL_VIEW);
+    // account labels are an Execution site's only
+    const canLabel = !payment.voidedAt && payment.domain === "execution" && permissions.hasAll(P.PAYMENT_RECORD, P.FINANCIAL_VIEW);
     const canVoid = !payment.voidedAt && permissions.has(P.PAYMENT_VOID);
     if (!canApply && !canLabel && !canVoid) return null;
     return (

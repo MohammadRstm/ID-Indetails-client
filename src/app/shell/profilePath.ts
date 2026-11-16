@@ -12,3 +12,10 @@ export function myProfilePath(p: Permissions, area: ShellArea, userId: number): 
     if (!p.isAdmin) return `/${area.domain}/profile`;
     return p.has(P.EMPLOYEE_VIEW) ? `/${area.domain}/people/${userId}` : null;
 }
+
+/** Where the signed-in person's own salary advances are: in the area they are in, a super admin's in the company area. */
+export function myAdvancesPath(p: Permissions, area: ShellArea): string {
+    if (area.kind === "website") return "/website/advances";
+    if (area.kind === "company" || p.isSuperAdmin) return "/company/advances";
+    return `/${area.domain}/advances`;
+}

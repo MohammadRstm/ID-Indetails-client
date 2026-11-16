@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { openContact } from "@/app/contact/contact";
 import Logo from "@/shared/components/Identity/Logo";
 import { useBranding } from "@/shared/components/Identity/useBranding";
@@ -13,13 +14,14 @@ export default function PortalTopBar() {
 
     return (
         <header className="portal-top">
-            <div className="row" style={{ gap: 10, minWidth: 0 }}>
+            {/* the logo goes home: the client's projects */}
+            <Link className="row portal-home" to="/portal" aria-label="Your projects" title="Your projects" style={{ gap: 10, minWidth: 0 }}>
                 <Logo size={30} />
                 <div style={{ minWidth: 0 }}>
                     <div className="logo-name trunc">{branding.data?.name || "ID InDetails"}</div>
                     <div className="logo-sub">Client portal</div>
                 </div>
-            </div>
+            </Link>
             <div className="row" style={{ gap: 10 }}>
                 <span className="muted trunc portal-who">{accountName(account)}</span>
                 <PortalBell />

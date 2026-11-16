@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { ChipGroup, ChoiceList } from "@/shared/components/Forms/Filters";
 import { Drawer } from "@/shared/components/Overlays/Modal";
-import { STATUS_LABEL, TYPE_LABEL, type ProjectFilterValues } from "./projectFilters";
+import { STATUS_LABEL, TYPE_LABEL, type ProjectFilterValues } from "./projectFilterValues";
 import type { ProjectStatus } from "./projectsApi";
 
 type Option = { value: string; label: string };

@@ -22,6 +22,7 @@ import { addDays, DAYS, dayKey, fmtDate, fmtDateY, fmtDayDateY, fmtDur, fmtDurSh
 import Icon from "@/shared/icons/Icon";
 import MyDeadlines from "../../shared/requirements/MyDeadlines";
 import { companyNow } from "./day";
+import EntryActions, { useDeleteWithUndo } from "./EntryActions";
 import EntryRow from "./EntryRow";
 import { openLogWork } from "./logWorkStore";
 import { useMyEntries, useMyProjects, useMyWorkSummary, type WorkEntry } from "./workApi";
@@ -43,6 +44,7 @@ export default function MyWorkPage() {
     const [weekAnchor, setWeekAnchor] = useState(startOfWeek(today));
     const text = useDebounce({ value: search.trim(), debounceTimeMs: 250 });
     const canLog = permissions.has(P.WORK_ENTRY_CREATE);
+    const del = useDeleteWithUndo();
 
     const ranges: Record<Period, { label: string; from?: string }> = {
         week: { label: "This week", from: startOfWeek(today) },
@@ -77,6 +79,10 @@ export default function MyWorkPage() {
                     {
                         key: "quarter", label: ranges.quarter.label, value: fmtH(s?.thisQuarterMinutes ?? 0),
                         delta: s && <Delta value={s.thisQuarterMinutes} prev={s.lastQuarterSameSpanMinutes} label="vs last quarter" />,
+                    },
+                    {
+                        key: "overtime", label: "Overtime", value: <span className={s?.totalOvertimeMinutes ? "ot-text" : undefined}>{fmtH(s?.totalOvertimeMinutes ?? 0)}</span>,
+                        sub: <span>all time</span>,
                     },
                     { key: "entries", label: "Work entries", value: fmtNumber(s?.entryCount ?? 0), sub: <span>avg {s?.entryCount ? fmtDur(s.totalMinutes / s.entryCount) : "-"}</span> },
                     { key: "projects", label: "Projects", value: s?.projectCount ?? 0, sub: <span>{active ?? 0} active right now</span> },
@@ -139,7 +145,7 @@ export default function MyWorkPage() {
                                         </div>
                                         <DayRuler blocks={g.items.map((e) => ({ start: e.startedAt, end: e.endedAt }))} scale={false} />
                                         <div style={{ marginTop: 6 }}>
-                                            {g.items.map((e) => <EntryRow key={e.id} entry={e} canAttach />)}
+                                            {g.items.map((e) => <EntryRow key={e.id} entry={e} canAttach right={canLog ? <EntryActions entry={e} onDelete={del} /> : null} />)}
                                         </div>
                                     </div>
                                 ))}

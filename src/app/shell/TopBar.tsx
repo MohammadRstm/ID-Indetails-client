@@ -18,7 +18,7 @@ import Icon from "@/shared/icons/Icon";
 import { toggleTheme, useTheme } from "@/shared/theme";
 import { cx } from "@/shared/utils/cx";
 import { contactPath } from "./contactPath";
-import { myProfilePath } from "./profilePath";
+import { myAdvancesPath, myProfilePath } from "./profilePath";
 import InstallMenuItem from "@/app/pwa/InstallMenuItem";
 import PushMenuItem from "@/app/pwa/PushMenuItem";
 import { useArrivalChime } from "@/domains/shared/messages/messageSounds";
@@ -134,6 +134,9 @@ export default function TopBar({ area, onMenu, onSearch, sideShown = true }: Top
                                     <Icon name="user" />My profile
                                 </button>
                             )}
+                            <button className="pop-item" onClick={() => { close(); navigate(myAdvancesPath(permissions, area)); }}>
+                                <Icon name="card" />Salary advances
+                            </button>
                             {!phone && (
                                 <button className="pop-item" onClick={() => { close(); navigate(`${base}/notifications`); }}>
                                     <Icon name="bell" />Notifications {badges.notifications > 0 && <span className="chk num">{badges.notifications}</span>}
