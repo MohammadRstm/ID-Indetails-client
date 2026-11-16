@@ -236,7 +236,7 @@ function HoursByProject({ detail: d, multiplier, openProject }: { detail: Salary
                                             <div style={{ minWidth: 0 }}>
                                                 <div className="trunc" style={{ fontWeight: 600 }}>{p.title}</div>
                                                 <div className="muted" style={{ fontSize: "11.5px" }}>
-                                                    {p.entries} entr{p.entries === 1 ? "y" : "ies"}{p.madeUpMinutes ? ` · ${fmtH(p.madeUpMinutes)} made up` : ""}
+                                                    {p.code && <span className="mono">{p.code} · </span>}{p.entries} entr{p.entries === 1 ? "y" : "ies"}{p.madeUpMinutes ? ` · ${fmtH(p.madeUpMinutes)} made up` : ""}
                                                 </div>
                                             </div>
                                         </div>

@@ -6,6 +6,7 @@ import { canOpen } from "@/app/routing/routeTable";
 import { CompositionBar, ProfitBars, RankBars, Spark } from "@/shared/components/Charts/Bars";
 import Columns from "@/shared/components/Charts/Columns";
 import Figure from "@/shared/components/Charts/Figure";
+import { projectLabel } from "@/domains/shared/projects/projectCodes";
 import { ProjectTile } from "@/shared/components/Data/Bits";
 import { Kpi } from "@/shared/components/Data/Kpi";
 import { MixedCurrency, Money } from "@/shared/components/Data/Money";
@@ -75,7 +76,7 @@ export function OverviewTab({ report, label, tiles, people }: TabProps) {
 
             <div className="grid g-2 mt">
                 <Figure title="Hours by project" sub={label}
-                    table={{ cols: [{ label: "Project" }, { label: "Hours", right: true }, { label: "Entries", right: true }], rows: report.byProject.map((p) => [p.title, fmtDur(p.minutes), p.entries]) }}>
+                    table={{ cols: [{ label: "Project" }, { label: "Hours", right: true }, { label: "Entries", right: true }], rows: report.byProject.map((p) => [projectLabel(p), fmtDur(p.minutes), p.entries]) }}>
                     <RankBars showPct onClick={(it) => open(`projects/${it.id}`)?.()}
                         items={report.byProject.slice(0, 8).map((p) => ({
                             id: p.projectId, label: p.title, value: p.minutes,

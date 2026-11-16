@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { errorMessage } from "@/api/errors";
 import FormFailure from "@/domains/shared/projects/FormFailure";
+import { projectLabel } from "@/domains/shared/projects/projectCodes";
 import { useCurrentUser } from "@/app/session/useSession";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
@@ -216,7 +217,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                     <div className="field">
                         <label className="label required" htmlFor="lw-project">Project</label>
                         <Select id="lw-project" value={projectId == null ? "" : String(projectId)} onChange={(v) => setProjectId(+v)}
-                            options={choices.map((p) => ({ value: String(p.id), label: p.title }))} />
+                            options={choices.map((p) => ({ value: String(p.id), label: projectLabel(p) }))} />
                         <div className="hint">Only active projects accept new work.</div>
                     </div>
                     <div className="field">

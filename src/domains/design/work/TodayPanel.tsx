@@ -20,6 +20,7 @@ import {
     loggableProjects, useDomainSettings, useMyDay, useMyProjects, useMySchedule, isKeptLog, useOvertimeFor, useSaveEntry, useUndoLog,
 } from "./workApi";
 import { loadFailed } from "@/api/queryState";
+import { projectLabel } from "@/domains/shared/projects/projectCodes";
 
 /** Today at a glance on the employee home: a strip of the day that opens into the day composer. */
 export default function TodayPanel() {
@@ -185,7 +186,7 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                         <div className="field">
                             <label className="label required" htmlFor="dc-project">Project</label>
                             <Select id="dc-project" value={pid == null ? "" : String(pid)} onChange={(v) => setProjectId(+v)}
-                                options={choices.map((p) => ({ value: String(p.id), label: p.title }))} />
+                                options={choices.map((p) => ({ value: String(p.id), label: projectLabel(p) }))} />
                         </div>
                         <div className="field">
                             <label className={requireDesc ? "label required" : "label"} htmlFor="dc-desc">What did you work on?</label>

@@ -40,6 +40,11 @@ export function buildingCodeError(code: string) {
     return !BUILDING_CODE.test(code) && "Use 1 to 10 letters (A to Z) or digits.";
 }
 
+/** A project as the pickers list it: its full code, then its name. */
+export function projectLabel(project: { title: string; code?: string | null }) {
+    return project.code ? `${project.code} · ${project.title}` : project.title;
+}
+
 /** The full code: ID26Q4001-VK. */
 export function fullCode(projectCode: string, buildingCode: string) {
     return `${projectCode}-${buildingCode}`;
