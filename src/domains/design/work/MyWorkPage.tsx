@@ -22,7 +22,8 @@ import { addDays, DAYS, dayKey, fmtDate, fmtDateY, fmtDayDateY, fmtDur, fmtDurSh
 import Icon from "@/shared/icons/Icon";
 import MyDeadlines from "../../shared/requirements/MyDeadlines";
 import { companyNow } from "./day";
-import EntryActions, { useDeleteWithUndo } from "./EntryActions";
+import EntryActions from "./EntryActions";
+import { useDeleteWithUndo } from "./useDeleteWithUndo";
 import EntryRow from "./EntryRow";
 import { openLogWork } from "./logWorkStore";
 import { useMyEntries, useMyProjects, useMyWorkSummary, type WorkEntry } from "./workApi";

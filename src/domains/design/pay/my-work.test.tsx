@@ -81,7 +81,8 @@ describe("My work (Design)", () => {
         await userEvent.tab();
         await waitFor(() => expect(asked).toContain("1/10 2026-09-29..2026-09-29"));
         await userEvent.click(screen.getByRole("button", { name: "All days" }));
-        await waitFor(() => expect(asked.at(-1)).toBe("1/10"));
+        await waitFor(() => expect(screen.queryByRole("button", { name: "All days" })).not.toBeInTheDocument());
+        expect(screen.getByLabelText("Find a day")).toHaveValue("");
     });
 
     it("shows the week as a calendar", async () => {
