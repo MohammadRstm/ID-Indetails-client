@@ -171,12 +171,14 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
             <div className="panel-head">
                 <div className="grow">
                     <div className="panel-title">Add logs · {fmtDayDate(date)}</div>
-                    <div className="panel-sub">Drag across free time on the timeline, or type the times below. Shaded time is outside your working day and counts as overtime.</div>
                 </div>
                 <button className="btn btn-sm btn-quiet" onClick={onCollapse}><Icon name="chevronUp" />Collapse</button>
             </div>
             <div className="panel-body">
-                <DayChips value={date} onChange={pickDay} count={5} />
+                <div className="field" role="group" aria-labelledby="dc-day">
+                    <div className="label" id="dc-day">What day to log?</div>
+                    <DayChips value={date} onChange={pickDay} count={5} />
+                </div>
                 <div className="mt">
                     <DragDay date={date} startMin={startMin} duration={duration} projectId={pid} swaps={swaps} deleted={deletes} onDeleted={setDeletes}
                         onChange={(s, d, sw) => { setSlot({ s, d }); if (sw) setSwaps(sw); }} />
