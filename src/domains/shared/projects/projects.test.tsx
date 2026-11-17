@@ -583,3 +583,61 @@ describe("a project's codes", () => {
         expect(await within(dialog).findByText("ID26Q3002 is already the code of Villa Mounir interiors.")).toBeInTheDocument();
     });
 });
+
+describe("the CFA price", () => {
+    // admins see project money once a super admin hands it to them
+    const noMoney = withPermissions(admin, { revoke: [P.FINANCIAL_VIEW] });
+    const priced = { ...fixtures.project, money: { ...fixtures.project.money!, cfaPrice: 15_000_000 } };
+
+    it("shows in the project's details and is changed there by whoever sees the money, in whole francs", async () => {
+        const edited: Record<string, unknown>[] = [];
+        renderApp("/design/projects/1", admin,
+            http.get("/api/projects/1", () => HttpResponse.json(priced)),
+            http.put("/api/projects/1", async ({ request }) => { edited.push((await request.json()) as Record<string, unknown>); return HttpResponse.json(priced); }),
+            ...projectHandlers);
+        expect(await screen.findByText("15,000,000 CFA")).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+        await userEvent.click(screen.getByRole("button", { name: "Edit details" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit project details" });
+        const field = within(dialog).getByLabelText(/CFA price/);
+        expect(field).toHaveValue("15,000,000");
+        await userEvent.clear(field);
+        // no cents in francs: the point is refused
+        await userEvent.type(field, "16500000.5");
+        expect((field as HTMLInputElement).value).not.toContain(".");
+        await userEvent.clear(field);
+        await userEvent.type(field, "16500000");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(edited).toEqual([expect.objectContaining({ cfaPrice: 16_500_000 })]));
+    });
+
+    it("is set when the project is created", async () => {
+        const created: Record<string, unknown>[] = [];
+        renderApp("/design/projects?new=1", admin,
+            http.post("/api/projects", async ({ request }) => {
+                created.push((await request.json()) as Record<string, unknown>);
+                return HttpResponse.json({ ...fixtures.project, id: 77, title: "Dakar offices" }, { status: 201 });
+            }),
+            ...projectHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "New project" });
+        await userEvent.type(within(dialog).getByLabelText("Project name"), "Dakar offices");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Internal" }));
+        await userEvent.type(within(dialog).getByLabelText(/CFA price/), "15000000");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
+        await waitFor(() => expect(created).toEqual([expect.objectContaining({ title: "Dakar offices", cfaPrice: 15_000_000 })]));
+    });
+
+    it("isn't there for someone who doesn't see the money, whose save leaves it as it is", async () => {
+        const edited: Record<string, unknown>[] = [];
+        renderApp("/design/projects/1", noMoney,
+            http.put("/api/projects/1", async ({ request }) => { edited.push((await request.json()) as Record<string, unknown>); return HttpResponse.json(fixtures.project); }),
+            ...projectHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+        await userEvent.click(screen.getByRole("button", { name: "Edit details" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit project details" });
+        expect(within(dialog).queryByLabelText(/CFA price/)).toBeNull();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(edited).toHaveLength(1));
+        expect(edited[0]).not.toHaveProperty("cfaPrice");
+    });
+});
