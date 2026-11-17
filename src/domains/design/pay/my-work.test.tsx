@@ -49,7 +49,10 @@ describe("My work (Design)", () => {
 
         await userEvent.click(within(row()).getByRole("button", { name: "Entry actions" }));
         await userEvent.click(await screen.findByRole("button", { name: "Edit entry" }));
-        expect(await screen.findByRole("dialog", { name: "Edit work entry" })).toBeInTheDocument();
+        const editing = await screen.findByRole("dialog", { name: "Edit work entry" });
+        // an old log keeps its day: no days to pick from, only the one it is on
+        expect(within(editing).queryByText("What day to log?")).toBeNull();
+        expect(within(editing).getByText("Logged on")).toBeInTheDocument();
         await userEvent.keyboard("{Escape}");
         await waitFor(() => expect(screen.queryByRole("dialog", { name: "Edit work entry" })).toBeNull());
 
