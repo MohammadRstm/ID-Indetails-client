@@ -20,7 +20,6 @@ describe("My work (Design)", () => {
     it("adds up their work and lists it day by day", async () => {
         renderApp("/design/my-work", sarah, ...workHandlers);
         expect(await screen.findByText(`avg ${fmtDur(work.summary.totalMinutes / work.summary.entryCount)}`)).toBeInTheDocument();
-        expect(await screen.findByText(work.requirements.items[0].text)).toBeInTheDocument();
         expect(await screen.findByRole("heading", { name: "Yesterday" })).toBeInTheDocument();
         expect(screen.getAllByText(work.entries.items[0].description).length).toBeGreaterThan(0);
     });
@@ -58,7 +57,10 @@ describe("My work (Design)", () => {
 
         await userEvent.click(within(row()).getByRole("button", { name: "Entry actions" }));
         await userEvent.click(await screen.findByRole("button", { name: "Edit entry" }));
-        expect(await screen.findByRole("dialog", { name: "Edit work entry" })).toBeInTheDocument();
+        // an old log keeps its day: no days to pick from, only the one it is on
+        expect(await screen.findByText("Logged on")).toBeInTheDocument();
+        const editing = screen.getByRole("dialog", { name: "Edit work entry" });
+        expect(within(editing).queryByText("What day to log?")).toBeNull();
         await userEvent.keyboard("{Escape}");
         await waitFor(() => expect(screen.queryByRole("dialog", { name: "Edit work entry" })).toBeNull());
 
@@ -94,6 +96,15 @@ describe("My work (Design)", () => {
         expect(screen.getByLabelText("Find a day")).toHaveValue("");
     });
 
+    it("opens Log work on a day of the activity squares", async () => {
+        renderApp("/design/my-work", sarah, ...workHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: /^Wed, Sep 30:/ }));
+        const dialog = await screen.findByRole("dialog", { name: /log work/i });
+        // on that day, which isn't picked again
+        expect(within(dialog).getByText("Wednesday, September 30, 2026")).toBeInTheDocument();
+        expect(within(dialog).queryByText("What day to log?")).toBeNull();
+    });
+
     it("shows the week as a calendar", async () => {
         renderApp("/design/my-work", sarah, ...workHandlers);
         await userEvent.click(await screen.findByRole("tab", { name: "Week" }));
@@ -103,23 +114,27 @@ describe("My work (Design)", () => {
     });
 });
 
-describe("the hours balance on the home page", () => {
-    it("flags a month that closed short, and shows the balance", async () => {
-        renderApp("/design/projects", sarah, ...workHandlers);
+describe("the hours an employee owes", () => {
+    it("are an alert on Log hours, folded with the others above the week until opened", async () => {
+        renderApp("/design/log-hours", sarah, ...workHandlers);
+        const toggle = await screen.findByRole("button", { name: /^Alert/ });
+        expect(toggle).toHaveAttribute("aria-expanded", "false");
+        expect(screen.queryByText(/August 2026 closed .* short\./)).not.toBeInTheDocument();
+        // the alerts come first, above the week
+        expect(toggle.compareDocumentPosition(await screen.findByText("Your week so far")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+        await userEvent.click(toggle);
         // August closed short in the fixture: said in hours only, since employees don't see their pay
-        const closed = await screen.findByText(/August 2026 closed .* short\./);
-        // the warning comes first, above the week
-        expect(closed.compareDocumentPosition(await screen.findByText("Your week so far")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(await screen.findByText(/August 2026 closed .* short\./)).toBeInTheDocument();
         expect(screen.getByText("Unless it's excused, the month stays marked short.", { exact: false })).toBeInTheDocument();
         expect(screen.queryByText(/salary/)).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: /pay/i })).not.toBeInTheDocument();
-        expect(screen.getByText("Hours balance")).toBeInTheDocument();
     });
 
-    it("includes time off in the excused column's note", async () => {
+    it("are on their profile's hours balance, with time off in the excused column's note", async () => {
         const [first, ...rest] = work.hours.months;
         const off = { requestId: 5, firstDay: "2026-09-14", lastDay: "2026-09-15", isPaid: true, days: ["2026-09-14", "2026-09-15"] };
-        renderApp("/design/projects", sarah,
+        renderApp("/design/profile", sarah,
             http.get("/api/me/hours", () => HttpResponse.json({ ...work.hours, months: [{ ...first, timeOff: [off] }, ...rest] })),
             ...workHandlers);
         const toggle = await screen.findByRole("button", { name: /^Hours balance/ });

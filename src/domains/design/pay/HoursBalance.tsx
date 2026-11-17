@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 import type { Schemas } from "@/api/types";
-import { fmtDate, fmtDur, fmtH, fmtMonthY } from "@/shared/format/time";
+import { fmtDate, fmtH, fmtMonthY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useMyHours } from "../work/workApi";
@@ -92,39 +92,4 @@ export function HoursBalance({ hours, self }: { hours: Hours; self: boolean }) {
 export function MyHoursBalance() {
     const hours = useMyHours();
     return hours.data ? <HoursBalance hours={hours.data} self /> : null;
-}
-
-/**
- * At the top of a Design employee's home: behind this month, or last month closed short (the prototype's
- * UI.BehindNotice). In hours only: employees don't see their pay.
- */
-export function BehindNotice() {
-    const hours = useMyHours();
-    const months = hours.data?.applies ? hours.data.months : [];
-    const cur = months.find((m) => m.inProgress);
-    const last = months.find((m) => !m.inProgress);
-    const flagged = last?.status === "short";
-
-    const lines = [];
-    if (cur?.status === "behind") {
-        const asked = cur.expectedMinutes - cur.excusedMinutes;
-        lines.push(
-            <div key="c"><b>You're {fmtH(cur.shortMinutes)} behind on your hours this month.</b>
-                {" "}Up to yesterday your schedule asked for {fmtDur(asked)} and you've covered {fmtDur(asked - cur.shortMinutes)} of it.
-                {" "}Log any time you missed, or work overtime to make it up before {fmtMonthY(cur.month).split(" ")[0]} ends.</div>,
-        );
-    }
-    if (last && flagged) {
-        lines.push(
-            <div key="l" className={lines.length ? "mt-s" : ""}><b>{fmtMonthY(last.month)} closed {fmtH(last.shortMinutes)} short.</b>
-                {" "}Unless it's excused, the month stays marked short.</div>,
-        );
-    }
-    if (!lines.length) return null;
-    return (
-        <div className="banner attn mb pay-behind" role="status">
-            <Icon name="clock" />
-            <div className="grow">{lines}</div>
-        </div>
-    );
 }

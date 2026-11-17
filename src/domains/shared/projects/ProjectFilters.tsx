@@ -24,6 +24,8 @@ type ProjectFiltersProps = {
     /** How many projects the filters leave, once known. */
     matching: number | undefined;
     anyOn: boolean;
+    /** Whether Archived is one of the statuses: employees never see archived projects. */
+    archived?: boolean;
 };
 
 const STATUSES: (ProjectStatus | "all")[] = ["all", "active", "hold", "completed", "archived"];
@@ -41,7 +43,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
  * The projects list's filters, all in one place: a panel that opens from the Filters button, grouped (status, time, type,
  * client, owner) and scrolling when it is long. A choice narrows the list behind it at once.
  */
-export default function ProjectFiltersDrawer({ values, onChange, onClear, onClose, counts, years, showType, clients, owners, matching, anyOn }: ProjectFiltersProps) {
+export default function ProjectFiltersDrawer({ values, onChange, onClear, onClose, counts, years, showType, clients, owners, matching, anyOn, archived = true }: ProjectFiltersProps) {
     return (
         <Drawer title="Filters" onClose={onClose}
             foot={
@@ -55,7 +57,7 @@ export default function ProjectFiltersDrawer({ values, onChange, onClear, onClos
             }>
             <Group title="Status">
                 <ChipGroup aria-label="Status" value={values.status} onChange={(status) => onChange({ status })}
-                    options={STATUSES.map((s) => ({ value: s, label: STATUS_LABEL[s], count: counts[s] }))} />
+                    options={STATUSES.filter((s) => archived || s !== "archived").map((s) => ({ value: s, label: STATUS_LABEL[s], count: counts[s] }))} />
             </Group>
 
             <Group title="When">

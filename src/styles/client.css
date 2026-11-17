@@ -596,6 +596,67 @@ table { line-height: normal; font-weight: normal; }
   .hc-line-item, .hc-more { display: none; }
 }
 
+/* Breadcrumbs: a pill trail on its own little card; the page you're on is tinted, and the way back lights up and nudges on hover */
+.crumbs { display: inline-flex; align-items: center; gap: 2px; max-width: 100%; padding: 3px; margin-bottom: 14px; border: 1px solid var(--line);
+  border-radius: 999px; background: var(--surface); box-shadow: 0 1px 3px rgba(0, 0, 0, .05); font-size: 13px; color: var(--ink-3); }
+.crumbs a { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 999px; color: var(--ink-2); font-weight: 550;
+  text-decoration: none; transition: background-color .15s ease, color .15s ease; }
+.crumbs a::before { content: ""; width: 6px; height: 6px; border-left: 1.7px solid currentColor; border-bottom: 1.7px solid currentColor;
+  transform: rotate(45deg); opacity: .55; transition: transform .18s ease, opacity .18s ease; }
+.crumbs a:hover { background: var(--accent-soft); color: var(--accent-ink); text-decoration: none; }
+.crumbs a:hover::before { transform: translateX(-3px) rotate(45deg); opacity: 1; }
+.crumbs > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 5px 13px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent-ink); font-weight: 650; }
+.crumbs > .ic { width: 14px; height: 14px; flex: none; color: var(--ink-3); }
+
+/* A project's page: its tile, title and code open its details; the details window lays them out in groups */
+.proj-open { padding: 0; border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; text-align: left; cursor: pointer; }
+.proj-open:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.pd-head { display: flex; align-items: center; gap: 12px; }
+.pd-title { font-size: 16px; font-weight: 700; }
+.pd-desc { margin: 12px 0 0; color: var(--ink-2); line-height: 1.55; white-space: pre-wrap; }
+.pd-group { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.pd-group-title { margin: 0 0 8px; font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); }
+.pd-facts { display: grid; gap: 8px; margin: 0; }
+.pd-fact { display: grid; grid-template-columns: 130px 1fr; gap: 12px; align-items: center; font-size: 13px; }
+.pd-fact:has(> dd:empty) { display: none; }
+.pd-fact dt { color: var(--ink-3); }
+.pd-fact dd { margin: 0; min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; }
+@media (max-width: 640px) { .pd-fact { grid-template-columns: 1fr; gap: 2px; } }
+
+/* Section tabs (Tabs): the open one is a card that grows out of the strip under the row, curving into it where they meet,
+   as a browser's tab grows out of its toolbar; it glides to whichever is chosen */
+.tabs { position: relative; padding-top: 4px; border-bottom: 0; }
+.tabs-scroll::after { content: ""; display: block; height: 8px; border-radius: 0 0 9px 9px; background: var(--surface);
+  box-shadow: 0 1px 0 var(--line), 0 3px 6px -4px rgba(0, 0, 0, .1); }
+.tabs .tab { position: relative; z-index: 1; padding: 8px 14px; border-bottom: 0; border-radius: 9px 9px 0 0; transition: color .15s ease, background-color .15s ease; }
+.tabs .tab:hover:not(.on) { background: color-mix(in srgb, var(--surface-3) 75%, transparent); }
+.tabs .tab.on { font-weight: 650; }
+.tabs-cover { position: absolute; top: 4px; bottom: 0; left: 0; z-index: 0; border-radius: 10px 10px 0 0; background: var(--surface);
+  box-shadow: 0 -2px 6px -4px rgba(0, 0, 0, .12); pointer-events: none; }
+.tabs-cover::before, .tabs-cover::after { content: ""; position: absolute; bottom: 0; width: 10px; height: 10px; }
+.tabs-cover::before { left: -10px; background: radial-gradient(circle at 0 0, transparent 9.5px, var(--surface) 10px); }
+.tabs-cover::after { right: -10px; background: radial-gradient(circle at 100% 0, transparent 9.5px, var(--surface) 10px); }
+.tabs-cover.glides { transition: transform .32s cubic-bezier(.3, .7, .2, 1), width .32s cubic-bezier(.3, .7, .2, 1); }
+@media (prefers-reduced-motion: reduce) { .tabs-cover.glides { transition: none; } }
+
+/* A text box's characters used, under it on the right (CharCount) */
+.char-count { margin-top: 3px; text-align: right; font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.char-count.near { color: var(--warn); font-weight: 600; }
+
+/* Logging work: labels that read clearly, and an Attach button that stands out a little from the form */
+.log-form .label { font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.btn-quiet.attach-btn { background: var(--surface-3); color: var(--ink); }
+.btn-quiet.attach-btn:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 9%, var(--surface-3)); }
+
+/* Log hours: the alerts together at the top, folded under one heading */
+.banner.alert-group { display: block; padding: 0; margin-bottom: 14px; }
+.alert-group-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 11px 13px; border: 0; border-radius: var(--r2); background: none;
+  color: inherit; font: inherit; font-size: 12.5px; text-align: left; cursor: pointer; }
+.alert-group-head:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+.alert-group-count { min-width: 18px; padding: 0 6px; border-radius: 99px; background: color-mix(in srgb, currentColor 15%, transparent); font-size: 11px; font-weight: 650; text-align: center; }
+.alert-group-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 13px 11px; border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
+
 /* Calendar: the meetings a person can see, a month at a time (the history calendar's month cells, with meetings in them) */
 .mcal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .mcal-wd { font-size: 10.5px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; padding: 0 4px 2px; }

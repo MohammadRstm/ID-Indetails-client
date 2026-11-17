@@ -34,7 +34,7 @@ afterEach(() => {
 describe("Contact the developer", () => {
     it("opens Settings → Contact from the account menu, for an employee too, and sends what they wrote with the page's path", async () => {
         const { sent, handler } = recorder("/api/bug-reports");
-        renderApp("/design/projects", personas.designEmployee, ...workHandlers, handler);
+        renderApp("/design/log-hours", personas.designEmployee, ...workHandlers, handler);
         await userEvent.click(await screen.findByRole("button", { name: "Account" }));
         await userEvent.click(screen.getByRole("button", { name: "Contact the developer" }));
 
@@ -58,7 +58,7 @@ describe("Contact the developer", () => {
 
     it("opens over the page about an error, with its reference and time, which can be left out", async () => {
         const { sent, handler } = recorder("/api/bug-reports");
-        renderApp("/design/projects", personas.designEmployee, ...workHandlers, handler);
+        renderApp("/design/log-hours", personas.designEmployee, ...workHandlers, handler);
         await screen.findByRole("button", { name: "Account" });
         act(() => openContact({ ref: traceId, at: "2026-11-13T12:32:00Z", message: null }));
 
@@ -67,7 +67,7 @@ describe("Contact the developer", () => {
         await userEvent.type(within(dialog).getByLabelText(describeField), "Saving failed.");
         await userEvent.click(within(dialog).getByRole("button", { name: "Send" }));
         await waitFor(() => expect(sent).toEqual([expect.objectContaining({
-            page: "/design/projects", error: { ref: traceId, at: "2026-11-13T12:32:00Z", message: null },
+            page: "/design/log-hours", error: { ref: traceId, at: "2026-11-13T12:32:00Z", message: null },
         })]));
 
         act(() => openContact({ ref: traceId, at: "2026-11-13T12:32:00Z", message: null }));
@@ -96,19 +96,19 @@ describe("Contact the developer", () => {
     });
 
     it("tells each person about it once on this device, until they open it or put it away", async () => {
-        const first = renderApp("/design/projects", personas.designEmployee, ...workHandlers);
+        const first = renderApp("/design/log-hours", personas.designEmployee, ...workHandlers);
         expect(await screen.findByText(/You can now reach the developer from Settings → Contact/)).toBeInTheDocument();
         await userEvent.click(screen.getByRole("button", { name: "Hide the Contact banner" }));
         expect(screen.queryByText(/You can now reach the developer/)).not.toBeInTheDocument();
         first.unmount();
 
-        const second = renderApp("/design/projects", personas.designEmployee, ...workHandlers);
+        const second = renderApp("/design/log-hours", personas.designEmployee, ...workHandlers);
         await screen.findByRole("button", { name: "Account" });
         expect(screen.queryByText(/You can now reach the developer/)).not.toBeInTheDocument();
         second.unmount();
 
         // someone else on the same computer still sees it
-        renderApp("/design/projects", { ...personas.designEmployee, id: 404 }, ...workHandlers);
+        renderApp("/design/log-hours", { ...personas.designEmployee, id: 404 }, ...workHandlers);
         expect(await screen.findByText(/You can now reach the developer/)).toBeInTheDocument();
     });
 

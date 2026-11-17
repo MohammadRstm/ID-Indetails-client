@@ -1,13 +1,10 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
-import { Delta, RankBars } from "@/shared/components/Charts/Bars";
-import Columns from "@/shared/components/Charts/Columns";
+import { Delta } from "@/shared/components/Charts/Bars";
 import DayRuler from "@/shared/components/Charts/DayRuler";
-import Figure from "@/shared/components/Charts/Figure";
 import { CalendarHeat } from "@/shared/components/Charts/Heat";
-import { ProjectTile } from "@/shared/components/Data/Bits";
 import { KpiStrip } from "@/shared/components/Data/Kpi";
 import { PageHead } from "@/shared/components/Data/Panel";
 import Empty from "@/shared/components/Feedback/Empty";
@@ -20,7 +17,6 @@ import useDebounce from "@/shared/hooks/useDebounce";
 import { quarterLabel, quarterOf, quarterStart } from "@/shared/format/periods";
 import { addDays, DAYS, dayKey, fmtDate, fmtDateY, fmtDayDateY, fmtDur, fmtDurShort, fmtH, fmtNumber, fmtRange, fmtTime, formatSettings, minutesOfDay, monthKey, partsOf, relDay, startOfWeek } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import MyDeadlines from "../../shared/requirements/MyDeadlines";
 import { companyNow } from "./day";
 import EntryActions from "./EntryActions";
 import { useDeleteWithUndo } from "./useDeleteWithUndo";
@@ -33,7 +29,6 @@ type Period = "week" | "month" | "quarter" | "all";
 
 /** Everything a Design employee has logged, and how it adds up (the prototype's DesignMyWork). */
 export default function MyWorkPage() {
-    const navigate = useNavigate();
     const permissions = usePermissions();
     const [params] = useSearchParams();
     const { today } = companyNow();
@@ -55,9 +50,8 @@ export default function MyWorkPage() {
     };
     const range = ranges[period];
     const filter = { from: range.from, to: today, projectId: projectId === "all" ? undefined : +projectId, search: text || undefined };
-    // the totals are all-time; the one filtered by the range gives where the time went
+    // the totals are all-time
     const all = useMyWorkSummary();
-    const inRange = useMyWorkSummary(filter);
     const entries = useMyEntries({ ...filter, page: 1, pageSize: 100 });
     const active = useMyProjects().data?.filter((p) => p.status === "active").length;
     const s = all.data;
@@ -66,7 +60,6 @@ export default function MyWorkPage() {
     const daily = new Map((s?.daily ?? []).map((d) => [d.day, d]));
     const since = addDays(today, -180);
     const activeDays = (s?.daily ?? []).filter((d) => d.day > since && d.minutes > 0).length;
-    const weekly = (s?.weekly ?? []).slice(-12);
 
     return (
         <div className="page">
@@ -90,33 +83,19 @@ export default function MyWorkPage() {
                 ]} />
             )}
 
-            <div className="mt"><MyDeadlines /></div>
-
-            <div className="grid g-8-4 mt">
-                <Figure title="Hours per week" sub="Your last 12 weeks."
-                    table={{ cols: [{ label: "Week of" }, { label: "Hours", right: true }, { label: "Entries", right: true }], rows: weekly.map((w) => [fmtDateY(w.weekStart), (w.minutes / 60).toFixed(1), w.entries]) }}>
-                    {!s ? <SkeletonLines lines={5} /> : (
-                        <Columns height={180} labelEvery={2} format={(v) => `${Math.round(v)}h`}
-                            data={weekly.map((w) => ({ label: fmtDate(w.weekStart), tip: `Week of ${fmtDateY(w.weekStart)}`, value: w.minutes / 60, note: `${w.entries} entries` }))} />
-                    )}
-                </Figure>
-                <Figure title="Where your time went" sub={range.label}>
-                    {loadFailed(inRange) ? <LoadError error={inRange.error} retry={() => inRange.refetch()} what="where your time went" /> : !inRange.data ? <SkeletonLines lines={5} /> : (
-                        <RankBars showPct onClick={(it) => navigate(`/design/projects/${it.id}`)}
-                            items={inRange.data.byProject.map((p) => ({
-                                id: p.projectId, label: p.title, value: p.minutes, color: p.tint,
-                                node: <><ProjectTile icon={p.icon} tint={p.tint} size="sm" /><span className="trunc">{p.title}</span></>,
-                            }))} />
-                    )}
-                </Figure>
-            </div>
-
             <div className="panel mt">
                 <div className="panel-head">
-                    <div><div className="panel-title">Your activity</div><div className="panel-sub">Every day you logged work over the last six months.</div></div>
+                    <div><div className="panel-title">Your activity</div><div className="panel-sub">Every day you logged work over the last six months{canLog ? ". Click a day to see or add its logs" : ""}.</div></div>
                 </div>
                 <div className="panel-body">
-                    {!s ? <SkeletonLines lines={4} /> : <CalendarHeat weeks={27} value={(k) => daily.get(k)?.minutes ?? 0} color={(k) => daily.get(k)?.tint} note={`${activeDays} active days in the last six months`} />}
+                    {/* larger days, centered in the panel, each opening Log work on its day; on a narrow screen it scrolls sideways */}
+                    {!s ? <SkeletonLines lines={4} /> : (
+                        <div style={{ width: "max-content", maxWidth: "100%", margin: "0 auto" }}>
+                            <CalendarHeat weeks={27} cell={24} value={(k) => daily.get(k)?.minutes ?? 0} color={(k) => daily.get(k)?.tint}
+                                note={`${activeDays} active days in the last six months`}
+                                onClick={canLog ? (day) => openLogWork({ date: day, fixedDay: true }) : undefined} />
+                        </div>
+                    )}
                 </div>
             </div>
 

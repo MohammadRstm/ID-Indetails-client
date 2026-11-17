@@ -6,15 +6,17 @@ import { useCurrentUser } from "@/app/session/useSession";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
+import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
+import CharCount from "@/shared/components/Forms/CharCount";
 import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
-import { dayKey, fmtDayDate, fmtDur, fmtH, fmtRange, minutesOfDay } from "@/shared/format/time";
+import { dayKey, fmtDayDate, fmtDayDateY, fmtDur, fmtH, fmtRange, minutesOfDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 import { useAttachment } from "./attachments";
 import { AttachmentField } from "./AttachmentField";
-import { checkLog, companyNow, DAY, DEFAULT_START, defaultSlot, isoAt, movesFor, restoreOf, spanOn, workHoursOf, type Moves } from "./day";
+import { checkLog, companyNow, DAY, DEFAULT_START, DESCRIPTION_MAX, defaultSlot, isoAt, movesFor, restoreOf, spanOn, workHoursOf, type Moves } from "./day";
 import DayChips from "./DayChips";
 import DragDay from "./DragDay";
 import { closeLogWork, type LogWorkOptions } from "./logWorkStore";
@@ -211,7 +213,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                     </button>
                 </>
             }>
-            <form onSubmit={submit} {...proton.guard}>
+            <form className="log-form" onSubmit={submit} {...proton.guard}>
                 <FilledNote fields={proton.filled} />
                 <div className="grid g-2">
                     <div className="field">
@@ -220,21 +222,28 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                             options={choices.map((p) => ({ value: String(p.id), label: projectLabel(p) }))} />
                         <div className="hint">Only active projects accept new work.</div>
                     </div>
-                    <div className="field">
-                        <label className="label required">Day</label>
-                        <DayChips value={date} onChange={pickDay} count={5} />
-                    </div>
+                    {/* a log already made keeps its day, as does one opened on a picked day: it is only named */}
+                    {ed || options.fixedDay ? (
+                        <div className="field">
+                            <div className="label">{ed ? "Logged on" : "Logging on"}</div>
+                            <div style={{ minHeight: 34, display: "flex", alignItems: "center", fontWeight: 600 }}>{fmtDayDateY(date)}</div>
+                        </div>
+                    ) : (
+                        <div className="field">
+                            <label className="label required">What day to log?</label>
+                            <DayChips value={date} onChange={pickDay} count={5} />
+                        </div>
+                    )}
                 </div>
 
                 <div className="field mt">
                     <label className={settings.requireDescription ? "label required" : "label"} htmlFor="lw-desc">What did you work on?</label>
-                    <textarea id="lw-desc" className="textarea" autoFocus
+                    <AutoGrowTextarea id="lw-desc" className="textarea" autoFocus minRows={2} maxRows={4} maxLength={DESCRIPTION_MAX}
                         placeholder={`${settings.requireDescription ? "" : "Optional - "}e.g. Detailed the kitchen joinery drawings for the client review`}
                         value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)}
                         onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit(); }} />
+                    <CharCount length={desc.length} max={DESCRIPTION_MAX} />
                 </div>
-
-                <div className="mt"><ScopeCheck checked={outside} onChange={setOutside} /></div>
 
                 <AttachmentField state={attachment} />
 
@@ -257,6 +266,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                 </div>
 
                 <OvertimeWarning date={date} duration={duration} preview={preview} scheduleDay={schedule.data?.day} />
+                <div className="mt"><ScopeCheck checked={outside} onChange={setOutside} /></div>
                 <div className="row mt-s" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                     <span className="hint">Tip: type “4pm”, “16:00” or “4:30p” - and ⌘/Ctrl + Enter to save.</span>
                     {settings.timerEnabled && !ed ? (

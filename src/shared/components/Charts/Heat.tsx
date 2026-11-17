@@ -1,5 +1,6 @@
 import { tip } from "@/shared/components/Overlays/tip";
 import { addDays, companyToday, DAYS, DAYS_LONG, fmtDayDate, fmtDur, fmtH, formatSettings, MONTHS, partsOf, startOfWeek } from "@/shared/format/time";
+import { clickable } from "@/shared/utils/clickable";
 import { cx } from "@/shared/utils/cx";
 import { clamp, heatLevel } from "./core";
 
@@ -56,7 +57,7 @@ export function CalendarHeat({ value, end, weeks = 27, scale, cell = 11, onClick
                         {months.map((m, i) => <span key={i} style={{ left: m.i * (cell + gap) }}>{m.label}</span>)}
                     </div>
                     <div style={{ display: "flex" }}>
-                        <div className="hm-days" style={{ width: 22 }}>{labels.map((l, i) => <span key={i}>{l}</span>)}</div>
+                        <div className="hm-days" style={{ width: 22 }}>{labels.map((l, i) => <span key={i} style={{ height: cell, lineHeight: `${cell}px` }}>{l}</span>)}</div>
                         <div className="hm">
                             {cols.map((col, ci) => (
                                 <div className="hm-col" key={ci}>
@@ -65,7 +66,8 @@ export function CalendarHeat({ value, end, weeks = 27, scale, cell = 11, onClick
                                         : (
                                             <div key={d.day} className={cx("hm-cell", `lv${heatLevel(d.minutes, scale)}`, d.color && "pc", onClick && "click")}
                                                 style={{ width: cell, height: cell, ["--hc" as string]: d.color ?? undefined }}
-                                                onClick={onClick ? () => onClick(d.day) : undefined}
+                                                {...clickable(onClick && (() => onClick(d.day)), "button")}
+                                                aria-label={onClick ? `${fmtDayDate(d.day)}: ${d.minutes ? fmtDur(d.minutes) : "no work"}` : undefined}
                                                 onMouseMove={(e) => tip.show(e, [{ big: fmtDayDate(d.day) }, { k: "Logged", v: d.minutes ? fmtDur(d.minutes) : "no work" }])}
                                                 onMouseLeave={tip.hide} />
                                         ))}

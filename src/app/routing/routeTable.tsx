@@ -5,6 +5,7 @@ import type { Domain, Permissions } from "@/app/permissions/permissions";
 import type { IconName } from "@/shared/icons/icons";
 import {
     ActivityPage,
+    AssignedRequirementsPage,
     BoqSitePage,
     BoqSitesPage,
     CalendarPage,
@@ -21,6 +22,7 @@ import {
     CompanySettingsPage,
     FinancialsRoute,
     HelpPage,
+    LogHoursPage,
     MeetingsPage,
     MessagesPage,
     ProtonPage,
@@ -101,6 +103,12 @@ const boqAuthor: AccessRule = ({ p }) => p.has(P.BOQ_CREATE) && !p.has(P.PROJECT
 
 export const domainRoutes: DomainRoute[] = [
     {
+        // a Design employee's start page: Log work, their week, today, overtime and hours balance
+        path: "log-hours",
+        nav: { label: "Log hours", icon: "timer" },
+        employee: { element: <LogHoursPage />, access: designOnly(all(P.WORK_ENTRY_VIEW_OWN)) },
+    },
+    {
         // an Execution site staff member's home: what happened on their sites, one log at a time
         path: "daily-log",
         nav: { label: "Daily log", icon: "file" },
@@ -173,6 +181,12 @@ export const domainRoutes: DomainRoute[] = [
             // site staff have their daily log instead
             access: designOnly(all(P.WORK_ENTRY_VIEW_OWN)),
         },
+    },
+    {
+        // the requirements assigned to a Design employee, filtered by project (they were on My work)
+        path: "requirements",
+        nav: { label: "Requirements", icon: "checkCircle" },
+        employee: { element: <AssignedRequirementsPage />, access: designOnly(all(P.REQUIREMENT_VIEW)) },
     },
     {
         path: "meetings",

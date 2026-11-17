@@ -41,7 +41,9 @@ const named = <M, K extends keyof M>(importer: () => Promise<M>, name: K) =>
 export const ClientPage = page(() => import("@/domains/shared/clients/ClientPage"));
 export const ClientsPage = page(() => import("@/domains/shared/clients/ClientsPage"));
 export const MeetingsPage = named(() => import("@/domains/shared/meetings/Meetings"), "MeetingsPage");
+export const LogHoursPage = named(() => import("@/domains/design/work/EmployeeHome"), "LogHoursPage");
 export const CalendarPage = named(() => import("@/domains/shared/meetings/CalendarPage"), "CalendarPage");
+export const AssignedRequirementsPage = named(() => import("@/domains/shared/requirements/AssignedRequirementsPage"), "AssignedRequirementsPage");
 export const ProjectRoute = page(() => import("@/domains/shared/projects/ProjectRoute"));
 export const ProjectsPage = page(() => import("@/domains/shared/projects/ProjectsPage"));
 export const MyWorkRoute = page(() => import("@/domains/shared/requirements/MyWorkRoute"));

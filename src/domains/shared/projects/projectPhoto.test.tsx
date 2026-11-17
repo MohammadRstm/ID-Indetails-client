@@ -36,9 +36,9 @@ describe("a project's photo", () => {
     // files are shown from object URLs, which the test browser doesn't make
     beforeEach(() => { URL.createObjectURL = vi.fn(() => "blob:photo"); });
 
-    it("is chosen from the device on the project's page and set on the project", async () => {
+    it("is chosen from the device in the project's details and set on the project", async () => {
         const api = photoApi();
-        renderApp(`/design/projects/${project.id}`, admin, ...api.handlers, ...projectHandlers);
+        renderApp(`/design/projects/${project.id}?about=1`, admin, ...api.handlers, ...projectHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Project photo" }));
         // no photo yet: there is nothing to take off
         expect(screen.queryByRole("button", { name: "Take the photo off" })).not.toBeInTheDocument();
@@ -50,7 +50,7 @@ describe("a project's photo", () => {
 
     it("shows instead of the icon tile, and can be taken off", async () => {
         const api = photoApi(60);
-        renderApp(`/design/projects/${project.id}`, admin, ...api.handlers, ...projectHandlers);
+        renderApp(`/design/projects/${project.id}?about=1`, admin, ...api.handlers, ...projectHandlers);
         const button = await screen.findByRole("button", { name: "Project photo" });
         await waitFor(() => expect(button.querySelector(".ptile-photo img")).not.toBeNull());
         await userEvent.click(button);
@@ -62,8 +62,8 @@ describe("a project's photo", () => {
 
     it("is only changed by whoever edits projects: an employee sees the tile alone", async () => {
         const api = photoApi(60);
-        renderApp(`/design/projects/${project.id}`, personas.designEmployee, ...api.handlers, ...projectHandlers);
-        expect(await screen.findByRole("heading", { name: project.title })).toBeInTheDocument();
+        renderApp(`/design/projects/${project.id}?about=1`, personas.designEmployee, ...api.handlers, ...projectHandlers);
+        expect(await screen.findByRole("dialog", { name: "Project details" })).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Project photo" })).not.toBeInTheDocument();
     });
 });

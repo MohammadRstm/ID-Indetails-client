@@ -47,17 +47,17 @@ describe("signing in", () => {
         await userEvent.type(screen.getByLabelText("Password"), "a long enough password");
         await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
-        await waitFor(() => expect(window.location.pathname).toBe("/design/projects"));
+        await waitFor(() => expect(window.location.pathname).toBe("/design/log-hours"));
     });
 });
 
 describe("coming back", () => {
     it("restores the session after a moment when the server was briefly unavailable", async () => {
-        renderApp("/design/projects", personas.designEmployee,
+        renderApp("/design/log-hours", personas.designEmployee,
             http.post("/api/auth/refresh", () => HttpResponse.json({ code: "rate_limited", message: "Too many requests." }, { status: 429 }), { once: true }));
         // the first try is refused; the next one, two seconds on, finds the session still good
         expect(await screen.findByRole("heading", { name: /Sarah/ }, { timeout: 6000 })).toBeInTheDocument();
-        expect(window.location.pathname).toBe("/design/projects");
+        expect(window.location.pathname).toBe("/design/log-hours");
     });
 });
 

@@ -21,7 +21,7 @@ export const work: Article[] = [
         ask: ["log work", "log time", "log hours", "add hours", "time entry", "record time", "fill timesheet", "add entry"],
         blocks: [
             steps(
-                step("Choose **Log work** (at the top of the sidebar, or on your projects page).", "Log work"),
+                step("Choose **Log work** (at the top of the sidebar, or on your Log hours page).", "Log work"),
                 step("Pick the **Project** and the **Day**."),
                 step("Press on free time on the day's timeline and drag to draw the entry. Drag an entry's edges to change it."),
                 step("Write **What did you work on?** and save."),
@@ -86,15 +86,15 @@ export const work: Article[] = [
         title: "Logging overtime",
         category: "work",
         who: logs,
-        summary: "Log overtime the same way as any work. Log overtime appears on your projects page once the working day is over.",
+        summary: "Log overtime the same way as any work: with Log work, at the time you worked.",
         ask: ["log overtime", "overtime", "extra hours", "worked late", "weekend work", "after hours"],
         blocks: [
             para("Overtime isn't a different kind of entry: you log the time you worked, and the app works out which part is overtime from your hours."),
             steps(
-                step("After your working day ends, choose **Log overtime** on your projects page (or **Log work** at any time).", "Projects"),
+                step("Choose **Log work** and set the time you worked: what falls outside your working day counts as overtime.", "Log work"),
                 step("Draw the time on the day's timeline. The window says how much of it counts as overtime before you save."),
             ),
-            links(link("Open my projects", { business: "projects", only: "design" })),
+            links(link("Open Log hours", { business: "log-hours", only: "design" })),
         ],
         related: ["overtime", "hours-balance"],
     },
@@ -127,7 +127,7 @@ export const work: Article[] = [
             list(
                 "Pick the period and project at the top, or search your descriptions.",
                 "**List** shows each entry; **Week** shows the week as a calendar.",
-                "Your deadlines and charts of where your time went are on the same page.",
+                "Charts of where your time went are on the same page; the requirements assigned to you are on **Requirements**.",
             ),
             links(link("Open my work", { business: "my-work", only: "design" })),
         ],
@@ -138,12 +138,12 @@ export const work: Article[] = [
         title: "Am I behind on my hours?",
         category: "work",
         who: tracksOwnHours,
-        summary: "Your projects page shows your hours balance for the month: on track, behind, or short.",
+        summary: "Your profile shows your hours balance for the month: on track, behind, or short. Log hours alerts you when you're behind.",
         ask: ["behind on hours", "hours short", "am i behind", "missing hours", "hours balance", "make up hours"],
         blocks: [
             para((f) => `Each working day asks for ${orFact(f.required, "the day's required hours")} of work inside your hours. While the month runs, "behind" means you have logged less than the days so far asked for. Overtime makes up for missing hours first.`),
             para("A month that ends short stays marked short, unless a super admin excuses the missing hours."),
-            links(link("Open my projects", { business: "projects", only: "design" })),
+            links(link("Open Log hours", { business: "log-hours", only: "design" })),
         ],
         related: ["hours-balance", "excuses"],
     },
@@ -156,6 +156,7 @@ export const work: Article[] = [
         ask: ["tick requirement", "complete requirement", "mark done", "task done", "requirements", "checklist", "my tasks"],
         blocks: [
             steps(step("Open the project, go to **Requirements**, and tick it.", "Projects", "the project", "Requirements")),
+            only(designEmployee, para("**Requirements** in the sidebar lists the ones assigned to you, soonest deadline first, and narrows them to one project.")),
             only(has(P.REQUIREMENT_MANAGE), para("You may tick, untick, add, edit, assign and remove any requirement.")),
             only(and(has(P.REQUIREMENT_COMPLETE_OWN), (ctx) => !ctx.p.has(P.REQUIREMENT_MANAGE)), para("You can tick the requirements assigned to you, and untick the ones you ticked.")),
             para("Ticking requirements moves the project's progress."),
