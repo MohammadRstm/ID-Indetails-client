@@ -4,7 +4,7 @@ import { addDays, DAYS, DAYS_LONG, dayKey, daysBetween, fmtDayDateY, fmtDur, fmt
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { clickable } from "@/shared/utils/clickable";
-import { dayStart, matches, teamColors, type Annotation, type DayItem, type Filter, type History, type Meeting } from "./history";
+import { dayStart, matches, type Annotation, type DayItem, type Filter, type History, type Meeting } from "./history";
 import { AnnChip } from "./HistoryParts";
 import { firstName } from "./words";
 
@@ -74,9 +74,8 @@ function placeBlocks(blocks: Block[]): Block[] {
     return sorted;
 }
 
-/** A day to a week as columns of hours: every task and meeting at its real time, coloured by team. */
+/** A day to a week as columns of hours: every task and meeting at its real time, the tasks in the project's colour. */
 function TimeGrid({ history: h, from, to, filter, anns, onOpenDay, onEntry }: CalendarProps) {
-    const colorOf = teamColors(h);
     const keys = Array.from({ length: daysBetween(from, to) + 1 }, (_, i) => addDays(from, i));
     const days = keys.map((k) => dayOf(h, k, filter));
     const hoursIn = (key: string, t: number) => (t - dayStart(key)) / 3_600_000;
@@ -92,7 +91,6 @@ function TimeGrid({ history: h, from, to, filter, anns, onOpenDay, onEntry }: Ca
     const now = h.now, today = dayKey(now);
     const nameOf = (id: number) => h.people.get(id)?.name ?? "Someone";
     const annsOf = (key: string) => anns.filter((a) => dayKey(a.at) === key);
-    const teams = [...new Set(days.flatMap((d) => d.items.map((it) => it.entry.team || "Other")))].sort();
 
     return (
         <div className="hc">
@@ -142,7 +140,7 @@ function TimeGrid({ history: h, from, to, filter, anns, onOpenDay, onEntry }: Ca
                                     }
                                     const e = b.it.entry;
                                     return (
-                                        <div key={`${e.id}:${b.s}`} className="hc-block" style={{ ...style, ["--dc" as string]: colorOf(e.team || "Other") }}
+                                        <div key={`${e.id}:${b.s}`} className="hc-block" style={{ ...style, ["--dc" as string]: h.color }}
                                             title={`${e.userName} · ${fmtTime(e.start)} – ${fmtTime(e.end)} · ${fmtDur(e.minutes)}\n${e.description}`}
                                             {...clickable(() => onEntry(e.id), "button")}>
                                             <div className="hc-time mono">{fmtTime(b.it.s)} · {fmtDurShort(Math.round((b.it.e - b.it.s) / MIN))}</div>
@@ -156,10 +154,9 @@ function TimeGrid({ history: h, from, to, filter, anns, onOpenDay, onEntry }: Ca
                     })}
                 </div>
             </div>
-            {(teams.length > 0 || days.some((d) => d.meetings.length)) && (
+            {days.some((d) => d.meetings.length) && (
                 <div className="ds-legend hc-legend">
-                    {teams.map((t) => <span key={t}><i style={{ background: colorOf(t) }} />{t}</span>)}
-                    {days.some((d) => d.meetings.length) && <span><i className="mtg" />Meeting</span>}
+                    <span><i className="mtg" />Meeting</span>
                 </div>
             )}
         </div>

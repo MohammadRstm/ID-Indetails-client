@@ -81,6 +81,8 @@ export type History = {
     gaps: Gap[];
     annotations: Annotation[];
     now: number;
+    /** The project's colour, which all its work is drawn in; the accent while it has none. */
+    color: string;
 };
 
 /** The start of a company day, as an instant. */
@@ -110,7 +112,7 @@ export function toEntry(e: Schemas["TimelineEntryResponse"]): Entry {
     return { id: e.id, userId: e.userId, userName: e.userName, team: e.teamName, description: e.description, start: Date.parse(e.startedAt), end: Date.parse(e.endedAt), minutes: e.minutes };
 }
 
-type ProjectDates = { startDate: string; completedAt: string | null; heldSince: string | null; createdAt: string; status: string };
+type ProjectDates = { startDate: string; completedAt: string | null; heldSince: string | null; createdAt: string; status: string; tint?: string | null };
 
 /** Builds a project's history from its entries, meetings and events. */
 export function buildHistory(project: ProjectDates, entriesIn: Entry[], meetingsIn: Meeting[], eventsIn: ProjectEvent[], now: number): History {
@@ -165,7 +167,7 @@ export function buildHistory(project: ProjectDates, entriesIn: Entry[], meetings
     const events = [...eventsIn].sort((a, b) => a.at - b.at);
 
     const h: History = {
-        entries, days, dayIndex, people, cum, totalMinutes: run, meetings, events, now,
+        entries, days, dayIndex, people, cum, totalMinutes: run, meetings, events, now, color: project.tint || "var(--accent)",
         bounds: { first: entries.length ? entries[0].start : null, last: entries.length ? Math.max(...entries.map((e) => e.end)) : null },
         statusTrack: [], progressTrack: [], gaps: [], annotations: [],
     };
@@ -403,20 +405,3 @@ export function earliestOf(h: History, startDate: string): number {
     return Math.min(h.statusTrack[0]?.from ?? Infinity, h.bounds.first ?? Infinity, dayStart(startDate));
 }
 
-/* ============================== colours ============================== */
-
-const TEAM_COLORS: Record<string, string> = { Engineering: "#3B82F6", Design: "#A855F7", Platform: "#F97316", Data: "#10B981", Marketing: "#EC4899", Operations: "#EAB308" };
-const PALETTE = ["#3B82F6", "#A855F7", "#F97316", "#10B981", "#EC4899", "#EAB308", "#14B8A6", "#6366F1", "#84CC16", "#F43F5E"];
-
-/**
- * One colour per team, the same on every day of the project: the prototype's named ones where they
- * apply, then the palette in the order of the teams' names, so two teams never share one.
- */
-export function teamColors(h: History): (team: string) => string {
-    const teams = [...new Set([...h.people.values()].map((p) => p.role || "Other"))].sort();
-    const free = PALETTE.filter((c) => !teams.some((t) => TEAM_COLORS[t] === c));
-    const map = new Map<string, string>();
-    let i = 0;
-    for (const t of teams) map.set(t, TEAM_COLORS[t] ?? free[i++ % free.length]);
-    return (team) => map.get(team) ?? PALETTE[PALETTE.length - 1];
-}

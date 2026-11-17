@@ -25,6 +25,15 @@ describe("My work (Design)", () => {
         expect(screen.getAllByText(work.entries.items[0].description).length).toBeGreaterThan(0);
     });
 
+    it("marks each entry with its project's colour on its left edge", async () => {
+        renderApp("/design/my-work", sarah, ...workHandlers);
+        const first = work.entries.items[0];
+        await screen.findByRole("heading", { name: "Yesterday" });
+        const row = screen.getAllByText(first.description).map((el) => el.closest<HTMLElement>(".entry")).find((el) => el != null);
+        expect(row).toHaveClass("pc");
+        expect(row?.style.getPropertyValue("--pc")).toBe(first.project.tint);
+    });
+
     it("narrows the list to the project in the link", async () => {
         const asked: string[] = [];
         const projectId = work.entries.items[0].project.id;

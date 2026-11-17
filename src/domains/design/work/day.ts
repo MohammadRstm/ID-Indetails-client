@@ -133,7 +133,7 @@ export function checkLog(o: LogCheck): string | null {
 export function trackEntry(e: WorkEntry, day: string): TrackEntry {
     const sp = spanOn(e, day);
     return {
-        id: e.id, s: sp.s, e: sp.e, description: e.description, projectTitle: e.project.title,
+        id: e.id, s: sp.s, e: sp.e, description: e.description, projectTitle: e.project.title, tint: e.project.tint,
         range: fmtRange(e.startedAt, e.endedAt), overtime: e.overtimeMinutes, locked: !e.canEdit,
     };
 }

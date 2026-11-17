@@ -30,6 +30,7 @@ export const work: Article[] = [
                 "An entry is 5 minutes to 16 hours long.",
                 "Only active projects take new work (and projects on hold, if the business allows it).",
                 "Entries count on the day they start, even if they run past midnight.",
+                "Each entry on the timeline is drawn in its project's colour, and each day of your week and of the My work calendar in the colour of the project you spent the most time on that day.",
                 (f) => `Your company's working day is ${orFact(f.day, "set by the company")}${f.days ? `, ${f.days}` : ""}. Work outside it counts as overtime.`,
             ),
             note("Months close for logging: from the 1st, last month's entries can't be added or changed (on the 1st itself, last month is still open)."),

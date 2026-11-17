@@ -14,6 +14,8 @@ type CalendarHeatProps = {
     cell?: number;
     onClick?: (day: string) => void;
     note?: string;
+    /** The colour a day with work is drawn in, such as its most-logged project's; the heat colours without one. */
+    color?: (day: string) => string | null | undefined;
 };
 
 const showLatest = (el: HTMLDivElement | null) => {
@@ -21,7 +23,7 @@ const showLatest = (el: HTMLDivElement | null) => {
 };
 
 /** A contribution grid of days (the prototype's V.CalendarHeat). */
-export function CalendarHeat({ value, end, weeks = 27, scale, cell = 11, onClick, note }: CalendarHeatProps) {
+export function CalendarHeat({ value, end, weeks = 27, scale, cell = 11, onClick, note, color }: CalendarHeatProps) {
     const today = companyToday();
     const lastWeek = startOfWeek(end ?? today);
     const first = addDays(lastWeek, -7 * (weeks - 1));
@@ -35,7 +37,8 @@ export function CalendarHeat({ value, end, weeks = 27, scale, cell = 11, onClick
     const cols = weekStarts.map((ws) =>
         Array.from({ length: 7 }, (_, di) => {
             const day = addDays(ws, di);
-            return { day, minutes: day > today ? -1 : value(day) };
+            const minutes = day > today ? -1 : value(day);
+            return { day, minutes, color: minutes > 0 ? color?.(day) : null };
         }),
     );
     // Every other day is labelled (Mon, Wed, Fri with a Monday week), following the company's week start.
@@ -61,8 +64,8 @@ export function CalendarHeat({ value, end, weeks = 27, scale, cell = 11, onClick
                                     {col.map((d) => d.minutes < 0
                                         ? <div key={d.day} className="hm-cell" style={{ opacity: 0.25, width: cell, height: cell }} />
                                         : (
-                                            <div key={d.day} className={cx("hm-cell", `lv${heatLevel(d.minutes, scale)}`, onClick && "click")}
-                                                style={{ width: cell, height: cell }}
+                                            <div key={d.day} className={cx("hm-cell", `lv${heatLevel(d.minutes, scale)}`, d.color && "pc", onClick && "click")}
+                                                style={{ width: cell, height: cell, ["--hc" as string]: d.color ?? undefined }}
                                                 {...clickable(onClick && (() => onClick(d.day)), "button")}
                                                 aria-label={onClick ? `${fmtDayDate(d.day)}: ${d.minutes ? fmtDur(d.minutes) : "no work"}` : undefined}
                                                 onMouseMove={(e) => tip.show(e, [{ big: fmtDayDate(d.day) }, { k: "Logged", v: d.minutes ? fmtDur(d.minutes) : "no work" }])}
@@ -87,10 +90,12 @@ type HourHeatProps = {
     grid: number[][];
     from?: number;
     to?: number;
+    /** The colour to draw the work in, such as its project's; the heat colours without one. */
+    color?: string | null;
 };
 
 /** When work happens: weekday × hour (the prototype's V.HourHeat). */
-export function HourHeat({ grid, from = 6, to = 22 }: HourHeatProps) {
+export function HourHeat({ grid, from = 6, to = 22, color }: HourHeatProps) {
     const hours = Array.from({ length: to - from + 1 }, (_, i) => from + i);
     let max = 1;
     grid.forEach((row) => row.forEach((v, h) => { if (h >= from && h <= to) max = Math.max(max, v); }));
@@ -106,7 +111,7 @@ export function HourHeat({ grid, from = 6, to = 22 }: HourHeatProps) {
         + (busiest ? `: the most on ${DAYS_LONG[(busiest.day + 1) % 7]} at ${label(busiest.hour)}` : ": no work recorded");
 
     return (
-        <div style={{ display: "flex", gap: 6 }} role="figure" aria-label={summary}>
+        <div style={{ display: "flex", gap: 6, ["--hc" as string]: color ?? undefined }} role="figure" aria-label={summary}>
             <div style={{ width: 28, flex: "none" }}>
                 {dayNames.map((d, i) => <div key={i} style={{ height: 16, marginBottom: 3, fontSize: 10, color: "var(--ink-3)", lineHeight: "16px" }}>{d}</div>)}
             </div>
@@ -118,7 +123,7 @@ export function HourHeat({ grid, from = 6, to = 22 }: HourHeatProps) {
                                 const v = row[h] ?? 0;
                                 const lvl = v <= 0 ? 0 : clamp(Math.ceil((v / max) * 4), 1, 4);
                                 return (
-                                    <div key={h} className={cx("hm-cell", `lv${lvl}`)} style={{ flex: "1 1 0", height: 16, borderRadius: 3 }}
+                                    <div key={h} className={cx("hm-cell", `lv${lvl}`, color && lvl > 0 && "pc")} style={{ flex: "1 1 0", height: 16, borderRadius: 3 }}
                                         onMouseMove={(e) => tip.show(e, [{ big: `${DAYS_LONG[(ri + 1) % 7]} · ${label(h)}` }, { k: "Logged", v: v ? fmtH(v) : "-" }])}
                                         onMouseLeave={tip.hide} />
                                 );

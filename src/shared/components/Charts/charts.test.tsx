@@ -70,3 +70,20 @@ describe("charts for screen readers", () => {
         expect(region).toHaveAttribute("hidden");
     });
 });
+
+describe("heat maps in project colours", () => {
+    it("draw a day with work in the colour given for it, and the rest in the heat colours", () => {
+        const { container } = render(<CalendarHeat end="2026-10-11" weeks={2}
+            value={(day) => (day === "2026-10-05" || day === "2026-10-06" ? 300 : 0)}
+            color={(day) => (day === "2026-10-05" ? "#2F9E44" : null)} />);
+        const colored = container.querySelectorAll<HTMLElement>(".hm-cell.pc");
+        expect(colored).toHaveLength(1);
+        expect(colored[0].style.getPropertyValue("--hc")).toBe("#2F9E44");
+    });
+
+    it("draw the hours with work in the project's colour", () => {
+        const grid = Array.from({ length: 7 }, (_, day) => Array.from({ length: 24 }, (_, hour) => (day === 1 && hour === 10 ? 60 : 0)));
+        const { container } = render(<HourHeat grid={grid} color="#2F9E44" />);
+        expect(container.querySelectorAll(".hm-cell.pc")).toHaveLength(1);
+    });
+});

@@ -11,7 +11,7 @@ import { useCanChangeMeeting } from "../../shared/meetings/meetingsApi";
 import { checkLog, clamp, companyNow, DAY, DAY_OFF_HOURS, isoAt, movesFor, rangeFor, spanOn, wholeOn, workHoursOf, type Moves, type Span } from "./day";
 import DayTrack, { type TrackEntry, type TrackMeeting } from "./DayTrack";
 import { BOX, dayModel, type Block, type DayTask, type Stuck } from "./dragModel";
-import { useDomainSettings, useMyDay, useMySchedule, useOvertimeFor, useResizeMeeting } from "./workApi";
+import { useDomainSettings, useMyDay, useMyProjects, useMySchedule, useOvertimeFor, useResizeMeeting } from "./workApi";
 
 type Mode = "draw" | "l" | "r" | "move" | "task-press" | "task" | "task-l" | "task-r" | "mtg-l" | "mtg-r";
 
@@ -76,6 +76,8 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
     const schedule = useMySchedule(date);
     const settings = useDomainSettings("design").data;
     const resize = useResizeMeeting();
+    // the time being drawn takes the colour of the project it is logged on
+    const selTint = useMyProjects().data?.find((p) => p.id === projectId)?.tint;
     const canChangeMeeting = useCanChangeMeeting();
     const [drag, setDrag] = useState<Drag | null>(null);
     const [selected, setSelected] = useState<number | null>(null);
@@ -464,7 +466,7 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
         const at = live[e.id];
         const sp = at ?? spanOn(e, date);
         return {
-            id: e.id, s: sp.s, e: sp.e, description: e.description, projectTitle: e.project.title, locked: !e.canEdit, moved: !!at,
+            id: e.id, s: sp.s, e: sp.e, description: e.description, projectTitle: e.project.title, tint: e.project.tint, locked: !e.canEdit, moved: !!at,
             range: at ? fmtRange(isoAt(date, at.s), isoAt(date, at.e)) : fmtRange(e.startedAt, e.endedAt), overtime: e.overtimeMinutes,
         };
     });
@@ -491,7 +493,7 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
                 ) : <span className="dd-hint">Press on free time and drag</span>}
             </div>
             <DayTrack big lo={r[0]} hi={r[1]} workHours={workHours} entries={shown} meetings={trackMeetings} nowMin={isToday ? nowMin : null}
-                sel={sel} selBad={bad} selected={selected} editable held={held} ref={trackRef} onPointerDown={down} onPointerMove={move} onPointerUp={up}
+                sel={sel} selBad={bad} selTint={selTint} selected={selected} editable held={held} ref={trackRef} onPointerDown={down} onPointerMove={move} onPointerUp={up}
                 onDoubleClick={select} onContextMenu={openMenu} onKeyDown={key} onBlur={blur} />
             {menu && (
                 <ContextMenu x={menu.x} y={menu.y} label="Logged task" onClose={() => setMenu(null)}>
