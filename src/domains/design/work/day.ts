@@ -17,6 +17,9 @@ export const DAY = 1440;
 export const MIN_ENTRY = 5;
 /** Where a day starts when the schedule doesn't say (9 AM). */
 export const DEFAULT_START = 9 * 60;
+
+/** "What did you work on?": at most this many characters, in a box that grows to 4 rows. */
+export const DESCRIPTION_MAX = 300;
 /** What a day off's timeline shows before anything is logged on it: 7 AM to 9 PM. */
 export const DAY_OFF_HOURS: [number, number] = [7 * 60, 21 * 60];
 

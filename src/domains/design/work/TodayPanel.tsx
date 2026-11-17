@@ -4,12 +4,13 @@ import { ErrorText } from "@/shared/components/Feedback/ErrorText";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import Skeleton from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
+import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import Select from "@/shared/components/Forms/Select";
 import { fmtDayDate, fmtDur, fmtH, fmtRange, minutesOfDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { useAttachment } from "./attachments";
 import { AttachmentChip } from "./AttachmentField";
-import { breakText, checkLog, companyNow, defaultSlot, DEFAULT_START, hoursText, isoAt, movesFor, rangeFor, restoreOf, spanOn, trackEntry, workHoursOf, type Moves } from "./day";
+import { breakText, checkLog, companyNow, defaultSlot, DEFAULT_START, DESCRIPTION_MAX, hoursText, isoAt, movesFor, rangeFor, restoreOf, spanOn, trackEntry, workHoursOf, type Moves } from "./day";
 import DayChips from "./DayChips";
 import DayTrack from "./DayTrack";
 import DragDay from "./DragDay";
@@ -190,8 +191,10 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                         </div>
                         <div className="field">
                             <label className={requireDesc ? "label required" : "label"} htmlFor="dc-desc">What did you work on?</label>
-                            <input id="dc-desc" className="input" placeholder={`${requireDesc ? "" : "Optional - "}e.g. Revised the ground-floor plan`} value={desc}
-                                onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)} />
+                            <AutoGrowTextarea id="dc-desc" className="input" minRows={1} maxRows={4} maxLength={DESCRIPTION_MAX}
+                                placeholder={`${requireDesc ? "" : "Optional - "}e.g. Revised the ground-floor plan`} value={desc}
+                                onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)}
+                                onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") e.currentTarget.form?.requestSubmit(); }} />
                         </div>
                     </div>
                     <div className="mt"><ScopeCheck checked={outside} onChange={setOutside} /></div>

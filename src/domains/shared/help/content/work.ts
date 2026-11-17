@@ -85,12 +85,12 @@ export const work: Article[] = [
         title: "Logging overtime",
         category: "work",
         who: logs,
-        summary: "Log overtime the same way as any work. Log overtime appears on your Log hours page once the working day is over.",
+        summary: "Log overtime the same way as any work: with Log work, at the time you worked.",
         ask: ["log overtime", "overtime", "extra hours", "worked late", "weekend work", "after hours"],
         blocks: [
             para("Overtime isn't a different kind of entry: you log the time you worked, and the app works out which part is overtime from your hours."),
             steps(
-                step("After your working day ends, choose **Log overtime** on your **Log hours** page (or **Log work** at any time).", "Log hours"),
+                step("Choose **Log work** and set the time you worked: what falls outside your working day counts as overtime.", "Log work"),
                 step("Draw the time on the day's timeline. The window says how much of it counts as overtime before you save."),
             ),
             links(link("Open Log hours", { business: "log-hours", only: "design" })),
@@ -137,7 +137,7 @@ export const work: Article[] = [
         title: "Am I behind on my hours?",
         category: "work",
         who: tracksOwnHours,
-        summary: "Your Log hours page shows your hours balance for the month: on track, behind, or short.",
+        summary: "Your profile shows your hours balance for the month: on track, behind, or short. Log hours alerts you when you're behind.",
         ask: ["behind on hours", "hours short", "am i behind", "missing hours", "hours balance", "make up hours"],
         blocks: [
             para((f) => `Each working day asks for ${orFact(f.required, "the day's required hours")} of work inside your hours. While the month runs, "behind" means you have logged less than the days so far asked for. Overtime makes up for missing hours first.`),

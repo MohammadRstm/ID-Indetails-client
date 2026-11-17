@@ -94,23 +94,27 @@ describe("My work (Design)", () => {
     });
 });
 
-describe("the hours balance on the home page", () => {
-    it("flags a month that closed short, and shows the balance", async () => {
+describe("the hours an employee owes", () => {
+    it("are an alert on Log hours, folded with the others above the week until opened", async () => {
         renderApp("/design/log-hours", sarah, ...workHandlers);
+        const toggle = await screen.findByRole("button", { name: /^Alert/ });
+        expect(toggle).toHaveAttribute("aria-expanded", "false");
+        expect(screen.queryByText(/August 2026 closed .* short\./)).not.toBeInTheDocument();
+        // the alerts come first, above the week
+        expect(toggle.compareDocumentPosition(await screen.findByText("Your week so far")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+        await userEvent.click(toggle);
         // August closed short in the fixture: said in hours only, since employees don't see their pay
-        const closed = await screen.findByText(/August 2026 closed .* short\./);
-        // the warning comes first, above the week
-        expect(closed.compareDocumentPosition(await screen.findByText("Your week so far")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(await screen.findByText(/August 2026 closed .* short\./)).toBeInTheDocument();
         expect(screen.getByText("Unless it's excused, the month stays marked short.", { exact: false })).toBeInTheDocument();
         expect(screen.queryByText(/salary/)).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: /pay/i })).not.toBeInTheDocument();
-        expect(screen.getByText("Hours balance")).toBeInTheDocument();
     });
 
-    it("includes time off in the excused column's note", async () => {
+    it("are on their profile's hours balance, with time off in the excused column's note", async () => {
         const [first, ...rest] = work.hours.months;
         const off = { requestId: 5, firstDay: "2026-09-14", lastDay: "2026-09-15", isPaid: true, days: ["2026-09-14", "2026-09-15"] };
-        renderApp("/design/log-hours", sarah,
+        renderApp("/design/profile", sarah,
             http.get("/api/me/hours", () => HttpResponse.json({ ...work.hours, months: [{ ...first, timeOff: [off] }, ...rest] })),
             ...workHandlers);
         const toggle = await screen.findByRole("button", { name: /^Hours balance/ });

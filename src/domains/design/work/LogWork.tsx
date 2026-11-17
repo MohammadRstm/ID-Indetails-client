@@ -6,6 +6,7 @@ import { useCurrentUser } from "@/app/session/useSession";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
+import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import { dayKey, fmtDayDate, fmtDur, fmtH, fmtRange, minutesOfDay } from "@/shared/format/time";
@@ -14,7 +15,7 @@ import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 import { useAttachment } from "./attachments";
 import { AttachmentField } from "./AttachmentField";
-import { checkLog, companyNow, DAY, DEFAULT_START, defaultSlot, isoAt, movesFor, restoreOf, spanOn, workHoursOf, type Moves } from "./day";
+import { checkLog, companyNow, DAY, DEFAULT_START, DESCRIPTION_MAX, defaultSlot, isoAt, movesFor, restoreOf, spanOn, workHoursOf, type Moves } from "./day";
 import DayChips from "./DayChips";
 import DragDay from "./DragDay";
 import { closeLogWork, type LogWorkOptions } from "./logWorkStore";
@@ -228,7 +229,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
 
                 <div className="field mt">
                     <label className={settings.requireDescription ? "label required" : "label"} htmlFor="lw-desc">What did you work on?</label>
-                    <textarea id="lw-desc" className="textarea" autoFocus
+                    <AutoGrowTextarea id="lw-desc" className="textarea" autoFocus minRows={2} maxRows={4} maxLength={DESCRIPTION_MAX}
                         placeholder={`${settings.requireDescription ? "" : "Optional - "}e.g. Detailed the kitchen joinery drawings for the client review`}
                         value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)}
                         onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit(); }} />

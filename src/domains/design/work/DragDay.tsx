@@ -508,11 +508,6 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
                 <span><i className="lg-ot" />{workHours ? "outside your working day" : "your day off"} · overtime</span>
                 {isToday && <span><i className="lg-now" />now {fmtTime(new Date())}</span>}
             </div>
-            {!touch && (
-                <div className="dd-keys"><Icon name="info" />Keyboard: Tab to a block, then <kbd>←</kbd> <kbd>→</kbd> move it 5 min (<kbd>Ctrl</kbd> for 15);
-                    {" "}<kbd>Shift</kbd> + arrows change its end, <kbd>Alt</kbd> + arrows its start. Click a logged task (or <kbd>Enter</kbd>) to select it, then <kbd>Delete</kbd> removes it;
-                    {" "}<kbd>Ctrl</kbd> + <kbd>Z</kbd> brings it back until you save.</div>
-            )}
             {gone.length > 0 && !drag && (
                 <div className="dd-swapped">
                     <Icon name="trash" />
