@@ -53,7 +53,7 @@ export function CalendarHeat({ value, end, weeks = 27, scale, cell = 11, onClick
                         {months.map((m, i) => <span key={i} style={{ left: m.i * (cell + gap) }}>{m.label}</span>)}
                     </div>
                     <div style={{ display: "flex" }}>
-                        <div className="hm-days" style={{ width: 22 }}>{labels.map((l, i) => <span key={i}>{l}</span>)}</div>
+                        <div className="hm-days" style={{ width: 22 }}>{labels.map((l, i) => <span key={i} style={{ height: cell, lineHeight: `${cell}px` }}>{l}</span>)}</div>
                         <div className="hm">
                             {cols.map((col, ci) => (
                                 <div className="hm-col" key={ci}>
