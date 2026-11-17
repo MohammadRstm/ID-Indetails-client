@@ -85,6 +85,12 @@ describe("My work (Design)", () => {
         expect(screen.getByLabelText("Find a day")).toHaveValue("");
     });
 
+    it("opens Log work on a day of the activity squares", async () => {
+        renderApp("/design/my-work", sarah, ...workHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: /^Wed, Sep 30:/ }));
+        expect(await screen.findByRole("dialog", { name: /log work/i })).toBeInTheDocument();
+    });
+
     it("shows the week as a calendar", async () => {
         renderApp("/design/my-work", sarah, ...workHandlers);
         await userEvent.click(await screen.findByRole("tab", { name: "Week" }));

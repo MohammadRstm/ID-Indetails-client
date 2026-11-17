@@ -1,5 +1,6 @@
 import { tip } from "@/shared/components/Overlays/tip";
 import { addDays, companyToday, DAYS, DAYS_LONG, fmtDayDate, fmtDur, fmtH, formatSettings, MONTHS, partsOf, startOfWeek } from "@/shared/format/time";
+import { clickable } from "@/shared/utils/clickable";
 import { cx } from "@/shared/utils/cx";
 import { clamp, heatLevel } from "./core";
 
@@ -62,7 +63,8 @@ export function CalendarHeat({ value, end, weeks = 27, scale, cell = 11, onClick
                                         : (
                                             <div key={d.day} className={cx("hm-cell", `lv${heatLevel(d.minutes, scale)}`, onClick && "click")}
                                                 style={{ width: cell, height: cell }}
-                                                onClick={onClick ? () => onClick(d.day) : undefined}
+                                                {...clickable(onClick && (() => onClick(d.day)), "button")}
+                                                aria-label={onClick ? `${fmtDayDate(d.day)}: ${d.minutes ? fmtDur(d.minutes) : "no work"}` : undefined}
                                                 onMouseMove={(e) => tip.show(e, [{ big: fmtDayDate(d.day) }, { k: "Logged", v: d.minutes ? fmtDur(d.minutes) : "no work" }])}
                                                 onMouseLeave={tip.hide} />
                                         ))}

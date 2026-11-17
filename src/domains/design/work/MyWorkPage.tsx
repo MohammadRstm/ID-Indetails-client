@@ -85,13 +85,14 @@ export default function MyWorkPage() {
 
             <div className="panel mt">
                 <div className="panel-head">
-                    <div><div className="panel-title">Your activity</div><div className="panel-sub">Every day you logged work over the last six months.</div></div>
+                    <div><div className="panel-title">Your activity</div><div className="panel-sub">Every day you logged work over the last six months{canLog ? ". Click a day to see or add its logs" : ""}.</div></div>
                 </div>
                 <div className="panel-body">
-                    {/* larger days, centered in the panel; on a narrow screen it scrolls sideways */}
+                    {/* larger days, centered in the panel, each opening Log work on its day; on a narrow screen it scrolls sideways */}
                     {!s ? <SkeletonLines lines={4} /> : (
                         <div style={{ width: "max-content", maxWidth: "100%", margin: "0 auto" }}>
-                            <CalendarHeat weeks={27} cell={24} value={(k) => daily.get(k) ?? 0} note={`${activeDays} active days in the last six months`} />
+                            <CalendarHeat weeks={27} cell={24} value={(k) => daily.get(k) ?? 0} note={`${activeDays} active days in the last six months`}
+                                onClick={canLog ? (day) => openLogWork({ date: day }) : undefined} />
                         </div>
                     )}
                 </div>
