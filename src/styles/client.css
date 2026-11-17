@@ -557,6 +557,19 @@ table { line-height: normal; font-weight: normal; }
   .hc-line-item, .hc-more { display: none; }
 }
 
+/* Breadcrumbs: a pill trail on its own little card; the page you're on is tinted, and the way back lights up and nudges on hover */
+.crumbs { display: inline-flex; align-items: center; gap: 2px; max-width: 100%; padding: 3px; margin-bottom: 14px; border: 1px solid var(--line);
+  border-radius: 999px; background: var(--surface); box-shadow: 0 1px 3px rgba(0, 0, 0, .05); font-size: 13px; color: var(--ink-3); }
+.crumbs a { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 999px; color: var(--ink-2); font-weight: 550;
+  text-decoration: none; transition: background-color .15s ease, color .15s ease; }
+.crumbs a::before { content: ""; width: 6px; height: 6px; border-left: 1.7px solid currentColor; border-bottom: 1.7px solid currentColor;
+  transform: rotate(45deg); opacity: .55; transition: transform .18s ease, opacity .18s ease; }
+.crumbs a:hover { background: var(--accent-soft); color: var(--accent-ink); text-decoration: none; }
+.crumbs a:hover::before { transform: translateX(-3px) rotate(45deg); opacity: 1; }
+.crumbs > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 5px 13px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent-ink); font-weight: 650; }
+.crumbs > .ic { width: 14px; height: 14px; flex: none; color: var(--ink-3); }
+
 /* A project's page: its tile, title and code open its details; the details window lays them out in groups */
 .proj-open { padding: 0; border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; text-align: left; cursor: pointer; }
 .proj-open:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
