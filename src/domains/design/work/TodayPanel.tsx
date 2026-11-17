@@ -5,6 +5,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import Skeleton from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
 import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
+import CharCount from "@/shared/components/Forms/CharCount";
 import Select from "@/shared/components/Forms/Select";
 import { fmtDayDate, fmtDur, fmtH, fmtRange, minutesOfDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -197,6 +198,7 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                                 placeholder={`${requireDesc ? "" : "Optional - "}e.g. Revised the ground-floor plan`} value={desc}
                                 onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)}
                                 onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") e.currentTarget.form?.requestSubmit(); }} />
+                            <CharCount length={desc.length} max={DESCRIPTION_MAX} />
                         </div>
                     </div>
                     <div className="mt"><ScopeCheck checked={outside} onChange={setOutside} /></div>

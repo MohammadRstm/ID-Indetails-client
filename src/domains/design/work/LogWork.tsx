@@ -7,6 +7,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
 import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
+import CharCount from "@/shared/components/Forms/CharCount";
 import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import { dayKey, fmtDayDate, fmtDur, fmtH, fmtRange, minutesOfDay } from "@/shared/format/time";
@@ -233,6 +234,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                         placeholder={`${settings.requireDescription ? "" : "Optional - "}e.g. Detailed the kitchen joinery drawings for the client review`}
                         value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)}
                         onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit(); }} />
+                    <CharCount length={desc.length} max={DESCRIPTION_MAX} />
                 </div>
 
                 <div className="mt"><ScopeCheck checked={outside} onChange={setOutside} /></div>

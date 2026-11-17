@@ -573,6 +573,10 @@ table { line-height: normal; font-weight: normal; }
 .tabs-cover.glides { transition: transform .32s cubic-bezier(.3, .7, .2, 1), width .32s cubic-bezier(.3, .7, .2, 1); }
 @media (prefers-reduced-motion: reduce) { .tabs-cover.glides { transition: none; } }
 
+/* A text box's characters used, under it on the right (CharCount) */
+.char-count { margin-top: 3px; text-align: right; font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.char-count.near { color: var(--warn); font-weight: 600; }
+
 /* Logging work: labels that read clearly, and an Attach button that stands out a little from the form */
 .log-form .label { font-size: 12.5px; font-weight: 700; color: var(--ink); }
 .btn-quiet.attach-btn { background: var(--surface-3); color: var(--ink); }
