@@ -21,6 +21,7 @@ import {
     CompanySettingsPage,
     FinancialsRoute,
     HelpPage,
+    LogHoursPage,
     MeetingsPage,
     MessagesPage,
     ProtonPage,
@@ -100,6 +101,12 @@ const executionOnly = (rule: AccessRule): AccessRule => (ctx) => ctx.domain === 
 const boqAuthor: AccessRule = ({ p }) => p.has(P.BOQ_CREATE) && !p.has(P.PROJECT_PRICING_MANAGE);
 
 export const domainRoutes: DomainRoute[] = [
+    {
+        // a Design employee's start page: Log work, their week, today, overtime and hours balance
+        path: "log-hours",
+        nav: { label: "Log hours", icon: "timer" },
+        employee: { element: <LogHoursPage />, access: designOnly(all(P.WORK_ENTRY_VIEW_OWN)) },
+    },
     {
         // an Execution site staff member's home: what happened on their sites, one log at a time
         path: "daily-log",

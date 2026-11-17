@@ -2,7 +2,7 @@ import type { Domain, Permissions } from "@/app/permissions/permissions";
 import { areasOf } from "./areas";
 import { companyNav, domainNav, websiteNav } from "./routeTable";
 
-/** Where a domain starts for this person: its first sidebar item (overview for admins, projects for employees). */
+/** Where a domain starts for this person: its first sidebar item (overview for admins, Log hours for Design employees). */
 export function domainHome(p: Permissions, domain: Domain): string {
     const first = domainNav(p, domain).find((item) => item.section !== "workspace");
     return first ? `/${domain}/${first.path}` : "/no-access";

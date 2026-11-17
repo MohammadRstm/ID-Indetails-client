@@ -41,11 +41,31 @@ afterEach(() => {
 });
 
 describe("the projects list, by permission", () => {
-    it("greets someone who logs work, and shows the business's projects once they oversee them", async () => {
+    it("gives an employee the business's projects as a table, without what isn't theirs and never the archived ones", async () => {
+        renderApp("/design/projects", sarah, ...projectHandlers);
+        expect(await screen.findByRole("heading", { name: "Projects" })).toBeInTheDocument();
+        const row = (await screen.findByText("Haddad Holdings HQ fit-out")).closest("tr") as HTMLElement;
+        // their own week and today are on Log hours
+        expect(screen.queryByRole("heading", { name: /^Good / })).toBeNull();
+        expect(screen.getByRole("columnheader", { name: "Progress" })).toBeInTheDocument();
+        for (const name of ["Revenue", "Hours", "Activity", "Team"]) expect(screen.queryByRole("columnheader", { name })).toBeNull();
+
+        // an active project takes their work from its menu
+        await userEvent.click(within(row).getByRole("button", { name: "Project actions" }));
+        expect(screen.getAllByRole("button", { name: "Log work" }).some((b) => b.classList.contains("pop-item"))).toBe(true);
+        await userEvent.keyboard("{Escape}");
+
+        await userEvent.click(screen.getByRole("button", { name: "Filters" }));
+        const status = within(await screen.findByRole("dialog", { name: "Filters" })).getByRole("group", { name: "Status" });
+        expect(within(status).getByRole("button", { name: /^Completed/ })).toBeInTheDocument();
+        expect(within(status).queryByRole("button", { name: /^Archived/ })).toBeNull();
+    });
+
+    it("shows the money to someone who logs work and is given it", async () => {
         renderApp("/design/projects", withPermissions(sarah, { grant: [P.FINANCIAL_VIEW] }), ...ownWork, ...projectHandlers);
-        expect(await screen.findByRole("heading", { name: "Good afternoon, Sarah" })).toBeInTheDocument();
-        expect(screen.getByRole("heading", { name: "All projects" })).toBeInTheDocument();
+        expect(await screen.findByRole("heading", { name: "Projects" })).toBeInTheDocument();
         expect(await screen.findByText("Haddad Holdings HQ fit-out")).toBeInTheDocument();
+        expect(screen.getByRole("columnheader", { name: "Revenue" })).toBeInTheDocument();
     });
 
     it("gives an admin, who logs no hours, the table on its own", async () => {

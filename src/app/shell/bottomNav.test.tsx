@@ -49,7 +49,7 @@ describe("what each kind of person has in the bottom bar", () => {
 
     it("gives each other person one more page of their own, and Home where they start", () => {
         expect(labels("designEmployee")).toEqual(["Home", "Search", "My work", "Alerts", "Chat"]);
-        expect(tabs("designEmployee")[0].path).toBe("/design/projects");
+        expect(tabs("designEmployee")[0].path).toBe("/design/log-hours");
         expect(labels("executionEmployee", { kind: "domain", domain: "execution", section: null })).toEqual(["Home", "Search", "My sites", "Alerts", "Chat"]);
         expect(tabs("executionEmployee")[0].path).toBe("/execution/daily-log");
         expect(labels("designAdmin")).toEqual(["Home", "Search", "Projects", "Alerts", "Chat"]);

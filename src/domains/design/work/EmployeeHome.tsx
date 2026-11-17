@@ -15,6 +15,7 @@ import { Avatars } from "@/shared/components/Identity/People";
 import { tip } from "@/shared/components/Overlays/tip";
 import { addDays, companyToday, DAYS, dayKey, daysBetween, fmtDate, fmtDayDate, fmtDur, fmtH, monthKey, partsOf, relTime, startOfWeek } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import GreetingHead from "../../shared/projects/GreetingHead";
 import { useMyTimeOff } from "../../shared/timeOff/timeOffApi";
 import { BehindNotice, MyHoursBalance } from "../pay/HoursBalance";
 import { companyNow, workHoursOf } from "./day";
@@ -26,14 +27,28 @@ import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
 
 /*
- * The parts of a Design person's own work on the projects page (the prototype's P.EmpProjects): their week,
- * today, overtime and hours, and the projects they log against. Each is for someone who may see their own work
- * (work_entry:view_own); logging also needs work_entry:create. ProjectsPage puts them together.
+ * The parts of a Design person's own work (the prototype's P.EmpProjects): their week, today, overtime and hours,
+ * and the projects they log against. Each is for someone who may see their own work (work_entry:view_own); logging
+ * also needs work_entry:create. LogHoursPage puts them together; the Projects page lists the projects in a table.
  */
 
 type LastWorked = "any" | "week" | "month" | "older" | "never";
 
 const firstName = (name: string) => name.split(" ")[0];
+
+/**
+ * A Design employee's start page: the greeting with Log work (and Log overtime once the working day is over), then
+ * their week, today, overtime and hours balance.
+ */
+export function LogHoursPage() {
+    const permissions = usePermissions();
+    return (
+        <div className="page">
+            <GreetingHead sub={<MyActiveCount />} actions={permissions.has(P.WORK_ENTRY_CREATE) && <MyLogButtons />} />
+            <MyWorkBand />
+        </div>
+    );
+}
 
 /** "12 active projects", for the greeting. */
 export function MyActiveCount() {

@@ -22,7 +22,7 @@ import { companyToday, fmtH, fmtNumber, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useOverview } from "../../design/dashboard/overviewApi";
-import { MyActiveCount, MyLogButtons, MyProjectCards, MyWorkBand } from "../../design/work/EmployeeHome";
+import { openLogWork } from "../../design/work/logWorkStore";
 import { SiteActiveCount, SiteCards } from "../../execution/staff/SiteHome";
 import { ClientBadge } from "../clients/ClientBits";
 import { useClients } from "../clients/clientsApi";
@@ -49,42 +49,35 @@ const SORTS: { value: ProjectSort; label: string }[] = [
 const PAGE_SIZE = 50;
 
 /**
- * The projects page, for everyone, its parts by permission. Someone who logs work (work_entry:view_own) is
- * greeted and gets their week, today and overtime (the prototype's P.EmpProjects). Someone who oversees the
- * business - its money, everyone's work or project status - gets the table of all its projects (the prototype's
- * P.AdminProjects); anyone else gets the cards of the projects they work on.
+ * The projects page, for everyone, its parts by permission: the table of the business's projects (the prototype's
+ * P.AdminProjects), with its money, hours and activity for whoever may see them. Execution people who record on sites
+ * without overseeing them are greeted and get the cards of their sites instead. A Design employee's own week, today
+ * and overtime are on their Log hours page.
  */
 export default function ProjectsPage() {
     const domain = useDomain();
     const permissions = usePermissions();
     const [params, setParams] = useSearchParams();
-    const design = domain === "design";
-    const own = design && permissions.has(P.WORK_ENTRY_VIEW_OWN);
-    const records = !design && permissions.hasAny(P.MATERIAL_CREATE, P.MATERIAL_MANAGE, P.LABOUR_REPORT_CREATE, P.LABOUR_REPORT_MANAGE);
+    const records = domain === "execution" && permissions.hasAny(P.MATERIAL_CREATE, P.MATERIAL_MANAGE, P.LABOUR_REPORT_CREATE, P.LABOUR_REPORT_MANAGE);
     const oversees = permissions.hasAny(P.FINANCIAL_VIEW, P.WORK_ENTRY_VIEW_ALL, P.PROJECT_CHANGE_STATUS);
-    // the cards list only what one works on, so they give way to the table once someone oversees more
-    const cards = (design ? own : records) && !oversees;
-    const greeting = design ? own : cards;
+    // the cards list only the sites one records on, so they give way to the table once someone oversees more
+    const cards = records && !oversees;
     const closeNew = () => { params.delete("new"); params.delete("client"); setParams(params, { replace: true }); };
 
     return (
         <div className="page">
-            {greeting && (
-                <GreetingHead sub={design ? <MyActiveCount /> : <SiteActiveCount />}
-                    actions={own && permissions.has(P.WORK_ENTRY_CREATE) && <MyLogButtons />} />
-            )}
-            {own && <MyWorkBand />}
-            {cards ? (design ? <MyProjectCards /> : <SiteCards />) : <ProjectTable section={greeting} />}
+            {cards ? <><GreetingHead sub={<SiteActiveCount />} /><SiteCards /></> : <ProjectTable />}
             {params.get("new") === "1" && permissions.has(P.PROJECT_CREATE) && <CreateProjectModal domain={domain} initialClient={params.get("client")} onClose={closeNew} />}
         </div>
     );
 }
 
 /**
- * All the business's projects in a table (the prototype's P.AdminProjects): the page's own head, or a section
- * under the greeting.
+ * All the business's projects in a table (the prototype's P.AdminProjects). Employees get it without what isn't
+ * theirs to see (money, everyone's hours and activity, the team who logged), and never the archived projects; they
+ * may log work on an active one from its menu.
  */
-function ProjectTable({ section }: { section: boolean }) {
+function ProjectTable() {
     const domain = useDomain();
     const navigate = useNavigate();
     const permissions = usePermissions();
@@ -93,6 +86,8 @@ function ProjectTable({ section }: { section: boolean }) {
     const seesMoney = permissions.has(P.FINANCIAL_VIEW);
     // Hours and activity come from logged work, so only for people who may see everyone's.
     const seesWork = permissions.has(P.WORK_ENTRY_VIEW_ALL);
+    const employee = !permissions.isAdmin;
+    const logs = !site && permissions.has(P.WORK_ENTRY_CREATE);
 
     const [search, setSearch] = useState("");
     const thisYear = +companyToday().slice(0, 4);
@@ -192,13 +187,14 @@ function ProjectTable({ section }: { section: boolean }) {
                 );
             },
         }] : []),
-        {
+        // who logged on a Design project is everyone's work; a site's team is its staff
+        ...(seesWork || site ? [{
             key: "team", header: "Team",
-            cell: (p) => {
+            cell: (p: ProjectSummary) => {
                 const team = p.work?.contributors ?? p.team?.people ?? [];
                 return <Avatars people={team} max={4} link total={p.work?.contributorCount ?? p.team?.count} />;
             },
-        },
+        }] : []),
         {
             key: "menu", header: "",
             cell: (p) => (
@@ -207,6 +203,9 @@ function ProjectTable({ section }: { section: boolean }) {
                         {(close) => (
                             <div>
                                 <button className="pop-item" onClick={() => { close(); navigate(`/${domain}/projects/${p.id}`); }}><Icon name="eye" />Open project</button>
+                                {logs && p.status === "active" && (
+                                    <button className="pop-item" onClick={() => { close(); openLogWork({ projectId: p.id }); }}><Icon name="plus" />Log work</button>
+                                )}
                                 {!site && seesMoney && permissions.has(P.WORK_ENTRY_VIEW_ALL) && (
                                     <button className="pop-item" onClick={() => { close(); navigate(`/${domain}/projects/${p.id}?report=1`); }}><Icon name="download" />Export report</button>
                                 )}
@@ -232,14 +231,7 @@ function ProjectTable({ section }: { section: boolean }) {
     );
     return (
         <>
-            {section ? (
-                <div className="row wrap" style={{ gap: 10, margin: "22px 0 10px", alignItems: "baseline" }}>
-                    <h2 className="page-title" style={{ fontSize: 15 }}>All projects</h2>
-                    <span className="muted" style={{ fontSize: 12 }}>{sub}</span>
-                    <div className="grow" />
-                    {newProject}
-                </div>
-            ) : <PageHead title="Projects" sub={sub} actions={newProject} />}
+            <PageHead title="Projects" sub={sub} actions={newProject} />
 
             {seesMoney && loadFailed(totals) && (
                 <div className="panel" style={{ marginBottom: 12 }}><div className="panel-body"><LoadError error={totals.error} retry={() => totals.refetch()} what="the projects' money" /></div></div>
@@ -285,7 +277,7 @@ function ProjectTable({ section }: { section: boolean }) {
             {filtersOpen && (
                 <ProjectFiltersDrawer values={filtered} onChange={changeFilters} onClear={turnFiltersOff} onClose={() => setFiltersOpen(false)}
                     counts={counts} years={[thisYear, thisYear - 1]} showType={seesMoney && !site} clients={clientOptions} owners={ownerOptions}
-                    matching={list.data?.totalCount} anyOn={on.length > 0} />
+                    matching={list.data?.totalCount} anyOn={on.length > 0} archived={!employee} />
             )}
 
             <div className="panel">

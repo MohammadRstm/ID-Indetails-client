@@ -96,7 +96,7 @@ describe("My work (Design)", () => {
 
 describe("the hours balance on the home page", () => {
     it("flags a month that closed short, and shows the balance", async () => {
-        renderApp("/design/projects", sarah, ...workHandlers);
+        renderApp("/design/log-hours", sarah, ...workHandlers);
         // August closed short in the fixture: said in hours only, since employees don't see their pay
         const closed = await screen.findByText(/August 2026 closed .* short\./);
         // the warning comes first, above the week
@@ -110,7 +110,7 @@ describe("the hours balance on the home page", () => {
     it("includes time off in the excused column's note", async () => {
         const [first, ...rest] = work.hours.months;
         const off = { requestId: 5, firstDay: "2026-09-14", lastDay: "2026-09-15", isPaid: true, days: ["2026-09-14", "2026-09-15"] };
-        renderApp("/design/projects", sarah,
+        renderApp("/design/log-hours", sarah,
             http.get("/api/me/hours", () => HttpResponse.json({ ...work.hours, months: [{ ...first, timeOff: [off] }, ...rest] })),
             ...workHandlers);
         const toggle = await screen.findByRole("button", { name: /^Hours balance/ });

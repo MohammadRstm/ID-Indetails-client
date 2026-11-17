@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { http as api } from "@/api/http";
 import { P } from "@/app/permissions/codes";
+import { projectHandlers } from "@/test/fixtures";
 import { work, workHandlers } from "@/test/fixtures/work";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
@@ -26,32 +27,33 @@ afterEach(() => {
 const logWindow = () => screen.findByRole("dialog", { name: /log work/i });
 
 describe("the Design employee home", () => {
-    it("shows their week, today and the projects they can log against", async () => {
-        renderApp("/design/projects", sarah, ...workHandlers);
+    it("is Log hours: their week, today, overtime and how many projects they have", async () => {
+        renderApp("/design/log-hours", sarah, ...workHandlers);
         expect(await screen.findByRole("heading", { name: "Good evening, Sarah" })).toBeInTheDocument();
-        expect(await screen.findByText(work.myProjects[0].title)).toBeInTheDocument();
+        const active = work.myProjects.filter((p) => p.status === "active").length;
+        expect(await screen.findByText(new RegExp(`${active} active projects`))).toBeInTheDocument();
         expect(screen.getByText(/^Today · /)).toBeInTheDocument();
         expect(screen.getByText("Overtime")).toBeInTheDocument();
         // after 5 PM, overtime can be logged straight away
         expect(screen.getByRole("button", { name: "Log overtime" })).toBeInTheDocument();
     });
 
-    it("offers New project to an employee given project:create, and opens it on their own page", async () => {
-        renderApp("/design/projects", withPermissions(sarah, { grant: [P.PROJECT_CREATE] }), ...workHandlers);
+    it("offers New project to an employee given project:create, and opens it on the Projects page", async () => {
+        renderApp("/design/log-hours", withPermissions(sarah, { grant: [P.PROJECT_CREATE] }), ...workHandlers, ...projectHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "New project" }));
         expect(await screen.findByRole("dialog", { name: "New project" })).toBeInTheDocument();
-        expect(screen.getByRole("heading", { name: "Good evening, Sarah" })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Projects" })).toBeInTheDocument();
     });
 
     it("offers no New project without project:create", async () => {
-        renderApp("/design/projects", sarah, ...workHandlers);
-        await screen.findByText(work.myProjects[0].title);
+        renderApp("/design/log-hours", sarah, ...workHandlers);
+        await screen.findByRole("heading", { name: "Good evening, Sarah" });
         expect(screen.queryByRole("button", { name: "New project" })).toBeNull();
     });
 
     it("offers no logging to someone without work_entry:create", async () => {
-        renderApp("/design/projects", cannotLog, ...workHandlers);
-        await screen.findByText(work.myProjects[0].title);
+        renderApp("/design/log-hours", cannotLog, ...workHandlers);
+        await screen.findByRole("heading", { name: "Good evening, Sarah" });
         expect(screen.queryByRole("button", { name: /log work/i })).toBeNull();
         expect(screen.queryByRole("button", { name: /start timer/i })).toBeNull();
         expect(screen.queryByText(/^Today · /)).toBeNull();
@@ -62,7 +64,7 @@ describe("logging work", () => {
     it("opens after the day's last entry, previews the overtime, saves the entry and undoes it", async () => {
         let body: Record<string, unknown> | null = null;
         const deleted: string[] = [];
-        renderApp("/design/projects", sarah,
+        renderApp("/design/log-hours", sarah,
             http.delete("/api/work-entries/:id", ({ params }) => { deleted.push(String(params.id)); return new HttpResponse(null, { status: 204 }); }),
             http.post("/api/work-entries", async ({ request }) => {
                 body = (await request.json()) as Record<string, unknown>;
@@ -99,7 +101,7 @@ describe("logging work", () => {
     });
 
     it("closes when someone else signs in from another tab", async () => {
-        renderApp("/design/projects", sarah, ...workHandlers);
+        renderApp("/design/log-hours", sarah, ...workHandlers);
         await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
         await logWindow();
         // the next refresh (the tabs share the cookie) comes back as another person
@@ -113,7 +115,7 @@ describe("logging work", () => {
     });
 
     it("says what is wrong next to the button, not in a toast", async () => {
-        renderApp("/design/projects", sarah,
+        renderApp("/design/log-hours", sarah,
             http.post("/api/work-entries", () => HttpResponse.json({ type: "conflict", code: "work_entry_overlap", message: "This overlaps another entry." }, { status: 409 })),
             ...workHandlers);
         await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
@@ -124,7 +126,7 @@ describe("logging work", () => {
     });
 
     it("warns about an overlap before saving", async () => {
-        renderApp("/design/projects", sarah, ...workHandlers);
+        renderApp("/design/log-hours", sarah, ...workHandlers);
         await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
         const dialog = await logWindow();
         const start = await within(dialog).findByLabelText("Start time");
@@ -134,7 +136,7 @@ describe("logging work", () => {
     });
 
     it("opens from the search palette", async () => {
-        renderApp("/design/projects", sarah, ...workHandlers,
+        renderApp("/design/log-hours", sarah, ...workHandlers,
             http.get("/api/search", () => HttpResponse.json({ projects: [], clients: [], people: [] })));
         await screen.findByRole("button", { name: "Account" });
         await userEvent.keyboard("{Control>}k{/Control}");
@@ -153,7 +155,7 @@ describe("the Log work timeline", () => {
     it("runs over the person's working hours that day, and the first log starts when the day does", async () => {
         // Monday 11:30 AM in Beirut, a day of 10 AM to 4 PM with nothing logged yet
         vi.setSystemTime(new Date("2026-09-28T08:30:00Z"));
-        renderApp("/design/projects", sarah, scheduled({ startMinute: 600, endMinute: 960, requiredMinutes: 300 }), empty, ...workHandlers);
+        renderApp("/design/log-hours", sarah, scheduled({ startMinute: 600, endMinute: 960, requiredMinutes: 300 }), empty, ...workHandlers);
         await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
         const dialog = await logWindow();
         expect(await within(dialog).findByLabelText("Start time")).toHaveValue("10:00 AM");
@@ -164,7 +166,7 @@ describe("the Log work timeline", () => {
 
     it("stretches to the work logged outside them, and up to now once the day is over", async () => {
         // 7 PM: the fixture's 9 AM to 5 PM day has work up to 6 PM
-        renderApp("/design/projects", sarah, ...workHandlers);
+        renderApp("/design/log-hours", sarah, ...workHandlers);
         await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
         const dialog = await logWindow();
         await within(dialog).findByRole("button", { name: /^Furniture schedule,/ });
@@ -176,7 +178,7 @@ describe("the Log work timeline", () => {
     it("shows 7 AM to 9 PM on a day off", async () => {
         // Saturday 3 October, 11 AM in Beirut
         vi.setSystemTime(new Date("2026-10-03T08:00:00Z"));
-        renderApp("/design/projects", sarah, scheduled({ isWorkingDay: false, startMinute: null, endMinute: null, requiredMinutes: 0 }), empty, ...workHandlers);
+        renderApp("/design/log-hours", sarah, scheduled({ isWorkingDay: false, startMinute: null, endMinute: null, requiredMinutes: 0 }), empty, ...workHandlers);
         await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
         const dialog = await logWindow();
         await within(dialog).findByLabelText("Start time");
@@ -189,7 +191,7 @@ describe("deleting a logged task on the Log work timeline", () => {
     async function openDay() {
         const sent: string[] = [];
         const posted: Record<string, unknown>[] = [];
-        renderApp("/design/projects", sarah,
+        renderApp("/design/log-hours", sarah,
             http.delete("/api/work-entries/:id", ({ params }) => { sent.push(`delete ${params.id}`); return new HttpResponse(null, { status: 204 }); }),
             http.post("/api/work-entries/:id/restore", ({ params }) => { sent.push(`restore ${params.id}`); return HttpResponse.json(work.day.entries[0]); }),
             http.post("/api/work-entries", async ({ request }) => {
@@ -313,7 +315,7 @@ describe("deleting a logged task on the Log work timeline", () => {
 
     it("logs work as outside the original scope when its box is ticked", async () => {
         let body: Record<string, unknown> | null = null;
-        renderApp("/design/projects", sarah,
+        renderApp("/design/log-hours", sarah,
             http.post("/api/work-entries", async ({ request }) => {
                 body = (await request.json()) as Record<string, unknown>;
                 return HttpResponse.json({ ...work.day.entries[0], id: 999, minutes: 60, startedAt: body.startedAt, endedAt: body.endedAt, outsideScope: true });
@@ -331,7 +333,7 @@ describe("deleting a logged task on the Log work timeline", () => {
 
     it("ticks the scope box per log on the home page's Add logs timeline", async () => {
         const posted: Record<string, unknown>[] = [];
-        renderApp("/design/projects", sarah,
+        renderApp("/design/log-hours", sarah,
             http.post("/api/work-entries", async ({ request }) => {
                 const body = (await request.json()) as Record<string, unknown>;
                 posted.push(body);
@@ -353,7 +355,7 @@ describe("deleting a logged task on the Log work timeline", () => {
     it("works the same on the home page's Add logs timeline", async () => {
         const posted: Record<string, unknown>[] = [];
         const sent: string[] = [];
-        renderApp("/design/projects", sarah,
+        renderApp("/design/log-hours", sarah,
             http.delete("/api/work-entries/:id", ({ params }) => { sent.push(`delete ${params.id}`); return new HttpResponse(null, { status: 204 }); }),
             http.post("/api/work-entries", async ({ request }) => {
                 const body = (await request.json()) as Record<string, unknown>;
@@ -388,7 +390,7 @@ describe("deleting a logged task on the Log work timeline", () => {
 
 describe("the timer", () => {
     it("fills in the times when stopped", async () => {
-        renderApp("/design/projects", sarah, ...workHandlers);
+        renderApp("/design/log-hours", sarah, ...workHandlers);
         await userEvent.click(await screen.findByRole("button", { name: /start timer/i }));
         expect(await screen.findByText("Timer started")).toBeInTheDocument();
         // five minutes at the least, ending now
@@ -402,7 +404,7 @@ describe("the timer", () => {
     it("fills in the minute it started and the minute it stopped, not a rounded length", async () => {
         // started at 7:00:10 PM, stopped at 7:06:50 PM: the clock read 7:00 and 7:06
         vi.setSystemTime(new Date("2026-09-28T16:00:10Z"));
-        renderApp("/design/projects", sarah, ...workHandlers);
+        renderApp("/design/log-hours", sarah, ...workHandlers);
         await userEvent.click(await screen.findByRole("button", { name: /start timer/i }));
         vi.setSystemTime(new Date("2026-09-28T16:06:50Z"));
         await userEvent.click(await screen.findByRole("button", { name: /stop/i }));
@@ -415,7 +417,7 @@ describe("the timer", () => {
 
     it("logs a run shorter than an entry's 5 minutes as 5, and says so", async () => {
         vi.setSystemTime(new Date("2026-09-28T16:00:00Z"));
-        renderApp("/design/projects", sarah, ...workHandlers);
+        renderApp("/design/log-hours", sarah, ...workHandlers);
         await userEvent.click(await screen.findByRole("button", { name: /start timer/i }));
         vi.setSystemTime(new Date("2026-09-28T16:01:05Z"));
         await userEvent.click(await screen.findByRole("button", { name: /stop/i }));
@@ -428,7 +430,7 @@ describe("the timer", () => {
     it("keeps the evening part of a timer stopped after midnight", async () => {
         // 11:30 PM in Beirut, stopped at 12:45 AM
         vi.setSystemTime(new Date("2026-09-28T20:30:00Z"));
-        renderApp("/design/projects", sarah, ...workHandlers);
+        renderApp("/design/log-hours", sarah, ...workHandlers);
         await userEvent.click(await screen.findByRole("button", { name: /start timer/i }));
         vi.setSystemTime(new Date("2026-09-28T21:45:00Z"));
         await userEvent.click(await screen.findByRole("button", { name: /stop/i }));
@@ -443,7 +445,7 @@ describe("overtime on a day off", () => {
         // Saturday 3 October, 11 AM in Beirut: a day off, all of it overtime
         vi.setSystemTime(new Date("2026-10-03T08:00:00Z"));
         const off = { ...work.schedule.day, isWorkingDay: false, startMinute: null, endMinute: null, requiredMinutes: 0 };
-        renderApp("/design/projects", sarah,
+        renderApp("/design/log-hours", sarah,
             http.get("/api/me/schedule", ({ request }) => HttpResponse.json({ ...work.schedule, day: { ...off, date: new URL(request.url).searchParams.get("date") } })),
             ...workHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Log overtime" }));
