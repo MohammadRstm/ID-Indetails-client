@@ -18101,6 +18101,8 @@ export interface components {
         CreateProjectRequest: {
             billingType?: components["schemas"]["BillingType"];
             buildingCode?: null | string;
+            /** Format: double */
+            cfaPrice?: null | number;
             /** Format: int64 */
             clientId?: null | number;
             departmentIds?: null | number[];
@@ -20959,6 +20961,8 @@ export interface components {
             billing: components["schemas"]["ProjectBillingResponse"];
             /** Format: double */
             cashProfit: null | number;
+            /** Format: double */
+            cfaPrice: null | number;
             cost: components["schemas"]["ProjectCostResponse"];
             /** Format: double */
             costPerHour: number;
@@ -23109,6 +23113,8 @@ export interface components {
         };
         UpdateProjectRequest: {
             buildingCode?: null | string;
+            /** Format: double */
+            cfaPrice?: null | number;
             description?: null | string;
             icon?: null | string;
             location?: null | string;

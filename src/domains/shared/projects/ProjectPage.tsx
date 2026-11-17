@@ -17,7 +17,7 @@ import { PersonAvatar, PersonName } from "@/shared/components/Identity/People";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
 import Popover from "@/shared/components/Overlays/Popover";
 import { money } from "@/shared/format/money";
-import { companyToday, dayKey, daysBetween, fmtDate, fmtDateY } from "@/shared/format/time";
+import { companyToday, dayKey, daysBetween, fmtDate, fmtDateY, fmtNumber } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { ClientBadge } from "../clients/ClientBits";
@@ -297,6 +297,10 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
                                     <SettledOwed money={m} />
                                 </span>
                             ))}
+                            {/* a reference typed in by hand, for whoever sees the money (the API sends it to no one else) */}
+                            {m?.cfaPrice != null && (
+                                <span className="row" style={{ gap: 6 }} title="For reference - it is in no calculation">CFA price <b className="sec mono">{fmtNumber(m.cfaPrice)} CFA</b></span>
+                            )}
                         </div>
                     </div>
                 </div>

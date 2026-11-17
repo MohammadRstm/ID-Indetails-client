@@ -1,9 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { errorMessage, toApiError } from "@/api/errors";
+import { P } from "@/app/permissions/codes";
+import { usePermissions } from "@/app/permissions/usePermissions";
 import { toast } from "@/shared/components/Feedback/toast";
+import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Modal from "@/shared/components/Overlays/Modal";
+import { WHOLE_AMOUNT } from "@/shared/format/limits";
 import { companyToday } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import { useUpdateProject, type Project } from "./projectsApi";
@@ -23,6 +27,9 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
     const [location, setLocation] = useState(project.location ?? "");
     const [target, setTarget] = useState(project.targetDate ?? "");
     const [start, setStart] = useState(project.startDate);
+    // a reference price in CFA francs: only whoever sees the money sees or sets it; the others' save leaves it out, and it stays
+    const seesMoney = usePermissions().has(P.FINANCIAL_VIEW);
+    const [cfaPrice, setCfaPrice] = useState(project.money?.cfaPrice ?? 0);
     const today = companyToday();
     const proton = useProtonForm("edit_project", project.id, (fill) => {
         const v = fill.editProject;
@@ -58,6 +65,8 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
         update.mutateAsync({
             title: title.trim(), projectCode, buildingCode, description: description.trim() || null, location: location.trim() || null,
             icon: project.icon, tint: project.tint, targetDate: target || null, startDate: start, ownerId: project.owner.id,
+            // 0 clears it
+            ...(seesMoney ? { cfaPrice } : {}),
         }).then(
             () => {
                 toast({ text: `${title.trim()} updated`, icon: "checkCircle" });
@@ -98,6 +107,13 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
                             <input id="ep-location" className="input" maxLength={200} placeholder={`Optional - e.g. ${project.domain === "execution" ? "Achrafieh, Beirut" : "Broummana, Mount Lebanon"}`}
                                 value={location} onChange={(e) => setLocation(e.target.value)} />
                         </div>
+                        {seesMoney && (
+                            <div className="field">
+                                <label className="label optional" htmlFor="ep-cfa">CFA price</label>
+                                <AmountField id="ep-cfa" value={cfaPrice || null} currency="CFA" currencies={false} shape={WHOLE_AMOUNT} onChange={setCfaPrice} />
+                                <div className="hint">For reference - it is in no calculation.</div>
+                            </div>
+                        )}
                     </div>
                     <div className="grid g-2 mt">
                         <div className="field">

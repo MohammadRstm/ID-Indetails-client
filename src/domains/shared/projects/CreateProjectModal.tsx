@@ -6,6 +6,7 @@ import { usePermissions } from "@/app/permissions/usePermissions";
 import { fullName, useCurrentUser } from "@/app/session/useSession";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
+import { WHOLE_AMOUNT } from "@/shared/format/limits";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Select from "@/shared/components/Forms/Select";
@@ -43,6 +44,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const me = useCurrentUser();
     const create = useCreateProject();
     const execution = domain === "execution";
+    const seesMoney = permissions.has(P.FINANCIAL_VIEW);
     const people = useProjectOwners(domain, permissions.has(P.EMPLOYEE_VIEW), permissions.canSeeDomain("design") && permissions.canSeeDomain("execution"));
 
     const [title, setTitle] = useState("");
@@ -52,6 +54,8 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
     const [more, setMore] = useState(false);
     const [description, setDescription] = useState("");
     const [location, setLocation] = useState("");
+    // a reference price in CFA francs, for whoever sees the money: it is in no calculation
+    const [cfaPrice, setCfaPrice] = useState(0);
     const [owner, setOwner] = useState(String(me.id));
     const [target, setTarget] = useState("");
     // a client is picked from the client list: without client:view, a Design project can only be internal
@@ -130,6 +134,7 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                 buildingCode: shownBuildingCode,
                 description: description.trim() || null,
                 location: location.trim() || null,
+                cfaPrice: seesMoney && cfaPrice ? cfaPrice : null,
                 domainCode: domain,
                 billingType: execution ? "client" : billing,
                 clientId: billing === "client" ? clientId : null,
@@ -251,10 +256,19 @@ export default function CreateProjectModal({ domain, initialClient, onClose }: C
                         </div>
                     )}
 
-                    <div className="field mt">
-                        <label className="label" htmlFor="np-location">Location</label>
-                        <input id="np-location" className="input" maxLength={200} placeholder={`Optional - e.g. ${execution ? "Achrafieh, Beirut" : "Broummana, Mount Lebanon"}`}
-                            value={location} onChange={(e) => setLocation(e.target.value)} />
+                    <div className={cx("mt", seesMoney && "grid g-2")}>
+                        <div className="field">
+                            <label className="label" htmlFor="np-location">Location</label>
+                            <input id="np-location" className="input" maxLength={200} placeholder={`Optional - e.g. ${execution ? "Achrafieh, Beirut" : "Broummana, Mount Lebanon"}`}
+                                value={location} onChange={(e) => setLocation(e.target.value)} />
+                        </div>
+                        {seesMoney && (
+                            <div className="field">
+                                <label className="label optional" htmlFor="np-cfa">CFA price</label>
+                                <AmountField id="np-cfa" value={cfaPrice || null} currency="CFA" currencies={false} shape={WHOLE_AMOUNT} onChange={setCfaPrice} />
+                                <div className="hint">For reference - it is in no calculation.</div>
+                            </div>
+                        )}
                     </div>
 
                     {setsPricing && (
