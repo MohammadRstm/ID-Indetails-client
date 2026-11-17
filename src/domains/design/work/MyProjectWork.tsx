@@ -11,6 +11,7 @@ import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { Avatars, PersonAvatar } from "@/shared/components/Identity/People";
+import { chartColors } from "@/shared/format/color";
 import { fmtDate, fmtDateY, fmtH, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
@@ -84,8 +85,10 @@ export function MyProjectWork({ project }: { project: Project }) {
             <div className="stack">
                 <Figure title="Your hours per week" sub="On this project.">
                     {!w ? <SkeletonLines lines={4} /> : (
-                        <Columns height={150} labelEvery={2} format={(v) => `${Math.round(v)}h`}
-                            data={w.weekly.map((x) => ({ label: fmtDate(x.weekStart), tip: `Week of ${fmtDateY(x.weekStart)}`, value: x.minutes / 60 }))} />
+                        <div style={chartColors(project.tint)}>
+                            <Columns height={150} labelEvery={2} format={(v) => `${Math.round(v)}h`}
+                                data={w.weekly.map((x) => ({ label: fmtDate(x.weekStart), tip: `Week of ${fmtDateY(x.weekStart)}`, value: x.minutes / 60 }))} />
+                        </div>
                     )}
                 </Figure>
 

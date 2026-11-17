@@ -7,7 +7,8 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { clickable } from "@/shared/utils/clickable";
 
-export type RankItem = { id?: string | number; label: string; value: number; node?: ReactNode };
+/** `color` draws the bar in a colour of its own, such as its project's. */
+export type RankItem = { id?: string | number; label: string; value: number; node?: ReactNode; color?: string | null };
 
 /** Ranked horizontal bars: hours by project, revenue by client (the prototype's V.RankBars). */
 export function RankBars({ items, format = fmtH, unit = "Hours", showPct, onClick, empty = "No data in this range." }: {
@@ -27,7 +28,7 @@ export function RankBars({ items, format = fmtH, unit = "Hours", showPct, onClic
                     onMouseMove={(e) => tip.show(e, [{ big: it.label }, { k: unit, v: format(it.value) }, total ? { k: "Share", v: `${pct(it.value, total)}%` } : null])}
                     onMouseLeave={tip.hide}>
                     <div className="rb-lab trunc">{it.node ?? <span className="trunc">{it.label}</span>}</div>
-                    <div className="rb-bar"><i style={{ width: `${Math.max(2, (it.value / max) * 100)}%` }} /></div>
+                    <div className="rb-bar"><i style={{ width: `${Math.max(2, (it.value / max) * 100)}%`, background: it.color ?? undefined }} /></div>
                     <div className="rb-val">{format(it.value)}</div>
                     {showPct && <div className="rb-pct muted">{pct(it.value, total)}%</div>}
                 </div>

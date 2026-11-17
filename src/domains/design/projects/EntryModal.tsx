@@ -64,7 +64,7 @@ export default function EntryModal({ entryId, onClose, overDrawer }: EntryModalP
                                     <div><div className="u">Duration</div><div className="mono" style={{ fontWeight: 600 }}>{fmtDur(e.minutes)}</div></div>
                                 </div>
                                 <div className="mt">
-                                    <DayRuler large blocks={[{ start: e.startedAt, end: e.endedAt }]}
+                                    <DayRuler large blocks={[{ start: e.startedAt, end: e.endedAt, color: e.project.tint ?? undefined }]}
                                         others={d.sameDay.filter((x) => x.id !== e.id).map((x) => ({ start: x.startedAt, end: x.endedAt, label: x.description }))} />
                                 </div>
                             </div>

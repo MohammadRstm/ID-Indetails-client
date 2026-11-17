@@ -3,10 +3,13 @@ import { errorMessage, toApiError } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { toast } from "@/shared/components/Feedback/toast";
+import { ProjectTile } from "@/shared/components/Data/Bits";
 import AmountField from "@/shared/components/Forms/AmountField";
+import ColorField from "@/shared/components/Forms/ColorField";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Modal from "@/shared/components/Overlays/Modal";
+import { isHexColor } from "@/shared/format/color";
 import { WHOLE_AMOUNT } from "@/shared/format/limits";
 import { companyToday } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
@@ -16,7 +19,7 @@ import { buildingCodeError, projectCodeError, typedCode } from "./projectCodes";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillChange, useProtonForm } from "@/domains/shared/proton/formFill";
 
-/** A project's details (project:edit): its name and codes, description, where it is, when it started and when it should be done. */
+/** A project's details (project:edit): its name and codes, description, where it is, when it started and when it should be done, and its colour. */
 export default function EditProjectModal({ project, onClose }: { project: Project; onClose: () => void }) {
     const update = useUpdateProject(project.id);
     const errors = useFormErrors();
@@ -27,6 +30,8 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
     const [location, setLocation] = useState(project.location ?? "");
     const [target, setTarget] = useState(project.targetDate ?? "");
     const [start, setStart] = useState(project.startDate);
+    // the colour its tile and its logged work are drawn in; the API gave it one when it was created
+    const [color, setColor] = useState(project.tint ?? "");
     // a reference price in CFA francs: only whoever sees the money sees or sets it; the others' save leaves it out, and it stays
     const seesMoney = usePermissions().has(P.FINANCIAL_VIEW);
     const [cfaPrice, setCfaPrice] = useState(project.money?.cfaPrice ?? 0);
@@ -48,6 +53,7 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
     const codeError = projectCodeError(projectCode);
     const buildingError = buildingCodeError(buildingCode);
     const startError = !start ? "Pick the day the project started." : start > today && "The start date can't be in the future.";
+    const colorError = color.trim() !== "" && !isHexColor(color) && "Use a hex colour like #2F6FEB, or pick one.";
     // the API also refuses a site's start after its first ground labour: shown beside the field until it is changed
     const failure = toApiError(update.error);
     const startRefused = failure.fieldErrors.startDate;
@@ -57,14 +63,15 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
     function submit(e?: FormEvent) {
         e?.preventDefault();
         if (update.isPending) return;
-        if (titleError || codeError || buildingError || startError) {
+        if (titleError || codeError || buildingError || startError || colorError) {
             errors.tried();
             return;
         }
         // the API replaces the details, so everything this form doesn't change goes back as it was
         update.mutateAsync({
             title: title.trim(), projectCode, buildingCode, description: description.trim() || null, location: location.trim() || null,
-            icon: project.icon, tint: project.tint, targetDate: target || null, startDate: start, ownerId: project.owner.id,
+            // left empty, the API keeps the colour it has
+            icon: project.icon, tint: color.trim().toUpperCase() || null, targetDate: target || null, startDate: start, ownerId: project.owner.id,
             // 0 clears it
             ...(seesMoney ? { cfaPrice } : {}),
         }).then(
@@ -126,6 +133,15 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
                             <label className="label" htmlFor="ep-target">Target completion</label>
                             <DateInput id="ep-target" className="input mono" value={target} placeholder="Optional" onChange={setTarget} />
                         </div>
+                    </div>
+                    <div className="field mt">
+                        <label className="label row" style={{ gap: 6 }} htmlFor="ep-color">
+                            <ProjectTile icon={project.icon} tint={isHexColor(color) ? color : project.tint} size="sm" />Colour
+                        </label>
+                        <ColorField id="ep-color" value={color} invalid={!!errors.show("color", colorError)}
+                            onChange={(v) => { setColor(v); errors.touch("color")(); }} />
+                        <FieldError message={errors.show("color", colorError)} />
+                        <div className="hint">Its tile and the work logged on it are drawn in this colour.</div>
                     </div>
                 </form>
             </div>
