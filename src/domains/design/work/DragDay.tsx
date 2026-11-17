@@ -3,12 +3,12 @@ import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import ContextMenu from "@/shared/components/Overlays/ContextMenu";
 import { tip } from "@/shared/components/Overlays/tip";
-import { dayKey, fmtDur, fmtHourLabel, fmtRange, fmtTime, minutesOfDay } from "@/shared/format/time";
+import { dayKey, fmtDur, fmtHourLabel, fmtRange, minutesOfDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { touchScreen } from "@/shared/utils/touchScreen";
 import { useCanChangeMeeting } from "../../shared/meetings/meetingsApi";
-import { checkLog, clamp, companyNow, DAY, DAY_OFF_HOURS, dayText, isoAt, movesFor, rangeFor, spanOn, wholeOn, workHoursOf, type Moves, type Span } from "./day";
+import { checkLog, clamp, companyNow, DAY, DAY_OFF_HOURS, isoAt, movesFor, rangeFor, spanOn, wholeOn, workHoursOf, type Moves, type Span } from "./day";
 import DayTrack, { type TrackEntry, type TrackMeeting } from "./DayTrack";
 import { BOX, dayModel, type Block, type DayTask, type Stuck } from "./dragModel";
 import { useDomainSettings, useMyDay, useMySchedule, useOvertimeFor, useResizeMeeting } from "./workApi";
@@ -500,14 +500,6 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
                     </button>
                 </ContextMenu>
             )}
-            <div className="row wrap mt-s legend-row">
-                <span><i className="lg-e" />logged ({list.length}), drag to move, edges to resize (pushing neighbours along), {touch ? "hold to delete" : "right-click to delete"}</span>
-                <span><i className="lg-sel" />{ignoreId ? "this entry" : "new log"} - drag it to move, its edges to resize</span>
-                {meetings.length > 0 && <span><i className="lg-mtg" />meetings ({meetings.length}), drag their ends to resize</span>}
-                {workHours && <span><i className="lg-wd" />your working day, {dayText(scheduleDay)}</span>}
-                <span><i className="lg-ot" />{workHours ? "outside your working day" : "your day off"} · overtime</span>
-                {isToday && <span><i className="lg-now" />now {fmtTime(new Date())}</span>}
-            </div>
             {gone.length > 0 && !drag && (
                 <div className="dd-swapped">
                     <Icon name="trash" />

@@ -248,13 +248,13 @@ describe("deleting a logged task on the Log work timeline", () => {
         expect(sent).toEqual([]);
     });
 
-    it("on a phone, offers Delete when a finger is held on a task, and leaves out the keyboard's help", async () => {
+    it("on a phone, offers Delete when a finger is held on a task", async () => {
         vi.stubGlobal("matchMedia", (query: string) => ({
             matches: query === "(pointer: coarse)", addEventListener: () => {}, removeEventListener: () => {},
         }));
         const { dialog, task, sent } = await openDay();
-        expect(within(dialog).getByText(/hold to delete/)).toBeInTheDocument();
-        expect(within(dialog).queryByText(/right-click to delete/)).toBeNull();
+        // the timeline lists no markers or keys under it
+        expect(within(dialog).queryByText(/drag to move/)).toBeNull();
         expect(within(dialog).queryByText(/Keyboard:/)).toBeNull();
 
         await userEvent.pointer({ keys: "[TouchA>]", target: task });
