@@ -229,7 +229,7 @@ function DesignWork({ userId, first, self }: { userId: number | null; first: str
     const weekly = (s?.weekly ?? []).slice(-16);
     const lastTwelve = weekly.slice(-13, -1);
     const avgWeek = lastTwelve.length ? lastTwelve.reduce((a, w) => a + w.minutes, 0) / 12 : 0;
-    const daily = new Map((s?.daily ?? []).map((d) => [d.day, d.minutes]));
+    const daily = new Map((s?.daily ?? []).map((d) => [d.day, d]));
     const groups = groupByDay(entries.data?.items ?? []);
 
     return (
@@ -255,7 +255,7 @@ function DesignWork({ userId, first, self }: { userId: number | null; first: str
                 <div className="panel-head">
                     <div><div className="panel-title">Activity</div><div className="panel-sub">Every day {self ? "you" : first} logged work in the last year.</div></div>
                 </div>
-                <div className="panel-body">{!s ? <SkeletonLines lines={4} /> : <CalendarHeat weeks={52} value={(k) => daily.get(k) ?? 0} />}</div>
+                <div className="panel-body">{!s ? <SkeletonLines lines={4} /> : <CalendarHeat weeks={52} value={(k) => daily.get(k)?.minutes ?? 0} color={(k) => daily.get(k)?.tint} />}</div>
             </div>
 
             <div className="grid g-7-5 mt">
@@ -269,7 +269,7 @@ function DesignWork({ userId, first, self }: { userId: number | null; first: str
                 <Figure title="Project distribution" sub="All time.">
                     {!s ? <SkeletonLines lines={5} /> : (
                         <RankBars showPct onClick={(it) => navigate(projectPath(Number(it.id)))}
-                            items={s.byProject.slice(0, 8).map((p) => ({ id: p.projectId, label: p.title, value: p.minutes, node: <><ProjectTile icon={p.icon} tint={p.tint} size="sm" /><span className="trunc">{p.title}</span></> }))} />
+                            items={s.byProject.slice(0, 8).map((p) => ({ id: p.projectId, label: p.title, value: p.minutes, color: p.tint, node: <><ProjectTile icon={p.icon} tint={p.tint} size="sm" /><span className="trunc">{p.title}</span></> }))} />
                     )}
                 </Figure>
             </div>
@@ -293,7 +293,7 @@ function DesignWork({ userId, first, self }: { userId: number | null; first: str
                                             <span className="muted" style={{ fontSize: "11.5px" }}>{fmtDayDateY(g.key)}</span>
                                             <span className="day-total mono">{fmtDur(g.minutes)}</span>
                                         </div>
-                                        <DayRuler blocks={g.items.map((e) => ({ start: e.startedAt, end: e.endedAt }))} scale={false} />
+                                        <DayRuler blocks={g.items.map((e) => ({ start: e.startedAt, end: e.endedAt, color: e.project.tint ?? undefined }))} scale={false} />
                                         <div style={{ marginTop: 6 }}>
                                             {g.items.map((e) => (
                                                 <EntryRow key={e.id} entry={e} canAttach={self} onOpen={openEntry}

@@ -84,3 +84,10 @@ describe("a project's history", () => {
         expect(dayStart("2026-09-30")).toBe(at("2026-09-30", 0));
     });
 });
+
+describe("the work's colour", () => {
+    it("is the project's, or the accent while it has none", () => {
+        expect(buildHistory({ ...project, tint: "#2F9E44" }, [], [], [], NOW).color).toBe("#2F9E44");
+        expect(buildHistory(project, [], [], [], NOW).color).toBe("var(--accent)");
+    });
+});

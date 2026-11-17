@@ -63,7 +63,7 @@ export default function MyWorkPage() {
     const s = all.data;
 
     const groups = groupByDay(entries.data?.items ?? []);
-    const daily = new Map((s?.daily ?? []).map((d) => [d.day, d.minutes]));
+    const daily = new Map((s?.daily ?? []).map((d) => [d.day, d]));
     const since = addDays(today, -180);
     const activeDays = (s?.daily ?? []).filter((d) => d.day > since && d.minutes > 0).length;
     const weekly = (s?.weekly ?? []).slice(-12);
@@ -104,7 +104,7 @@ export default function MyWorkPage() {
                     {loadFailed(inRange) ? <LoadError error={inRange.error} retry={() => inRange.refetch()} what="where your time went" /> : !inRange.data ? <SkeletonLines lines={5} /> : (
                         <RankBars showPct onClick={(it) => navigate(`/design/projects/${it.id}`)}
                             items={inRange.data.byProject.map((p) => ({
-                                id: p.projectId, label: p.title, value: p.minutes,
+                                id: p.projectId, label: p.title, value: p.minutes, color: p.tint,
                                 node: <><ProjectTile icon={p.icon} tint={p.tint} size="sm" /><span className="trunc">{p.title}</span></>,
                             }))} />
                     )}
@@ -116,7 +116,7 @@ export default function MyWorkPage() {
                     <div><div className="panel-title">Your activity</div><div className="panel-sub">Every day you logged work over the last six months.</div></div>
                 </div>
                 <div className="panel-body">
-                    {!s ? <SkeletonLines lines={4} /> : <CalendarHeat weeks={27} value={(k) => daily.get(k) ?? 0} note={`${activeDays} active days in the last six months`} />}
+                    {!s ? <SkeletonLines lines={4} /> : <CalendarHeat weeks={27} value={(k) => daily.get(k)?.minutes ?? 0} color={(k) => daily.get(k)?.tint} note={`${activeDays} active days in the last six months`} />}
                 </div>
             </div>
 
@@ -144,7 +144,7 @@ export default function MyWorkPage() {
                                             <span className="muted" style={{ fontSize: "11.5px" }}>{fmtDayDateY(g.key)}</span>
                                             <span className="day-total mono">{fmtDur(g.minutes)}</span>
                                         </div>
-                                        <DayRuler blocks={g.items.map((e) => ({ start: e.startedAt, end: e.endedAt }))} scale={false} />
+                                        <DayRuler blocks={g.items.map((e) => ({ start: e.startedAt, end: e.endedAt, color: e.project.tint ?? undefined }))} scale={false} />
                                         <div style={{ marginTop: 6 }}>
                                             {g.items.map((e) => <EntryRow key={e.id} entry={e} canAttach right={canLog ? <EntryActions entry={e} onDelete={del} /> : null} />)}
                                         </div>
@@ -235,12 +235,12 @@ function WeekCalendar({ anchor, setAnchor, today }: { anchor: string; setAnchor:
                                         return (
                                             <div key={d} className="grow" style={{ position: "relative", borderLeft: di ? "1px solid var(--line)" : 0, background: weekday === 0 || weekday === 6 ? "var(--surface-2)" : "transparent" }}>
                                                 {entries.filter((e) => dayKey(e.startedAt) === d).map((e) => {
-                                                    const tint = e.project.tint ?? "#0C6B69";
+                                                    const tint = e.project.tint ?? "var(--accent)";
                                                     const top = (minutesOfDay(e.startedAt) / 60 - DAY_START) * ROW;
                                                     return (
                                                         <div key={e.id} style={{
                                                             position: "absolute", top: Math.max(0, top), left: 3, right: 3, height: Math.max(16, (e.minutes / 60) * ROW),
-                                                            background: rgba(tint, 0.13), borderLeft: `2.5px solid ${tint}`, borderRadius: 4, padding: "3px 5px", overflow: "hidden", cursor: "default",
+                                                            background: `color-mix(in srgb, ${tint} 13%, transparent)`, borderLeft: `2.5px solid ${tint}`, borderRadius: 4, padding: "3px 5px", overflow: "hidden", cursor: "default",
                                                         }}
                                                             onMouseMove={(ev) => tip.show(ev, [{ big: e.project.title }, { k: "Time", v: fmtRange(e.startedAt, e.endedAt) }, { k: "Duration", v: fmtDur(e.minutes) }, e.description])}
                                                             onMouseLeave={tip.hide}>
@@ -263,10 +263,4 @@ function WeekCalendar({ anchor, setAnchor, today }: { anchor: string; setAnchor:
             </div>
         </div>
     );
-}
-
-/** A project tint, see-through (the prototype's HL.rgba). */
-function rgba(hex: string, alpha: number) {
-    const n = parseInt(hex.replace("#", ""), 16);
-    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
 }

@@ -79,7 +79,7 @@ export function OverviewTab({ report, label, tiles, people }: TabProps) {
                     table={{ cols: [{ label: "Project" }, { label: "Hours", right: true }, { label: "Entries", right: true }], rows: report.byProject.map((p) => [projectLabel(p), fmtDur(p.minutes), p.entries]) }}>
                     <RankBars showPct onClick={(it) => open(`projects/${it.id}`)?.()}
                         items={report.byProject.slice(0, 8).map((p) => ({
-                            id: p.projectId, label: p.title, value: p.minutes,
+                            id: p.projectId, label: p.title, value: p.minutes, color: tiles.get(p.projectId)?.tint,
                             node: <><ProjectTile icon={tiles.get(p.projectId)?.icon} tint={tiles.get(p.projectId)?.tint} photo={tiles.get(p.projectId)?.photo} size="sm" /><span className="trunc">{p.title}</span></>,
                         }))} />
                 </Figure>

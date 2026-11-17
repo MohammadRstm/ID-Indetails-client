@@ -18179,6 +18179,7 @@ export interface components {
             day: string;
             /** Format: int32 */
             minutes: number;
+            tint: null | string;
         };
         DeactivateEmployeeRequest: {
             /** Format: date */
