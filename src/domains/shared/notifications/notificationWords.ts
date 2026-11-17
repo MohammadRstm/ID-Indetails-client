@@ -1,6 +1,6 @@
 import type { Schemas } from "@/api/types";
 import { AREAS } from "@/app/routing/areas";
-import { companyToday, daysBetween, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange, dayKey } from "@/shared/format/time";
+import { companyToday, daysBetween, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange, fmtTime, dayKey } from "@/shared/format/time";
 import type { IconName } from "@/shared/icons/icons";
 
 export type Notification = Schemas["NotificationResponse"];
@@ -61,13 +61,16 @@ export function describe(note: Notification, reader: Reader): NotificationView {
     const myPage = reader.isSuperAdmin ? "/company/profile" : mine ?? (reader.domain ? `/${reader.domain}/people/${reader.userId}` : undefined);
     const advances = (id?: number) => `/company/salaries?view=advances${id ? `&advance=${id}` : ""}`;
     const by = note.actor ? `By ${who}` : undefined;
-    // admins keep meetings on their Overview's tab, super admins on the company overview's, Design employees on a page
+    // admins keep meetings on their Overview's tab, super admins on the company overview's, Design employees on a page,
+    // site staff on their calendar
     const meetings = reader.isSuperAdmin ? "/company/overview?tab=meetings"
         : !d ? undefined
             : reader.isAdmin ? `/${d}/overview?tab=meetings`
-                : d === "design" ? "/design/meetings" : undefined;
+                : d === "design" ? "/design/meetings" : "/execution/calendar";
     const when = s(p.startsAt) ? `${fmtDayDate(s(p.startsAt))} · ${fmtRange(s(p.startsAt), s(p.endsAt) || s(p.startsAt))}` : undefined;
     const topic = p.topic ? `: ${s(p.topic)}` : "";
+    // a project meeting's people are told its project; a general meeting has none
+    const onProject = title ? ` on ${title}` : "";
 
     switch (note.kind) {
         case "requirement_assigned":
@@ -143,13 +146,19 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 sub: when && `${when}${p.topic ? ` · ${s(p.topic)}` : ""}`,
                 icon: "calendar", route: meetings,
             };
-        // a general meeting's attendees
+        // a general meeting's attendees, and a project meeting's invitees
         case "meeting_invited":
-            return { text: `${s(p.authorName) || who} invited you to a meeting${topic}`, sub: when, icon: "calendar", route: meetings };
+            return { text: `${s(p.authorName) || who} invited you to a meeting${onProject}${topic}`, sub: when, icon: "calendar", route: meetings };
         case "meeting_moved":
-            return { text: `${s(p.authorName) || who} moved a meeting${topic}`, sub: when && `Now ${when}`, icon: "calendar", route: meetings };
+            return { text: `${s(p.authorName) || who} moved a meeting${onProject}${topic}`, sub: when && `Now ${when}`, icon: "calendar", route: meetings };
         case "meeting_cancelled":
-            return { text: `${s(p.authorName) || who} cancelled a meeting${topic}`, sub: when, icon: "calendar", route: meetings };
+            return { text: `${s(p.authorName) || who} cancelled a meeting${onProject}${topic}`, sub: when, icon: "calendar", route: meetings };
+        // 10 minutes before it starts
+        case "meeting_soon":
+            return {
+                text: `Your meeting${onProject}${topic} starts${s(p.startsAt) ? ` at ${fmtTime(s(p.startsAt))}` : " soon"}`,
+                sub: when, icon: "calendar", route: meetings,
+            };
         case "materials_added":
             return { text: `${who} added ${plural(n(p.count), "expense")} to ${title}`, icon: "list", route: project };
         case "labour_week_submitted":

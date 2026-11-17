@@ -8,6 +8,7 @@ import { useCurrentUser } from "@/app/session/useSession";
 import { fmtDayDate } from "@/shared/format/time";
 
 export type Meeting = Schemas["MeetingResponse"];
+export type MeetingInvitee = Schemas["MeetingInviteeResponse"];
 
 /** "Meeting at Wed, Sep 30": a meeting's title is its date (the prototype's HL.meetingTitle). */
 export const meetingTitle = (m: Pick<Meeting, "startsAt">) => `Meeting at ${fmtDayDate(m.startsAt)}`;
@@ -21,9 +22,9 @@ export function useCanChangeMeeting() {
 
 /**
  * Meetings of the projects the person can see, and the general meetings they may see; a domain keeps that domain's
- * (company-wide ones stay in).
+ * (company-wide ones stay in). `from` and `to` are company days a meeting overlaps.
  */
-export function useMeetings(params: { domain?: string; projectId?: number; mine?: boolean }) {
+export function useMeetings(params: { domain?: string; projectId?: number; mine?: boolean; from?: string; to?: string }) {
     const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== false));
     return useQuery({
         queryKey: keys.meetings.list(p),
@@ -35,6 +36,16 @@ export function useProjectMeetings(projectId: number) {
     return useQuery({
         queryKey: keys.meetings.project(projectId),
         queryFn: async () => (await http.get<Meeting[]>(`/projects/${projectId}/meetings`)).data,
+    });
+}
+
+/** Who may be invited to a project's meetings: everyone who sees the project but the person. */
+export function useMeetingInvitees(projectId: number | undefined, enabled = true) {
+    return useQuery({
+        queryKey: keys.meetings.invitees(projectId ?? 0),
+        queryFn: async () => (await http.get<MeetingInvitee[]>(`/projects/${projectId}/meetings/invitees`)).data,
+        enabled: enabled && projectId != null,
+        staleTime: 5 * 60_000,
     });
 }
 
@@ -54,6 +65,22 @@ export function useCreateGeneralMeeting() {
     return useMutation({
         mutationFn: async (body: Schemas["SaveGeneralMeetingRequest"]) => (await http.post<Meeting>("/meetings", body)).data,
         onSuccess: () => { void invalidate(keys.meetings.all, keys.work.all); },
+    });
+}
+
+/**
+ * Moves, renames or re-describes a meeting, and changes a general meeting's people or a project meeting's invitees
+ * (`attendeeIds` left out keeps them). The timeline's dragged ends save through it too.
+ */
+export function useUpdateMeeting() {
+    const invalidate = useInvalidate();
+    return useMutation({
+        mutationFn: async ({ id, body }: { id: number; body: Schemas["SaveMeetingRequest"] }) =>
+            (await http.put<Meeting>(`/meetings/${id}`, body)).data,
+        // it shows on its project's timeline too
+        onSuccess: (meeting) => {
+            void invalidate(keys.meetings.all, keys.work.all, ...(meeting.project ? [keys.projects.detail(meeting.project.id)] : []));
+        },
     });
 }
 

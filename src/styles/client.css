@@ -596,6 +596,42 @@ table { line-height: normal; font-weight: normal; }
   .hc-line-item, .hc-more { display: none; }
 }
 
+/* Calendar: the meetings a person can see, a month at a time (the history calendar's month cells, with meetings in them) */
+.mcal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.mcal-wd { font-size: 10.5px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; padding: 0 4px 2px; }
+.mcal-cell { min-height: 104px; border: 1px solid var(--line); border-radius: 9px; padding: 5px 6px; background: var(--surface); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.mcal-cell.out { background: transparent; border-style: dashed; border-color: color-mix(in srgb, var(--line) 60%, transparent); }
+.mcal-cell.out .mcal-day { color: var(--ink-3); }
+.mcal-cell.today { border-color: var(--now); box-shadow: inset 0 0 0 1px var(--now); }
+.mcal-day { display: flex; align-items: center; justify-content: space-between; gap: 4px; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mcal-today { font-size: 10px; font-weight: 600; color: var(--now); }
+.mcal-mtg { display: block; width: 100%; min-width: 0; text-align: left; border: 0; border-left: 3px solid var(--now); border-radius: 5px; padding: 2px 5px;
+  background: color-mix(in srgb, var(--now) 9%, var(--surface)); font: inherit; font-size: 10.5px; line-height: 1.3; color: var(--ink); cursor: pointer; overflow: hidden; }
+.mcal-mtg:hover, .mcal-mtg:focus-visible { background: color-mix(in srgb, var(--now) 16%, var(--surface)); outline: none; }
+.mcal-mtg .t { font-family: var(--mono); color: var(--ink-2); margin-right: 4px; }
+.mcal-mtg .tp { font-weight: 600; }
+.mcal-mtg .w { display: block; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mcal-more { border: 0; background: none; padding: 0 2px; font: inherit; font-size: 10.5px; color: var(--accent-ink); cursor: pointer; text-align: left; }
+.mcal-day-list { display: flex; flex-direction: column; gap: 6px; }
+.mcal-day-list .mcal-mtg { font-size: 12.5px; padding: 6px 9px; }
+.mcal-facts { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; font-size: 13px; }
+.mcal-facts dt { color: var(--ink-3); }
+.mcal-facts dd { margin: 0; min-width: 0; }
+.mcal-facts .desc { white-space: pre-wrap; }
+@media (max-width: 640px) {
+  .mcal-grid { gap: 2px; }
+  .mcal-wd { padding: 0 1px 2px; font-size: 9.5px; }
+  .mcal-cell { min-height: 64px; padding: 3px; border-radius: 6px; }
+  .mcal-today { display: none; }
+  .mcal-mtg { padding: 1px 3px; font-size: 9.5px; border-left-width: 2px; }
+  .mcal-mtg .t { margin-right: 0; }
+  .mcal-mtg .tp, .mcal-mtg .w { display: none; }
+  .mcal-day-list .mcal-mtg .tp, .mcal-day-list .mcal-mtg .w { display: inline; }
+  .mcal-day-list .mcal-mtg .w { display: block; }
+  .mcal-facts { grid-template-columns: 1fr; gap: 2px; }
+  .mcal-facts dd { margin-bottom: 8px; }
+}
+
 /* Figures on one line that scroll sideways (fewer than eight): arrows at the ends instead of a scroll bar */
 .kpis-scroll { position: relative; }
 .kpis-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; scroll-behavior: smooth; }

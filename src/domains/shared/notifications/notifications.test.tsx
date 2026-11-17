@@ -92,6 +92,14 @@ group("A notification's words", () => {
             .toBe("Nadia Karam moved a meeting: Studio planning");
         expect(describe(note("meeting_cancelled", { topic: "Studio planning", startsAt: "2026-10-02T09:00:00Z", endsAt: "2026-10-02T10:00:00Z" }, { actor: nadia }), designer).text)
             .toBe("Nadia Karam cancelled a meeting: Studio planning");
+        // a project meeting's invitees hear of its project, and everyone in a meeting is reminded 10 minutes before it
+        const lobby = { id: 7, title: "Achrafieh Towers lobby", domain: "execution", icon: null, tint: null };
+        const siteStaff: Reader = { userId: 9, isAdmin: false, logsWork: false, domain: "execution" };
+        expect(describe(note("meeting_invited", { authorName: "Nadia Karam", startsAt: "2026-10-02T08:00:00Z", endsAt: "2026-10-02T09:00:00Z" }, { actor: nadia, project }), designer))
+            .toMatchObject({ text: "Nadia Karam invited you to a meeting on Studio Nour brand space", route: "/design/meetings" });
+        expect(describe(note("meeting_soon", { topic: "Slab inspection", startsAt: "2026-10-02T08:00:00Z", endsAt: "2026-10-02T09:00:00Z" }, { project: lobby }), siteStaff))
+            .toMatchObject({ text: "Your meeting on Achrafieh Towers lobby: Slab inspection starts at 11:00 AM", route: "/execution/calendar" });
+        expect(describe(note("meeting_soon", { startsAt: "2026-10-02T08:00:00Z", endsAt: "2026-10-02T09:00:00Z" }), designer).text).toBe("Your meeting starts at 11:00 AM");
         expect(describe(note("something_new", {}), designer).text).toBe("Something new");
     });
 
