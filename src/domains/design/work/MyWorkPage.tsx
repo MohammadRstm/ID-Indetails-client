@@ -20,7 +20,6 @@ import useDebounce from "@/shared/hooks/useDebounce";
 import { quarterLabel, quarterOf, quarterStart } from "@/shared/format/periods";
 import { addDays, DAYS, dayKey, fmtDate, fmtDateY, fmtDayDateY, fmtDur, fmtDurShort, fmtH, fmtNumber, fmtRange, fmtTime, formatSettings, minutesOfDay, monthKey, partsOf, relDay, startOfWeek } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import MyDeadlines from "../../shared/requirements/MyDeadlines";
 import { companyNow } from "./day";
 import EntryActions from "./EntryActions";
 import { useDeleteWithUndo } from "./useDeleteWithUndo";
@@ -89,8 +88,6 @@ export default function MyWorkPage() {
                     { key: "projects", label: "Projects", value: s?.projectCount ?? 0, sub: <span>{active ?? 0} active right now</span> },
                 ]} />
             )}
-
-            <div className="mt"><MyDeadlines /></div>
 
             <div className="grid g-8-4 mt">
                 <Figure title="Hours per week" sub="Your last 12 weeks."

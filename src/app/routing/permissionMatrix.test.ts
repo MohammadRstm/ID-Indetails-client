@@ -28,7 +28,7 @@ function outcome(user: CurrentUser, domain: Domain, path: string): Outcome {
 const PATHS = [
     "overview", "projects", "projects/:id", "clients", "clients/:id", "people", "people/:id", "financials",
     "my-work", "meetings", "calendar", "activity", "reports", "profile", "settings", "notifications", "messages", "assistant/:chatId?", "help",
-    "daily-log", "sites", "site-logs", "pocket", "time-off", "boq-sites", "boq-sites/:id", "advances", "log-hours",
+    "daily-log", "sites", "site-logs", "pocket", "time-off", "boq-sites", "boq-sites/:id", "advances", "log-hours", "requirements",
 ] as const;
 
 // one letter per path, in PATHS order: o open, h home, d denied (everyone here has Proton, so its page opens in their business)
@@ -36,15 +36,15 @@ const PATHS = [
 // the Calendar is every employee's, in either business; Log hours is a Design employee's start page
 // Settings are everyone's: the theme and Contact the developer, and the sections each person may change
 const MATRIX: Record<PersonaName, Record<Domain, string>> = {
-    superAdmin:        { design: "oooooooohhhoohooooo hhdd h dd o h", execution: "ooooodoohhhddhooooo hhoo h dd o h" },
+    superAdmin:        { design: "oooooooohhhoohooooo hhdd h dd o hh", execution: "ooooodoohhhddhooooo hhoo h dd o hh" },
     // admins: no Financials until a super admin hands them the money
-    designAdmin:       { design: "ooooooodhhhoohooooo hhdd h dd o h", execution: "hhhhhhhhhhhhhhhhhhh hhhh h hh h h" },
-    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhhh hhhh h hh h h", execution: "ooooododhhhddhooooo hhod h dd o h" },
-    designEmployee:    { design: "doodddddoooddoooooo dddd o dd o o", execution: "hhhhhhhhhhhhhhhhhhh hhhh h hh h h" },
+    designAdmin:       { design: "ooooooodhhhoohooooo hhdd h dd o hh", execution: "hhhhhhhhhhhhhhhhhhh hhhh h hh h hh" },
+    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhhh hhhh h hh h hh", execution: "ooooododhhhddhooooo hhod h dd o hh" },
+    designEmployee:    { design: "doodddddoooddoooooo dddd o dd o oo", execution: "hhhhhhhhhhhhhhhhhhh hhhh h hh h hh" },
     // site staff: their daily log and their sites, which open from My sites, not the project list
-    executionEmployee: { design: "hhhhhhhhhhhhhhhhhhh hhhh h hh h h", execution: "ddodddddddoddoooooo oodd d dd o d" },
+    executionEmployee: { design: "hhhhhhhhhhhhhhhhhhh hhhh h hh h hh", execution: "ddodddddddoddoooooo oodd d dd o dd" },
     // the website's staff belong to no business
-    websiteAdmin:      { design: "hhhhhhhhhhhhhhhhhhh hhhh h hh h h", execution: "hhhhhhhhhhhhhhhhhhh hhhh h hh h h" },
+    websiteAdmin:      { design: "hhhhhhhhhhhhhhhhhhh hhhh h hh h hh", execution: "hhhhhhhhhhhhhhhhhhh hhhh h hh h hh" },
 };
 
 const LETTER: Record<string, Outcome> = { o: "open", h: "home", d: "denied" };

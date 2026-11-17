@@ -126,7 +126,7 @@ export const work: Article[] = [
             list(
                 "Pick the period and project at the top, or search your descriptions.",
                 "**List** shows each entry; **Week** shows the week as a calendar.",
-                "Your deadlines and charts of where your time went are on the same page.",
+                "Charts of where your time went are on the same page; the requirements assigned to you are on **Requirements**.",
             ),
             links(link("Open my work", { business: "my-work", only: "design" })),
         ],
@@ -155,6 +155,7 @@ export const work: Article[] = [
         ask: ["tick requirement", "complete requirement", "mark done", "task done", "requirements", "checklist", "my tasks"],
         blocks: [
             steps(step("Open the project, go to **Requirements**, and tick it.", "Projects", "the project", "Requirements")),
+            only(designEmployee, para("**Requirements** in the sidebar lists the ones assigned to you, soonest deadline first, and narrows them to one project.")),
             only(has(P.REQUIREMENT_MANAGE), para("You may tick, untick, add, edit, assign and remove any requirement.")),
             only(and(has(P.REQUIREMENT_COMPLETE_OWN), (ctx) => !ctx.p.has(P.REQUIREMENT_MANAGE)), para("You can tick the requirements assigned to you, and untick the ones you ticked.")),
             para("Ticking requirements moves the project's progress."),

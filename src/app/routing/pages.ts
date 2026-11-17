@@ -43,6 +43,7 @@ export const ClientsPage = page(() => import("@/domains/shared/clients/ClientsPa
 export const MeetingsPage = named(() => import("@/domains/shared/meetings/Meetings"), "MeetingsPage");
 export const LogHoursPage = named(() => import("@/domains/design/work/EmployeeHome"), "LogHoursPage");
 export const CalendarPage = named(() => import("@/domains/shared/meetings/CalendarPage"), "CalendarPage");
+export const AssignedRequirementsPage = named(() => import("@/domains/shared/requirements/AssignedRequirementsPage"), "AssignedRequirementsPage");
 export const ProjectRoute = page(() => import("@/domains/shared/projects/ProjectRoute"));
 export const ProjectsPage = page(() => import("@/domains/shared/projects/ProjectsPage"));
 export const MyWorkRoute = page(() => import("@/domains/shared/requirements/MyWorkRoute"));
