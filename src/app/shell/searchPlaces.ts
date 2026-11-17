@@ -238,6 +238,12 @@ export const PLACES: Place[] = [
         targets: meetings,
     },
     {
+        // an employee's meetings, a month at a time, in either business
+        key: "calendar", icon: "grid", label: "Open calendar",
+        words: ["calendar", "month", "my meetings", "upcoming meetings", "meetings this month", "when is my meeting"],
+        targets: (ctx) => inBusinesses(ctx, "calendar"),
+    },
+    {
         key: "messages", icon: "chat", label: "Open messages",
         words: ["messages", "message", "chat", "chats", "inbox", "conversations", "conversation", "dm", "direct message", "talk",
             "send a message", "group chat", "write to"],

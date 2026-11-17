@@ -48,6 +48,7 @@ export const projectHandlers = [
     http.get("/api/projects/:id", () => HttpResponse.json(fixtures.project)),
     http.get("/api/projects/:id/requirements", () => HttpResponse.json(fixtures.requirements)),
     http.get("/api/projects/:id/meetings", () => HttpResponse.json(fixtures.projectMeetings)),
+    http.get("/api/projects/:id/meetings/invitees", () => HttpResponse.json([])),
     http.get("/api/meetings", () => HttpResponse.json(fixtures.meetings)),
     http.get("/api/clients", () => HttpResponse.json(fixtures.clients)),
     http.get("/api/clients/overview", () => HttpResponse.json(fixtures.clientOverview)),

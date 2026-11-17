@@ -7,6 +7,7 @@ import {
     ActivityPage,
     BoqSitePage,
     BoqSitesPage,
+    CalendarPage,
     ClientPage,
     ClientsPage,
     CompanyExpensesPage,
@@ -178,6 +179,12 @@ export const domainRoutes: DomainRoute[] = [
         nav: { label: "Meetings", icon: "calendar" },
         // admins set meetings from their Overview's Meetings tab, super admins from the company overview's
         employee: { element: <MeetingsPage />, access: designOnly(all(P.PROJECT_VIEW)) },
+    },
+    {
+        // the meetings an employee may see, a month at a time, in either business: site staff can be invited too
+        path: "calendar",
+        nav: { label: "Calendar", icon: "grid" },
+        employee: { element: <CalendarPage />, access: all(P.PROJECT_VIEW) },
     },
     {
         path: "time-off",

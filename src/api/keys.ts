@@ -34,6 +34,7 @@ export const keys = {
         all: ["meetings"] as const,
         list: (params: object) => ["meetings", "list", params] as const,
         project: (projectId: number) => ["meetings", "project", projectId] as const,
+        invitees: (projectId: number) => ["meetings", "invitees", projectId] as const,
     },
     clients: {
         all: ["clients"] as const,

@@ -89,6 +89,7 @@ const PAGES: Record<NonNullable<Schemas["ProtonPage"]>, { path: string; company?
     // the person's own pages, in their domain
     my_work: { path: "my-work" },
     my_profile: { path: "profile" },
+    calendar: { path: "calendar" },
     // Execution's own: the pocket money and everyone's daily logs, a site staff member's daily log and sites
     pocket: { path: "pocket" },
     site_logs: { path: "site-logs" },

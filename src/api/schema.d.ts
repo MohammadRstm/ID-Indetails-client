@@ -11348,6 +11348,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{projectId}/meetings/invitees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MeetingInviteeResponse"][];
+                        "text/json": components["schemas"]["MeetingInviteeResponse"][];
+                        "text/plain": components["schemas"]["MeetingInviteeResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{projectId}/payment": {
         parameters: {
             query?: never;
@@ -19201,6 +19240,14 @@ export interface components {
             startMinute: null | number;
             topic: null | string;
         };
+        MeetingInviteeResponse: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: int64 */
+            photoFileId: null | number;
+            team: null | string;
+        };
         MeetingPersonResponse: {
             /** Format: int64 */
             id: number;
@@ -21532,7 +21579,7 @@ export interface components {
         /** @enum {unknown} */
         ProtonMessageRole: "user" | "proton";
         /** @enum {unknown} */
-        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_profile" | "pocket" | "site_logs" | "daily_log" | "my_sites" | "website_projects" | "website_analytics" | "website_services" | "website_locations" | "website_contact" | "website_site" | "website_staff" | null;
+        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_profile" | "pocket" | "site_logs" | "daily_log" | "my_sites" | "website_projects" | "website_analytics" | "website_services" | "website_locations" | "website_contact" | "website_site" | "website_staff" | "calendar" | null;
         ProtonPageContext: {
             area: string;
             /** Format: int64 */
