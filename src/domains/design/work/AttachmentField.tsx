@@ -41,23 +41,3 @@ export function AttachmentField({ state }: { state: AttachmentState }) {
         </div>
     );
 }
-
-/** The day composer's smaller version: the file's name as a chip. */
-export function AttachmentChip({ state }: { state: AttachmentState }) {
-    const picker = useFilePicker(state.pick);
-    return (
-        <>
-            {state.file ? (
-                <span className="chip on"><Icon name="attach" />{state.file.name}
-                    <button type="button" className="icon-btn" style={{ width: 20, height: 20 }} aria-label="Remove attachment" onClick={state.clear}><Icon name="x" /></button>
-                </span>
-            ) : (
-                <button type="button" className="btn btn-sm btn-quiet attach-btn" disabled={state.uploading} onClick={picker.open}>
-                    <Icon name="attach" />{state.uploading ? "Uploading…" : "Attach a file"}
-                </button>
-            )}
-            {state.error && <span className="err"><Icon name="alert" /><ErrorMessage error={state.error} /></span>}
-            {picker.input}
-        </>
-    );
-}

@@ -223,7 +223,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                         <div className="hint">Only active projects accept new work.</div>
                     </div>
                     <div className="field">
-                        <label className="label required">Day</label>
+                        <label className="label required">What day to log?</label>
                         <DayChips value={date} onChange={pickDay} count={5} />
                     </div>
                 </div>

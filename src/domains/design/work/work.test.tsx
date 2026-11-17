@@ -335,51 +335,15 @@ describe("deleting a logged task on the Log work timeline", () => {
         await waitFor(() => expect(body).toMatchObject({ description: "The guest house the client added", outsideScope: true }));
     });
 
-    it("ticks the scope box per log on the home page's Add logs timeline", async () => {
-        const posted: Record<string, unknown>[] = [];
-        renderApp("/design/log-hours", sarah,
-            http.post("/api/work-entries", async ({ request }) => {
-                const body = (await request.json()) as Record<string, unknown>;
-                posted.push(body);
-                return HttpResponse.json({ ...work.day.entries[0], id: 999, minutes: 60, startedAt: body.startedAt, endedAt: body.endedAt });
-            }),
-            ...workHandlers);
+    it("opens Log work from the home page's Add logs, and from a click on its day", async () => {
+        renderApp("/design/log-hours", sarah, ...workHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Add logs" }));
-        const panel = (await screen.findByText(/^Add logs · /)).closest(".panel") as HTMLElement;
-        const scope = within(panel).getByRole("checkbox", { name: /Outside the original scope/ });
-        await userEvent.type(within(panel).getByLabelText("What did you work on?"), "Extra bathroom");
-        await userEvent.click(scope);
-        await userEvent.click(within(panel).getByRole("button", { name: "Add log" }));
-        await waitFor(() => expect(posted).toHaveLength(1));
-        expect(posted[0]).toMatchObject({ description: "Extra bathroom", outsideScope: true });
-        // ready for the next log, which says for itself
-        await waitFor(() => expect(scope).not.toBeChecked());
-    });
-
-    it("works the same on the home page's Add logs timeline", async () => {
-        const posted: Record<string, unknown>[] = [];
-        const sent: string[] = [];
-        renderApp("/design/log-hours", sarah,
-            http.delete("/api/work-entries/:id", ({ params }) => { sent.push(`delete ${params.id}`); return new HttpResponse(null, { status: 204 }); }),
-            http.post("/api/work-entries", async ({ request }) => {
-                const body = (await request.json()) as Record<string, unknown>;
-                posted.push(body);
-                return HttpResponse.json({ ...work.day.entries[0], id: 999, minutes: 60, startedAt: body.startedAt, endedAt: body.endedAt });
-            }),
-            ...workHandlers);
-        await userEvent.click(await screen.findByRole("button", { name: "Add logs" }));
-        const panel = (await screen.findByText(/^Add logs · /)).closest(".panel") as HTMLElement;
-        await deleteByMenu(panel, /^Furniture schedule,/);
-        expect(shown(panel, /^Furniture schedule,/)).toBeNull();
-        await ctrlZ();
-        expect(shown(panel, /^Furniture schedule,/)).not.toBeNull();
-        await deleteByMenu(panel, /^Furniture schedule,/);
-
-        await userEvent.type(within(panel).getByLabelText("What did you work on?"), "Redid the schedule");
-        await userEvent.click(within(panel).getByRole("button", { name: "Add log" }));
-        await waitFor(() => expect(posted).toHaveLength(1));
-        expect(posted[0]).toMatchObject({ deletes: [74] });
-        expect(sent).toEqual([]);
+        await userEvent.click(within(await logWindow()).getByRole("button", { name: "Cancel" }));
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: /log work/i })).toBeNull());
+        // the day stays a preview: a click on it opens the same window
+        expect(screen.queryByText(/^Add logs · /)).toBeNull();
+        await userEvent.click(screen.getByTitle("Log work for today"));
+        expect(await logWindow()).toBeInTheDocument();
     });
 
     it("deletes nothing when the window is closed without saving", async () => {

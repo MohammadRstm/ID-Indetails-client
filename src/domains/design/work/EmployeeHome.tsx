@@ -115,7 +115,7 @@ function useAlerts(): Alert[] {
     if (settings?.logReminder && workHours && nowMin >= 15 * 60 && summary && !summary.todayMinutes && permissions.has(P.WORK_ENTRY_CREATE)) {
         alerts.push({
             key: "today", icon: "bell",
-            text: <><b>Nothing logged today yet.</b> Add what you worked on before you finish - it takes a few seconds on the timeline below.</>,
+            text: <><b>Nothing logged today yet.</b> Add what you worked on before you finish: Log work takes a few seconds.</>,
         });
     }
     if (permissions.has(P.TIME_OFF_REQUEST)) {
