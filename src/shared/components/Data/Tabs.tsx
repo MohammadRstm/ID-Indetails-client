@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { revealInStrip } from "@/shared/utils/revealInStrip";
@@ -12,11 +12,13 @@ type TabsProps<K extends string> = {
 };
 
 /**
- * A page's sections (the prototype's UI.SectionNav). When they don't fit, the row scrolls sideways with no scroll
- * bar: a side with more sections fades out, line and all, and shows a small arrow that scrolls that way.
+ * A page's sections (the prototype's UI.SectionNav). The open one sits on a raised card, like a browser's tab, which
+ * glides to whichever section is chosen. When they don't fit, the row scrolls sideways with no scroll bar: a side with
+ * more sections fades out, line and all, and shows a small arrow that scrolls that way.
  */
 export default function Tabs<K extends string>({ items, value, onChange }: TabsProps<K>) {
     const ref = useRef<HTMLDivElement>(null);
+    const card = useRef<HTMLSpanElement>(null);
     const [edges, setEdges] = useState({ l: false, r: false });
 
     function measure() {
@@ -25,11 +27,23 @@ export default function Tabs<K extends string>({ items, value, onChange }: TabsP
         const l = el.scrollLeft > 2, r = el.scrollLeft < el.scrollWidth - el.clientWidth - 2;
         setEdges((o) => (o.l === l && o.r === r ? o : { l, r }));
     }
+    /** Puts the card under the open section; it appears in place at first, and only glides once it is there. */
+    function placeCard() {
+        const box = card.current, tab = ref.current?.querySelector<HTMLElement>(".tab.on");
+        if (!box) return;
+        box.style.opacity = tab ? "1" : "0";
+        if (!tab) return;
+        box.style.transform = `translateX(${tab.offsetLeft}px)`;
+        box.style.width = `${tab.offsetWidth}px`;
+        if (!box.classList.contains("glides")) requestAnimationFrame(() => box.classList.add("glides"));
+    }
+    // after every render: another section was chosen, or counts loaded into the tabs and widened them
+    useLayoutEffect(() => placeCard());
     // observed afresh after every render, which measures it too: the window resizes, and counts load into the tabs
     useEffect(() => {
         const el = ref.current;
         if (!el) return;
-        const ro = new ResizeObserver(() => measure());
+        const ro = new ResizeObserver(() => { measure(); placeCard(); });
         ro.observe(el);
         return () => ro.disconnect();
     });
@@ -40,6 +54,7 @@ export default function Tabs<K extends string>({ items, value, onChange }: TabsP
             {/* for a pointer: from the keyboard, the focused tab scrolls into view by itself */}
             {edges.l && <button type="button" className="tabs-arrow l" tabIndex={-1} aria-label="Earlier sections" onClick={() => by(-1)}><Icon name="chevronLeft" /></button>}
             <div className="tabs" role="tablist" ref={ref} onScroll={measure}>
+                <span className="tabs-cover" ref={card} aria-hidden="true" />
                 {items.map((item) => (
                     <button key={item.key} role="tab" aria-selected={value === item.key} className={cx("tab", value === item.key && "on")}
                         ref={value === item.key ? revealInStrip : undefined} onClick={() => onChange(item.key)}>

@@ -557,6 +557,16 @@ table { line-height: normal; font-weight: normal; }
   .hc-line-item, .hc-more { display: none; }
 }
 
+/* Section tabs (Tabs): the open one sits on a raised card, like a browser's tab, that glides to whichever is chosen */
+.tabs { position: relative; }
+.tabs .tab { position: relative; z-index: 1; padding: 8px 14px; border-radius: 9px 9px 0 0; transition: color .15s ease, background-color .15s ease; }
+.tabs .tab:hover:not(.on) { background: color-mix(in srgb, var(--surface-3) 75%, transparent); }
+.tabs .tab.on { border-bottom-color: transparent; font-weight: 650; }
+.tabs-cover { position: absolute; top: 3px; bottom: 0; left: 0; z-index: 0; border: 1px solid var(--line); border-bottom: 0; border-radius: 10px 10px 0 0;
+  background: var(--surface); box-shadow: 0 -3px 10px -6px rgba(0, 0, 0, .18); pointer-events: none; }
+.tabs-cover.glides { transition: transform .32s cubic-bezier(.3, .7, .2, 1), width .32s cubic-bezier(.3, .7, .2, 1); }
+@media (prefers-reduced-motion: reduce) { .tabs-cover.glides { transition: none; } }
+
 /* Logging work: labels that read clearly, and an Attach button that stands out a little from the form */
 .log-form .label { font-size: 12.5px; font-weight: 700; color: var(--ink); }
 .btn-quiet.attach-btn { background: var(--surface-3); color: var(--ink); }
