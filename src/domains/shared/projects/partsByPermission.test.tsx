@@ -94,10 +94,14 @@ describe("a Design project, by permission", () => {
         expect(screen.getByText("Team activity")).toBeInTheDocument();
         expect(tabs()).toEqual(["Overview", "Requirements", "Meetings", "Project files"]);
         expect(await logWork()).toHaveClass("btn-primary");
-        // the client is named, but its page isn't theirs to open
-        expect(screen.getByText(projectWork.project.client!.displayName)).toBeInTheDocument();
-        expect(screen.queryByRole("link", { name: new RegExp(projectWork.project.client!.displayName) })).toBeNull();
         for (const name of ["Mark as done", "More actions", "Export report", "Project status"]) expect(screen.queryByRole("button", { name })).toBeNull();
+        // in the project's details, the client is named, but its page isn't theirs to open, and nothing there is theirs to change
+        await userEvent.click(screen.getByRole("button", { name: "Details" }));
+        const details = await screen.findByRole("dialog", { name: "Project details" });
+        expect(within(details).getByText(projectWork.project.client!.displayName)).toBeInTheDocument();
+        expect(within(details).queryByRole("link", { name: new RegExp(projectWork.project.client!.displayName) })).toBeNull();
+        for (const name of ["Edit details", "Change owner", "Project photo"]) expect(within(details).queryByRole("button", { name })).toBeNull();
+        await userEvent.click(within(details).getAllByRole("button", { name: "Close" }).at(-1)!);
         expect(screen.queryByText("Contributors")).toBeNull();
         expect(asked).toEqual([]);
     });

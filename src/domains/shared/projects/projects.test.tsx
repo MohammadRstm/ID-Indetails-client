@@ -595,9 +595,12 @@ describe("the CFA price", () => {
             http.get("/api/projects/1", () => HttpResponse.json(priced)),
             http.put("/api/projects/1", async ({ request }) => { edited.push((await request.json()) as Record<string, unknown>); return HttpResponse.json(priced); }),
             ...projectHandlers);
-        expect(await screen.findByText("15,000,000 CFA")).toBeInTheDocument();
-        await userEvent.click(screen.getByRole("button", { name: "More actions" }));
-        await userEvent.click(screen.getByRole("button", { name: "Edit details" }));
+        // among the project's details, which open from its title
+        await userEvent.click(await screen.findByRole("button", { name: "Details" }));
+        const details = await screen.findByRole("dialog", { name: "Project details" });
+        expect(within(details).getByText("15,000,000 CFA")).toBeInTheDocument();
+        // and on to Edit details from there
+        await userEvent.click(within(details).getByRole("button", { name: "Edit details" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit project details" });
         const field = within(dialog).getByLabelText(/CFA price/);
         expect(field).toHaveValue("15,000,000");

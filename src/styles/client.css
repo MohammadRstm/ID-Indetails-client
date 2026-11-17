@@ -557,6 +557,21 @@ table { line-height: normal; font-weight: normal; }
   .hc-line-item, .hc-more { display: none; }
 }
 
+/* A project's page: its tile, title and code open its details; the details window lays them out in groups */
+.proj-open { padding: 0; border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; text-align: left; cursor: pointer; }
+.proj-open:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.pd-head { display: flex; align-items: center; gap: 12px; }
+.pd-title { font-size: 16px; font-weight: 700; }
+.pd-desc { margin: 12px 0 0; color: var(--ink-2); line-height: 1.55; white-space: pre-wrap; }
+.pd-group { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.pd-group-title { margin: 0 0 8px; font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); }
+.pd-facts { display: grid; gap: 8px; margin: 0; }
+.pd-fact { display: grid; grid-template-columns: 130px 1fr; gap: 12px; align-items: center; font-size: 13px; }
+.pd-fact:has(> dd:empty) { display: none; }
+.pd-fact dt { color: var(--ink-3); }
+.pd-fact dd { margin: 0; min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; }
+@media (max-width: 640px) { .pd-fact { grid-template-columns: 1fr; gap: 2px; } }
+
 /* Section tabs (Tabs): the open one is a card that grows out of the strip under the row, curving into it where they meet,
    as a browser's tab grows out of its toolbar; it glides to whichever is chosen */
 .tabs { position: relative; padding-top: 4px; border-bottom: 0; }
