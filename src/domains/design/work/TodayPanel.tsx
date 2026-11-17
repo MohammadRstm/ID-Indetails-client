@@ -167,7 +167,7 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
     }
 
     return (
-        <div className="panel mt today open">
+        <div className="panel mt today open log-form">
             <div className="panel-head">
                 <div className="grow">
                     <div className="panel-title">Add logs · {fmtDayDate(date)}</div>

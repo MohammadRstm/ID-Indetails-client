@@ -212,7 +212,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                     </button>
                 </>
             }>
-            <form onSubmit={submit} {...proton.guard}>
+            <form className="log-form" onSubmit={submit} {...proton.guard}>
                 <FilledNote fields={proton.filled} />
                 <div className="grid g-2">
                     <div className="field">

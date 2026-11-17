@@ -32,7 +32,7 @@ export function AttachmentField({ state }: { state: AttachmentState }) {
                     </div>
                 </div>
             ) : (
-                <button type="button" className="btn btn-sm btn-quiet" disabled={state.uploading} onClick={picker.open}>
+                <button type="button" className="btn btn-sm btn-quiet attach-btn" disabled={state.uploading} onClick={picker.open}>
                     <Icon name="attach" />{state.uploading ? "Uploading…" : "Attach an image or video"}
                 </button>
             )}
@@ -52,7 +52,7 @@ export function AttachmentChip({ state }: { state: AttachmentState }) {
                     <button type="button" className="icon-btn" style={{ width: 20, height: 20 }} aria-label="Remove attachment" onClick={state.clear}><Icon name="x" /></button>
                 </span>
             ) : (
-                <button type="button" className="btn btn-sm btn-quiet" disabled={state.uploading} onClick={picker.open}>
+                <button type="button" className="btn btn-sm btn-quiet attach-btn" disabled={state.uploading} onClick={picker.open}>
                     <Icon name="attach" />{state.uploading ? "Uploading…" : "Attach a file"}
                 </button>
             )}
