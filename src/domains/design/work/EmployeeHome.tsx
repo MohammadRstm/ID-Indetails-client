@@ -246,7 +246,8 @@ function WeekPanel({ summary: s, error, retry, today }: { summary: Summary; erro
                             {s && <Delta value={s.thisWeekMinutes} prev={s.lastWeekMinutes} label="vs last week" />}
                         </div>
                         <div className="grow" style={{ minWidth: 260 }}>
-                            <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 84 }}>
+                            {/* tall enough for the highest bar, its hours above it and the day below, clear of the panel's edge */}
+                            <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 112, paddingTop: 8 }}>
                                 {(s?.week ?? []).map((d) => {
                                     const isToday = d.day === today, future = d.day > today;
                                     const h = d.minutes ? Math.max(4, (d.minutes / maxDay) * 64) : 2;
@@ -254,7 +255,7 @@ function WeekPanel({ summary: s, error, retry, today }: { summary: Summary; erro
                                         <div key={d.day} className="grow" style={{ textAlign: "center" }}
                                             onMouseMove={(e) => tip.show(e, [{ big: fmtDayDate(d.day) }, { k: "Logged", v: d.minutes ? fmtDur(d.minutes) : "nothing yet" }])}
                                             onMouseLeave={tip.hide}>
-                                            <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)", marginBottom: 3 }}>{d.minutes ? (d.minutes / 60).toFixed(1) : ""}</div>
+                                            <div className="mono" style={{ fontSize: 11.5, fontWeight: 600, color: "var(--ink-2)", marginBottom: 4 }}>{d.minutes ? (d.minutes / 60).toFixed(1) : ""}</div>
                                             <div style={{
                                                 height: h, borderRadius: "3px 3px 0 0",
                                                 background: future ? "var(--surface-3)" : isToday ? "var(--accent)" : d.minutes ? "var(--chart)" : "var(--surface-3)",
