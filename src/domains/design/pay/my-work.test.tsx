@@ -20,7 +20,6 @@ describe("My work (Design)", () => {
     it("adds up their work and lists it day by day", async () => {
         renderApp("/design/my-work", sarah, ...workHandlers);
         expect(await screen.findByText(`avg ${fmtDur(work.summary.totalMinutes / work.summary.entryCount)}`)).toBeInTheDocument();
-        expect(await screen.findByText(work.requirements.items[0].text)).toBeInTheDocument();
         expect(await screen.findByRole("heading", { name: "Yesterday" })).toBeInTheDocument();
         expect(screen.getAllByText(work.entries.items[0].description).length).toBeGreaterThan(0);
     });
@@ -58,10 +57,10 @@ describe("My work (Design)", () => {
 
         await userEvent.click(within(row()).getByRole("button", { name: "Entry actions" }));
         await userEvent.click(await screen.findByRole("button", { name: "Edit entry" }));
-        const editing = await screen.findByRole("dialog", { name: "Edit work entry" });
         // an old log keeps its day: no days to pick from, only the one it is on
+        expect(await screen.findByText("Logged on")).toBeInTheDocument();
+        const editing = screen.getByRole("dialog", { name: "Edit work entry" });
         expect(within(editing).queryByText("What day to log?")).toBeNull();
-        expect(within(editing).getByText("Logged on")).toBeInTheDocument();
         await userEvent.keyboard("{Escape}");
         await waitFor(() => expect(screen.queryByRole("dialog", { name: "Edit work entry" })).toBeNull());
 

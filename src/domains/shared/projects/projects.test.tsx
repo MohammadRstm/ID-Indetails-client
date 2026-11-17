@@ -221,7 +221,9 @@ describe("a project", () => {
         expect(await screen.findByRole("button", { name: /mark as done/i })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Project status" })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "More actions" })).toBeInTheDocument();
-        expect(within(document.querySelector(".page-head") as HTMLElement).getByText(/^Payment/)).toBeInTheDocument();
+        // the payment is among the project's details
+        await userEvent.click(screen.getByRole("button", { name: "Details" }));
+        expect(within(await screen.findByRole("dialog", { name: "Project details" })).getByText("Payment")).toBeInTheDocument();
     });
 
     it("only shows the status to everyone else", async () => {
@@ -321,9 +323,11 @@ describe("a new project and its details", () => {
                 return HttpResponse.json({ ...located, location: "Jounieh" });
             }),
             ...projectHandlers);
-        expect(await screen.findByText("Achrafieh, Beirut")).toBeInTheDocument();
-        await userEvent.click(screen.getByRole("button", { name: "More actions" }));
-        await userEvent.click(screen.getByRole("button", { name: "Edit details" }));
+        // where it is shows among its details, which lead on to Edit details
+        await userEvent.click(await screen.findByRole("button", { name: "Details" }));
+        const about = await screen.findByRole("dialog", { name: "Project details" });
+        expect(await within(about).findByText("Achrafieh, Beirut")).toBeInTheDocument();
+        await userEvent.click(within(about).getByRole("button", { name: "Edit details" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit project details" });
         const where = within(dialog).getByLabelText(/Location/);
         await userEvent.clear(where);

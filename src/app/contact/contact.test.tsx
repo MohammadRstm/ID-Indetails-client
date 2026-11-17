@@ -67,7 +67,7 @@ describe("Contact the developer", () => {
         await userEvent.type(within(dialog).getByLabelText(describeField), "Saving failed.");
         await userEvent.click(within(dialog).getByRole("button", { name: "Send" }));
         await waitFor(() => expect(sent).toEqual([expect.objectContaining({
-            page: "/design/projects", error: { ref: traceId, at: "2026-11-13T12:32:00Z", message: null },
+            page: "/design/log-hours", error: { ref: traceId, at: "2026-11-13T12:32:00Z", message: null },
         })]));
 
         act(() => openContact({ ref: traceId, at: "2026-11-13T12:32:00Z", message: null }));

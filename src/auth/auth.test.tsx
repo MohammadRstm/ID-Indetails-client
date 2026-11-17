@@ -47,7 +47,7 @@ describe("signing in", () => {
         await userEvent.type(screen.getByLabelText("Password"), "a long enough password");
         await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
-        await waitFor(() => expect(window.location.pathname).toBe("/design/projects"));
+        await waitFor(() => expect(window.location.pathname).toBe("/design/log-hours"));
     });
 });
 
