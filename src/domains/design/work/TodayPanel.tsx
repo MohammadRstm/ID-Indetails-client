@@ -181,9 +181,13 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                     <DayChips value={date} onChange={pickDay} count={5} />
                 </div>
                 <div className="mt">
+                    <TimeRange date={date} startMin={startMin} duration={duration} preview={preview} onChange={(s, d) => setSlot({ s, d })} />
+                </div>
+                <div className="mt">
                     <DragDay date={date} startMin={startMin} duration={duration} projectId={pid} swaps={swaps} deleted={deletes} onDeleted={setDeletes}
                         onChange={(s, d, sw) => { setSlot({ s, d }); if (sw) setSwaps(sw); }} />
                 </div>
+                <OvertimeWarning date={date} duration={duration} preview={preview} scheduleDay={schedule.data?.day} />
 
                 <form className="composer-form mt" onSubmit={add}>
                     <div className="grid g-2">
@@ -201,13 +205,9 @@ function DayComposer({ onCollapse }: { onCollapse: () => void }) {
                             <CharCount length={desc.length} max={DESCRIPTION_MAX} />
                         </div>
                     </div>
-                    <div className="mt"><ScopeCheck checked={outside} onChange={setOutside} /></div>
-                    <div className="mt">
-                        <TimeRange date={date} startMin={startMin} duration={duration} preview={preview} onChange={(s, d) => setSlot({ s, d })} />
-                    </div>
-                    <OvertimeWarning date={date} duration={duration} preview={preview} scheduleDay={schedule.data?.day} />
+                    <div className="row wrap mt" style={{ gap: 10 }}><AttachmentChip state={attachment} /></div>
                     <div className="row wrap mt" style={{ gap: 10 }}>
-                        <AttachmentChip state={attachment} />
+                        <ScopeCheck checked={outside} onChange={setOutside} />
                         <span className="grow">
                             {error || save.error ? <span className="err"><Icon name="alert" /><ErrorText text={error ?? errorMessage(save.error)} /></span> : null}
                         </span>

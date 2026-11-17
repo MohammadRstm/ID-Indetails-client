@@ -237,8 +237,6 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                     <CharCount length={desc.length} max={DESCRIPTION_MAX} />
                 </div>
 
-                <div className="mt"><ScopeCheck checked={outside} onChange={setOutside} /></div>
-
                 <AttachmentField state={attachment} />
 
                 <div className="panel mt" style={{ background: "var(--surface-2)" }}>
@@ -260,6 +258,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                 </div>
 
                 <OvertimeWarning date={date} duration={duration} preview={preview} scheduleDay={schedule.data?.day} />
+                <div className="mt"><ScopeCheck checked={outside} onChange={setOutside} /></div>
                 <div className="row mt-s" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                     <span className="hint">Tip: type “4pm”, “16:00” or “4:30p” - and ⌘/Ctrl + Enter to save.</span>
                     {settings.timerEnabled && !ed ? (
