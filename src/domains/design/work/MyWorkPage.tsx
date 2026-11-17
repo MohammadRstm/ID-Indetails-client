@@ -92,7 +92,7 @@ export default function MyWorkPage() {
                     {!s ? <SkeletonLines lines={4} /> : (
                         <div style={{ width: "max-content", maxWidth: "100%", margin: "0 auto" }}>
                             <CalendarHeat weeks={27} cell={24} value={(k) => daily.get(k) ?? 0} note={`${activeDays} active days in the last six months`}
-                                onClick={canLog ? (day) => openLogWork({ date: day }) : undefined} />
+                                onClick={canLog ? (day) => openLogWork({ date: day, fixedDay: true }) : undefined} />
                         </div>
                     )}
                 </div>

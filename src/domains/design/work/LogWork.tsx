@@ -222,10 +222,10 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                             options={choices.map((p) => ({ value: String(p.id), label: projectLabel(p) }))} />
                         <div className="hint">Only active projects accept new work.</div>
                     </div>
-                    {/* a log already made keeps its day: it is only named */}
-                    {ed ? (
+                    {/* a log already made keeps its day, as does one opened on a picked day: it is only named */}
+                    {ed || options.fixedDay ? (
                         <div className="field">
-                            <div className="label">Logged on</div>
+                            <div className="label">{ed ? "Logged on" : "Logging on"}</div>
                             <div style={{ minHeight: 34, display: "flex", alignItems: "center", fontWeight: 600 }}>{fmtDayDateY(date)}</div>
                         </div>
                     ) : (

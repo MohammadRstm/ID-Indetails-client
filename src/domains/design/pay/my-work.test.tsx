@@ -91,7 +91,10 @@ describe("My work (Design)", () => {
     it("opens Log work on a day of the activity squares", async () => {
         renderApp("/design/my-work", sarah, ...workHandlers);
         await userEvent.click(await screen.findByRole("button", { name: /^Wed, Sep 30:/ }));
-        expect(await screen.findByRole("dialog", { name: /log work/i })).toBeInTheDocument();
+        const dialog = await screen.findByRole("dialog", { name: /log work/i });
+        // on that day, which isn't picked again
+        expect(within(dialog).getByText("Wednesday, September 30, 2026")).toBeInTheDocument();
+        expect(within(dialog).queryByText("What day to log?")).toBeNull();
     });
 
     it("shows the week as a calendar", async () => {
