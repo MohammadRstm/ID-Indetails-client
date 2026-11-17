@@ -281,7 +281,7 @@ export function EntriesTab({ scope, label, people }: { scope: ReportScope; label
                             <thead><tr><th>Date</th><th>Time</th><th className="r">Duration</th><th className="r">Overtime</th><th>Employee</th><th>Project</th><th>Work</th></tr></thead>
                             <tbody>
                                 {rows.map((e) => (
-                                    <tr key={e.id}>
+                                    <tr key={e.id} className={e.project.tint ? "pc" : undefined} style={e.project.tint ? { ["--pc" as string]: e.project.tint } : undefined}>
                                         <td className="nowrap muted">{fmtDate(e.startedAt)}</td>
                                         <td className="mono nowrap">{fmtRange(e.startedAt, e.endedAt)}</td>
                                         <td className="r mono nowrap">{fmtDur(e.minutes)}</td>

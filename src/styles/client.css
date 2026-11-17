@@ -292,6 +292,10 @@ table { line-height: normal; font-weight: normal; }
 .dt-track > i.dt-e.pc .dt-h.in::after { background: var(--pc-ink); }
 .dt-track > i.dt-sel.pc:not(.bad) { background: color-mix(in srgb, var(--pc) 22%, transparent); border-color: var(--pc); }
 
+/* An entry in a list, marked on its left edge with its project's colour (--pc). */
+.entry.pc, .ot-item.pc { box-shadow: inset 3px 0 0 var(--pc); padding-left: 12px; }
+.tbl tr.pc > td:first-child { box-shadow: inset 3px 0 0 var(--pc); }
+
 /* A heat-map cell in a project's colour (--hc): the more work, the stronger, as the heat colours go. */
 .hm-cell.pc.lv1 { background: color-mix(in srgb, var(--hc) 35%, var(--heat-0)); }
 .hm-cell.pc.lv2 { background: color-mix(in srgb, var(--hc) 60%, var(--heat-0)); }
