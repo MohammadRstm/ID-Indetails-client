@@ -1,5 +1,6 @@
 import type { FocusEvent, KeyboardEvent, MouseEvent, PointerEvent, Ref } from "react";
 import { tip } from "@/shared/components/Overlays/tip";
+import { inkOn } from "@/shared/format/color";
 import { fmtDur, fmtHourLabel, fmtMinutes } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
 import { clamp, type Span } from "./day";
@@ -9,6 +10,8 @@ export type TrackEntry = Span & {
     id: number;
     description: string;
     projectTitle: string;
+    /** The project's colour, which the entry is drawn in. */
+    tint?: string | null;
     range: string;
     overtime: number;
     locked: boolean;
@@ -28,6 +31,8 @@ type DayTrackProps = {
     nowMin?: number | null;
     sel?: Span | null;
     selBad?: boolean;
+    /** The colour of the project the selection is being logged on. */
+    selTint?: string | null;
     /** The logged entry picked to be deleted (clicked, or Enter on it). */
     selected?: number | null;
     editable?: boolean;
@@ -51,7 +56,7 @@ type DayTrackProps = {
  * entries, meetings, an optional selection and the now line.
  */
 export default function DayTrack({
-    lo, hi, workHours, entries, meetings, nowMin, sel, selBad, selected, editable, held, big, title, ref,
+    lo, hi, workHours, entries, meetings, nowMin, sel, selBad, selTint, selected, editable, held, big, title, ref,
     onPointerDown, onPointerMove, onPointerUp, onClick, onDoubleClick, onContextMenu, onKeyDown, onBlur,
 }: DayTrackProps) {
     const range = hi - lo;
@@ -82,8 +87,8 @@ export default function DayTrack({
                     const canEdit = editable && !e.locked;
                     return (
                         <i key={e.id} data-eid={canEdit ? e.id : undefined}
-                            className={cx("dt-e", e.isNew && "new", e.moved && "moved", canEdit && "grab", editable && e.locked && "locked", canEdit && selected === e.id && "selected")}
-                            style={{ left: `${pct(e.s)}%`, width: `${Math.max(0.6, pct(e.e) - pct(e.s))}%` }}
+                            className={cx("dt-e", e.tint && "pc", e.isNew && "new", e.moved && "moved", canEdit && "grab", editable && e.locked && "locked", canEdit && selected === e.id && "selected")}
+                            style={{ left: `${pct(e.s)}%`, width: `${Math.max(0.6, pct(e.e) - pct(e.s))}%`, ...tintVars(e.tint) }}
                             tabIndex={canEdit ? 0 : undefined} role={canEdit ? "button" : undefined}
                             aria-pressed={canEdit ? selected === e.id : undefined}
                             aria-label={canEdit ? `${e.description}, ${e.range}. Left and right arrows move it; Shift with an arrow changes its end, Alt its start; Enter selects it and Delete then removes it.` : undefined}
@@ -122,8 +127,8 @@ export default function DayTrack({
                 })}
                 {sel && sel.e > sel.s && (
                     // at either end of the track its handle moves inside the box, where the track doesn't cut it off
-                    <i className={cx("dt-sel", selBad && "bad", editable && "grab", sel.s <= lo && "at-lo", sel.e >= hi && "at-hi")}
-                        style={{ left: `${pct(sel.s)}%`, width: `${Math.max(0.6, pct(sel.e) - pct(sel.s))}%` }}
+                    <i className={cx("dt-sel", selTint && "pc", selBad && "bad", editable && "grab", sel.s <= lo && "at-lo", sel.e >= hi && "at-hi")}
+                        style={{ left: `${pct(sel.s)}%`, width: `${Math.max(0.6, pct(sel.e) - pct(sel.s))}%`, ...tintVars(selTint) }}
                         tabIndex={editable ? 0 : undefined} role={editable ? "button" : undefined}
                         aria-label={editable ? "This log. Left and right arrows move it; Shift with an arrow changes its end, Alt its start." : undefined}>
                         {editable && (
@@ -148,4 +153,9 @@ export default function DayTrack({
             </div>
         </div>
     );
+}
+
+/** A project colour for the CSS (`--pc`), with the text colour that reads on it (`--pc-ink`). */
+function tintVars(tint: string | null | undefined) {
+    return tint ? { ["--pc" as string]: tint, ["--pc-ink" as string]: inkOn(tint) } : {};
 }

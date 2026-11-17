@@ -94,3 +94,42 @@ describe("the start date of a project's details", () => {
         await waitFor(() => expect(within(dialog).queryByText(message)).not.toBeInTheDocument());
     });
 });
+
+describe("a project's colour", () => {
+    it("starts at the project's colour and sends the swatch picked", async () => {
+        const bodies: Record<string, unknown>[] = [];
+        const dialog = await openDetails(http.put("/api/projects/1", async ({ request }) => {
+            bodies.push((await request.json()) as Record<string, unknown>);
+            return HttpResponse.json(project);
+        }));
+        const hex = within(dialog).getByPlaceholderText("#2F6FEB");
+        expect(hex).toHaveValue("#0C6B69");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Green" }));
+        expect(hex).toHaveValue("#2F9E44");
+        expect(within(dialog).getByRole("button", { name: "Green" })).toHaveAttribute("aria-pressed", "true");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ tint: "#2F9E44" })]));
+    });
+
+    it("moves on the wheel with the arrow keys and writes the hex code", async () => {
+        const dialog = await openDetails();
+        const wheel = within(dialog).getByRole("slider", { name: /Colour wheel/ });
+        wheel.focus();
+        await userEvent.keyboard("{ArrowRight}");
+        expect(within(dialog).getByPlaceholderText("#2F6FEB")).not.toHaveValue("#0C6B69");
+    });
+
+    it("says live when the hex code isn't a colour, and saves nothing until it is", async () => {
+        const bodies: unknown[] = [];
+        const dialog = await openDetails(http.put("/api/projects/1", async ({ request }) => { bodies.push(await request.json()); return HttpResponse.json(project); }));
+        const hex = within(dialog).getByPlaceholderText("#2F6FEB");
+        await userEvent.clear(hex);
+        await userEvent.type(hex, "#12");
+        const message = "Use a hex colour like #2F6FEB, or pick one.";
+        expect(await within(dialog).findByText(message)).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        expect(bodies).toEqual([]);
+        await userEvent.type(hex, "3456");
+        await waitFor(() => expect(within(dialog).queryByText(message)).not.toBeInTheDocument());
+    });
+});

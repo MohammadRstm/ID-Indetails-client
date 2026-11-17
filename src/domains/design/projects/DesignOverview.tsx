@@ -19,6 +19,7 @@ import Select from "@/shared/components/Forms/Select";
 import { SearchInput, Segmented } from "@/shared/components/Forms/Filters";
 import { Avatars, PersonAvatar, PersonLine } from "@/shared/components/Identity/People";
 import useDebounce from "@/shared/hooks/useDebounce";
+import { chartColors } from "@/shared/format/color";
 import { money } from "@/shared/format/money";
 import { addDays, dayKey, daysBetween, fmtDate, fmtDateY, fmtDur, fmtDurShort, fmtH, fmtNumber, relDay, startOfWeek } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
@@ -335,8 +336,10 @@ function Analytics({ project, work: w, contributors, onPerson }: { project: Proj
             <div className="grid g-2 mt">
                 <Figure title="Hours per week" sub="Where the effort actually landed across the project's life."
                     table={{ cols: [{ label: "Week of" }, { label: "Hours", right: true }, { label: "Entries", right: true }], rows: weekly.map((x) => [fmtDateY(x.weekStart), (x.minutes / 60).toFixed(1), x.entries]) }}>
-                    <Columns height={180} labelEvery={labelEvery} format={(v) => `${Math.round(v)}h`}
-                        data={weekly.map((x) => ({ label: fmtDate(x.weekStart), tip: `Week of ${fmtDateY(x.weekStart)}`, value: x.minutes / 60, note: `${x.entries} entries` }))} />
+                    <div style={chartColors(project.tint)}>
+                        <Columns height={180} labelEvery={labelEvery} format={(v) => `${Math.round(v)}h`}
+                            data={weekly.map((x) => ({ label: fmtDate(x.weekStart), tip: `Week of ${fmtDateY(x.weekStart)}`, value: x.minutes / 60, note: `${x.entries} entries` }))} />
+                    </div>
                 </Figure>
                 <Figure title="Contribution share" sub="How the work is distributed across the team."
                     table={{ cols: [{ label: "Employee" }, { label: "Hours", right: true }, { label: "Share", right: true }], rows: contributors.map((c) => [c.name, fmtDur(c.minutes), `${total ? Math.round((c.minutes / total) * 100) : 0}%`]) }}>
@@ -350,7 +353,7 @@ function Analytics({ project, work: w, contributors, onPerson }: { project: Proj
             </div>
             <div className="grid g-2 mt">
                 <Figure title="When work happens" sub="Logged time by weekday and hour - useful for spotting crunch.">
-                    <HourHeat grid={grid} />
+                    <HourHeat grid={grid} color={project.tint} />
                 </Figure>
                 <Figure title="Cumulative hours vs plan" sub={project.targetDate ? "Actual hours against a straight-line plan to the target date." : "Hours accumulated since the project started."}>
                     <BurnUp project={project} />
@@ -395,7 +398,7 @@ function BurnUp({ project }: { project: Project }) {
         { label: completed ? "Straight-line pace" : "Pace needed for target", points: plan, ghost: true, dash: true },
     ];
     return (
-        <div>
+        <div style={chartColors(project.tint)}>
             <LineChart series={series} height={190} tickEvery={Math.max(1, Math.ceil(plan.length / 6))} format={(v) => `${Math.round(v)}h`} />
             <div className="chart-note">
                 The dashed line is a simple straight-line pace, not an estimate: there are no hour budgets yet.

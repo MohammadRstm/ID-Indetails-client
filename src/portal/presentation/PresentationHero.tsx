@@ -22,7 +22,8 @@ const paragraphsOf = (text: string | null) => (text ?? "").split(/\n\s*\n/).map(
  * The top of the page. With hero images: the first big on the left, the others in a grid on the right (a "+N" on the
  * last when there are more), the project's title on the first one over a dark fade, and the introduction under the
  * title in smaller type (under the pictures on a phone). Any of them opens the gallery, which moves through them all.
- * Without any (or when none will load): the title and the introduction in a calm block.
+ * Without any (or when none will load): the title in a block of the default project tint (never the project's own
+ * colour), and the introduction under it.
  */
 export default function PresentationHero({ presentation, onBroken }: Props) {
     const { heroes, title, status, publishedAt, summary } = presentation;

@@ -283,7 +283,7 @@ function OvertimeDays({ userId, month }: { userId: number; month: string }) {
                                         <b className="mono ot-text">{fmtDur(day.overtimeMinutes)}</b>
                                     </div>
                                     {day.entries.map((e) => (
-                                        <div key={e.workEntryId} className="ot-item" style={{ cursor: "default" }}>
+                                        <div key={e.workEntryId} className={cx("ot-item", e.projectTint && "pc")} style={{ cursor: "default", ["--pc" as string]: e.projectTint ?? undefined }}>
                                             <ProjectTile icon={e.projectIcon} tint={e.projectTint} size="sm" />
                                             <div className="grow" style={{ minWidth: 0 }}>
                                                 <div className="trunc">{e.description}</div>
