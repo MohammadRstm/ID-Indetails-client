@@ -78,7 +78,8 @@ describe("logging work", () => {
         const dialog = await logWindow();
         // the overtime preview comes from the API
         const save = await within(dialog).findByRole("button", { name: "Log 1h 00m · 1h 00m overtime" });
-        expect(within(dialog).getByText(/This (is all|includes) overtime/)).toBeInTheDocument();
+        // said once, on the timeline's label: no banner under it
+        expect(within(dialog).queryByText(/This (is all|includes) overtime/)).toBeNull();
         // a description is required by the domain's settings, and pressing Log without one says so
         await userEvent.click(save);
         expect(within(dialog).getByText("Say what you worked on.")).toBeInTheDocument();
@@ -313,6 +314,16 @@ describe("deleting a logged task on the Log work timeline", () => {
         const logged = (await screen.findByText(/logged on/)).closest(".toast") as HTMLElement;
         await userEvent.click(within(logged).getByRole("button", { name: "Undo" }));
         await waitFor(() => expect(sent).toEqual(["delete 999", "restore 74"]));
+    });
+
+    it("saves the changes alone when no new log is written: the button says Save changes", async () => {
+        const { dialog, sent, posted } = await openDay();
+        await deleteByMenu(dialog, /^Furniture schedule,/);
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save changes" }));
+
+        await waitFor(() => expect(sent).toEqual(["delete 74"]));
+        expect(posted).toEqual([]);
+        expect(await screen.findByText("Changes saved")).toBeInTheDocument();
     });
 
     it("logs work as outside the original scope when its box is ticked", async () => {

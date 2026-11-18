@@ -105,3 +105,70 @@ describe("undoing a log that moved other tasks", () => {
         expect(restoreOf(work.day.entries, day, {})).toBeNull();
     });
 });
+
+describe("carrying any block with the pointer", () => {
+    const carry = (m: ReturnType<typeof model>, b: { id: number; s: number; e: number; full?: number; swaps?: Record<number, Span>; box?: Span | null }, at: number) =>
+        m.carryBlock({ id: b.id, grab: 0, s: b.s, e: b.e, full: b.full ?? b.e - b.s, swaps: b.swaps ?? {}, box: b.box ?? null, lastSwap: null }, at);
+
+    it("moves a logged task past the new box: the two trade places", () => {
+        const m = model([task(1, 600, 660)]);
+        expect(carry(m, { id: 1, s: 600, e: 660, box: { s: 660, e: 720 } }, 690))
+            .toEqual({ s: 660, e: 720, swaps: {}, box: { s: 600, e: 660 }, lastSwap: BOX });
+    });
+
+    it("moves a logged task past another one, back to back", () => {
+        const m = model([task(1, 600, 660), task(2, 660, 720)]);
+        expect(carry(m, { id: 1, s: 600, e: 660 }, 690))
+            .toEqual({ s: 660, e: 720, swaps: { 2: { s: 600, e: 660 } }, box: null, lastSwap: 2 });
+    });
+
+    it("jumps over a task into the free time on its other side", () => {
+        const m = model([task(1, 600, 660), task(2, 700, 760)]);
+        expect(carry(m, { id: 1, s: 600, e: 660 }, 800)).toMatchObject({ s: 800, e: 860 });
+    });
+
+    it("never moves a locked task: what lands on it stays put", () => {
+        const m = model([task(1, 600, 660), task(2, 660, 720, true)]);
+        expect(carry(m, { id: 1, s: 600, e: 660 }, 690)).toBeNull();
+    });
+
+    it("shrinks to fit a shorter gap, and grows back to its full length in a roomier one", () => {
+        // 9-10 logged, a 2-hour gap, 12-1 logged, then a 4-hour task from 1 PM
+        const m = model([task(1, 540, 600), task(2, 720, 780), task(3, 780, 1020)]);
+        const behind = carry(m, { id: 3, s: 780, e: 1020 }, 610);
+        expect(behind).toMatchObject({ s: 600, e: 720 });
+        // carried back to the front before anything is saved: 4 hours again
+        const back = dayModel({ tasks: [task(1, 540, 600), task(2, 720, 780), task(3, 780, 1020)], range: [420, 1260], limit: 1260, workHours: { s: 540, e: 1020 }, box: null, live: { 3: { s: 600, e: 720 } } });
+        expect(back.carryBlock({ id: 3, grab: 0, s: 600, e: 720, full: 240, swaps: { 3: { s: 600, e: 720 } }, box: null, lastSwap: null }, 780))
+            .toMatchObject({ s: 780, e: 1020 });
+    });
+
+    it("carries the new box the same way, squeezing it into a short gap", () => {
+        const m = model([task(1, 540, 600), task(2, 630, 700)], { s: 800, e: 920 });
+        expect(carry(m, { id: BOX, s: 800, e: 920 }, 605)).toMatchObject({ s: 600, e: 630 });
+    });
+});
+
+describe("stretching the new box's edges", () => {
+    it("runs into the next task, which gets shorter, and grows back when pulled away", () => {
+        // the box at 10-11, wedged between a task until 10 and one from 11 to 3
+        const tasks = [task(1, 540, 600), task(2, 660, 900)];
+        const m = model(tasks, { s: 600, e: 660 });
+        const longer = m.stretchBox({}, { s: 600, e: 660 }, "r", 720);
+        expect(longer).toEqual({ s: 600, e: 720, swaps: { 2: { s: 720, e: 900 } } });
+        // pulled back after the drop: the task grows back to where it began, no further
+        const back = dayModel({ tasks, range: [420, 1260], limit: 1260, workHours: { s: 540, e: 1020 }, box: { s: 600, e: 720 }, live: longer.swaps });
+        expect(back.stretchBox(longer.swaps, { s: 600, e: 720 }, "r", 690)).toEqual({ s: 600, e: 690, swaps: { 2: { s: 690, e: 900 } } });
+        expect(back.stretchBox(longer.swaps, { s: 600, e: 720 }, "r", 630)).toEqual({ s: 600, e: 630, swaps: {} });
+    });
+
+    it("takes from the task before it the same way, and leaves it at least 5 minutes", () => {
+        const m = model([task(1, 540, 600), task(2, 660, 900)], { s: 600, e: 660 });
+        expect(m.stretchBox({}, { s: 600, e: 660 }, "l", 500)).toEqual({ s: 545, e: 660, swaps: { 1: { s: 540, e: 545 } } });
+    });
+
+    it("stops at a locked task", () => {
+        const m = model([task(1, 540, 600), task(2, 660, 900, true)], { s: 600, e: 660 });
+        expect(m.stretchBox({}, { s: 600, e: 660 }, "r", 720)).toEqual({ s: 600, e: 660, swaps: {} });
+    });
+});

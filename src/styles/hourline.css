@@ -1530,6 +1530,7 @@ tr.voided .mono, .cost-row.voided .mono { text-decoration: line-through; }
 .banner.ot-warn { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn-mark) 45%, transparent); color: var(--warn); }
 .banner.ot-warn b { color: var(--warn); }
 .banner.ot-warn div div { margin-top: 2px; font-size: 12px; }
+.dd-putback { display: flex; justify-content: flex-end; margin-top: 6px; }
 
 /* logged tasks on an editable timeline can be dragged to a new time */
 .dt-track > i.dt-e.grab { cursor: grab; }
