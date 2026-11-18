@@ -25,7 +25,8 @@ export default function Toasts() {
         <div className="toasts" aria-live="polite">
             {[...toasts].reverse().map((t) => (
                 <div className={cx("toast", kindOf(t), t.leaving && "leaving")} key={t.id}
-                    onMouseEnter={() => holdToast(t.id)} onMouseLeave={() => releaseToast(t.id)}
+                    // only a mouse holds it: a tap on a touch screen never "leaves", so it would stay for good
+                    onPointerEnter={(e) => e.pointerType === "mouse" && holdToast(t.id)} onPointerLeave={(e) => e.pointerType === "mouse" && releaseToast(t.id)}
                     onFocus={() => holdToast(t.id)} onBlur={() => releaseToast(t.id)}>
                     <Icon name={t.icon ?? "checkCircle"} />
                     <div className="grow">
