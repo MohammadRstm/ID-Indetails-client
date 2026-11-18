@@ -91,4 +91,15 @@ No problems beyond the touch targets (T1). Forms (time off, advance, edit profil
 
 ## Changes made
 
-See the commits on `MR-UI-UX-Employee`. Each row marked as changed above is one of them; the rest stay here for later.
+On `MR-UI-UX-Employee`, checked live on port 5180 at 1024px and 375px (no local tests or builds run; CI runs them):
+
+| Rows | Commit |
+|---|---|
+| S1, S2, S3 (as `aria-expanded`; the account popover isn't an ARIA menu, so no `aria-haspopup`), H1 | Name the sidebar's tabs for screen readers while it shows icons only, and keep Help's topic names at that width |
+| T1, L3, W3, M1, C2 | Give buttons, switches, chips, small selects and page tabs room for a finger on touch screens |
+| L1, L2 | Log hours: say each day's hours to keyboards and screen readers, and what the Alert banner holds |
+| P1 | Projects: leave the line under a project's name empty when it has no location or description |
+| C1 | Calendar: say which month the meeting count is for |
+| X1 | Give Messages and Proton a page heading for screen readers |
+
+Left for later: PR2 (group Team activity, needs the user's OK), W1 and W2 (in `LogWork.tsx`, being changed by another session), M2 (heatmap cell size) and Y1 (the prototype's small type, a design decision).
