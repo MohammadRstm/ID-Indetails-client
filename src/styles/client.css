@@ -1169,3 +1169,12 @@ button.pc-comments { border: 0; cursor: pointer; }
 @media (pointer: coarse) {
   .log-form > .row > .hint:first-child { display: none; }
 }
+
+/* ---------------- small text, a step larger ----------------
+   Labels people read were 9.5–10.5px, under the 11px floor for small print: field-style labels (.u), table
+   headings, menu and sidebar section names, calendar weekdays, message times and section names. Dense charts
+   and timelines keep their sizes, where space is the point. */
+.u, .tbl th, .nav-sec, .pop-label, .tbl tfoot tr.tfoot-head th, .sh th { font-size: 11px; }
+.cal-dow, .mcal-wd, .msg-sub-label { font-size: 11px; }
+.msg-time, .hm-days, .hm-months { font-size: 10.5px; }
+@media (max-width: 640px) { .mcal-wd { font-size: 10.5px; } }

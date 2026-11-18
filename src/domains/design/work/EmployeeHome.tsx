@@ -265,7 +265,7 @@ function WeekPanel({ summary: s, error, retry, today }: { summary: Summary; erro
                                                 // a day with work in the colour of the project with the most of it
                                                 background: future || !d.minutes ? "var(--surface-3)" : d.tint ?? (isToday ? "var(--accent)" : "var(--chart)"),
                                             }} />
-                                            <div style={{ fontSize: "10.5px", marginTop: 4, color: isToday ? "var(--accent-ink)" : "var(--ink-3)", fontWeight: isToday ? 700 : 400 }}>
+                                            <div style={{ fontSize: "11px", marginTop: 4, color: isToday ? "var(--accent-ink)" : "var(--ink-3)", fontWeight: isToday ? 700 : 400 }}>
                                                 {DAYS[partsOf(d.day).weekday]}
                                             </div>
                                         </div>
