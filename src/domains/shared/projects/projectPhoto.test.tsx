@@ -16,7 +16,8 @@ function photoApi(photoFileId: number | null = null) {
     const handlers = [
         http.get(`/api/projects/${project.id}`, () => HttpResponse.json({ ...project, photoFileId })),
         http.post("/api/files", () => { calls.push({ call: "upload" }); return HttpResponse.json(uploaded, { status: 201 }); }),
-        http.get("/api/files/:id", () => new HttpResponse(new Blob(["x"], { type: "image/webp" }))),
+        // the type said in the header, as the API sends it: a Blob body doesn't carry its type through the test browser
+        http.get("/api/files/:id", () => new HttpResponse("x", { headers: { "Content-Type": "image/webp" } })),
         http.put(`/api/projects/${project.id}/photo`, async ({ request }) => {
             const body = await request.json();
             calls.push({ call: "PUT", body });
