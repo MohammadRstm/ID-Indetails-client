@@ -150,7 +150,7 @@ function ProjectTable() {
                             <span className="trunc" style={{ fontWeight: 650, fontSize: 13 }}>{p.title}</span>
                             {p.startDate === companyToday() && <span className="badge badge-new">New</span>}
                         </div>
-                        <div className="muted trunc" style={{ fontSize: "11.5px", maxWidth: 340 }}>{[p.location, p.description].filter(Boolean).join(" · ") || "No description"}</div>
+                        {(p.location || p.description) && <div className="muted trunc" style={{ fontSize: "11.5px", maxWidth: 340 }}>{[p.location, p.description].filter(Boolean).join(" · ")}</div>}
                     </div>
                 </div>
             ),
