@@ -49,8 +49,8 @@ Priority: **P1** fix now (broken or inaccessible), **P2** worth fixing (clarity)
 
 | # | What's wrong | Suggested change | Priority |
 |---|---|---|---|
-| W1 | The time span appears three times: under the times, above the timeline and in the footer ("9:00 AM → 10:00 AM · 1h 00m"). | Keep the footer summary and the one under the times; drop the third. | P3 |
-| W2 | "Tip: type “4pm”, “16:00” … and ⌘/Ctrl + Enter to save." The 17 Nov decision was no keyboard-shortcut help. | Keep the typing tip, drop the shortcut half, or hide the tip on touch screens (`.sh-key` already does that for other tips). | P3 |
+| W1 | The time span appears three times: under the times, on the timeline's box and in the footer ("9:00 AM → 10:00 AM · 1h 00m"), and the Log button repeats the length. | Done, CSS only: the line under the times is hidden in the Log work window (`.log-form .trange-sum`). The box and the footer stay. | P2 |
+| W2 | "Tip: type “4pm”, “16:00” … and ⌘/Ctrl + Enter to save." The 17 Nov decision was no keyboard-shortcut help. | Done in part, CSS only: touch screens no longer show the tip. Still to do once the other branch is merged: drop "and ⌘/Ctrl + Enter to save" from the text in `LogWork.tsx`. | P3 |
 | W3 | Day chips, the duration chips (30m, 1h, …) and "Use a timer instead" are 26–28px high on a phone. | Covered by T1 for the shared button classes. | P1 |
 
 ## My work
@@ -58,7 +58,7 @@ Priority: **P1** fix now (broken or inaccessible), **P2** worth fixing (clarity)
 | # | What's wrong | Change | Why | Priority |
 |---|---|---|---|---|
 | M1 | The period switch (This week, This month, …) is 26px high on a phone. | Covered by T1. | Touch. | P1 |
-| M2 | The heatmap's day cells are 24px; fine with a mouse, tight for a finger. | Note only: the heatmap is sized to fit six months. | Touch. | P3 |
+| M2 | The heatmap's day cells are 24px; on a phone the six months are wider than the screen. | No change needed: it already scrolls sideways and opens on the latest weeks (checked at 375px), and each day has a name for screen readers. | - |
 
 ## Calendar
 
@@ -87,7 +87,7 @@ No problems beyond the touch targets (T1). Forms (time off, advance, edit profil
 
 | # | What's wrong | Change | Priority |
 |---|---|---|---|
-| Y1 | Table headers (10px uppercase), weekday labels (10.5px), the ⌘K hint and message badges (9.5px) are under the 12px guidance. | Not changed: it's the prototype's type scale, used app-wide; changing it is a design decision for the user. | P3 |
+| Y1 | Table headers (10px uppercase), field-style labels (10px), weekday labels (10.5px), message times (9.5px) were under the 11px floor. | Done: those go to 11px (message times and heatmap labels 10.5px). Dense charts, timelines and the ⌘K hint keep their sizes. | P3 |
 
 ## Changes made
 
@@ -102,5 +102,7 @@ On `MR-UI-UX-Employee`, checked live on port 5180 at 1024px and 375px (no local 
 | C1 | Calendar: say which month the meeting count is for |
 | X1 | Give Messages and Proton a page heading for screen readers |
 | PR2 | Project page: group the team's activity by teammate and day |
+| W1, W2 (touch part) | Log work: say the time span once less, and hide the keyboard tip on touch screens |
+| Y1 | Make small labels a step larger: table headings, field labels, weekdays and message times |
 
-Left for later: W1 and W2 (in `LogWork.tsx`, being changed by another session), M2 (heatmap cell size) and Y1 (the prototype's small type, a design decision).
+Left for later: the text half of W2 (in `LogWork.tsx`, after the other branch merges).
