@@ -41,7 +41,7 @@ Priority: **P1** fix now (broken or inaccessible), **P2** worth fixing (clarity)
 | # | What's wrong | Change | Why | Priority |
 |---|---|---|---|---|
 | PR1 | On a phone the tab strip and the KPI strip run past the screen edge (they scroll inside; that's by design). | None now: the scroll is intended. | - | - |
-| PR2 | "Team activity" repeats one line per entry ("Pay · Friday / Pay test drawings" six times). | Later: group a teammate's entries per day. Changes what the list shows, so it needs the user's OK. | Content: reduce repetition. | P3 |
+| PR2 | "Team activity" repeats one line per entry ("Pay · Friday / Pay test drawings" six times). | One row per teammate per day, each task named once; days in a row with the same tasks fold into one row with the dates ("Pay · Nov 6 – Nov 13 · 6 days"). Approved by the user on 18 Nov. Still no hours shown. | Content: reduce repetition. | P2 |
 
 ## Log work window (and editing an entry)
 
@@ -101,5 +101,6 @@ On `MR-UI-UX-Employee`, checked live on port 5180 at 1024px and 375px (no local 
 | P1 | Projects: leave the line under a project's name empty when it has no location or description |
 | C1 | Calendar: say which month the meeting count is for |
 | X1 | Give Messages and Proton a page heading for screen readers |
+| PR2 | Project page: group the team's activity by teammate and day |
 
-Left for later: PR2 (group Team activity, needs the user's OK), W1 and W2 (in `LogWork.tsx`, being changed by another session), M2 (heatmap cell size) and Y1 (the prototype's small type, a design decision).
+Left for later: W1 and W2 (in `LogWork.tsx`, being changed by another session), M2 (heatmap cell size) and Y1 (the prototype's small type, a design decision).
