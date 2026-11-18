@@ -20717,6 +20717,11 @@ export interface components {
             id: number;
             title: string;
         };
+        ProjectColorResponse: {
+            hex: string;
+            name: string;
+            takenBy: null | components["schemas"]["ProjectCodeHolderResponse"];
+        };
         ProjectContributorDetailResponse: {
             /** Format: int32 */
             entries: number;
@@ -22892,6 +22897,10 @@ export interface components {
             /** Format: int32 */
             count: number;
             status: components["schemas"]["ProjectStatus"];
+        };
+        SwapProjectColorRequest: {
+            /** Format: int64 */
+            otherProjectId?: number;
         };
         SubmitLabourWeekRequest: {
             days?: components["schemas"]["LabourDayRequest"][];

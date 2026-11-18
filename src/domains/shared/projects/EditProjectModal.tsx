@@ -5,16 +5,17 @@ import { usePermissions } from "@/app/permissions/usePermissions";
 import { toast } from "@/shared/components/Feedback/toast";
 import { ProjectTile } from "@/shared/components/Data/Bits";
 import AmountField from "@/shared/components/Forms/AmountField";
-import ColorField from "@/shared/components/Forms/ColorField";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { FieldError } from "@/shared/components/Forms/Field";
 import Modal from "@/shared/components/Overlays/Modal";
-import { isHexColor } from "@/shared/format/color";
+import { colorName, isHexColor } from "@/shared/format/color";
+import Icon from "@/shared/icons/Icon";
 import { WHOLE_AMOUNT } from "@/shared/format/limits";
 import { companyToday } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import { useUpdateProject, type Project } from "./projectsApi";
 import ProjectCodeFields from "./ProjectCodeFields";
+import ProjectColorPicker from "./ProjectColorPicker";
 import { buildingCodeError, projectCodeError, typedCode } from "./projectCodes";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillChange, useProtonForm } from "@/domains/shared/proton/formFill";
@@ -32,6 +33,7 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
     const [start, setStart] = useState(project.startDate);
     // the colour its tile and its logged work are drawn in; the API gave it one when it was created
     const [color, setColor] = useState(project.tint ?? "");
+    const [picking, setPicking] = useState(false);
     // a reference price in CFA francs: only whoever sees the money sees or sets it; the others' save leaves it out, and it stays
     const seesMoney = usePermissions().has(P.FINANCIAL_VIEW);
     const [cfaPrice, setCfaPrice] = useState(project.money?.cfaPrice ?? 0);
@@ -53,7 +55,6 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
     const codeError = projectCodeError(projectCode);
     const buildingError = buildingCodeError(buildingCode);
     const startError = !start ? "Pick the day the project started." : start > today && "The start date can't be in the future.";
-    const colorError = color.trim() !== "" && !isHexColor(color) && "Use a hex colour like #2F6FEB, or pick one.";
     // the API also refuses a site's start after its first ground labour: shown beside the field until it is changed
     const failure = toApiError(update.error);
     const startRefused = failure.fieldErrors.startDate;
@@ -63,7 +64,7 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
     function submit(e?: FormEvent) {
         e?.preventDefault();
         if (update.isPending) return;
-        if (titleError || codeError || buildingError || startError || colorError) {
+        if (titleError || codeError || buildingError || startError) {
             errors.tried();
             return;
         }
@@ -135,14 +136,18 @@ export default function EditProjectModal({ project, onClose }: { project: Projec
                         </div>
                     </div>
                     <div className="field mt">
-                        <label className="label row" style={{ gap: 6 }} htmlFor="ep-color">
-                            <ProjectTile icon={project.icon} tint={isHexColor(color) ? color : project.tint} size="sm" />Colour
-                        </label>
-                        <ColorField id="ep-color" value={color} invalid={!!errors.show("color", colorError)}
-                            onChange={(v) => { setColor(v); errors.touch("color")(); }} />
-                        <FieldError message={errors.show("color", colorError)} />
+                        <div className="label">Colour</div>
+                        <div className="row" style={{ gap: 10 }}>
+                            <ProjectTile icon={project.icon} tint={isHexColor(color) ? color : project.tint} size="lg" />
+                            <span className="grow">{colorName(color) ?? "Not one of the palette's colours"}</span>
+                            <button type="button" className="btn btn-sm" onClick={() => setPicking(true)}><Icon name="palette" />Change colour</button>
+                        </div>
                         <div className="hint">Its tile and the work logged on it are drawn in this colour.</div>
                     </div>
+                    {picking && (
+                        <ProjectColorPicker project={project} value={color} onClose={() => setPicking(false)}
+                            onPick={(hex) => { setColor(hex); setPicking(false); }} />
+                    )}
                 </form>
             </div>
         </Modal>

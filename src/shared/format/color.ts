@@ -1,38 +1,27 @@
 import type { CSSProperties } from "react";
 
 /**
- * The project colours a new project is given one of: the API's palette (its docs/projects.md, "Colours"). Each reads
- * with a white icon on it and shows on the dark theme too. Anyone editing a project may still pick any colour.
+ * The thirty project colours (the API's palette, its docs/projects.md, "Colours"), in the picker's hue order. Deep,
+ * picked from Coolors' elegant palettes so no two are close; each reads with a white icon on it. Design and Execution
+ * use the same thirty, each on its own.
  */
 export const PROJECT_COLORS = [
-    { name: "Blue", hex: "#2F6FEB" }, { name: "Indigo", hex: "#5B5BD6" }, { name: "Violet", hex: "#8B5CF6" }, { name: "Purple", hex: "#9D3FC7" },
-    { name: "Magenta", hex: "#C026A3" }, { name: "Pink", hex: "#D6336C" }, { name: "Coral", hex: "#E0603F" }, { name: "Orange", hex: "#D9730D" },
-    { name: "Amber", hex: "#B7791F" }, { name: "Olive", hex: "#7C8A16" }, { name: "Green", hex: "#2F9E44" }, { name: "Emerald", hex: "#0F9F75" },
-    { name: "Teal", hex: "#0E8A84" }, { name: "Cyan", hex: "#0B8DB8" }, { name: "Slate", hex: "#5F7085" }, { name: "Brown", hex: "#9C6644" },
+    { name: "Raspberry", hex: "#A53860" }, { name: "Rose", hex: "#DA627D" }, { name: "Cocoa", hex: "#3D2C2E" }, { name: "Burgundy", hex: "#6E0D25" }, { name: "Dusty rose", hex: "#A26769" },
+    { name: "Oxblood", hex: "#81171B" }, { name: "Coral", hex: "#FE5F55" }, { name: "Terracotta", hex: "#C75146" }, { name: "Brick", hex: "#AD2E24" }, { name: "Chestnut", hex: "#6A381F" },
+    { name: "Copper", hex: "#DA7422" }, { name: "Taupe", hex: "#6F5E53" }, { name: "Walnut", hex: "#8E6E53" }, { name: "Ochre", hex: "#A59132" }, { name: "Olive", hex: "#625834" },
+    { name: "Moss", hex: "#48483A" }, { name: "Sage", hex: "#808F85" }, { name: "Jade", hex: "#2A7F62" }, { name: "Forest", hex: "#26413C" }, { name: "Lagoon", hex: "#407076" },
+    { name: "Petrol", hex: "#0B525B" }, { name: "Turquoise", hex: "#1B9AAA" }, { name: "Slate", hex: "#4C5760" }, { name: "Steel", hex: "#748CAB" }, { name: "Navy", hex: "#1D2D44" },
+    { name: "Dusk", hex: "#4B4E6D" }, { name: "Storm", hex: "#6A6B83" }, { name: "Aubergine", hex: "#4D194D" }, { name: "Mulberry", hex: "#6D466B" }, { name: "Heather", hex: "#A28F9D" },
 ] as const;
 
-/** #RRGGBB, the colours picked here; the API also keeps #RRGGBBAA, which some older projects have. */
+/** The palette's name for a colour; null for one outside it (an older project's, or #RRGGBBAA). */
+export function colorName(hex: string | null | undefined): string | null {
+    if (!hex) return null;
+    return PROJECT_COLORS.find((c) => c.hex.toLowerCase() === hex.trim().toLowerCase())?.name ?? null;
+}
+
+/** #RRGGBB; the API also keeps #RRGGBBAA, which some older projects have. */
 export const isHexColor = (value: string) => /^#([0-9a-f]{6}|[0-9a-f]{8})$/i.test(value.trim());
-
-/** Hue (0 to 360), saturation and value (0 to 1). */
-export type Hsv = { h: number; s: number; v: number };
-
-export function hexToHsv(hex: string): Hsv | null {
-    if (!isHexColor(hex)) return null;
-    const n = parseInt(hex.trim().slice(1, 7), 16);
-    const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
-    const max = Math.max(r, g, b), d = max - Math.min(r, g, b);
-    const h = d === 0 ? 0 : max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
-    return { h: (h * 60 + 360) % 360, s: max === 0 ? 0 : d / max, v: max };
-}
-
-export function hsvToHex({ h, s, v }: Hsv): string {
-    const f = (k: number) => {
-        const x = (k + h / 60) % 6;
-        return Math.round(255 * (v - v * s * Math.max(0, Math.min(x, 4 - x, 1))));
-    };
-    return `#${[f(5), f(3), f(1)].map((c) => c.toString(16).padStart(2, "0")).join("")}`.toUpperCase();
-}
 
 /** The text colour that reads on a solid fill of the colour: white, or near black on a light colour. */
 export function inkOn(hex: string): string {
