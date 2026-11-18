@@ -23,7 +23,7 @@ export type Toast = {
  * went wrong long enough to act on it or read it. A toast the pointer or focus is on stays until it leaves. `exit` is
  * how long it takes to fade out (the CSS `toast-out` animation); with 0, or reduced motion, it goes at once.
  */
-export const TOAST_MS = { short: 3000, long: 5000, exit: 260 };
+export const TOAST_MS = { short: 2000, long: 5000, exit: 260 };
 
 let toasts: Toast[] = [];
 let nextId = 1;
