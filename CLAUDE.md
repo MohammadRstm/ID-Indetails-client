@@ -94,7 +94,7 @@ This file is how every new session learns the project, so keep it true:
 
 ## Commands
 
-- `npm run dev`: Vite at http://localhost:5173 (strict port). It proxies `/api`, `/hubs` (WebSocket) and `/openapi` to the API at `https://localhost:7187`, or to `HOURLINE_API` if set. The API must be running for the app to work. Tests don't need it.
+- `npm run dev`: Vite at http://localhost:5173 (strict port). It proxies `/api`, `/hubs` (WebSocket) and `/openapi` to the API at `https://localhost:7187`, or to `HOURLINE_API` if set. The API must be running for the app to work. Tests don't need it. The sign-in page then has the development account picker (`auth/DevAccountPicker.tsx`): it signs in as any account without its password, through the API's Development-only `/api/dev/*`. It is loaded only when `import.meta.env.DEV` and not in tests (`DevAccountPicker` in `app/routing/pages.ts`), so production builds don't contain it.
 - `npm run build`: `tsc -b` and then `vite build`.
 - `npm run lint`: ESLint. `npm run lint:summary` prints a short summary.
 - `npm test`: Vitest, run once. `npm run test:watch` re-runs on change.

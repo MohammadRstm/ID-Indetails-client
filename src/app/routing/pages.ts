@@ -97,6 +97,9 @@ export const ForgotPasswordPage = page(() => import("@/auth/ForgotPasswordPage")
 export const ResetPasswordPage = page(() => import("@/auth/ResetPasswordPage"));
 export const AcceptInvitationPage = page(() => import("@/auth/AcceptInvitationPage"));
 export const ChangePasswordPage = page(() => import("@/auth/ChangePasswordPage"));
+// development only, and not in the tests (no API there): the sign-in page's picker that signs in as any account
+// without its password. A production build leaves it out, as it does the API's endpoints for it.
+export const DevAccountPicker = import.meta.env.DEV && import.meta.env.MODE !== "test" ? page(() => import("@/auth/DevAccountPicker")) : null;
 
 // the client portal: its own pages and session, apart from the staff app
 export const PortalRoot = page(() => import("@/portal/PortalRoot"));
