@@ -23,12 +23,14 @@ import { areaBase, type ShellArea } from "./useArea";
 
 /**
  * A tab's name beside its icon while the sidebar shows icons only (a laptop-sized window): on hover or keyboard focus,
- * and only when the name itself is hidden.
+ * and only when the name itself is hidden from view.
  */
 function nameTip(name: string) {
     const show = (e: { currentTarget: HTMLElement }) => {
+        // the name is hidden by clipping it to a pixel (client.css), so a screen reader still reads it, or by display: none
         const label = e.currentTarget.querySelector(".nav-label, .side-cta-label");
-        if (label && getComputedStyle(label).display !== "none") return;
+        const style = label && getComputedStyle(label);
+        if (style && style.display !== "none" && style.position !== "absolute") return;
         const r = e.currentTarget.getBoundingClientRect();
         tip.show({ clientX: r.right - 4, clientY: r.top - 6 }, name);
     };
@@ -70,6 +72,7 @@ export default function Sidebar({ area }: { area: ShellArea }) {
             <button
                 key={item.key}
                 className={cx("nav-item", area.section === item.key && "on")}
+                aria-current={area.section === item.key ? "page" : undefined}
                 onClick={() => { tip.hide(); navigate(`${base}/${item.path}`); }}
                 {...nameTip(item.label)}
             >
@@ -125,8 +128,8 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                     align="left"
                     width={250}
                     hostClass="grow"
-                    trigger={(_, toggle) => (
-                        <button className="side-user" onClick={toggle}>
+                    trigger={(open, toggle) => (
+                        <button className="side-user" onClick={toggle} aria-expanded={open}>
                             <Avatar person={me} size={30} presence />
                             <div className="side-user-txt grow" style={{ minWidth: 0 }}>
                                 <div className="side-user-name trunc">{me.name}</div>
