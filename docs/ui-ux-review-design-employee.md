@@ -106,3 +106,16 @@ On `MR-UI-UX-Employee`, checked live on port 5180 at 1024px and 375px (no local 
 | Y1 | Make small labels a step larger: table headings, field labels, weekdays and message times |
 
 Left for later: the text half of W2 (in `LogWork.tsx`, after the other branch merges).
+
+## Toasts (added 18 Nov, chosen by the user)
+
+Every toast was the same dark pill, so a failure ("Log wasn't saved") looked like a confirmation. Four styles were shown; the user picked **B, tinted**:
+
+| Kind | When (from the icon the toast already passes) | Look |
+|---|---|---|
+| Done | `checkCircle`, `check` or no icon | pale green, dark green text |
+| Failed | `alert` | pale red, dark red text, the reason under it |
+| Notice | any other icon (send, download, refresh, bell, …) | pale teal, dark teal text |
+| Removed / cancelled | `trash`, `x` (usually with Undo) | plain white card |
+
+No call site changed: `Toasts.tsx` picks the kind, `client.css` colours it. The tints are mixed into the surface, so they stay opaque over the page in light and dark mode. Commit: "Tint toasts by what they say".

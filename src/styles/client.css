@@ -1178,3 +1178,15 @@ button.pc-comments { border: 0; cursor: pointer; }
 .cal-dow, .mcal-wd, .msg-sub-label { font-size: 11px; }
 .msg-time, .hm-days, .hm-months { font-size: 10.5px; }
 @media (max-width: 640px) { .mcal-wd { font-size: 10.5px; } }
+
+/* ---------------- toasts, tinted by kind ----------------
+   Every toast was the same dark pill, so "wasn't saved" looked like "Saved". Each now takes its kind's soft
+   colour (Toasts.tsx picks the kind from the icon): green for done, red for a failure, teal for a notice, and a
+   plain card for a removal with Undo. The tints are mixed into the surface so they stay opaque over the page in
+   both themes, and the text is the kind's colour darkened towards the ink (lightened in dark mode) to stay legible. */
+.toast { border: 1px solid transparent; box-shadow: var(--shadow-2); }
+.toast-ok { background: color-mix(in srgb, var(--ok) 13%, var(--surface)); border-color: color-mix(in srgb, var(--ok) 35%, var(--surface)); color: color-mix(in srgb, var(--ok) 72%, var(--ink)); }
+.toast-error { background: color-mix(in srgb, var(--now) 13%, var(--surface)); border-color: color-mix(in srgb, var(--now) 38%, var(--surface)); color: color-mix(in srgb, var(--now) 70%, var(--ink)); }
+.toast-info { background: color-mix(in srgb, var(--accent) 13%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 35%, var(--surface)); color: color-mix(in srgb, var(--accent) 72%, var(--ink)); }
+.toast-plain { background: var(--surface); border-color: var(--line-2); color: var(--ink); }
+.toast .toast-sub { opacity: .85; }
