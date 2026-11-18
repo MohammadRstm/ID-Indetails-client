@@ -134,8 +134,9 @@ function AlertGroup({ alerts }: { alerts: Alert[] }) {
     if (!alerts.length) return null;
     return (
         <div className="banner attn alert-group" role="region" aria-label="Alert">
-            <button type="button" className="alert-group-head" aria-expanded={open} onClick={() => setOpen(!open)}>
-                <Icon name="alert" /><b>Alert</b><span className="alert-group-count">{alerts.length}</span>
+            <button type="button" className="alert-group-head" aria-expanded={open} onClick={() => setOpen(!open)}
+                aria-label={`Alert: ${alerts.length === 1 ? "1 thing needs" : `${alerts.length} things need`} your attention`}>
+                <Icon name="alert" /><b>Alert</b><span className="alert-group-count" aria-hidden="true">{alerts.length}</span>
                 <span className="grow" /><Icon name={open ? "chevronUp" : "chevronDown"} />
             </button>
             {open && alerts.map((a) => (
@@ -247,12 +248,15 @@ function WeekPanel({ summary: s, error, retry, today }: { summary: Summary; erro
                         </div>
                         <div className="grow" style={{ minWidth: 260 }}>
                             {/* tall enough for the highest bar, its hours above it and the day below, clear of the panel's edge */}
-                            <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 112, paddingTop: 8 }}>
+                            {/* each day's hours are in a tooltip for the mouse, and in the day's name for keyboards and screen readers */}
+                            <div role="list" aria-label="Hours logged each day this week" style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 112, paddingTop: 8 }}>
                                 {(s?.week ?? []).map((d) => {
                                     const isToday = d.day === today, future = d.day > today;
                                     const h = d.minutes ? Math.max(4, (d.minutes / maxDay) * 64) : 2;
+                                    const said = d.minutes ? `${fmtDur(d.minutes)} logged` : future ? "still to come" : "nothing logged";
                                     return (
                                         <div key={d.day} className="grow" style={{ textAlign: "center" }}
+                                            role="listitem" aria-label={`${fmtDayDate(d.day)}${isToday ? " (today)" : ""}: ${said}`}
                                             onMouseMove={(e) => tip.show(e, [{ big: fmtDayDate(d.day) }, { k: "Logged", v: d.minutes ? fmtDur(d.minutes) : "nothing yet" }])}
                                             onMouseLeave={tip.hide}>
                                             <div className="mono" style={{ fontSize: 11.5, fontWeight: 600, color: "var(--ink-2)", marginBottom: 4 }}>{d.minutes ? (d.minutes / 60).toFixed(1) : ""}</div>
