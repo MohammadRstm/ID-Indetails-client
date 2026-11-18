@@ -220,7 +220,96 @@ export function dayModel({ tasks, range, limit, workHours, box, live }: ModelInp
         return want === b.s ? null : { s: want, e: want + len, swaps: b.swaps, lastSwap };
     }
 
-    return { WD, spans, spansWith, magnet, stickTo, edgesOf, stickBlock, gapAround, anchorAt, blocksNow, pushEdge, withPush, tidy, obstaclesFor, carryTask, carry };
+    /**
+     * The new box's edge stretched to `want`: through free time, then into the task it runs into, which gets shorter
+     * (never under 5 minutes; a locked task stops it). Pulled back, a task it had shortened grows back with it, up to
+     * its saved length. Only the one task next to the box gives way: nothing is pushed along.
+     */
+    function stretchBox(sw: Moves, box: Span, edge: "l" | "r", want: number): { s: number; e: number; swaps: Moves } {
+        const blocks = spansWith(sw).map((x) => ({ id: x.id, s: x.s, e: x.e, fixed: x.locked || !x.whole }));
+        const out: Moves = { ...sw };
+        const savedLen = (id: number) => { const t = tasks.find((x) => x.id === id)!; return t.span.e - t.span.s; };
+        if (edge === "r") {
+            const next = blocks.filter((x) => x.s >= box.e).sort((a, b) => a.s - b.s)[0];
+            let e = clamp(want, box.s + 5, limit);
+            if (next && e > next.s) {
+                if (next.fixed) e = next.s;
+                else {
+                    e = Math.min(e, next.e - 5);
+                    out[next.id] = { s: e, e: next.e };
+                }
+            } else if (next && !next.fixed && next.s === box.e && e < box.e) {
+                out[next.id] = { s: Math.max(e, next.e - savedLen(next.id)), e: next.e };
+            }
+            return { s: box.s, e, swaps: tidy(out) };
+        }
+        const prev = blocks.filter((x) => x.e <= box.s).sort((a, b) => b.e - a.e)[0];
+        let s = clamp(want, lo, box.e - 5);
+        if (prev && s < prev.e) {
+            if (prev.fixed) s = prev.e;
+            else {
+                s = Math.max(s, prev.s + 5);
+                out[prev.id] = { s: prev.s, e: s };
+            }
+        } else if (prev && !prev.fixed && prev.e === box.s && s > box.s) {
+            out[prev.id] = { s: prev.s, e: Math.min(s, prev.s + savedLen(prev.id)) };
+        }
+        return { s, e: box.e, swaps: tidy(out) };
+    }
+
+    /**
+     * Any block carried by the pointer: the new box (`BOX`) or a logged task that may change. Where the pointer is
+     * decides:
+     * - free time: the block goes there, past anything in between. A gap shorter than the block shrinks it to fit;
+     *   in a roomier gap it grows back, up to `full` (a task's saved length, the box's own length);
+     * - another block that may move: the two trade places, as long as nothing else lies between them;
+     * - a locked task: it stays where it is.
+     * `box` is where the new box is while a task is carried (it may be traded with); null while the box itself is.
+     */
+    function carryBlock(
+        b: { id: number; grab: number; s: number; e: number; full: number; swaps: Moves; box: Span | null; lastSwap: number | null },
+        m: number,
+    ): { s: number; e: number; swaps: Moves; box: Span | null; lastSwap: number | null } | null {
+        const len = b.e - b.s;
+        const others: Block[] = spansWith(b.swaps).filter((x) => x.id !== b.id).map((x) => ({ id: x.id, s: x.s, e: x.e, fixed: x.locked || !x.whole }));
+        if (b.id !== BOX && b.box) others.push({ id: BOX, s: b.box.s, e: b.box.e, fixed: false });
+        let lastSwap = b.lastSwap;
+        const hit = others.find((y) => m >= y.s && m < y.e);
+        if (lastSwap != null && hit?.id !== lastSwap) lastSwap = null;
+
+        if (hit) {
+            if (hit.fixed || hit.id === lastSwap) return null;
+            const before = b.s < hit.s;
+            const between = others.some((y) => y.id !== hit.id && (before ? y.s >= b.e && y.e <= hit.s : y.s >= hit.e && y.e <= b.s));
+            if (between) return null;
+            const hl = hit.e - hit.s;
+            const [moved, self] = before
+                ? [{ s: b.s, e: b.s + hl }, { s: hit.e - len, e: hit.e }]
+                : [{ s: b.e - hl, e: b.e }, { s: hit.s, e: hit.s + len }];
+            const clash = moved.e > self.s && self.e > moved.s;
+            if (clash || Math.min(moved.s, self.s) < lo || Math.max(moved.e, self.e) > limit) return null;
+            const sw: Moves = { ...b.swaps };
+            let box = b.box;
+            if (hit.id === BOX) box = moved;
+            else {
+                const original = tasks.find((x) => x.id === hit.id)!.span;
+                if (original.s === moved.s && original.e === moved.e) delete sw[hit.id];
+                else sw[hit.id] = moved;
+            }
+            return { s: self.s, e: self.e, swaps: sw, box, lastSwap: hit.id };
+        }
+
+        // free time: the gap the pointer is in, whichever side of the block it is on
+        const [g0, g1] = gapAround(m, others);
+        if (g1 - g0 < 5) return null;
+        const size = Math.min(Math.max(b.full, len), g1 - g0);
+        const grab = Math.min(b.grab, size);
+        const s = clamp(place(snap(m - grab), size, others, false), g0, g1 - size);
+        if (s === b.s && s + size === b.e) return null;
+        return { s, e: s + size, swaps: b.swaps, box: b.box, lastSwap: null };
+    }
+
+    return { WD, spans, spansWith, magnet, stickTo, edgesOf, stickBlock, gapAround, anchorAt, blocksNow, pushEdge, withPush, tidy, obstaclesFor, carryTask, carry, carryBlock, stretchBox };
 }
 
 export type DayModel = ReturnType<typeof dayModel>;

@@ -82,6 +82,8 @@ export default function MessagesPage() {
 
     return (
         <div className={cx("msg-full-page", reading && "reading")}>
+            {/* the page's heading for screen readers: the conversations themselves fill the screen */}
+            <h1 className="sr-only">Messages</h1>
             <div className={cx("msg-page", reading && "reading")}>
                 <div className="msg-sidebar">
                     <div className="search" style={{ margin: "0 0 10px" }}>

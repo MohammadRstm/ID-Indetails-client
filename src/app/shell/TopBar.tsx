@@ -57,7 +57,7 @@ export default function TopBar({ area, onMenu, onSearch, sideShown = true }: Top
 
     return (
         <header className="top">
-            <button className="icon-btn hamburger" onClick={onMenu} aria-label="Menu" title={sideShown ? "Hide the sidebar" : "Show the sidebar"}>
+            <button className="icon-btn hamburger" onClick={onMenu} aria-label="Menu" title={sideShown ? "Fold the sidebar to its icons" : "Open the sidebar"}>
                 <Icon name="menu" />
             </button>
             {phone ? (

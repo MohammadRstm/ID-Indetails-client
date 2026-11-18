@@ -111,6 +111,26 @@ export function useUpdateProject(id: number) {
     });
 }
 
+export type ProjectColor = Schemas["ProjectColorResponse"];
+
+/** The palette's thirty colours, each with the business's open project that has it (project:create or project:edit). */
+export function useProjectColors(domain: string, enabled = true) {
+    return useQuery({
+        queryKey: keys.projects.colors(domain),
+        queryFn: async () => (await http.get<ProjectColor[]>("/projects/colors", { params: { domain } })).data,
+        enabled,
+    });
+}
+
+/** Trades colours with another project of the same business, both at once (project:edit). */
+export function useSwapProjectColor(id: number) {
+    const invalidate = useInvalidate();
+    return useMutation({
+        mutationFn: async (otherProjectId: number) => (await http.post<Project>(`/projects/${id}/swap-color`, { otherProjectId })).data,
+        onSuccess: () => { void invalidate(keys.projects.all, keys.activity.all); },
+    });
+}
+
 /** Sets the project's own photo from an uploaded file, or takes it off (null), back to its icon tile (project:edit). */
 export function useSetProjectPhoto(id: number) {
     const invalidate = useInvalidate();

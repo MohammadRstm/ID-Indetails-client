@@ -15,6 +15,8 @@ export const keys = {
         /** The project form's suggested code, and who has the one typed: refreshed by every project change. */
         nextCode: (domain: string, check: string, projectId: number | null) => ["projects", "next-code", domain, check, projectId] as const,
         detail: (id: number) => ["projects", "detail", id] as const,
+        /** The colour picker's thirty colours and who has each: refreshed by every project change. */
+        colors: (domain: string) => ["projects", "colors", domain] as const,
         /** Its profitability and its what-ifs: under the project, so every change to it refreshes them. */
         insights: (id: number) => ["projects", "detail", id, "insights"] as const,
         scenario: (id: number, levers: object) => ["projects", "detail", id, "insights", "scenario", levers] as const,

@@ -1,18 +1,13 @@
 import { useState } from "react";
 import TimeField from "@/shared/components/Forms/TimeField";
 import { fmtDur, fmtRange, fmtTime } from "@/shared/format/time";
-import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { DAY, isoAt } from "./day";
-import { overtimeTag } from "./overtime";
-import type { OvertimePreview } from "./workApi";
 
 type TimeRangeProps = {
     date: string;
     startMin: number;
     duration: number;
-    /** The API's overtime preview for this time, once it has answered. */
-    preview?: OvertimePreview;
     onChange: (startMin: number, duration: number) => void;
 };
 
@@ -23,7 +18,7 @@ const MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
  * Two ways to say when: start → end, or start + how long (the prototype's UI.TimeRange). The duration is
  * the source of truth, so switching mode never changes the entry, only how it is typed.
  */
-export default function TimeRange({ date, startMin: s, duration: dur, preview, onChange }: TimeRangeProps) {
+export default function TimeRange({ date, startMin: s, duration: dur, onChange }: TimeRangeProps) {
     const [mode, setMode] = useState<"end" | "dur">("end");
     const endMin = (s + dur) % DAY, nextDay = s + dur >= DAY;
     const startAt = isoAt(date, s), endAt = isoAt(date, s + dur);
@@ -78,12 +73,6 @@ export default function TimeRange({ date, startMin: s, duration: dur, preview, o
             </div>
             <div className="trange-sum">
                 <span className="mono">{fmtRange(startAt, endAt)}</span><span className="muted">·</span><b className="mono">{fmtDur(dur)}</b>
-                {preview && preview.overtimeMinutes > 0 && (
-                    <>
-                        <span className="muted">·</span>
-                        <span className="ot-tag"><Icon name="clock" />{overtimeTag(preview)}</span>
-                    </>
-                )}
             </div>
         </div>
     );

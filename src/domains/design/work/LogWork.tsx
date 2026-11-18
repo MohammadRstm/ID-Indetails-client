@@ -20,12 +20,11 @@ import { checkLog, companyNow, DAY, DEFAULT_START, DESCRIPTION_MAX, defaultSlot,
 import DayChips from "./DayChips";
 import DragDay from "./DragDay";
 import { closeLogWork, type LogWorkOptions } from "./logWorkStore";
-import OvertimeWarning from "./OvertimeWarning";
 import { ScopeCheck } from "./Scope";
 import TimeRange from "./TimeRange";
 import { startTimer } from "./timer";
 import {
-    entryBody, loggableProjects, useDomainSettings, useMyDay, useMyProjects, useMySchedule, isKeptLog, useOvertimeFor, useSaveEntry, useUndoLog,
+    entryBody, loggableProjects, useDeleteEntry, useDomainSettings, useMyDay, useMyProjects, useMySchedule, isKeptLog, useOvertimeFor, useSaveEntry, useUndoLog,
     type DomainSettings, type MyProject, type WorkEntry,
 } from "./workApi";
 
@@ -89,6 +88,8 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
     const [slotFor, setSlotFor] = useState<string | null>(null);
     const attachment = useAttachment(ed?.attachment ?? null);
     const save = useSaveEntry();
+    const remove = useDeleteEntry();
+    const [removing, setRemoving] = useState(false);
     const undo = useUndoLog();
     const day = useMyDay(date);
     const schedule = useMySchedule(date);
@@ -141,7 +142,13 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
     }) ?? (settings.requireDescription && !desc.trim() && touched ? "Say what you worked on." : null);
     // a project that stopped taking work (the timer ran on it) has to be picked again from the list
     const unlisted = !ed && !choices.some((c) => c.id === projectId);
-    const blocked = !!error || unlisted || (settings.requireDescription && !desc.trim()) || attachment.uploading || save.isPending;
+    const busy = attachment.uploading || save.isPending || removing;
+    // logged tasks moved, resized or deleted on the timeline. Without a new log written (nothing said, no file), only
+    // those changes are saved; with one, the new log goes in with them
+    const changed = Object.keys(swaps).length > 0 || deletes.length > 0;
+    const changesOnly = !ed && changed && !desc.trim() && !attachment.file;
+    const blocked = changesOnly ? busy : !!error || unlisted || (settings.requireDescription && !desc.trim()) || busy;
+    const shownError = changesOnly ? null : error;
 
     function pickDay(d: string) {
         setDate(d);
@@ -160,8 +167,46 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
         return back;
     }
 
+    /** Saves only what changed on the timeline: one moved task is saved with the others' moves and the deletions, in one go. */
+    async function saveChanges() {
+        const movedIds = Object.keys(swaps).map(Number);
+        const first = list.find((x) => x.id === movedIds[0]);
+        const n = movedIds.length + deletes.length;
+        const sub = `${fmtDayDate(startAt)} · ${n === 1 ? "1 logged task" : `${n} logged tasks`}`;
+        const back = movesBack();
+        try {
+            if (first) {
+                const rest = { ...swaps };
+                delete rest[first.id];
+                const at = swaps[first.id];
+                await save.mutateAsync({ id: first.id, body: entryBody(first, { startedAt: isoAt(date, at.s), endedAt: isoAt(date, at.e), moves: movesFor(date, rest), deletes }) });
+                const backRest = { ...back };
+                delete backRest[first.id];
+                closeLogWork();
+                toast({
+                    text: "Changes saved", sub, icon: "checkCircle", actionLabel: "Undo",
+                    action: () => undo.mutate({ restore: { id: first.id, body: { ...entryBody(first), moves: movesFor(date, backRest) } }, deleted: deletes }),
+                });
+                return;
+            }
+            setRemoving(true);
+            for (const id of deletes) await remove.mutateAsync(id);
+            closeLogWork();
+            toast({ text: "Changes saved", sub, icon: "checkCircle", actionLabel: "Undo", action: () => undo.mutate({ restore: null, deleted: deletes }) });
+        } catch (failure) {
+            // a refused save says why in the form's foot; a delete that failed says it here
+            if (!first) toast({ text: "Your changes weren't saved", sub: errorMessage(failure), icon: "alert" });
+        } finally {
+            setRemoving(false);
+        }
+    }
+
     function submit(e?: FormEvent) {
         e?.preventDefault();
+        if (changesOnly) {
+            if (!blocked) void saveChanges();
+            return;
+        }
         setTouched(true);
         if (blocked || projectId == null) return;
         const back = movesBack();
@@ -195,7 +240,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
         });
     }
 
-    const failure = save.error && !error && !isKeptLog(save.error) ? <FormFailure error={save.error} onForced={closeLogWork} /> : null;
+    const failure = save.error && !shownError && !isKeptLog(save.error) ? <FormFailure error={save.error} onForced={closeLogWork} /> : null;
     const required = preview?.requiredMinutes ?? schedule.data?.day.requiredMinutes;
 
     return (
@@ -204,12 +249,13 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
             foot={
                 <>
                     <div className="grow">
-                        {error ? <span className="err"><Icon name="alert" />{error}</span> : failure ? failure
+                        {shownError ? <span className="err"><Icon name="alert" />{shownError}</span> : failure ? failure
                             : <span className="muted">{fmtDayDate(startAt)} · <span className="mono">{fmtRange(startAt, endAt)}</span>{nextDay ? " (ends next day)" : ""}</span>}
                     </div>
                     <button className="btn" onClick={closeLogWork}>Cancel</button>
-                    <button className="btn btn-primary" disabled={attachment.uploading || save.isPending} onClick={() => submit()}>
-                        {ed ? "Save changes" : `Log ${fmtDur(duration)}`}{ot ? ` · ${fmtDur(ot)} overtime` : ""}
+                    <button className="btn btn-primary" disabled={busy} onClick={() => submit()}>
+                        {ed || changesOnly ? "Save changes" : `Log ${fmtDur(duration)}${changed ? " and save changes" : ""}`}
+                        {!changesOnly && ot ? ` · ${fmtDur(ot)} overtime` : ""}
                     </button>
                 </>
             }>
@@ -249,7 +295,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
 
                 <div className="panel mt" style={{ background: "var(--surface-2)" }}>
                     <div className="panel-body">
-                        <TimeRange date={date} startMin={startMin} duration={duration} preview={preview}
+                        <TimeRange date={date} startMin={startMin} duration={duration}
                             onChange={(s, d) => { setStartMin(s); setDuration(d); }} />
                         <div className="mt">
                             <DragDay date={date} startMin={startMin} duration={duration} projectId={projectId} ignoreId={ed?.id} swaps={swaps}
@@ -265,7 +311,6 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                     </div>
                 </div>
 
-                <OvertimeWarning date={date} duration={duration} preview={preview} scheduleDay={schedule.data?.day} />
                 <div className="mt"><ScopeCheck checked={outside} onChange={setOutside} /></div>
                 <div className="row mt-s" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                     <span className="hint">Tip: type “4pm”, “16:00” or “4:30p” - and ⌘/Ctrl + Enter to save.</span>

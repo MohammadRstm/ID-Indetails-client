@@ -61,7 +61,7 @@ export function CalendarPage() {
         <div className="page">
             <PageHead title="Calendar" sub={`The meetings you can see in ${DOMAIN_LABEL[domain]}, a month at a time`} />
             <Panel title={`${MONTHS_LONG[p.month]} ${p.year}`}
-                sub={query.isPending ? "…" : `${count} meeting${count === 1 ? "" : "s"}`}
+                sub={query.isPending ? "…" : `${count} meeting${count === 1 ? "" : "s"} in ${MONTHS_LONG[p.month]}`}
                 tools={
                     <div className="row" style={{ gap: 6 }}>
                         <button className="btn btn-sm btn-quiet" aria-label="Previous month" onClick={() => setMonth(addMonths(month, -1))}><Icon name="chevronLeft" /></button>

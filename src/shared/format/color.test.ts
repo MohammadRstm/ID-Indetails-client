@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { PROJECT_COLORS, chartColors, hexToHsv, hsvToHex, inkOn, isHexColor } from "./color";
+import { PROJECT_COLORS, chartColors, colorName, inkOn, isHexColor } from "./color";
 
 describe("project colours", () => {
-    it("are sixteen different hex colours", () => {
-        expect(new Set(PROJECT_COLORS.map((c) => c.hex)).size).toBe(16);
+    it("are thirty different hex colours with different names", () => {
+        expect(new Set(PROJECT_COLORS.map((c) => c.hex)).size).toBe(30);
+        expect(new Set(PROJECT_COLORS.map((c) => c.name)).size).toBe(30);
         expect(PROJECT_COLORS.every((c) => isHexColor(c.hex))).toBe(true);
+        // the deep ones take white marks; the lightest (coral, ochre) dark ones, whichever reads better
+        expect(inkOn("#1D2D44")).toBe("#FFFFFF");
+    });
+
+    it("are named, whatever the case of the hex code; a colour outside the palette has no name", () => {
+        expect(colorName("#2a7f62")).toBe("Jade");
+        expect(colorName("#123456")).toBeNull();
+        expect(colorName(null)).toBeNull();
     });
 
     it("are six or eight hex digits after a #", () => {
@@ -13,14 +22,6 @@ describe("project colours", () => {
         expect(isHexColor("2F9E44")).toBe(false);
         expect(isHexColor("#2F9")).toBe(false);
         expect(isHexColor("green")).toBe(false);
-    });
-
-    it("go to hue, saturation and value and back unchanged", () => {
-        for (const { hex } of PROJECT_COLORS) expect(hsvToHex(hexToHsv(hex)!)).toBe(hex);
-        expect(hexToHsv("#FF0000")).toEqual({ h: 0, s: 1, v: 1 });
-        expect(hsvToHex({ h: 120, s: 1, v: 1 })).toBe("#00FF00");
-        expect(hsvToHex({ h: 240, s: 0, v: 1 })).toBe("#FFFFFF");
-        expect(hexToHsv("nope")).toBeNull();
     });
 
     it("recolour the charts inside only when there is one", () => {

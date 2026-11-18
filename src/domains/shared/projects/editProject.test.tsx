@@ -96,40 +96,43 @@ describe("the start date of a project's details", () => {
 });
 
 describe("a project's colour", () => {
-    it("starts at the project's colour and sends the swatch picked", async () => {
+    // the palette, the navy one taken by another open project of the business
+    const palette = [
+        { name: "Raspberry", hex: "#A53860", takenBy: null },
+        { name: "Jade", hex: "#2A7F62", takenBy: null },
+        { name: "Navy", hex: "#1D2D44", takenBy: { id: 9, title: "Villa Nour" } },
+    ];
+    const colors = http.get("/api/projects/colors", () => HttpResponse.json(palette));
+
+    it("is picked from a grid of the palette, the taken colours faded, and sent with the rest", async () => {
         const bodies: Record<string, unknown>[] = [];
-        const dialog = await openDetails(http.put("/api/projects/1", async ({ request }) => {
+        const dialog = await openDetails(colors, http.put("/api/projects/1", async ({ request }) => {
             bodies.push((await request.json()) as Record<string, unknown>);
             return HttpResponse.json(project);
         }));
-        const hex = within(dialog).getByPlaceholderText("#2F6FEB");
-        expect(hex).toHaveValue("#0C6B69");
-        await userEvent.click(within(dialog).getByRole("button", { name: "Green" }));
-        expect(hex).toHaveValue("#2F9E44");
-        expect(within(dialog).getByRole("button", { name: "Green" })).toHaveAttribute("aria-pressed", "true");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Change colour" }));
+        const picker = await screen.findByRole("dialog", { name: "Project colour" });
+        expect(await within(picker).findAllByRole("listitem")).toHaveLength(3);
+        expect(within(picker).getByRole("button", { name: "Navy, taken by Villa Nour" })).toHaveClass("taken");
+        await userEvent.click(within(picker).getByRole("button", { name: "Jade" }));
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: "Project colour" })).not.toBeInTheDocument());
+        expect(within(dialog).getByText("Jade")).toBeInTheDocument();
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ tint: "#2F9E44" })]));
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ tint: "#2A7F62" })]));
     });
 
-    it("moves on the wheel with the arrow keys and writes the hex code", async () => {
-        const dialog = await openDetails();
-        const wheel = within(dialog).getByRole("slider", { name: /Colour wheel/ });
-        wheel.focus();
-        await userEvent.keyboard("{ArrowRight}");
-        expect(within(dialog).getByPlaceholderText("#2F6FEB")).not.toHaveValue("#0C6B69");
-    });
-
-    it("says live when the hex code isn't a colour, and saves nothing until it is", async () => {
-        const bodies: unknown[] = [];
-        const dialog = await openDetails(http.put("/api/projects/1", async ({ request }) => { bodies.push(await request.json()); return HttpResponse.json(project); }));
-        const hex = within(dialog).getByPlaceholderText("#2F6FEB");
-        await userEvent.clear(hex);
-        await userEvent.type(hex, "#12");
-        const message = "Use a hex colour like #2F6FEB, or pick one.";
-        expect(await within(dialog).findByText(message)).toBeInTheDocument();
-        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-        expect(bodies).toEqual([]);
-        await userEvent.type(hex, "3456");
-        await waitFor(() => expect(within(dialog).queryByText(message)).not.toBeInTheDocument());
+    it("taken by another project, is swapped with it at once", async () => {
+        const swaps: unknown[] = [];
+        const dialog = await openDetails(colors, http.post("/api/projects/1/swap-color", async ({ request }) => {
+            swaps.push(await request.json());
+            return HttpResponse.json({ ...project, tint: "#1D2D44" });
+        }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Change colour" }));
+        const picker = await screen.findByRole("dialog", { name: "Project colour" });
+        await userEvent.click(await within(picker).findByRole("button", { name: "Navy, taken by Villa Nour" }));
+        await userEvent.click(screen.getByRole("menuitem", { name: "Swap colours with Villa Nour" }));
+        await waitFor(() => expect(swaps).toEqual([{ otherProjectId: 9 }]));
+        expect(await screen.findByText("Colours swapped with Villa Nour")).toBeInTheDocument();
+        expect(within(dialog).getByText("Navy")).toBeInTheDocument();
     });
 });

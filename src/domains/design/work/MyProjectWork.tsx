@@ -12,7 +12,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { Avatars, PersonAvatar } from "@/shared/components/Identity/People";
 import { chartColors } from "@/shared/format/color";
-import { fmtDate, fmtDateY, fmtH, relDay } from "@/shared/format/time";
+import { dayKey, fmtDate, fmtDateY, fmtH, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../shared/projects/projectsApi";
@@ -22,6 +22,7 @@ import EntryRow from "./EntryRow";
 import { openLogWork } from "./logWorkStore";
 import { useMyProjects, useMyProjectWork, type WorkEntry } from "./workApi";
 import { loadFailed } from "@/api/queryState";
+import type { Schemas } from "@/api/types";
 
 /*
  * The person's own work on a Design project (the prototype's P.EmpProject), the parts of the project page that
@@ -95,12 +96,15 @@ export function MyProjectWork({ project }: { project: Project }) {
                 {!seesAll && (
                     <Panel title="Team activity" sub="What your teammates have been working on." bodyStyle={{ paddingTop: 2 }}
                         foot={<span className="muted">Teammates' hours stay private - only admins see per-person totals.</span>}>
-                        {!w ? <SkeletonLines lines={3} /> : w.team.length ? w.team.map((t, i) => (
-                            <div key={`${t.personId}-${t.startedAt}-${i}`} className="mini-row" style={{ alignItems: "flex-start" }}>
-                                <PersonAvatar person={{ id: t.personId, name: t.personName }} size={26} />
+                        {!w ? <SkeletonLines lines={3} /> : w.team.length ? teamRows(w.team).map((g) => (
+                            <div key={g.key} className="mini-row" style={{ alignItems: "flex-start" }}>
+                                <PersonAvatar person={{ id: g.personId, name: g.personName }} size={26} />
                                 <div className="grow" style={{ minWidth: 0 }}>
-                                    <div style={{ fontSize: "12.5px" }}><b>{t.personName.split(" ")[0]}</b> · {relDay(t.startedAt)}</div>
-                                    <div className="muted clamp2" style={{ fontSize: "11.5px" }}>{t.description}</div>
+                                    <div style={{ fontSize: "12.5px" }}>
+                                        <b>{g.personName.split(" ")[0]}</b> · {g.days === 1 ? relDay(g.to) : <>{fmtDate(g.from)} – {fmtDate(g.to)} <span className="muted">· {g.days} days</span></>}
+                                    </div>
+                                    {g.tasks.slice(0, SHOWN_TASKS).map((task) => <div key={task} className="muted clamp2" style={{ fontSize: "11.5px" }}>{task}</div>)}
+                                    {g.tasks.length > SHOWN_TASKS && <div className="muted" style={{ fontSize: "11.5px" }}>and {g.tasks.length - SHOWN_TASKS} more</div>}
                                 </div>
                             </div>
                         )) : <p className="muted">No one else has logged work here yet.</p>}
@@ -109,6 +113,36 @@ export function MyProjectWork({ project }: { project: Project }) {
             </div>
         </div>
     );
+}
+
+const SHOWN_TASKS = 3;
+
+const sameTasks = (a: string[], b: string[]) => a.length === b.length && a.every((task, i) => task === b[i]);
+
+type TeamRow = { key: string; personId: number; personName: string; from: string; to: string; days: number; tasks: string[] };
+
+/**
+ * The team's latest work, newest first, one row per teammate per day with each different task named once. Days in a
+ * row where a teammate did the same tasks fold into one row with the dates ("Nov 6 – Nov 13 · 6 days"), so a week on
+ * one drawing reads as one line. Only what they worked on and when, never for how long.
+ */
+function teamRows(team: Schemas["MyProjectWorkResponse"]["team"]): TeamRow[] {
+    const days = new Map<string, TeamRow>();
+    for (const t of team) {
+        const key = `${t.personId}-${dayKey(t.startedAt)}`;
+        const day = days.get(key) ?? { key, personId: t.personId, personName: t.personName, from: t.startedAt, to: t.startedAt, days: 1, tasks: [] };
+        if (t.description && !day.tasks.includes(t.description)) day.tasks.push(t.description);
+        days.set(key, day);
+    }
+    const rows: TeamRow[] = [];
+    for (const day of days.values()) {
+        const prev = rows[rows.length - 1];
+        if (prev && prev.personId === day.personId && sameTasks(prev.tasks, day.tasks)) {
+            prev.from = day.from;
+            prev.days += 1;
+        } else rows.push({ ...day });
+    }
+    return rows;
 }
 
 /** "Your recent work": the person's latest entries here, each editable while the edit window lasts. */
