@@ -27,9 +27,10 @@ import { areaBase, type ShellArea } from "./useArea";
  */
 function nameTip(name: string) {
     const show = (e: { currentTarget: HTMLElement }) => {
-        // the name is hidden by clipping it to a pixel (client.css), so a screen reader still reads it
+        // the name is hidden by clipping it to a pixel (client.css), so a screen reader still reads it, or by display: none
         const label = e.currentTarget.querySelector(".nav-label, .side-cta-label");
-        if (label && getComputedStyle(label).position !== "absolute") return;
+        const style = label && getComputedStyle(label);
+        if (style && style.display !== "none" && style.position !== "absolute") return;
         const r = e.currentTarget.getBoundingClientRect();
         tip.show({ clientX: r.right - 4, clientY: r.top - 6 }, name);
     };
