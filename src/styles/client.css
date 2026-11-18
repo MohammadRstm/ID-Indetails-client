@@ -1127,3 +1127,17 @@ button.pc-comments { border: 0; cursor: pointer; }
 .bn-ic .ic { width: 24px; height: 24px; }
 .bn-tab .msg-badge { top: -5px; right: -10px; }
 .bn-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.1; }
+
+/* ---------------- the sidebar as icons only (a laptop-sized window) ----------------
+   hourline.css hides the tabs' names with display: none there, which also leaves the buttons nameless for a screen
+   reader. Clip them to a pixel instead: they still name the buttons, and the hover tip still shows the name.
+   The same rule hid the names in lists inside a page (Help's topics, Settings' sections), leaving empty buttons:
+   those keep their names. */
+@media (min-width: 821px) and (max-width: 1120px) {
+  .side .nav-label, .side .side-cta-label, .side .side-user-txt {
+    display: block; position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+  .page .nav-label, .page .nav-count { display: initial; }
+  .page .nav-item { justify-content: flex-start; padding: 7px 9px; }
+}
