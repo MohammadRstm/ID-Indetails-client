@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from "react";
+import { Suspense, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate, type Location } from "react-router";
 import { z } from "zod";
 import { toApiError } from "@/api/errors";
+import { DevAccountPicker } from "@/app/routing/pages";
 import { useSession } from "@/app/session/useSession";
 import Field, { FieldError } from "@/shared/components/Forms/Field";
 import { useForm } from "@/shared/components/Forms/useForm";
@@ -74,6 +75,11 @@ export default function SignInPage() {
                     <Link className="link" style={{ fontSize: "11.5px" }} to="/forgot-password">Forgot password?</Link>
                 </div>
             </form>
+            {DevAccountPicker && (
+                <Suspense fallback={null}>
+                    <DevAccountPicker />
+                </Suspense>
+            )}
         </AuthLayout>
     );
 }
