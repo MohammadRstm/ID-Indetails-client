@@ -63,7 +63,8 @@ export default function ProjectPhoto({ project, canEdit }: { project: Project; c
 
     return (
         <>
-            <MenuButton buttonClass="ptile-btn" align="left" width={200} label="Project photo" text={tile}>
+            <MenuButton buttonClass="ptile-btn" align="left" width={200} label="Project photo"
+                text={<>{tile}<span className="ptile-pencil" aria-hidden="true"><Icon name="edit" /></span></>}>
                 {(close) => (
                     <div>
                         <button className="pop-item" disabled={busy} onClick={() => { close(); input.current?.click(); }}>

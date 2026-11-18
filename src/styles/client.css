@@ -21,13 +21,22 @@ table { line-height: normal; font-weight: normal; }
 @media (max-width: 520px) { .toasts { top: calc(var(--top-h) + 8px); } }
 .pg-anchor { scroll-margin-top: calc(var(--top-h) + 22px); }
 
-/* The menu button shows at every width (the prototype's was phone-only): on a wider screen it hides the sidebar,
-   giving the page the whole width, and shows it again. */
+/* The menu button shows at every width (the prototype's was phone-only): on a wider screen it folds the sidebar down
+   to its icons, each tab's name shown beside it on hover (Sidebar's nameTip), and opens it again. It slides both
+   ways. */
 .hamburger { display: grid; }
 @media (min-width: 821px) {
-  .app.side-hidden { grid-template-columns: minmax(0, 1fr); }
-  .app.side-hidden .side { display: none; }
+  .app { transition: grid-template-columns .24s ease; }
+  .side { overflow: hidden; }
+  .app.side-hidden { grid-template-columns: 66px minmax(0, 1fr); }
+  .app.side-hidden .nav-label, .app.side-hidden .logo-text, .app.side-hidden .side-user-txt, .app.side-hidden .nav-count,
+  .app.side-hidden .nav-sec, .app.side-hidden .side-cta-label { display: none; }
+  .app.side-hidden .nav-item { justify-content: center; padding: 8px; }
+  .app.side-hidden .side-head { justify-content: center; padding: 13px 8px; }
+  .app.side-hidden .side-user { justify-content: center; }
+  .app.side-hidden .side-cta .btn { padding: 0; }
 }
+@media (min-width: 821px) and (prefers-reduced-motion: reduce) { .app { transition: none; } }
 
 /* The prototype capped pages at 1520px, which left an empty band on the right of large screens. Pages
    take the whole width beside the sidebar instead. */
@@ -229,6 +238,12 @@ table { line-height: normal; font-weight: normal; }
 .ptile-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ptile-btn { padding: 0; border: 0; background: none; border-radius: 11px; cursor: pointer; display: grid; }
 .ptile-btn:hover .ptile, .ptile-btn.on .ptile { box-shadow: 0 0 0 3px var(--accent-soft); }
+/* a pencil over the tile, on hover or keyboard focus, where the photo can be changed */
+.ptile-btn { position: relative; }
+.ptile-pencil { position: absolute; inset: 0; border-radius: inherit; display: grid; place-items: center; color: #fff;
+  background: rgba(9, 15, 16, .45); opacity: 0; transition: opacity .15s ease; pointer-events: none; }
+.ptile-pencil .ic { width: 45%; height: 45%; max-width: 22px; max-height: 22px; }
+.ptile-btn:hover .ptile-pencil, .ptile-btn:focus-visible .ptile-pencil, .ptile-btn.on .ptile-pencil { opacity: 1; }
 
 /* Home sits at the bottom of the sidebar, just above the user, however long the list above it */
 .side-home { margin-top: auto; padding: 10px 10px 9px; }
@@ -1113,7 +1128,9 @@ button.pc-comments { border: 0; cursor: pointer; }
 .color-swatch:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 0 0 3px var(--accent-soft); }
 .color-swatch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .color-swatch.on { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
-.color-swatch.taken { opacity: .3; }
-.color-swatch.taken:hover:not(:disabled) { opacity: .55; }
+/* a colour another open project has: its own colour, hatched and locked, so it reads as in use rather than paler */
+.color-swatch.taken { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .34) 0 3px, transparent 3px 9px); }
+.color-swatch.taken .ic { width: 16px; height: 16px; }
+.color-name.taken { color: var(--ink-3); }
 .color-swatch .ic { width: 20px; height: 20px; }
 .color-name { margin-top: 4px; font-size: 11.5px; text-align: center; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

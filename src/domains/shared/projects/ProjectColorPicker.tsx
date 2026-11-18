@@ -63,7 +63,7 @@ export default function ProjectColorPicker({ project, value, onPick, onClose }: 
     }
 
     return (
-        <Modal title="Project colour" sub="The faded colours belong to another open project: pick one to swap colours with it." size="md" onClose={onClose}
+        <Modal title="Project colour" sub="Locked colours belong to another open project: pick one to swap colours with it." size="md" onClose={onClose}
             foot={<><div className="grow" /><button type="button" className="btn" onClick={onClose}>Close</button></>}>
             {colors.isError ? <LoadError error={colors.error} retry={() => colors.refetch()} what="the colours" />
                 : !colors.data ? <SkeletonLines lines={4} />
@@ -77,9 +77,9 @@ export default function ProjectColorPicker({ project, value, onPick, onClose }: 
                                     <div role="listitem" key={c.hex}>
                                         <button type="button" className={cx("color-swatch", mine && "on", taken && "taken")} style={{ background: c.hex, color: inkOn(c.hex) }}
                                             aria-label={label} title={label} disabled={swap.isPending} onClick={(ev) => choose(c, ev)}>
-                                            {mine && <Icon name="check" />}
+                                            {mine ? <Icon name="check" /> : taken ? <Icon name="lock" /> : null}
                                         </button>
-                                        <div className="color-name">{c.name}</div>
+                                        <div className={cx("color-name", taken && "taken")}>{c.name}</div>
                                     </div>
                                 );
                             })}

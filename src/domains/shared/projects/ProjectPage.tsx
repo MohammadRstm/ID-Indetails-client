@@ -254,8 +254,11 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             <div className="page-head">
                 <div className="row start" style={{ gap: 13, minWidth: 0 }}>
                     {/* the tile, the title and the code open the project's details */}
-                    <button type="button" className="ptile-btn" onClick={() => setAbout(true)} aria-label="Project details" title="See the project's details">
+                    <button type="button" className="ptile-btn" onClick={() => setAbout(true)} aria-label="Project details"
+                        title={canEditDetails ? "See the project's details and change its photo" : "See the project's details"}>
                         <ProjectTile icon={project.icon} tint={project.tint} photo={project.photoFileId} size="lg" />
+                        {/* whoever edits the project sees a pencil on hover: its photo is changed in the details */}
+                        {canEditDetails && <span className="ptile-pencil" aria-hidden="true"><Icon name="edit" /></span>}
                     </button>
                     <div style={{ minWidth: 0 }}>
                         <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
