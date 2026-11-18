@@ -14,12 +14,20 @@ const ARROWS = new Map<string, [number, number]>([["ArrowLeft", [-1, 0]], ["Arro
 
 type Drag = { id: number; fromX: number; fromY: number; x: number; y: number };
 
+type PhotoPositionerProps = {
+    file: File;
+    onDone: (picture: File) => void;
+    onCancel: () => void;
+    /** The frame the picture will be shown in: a person's round picture (the default), or a project's rounded square tile. */
+    frame?: "circle" | "square";
+};
+
 /**
- * A picked photo placed by hand before it is used as someone's picture: drag it (or use the arrow keys) and zoom until
- * the face sits in the circle, then it is cut to that square. A photo the browser can't open to place (HEIC) goes up as
- * it is, as before.
+ * A picked photo placed by hand before it is used as someone's picture or a project's: drag it (or use the arrow keys)
+ * and zoom until it sits in the frame, then it is cut to that square. A photo the browser can't open to place (HEIC)
+ * goes up as it is, as before.
  */
-export default function PhotoPositioner({ file, onDone, onCancel }: { file: File; onDone: (picture: File) => void; onCancel: () => void }) {
+export default function PhotoPositioner({ file, onDone, onCancel, frame = "circle" }: PhotoPositionerProps) {
     const [opened, setOpened] = useState<{ bitmap: ImageBitmap; url: string } | null>(null);
     const [place, setPlace] = useState<Placement>({ zoom: MIN_ZOOM, x: 0, y: 0 });
     const [saving, setSaving] = useState(false);
@@ -85,8 +93,10 @@ export default function PhotoPositioner({ file, onDone, onCancel }: { file: File
 
     return (
         <Modal
-            title="Position your photo"
-            sub="Drag the picture until it sits in the circle the way you want it."
+            title={frame === "square" ? "Position the photo" : "Position your photo"}
+            sub={frame === "square"
+                ? "Drag the picture, and zoom, until it fills the square the way you want it."
+                : "Drag the picture until it sits in the circle the way you want it."}
             size="md"
             onClose={onCancel}
             foot={
@@ -110,7 +120,7 @@ export default function PhotoPositioner({ file, onDone, onCancel }: { file: File
                     onPointerCancel={onPointerEnd}
                 >
                     <img src={url} alt="" draggable={false} style={{ width: shown.width, height: shown.height, transform: `translate(${place.x}px, ${place.y}px)` }} />
-                    <div className="photo-pos-mask" aria-hidden="true" />
+                    <div className={frame === "square" ? "photo-pos-mask square" : "photo-pos-mask"} aria-hidden="true" />
                 </div>
                 <div className="photo-pos-tools">
                     <label className="label" htmlFor="photo-pos-zoom">Zoom</label>
