@@ -22,10 +22,22 @@ export default function BlockedChangeModal({ id, onClose }: { id: number; onClos
     const [sure, setSure] = useState(false);
     const c = change.data;
     const pay = c?.kind === "pay_change";
+    // hours logged by someone whose department isn't on the project: approved alone, or turned down
+    const waiting = c?.kind === "work_entry_department";
     const busy = force.isPending || dismiss.isPending;
     const failure = force.error ?? dismiss.error;
 
-    const foot = c?.status === "pending" ? (
+    const foot = c?.status === "pending" && waiting ? (
+        <>
+            <div className="grow">{failure ? <span className="err"><Icon name="alert" /><ErrorMessage error={failure} /></span> : null}</div>
+            <button className="btn" disabled={busy} onClick={() => dismiss.mutate(id, {
+                onSuccess: () => { toast({ text: "Hours turned down", sub: c.summary, icon: "x" }); onClose(); },
+            })}>Turn down</button>
+            <button className="btn btn-primary" disabled={busy} onClick={() => force.mutate(id, {
+                onSuccess: (done) => { toast({ text: "Hours approved", sub: done.summary, icon: "checkCircle" }); onClose(); },
+            })}>Approve hours</button>
+        </>
+    ) : c?.status === "pending" ? (
         <>
             <div className="grow">{failure ? <span className="err"><Icon name="alert" /><ErrorMessage error={failure} /></span> : sure ? (pay ? "It will take these projects to zero profit or below, and the employee is told their pay changed." : "It will take the project to zero profit or below.") : null}</div>
             {sure ? (
@@ -47,8 +59,19 @@ export default function BlockedChangeModal({ id, onClose }: { id: number; onClos
     ) : <button className="btn" onClick={onClose}>Close</button>;
 
     return (
-        <Modal size="sm" title={pay ? "A pay change was held" : "A change was stopped"} sub={pay ? c?.person?.name : c?.projectTitle} onClose={onClose} foot={foot}>
-            {change.isError ? <LoadError error={change.error} /> : !c ? <p className="muted">Loading…</p> : (
+        <Modal size="sm" title={waiting ? "Hours waiting for approval" : pay ? "A pay change was held" : "A change was stopped"}
+            sub={pay ? c?.person?.name : c?.projectTitle} onClose={onClose} foot={foot}>
+            {change.isError ? <LoadError error={change.error} /> : !c ? <p className="muted">Loading…</p> : waiting ? (
+                <>
+                    <p>{c.requestedBy.name}'s department isn't part of {c.projectTitle}. Approving logs these hours alone, without adding the department: they count under other departments, with no share of the price.</p>
+                    <div className="field mt">
+                        <div className="label">The hours</div>
+                        <div>{c.summary}</div>
+                        <div className="hint">By {c.requestedBy.name}, {fmtDate(c.requestedAt)}</div>
+                    </div>
+                    <div className="hint mt">{STATUS[c.status]}{c.decidedBy ? ` by ${c.decidedBy.name}` : ""}</div>
+                </>
+            ) : (
                 <>
                     <p>{pay ? "It would take a project's profit to zero or below, so it wasn't saved. Only super admins decide it." : "It would take the project's profit to zero or below, so it wasn't saved."}</p>
                     <div className="field mt">

@@ -108,12 +108,19 @@ export function describe(note: Notification, reader: Reader): NotificationView {
         case "log_department_blocked":
             return {
                 text: note.count > 1
-                    ? `${note.count} logs on ${title} wait for ${s(p.departmentName) || "a department"}`
-                    : `${s(p.personName) || who}'s hours on ${title} wait for ${s(p.departmentName) || "their department"}`,
-                sub: `Add ${s(p.departmentName) || "the department"} to the project to let them through`,
-                icon: "clock", route: project ? `${project}?departments=edit` : undefined,
+                    ? `${note.count} logs on ${title} wait for approval`
+                    : `${s(p.personName) || who}'s hours on ${title} wait for approval`,
+                sub: `${s(p.departmentName) || "Their department"} isn't part of the project: approve the hours or turn them down`,
+                icon: "clock",
+                route: project ? (note.subjectType === "blocked_change" && note.subjectId ? `${project}?blocked=${note.subjectId}` : `${project}?departments=edit`) : undefined,
             };
         case "work_entry_released":
+            if (p.turnedDown === true) {
+                return { text: `Your hours on ${title} were turned down`, sub: "They weren't logged", icon: "x", route: "/design/my-work" };
+            }
+            if (p.approved === true) {
+                return { text: `Your hours on ${title} were approved`, sub: "They're logged now: don't log them again", icon: "checkCircle", route: "/design/my-work" };
+            }
             return p.released === false
                 ? { text: `Your hours waiting on ${title} couldn't be added`, sub: `${s(p.reason)} Log them again.`.trim(), icon: "alert", route: "/design/my-work" }
                 : {

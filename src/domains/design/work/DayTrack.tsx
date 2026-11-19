@@ -17,6 +17,8 @@ export type TrackEntry = Span & {
     locked: boolean;
     moved?: boolean;
     isNew?: boolean;
+    /** Hours waiting for approval (the logger's department isn't on the project): faded, and nothing goes in their place. */
+    pending?: boolean;
 };
 
 export type TrackMeeting = Span & { id: number; topic: string | null; projectTitle: string; setBy: string | null; range: string; editable: boolean };
@@ -87,13 +89,13 @@ export default function DayTrack({
                     const canEdit = editable && !e.locked;
                     return (
                         <i key={e.id} data-eid={canEdit ? e.id : undefined}
-                            className={cx("dt-e", e.tint && "pc", e.isNew && "new", e.moved && "moved", canEdit && "grab", editable && e.locked && "locked", canEdit && selected === e.id && "selected")}
+                            className={cx("dt-e", e.tint && "pc", e.isNew && "new", e.moved && "moved", canEdit && "grab", editable && e.locked && "locked", e.pending && "pending", canEdit && selected === e.id && "selected")}
                             style={{ left: `${pct(e.s)}%`, width: `${Math.max(0.6, pct(e.e) - pct(e.s))}%`, ...tintVars(e.tint) }}
                             tabIndex={canEdit ? 0 : undefined} role={canEdit ? "button" : undefined}
                             aria-pressed={canEdit ? selected === e.id : undefined}
                             aria-label={canEdit ? `${e.description}, ${e.range}. Left and right arrows move it; Shift with an arrow changes its end, Alt its start; Enter selects it and Delete then removes it.` : undefined}
-                            onMouseMove={(ev) => tip.show(ev, [{ big: e.description }, { k: "Project", v: e.projectTitle }, { k: "Time", v: e.range },
-                                e.overtime ? { k: "Overtime", v: fmtDur(e.overtime) } : null])}
+                            onMouseMove={(ev) => tip.show(ev, [{ big: e.description }, e.pending ? { k: "Status", v: "Pending approval" } : null,
+                                { k: "Project", v: e.projectTitle }, { k: "Time", v: e.range }, e.overtime ? { k: "Overtime", v: fmtDur(e.overtime) } : null])}
                             onMouseLeave={tip.hide}>
                             {big && pct(e.e) - pct(e.s) > 9 && <span className="trunc">{e.description}</span>}
                             {canEdit && (

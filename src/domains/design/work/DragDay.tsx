@@ -111,7 +111,13 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
     const scheduleDay = schedule.data?.day;
     const workHours = workHoursOf(scheduleDay);
     const list = (day.data?.entries ?? []).filter((e) => e.id !== ignoreId && !deleted.includes(e.id));
-    const tasks: DayTask[] = list.map((e) => ({ id: e.id, span: spanOn(e, date), whole: wholeOn(e, date), locked: !e.canEdit }));
+    // hours waiting for approval (the logger's department isn't on that project): they hold their time, faded and locked;
+    // their ids are negative so they never stand for an entry
+    const waiting = day.data?.waiting ?? [];
+    const tasks: DayTask[] = [
+        ...list.map((e) => ({ id: e.id, span: spanOn(e, date), whole: wholeOn(e, date), locked: !e.canEdit })),
+        ...waiting.map((w) => ({ id: -w.id, span: spanOn(w, date), whole: wholeOn(w, date), locked: true })),
+    ];
 
     const taskMode = drag != null && (drag.mode === "task" || drag.mode === "task-l" || drag.mode === "task-r");
     const mtgMode = drag != null && (drag.mode === "mtg-l" || drag.mode === "mtg-r");
@@ -500,6 +506,11 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
             range: at ? fmtRange(isoAt(date, at.s), isoAt(date, at.e)) : fmtRange(e.startedAt, e.endedAt), overtime: e.overtimeMinutes,
         };
     });
+    for (const w of waiting) {
+        const sp = spanOn(w, date);
+        shown.push({ id: -w.id, s: sp.s, e: sp.e, description: w.description || "Hours waiting", projectTitle: w.projectTitle, locked: true, pending: true,
+            range: fmtRange(w.startedAt, w.endedAt), overtime: 0 });
+    }
     // a phone has no right-click and usually no keyboard: it holds to delete, and the keyboard's help is left out
     const touch = touchScreen();
     const trackMeetings: TrackMeeting[] = meetings.map((x) => ({

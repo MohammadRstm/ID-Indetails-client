@@ -123,7 +123,9 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
     });
 
     if (slotFor && slotFor === date && day.data && !day.isPlaceholderData && day.data.date.slice(0, 10) === date) {
-        const sl = defaultSlot(day.data.entries.map((e) => spanOn(e, date)), workHoursOf(schedule.data?.day)?.s ?? DEFAULT_START, date === today, nowMin);
+        // hours waiting for approval hold their time too
+        const taken = [...day.data.entries, ...(day.data.waiting ?? [])].map((e) => spanOn(e, date));
+        const sl = defaultSlot(taken, workHoursOf(schedule.data?.day)?.s ?? DEFAULT_START, date === today, nowMin);
         setSlotFor(null);
         setStartMin(sl.s);
         setDuration(sl.d);
@@ -235,7 +237,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
             onError: (failure) => {
                 if (!isKeptLog(failure)) return;
                 closeLogWork();
-                toast({ text: `Your hours on ${title} are waiting for your department`, sub: errorMessage(failure), icon: "clock" });
+                toast({ text: "Your hours wait for approval", sub: `Your department isn't part of ${title}.`, icon: "clock" });
             },
         });
     }
