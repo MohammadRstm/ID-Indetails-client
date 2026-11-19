@@ -24,4 +24,13 @@ describe("the day's timeline", () => {
         expect(sel).toHaveClass("pc");
         expect(sel?.style.getPropertyValue("--pc")).toBe("#8B5CF6");
     });
+
+    it("draws hours waiting for approval faded and locked, so nothing is dragged into their place", () => {
+        const waiting: TrackEntry = { ...entry(1, null), id: -7, locked: true, pending: true };
+        const { container } = render(<DayTrack lo={8 * 60} hi={18 * 60} workHours={null} entries={[waiting]} editable />);
+        const box = container.querySelector<HTMLElement>("i.dt-e");
+        expect(box).toHaveClass("pending");
+        expect(box).toHaveClass("locked");
+        expect(box).not.toHaveAttribute("data-eid");
+    });
 });

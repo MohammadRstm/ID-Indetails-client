@@ -19375,6 +19375,7 @@ export interface components {
             meetings: components["schemas"]["MeetingResponse"][];
             /** Format: int32 */
             overtimeMinutes: number;
+            waiting: components["schemas"]["WaitingHoursResponse"][];
         };
         MyExcuseResponse: {
             days: string[];
@@ -23258,6 +23259,18 @@ export interface components {
         };
         VoidRequest: {
             reason?: string;
+        };
+        WaitingHoursResponse: {
+            description: string;
+            /** Format: date-time */
+            endedAt: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            projectId: number;
+            projectTitle: string;
+            /** Format: date-time */
+            startedAt: string;
         };
         WatermarkCheckResponse: {
             /** Format: double */

@@ -1559,6 +1559,8 @@ tr.voided .mono, .cost-row.voided .mono { text-decoration: line-through; }
 
 .dt-track > i.dt-e { position: absolute; }
 .dt-track > i.dt-e.locked { opacity: .75; cursor: not-allowed; }
+/* hours waiting for approval: faded and hatched, holding their time until they are approved or turned down */
+.dt-track > i.dt-e.pending { opacity: .45; background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .35) 0 4px, transparent 4px 10px); outline: 1px dashed var(--ink-3); outline-offset: -1px; cursor: not-allowed; }
 
 /* ---------------- the Meetings page ---------------- */
 .mtg-row { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); }
