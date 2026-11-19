@@ -268,6 +268,7 @@ function Contributors({ work, error, retry, range, rangeKey, ranges, setRangeKey
                                     <th className="r" title="Hours inside the working day">Normal</th>
                                     <th className="r" title="Outside the working day, on a day off, or past what the day asks for">Overtime</th>
                                     <SortTh sortKey="hours" sort={sort} onSort={setSort} right>Total</SortTh>
+                                    <th className="r" title="Their share of the paid daily break, given to this project by the time they worked on it that day">Break</th>
                                     <th className="r" title="Work the client asked for beyond what was agreed">Out of scope</th>
                                     {seesMoney && <th className="r">Labour cost</th>}
                                     <th style={{ width: 120 }}>{showCost ? "Share of cost" : "Share"}</th>
@@ -283,6 +284,7 @@ function Contributors({ work, error, retry, range, rangeKey, ranges, setRangeKey
                                         <td className="r mono">{fmtDur(c.minutes - c.overtimeMinutes)}</td>
                                         <td className={cx("r mono", c.overtimeMinutes ? "ot-text" : "muted")}>{c.overtimeMinutes ? fmtDur(c.overtimeMinutes) : "-"}</td>
                                         <td className="r mono" style={{ fontWeight: 600 }}>{fmtDur(c.minutes)}</td>
+                                        <td className={cx("r mono", !c.breakMinutes && "muted")}>{c.breakMinutes ? fmtDur(c.breakMinutes) : "-"}</td>
                                         <td className={cx("r mono", !c.outsideScopeMinutes && "muted")}>{c.outsideScopeMinutes ? fmtDur(c.outsideScopeMinutes) : "-"}</td>
                                         {seesMoney && (
                                             <td className="r mono">

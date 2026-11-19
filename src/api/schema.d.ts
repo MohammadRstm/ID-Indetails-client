@@ -20739,6 +20739,11 @@ export interface components {
             weekly: components["schemas"]["WeekTotalResponse"][];
         };
         ProjectContributorResponse: {
+            /**
+             * Format: int32
+             * @default 0
+             */
+            breakMinutes?: number;
             /** Format: int32 */
             entries: number;
             labourCost: null | components["schemas"]["LabourCostResponse"];
