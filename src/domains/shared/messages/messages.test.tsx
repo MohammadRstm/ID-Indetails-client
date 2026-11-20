@@ -61,7 +61,8 @@ describe("Messages", () => {
     it("show a group's messages by day, each run under its sender, with mentions and shared task comments", async () => {
         renderApp("/design/messages?group=13", rana, ...messageHandlers);
         const t = await screen.findByText("Morning! The Villa Mounir samples arrived.").then(() => thread());
-        expect(within(t).getByText("4 members · Design")).toBeInTheDocument();
+        // Sarah has the app open
+        expect(t.querySelector(".msg-thread-head")).toHaveTextContent("4 members · 1 online · Design");
         expect([...t.querySelectorAll(".day-head h4")].map((h) => h.textContent)).toEqual(["Yesterday", "Today"]);
         // Sarah's two messages a couple of minutes apart are one run: her name once
         expect(within(t).getAllByText("Sarah Haddad", { selector: ".msg-sender *, .msg-sender" })).toHaveLength(1);
@@ -149,7 +150,7 @@ describe("Messages", () => {
             http.post("/api/messages/:type/:id/read", ({ params }) => { read.push(`${params.type}/${params.id}`); return HttpResponse.json({ unread: 0, mention: false }); }),
             ...messageHandlers);
         const t = await screen.findByText("Can we talk about the Q4 plan?").then(() => thread());
-        expect(within(t.querySelector(".msg-thread-head") as HTMLElement).getByText("Design director")).toBeInTheDocument();
+        expect(t.querySelector(".msg-thread-head")).toHaveTextContent(/Design director/);
         expect(within(t).getByText("Yes, after lunch.").closest(".msg-bubble")).toHaveClass("mine");
         await waitFor(() => expect(read).toEqual(["direct/2"]));
     });

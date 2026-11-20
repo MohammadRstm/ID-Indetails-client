@@ -1069,6 +1069,24 @@ tr.voided .mono, .cost-row.voided .mono { text-decoration: line-through; }
 .msg-att { display: block; max-width: 280px; max-height: 220px; border-radius: var(--r1); margin-top: 6px; }
 .msg-time { font-size: 9.5px; color: var(--ink-3); margin-top: 3px; text-align: right; }
 .msg-via { font-style: italic; }
+/* the sender's ticks: one grey once sent, two grey once everyone has it, two blue once everyone has read it */
+.msg-ticks { display: inline-flex; align-items: center; margin-left: 3px; padding: 0; border: 0; background: none; color: var(--ink-3); cursor: pointer; vertical-align: -3px; }
+.msg-ticks .ic { width: 15px; height: 15px; }
+.msg-ticks.read { color: var(--tick-read, #3B97E3); }
+/* who has seen the newest message of a team chat or Announcements */
+.msg-seen-by { display: flex; align-items: center; gap: 6px; margin: 3px 0 8px 38px; padding: 2px 6px; border: 0; border-radius: var(--r1); background: none; color: var(--ink-3); font-size: 11px; cursor: pointer; }
+.msg-seen-by.mine { margin-left: auto; }
+.msg-seen-by:hover { color: var(--ink); background: var(--surface-2); }
+.msg-seen-by .ic { width: 12px; height: 12px; }
+.msg-seen-faces { display: inline-flex; }
+.msg-seen-faces > * + * { margin-left: -5px; }
+.msg-seen-faces .av, .msg-seen-faces .av-fb { border: 1.5px solid var(--surface); border-radius: 50%; }
+.msg-online { color: var(--ok); }
+.receipt-sec + .receipt-sec { margin-top: 14px; }
+.receipt-sec-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+.receipt-row { display: flex; align-items: center; gap: 9px; padding: 5px 0; }
+.receipt-at { font-size: 11px; }
+.receipt-empty { font-size: 12px; padding: 2px 0; }
 
 /* task-comment card: an admin's comment on a task, forwarded to a department group */
 .msg-bubble.task-card { max-width: min(420px, 100%); width: 420px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); }

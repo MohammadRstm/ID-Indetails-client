@@ -18035,7 +18035,11 @@ export interface components {
             domain: null | string;
             /** Format: int64 */
             id: number;
+            /** Format: date-time */
+            lastSeenAt?: null | string;
             name: string;
+            /** @default false */
+            online?: boolean;
             /** Format: int64 */
             photoFileId: null | number;
             position: null | string;
@@ -18049,6 +18053,8 @@ export interface components {
         };
         ConversationResponse: {
             lastMessage: null | components["schemas"]["MessageResponse"];
+            /** Format: int32 */
+            onlineCount?: null | number;
             person: null | components["schemas"]["ContactResponse"];
             team: null | components["schemas"]["ChatTeamResponse"];
             type: components["schemas"]["ConversationType"];
@@ -19298,11 +19304,40 @@ export interface components {
             id: number;
             kind: string;
             mentions: components["schemas"]["ChatPersonResponse"][];
+            receipt?: null | components["schemas"]["MessageReceiptResponse"];
             sender: components["schemas"]["ChatPersonResponse"];
             taskComment: null | components["schemas"]["TaskCommentResponse"];
             /** @default false */
             viaProton: boolean;
         };
+        MessageReceiptResponse: {
+            /** Format: int32 */
+            delivered: number;
+            /** Format: int32 */
+            of: number;
+            /** Format: int32 */
+            seen: number;
+            status: components["schemas"]["ReceiptStatus"];
+        };
+        MessageReceiptsResponse: {
+            delivered: components["schemas"]["ReceiptPersonResponse"][];
+            /** Format: int64 */
+            messageId: number;
+            notReceived: components["schemas"]["ReceiptPersonResponse"][];
+            seen: components["schemas"]["ReceiptPersonResponse"][];
+            summary: components["schemas"]["MessageReceiptResponse"];
+        };
+        ReceiptPersonResponse: {
+            /** Format: date-time */
+            at?: null | string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: int64 */
+            photoFileId: null | number;
+        };
+        /** @enum {unknown} */
+        ReceiptStatus: "sent" | "delivered" | "read";
         MessagesBadgeResponse: {
             mention: boolean;
             /** Format: int32 */
