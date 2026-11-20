@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Icon from "@/shared/icons/Icon";
 import type { IconName } from "@/shared/icons/icons";
 import { cx } from "@/shared/utils/cx";
@@ -6,6 +6,16 @@ import { revealInStrip } from "@/shared/utils/revealInStrip";
 
 /** Every section has an icon before its name, so the row reads at a glance. */
 export type TabItem<K extends string> = { key: K; label: ReactNode; icon: IconName; count?: number | null };
+
+/** Each section's icon keeps its own colour wherever it appears; one without its own takes the next of the rest. */
+const ICON_COLORS: Partial<Record<IconName, string>> = {
+    overview: "#2F6FEB", projects: "#5B5BD6", chartTile: "#0E8A84", card: "#B7791F", edit: "#E0603F", target: "#C026A3",
+    activity: "#0B8DB8", people: "#8B5CF6", checkCircle: "#2F9E44", clock: "#D9730D", calendar: "#D6336C", folder: "#9C6644",
+    browser: "#5F7085", briefcase: "#7C8A16", file: "#0F9F75", trendDown: "#E03131", timer: "#9D3FC7", list: "#4C6EF5",
+    building: "#A26769", archive: "#868E96",
+};
+const SPARE = ["#2F6FEB", "#D9730D", "#2F9E44", "#C026A3", "#0E8A84", "#8B5CF6"];
+const iconColor = (icon: IconName, index: number) => ICON_COLORS[icon] ?? SPARE[index % SPARE.length];
 
 type TabsProps<K extends string> = {
     items: TabItem<K>[];
@@ -57,8 +67,9 @@ export default function Tabs<K extends string>({ items, value, onChange }: TabsP
             {edges.l && <button type="button" className="tabs-arrow l" tabIndex={-1} aria-label="Earlier sections" onClick={() => by(-1)}><Icon name="chevronLeft" /></button>}
             <div className="tabs" role="tablist" ref={ref} onScroll={measure}>
                 <span className="tabs-cover" ref={card} aria-hidden="true" />
-                {items.map((item) => (
+                {items.map((item, i) => (
                     <button key={item.key} role="tab" aria-selected={value === item.key} className={cx("tab", value === item.key && "on")}
+                        style={{ "--tab-ic": iconColor(item.icon, i) } as CSSProperties}
                         ref={value === item.key ? revealInStrip : undefined} onClick={() => onChange(item.key)}>
                         <Icon name={item.icon} />
                         {item.label}
