@@ -61,7 +61,7 @@ export default function OverviewRoute() {
         else params.set("tab", next);
         setParams(params, { replace: true });
     };
-    const tabs = meetings && <Tabs value={tab} onChange={open} items={[{ key: "overview", label }, { key: "meetings", label: "Meetings" }]} />;
+    const tabs = meetings && <Tabs value={tab} onChange={open} items={[{ key: "overview", label, icon: "overview" }, { key: "meetings", label: "Meetings", icon: "calendar" }]} />;
 
     if (tab === "overview") return <OverviewPage key={domain} domain={domain} tabs={tabs} />;
     return (

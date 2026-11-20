@@ -1,9 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import Icon from "@/shared/icons/Icon";
+import type { IconName } from "@/shared/icons/icons";
 import { cx } from "@/shared/utils/cx";
 import { revealInStrip } from "@/shared/utils/revealInStrip";
 
-export type TabItem<K extends string> = { key: K; label: ReactNode; count?: number | null };
+/** Every section has an icon before its name, so the row reads at a glance. */
+export type TabItem<K extends string> = { key: K; label: ReactNode; icon: IconName; count?: number | null };
 
 type TabsProps<K extends string> = {
     items: TabItem<K>[];
@@ -58,6 +60,7 @@ export default function Tabs<K extends string>({ items, value, onChange }: TabsP
                 {items.map((item) => (
                     <button key={item.key} role="tab" aria-selected={value === item.key} className={cx("tab", value === item.key && "on")}
                         ref={value === item.key ? revealInStrip : undefined} onClick={() => onChange(item.key)}>
+                        <Icon name={item.icon} />
                         {item.label}
                         {item.count != null && <> <span className="muted num">{item.count}</span></>}
                     </button>

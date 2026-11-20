@@ -5,6 +5,8 @@ import type { Schemas } from "@/api/types";
 export type Conversation = Schemas["ConversationResponse"];
 export type Contact = Schemas["ContactResponse"];
 export type Message = Schemas["MessageResponse"];
+export type Receipt = Schemas["MessageReceiptResponse"];
+export type Receipts = Schemas["MessageReceiptsResponse"];
 
 /** A chat: a team's group chat, the direct chat with one person, or Announcements, which everyone reads. */
 export type Chat = { kind: "group"; teamId: number } | { kind: "dm"; userId: number } | { kind: "announcements" };
@@ -59,6 +61,18 @@ export function useThread(chat: Chat | null) {
         initialPageParam: null as number | null,
         getNextPageParam: (page) => (page.hasMore && page.items.length ? page.items[0].id : undefined),
         enabled: chat != null,
+    });
+}
+
+/**
+ * Who has seen a message, who has received it, and who hasn't: for its sender, the super admins in team chats and
+ * whoever announces in Announcements. The live connection's "receipts" signal reloads it.
+ */
+export function useMessageReceipts(messageId: number | null) {
+    return useQuery({
+        queryKey: [...messagesKey, "receipts", messageId],
+        queryFn: async () => (await http.get<Receipts>(`/messages/${messageId}/receipts`)).data,
+        enabled: messageId != null,
     });
 }
 

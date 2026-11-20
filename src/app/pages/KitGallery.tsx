@@ -72,7 +72,7 @@ export default function KitGallery() {
                 <OrbPreview />
             </Panel>
 
-            <Tabs value={tab} onChange={setTab} items={[{ key: "overview", label: "Overview" }, { key: "requirements", label: "Requirements", count: 4 }, { key: "timeline", label: "Timeline" }]} />
+            <Tabs value={tab} onChange={setTab} items={[{ key: "overview", label: "Overview", icon: "overview" }, { key: "requirements", label: "Requirements", icon: "checkCircle", count: 4 }, { key: "timeline", label: "Timeline", icon: "clock" }]} />
 
             <div className="filters mt">
                 <SearchInput value="" onChange={() => {}} placeholder="Search projects" />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { AREAS } from "@/app/routing/areas";
@@ -16,6 +16,7 @@ import Thread from "./Thread";
 import { chatKey, chatOf, useContacts, useConversations, usePresence, type Chat, type Conversation } from "./messagesApi";
 import { loadFailed } from "@/api/queryState";
 import { clickable } from "@/shared/utils/clickable";
+import { lastSeenWords } from "./lastSeenWords";
 
 // direct messages are listed by who people are: super admins, then admins, then employees
 const LEVELS = [{ role: "super_admin", label: "Super admins" }, { role: "admin", label: "Admins" }, { role: "employee", label: "Employees" }];
@@ -48,6 +49,16 @@ export default function MessagesPage() {
     const conversations = useConversations();
     const contacts = useContacts();
     const presence = usePresence();
+    // someone closed the app: their "last seen" moved, so the people are loaded again
+    const wasOnline = useRef<Set<number>>(new Set());
+    const refetchContacts = contacts.refetch;
+    useEffect(() => {
+        const now = presence.data;
+        if (!now) return;
+        const left = [...wasOnline.current].some((id) => !now.has(id));
+        wasOnline.current = now;
+        if (left) void refetchContacts();
+    }, [presence.data, refetchContacts]);
     const list = conversations.data ?? [];
     const recent = list.filter((c) => c.lastMessage).sort((a, b) => b.lastMessage!.createdAt.localeCompare(a.lastMessage!.createdAt));
     const asked = chatFrom(params);
@@ -113,7 +124,13 @@ export default function MessagesPage() {
                                             <GroupTile domain={c.team!.domain} size="sm" />
                                             <div className="grow" style={{ minWidth: 0 }}>
                                                 <div className="trunc" style={{ fontWeight: 600 }}>{c.team!.name}</div>
-                                                {super_ && <div className="muted trunc" style={{ fontSize: 11 }}>{areaLabel(c.team!.domain)}</div>}
+                                                {(super_ || (c.onlineCount ?? 0) > 0) && (
+                                                    <div className="muted trunc" style={{ fontSize: 11 }}>
+                                                        {(c.onlineCount ?? 0) > 0 && <span className="msg-online">{c.onlineCount} online</span>}
+                                                        {(c.onlineCount ?? 0) > 0 && super_ ? " · " : ""}
+                                                        {super_ ? areaLabel(c.team!.domain) : ""}
+                                                    </div>
+                                                )}
                                             </div>
                                             {count(c)}
                                         </div>
@@ -128,12 +145,15 @@ export default function MessagesPage() {
                                             <div className="msg-sub-label">{lv.label}<span>{rows.length}</span></div>
                                             {rows.map((p) => {
                                                 const k: Chat = { kind: "dm", userId: p.id };
+                                                const online = presence.data?.has(p.id) ?? p.online ?? false;
                                                 return (
                                                     <div key={p.id} className={cx("msg-contact-row", chat && chatKey(chat) === chatKey(k) && "on")} {...clickable(() => select(k), "button")}>
-                                                        <Avatar person={{ name: p.name, photoFileId: p.photoFileId, online: presence.data?.has(p.id) ?? false }} size={28} presence />
+                                                        <Avatar person={{ name: p.name, photoFileId: p.photoFileId, online }} size={28} presence />
                                                         <div className="grow" style={{ minWidth: 0 }}>
                                                             <div className="trunc" style={{ fontWeight: 600 }}>{p.name}</div>
-                                                            <div className="muted trunc" style={{ fontSize: 11 }}>{p.position ?? ""}{super_ && p.domain ? ` · ${areaLabel(p.domain)}` : ""}</div>
+                                                            <div className="muted trunc" style={{ fontSize: 11 }} title={[p.position, super_ && p.domain ? areaLabel(p.domain) : null].filter(Boolean).join(" · ")}>
+                                                                <span className={cx(online && "msg-online")}>{lastSeenWords(online, p.lastSeenAt)}</span>
+                                                            </div>
                                                         </div>
                                                         <OffBadge userId={p.id} />
                                                         {count(byChat.get(chatKey(k)))}
