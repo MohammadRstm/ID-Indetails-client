@@ -625,16 +625,15 @@ table { line-height: normal; font-weight: normal; }
 .tabs { position: relative; padding-top: 4px; border-bottom: 0; }
 .tabs-scroll::after { content: ""; display: block; height: 8px; border-radius: 0 0 9px 9px; background: var(--surface);
   box-shadow: 0 1px 0 var(--line), 0 3px 6px -4px rgba(0, 0, 0, .1); }
-/* every section sits on a card, its icon to the left of its name; the open one is in the primary colour */
+/* every section sits on a card, its icon to the left of its name; the open one is tinted like the breadcrumbs' current page */
 .tabs .tab { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-bottom: 0;
   border-radius: 9px 9px 0 0; background: var(--surface); color: var(--ink-2); transition: color .15s ease, background-color .15s ease; }
 .tabs .tab:hover:not(.on) { background: color-mix(in srgb, var(--surface-3) 70%, var(--surface)); color: var(--ink); }
-.tabs .tab.on { background: transparent; color: #fff; font-weight: 650; }
-/* each section's icon in its own colour (Tabs sets --tab-ic); white on the open one */
+.tabs .tab.on { background: transparent; color: var(--accent-ink); font-weight: 650; }
+/* each section's icon in its own colour (Tabs sets --tab-ic) */
 .tabs .tab .ic { width: 14px; height: 14px; color: var(--tab-ic, currentColor); }
-.tabs .tab.on .ic { color: #fff; }
-.tabs .tab.on .muted { color: rgba(255, 255, 255, .8); }
-.tabs-cover { position: absolute; top: 4px; bottom: 0; left: 0; z-index: 0; border-radius: 10px 10px 0 0; background: var(--accent);
+.tabs-cover { position: absolute; top: 4px; bottom: 0; left: 0; z-index: 0; border-radius: 10px 10px 0 0;
+  background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--surface);
   box-shadow: 0 -2px 6px -4px rgba(0, 0, 0, .12); pointer-events: none; }
 .tabs-cover.glides { transition: transform .32s cubic-bezier(.3, .7, .2, 1), width .32s cubic-bezier(.3, .7, .2, 1); }
 @media (prefers-reduced-motion: reduce) { .tabs-cover.glides { transition: none; } }
