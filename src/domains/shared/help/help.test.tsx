@@ -84,6 +84,9 @@ describe("Help's content", () => {
         expect(xm).toEqual(expect.arrayContaining(["set-pricing", "boqs", "write-boq", "agree-boq", "execution-pricing", "site-money"]));
         for (const id of ["set-pricing", "boqs", "write-boq", "agree-boq", "execution-pricing", "site-money"]) expect(xa, id).not.toContain(id);
         expect(da).not.toContain("site-money");
+        // progress by value: site staff record it, Execution admins and whoever sees money read it, Design doesn't
+        for (const reader of [xe, xa, xm, sa]) expect(reader, "boq-progress").toContain("boq-progress");
+        for (const other of [da, de]) expect(other, "boq-progress").not.toContain("boq-progress");
         // the hours balance is Design's employees', and only employees log hours: admins are paid a fixed salary
         expect(da).not.toContain("hours-balance");
         for (const admin of [sa, da, xa]) for (const id of ["log-work", "timer", "my-pay"]) expect(admin, id).not.toContain(id);
