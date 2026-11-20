@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, type RefObject } from "react";
 import { useNavigate } from "react-router";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -24,6 +24,9 @@ import { OffBadge } from "../timeOff/OffBadge";
 import SoundToggle from "./SoundToggle";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
+import { usePageVisible } from "@/portal/discussion/usePageVisible";
+import { lastSeenWords } from "./lastSeenWords";
+import { ReceiptsModal, SeenBy, Ticks } from "./Receipts";
 
 type File = Message["attachments"][number];
 
@@ -74,7 +77,24 @@ function TaskCard({ m, mine }: { m: Message; mine: boolean }) {
     );
 }
 
-function Body({ m, mine, showName, names }: { m: Message; mine: boolean; showName: boolean; names: string[] }) {
+/**
+ * Whether the element is on screen: in a tab being looked at, and not hidden (the thread behind the list of chats on
+ * a phone). Where the browser can't tell, it counts as on screen.
+ */
+function useOnScreen(ref: RefObject<HTMLElement | null>): boolean {
+    const visible = usePageVisible();
+    const [inView, setInView] = useState(() => typeof IntersectionObserver === "undefined");
+    useEffect(() => {
+        const el = ref.current;
+        if (!el || typeof IntersectionObserver === "undefined") return;
+        const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting));
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [ref]);
+    return visible && inView;
+}
+
+function Body({ m, mine, showName, names, onReceipts }: { m: Message; mine: boolean; showName: boolean; names: string[]; onReceipts: () => void }) {
     if (m.kind === "task_comment") return <TaskCard m={m} mine={mine} />;
     return (
         <div className={cx("msg-bubble", mine && "mine")}>
@@ -89,6 +109,7 @@ function Body({ m, mine, showName, names }: { m: Message; mine: boolean; showNam
                 {/* sent by Proton for the sender, after they confirmed it: recipients should know */}
                 {m.viaProton && <span className="msg-via" title="Written with Proton and sent after the sender confirmed it">with Proton · </span>}
                 {fmtTime(m.createdAt)}
+                {mine && m.receipt && <Ticks receipt={m.receipt} onOpen={onReceipts} />}
             </div>
         </div>
     );
@@ -104,8 +125,9 @@ type ThreadProps = {
 };
 
 /**
- * One chat (the prototype's thread): who it is with, the messages by day, and the composer. Opening it, and
- * each new message while it is open, marks it read.
+ * One chat (the prototype's thread): who it is with, the messages by day, and the composer. While it is on screen,
+ * it is marked read, and so is each new message. The sender's messages show their ticks, and under the newest one
+ * whose receipts the caller sees, a team chat or Announcements says who has seen it.
  */
 export default function Thread({ chat, person, team, meId, onBack }: ThreadProps) {
     const navigate = useNavigate();
@@ -116,6 +138,8 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
     const send = useSendMessage(chat);
     const markRead = useMarkChatRead();
     const listRef = useRef<HTMLDivElement>(null);
+    const onScreen = useOnScreen(listRef);
+    const [info, setInfo] = useState<number | null>(null);
     const messages = [...(thread.data?.pages ?? [])].reverse().flatMap((p) => p.items);
     const newest = messages[messages.length - 1]?.id ?? 0;
     const names = (members.data ?? []).map((p) => p.name);
@@ -126,10 +150,10 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
     // everyone reads Announcements; only message:announce writes in it
     const writes = kind !== "announcements" || permissions.has(P.MESSAGE_ANNOUNCE);
 
-    // read up to the newest message, whenever a new one arrives
+    // read up to the newest message, whenever a new one arrives, while the chat is on screen: what isn't looked at isn't read
     useEffect(() => {
-        if (loaded) markChat(kind === "group" ? { kind, teamId: id } : kind === "dm" ? { kind, userId: id } : { kind });
-    }, [kind, id, newest, loaded, markChat]);
+        if (loaded && onScreen) markChat(kind === "group" ? { kind, teamId: id } : kind === "dm" ? { kind, userId: id } : { kind });
+    }, [kind, id, newest, loaded, onScreen, markChat]);
 
     // someone else's message arriving in the open chat chimes (marking it read keeps the badge from doing so)
     const seen = useRef<{ key: string; id: number } | null>(null);
@@ -157,7 +181,10 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
     }
 
     const profile = person?.domain && canOpen(permissions, person.domain as "design", `people/${person.id}`) ? `/${person.domain}/people/${person.id}` : null;
-    const who = person ? { name: person.name, photoFileId: person.photoFileId, online: presence.data?.has(person.id) ?? false } : null;
+    const who = person ? { name: person.name, photoFileId: person.photoFileId, online: presence.data?.has(person.id) ?? person.online ?? false } : null;
+    const onlineHere = (members.data ?? []).filter((p) => p.id !== meId && presence.data?.has(p.id)).length;
+    // who has seen the newest message whose receipts the caller sees: in team chats and Announcements
+    const seenBy = chat.kind === "dm" ? undefined : [...messages].reverse().find((m) => m.receipt);
 
     return (
         <>
@@ -169,7 +196,10 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                             <Avatar person={who} size={32} presence />
                             <div style={{ minWidth: 0 }}>
                                 <div className="trunc" style={{ fontWeight: 650 }}>{person.name}</div>
-                                <div className="muted trunc" style={{ fontSize: "11.5px" }}>{person.position ?? ROLE[person.role] ?? ""}</div>
+                                <div className="muted trunc" style={{ fontSize: "11.5px" }}>
+                                    <span className={cx(who.online && "msg-online")}>{lastSeenWords(who.online, person.lastSeenAt)}</span>
+                                    {(person.position ?? ROLE[person.role]) ? ` · ${person.position ?? ROLE[person.role]}` : ""}
+                                </div>
                             </div>
                             <OffBadge userId={person.id} />
                         </div>
@@ -180,7 +210,9 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                         <div>
                             <div style={{ fontWeight: 650 }}>{team.name}</div>
                             <div className="muted" style={{ fontSize: "11.5px" }}>
-                                {members.data ? `${members.data.length} member${members.data.length === 1 ? "" : "s"} · ` : ""}{AREAS[team.domain as "design"]?.label}
+                                {members.data ? `${members.data.length} member${members.data.length === 1 ? "" : "s"} · ` : ""}
+                                {onlineHere > 0 && <span className="msg-online">{onlineHere} online · </span>}
+                                {AREAS[team.domain as "design"]?.label}
                             </div>
                         </div>
                     </div>
@@ -214,15 +246,27 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                                     {day.items.map((m, i) => {
                                         const mine = m.sender.id === meId;
                                         const first = startsRun(m, day.items[i - 1]);
+                                        const open = () => setInfo(m.id);
+                                        const seen = seenBy?.id === m.id && m.receipt
+                                            ? <SeenBy messageId={m.id} receipt={m.receipt} mine={mine} onOpen={open} />
+                                            : null;
                                         if (chat.kind !== "dm" && !mine) {
                                             return (
-                                                <div key={m.id} className={cx("msg-row", first && "first")}>
-                                                    <div className="msg-av">{first && <Avatar person={{ name: m.sender.name, photoFileId: m.sender.photoFileId }} size={30} />}</div>
-                                                    <Body m={m} mine={false} showName={first} names={names} />
-                                                </div>
+                                                <Fragment key={m.id}>
+                                                    <div className={cx("msg-row", first && "first")}>
+                                                        <div className="msg-av">{first && <Avatar person={{ name: m.sender.name, photoFileId: m.sender.photoFileId }} size={30} />}</div>
+                                                        <Body m={m} mine={false} showName={first} names={names} onReceipts={open} />
+                                                    </div>
+                                                    {seen}
+                                                </Fragment>
                                             );
                                         }
-                                        return <Body key={m.id} m={m} mine={mine} showName={false} names={names} />;
+                                        return (
+                                            <Fragment key={m.id}>
+                                                <Body m={m} mine={mine} showName={false} names={names} onReceipts={open} />
+                                                {seen}
+                                            </Fragment>
+                                        );
                                     })}
                                 </div>
                             ))}
@@ -239,6 +283,7 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
             ) : (
                 <div className="msg-composer-wrap msg-readonly"><Icon name="megaphone" />Only super admins write here.</div>
             )}
+            {info != null && <ReceiptsModal messageId={info} onClose={() => setInfo(null)} />}
         </>
     );
 }

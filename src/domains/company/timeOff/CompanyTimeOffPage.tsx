@@ -20,13 +20,14 @@ import { TimeOffDecisionNotes, TimeOffStatusBadge } from "../../shared/timeOff/T
 import {
     TIME_OFF_NOTE_MAX, useApproveTimeOff, useDeclineTimeOff, useRejectTimeOff, useTimeOffList, type TimeOff, type TimeOffView,
 } from "../../shared/timeOff/timeOffApi";
+import type { IconName } from "@/shared/icons/icons";
 
 const PAGE_SIZE = 25;
 
-const VIEWS: { key: TimeOffView; label: string; empty: string; emptyText: string }[] = [
-    { key: "pending", label: "Pending", empty: "Nothing waiting", emptyText: "Requests nobody has decided on yet appear here." },
-    { key: "current", label: "Current & upcoming", empty: "No time off now or coming up", emptyText: "Approved time off that is under way or still ahead appears here." },
-    { key: "past", label: "Past", empty: "No past time off", emptyText: "Finished, declined and withdrawn requests appear here." },
+const VIEWS: { key: TimeOffView; label: string; icon: IconName; empty: string; emptyText: string }[] = [
+    { key: "pending", label: "Pending", icon: "clock", empty: "Nothing waiting", emptyText: "Requests nobody has decided on yet appear here." },
+    { key: "current", label: "Current & upcoming", icon: "calendar", empty: "No time off now or coming up", emptyText: "Approved time off that is under way or still ahead appears here." },
+    { key: "past", label: "Past", icon: "archive", empty: "No past time off", emptyText: "Finished, declined and withdrawn requests appear here." },
 ];
 
 const periodOf = (r: TimeOff) => (r.lastDay === r.firstDay ? fmtDateY(r.firstDay) : `${fmtDateY(r.firstDay)} to ${fmtDateY(r.lastDay)}`);
@@ -174,7 +175,7 @@ export default function CompanyTimeOffPage() {
         <div className="page">
             <PageHead title="Time off" sub="Requests from Design employees. Approve with pay or without, or decline. Approved time off can be taken back until its last day." />
             <Tabs value={view} onChange={(next) => { setView(next); setPage(1); }}
-                items={VIEWS.map((v) => ({ key: v.key, label: v.label, count: v.key === view ? data?.totalCount : undefined }))} />
+                items={VIEWS.map((v) => ({ key: v.key, label: v.label, icon: v.icon, count: v.key === view ? data?.totalCount : undefined }))} />
             <div className="panel mt" ref={anchor} aria-label={current.label}>
                 {loadFailed(list) ? <div className="panel-body"><LoadError error={list.error} retry={() => list.refetch()} what="the time off" /></div>
                     : !data ? <div className="panel-body"><SkeletonLines lines={5} /></div>

@@ -6,8 +6,12 @@ import { secondsLeft } from "@/api/tokenExpiry";
 import { tokenStore } from "@/api/tokenStore";
 import { refreshDiscussion } from "@/portal/discussion/discussionApi";
 
-/** Which chat changed: a team's, or the direct chat with a person. */
-export type LiveChat = { teamId?: number | null; userId?: number | null };
+/** Which chat changed: a team's, the direct chat with a person, or Announcements. */
+export type LiveChat = { teamId?: number | null; userId?: number | null; announcements?: boolean };
+
+/** The thread's key of the chat a signal names (as messagesApi keys it). */
+const threadOf = (chat?: LiveChat) =>
+    chat?.teamId ? `group-${chat.teamId}` : chat?.userId ? `dm-${chat.userId}` : chat?.announcements ? "announcements" : null;
 
 const RETRY_MS = 15_000;
 /** The client discussions of every project, as the staff's pages key them. */
@@ -52,6 +56,12 @@ export function useLiveUpdates(userId: number) {
 
         connection.on("notifications", () => refresh("notifications"));
         connection.on("messages", () => refresh("messages"));
+        // someone received or read messages: their ticks, "Seen by" and the chats' last messages (never the badge,
+        // whose loading is what marks messages received)
+        connection.on("receipts", (chat?: LiveChat) => {
+            const key = threadOf(chat);
+            refresh(key ? ["messages", "thread", key] : ["messages", "thread"], ["messages", "receipts"], ["messages", "conversations"]);
+        });
         // one project's discussion: its summary, its chat and the thread on screen; without a project, all of them
         connection.on("portal", (change?: { projectId?: number }) => {
             if (change?.projectId) refreshDiscussion(queryClient, "staff", change.projectId);

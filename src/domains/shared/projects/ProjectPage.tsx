@@ -354,18 +354,18 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             )}
 
             <Tabs value={tab} onChange={switchTab} items={[
-                ...(allowed.financials ? [{ key: "financials" as TabKey, label: "Financials" }] : []),
-                ...(allowed.payments ? [{ key: "payments" as TabKey, label: "Client payments" }] : []),
-                ...(allowed.vos ? [{ key: "vos" as TabKey, label: "Variation orders" }] : []),
-                ...(allowed.insights ? [{ key: "insights" as TabKey, label: "Insights" }] : []),
-                ...(allowed.overview ? [{ key: "overview" as TabKey, label: "Overview" }] : []),
-                ...(allowed.analytics ? [{ key: "analytics" as TabKey, label: "Analytics" }] : []),
-                ...(allowed.contributors ? [{ key: "contributors" as TabKey, label: "Contributors" }] : []),
-                ...(permissions.has(P.REQUIREMENT_VIEW) ? [{ key: "requirements" as TabKey, label: "Requirements", count: requirements.data?.total }] : []),
-                ...(timelineTab ? [{ key: "timeline" as TabKey, label: "Timeline" }] : []),
-                { key: "meetings" as TabKey, label: "Meetings", count: meetings.data?.length },
-                ...(allowed.files ? [{ key: "files" as TabKey, label: "Project files" }] : []),
-                ...(allowed.portal ? [{ key: "portal" as TabKey, label: "Client portal" }] : []),
+                ...(allowed.financials ? [{ key: "financials" as TabKey, label: "Financials", icon: "chartTile" as const }] : []),
+                ...(allowed.payments ? [{ key: "payments" as TabKey, label: "Client payments", icon: "card" as const }] : []),
+                ...(allowed.vos ? [{ key: "vos" as TabKey, label: "Variation orders", icon: "edit" as const }] : []),
+                ...(allowed.insights ? [{ key: "insights" as TabKey, label: "Insights", icon: "target" as const }] : []),
+                ...(allowed.overview ? [{ key: "overview" as TabKey, label: "Overview", icon: "overview" as const }] : []),
+                ...(allowed.analytics ? [{ key: "analytics" as TabKey, label: "Analytics", icon: "activity" as const }] : []),
+                ...(allowed.contributors ? [{ key: "contributors" as TabKey, label: "Contributors", icon: "people" as const }] : []),
+                ...(permissions.has(P.REQUIREMENT_VIEW) ? [{ key: "requirements" as TabKey, label: "Requirements", icon: "checkCircle" as const, count: requirements.data?.total }] : []),
+                ...(timelineTab ? [{ key: "timeline" as TabKey, label: "Timeline", icon: "clock" as const }] : []),
+                { key: "meetings" as TabKey, label: "Meetings", icon: "calendar" as const, count: meetings.data?.length },
+                ...(allowed.files ? [{ key: "files" as TabKey, label: "Project files", icon: "folder" as const }] : []),
+                ...(allowed.portal ? [{ key: "portal" as TabKey, label: "Client portal", icon: "browser" as const }] : []),
             ]} />
 
             {waitingForPortal ? <SkeletonLines lines={6} />

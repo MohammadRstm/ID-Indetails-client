@@ -294,7 +294,7 @@ export default function PocketPage() {
     return (
         <div className="page">
             <PageHead title="Pocket money" sub="Money set aside from Execution sites by hand, and paid back to sites that run short when a super admin approves." />
-            <Tabs value={tab} onChange={pick} items={[{ key: "pocket", label: "Pocket" }, { key: "transactions", label: "Transactions" }]} />
+            <Tabs value={tab} onChange={pick} items={[{ key: "pocket", label: "Pocket", icon: "card" }, { key: "transactions", label: "Transactions", icon: "list" }]} />
             {tab === "transactions" ? <Transactions />
                 : loadFailed(pocket) ? <LoadError error={pocket.error} retry={() => pocket.refetch()} what="the pocket money" />
                     : !p ? <SkeletonLines lines={6} />

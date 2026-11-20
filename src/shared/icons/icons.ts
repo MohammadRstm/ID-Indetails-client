@@ -19,6 +19,7 @@ export const icons = {
   chevronLeft: '<path d="M14.5 5.5 8 12l6.5 6.5"/>',
   x: '<path d="M6.6 6.6 17.4 17.4"/><path d="M17.4 6.6 6.6 17.4"/>',
   check: '<path d="M5.2 12.6 9.8 17.2 18.8 6.9"/>',
+  checks: '<path d="M2.6 12.8 6.6 16.8 15.2 7.2"/><path d="M11.2 15.4 12.6 16.8 21.2 7.2"/>',
   clock: '<circle cx="12" cy="12" r="8.4"/><path d="M12 7.2V12l3.4 2.2"/>',
   calendar: '<rect x="3.6" y="5.2" width="16.8" height="15.2" rx="2.4"/><path d="M3.6 9.8h16.8"/><path d="M8 3.4v3.6"/><path d="M16 3.4v3.6"/>',
   download: '<path d="M12 4v11.4"/><path d="M7.6 11.4 12 15.8l4.4-4.4"/><path d="M4.8 19.6h14.4"/>',
