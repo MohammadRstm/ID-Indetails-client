@@ -7,6 +7,7 @@ import { canOpen } from "@/app/routing/routeTable";
 import { Delta, ProfitBars, RankBars, StatusBar } from "@/shared/components/Charts/Bars";
 import Columns from "@/shared/components/Charts/Columns";
 import Figure from "@/shared/components/Charts/Figure";
+import { projectLabel } from "@/domains/shared/projects/projectCodes";
 import { ProjectTile, Signal } from "@/shared/components/Data/Bits";
 import { Money } from "@/shared/components/Data/Money";
 import { MarginPill } from "@/shared/components/Data/Pills";
@@ -149,7 +150,7 @@ export function FollowupsCard({ items, deadlines, deadlinesFailed, loading }: Fo
                                 <div className="grow" style={{ minWidth: 0 }}>
                                     <div className="req-text">{r.text}</div>
                                     <div className="req-meta">
-                                        <span>{r.project.title}</span>
+                                        <span>{projectLabel(r.project)}</span>
                                         {r.assignees.length
                                             ? <span className="row" style={{ gap: 5 }}><Avatars people={r.assignees} max={3} size={16} link /><NameList people={r.assignees} /></span>
                                             : <span className="down">Not assigned</span>}

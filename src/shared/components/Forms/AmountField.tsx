@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent } from "react";
-import { AMOUNT, upTo } from "@/shared/format/limits";
+import { AMOUNT, upTo, type NumberShape } from "@/shared/format/limits";
 import { FieldError } from "./Field";
 import { groupedNumber } from "./groupedNumber";
 import Select from "./Select";
@@ -11,6 +11,8 @@ type AmountFieldProps = {
     onCurrency?: (currency: string) => void;
     /** false hides the currency picker (amounts that are always in one currency). */
     currencies?: boolean;
+    /** How many digits and decimals it takes: an amount to the cent unless said otherwise. */
+    shape?: NumberShape;
     id?: string;
     /** For a field with no label of its own, as in a grid. */
     "aria-label"?: string;
@@ -31,7 +33,7 @@ const parsed = (text: string) => (text === "" ? 0 : Number(text) || 0);
  * commas between the thousands as it is typed (400,000) and hands up the plain number. It takes no more digits or
  * decimals than an amount can have, and says so under itself when a key is refused.
  */
-export default function AmountField({ value, onChange, currency = "USD", onCurrency, currencies = true, id, placeholder = "0", r, c, onKeyDown, onBlur, ...rest }: AmountFieldProps) {
+export default function AmountField({ value, onChange, currency = "USD", onCurrency, currencies = true, shape = AMOUNT, id, placeholder = "0", r, c, onKeyDown, onBlur, ...rest }: AmountFieldProps) {
     // The text as typed without its commas, so "42." and "42.50" stay as they are while the amount they give is
     // handed up; an amount set from outside replaces it.
     const [text, setText] = useState(() => shown(value));
@@ -41,17 +43,18 @@ export default function AmountField({ value, onChange, currency = "USD", onCurre
         setLast(value);
         if (parsed(text) !== (value ?? 0)) setText(shown(value));
     }
-    const input = groupedNumber(text, AMOUNT);
+    const input = groupedNumber(text, shape);
 
     return (
         <>
         <div className="amount-field">
-            <span className="amount-cur">{currency === "LBP" ? "LBP" : "$"}</span>
+            {/* "$" for dollars; any other currency shows its code (LBP, CFA) */}
+            <span className="amount-cur">{currency === "USD" ? "$" : currency}</span>
             <input
                 id={id}
                 aria-label={rest["aria-label"]}
                 className="input mono"
-                inputMode="decimal"
+                inputMode={shape.decimals ? "decimal" : "numeric"}
                 placeholder={placeholder}
                 value={input.value}
                 data-r={r}
@@ -82,7 +85,7 @@ export default function AmountField({ value, onChange, currency = "USD", onCurre
                 />
             )}
         </div>
-        {refused && <FieldError message={upTo(AMOUNT)} />}
+        {refused && <FieldError message={upTo(shape)} />}
         </>
     );
 }

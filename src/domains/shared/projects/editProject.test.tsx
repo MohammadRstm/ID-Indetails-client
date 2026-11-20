@@ -94,3 +94,45 @@ describe("the start date of a project's details", () => {
         await waitFor(() => expect(within(dialog).queryByText(message)).not.toBeInTheDocument());
     });
 });
+
+describe("a project's colour", () => {
+    // the palette, the navy one taken by another open project of the business
+    const palette = [
+        { name: "Raspberry", hex: "#A53860", takenBy: null },
+        { name: "Jade", hex: "#2A7F62", takenBy: null },
+        { name: "Navy", hex: "#1D2D44", takenBy: { id: 9, title: "Villa Nour" } },
+    ];
+    const colors = http.get("/api/projects/colors", () => HttpResponse.json(palette));
+
+    it("is picked from a grid of the palette, the taken colours faded, and sent with the rest", async () => {
+        const bodies: Record<string, unknown>[] = [];
+        const dialog = await openDetails(colors, http.put("/api/projects/1", async ({ request }) => {
+            bodies.push((await request.json()) as Record<string, unknown>);
+            return HttpResponse.json(project);
+        }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Change colour" }));
+        const picker = await screen.findByRole("dialog", { name: "Project colour" });
+        expect(await within(picker).findAllByRole("listitem")).toHaveLength(3);
+        expect(within(picker).getByRole("button", { name: "Navy, taken by Villa Nour" })).toHaveClass("taken");
+        await userEvent.click(within(picker).getByRole("button", { name: "Jade" }));
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: "Project colour" })).not.toBeInTheDocument());
+        expect(within(dialog).getByText("Jade")).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ tint: "#2A7F62" })]));
+    });
+
+    it("taken by another project, is swapped with it at once", async () => {
+        const swaps: unknown[] = [];
+        const dialog = await openDetails(colors, http.post("/api/projects/1/swap-color", async ({ request }) => {
+            swaps.push(await request.json());
+            return HttpResponse.json({ ...project, tint: "#1D2D44" });
+        }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Change colour" }));
+        const picker = await screen.findByRole("dialog", { name: "Project colour" });
+        await userEvent.click(await within(picker).findByRole("button", { name: "Navy, taken by Villa Nour" }));
+        await userEvent.click(screen.getByRole("menuitem", { name: "Swap colours with Villa Nour" }));
+        await waitFor(() => expect(swaps).toEqual([{ otherProjectId: 9 }]));
+        expect(await screen.findByText("Colours swapped with Villa Nour")).toBeInTheDocument();
+        expect(within(dialog).getByText("Navy")).toBeInTheDocument();
+    });
+});

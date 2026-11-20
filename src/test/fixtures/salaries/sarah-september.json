@@ -9,7 +9,6 @@
       "id": 13,
       "name": "Interiors"
     },
-    "basis": "monthly",
     "amount": 1800,
     "currency": "USD",
     "hourlyRate": 10.3848,
@@ -38,11 +37,12 @@
     "fullMonthEstimate": 1822.5,
     "overtimePaidMinutes": 130,
     "overtimeThresholdMinutes": null,
-    "countedMinutes": null
+    "countedMinutes": null,
+    "advanceRepayment": null,
+    "toHandOver": 1822.5
   },
   "inProgress": true,
-  "paidBreakDays": 0,
-  "paidBreakPay": 0,
+  "advances": [],
   "deductionMinutes": 0,
   "missedDays": [
     "2026-09-15"
@@ -146,8 +146,8 @@
     }
   ],
   "excuses": [],
+  "parts": [],
   "timeOff": [],
-  "timeOffPay": 0,
   "workingDays": [
     {
       "date": "2026-09-01",

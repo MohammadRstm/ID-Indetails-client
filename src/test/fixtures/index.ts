@@ -37,13 +37,18 @@ export const fixtures = {
 
 const empty = { items: [], page: 1, pageSize: 50, totalCount: 0 };
 
+/** The project form's suggested code, never taken. It goes before any /api/projects/:id handler, which would answer it. */
+export const nextCodeHandler = http.get("/api/projects/next-code", () => HttpResponse.json({ projectCode: "ID26Q4007", takenBy: null }));
+
 /** The project and client screens' API, answered from the fixtures. A test's own handlers go before these: the first match answers. */
 export const projectHandlers = [
+    nextCodeHandler,
     http.get("/api/projects", () => HttpResponse.json(fixtures.projects)),
     http.get("/api/projects/totals", () => HttpResponse.json(fixtures.projectTotals)),
     http.get("/api/projects/:id", () => HttpResponse.json(fixtures.project)),
     http.get("/api/projects/:id/requirements", () => HttpResponse.json(fixtures.requirements)),
     http.get("/api/projects/:id/meetings", () => HttpResponse.json(fixtures.projectMeetings)),
+    http.get("/api/projects/:id/meetings/invitees", () => HttpResponse.json([])),
     http.get("/api/meetings", () => HttpResponse.json(fixtures.meetings)),
     http.get("/api/clients", () => HttpResponse.json(fixtures.clients)),
     http.get("/api/clients/overview", () => HttpResponse.json(fixtures.clientOverview)),

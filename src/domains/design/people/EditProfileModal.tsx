@@ -9,20 +9,22 @@ import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { FieldError } from "@/shared/components/Forms/Field";
 import PhoneField from "@/shared/components/Forms/PhoneField";
-import { Segmented } from "@/shared/components/Forms/Filters";
+import PhotoPositioner from "@/shared/components/Forms/PhotoPositioner";
 import Select from "@/shared/components/Forms/Select";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Modal from "@/shared/components/Overlays/Modal";
-import { money } from "@/shared/format/money";
 import { companyToday, fmtDateY } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { isEmail } from "@/shared/utils/email";
-import { currentPay, hasFixedSalary, paidMonthlyOnly, suggestedOvertimeRate } from "../pay/payRules";
+import type { Schemas } from "@/api/types";
+import { CURRENCY_WARNING, currentPay, hasFixedSalary, paidMonthlyOnly, suggestedOvertimeRate } from "../pay/payRules";
 import { useOvertimeHours } from "@/domains/shared/settings/settingsApi";
 import { uploadFile } from "../work/workApi";
-import { useChangeEmail, useChangeMyEmail, useChangePay, usePayHistory, useSetPhoto, useTeams, useUpdateEmployee, useUpdateMyProfile } from "./peopleWorkApi";
+import FormFailure from "@/domains/shared/projects/FormFailure";
+import PayPreview from "./PayPreview";
+import { useChangeEmail, useChangeMyEmail, useChangePay, usePayHistory, usePreviewPay, useSetPhoto, useTeams, useUpdateEmployee, useUpdateMyProfile } from "./peopleWorkApi";
 
 export type ProfilePerson = {
     id: number;
@@ -41,7 +43,8 @@ export type ProfilePerson = {
 
 /**
  * Editing a profile (the prototype's P.EditProfile): anyone their own name, phone and photo; with
- * employee:manage someone's position and team too, and with employee:pay_manage their pay from a date on.
+ * employee:manage someone's position and team too, and with employee:pay_manage their pay from a day on: Save first
+ * shows what the pay change does (the API's preview), and saves on the second press.
  * A super admin also changes sign-in addresses: someone's, or their own with their password.
  */
 export default function EditProfileModal({ person, self, onClose }: { person: ProfilePerson; self: boolean; onClose: () => void }) {
@@ -59,10 +62,13 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     const updateEmployee = useUpdateEmployee(person.id);
     const setPhoto = useSetPhoto(self ? "me" : person.id);
     const changePay = useChangePay(person.id);
+    const previewPay = usePreviewPay(person.id);
     const changeEmail = useChangeEmail(person.id);
     const changeMyEmail = useChangeMyEmail();
     const emailCall = self ? changeMyEmail : changeEmail;
     const fileRef = useRef<HTMLInputElement>(null);
+    // a photo just picked, being placed by hand before it goes up
+    const [placing, setPlacing] = useState<File | null>(null);
 
     const [name, setName] = useState(`${person.firstName ?? ""} ${person.lastName ?? ""}`.trim());
     const [phone, setPhone] = useState(person.phone ?? "");
@@ -88,31 +94,40 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     const [password, setPassword] = useState("");
     const emailChanged = changesEmail && email.trim().toLowerCase() !== person.email.toLowerCase();
     // pay, once its history has loaded; a salary's overtime rate follows the salary (null) until it is typed over
-    const [pay, setPay] = useState<{ basis: "hourly" | "monthly"; amount: number; currency: string; overtimeRate: number | null } | null>(null);
+    const [pay, setPay] = useState<{ amount: number; currency: string; overtimeRate: number | null } | null>(null);
     const [from, setFrom] = useState(today);
     // admins and super admins are paid a fixed monthly salary
     const salaried = hasFixedSalary(person.role ?? "employee");
-    // site staff log no hours, so they are paid by the month too
+    // site staff log no hours either, so they earn no overtime
     const monthlyOnly = paidMonthlyOnly(person.role ?? "employee", person.domain);
     if (pays && pay == null && history.data) {
         // a rate an admin set by hand stays until it is changed
-        const typed = terms?.basis === "monthly" && terms.overtimeRate !== suggestedOvertimeRate(terms.amount, overtimeHours) ? terms.overtimeRate : null;
-        setPay({ basis: monthlyOnly ? "monthly" : terms?.basis ?? "hourly", amount: terms?.amount ?? 0, currency: terms?.currency ?? "USD", overtimeRate: typed });
+        const typed = terms && terms.overtimeRate !== suggestedOvertimeRate(terms.amount, overtimeHours) ? terms.overtimeRate : null;
+        setPay({ amount: terms?.amount ?? 0, currency: terms?.currency ?? "USD", overtimeRate: typed });
     }
-    // only a salaried Design employee earns overtime at a rate of its own; the API gives everyone else its suggestion
-    const setsOvertime = !!pay && pay.basis === "monthly" && !monthlyOnly;
+    // only a Design employee earns overtime at a rate of its own; the API gives everyone else its suggestion
+    const setsOvertime = !!pay && !monthlyOnly;
     const overtimeRate = pay ? pay.overtimeRate ?? suggestedOvertimeRate(pay.amount, overtimeHours) : 0;
     // someone with no pay yet (an invited admin) keeps none until an amount is typed
     const payChanged = !!pay && (terms
-        ? pay.basis !== terms.basis || pay.currency !== terms.currency || Math.abs(pay.amount - terms.amount) > 0.004
+        ? pay.currency !== terms.currency || Math.abs(pay.amount - terms.amount) > 0.004
             || (setsOvertime && Math.abs(overtimeRate - terms.overtimeRate) > 0.004)
         : pay.amount > 0);
+    const currencyChanged = !!pay && !!terms && pay.currency !== terms.currency;
+    const payBody: Schemas["ChangePayRequest"] | null = pay && payChanged
+        ? { amount: pay.amount, currency: pay.currency, ...(setsOvertime ? { overtimeRate } : {}), effectiveFrom: from }
+        : null;
+    // what the pay change does, as the API previews it; it only holds while the change is the one previewed
+    const [preview, setPreview] = useState<{ key: string; data: Schemas["PayPreviewResponse"] } | null>(null);
+    const previewKey = JSON.stringify(payBody);
+    const shown = preview?.key === previewKey ? preview.data : null;
     const errors = useFormErrors();
     const nameError = editsDetails && !name.trim() && "Enter the full name.";
     const positionError = manages && !position.trim() && "Enter their position.";
     const payError = payChanged && !((pay?.amount ?? 0) > 0) && "Enter the new pay.";
     const overtimeError = payChanged && setsOvertime
         && (!(overtimeRate > 0) ? "Enter the overtime rate." : overtimeRate > (pay?.amount ?? 0) && "The overtime rate can't be more than the salary.");
+    const fromError = payChanged && currencyChanged && !from.endsWith("-01") && "A change of currency starts on the 1st of a month.";
     const emailError = emailChanged && !isEmail(email) && "Enter an email like name@company.com.";
     const passwordError = self && emailChanged && !password && "Enter your password to change your sign-in address.";
     // a Design employee's hours are counted in their department, and a Design admin looks after one: both always have one
@@ -122,8 +137,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
     const refused = emailCall.error ? toApiError(emailCall.error) : null;
     const refusedEmail = refused && (refused.fieldErrors.email ?? (refused.status === 409 || refused.code === "email_unchanged" ? refused.message : undefined));
     const refusedPassword = refused?.fieldErrors.currentPassword;
-    const busy = updateMine.isPending || updateEmployee.isPending || setPhoto.isPending || changePay.isPending || emailCall.isPending || uploading;
-    const error = (refusedEmail || refusedPassword ? null : emailCall.error) ?? updateMine.error ?? updateEmployee.error ?? setPhoto.error ?? changePay.error;
+    const busy = updateMine.isPending || updateEmployee.isPending || setPhoto.isPending || changePay.isPending || previewPay.isPending || emailCall.isPending || uploading;
+    const error = (refusedEmail || refusedPassword ? null : emailCall.error) ?? updateMine.error ?? updateEmployee.error ?? setPhoto.error ?? previewPay.error ?? changePay.error;
 
     async function pick(f: File) {
         setUploading(true);
@@ -138,7 +153,16 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
 
     async function save() {
         if (busy) return;
-        if (nameError || positionError || payError || overtimeError || emailError || passwordError || departmentError) return errors.tried();
+        if (nameError || positionError || payError || overtimeError || fromError || emailError || passwordError || departmentError) return errors.tried();
+        // a pay change shows what it does first; the second press saves
+        if (payBody && !shown) {
+            try {
+                setPreview({ key: previewKey, data: await previewPay.mutateAsync(payBody) });
+            } catch {
+                // the error is shown next to the buttons
+            }
+            return;
+        }
         const [firstName, ...rest] = name.trim().split(/\s+/);
         const lastName = rest.join(" ");
         const newEmail = email.trim().toLowerCase();
@@ -151,16 +175,12 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
             // someone who may only change pay (employee:pay_manage) doesn't send the rest, which needs employee:manage
             else if (manages) await updateEmployee.mutateAsync({ firstName, lastName, phone: phone.trim() || null, position: position.trim(), teamId: teamId ? +teamId : null });
             if (editsDetails && photo !== person.photoFileId) await setPhoto.mutateAsync(photo);
-            if (payChanged && pay) {
-                await changePay.mutateAsync({
-                    basis: pay.basis, amount: pay.amount, currency: pay.currency, ...(setsOvertime ? { overtimeRate } : {}), effectiveFrom: from,
-                });
-            }
+            if (payBody) await changePay.mutateAsync(payBody);
             const emailNote = !emailChanged ? null
                 : self ? `You now sign in with ${newEmail} - your other devices were signed out`
                     : person.status === "invited" ? `Their invitation was sent again, to ${newEmail}`
                         : `They now sign in with ${newEmail} - their sessions ended, and both addresses were emailed`;
-            const payNote = payChanged ? `New pay applies from ${fmtDateY(from)} - earlier months are unchanged` : null;
+            const payNote = payBody ? `New pay applies from ${fmtDateY(from)}${shown?.replaces.length ? ", replacing the pay set from then" : ""}` : null;
             toast({ text: "Profile updated", icon: "checkCircle", sub: [emailNote, payNote].filter(Boolean).join(". ") || undefined });
             onClose();
         } catch {
@@ -174,13 +194,15 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
             foot={
                 <>
                     <div className="grow muted">
-                        {error ? <span className="err"><Icon name="alert" />{errorMessage(error)}</span>
-                            : self ? "Position, department and pay are set by your admin." : "Changes are recorded; pay changes apply forward only."}
+                        {error ? <FormFailure error={error} onForced={onClose} />
+                            : shown ? "Nothing is saved until you press Save."
+                                : self ? "Position, department and pay are set by your admin." : "Changes are recorded; a pay change replaces any pay set from its day on."}
                     </div>
-                    <button className="btn" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" disabled={busy} onClick={save}><Icon name="check" />Save</button>
+                    {shown ? <button className="btn" onClick={() => setPreview(null)}>Back</button> : <button className="btn" onClick={onClose}>Cancel</button>}
+                    <button className="btn btn-primary" disabled={busy} onClick={save}><Icon name="check" />{payBody && !shown ? "Review the pay change" : "Save"}</button>
                 </>
             }>
+            {shown ? <PayPreview preview={shown} currencyChanged={currencyChanged} /> : (<>
             <FilledNote fields={proton.filled} />
             <div className="row" style={{ gap: 14, alignItems: "flex-start" }} {...proton.guard}>
                 <div style={{ textAlign: "center", width: 96, flex: "none" }}>
@@ -194,7 +216,7 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                     <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => {
                         const f = e.target.files?.[0];
                         e.target.value = "";
-                        if (f) pick(f);
+                        if (f) setPlacing(f);
                     }} />
                 </div>
                 <div className="grow stack">
@@ -260,11 +282,8 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                     {pays && pay && (
                         <div className="field">
                             <div className="spread" style={{ alignItems: "center" }}>
-                                <label className="label" htmlFor="ep-pay" style={{ margin: 0 }}>{salaried ? "Monthly salary" : "Pay"}</label>
-                                {salaried ? <span className="badge">Fixed salary</span> : monthlyOnly ? <span className="badge">Per month</span> : (
-                                    <Segmented value={pay.basis} onChange={(basis) => setPay({ ...pay, basis })} aria-label="Pay basis"
-                                        options={[{ value: "hourly", label: "Per hour" }, { value: "monthly", label: "Per month" }]} />
-                                )}
+                                <label className="label" htmlFor="ep-pay" style={{ margin: 0 }}>Monthly salary</label>
+                                {salaried && <span className="badge">Fixed salary</span>}
                             </div>
                             <div className="grid g-2 mt-s">
                                 <div className="field">
@@ -272,16 +291,19 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                                     <FieldError message={errors.show("pay", payError)} />
                                     <div className="hint">
                                         {salaried ? "Admins and super admins are paid a fixed monthly salary: they log no hours, so no overtime."
-                                            : pay.basis === "monthly" ? "Monthly salary."
-                                            : (pay.amount ? `= ${money.fmt(pay.amount * overtimeHours, pay.currency)} for a month of ${overtimeHours} hours; overtime at this rate × the multiplier` : "Paid per hour worked.")}
+                                            : monthlyOnly ? "Site staff log no hours, so no overtime." : "An hour of it is the salary ÷ the month's paid hours."}
                                     </div>
                                 </div>
                                 <div className="field">
-                                    <label className="label required" htmlFor="ep-from">Applies from</label>
+                                    <label className="label required" htmlFor="ep-from">From when</label>
                                     <DateInput id="ep-from" className="input mono" value={from} max={today} disabled={!payChanged} onChange={(v) => { if (v) setFrom(v); }} />
-                                    <div className="hint">{payChanged ? "Hours before this date keep the old rate." : "Change the pay to pick a date."}</div>
+                                    {errors.show("from", fromError) ? <FieldError message={errors.show("from", fromError)} />
+                                        : <div className="hint">{!payChanged ? "Change the pay to pick a day."
+                                            : currencyChanged ? "A change of currency starts on the 1st of a month."
+                                                : "Today or any earlier day. It replaces any pay set from this day on; earlier days keep theirs."}</div>}
                                 </div>
                             </div>
+                            {currencyChanged && <div className="banner hold mt-s"><Icon name="alert" /><div>{CURRENCY_WARNING}</div></div>}
                             {setsOvertime && (
                                 <div className="grid g-2 mt-s">
                                     <div className="field">
@@ -297,6 +319,10 @@ export default function EditProfileModal({ person, self, onClose }: { person: Pr
                     )}
                 </div>
             </div>
+            </>)}
+            {placing && (
+                <PhotoPositioner file={placing} onCancel={() => setPlacing(null)} onDone={(photo) => { setPlacing(null); void pick(photo); }} />
+            )}
         </Modal>
     );
 }

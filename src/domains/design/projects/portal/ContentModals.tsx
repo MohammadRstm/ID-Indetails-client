@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { toast } from "@/shared/components/Feedback/toast";
 import Field, { FieldError } from "@/shared/components/Forms/Field";
 import { useForm } from "@/shared/components/Forms/useForm";
@@ -76,7 +76,7 @@ export function DeleteModal({ projectId, item, onClose }: { projectId: number; i
         <Modal title={`Delete ${item.title}?`} sub={item.file.name} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{remove.error ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(remove.error)}</span> : null}</div>
+                    <div className="grow">{remove.error ? <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={remove.error} /></span> : null}</div>
                     <button type="button" className="btn" onClick={onClose}>Keep it</button>
                     <button type="button" className="btn btn-danger" disabled={remove.isPending} onClick={() => void submit()}>Delete</button>
                 </>

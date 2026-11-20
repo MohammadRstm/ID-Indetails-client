@@ -92,6 +92,20 @@ const WORDS: Record<string, Words> = {
         icon: "edit",
         text: (e, p) => (p.change === "photo" ? `changed ${project(e)}'s photo` : p.change === "photo_removed" ? `took ${project(e)}'s photo off` : `updated ${project(e)}'s details`),
     },
+    // salary advances (the person is the subject; only super admins see these, and never an amount)
+    salary_advance_requested: { icon: "card", text: () => "asked for a salary advance" },
+    salary_advance_withdrawn: { icon: "x", text: () => "took back their request for a salary advance" },
+    salary_advance_approved: { icon: "checkCircle", text: (e, _p, names) => `approved ${subject(e, names)}'s salary advance` },
+    salary_advance_declined: { icon: "x", text: (e, _p, names) => `declined ${subject(e, names)}'s request for a salary advance` },
+    salary_advance_recorded: { icon: "card", text: (e, _p, names) => `recorded a salary advance for ${subject(e, names)}` },
+    salary_advance_months_changed: { icon: "calendar", text: (e, _p, names) => `changed the months of ${subject(e, names)}'s salary advance` },
+    salary_advance_cancelled: { icon: "x", text: (e, _p, names) => `cancelled ${subject(e, names)}'s salary advance` },
+    salary_advance_settled: {
+        icon: "checkCircle",
+        text: (e, p, names) => (p.settledKind === "written_off" ? `wrote off the rest of ${subject(e, names)}'s salary advance`
+            : p.settledKind === "cash" ? `settled what was left of ${subject(e, names)}'s salary advance in cash`
+                : `settled ${subject(e, names)}'s salary advance`),
+    },
     project_owner_set: {
         icon: "user",
         text: (e, p, names) => {

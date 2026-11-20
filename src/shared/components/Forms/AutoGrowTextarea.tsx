@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type TextareaHTMLAttributes } from "react";
+import { useLayoutEffect, useRef, type Ref, type TextareaHTMLAttributes } from "react";
 
 type Props = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "rows"> & {
     value: string;
@@ -6,13 +6,15 @@ type Props = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "rows"> & {
     minRows?: number;
     /** Rows it grows to as it is typed in; past them it scrolls. */
     maxRows?: number;
+    /** For a box the page focuses or puts the caret in. */
+    ref?: Ref<HTMLTextAreaElement>;
 };
 
 /**
  * A text box that grows a row at a time as it is typed in, from minRows up to maxRows, then scrolls. It only grows
  * down: it keeps its width, and long words and links wrap, so it never widens the form or window it sits in.
  */
-export default function AutoGrowTextarea({ value, minRows = 4, maxRows = 25, className, style, ...rest }: Props) {
+export default function AutoGrowTextarea({ value, minRows = 4, maxRows = 25, className, style, ref: outer, ...rest }: Props) {
     const ref = useRef<HTMLTextAreaElement>(null);
 
     useLayoutEffect(() => {
@@ -28,6 +30,11 @@ export default function AutoGrowTextarea({ value, minRows = 4, maxRows = 25, cla
     }, [value, minRows, maxRows]);
 
     return (
-        <textarea ref={ref} rows={minRows} value={value} className={className ? `${className} autogrow` : "autogrow"} style={style} {...rest} />
+        <textarea ref={(box) => { ref.current = box; setRef(outer, box); }} rows={minRows} value={value} className={className ? `${className} autogrow` : "autogrow"} style={style} {...rest} />
     );
+}
+
+function setRef(ref: Ref<HTMLTextAreaElement> | undefined, box: HTMLTextAreaElement | null) {
+    if (typeof ref === "function") ref(box);
+    else if (ref) ref.current = box;
 }

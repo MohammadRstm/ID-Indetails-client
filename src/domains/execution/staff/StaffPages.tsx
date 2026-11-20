@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { loadFailed } from "@/api/queryState";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -23,6 +23,7 @@ import { cx } from "@/shared/utils/cx";
 import { useEmployee } from "../../design/people/peopleWorkApi";
 import { personName, useDomainPeople } from "../../shared/people/peopleApi";
 import type { Project } from "../../shared/projects/projectsApi";
+import { projectLabel } from "../../shared/projects/projectCodes";
 import { useProjects } from "../../shared/projects/projectsApi";
 import BoqProgressPanel from "../boqs/BoqProgressPanel";
 import { SiteLogBrowser, WriteSiteLog } from "./SiteLogs";
@@ -118,7 +119,7 @@ export function SiteLogsPage() {
             <PageHead title="Daily logs" sub="What site staff noted on their sites, newest first. Losses are worked out from these later." />
             <SiteLogBrowser mine={false} title="All logs"
                 people={(people.data ?? []).map((p) => ({ value: String(p.id), label: personName(p) }))}
-                sites={(projects.data?.items ?? []).map((p) => ({ value: String(p.id), label: p.title }))} />
+                sites={(projects.data?.items ?? []).map((p) => ({ value: String(p.id), label: projectLabel(p) }))} />
         </div>
     );
 }
@@ -144,7 +145,7 @@ function StaffRow({ person }: { person: { id: number; name: string } }) {
         <tr>
             <td>{profile ? <Link to={profile} className="link-plain" title={`Open ${person.name}'s profile`}>{who}</Link> : who}</td>
             <td className="muted trunc">{employee?.email ?? "-"}</td>
-            <td className="r mono nowrap">{pay ? `${money.exact(pay.amount, pay.currency)} / ${pay.basis === "monthly" ? "month" : "hour"}` : <span className="muted">-</span>}</td>
+            <td className="r mono nowrap">{pay ? `${money.exact(pay.amount, pay.currency)} / month` : <span className="muted">-</span>}</td>
             <td className="r muted nowrap">Not counted yet</td>
         </tr>
     );
@@ -203,7 +204,7 @@ function SiteStaffModal({ project, onClose }: { project: Project; onClose: () =>
         <Modal title="Site staff" sub={project.title} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{save.error != null && <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span>}</div>
+                    <div className="grow">{save.error != null && <span className="err"><Icon name="alert" /><ErrorMessage error={save.error} /></span>}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={save.isPending} onClick={() => {
                         save.mutate(chosen, { onSuccess: () => { toast({ text: "Site staff saved", sub: project.title, icon: "checkCircle" }); onClose(); } });

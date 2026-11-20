@@ -1,11 +1,14 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+import { printFile } from "@/api/download";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { companyPay, companyPayHandlers } from "@/test/fixtures/companyPay";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
+
+vi.mock("@/api/download", async (original) => ({ ...(await original<typeof import("@/api/download")>()), printFile: vi.fn(async () => undefined) }));
 
 const rana = personas.superAdmin;
 const s = companyPay.schedules;
@@ -44,6 +47,27 @@ describe("Schedules", () => {
         expect(within(elie).getAllByText("9 AM – 5 PM")).toHaveLength(5);
         expect(within(elie).getAllByText("Off")).toHaveLength(2);
         expect(within(elie).getByText("35h")).toBeInTheDocument();
+    });
+
+    it("download the PDF and the CSV, and print, with the business and search on screen", async () => {
+        vi.mocked(printFile).mockClear();
+        URL.createObjectURL = vi.fn(() => "blob:schedules");
+        URL.revokeObjectURL = vi.fn();
+        const asked: string[] = [];
+        const answer = (kind: string, type: string) => http.get(`/api/company/schedules/${kind}`, ({ request }) => {
+            asked.push(`${kind}?${new URL(request.url).searchParams}`);
+            return new HttpResponse(kind === "pdf" ? "%PDF" : "Name\n", { headers: { "content-type": type } });
+        });
+        renderApp("/company/schedules", rana, answer("pdf", "application/pdf"), answer("export", "text/csv"), ...companyPayHandlers);
+        await screen.findByText("Elie Khalil");
+        await userEvent.click(screen.getByRole("tab", { name: "Execution" }));
+        await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
+        await waitFor(() => expect(asked).toEqual(["pdf?domain=execution"]));
+        await userEvent.click(screen.getByRole("button", { name: "Export CSV" }));
+        await waitFor(() => expect(asked).toEqual(["pdf?domain=execution", "export?domain=execution"]));
+
+        await userEvent.click(screen.getByRole("button", { name: "Print" }));
+        await waitFor(() => expect(printFile).toHaveBeenCalledWith("/company/schedules/pdf", { domain: "execution", search: null }, "schedules-2026-09-30.pdf"));
     });
 
     it("filter by business and by person or department", async () => {

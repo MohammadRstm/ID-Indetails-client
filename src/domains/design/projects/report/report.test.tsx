@@ -1,12 +1,15 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+import { printFile } from "@/api/download";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { billingHandlers } from "@/test/fixtures/billing";
 import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
 import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
+
+vi.mock("@/api/download", async (original) => ({ ...(await original<typeof import("@/api/download")>()), printFile: vi.fn(async () => undefined) }));
 
 // A Design admin a super admin has handed the money to: admins don't hold it by default
 const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
@@ -75,6 +78,19 @@ describe("the project report", () => {
         expect(asked[0].get("from")).toBe(project.startDate);
         expect(asked[0].get("to")).toBe("2026-09-30");
         expect(asked[0].getAll("sections")).toEqual(["summary", "info", "timeline", "work", "financials", "billing", "client", "log"]);
+    });
+
+    it("prints exactly what Download PDF would download", async () => {
+        vi.mocked(printFile).mockClear();
+        renderApp(path, admin, ...handlers);
+        const dialog = await openReport();
+        await userEvent.click(within(dialog).getByRole("switch", { name: "Project expenses" }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Print" }));
+        await waitFor(() => expect(printFile).toHaveBeenCalledTimes(1));
+        const [url, params] = vi.mocked(printFile).mock.calls[0];
+        expect(url).toBe(`/projects/${project.id}/report`);
+        expect(params).toMatchObject({ kind: "internal", from: project.startDate, to: "2026-09-30" });
+        expect((params as { sections: string[] }).sections).not.toContain("expenses");
     });
 
     it("previews the CSV when it is picked, and downloads it only when asked", async () => {

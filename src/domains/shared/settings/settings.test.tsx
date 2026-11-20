@@ -50,7 +50,7 @@ describe("Settings", () => {
         renderApp("/design/settings", nadia, ...settingsHandlers);
         const nav = await screen.findByRole("navigation", { name: "Settings" });
         expect(within(nav).getAllByRole("button").map((b) => b.textContent))
-            .toEqual(["Appearance", "Time tracking", "Projects", "Notifications", "Departments", "Data & export"]);
+            .toEqual(["Appearance", "Time tracking", "Projects", "Notifications", "Departments", "Data & export", "Contact"]);
         expect(await screen.findByText("Applies to this browser only. The sun / moon button in the top bar does the same.")).toBeInTheDocument();
         expect(screen.queryByLabelText("Company name")).not.toBeInTheDocument();
     });
@@ -59,19 +59,19 @@ describe("Settings", () => {
         renderApp("/design/settings", moneyNadia, ...settingsHandlers);
         const nav = await screen.findByRole("navigation", { name: "Settings" });
         expect(within(nav).getAllByRole("button").map((b) => b.textContent))
-            .toEqual(["Appearance", "Time tracking", "Finance", "Projects", "Notifications", "Departments", "Admins & access", "Data & export"]);
+            .toEqual(["Appearance", "Time tracking", "Finance", "Projects", "Notifications", "Departments", "Admins & access", "Data & export", "Contact"]);
     });
 
     it("give someone with only team:manage the theme and the departments", async () => {
         renderApp("/design/settings", withPermissions(personas.designEmployee, { grant: [P.TEAM_MANAGE] }), ...settingsHandlers);
         const nav = await screen.findByRole("navigation", { name: "Settings" });
-        expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Appearance", "Departments"]);
+        expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Appearance", "Departments", "Contact"]);
     });
 
     it("let someone with only exchange_rate:manage set the rate, without the billing around it", async () => {
         renderApp(page("finance"), withPermissions(personas.designEmployee, { grant: [P.EXCHANGE_RATE_MANAGE] }), ...settingsHandlers);
         const nav = await screen.findByRole("navigation", { name: "Settings" });
-        expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Appearance", "Finance"]);
+        expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Appearance", "Finance", "Contact"]);
         expect(await screen.findByText("Payments in another currency")).toBeInTheDocument();
         expect(screen.queryByText("Invoicing and payments")).not.toBeInTheDocument();
     });

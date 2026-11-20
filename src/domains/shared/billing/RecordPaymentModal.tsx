@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { errorMessage, toApiError } from "@/api/errors";
+import { toApiError } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import DateInput from "@/shared/components/Forms/DateInput";
@@ -51,6 +52,8 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
     const [method, setMethod] = useState<Method>("bank");
     const [reference, setReference] = useState("");
     const [labelId, setLabelId] = useState("");
+    // account labels are an Execution site's: a Design project's payments carry none
+    const labelled = project.domain === "execution";
     const fx = rate ?? rateOfDay ?? 0;
     // until it is typed, the amount is what the chosen invoice still owes
     const value = amount ?? (currency === "USD" ? cents(balance) / 100 : Math.round(balance * fx));
@@ -90,7 +93,7 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
         record.mutate({
             amount: value, currency, fxRate: currency === "USD" ? null : fx, invoiceId: target?.id ?? null,
             method, receivedOn: date, reference: reference.trim() || null,
-            ...(labelId ? { accountLabelId: Number(labelId) } : {}),
+            ...(labelled && labelId ? { accountLabelId: Number(labelId) } : {}),
         }, {
             onSuccess: (pay) => {
                 const left = balance - pay.amountUsd;
@@ -109,7 +112,7 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
             foot={
                 <>
                     <div className="grow mono" style={{ fontSize: "12.5px" }}>
-                        {record.error && !labelError ? <span className="err"><Icon name="alert" />{errorMessage(record.error)}</span>
+                        {record.error && !labelError ? <span className="err"><Icon name="alert" /><ErrorMessage error={record.error} /></span>
                             : currency === "USD" ? money.exact(usd) : `${money.exact(value, "LBP")} = ${money.exact(usd)}`}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>
@@ -169,12 +172,14 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
                 </div>
             </div>
 
-            <div className="field mt">
-                <label className="label" htmlFor="pay-label">Account label</label>
-                <AccountLabelSelect id="pay-label" value={labelId} onChange={(v) => { if (record.error) record.reset(); setLabelId(v); }} />
-                <FieldError message={labelError} />
-                <div className="hint">Optional - the account this money belongs to (Concrete, Finishing…). It can be changed later and changes no amount.</div>
-            </div>
+            {labelled && (
+                <div className="field mt">
+                    <label className="label" htmlFor="pay-label">Account label</label>
+                    <AccountLabelSelect id="pay-label" value={labelId} onChange={(v) => { if (record.error) record.reset(); setLabelId(v); }} />
+                    <FieldError message={labelError} />
+                    <div className="hint">Optional - the account this money belongs to (Concrete, Finishing…). It can be changed later and changes no amount.</div>
+                </div>
+            )}
 
             {overInvoice && target && (
                 <div className="banner attn mt">

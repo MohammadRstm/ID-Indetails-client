@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -13,27 +13,42 @@ import Select from "@/shared/components/Forms/Select";
 import { SearchInput } from "@/shared/components/Forms/Filters";
 import { Avatars } from "@/shared/components/Identity/People";
 import { tip } from "@/shared/components/Overlays/tip";
-import { addDays, companyToday, DAYS, dayKey, daysBetween, fmtDate, fmtDayDate, fmtDur, fmtH, monthKey, partsOf, relTime, startOfWeek } from "@/shared/format/time";
+import { addDays, DAYS, dayKey, daysBetween, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, monthKey, partsOf, relTime, startOfWeek } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import type { IconName } from "@/shared/icons/icons";
+import GreetingHead from "../../shared/projects/GreetingHead";
 import { useMyTimeOff } from "../../shared/timeOff/timeOffApi";
-import { BehindNotice, MyHoursBalance } from "../pay/HoursBalance";
 import { companyNow, workHoursOf } from "./day";
 import { openLogWork } from "./logWorkStore";
 import OvertimePanel from "./OvertimePanel";
 import TodayPanel from "./TodayPanel";
-import { useDomainSettings, useMyProjects, useMySchedule, useMyWorkSummary, type MyProject } from "./workApi";
+import { useDomainSettings, useMyHours, useMyProjects, useMySchedule, useMyWorkSummary, type MyProject } from "./workApi";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
 
 /*
- * The parts of a Design person's own work on the projects page (the prototype's P.EmpProjects): their week,
- * today, overtime and hours, and the projects they log against. Each is for someone who may see their own work
- * (work_entry:view_own); logging also needs work_entry:create. ProjectsPage puts them together.
+ * The parts of a Design person's own work (the prototype's P.EmpProjects): their week, today, overtime and hours,
+ * and the projects they log against. Each is for someone who may see their own work (work_entry:view_own); logging
+ * also needs work_entry:create. LogHoursPage puts them together; the Projects page lists the projects in a table.
  */
 
 type LastWorked = "any" | "week" | "month" | "older" | "never";
 
 const firstName = (name: string) => name.split(" ")[0];
+
+/**
+ * A Design employee's start page: the greeting with Log work, what needs their attention (folded under one Alert
+ * heading), their week, today's timeline and overtime. Their hours balance is on their profile.
+ */
+export function LogHoursPage() {
+    const permissions = usePermissions();
+    return (
+        <div className="page">
+            <GreetingHead sub={<MyActiveCount />} actions={permissions.has(P.WORK_ENTRY_CREATE) && <MyLogButtons />} />
+            <MyWorkBand />
+        </div>
+    );
+}
 
 /** "12 active projects", for the greeting. */
 export function MyActiveCount() {
@@ -41,61 +56,92 @@ export function MyActiveCount() {
     return <>{projects.data ? `${projects.data.filter((p) => p.status === "active").length} active projects` : "…"}</>;
 }
 
-/** Log overtime (once the working day is over) and Log work, for the greeting. */
+/** Log work, for the greeting. */
 export function MyLogButtons() {
-    const { today, minute: nowMin } = companyNow();
-    const schedule = useMySchedule(today);
-    const workHours = workHoursOf(schedule.data?.day);
-    const overtimeNow = schedule.data != null && (!workHours || nowMin >= workHours.e);
-    return (
-        <>
-            {overtimeNow && <button className="btn btn-lg" onClick={() => openLogWork({ overtime: true })}><Icon name="clock" />Log overtime</button>}
-            <button className="btn btn-primary btn-lg" onClick={() => openLogWork()}><Icon name="plus" />Log work</button>
-        </>
-    );
+    return <button className="btn btn-primary btn-lg" onClick={() => openLogWork()}><Icon name="plus" />Log work</button>;
 }
 
-/** Their week, a reminder to log today, hours they are behind on, today's timeline, overtime and hours balance. */
+/** The alerts (folded under one heading), their week, today's timeline and overtime. */
 export function MyWorkBand() {
     const permissions = usePermissions();
-    const { today, minute: nowMin } = companyNow();
+    const { today } = companyNow();
     const summary = useMyWorkSummary();
-    const schedule = useMySchedule(today);
-    const settings = useDomainSettings("design").data;
     const canLog = permissions.has(P.WORK_ENTRY_CREATE);
-    const workHours = workHoursOf(schedule.data?.day);
-    const s = summary.data;
     return (
         <>
-            <WeekPanel summary={s} error={loadFailed(summary) ? summary.error : null} retry={() => summary.refetch()} today={today} />
-            {settings?.logReminder && workHours && nowMin >= 15 * 60 && s && !s.todayMinutes && canLog && (
-                <div className="banner attn mt"><Icon name="bell" />
-                    <div className="grow"><b>Nothing logged today yet.</b> Add what you worked on before you finish - it takes a few seconds on the timeline below.</div>
-                </div>
-            )}
-            <BehindNotice />
-            {permissions.has(P.TIME_OFF_REQUEST) && <TimeOffNotice />}
+            <AlertGroup alerts={useAlerts()} />
+            <WeekPanel summary={summary.data} error={loadFailed(summary) ? summary.error : null} retry={() => summary.refetch()} today={today} />
             {canLog && <TodayPanel />}
             <OvertimePanel />
-            <MyHoursBalance />
         </>
     );
 }
 
-/** While they are off today, until when; otherwise their next approved time off, when there is one. */
-function TimeOffNotice() {
+type Alert = { key: string; icon: IconName; text: ReactNode };
+
+/**
+ * What needs their attention: hours they owe (behind this month, or last month closed short, in hours only since
+ * employees don't see their pay), nothing logged today late in the day, and their time off.
+ */
+function useAlerts(): Alert[] {
+    const permissions = usePermissions();
+    const { today, minute: nowMin } = companyNow();
+    const summary = useMyWorkSummary().data;
+    const schedule = useMySchedule(today);
+    const settings = useDomainSettings("design").data;
+    const hours = useMyHours().data;
     const requests = useMyTimeOff().data;
-    const today = companyToday();
-    const approved = (requests ?? []).filter((r) => r.status === "approved" && r.lastDay >= today);
-    const now = approved.find((r) => r.firstDay <= today);
-    const next = approved.filter((r) => r.firstDay > today).sort((a, b) => a.firstDay.localeCompare(b.firstDay))[0];
-    if (!now && !next) return null;
+    const workHours = workHoursOf(schedule.data?.day);
+    const alerts: Alert[] = [];
+
+    const months = hours?.applies ? hours.months : [];
+    const current = months.find((m) => m.inProgress);
+    const last = months.find((m) => !m.inProgress);
+    if (current?.status === "behind") {
+        const asked = current.expectedMinutes - current.excusedMinutes;
+        alerts.push({
+            key: "behind", icon: "clock",
+            text: <><b>You're {fmtH(current.shortMinutes)} behind on your hours this month.</b> Up to yesterday your schedule asked for {fmtDur(asked)} and
+                you've covered {fmtDur(asked - current.shortMinutes)} of it. Log any time you missed, or work overtime to make it up
+                before {fmtMonthY(current.month).split(" ")[0]} ends.</>,
+        });
+    }
+    if (last?.status === "short") {
+        alerts.push({
+            key: "short", icon: "clock",
+            text: <><b>{fmtMonthY(last.month)} closed {fmtH(last.shortMinutes)} short.</b> Unless it's excused, the month stays marked short.</>,
+        });
+    }
+    if (settings?.logReminder && workHours && nowMin >= 15 * 60 && summary && !summary.todayMinutes && permissions.has(P.WORK_ENTRY_CREATE)) {
+        alerts.push({
+            key: "today", icon: "bell",
+            text: <><b>Nothing logged today yet.</b> Add what you worked on before you finish: Log work takes a few seconds.</>,
+        });
+    }
+    if (permissions.has(P.TIME_OFF_REQUEST)) {
+        const approved = (requests ?? []).filter((r) => r.status === "approved" && r.lastDay >= today);
+        const now = approved.find((r) => r.firstDay <= today);
+        const next = approved.filter((r) => r.firstDay > today).sort((a, b) => a.firstDay.localeCompare(b.firstDay))[0];
+        if (now) alerts.push({ key: "off", icon: "sun", text: <><b>You're off until {fmtDate(now.lastDay)}.</b> Hours can't be logged on your time off.</> });
+        else if (next) alerts.push({ key: "off", icon: "sun", text: <><b>Time off from {fmtDate(next.firstDay)} to {fmtDate(next.lastDay)}.</b> It is approved.</> });
+    }
+    return alerts;
+}
+
+/** The alerts together at the top, folded under one "Alert" heading until it is opened. */
+function AlertGroup({ alerts }: { alerts: Alert[] }) {
+    const [open, setOpen] = useState(false);
+    if (!alerts.length) return null;
     return (
-        <div className="banner hold mt"><Icon name="sun" />
-            <div className="grow">
-                {now ? <><b>You're off until {fmtDate(now.lastDay)}.</b> Hours can't be logged on your time off.</>
-                    : <><b>Time off from {fmtDate(next.firstDay)} to {fmtDate(next.lastDay)}.</b> It is approved.</>}
-            </div>
+        <div className="banner attn alert-group" role="region" aria-label="Alert">
+            <button type="button" className="alert-group-head" aria-expanded={open} onClick={() => setOpen(!open)}
+                aria-label={`Alert: ${alerts.length === 1 ? "1 thing needs" : `${alerts.length} things need`} your attention`}>
+                <Icon name="alert" /><b>Alert</b><span className="alert-group-count" aria-hidden="true">{alerts.length}</span>
+                <span className="grow" /><Icon name={open ? "chevronUp" : "chevronDown"} />
+            </button>
+            {open && alerts.map((a) => (
+                <div key={a.key} className="alert-group-item"><Icon name={a.icon} /><div className="grow">{a.text}</div></div>
+            ))}
         </div>
     );
 }
@@ -117,7 +163,7 @@ export function MyProjectCards() {
     const weekStart = startOfWeek(today), monthStart = `${monthKey(today)}-01`, monthAgo = addDays(today, -30);
     function keep(p: MyProject) {
         const q = fq.trim().toLowerCase();
-        if (q && !p.title.toLowerCase().includes(q) && !(p.clientName ?? "").toLowerCase().includes(q)) return false;
+        if (q && ![p.title, p.code, p.clientName ?? ""].some((text) => text.toLowerCase().includes(q))) return false;
         if (fClient === "internal" ? !!p.clientName : fClient && p.clientName !== fClient) return false;
         const last = p.myLastStartedAt ? dayKey(p.myLastStartedAt) : null;
         if (fLast === "week" && !(last && last >= weekStart)) return false;
@@ -140,7 +186,7 @@ export function MyProjectCards() {
                 <span className="muted" style={{ fontSize: 12 }}>most recently worked on first</span>
             </div>
             <div className="filters">
-                <SearchInput width={230} value={fq} onChange={setFq} placeholder="Search projects or clients" />
+                <SearchInput width={230} value={fq} onChange={setFq} placeholder="Search projects, codes or clients" />
                 <Select className="select sm" style={{ width: 190 }} aria-label="Client" value={fClient} onChange={setFClient} options={[
                     { value: "", label: "All clients" },
                     ...clientNames.map((n) => ({ value: n, label: n })),
@@ -201,20 +247,25 @@ function WeekPanel({ summary: s, error, retry, today }: { summary: Summary; erro
                             {s && <Delta value={s.thisWeekMinutes} prev={s.lastWeekMinutes} label="vs last week" />}
                         </div>
                         <div className="grow" style={{ minWidth: 260 }}>
-                            <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 84 }}>
+                            {/* tall enough for the highest bar, its hours above it and the day below, clear of the panel's edge */}
+                            {/* each day's hours are in a tooltip for the mouse, and in the day's name for keyboards and screen readers */}
+                            <div role="list" aria-label="Hours logged each day this week" style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 112, paddingTop: 8 }}>
                                 {(s?.week ?? []).map((d) => {
                                     const isToday = d.day === today, future = d.day > today;
                                     const h = d.minutes ? Math.max(4, (d.minutes / maxDay) * 64) : 2;
+                                    const said = d.minutes ? `${fmtDur(d.minutes)} logged` : future ? "still to come" : "nothing logged";
                                     return (
                                         <div key={d.day} className="grow" style={{ textAlign: "center" }}
+                                            role="listitem" aria-label={`${fmtDayDate(d.day)}${isToday ? " (today)" : ""}: ${said}`}
                                             onMouseMove={(e) => tip.show(e, [{ big: fmtDayDate(d.day) }, { k: "Logged", v: d.minutes ? fmtDur(d.minutes) : "nothing yet" }])}
                                             onMouseLeave={tip.hide}>
-                                            <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)", marginBottom: 3 }}>{d.minutes ? (d.minutes / 60).toFixed(1) : ""}</div>
+                                            <div className="mono" style={{ fontSize: 11.5, fontWeight: 600, color: "var(--ink-2)", marginBottom: 4 }}>{d.minutes ? (d.minutes / 60).toFixed(1) : ""}</div>
                                             <div style={{
                                                 height: h, borderRadius: "3px 3px 0 0",
-                                                background: future ? "var(--surface-3)" : isToday ? "var(--accent)" : d.minutes ? "var(--chart)" : "var(--surface-3)",
+                                                // a day with work in the colour of the project with the most of it
+                                                background: future || !d.minutes ? "var(--surface-3)" : d.tint ?? (isToday ? "var(--accent)" : "var(--chart)"),
                                             }} />
-                                            <div style={{ fontSize: "10.5px", marginTop: 4, color: isToday ? "var(--accent-ink)" : "var(--ink-3)", fontWeight: isToday ? 700 : 400 }}>
+                                            <div style={{ fontSize: "11px", marginTop: 4, color: isToday ? "var(--accent-ink)" : "var(--ink-3)", fontWeight: isToday ? 700 : 400 }}>
                                                 {DAYS[partsOf(d.day).weekday]}
                                             </div>
                                         </div>
@@ -247,6 +298,7 @@ function ProjectCard({ project: p, today, canLog, paused }: { project: MyProject
                     <div className="row" style={{ gap: 7, flexWrap: "wrap" }}>
                         <span className="pcard-title trunc">{p.title}</span>
                         {isNew && <span className="badge badge-new">New</span>}
+                        <span className="muted mono" style={{ fontSize: 11 }}>{p.code}</span>
                     </div>
                     {(p.clientName || p.location) && <div className="muted trunc" style={{ fontSize: "11.5px", marginTop: 2 }}>{[p.clientName && `for ${p.clientName}`, p.location].filter(Boolean).join(" · ")}</div>}
                     <div className="muted clamp2" style={{ fontSize: "11.5px", marginTop: 2 }}>{p.description}</div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { toast } from "@/shared/components/Feedback/toast";
 import { FieldError } from "@/shared/components/Forms/Field";
 import { Segmented } from "@/shared/components/Forms/Filters";
@@ -47,7 +47,7 @@ export default function ClientTypeModal({ project, onClose }: { project: Project
         <Modal title="Client & type" sub={project.title} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{save.error ? <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span> : null}</div>
+                    <div className="grow">{save.error ? <span className="err"><Icon name="alert" /><ErrorMessage error={save.error} /></span> : null}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={save.isPending} onClick={submit}>{save.isPending ? "Saving…" : "Save"}</button>
                 </>

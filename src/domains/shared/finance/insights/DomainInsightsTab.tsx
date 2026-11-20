@@ -102,7 +102,7 @@ function RiskRow({ group: g, domain, tile }: { group: ProjectRiskGroup; domain: 
             <ProjectTile icon={tile?.icon} tint={tile?.tint} size="sm" />
             <div className="grow" style={{ minWidth: 0 }}>
                 <div className="row wrap" style={{ gap: 8 }}>
-                    <ProjectLink domain={domain} id={g.projectId} title={g.title} query="tab=insights" />
+                    <ProjectLink domain={domain} id={g.projectId} title={g.title} code={g.code} query="tab=insights" />
                     <StatusBadge status={g.status} />
                 </div>
                 {g.risks.map((r, i) => {

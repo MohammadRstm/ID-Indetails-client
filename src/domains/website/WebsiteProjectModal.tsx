@@ -4,6 +4,7 @@ import { fillChange, fillEmpty, useProtonForm } from "@/domains/shared/proton/fo
 import { uploadingLabel } from "@/shared/files/upload";
 import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { toast } from "@/shared/components/Feedback/toast";
 import Field, { FieldError } from "@/shared/components/Forms/Field";
 import { SearchInput, SwitchRow, Toggle } from "@/shared/components/Forms/Filters";
@@ -176,8 +177,8 @@ export default function WebsiteProjectModal({ project, canManage, onClose }: { p
             foot={edit ? (
                 <>
                     <div className="grow">
-                        {save.error != null ? <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span>
-                            : remove.error != null ? <span className="err"><Icon name="alert" />{errorMessage(remove.error)}</span>
+                        {save.error != null ? <span className="err"><Icon name="alert" /><ErrorMessage error={save.error} /></span>
+                            : remove.error != null ? <span className="err"><Icon name="alert" /><ErrorMessage error={remove.error} /></span>
                                 : step === 1 && p && confirming ? (
                                     <span className="row" style={{ gap: 6 }}>
                                         <span className="muted">Delete it from the website for good?</span>

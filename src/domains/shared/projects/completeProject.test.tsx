@@ -163,8 +163,9 @@ describe("closing a project whose client still owes", () => {
     it("shows on the project what was excused when it was completed", async () => {
         const m = fixtures.project.money!;
         const closed = { ...fixtures.project, status: "completed", money: { ...m, isLocked: true, settledOwedUsd: 1500, settledOwedAs: "excused" } };
-        renderApp("/design/projects/1", nadia, http.get("/api/projects/1", () => HttpResponse.json(closed)), ...projectHandlers);
-        expect(await screen.findByText(/Excused/)).toHaveTextContent(`Excused ${money.fmt(1500)} at completion`);
+        renderApp("/design/projects/1?about=1", nadia, http.get("/api/projects/1", () => HttpResponse.json(closed)), ...projectHandlers);
+        const details = await screen.findByRole("dialog", { name: "Project details" });
+        expect(within(details).getByText(/Excused/)).toHaveTextContent(`Excused ${money.fmt(1500)} at completion`);
     });
 });
 

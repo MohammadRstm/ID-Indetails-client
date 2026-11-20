@@ -34,14 +34,14 @@ const designRisks: Schemas["ProjectRisksResponse"] = {
     domain: "design", today: "2026-09-30", checked: 7,
     projects: [
         {
-            projectId: 11, title: "Gemmayze loft renovation", status: "active",
+            projectId: 11, title: "Gemmayze loft renovation", code: "ID26Q3011-GLR", status: "active",
             risks: [
                 { kind: "profit_at_zero", amount: -1250, fact: "An agreed profit of -1,250 USD on 14,000 USD agreed.", rule: PROFIT_AT_ZERO },
                 { kind: "department_over_budget", amount: 2600, fact: "Architecture: 11,000 USD of labour on a budget of 8,400 USD, 2,600 USD over.", rule: DEPARTMENT },
             ],
         },
         {
-            projectId: 12, title: "Batroun beach house", status: "hold",
+            projectId: 12, title: "Batroun beach house", code: "ID26Q3012-BBH", status: "hold",
             risks: [
                 { kind: "projected_loss", amount: -3400, fact: "At 40% along, the cost so far points to 25,400 USD at completion: a profit of -3,400 USD on 22,000 USD agreed.", rule: PROJECTED_LOSS },
                 { kind: "profit_close", amount: 1840, fact: "An agreed profit of 1,840 USD on 22,000 USD agreed, a margin of 8.4%.", rule: PROFIT_CLOSE },
@@ -50,11 +50,11 @@ const designRisks: Schemas["ProjectRisksResponse"] = {
             ],
         },
         {
-            projectId: 13, title: "Achrafieh clinic", status: "active",
+            projectId: 13, title: "Achrafieh clinic", code: "ID26Q3013-AC", status: "active",
             risks: [{ kind: "unconverted_costs", amount: null, fact: "Not counted: 4,500,000 LBP of expenses.", rule: UNCONVERTED }],
         },
         {
-            projectId: 14, title: "Jounieh showroom", status: "completed",
+            projectId: 14, title: "Jounieh showroom", code: "ID26Q3014-JS", status: "completed",
             risks: [{ kind: "settlement_at_zero", amount: 2000, fact: "Written off at completion on 14 Aug 2026, taking 2,000 USD off the profit: an agreed profit of -350 USD.", rule: SETTLEMENT }],
         },
     ],
@@ -144,10 +144,10 @@ const designLabour: Schemas["LabourInsightResponse"] = {
         labourMonth("2026-09-01", 6400, 26100, 500, 2400, 0.0781),
     ],
     projects: [
-        { projectId: 11, title: "Gemmayze loft renovation", billingType: "client", totals: labourTotals(28400, 112800, 4200, 16800, 0.1479), labourShare: 0.3287 },
-        { projectId: 12, title: "Batroun beach house", billingType: "client", totals: labourTotals(24100, 96600, 2600, 10200, 0.1079), labourShare: 0.2789 },
-        { projectId: 2, title: "Villa Mounir interiors", billingType: "client", totals: labourTotals(21500, 86400, 1000, 4200, 0.0465), labourShare: 0.2488 },
-        { projectId: 30, title: "Studio admin", billingType: "internal", totals: labourTotals(12400, 49800, 0, 0, 0), labourShare: 0.1435 },
+        { projectId: 11, title: "Gemmayze loft renovation", code: "ID26Q3011-GLR", billingType: "client", totals: labourTotals(28400, 112800, 4200, 16800, 0.1479), labourShare: 0.3287 },
+        { projectId: 12, title: "Batroun beach house", code: "ID26Q3012-BBH", billingType: "client", totals: labourTotals(24100, 96600, 2600, 10200, 0.1079), labourShare: 0.2789 },
+        { projectId: 2, title: "Villa Mounir interiors", code: "ID26Q3002-VMI", billingType: "client", totals: labourTotals(21500, 86400, 1000, 4200, 0.0465), labourShare: 0.2488 },
+        { projectId: 30, title: "Studio admin", code: "ID26Q3030-SA", billingType: "internal", totals: labourTotals(12400, 49800, 0, 0, 0), labourShare: 0.1435 },
     ],
     departments: [
         { teamId: 1, name: "Architecture", totals: labourTotals(45200, 180000, 5100, 20400, 0.1128), labourShare: 0.5231 },

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ErrorText } from "@/shared/components/Feedback/ErrorText";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 
@@ -23,13 +24,13 @@ export default function Field({ id, label, error, hint, required, children }: Fi
     );
 }
 
-/** A small error line in the prototype's .err style. */
+/** A small error line in the prototype's .err style; an unexpected failure's links to Contact the developer. */
 export function FieldError({ message }: { message: string | undefined }) {
     if (!message) return null;
     return (
         <div className="err" role="alert">
             <Icon name="alert" />
-            <span>{message}</span>
+            <span><ErrorText text={message} /></span>
         </div>
     );
 }

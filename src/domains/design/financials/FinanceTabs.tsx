@@ -178,7 +178,7 @@ export function ProjectsTab({ projects, failed, tiles }: { projects: FinanceProj
                                                 <Tile tile={tiles.get(f.projectId)} />
                                                 <div style={{ minWidth: 0 }}>
                                                     <div className="trunc" style={{ fontWeight: 600 }}>{f.title}</div>
-                                                    <div className="muted" style={{ fontSize: 11 }}>{internal ? "Internal" : "Client project"}</div>
+                                                    <div className="muted" style={{ fontSize: 11 }}>{f.code && <span className="mono">{f.code} · </span>}{internal ? "Internal" : "Client project"}</div>
                                                 </div>
                                             </div>
                                         </td>

@@ -5,8 +5,10 @@ import type { Domain, Permissions } from "@/app/permissions/permissions";
 import type { IconName } from "@/shared/icons/icons";
 import {
     ActivityPage,
+    AssignedRequirementsPage,
     BoqSitePage,
     BoqSitesPage,
+    CalendarPage,
     ClientPage,
     ClientsPage,
     CompanyExpensesPage,
@@ -16,9 +18,11 @@ import {
     PocketPage,
     CompanyOverviewPage,
     CompanyProfilePage,
+    MySalaryAdvancesPage,
     CompanySettingsPage,
     FinancialsRoute,
     HelpPage,
+    LogHoursPage,
     MeetingsPage,
     MessagesPage,
     ProtonPage,
@@ -43,6 +47,7 @@ import {
     WebsiteLocationsPage,
     WebsiteProjectsPage,
     WebsiteServicesPage,
+    WebsiteSettingsPage,
     WebsiteSitePage,
     WebsiteStaffPage,
 } from "./pages";
@@ -96,20 +101,13 @@ const executionOnly = (rule: AccessRule): AccessRule => (ctx) => ctx.domain === 
 /** Writes BOQ drafts but doesn't manage pricing: whoever manages it uses the site's own page. */
 const boqAuthor: AccessRule = ({ p }) => p.has(P.BOQ_CREATE) && !p.has(P.PROJECT_PRICING_MANAGE);
 
-/** Anything a settings page lets someone manage. */
-const SETTINGS_CODES = [
-    P.DOMAIN_SETTINGS_MANAGE,
-    P.BILLING_SETTINGS_MANAGE,
-    P.EXCHANGE_RATE_MANAGE,
-    P.COMPANY_SETTINGS_MANAGE,
-    P.WORKING_TIME_MANAGE,
-    P.TEAM_MANAGE,
-    P.EMPLOYEE_INVITE,
-    P.EMPLOYEE_INVITE_SUPER_ADMIN,
-    P.PERMISSION_MANAGE,
-] as const;
-
 export const domainRoutes: DomainRoute[] = [
+    {
+        // a Design employee's start page: Log work, their week, today, overtime and hours balance
+        path: "log-hours",
+        nav: { label: "Log hours", icon: "timer" },
+        employee: { element: <LogHoursPage />, access: designOnly(all(P.WORK_ENTRY_VIEW_OWN)) },
+    },
     {
         // an Execution site staff member's home: what happened on their sites, one log at a time
         path: "daily-log",
@@ -185,10 +183,22 @@ export const domainRoutes: DomainRoute[] = [
         },
     },
     {
+        // the requirements assigned to a Design employee, filtered by project (they were on My work)
+        path: "requirements",
+        nav: { label: "Requirements", icon: "checkCircle" },
+        employee: { element: <AssignedRequirementsPage />, access: designOnly(all(P.REQUIREMENT_VIEW)) },
+    },
+    {
         path: "meetings",
         nav: { label: "Meetings", icon: "calendar" },
         // admins set meetings from their Overview's Meetings tab, super admins from the company overview's
         employee: { element: <MeetingsPage />, access: designOnly(all(P.PROJECT_VIEW)) },
+    },
+    {
+        // the meetings an employee may see, a month at a time, in either business: site staff can be invited too
+        path: "calendar",
+        nav: { label: "Calendar", icon: "grid" },
+        employee: { element: <CalendarPage />, access: all(P.PROJECT_VIEW) },
     },
     {
         path: "time-off",
@@ -224,9 +234,15 @@ export const domainRoutes: DomainRoute[] = [
         employee: { element: <MyProfilePage />, access: signedIn },
     },
     {
+        // one's own salary advances, from the menu under one's name: the same page for admins and employees
+        path: "advances",
+        admin: { element: <MySalaryAdvancesPage />, access: signedIn },
+    },
+    {
+        // everyone's: the theme and Contact the developer, and each section someone may change
         path: "settings",
         nav: { label: "Settings", icon: "settings", section: "workspace" },
-        admin: { element: <SettingsPage />, access: any(...SETTINGS_CODES) },
+        admin: { element: <SettingsPage />, access: signedIn },
     },
     {
         path: "notifications",
@@ -264,8 +280,9 @@ export const companyRoutes: CompanyRoute[] = [
     // the assistant's cost and budget: super admins only, everyone else sees just their question allowance
     { path: "proton", nav: { label: "Proton", icon: "compass", section: "workspace" }, element: <ProtonBudgetPage />, access: (p) => p.has(P.PROTON_BUDGET_MANAGE) },
     // the company's own settings and each business's, for whoever reaches the company area
-    { path: "settings", nav: { label: "Settings", icon: "settings", section: "workspace" }, element: <CompanySettingsPage />, access: (p) => p.has(P.COMPANY_VIEW) && p.hasAny(...SETTINGS_CODES) },
+    { path: "settings", nav: { label: "Settings", icon: "settings", section: "workspace" }, element: <CompanySettingsPage />, access: (p) => p.has(P.COMPANY_VIEW) },
     { path: "profile", element: <CompanyProfilePage />, access: () => true },
+    { path: "advances", element: <MySalaryAdvancesPage />, access: () => true },
     { path: "notifications", element: <NotificationsPage />, access: () => true },
     { path: "messages", element: <MessagesPage />, access: () => true },
     { path: "assistant/:chatId?", element: <ProtonPage />, access: (p) => p.has(P.PROTON_USE) },
@@ -288,7 +305,10 @@ export const websiteRoutes: CompanyRoute[] = [
     { path: "site", nav: { label: "Site", icon: "browser" }, element: <WebsiteSitePage />, access: website },
     // the website's own staff, for whoever may see people
     { path: "staff", nav: { label: "Staff", icon: "people", section: "workspace" }, element: <WebsiteStaffPage />, access: (p) => p.has(P.EMPLOYEE_VIEW) },
+    // the theme and Contact the developer
+    { path: "settings", nav: { label: "Settings", icon: "settings", section: "workspace" }, element: <WebsiteSettingsPage />, access: () => true },
     { path: "profile", element: <CompanyProfilePage />, access: () => true },
+    { path: "advances", element: <MySalaryAdvancesPage />, access: () => true },
     { path: "notifications", element: <NotificationsPage />, access: () => true },
     { path: "messages", element: <MessagesPage />, access: () => true },
     { path: "help", element: <HelpPage />, access: () => true },

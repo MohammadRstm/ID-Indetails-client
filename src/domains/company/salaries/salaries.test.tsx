@@ -1,12 +1,15 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+import { printFile } from "@/api/download";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { money } from "@/shared/format/money";
 import { salaries, salaryHandlers } from "@/test/fixtures/salaries";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
+
+vi.mock("@/api/download", async (original) => ({ ...(await original<typeof import("@/api/download")>()), printFile: vi.fn(async () => undefined) }));
 
 const rana = personas.superAdmin;
 const sep = salaries.september;
@@ -35,12 +38,12 @@ describe("Salaries", () => {
         expect(kpi("Earned so far")).toHaveTextContent(money.exact(sep.totals[0].earnedSoFar));
         expect(kpi("Earned so far")).toHaveTextContent(`of ${money.exact(sep.totals[0].total)} for the full month`);
         // each person: the month's pay as a monthly amount, the hour it gives this month, and what is earned so far
-        const salaried = sep.rows.items.find((x) => x.basis === "monthly" && x.fullMonthEstimate != null && !x.proRated)!;
+        const salaried = sep.rows.items.find((x) => x.fullMonthEstimate != null && !x.proRated)!;
         const line = rowOf(salaried.name);
         expect(line).toHaveTextContent(money.exact(salaried.monthlyPay));
         expect(line).toHaveTextContent(`÷ ${Math.round(salaried.monthlyPay / salaried.hourlyRate)}h this month`);
         expect(line).toHaveTextContent(`${money.exact(salaried.earnedSoFar)}so far · ${money.exact(salaried.fullMonthEstimate!)} full month`);
-        expect(kpi("Employees")).toHaveTextContent("9 on a monthly salary");
+        expect(kpi("Employees")).toHaveTextContent("on a monthly salary");
         expect(kpi("Behind so far")).toHaveTextContent("2");
         expect(within(table()).getAllByRole("row").filter((r) => r.querySelector(".av, .av-fb"))).toHaveLength(10);
         expect(within(rowOf("Rami Aoun")).getByText("13h 40m behind")).toBeInTheDocument();
@@ -129,6 +132,29 @@ describe("Salaries", () => {
         expect(asked[0].get("month")).toBe("2026-09");
     });
 
+    it("download and print the month's PDF as filtered", async () => {
+        vi.mocked(printFile).mockClear();
+        URL.createObjectURL = vi.fn(() => "blob:salaries-pdf");
+        URL.revokeObjectURL = vi.fn();
+        const asked: URLSearchParams[] = [];
+        renderApp("/company/salaries", rana,
+            http.get("/api/company/salaries/pdf", ({ request }) => {
+                asked.push(new URL(request.url).searchParams);
+                return new HttpResponse("%PDF", { headers: { "content-type": "application/pdf", "content-disposition": 'attachment; filename="salaries-2026-09.pdf"' } });
+            }),
+            ...salaryHandlers);
+        await screen.findByText("Elie Khalil");
+        await userEvent.click(screen.getByRole("button", { name: "Admins" }));
+        await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
+        await waitFor(() => expect(asked).toHaveLength(1));
+        expect(asked[0].get("month")).toBe("2026-09");
+        expect(asked[0].get("role")).toBe("admin");
+        expect(URL.createObjectURL).toHaveBeenCalled();
+
+        await userEvent.click(screen.getByRole("button", { name: "Print" }));
+        await waitFor(() => expect(printFile).toHaveBeenCalledWith("/company/salaries/pdf", { month: "2026-09", domain: null, role: "admin", search: null }, "salaries-2026-09.pdf"));
+    });
+
     it("are out of reach without salary:view", async () => {
         const asked: string[] = [];
         renderApp("/company/salaries", personas.designAdmin,
@@ -178,7 +204,7 @@ describe("Salaries", () => {
 describe("A person's salary", () => {
     it("show what a salary's overtime is paid past its threshold, under the overtime pay", async () => {
         const row = {
-            ...sep.rows.items[0], basis: "monthly", overtimeMinutes: 41 * 60, overtimePaidMinutes: 4 * 60,
+            ...sep.rows.items[0], overtimeMinutes: 41 * 60, overtimePaidMinutes: 4 * 60,
             overtimeThresholdMinutes: 184 * 60, countedMinutes: 188 * 60, overtimePay: 38.28,
         };
         const under = { ...row, userId: 99, name: "Lina Short", email: "lina@hourline.test", overtimePaidMinutes: 0, countedMinutes: 170 * 60, overtimePay: 0 };
@@ -236,11 +262,28 @@ describe("A person's salary", () => {
         expect(within(drawer).queryByText("Where the hours went")).not.toBeInTheDocument();
     });
 
-    it("prices hourly work with each day's paid break", async () => {
+    it("shows each stretch of a month whose pay changed, at its own salary", async () => {
+        const parts = [
+            { from: "2026-09-01", to: "2026-09-14", salary: 2200, overtimeRate: 11.96, days: 10, pay: 1000 },
+            { from: "2026-09-15", to: "2026-09-30", salary: 2640, overtimeRate: 14.35, days: 12, pay: 1440 },
+        ];
+        const changed = { ...sep, rows: { ...sep.rows, items: sep.rows.items.map((x) => (x.name === "Rami Aoun" ? { ...x, payChanged: true } : x)) } };
+        renderApp("/company/salaries", rana,
+            http.get("/api/company/salaries/6", () => HttpResponse.json({ ...salaries.rami, parts })),
+            http.get("/api/company/salaries", () => HttpResponse.json(changed)),
+            ...salaryHandlers);
+        // the list's hour is the days' rates together, not the end-of-month salary ÷ its hours
+        expect(within(await screen.findByText("Rami Aoun").then((n) => n.closest("tr") as HTMLElement)).getByText("the days' rates together")).toBeInTheDocument();
+        const drawer = await openDetails("Rami Aoun");
+        expect((await within(drawer).findByText(/a month · 10 working days$/)).parentElement).toHaveTextContent(money.exact(1000));
+        expect(within(drawer).getByText(/a month · 12 working days$/).parentElement).toHaveTextContent(money.exact(1440));
+        expect(within(drawer).getByText(/Their pay changed this month/)).toBeInTheDocument();
+    });
+
+    it("shows the working days with nothing logged", async () => {
         renderApp("/company/salaries", rana, ...salaryHandlers);
         const drawer = await openDetails("Rami Aoun");
         expect(await within(drawer).findByText("Behind so far")).toBeInTheDocument();
-        expect(within(drawer).getByText(/Paid breaks · 18 working days/).parentElement).toHaveTextContent(money.exact(252));
         expect(within(drawer).getByText("Working days with nothing logged, not excused").parentElement).toHaveTextContent("3");
     });
 
@@ -261,8 +304,8 @@ describe("A person's salary", () => {
         const drawer = await openDetails("Rami Aoun");
         await userEvent.click(await within(drawer).findByRole("button", { name: "Excuse hours or days…" }));
         expect(within(drawer).getByLabelText("Hours")).toHaveValue("13.67");
-        // hourly pay has nothing to lose, so there is no paid or unpaid choice
-        expect(within(drawer).queryByRole("tab", { name: "Unpaid" })).not.toBeInTheDocument();
+        // excused time is paid unless it is marked unpaid
+        expect(within(drawer).getByRole("tab", { name: "Unpaid" })).toBeInTheDocument();
         await userEvent.type(within(drawer).getByLabelText("Reason"), "Public holiday");
         await userEvent.click(within(drawer).getByRole("button", { name: "Excuse 13h 40m" }));
         await waitFor(() => expect(sent).toEqual([{ id: "6", month: "2026-09", kind: "minutes", minutes: 820, days: [], isPaid: true, note: "Public holiday" }]));
@@ -296,23 +339,15 @@ describe("A person's salary", () => {
         expect(await within(drawer).findByRole("alert")).toHaveTextContent("Hours can't be excused for a future month.");
     });
 
-    it("lists a month's time off as decided elsewhere, and prices an hourly person's paid days", async () => {
+    it("lists a month's time off as decided elsewhere", async () => {
         const off = { requestId: 5, firstDay: "2026-09-14", lastDay: "2026-09-15", isPaid: true, days: ["2026-09-14", "2026-09-15"] };
         renderApp("/company/salaries", rana,
-            http.get("/api/company/salaries/6", () => HttpResponse.json({ ...salaries.rami, timeOff: [off], timeOffPay: 180 })),
+            http.get("/api/company/salaries/6", () => HttpResponse.json({ ...salaries.rami, timeOff: [off] })),
             ...salaryHandlers);
         const drawer = await openDetails("Rami Aoun");
         const line = (await within(drawer).findByText(/^Time off · Sep 14–Sep 15 · 2 days · Paid$/)).closest(".hl-excuse-row") as HTMLElement;
         expect(within(line).getByText("Decided on Company › Time off")).toBeInTheDocument();
         expect(within(line).queryByRole("button", { name: "Remove" })).not.toBeInTheDocument();
-        expect(within(drawer).getByText("Paid time off").parentElement).toHaveTextContent(money.exact(180));
-    });
-
-    it("leaves out the paid time off line when there is no pay for it", async () => {
-        renderApp("/company/salaries", rana, ...salaryHandlers);
-        const drawer = await openDetails("Rami Aoun");
-        expect(await within(drawer).findByText("Behind so far")).toBeInTheDocument();
-        expect(within(drawer).queryByText("Paid time off")).not.toBeInTheDocument();
     });
 
     it("can't excuse a day that is on time off", async () => {

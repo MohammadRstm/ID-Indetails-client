@@ -1,7 +1,7 @@
 import { useState } from "react";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillChange, useProtonForm } from "@/domains/shared/proton/formFill";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { toast } from "@/shared/components/Feedback/toast";
 import AmountField from "@/shared/components/Forms/AmountField";
 import { FieldError } from "@/shared/components/Forms/Field";
@@ -75,7 +75,7 @@ export default function OverheadModal({ line, onClose }: { line: OverheadLine | 
             foot={
                 <>
                     <div className="grow">
-                        {error ? <span className="err"><Icon name="alert" />{errorMessage(error)}</span>
+                        {error ? <span className="err"><Icon name="alert" /><ErrorMessage error={error} /></span>
                             : line ? "Past months keep the cost they carried." : "It joins this month's pool straight away."}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>

@@ -9,6 +9,8 @@ export type NumberShape = { digits: number; decimals: number; max?: number };
 
 /** An amount of money: 13 digits and 2 decimals. */
 export const AMOUNT: NumberShape = { digits: 13, decimals: 2 };
+/** An amount in CFA francs, which have no cents: whole francs. */
+export const WHOLE_AMOUNT: NumberShape = { digits: 13, decimals: 0 };
 /** A site expense's quantity: 11 digits and 3 decimals, as the API keeps it. */
 export const QUANTITY: NumberShape = { digits: 11, decimals: 3 };
 /** A site expense's unit cost: 11 digits and 4 decimals (15 digits, as exact as the browser's numbers go). */
