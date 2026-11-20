@@ -42,6 +42,14 @@ group("A notification's words", () => {
         const site = { ...project, id: 7, title: "Achrafieh Towers lobby", domain: "execution" };
         const agreeing = note("change_blocked", { projectTitle: site.title, kind: "boq_agree" }, { actor: nadia, project: site, subjectType: "blocked_change", subjectId: 9 });
         expect(describe(agreeing, admin)).toMatchObject({ sub: "Agreeing a BOQ or VO by Nadia Karam · force it or dismiss it", route: "/execution/projects/7?blocked=9" });
+        // a held pay change, for the super admins: whose pay, the hardest-hit project and how many more, never an amount
+        const held = note("pay_change_held", { personName: "Yara Mansour", effectiveFrom: "2026-06-15", projectTitle: project.title, projectCount: 2 },
+            { actor: nadia, project, subjectType: "blocked_change", subjectId: 11 });
+        expect(describe(held, admin)).toMatchObject({
+            text: "Yara Mansour's pay change was held at zero profit",
+            sub: "It would take Studio Nour brand space and 1 more to zero profit or below · asked by Nadia Karam · force it or dismiss it",
+            route: "/design/projects/5?blocked=11",
+        });
         const withdrawing = note("change_blocked", { projectTitle: site.title, kind: "boq_withdraw" }, { actor: nadia, project: site, subjectType: "blocked_change", subjectId: 9 });
         expect(describe(withdrawing, admin).sub).toBe("Withdrawing the agreement of a BOQ or VO by Nadia Karam · force it or dismiss it");
         expect(describe(note("profit_low", { projectTitle: project.title, marginPct: 8 }, { project }), admin))
@@ -84,6 +92,14 @@ group("A notification's words", () => {
             .toBe("Nadia Karam moved a meeting: Studio planning");
         expect(describe(note("meeting_cancelled", { topic: "Studio planning", startsAt: "2026-10-02T09:00:00Z", endsAt: "2026-10-02T10:00:00Z" }, { actor: nadia }), designer).text)
             .toBe("Nadia Karam cancelled a meeting: Studio planning");
+        // a project meeting's invitees hear of its project, and everyone in a meeting is reminded 10 minutes before it
+        const lobby = { id: 7, title: "Achrafieh Towers lobby", domain: "execution", icon: null, tint: null };
+        const siteStaff: Reader = { userId: 9, isAdmin: false, logsWork: false, domain: "execution" };
+        expect(describe(note("meeting_invited", { authorName: "Nadia Karam", startsAt: "2026-10-02T08:00:00Z", endsAt: "2026-10-02T09:00:00Z" }, { actor: nadia, project }), designer))
+            .toMatchObject({ text: "Nadia Karam invited you to a meeting on Studio Nour brand space", route: "/design/meetings" });
+        expect(describe(note("meeting_soon", { topic: "Slab inspection", startsAt: "2026-10-02T08:00:00Z", endsAt: "2026-10-02T09:00:00Z" }, { project: lobby }), siteStaff))
+            .toMatchObject({ text: "Your meeting on Achrafieh Towers lobby: Slab inspection starts at 11:00 AM", route: "/execution/calendar" });
+        expect(describe(note("meeting_soon", { startsAt: "2026-10-02T08:00:00Z", endsAt: "2026-10-02T09:00:00Z" }), designer).text).toBe("Your meeting starts at 11:00 AM");
         expect(describe(note("something_new", {}), designer).text).toBe("Something new");
     });
 
@@ -120,6 +136,26 @@ group("A notification's words", () => {
 
         expect(describe(note("time_off_starts", { name: "Sarah Haddad", userId: 4, lastDay: "2026-10-16" }), admin)).toMatchObject({ text: "Sarah Haddad is off until Oct 16", route: "/design/people/4" });
         expect(describe(note("time_off_back", { name: "Sarah Haddad", userId: 4 }), admin)).toMatchObject({ text: "Sarah Haddad is back at work today", route: "/design/people/4" });
+    });
+
+    it("tell who decides about a salary advance, and the person its outcome, without an amount", () => {
+        const sup: Reader = { ...admin, isSuperAdmin: true };
+        const ask = { name: "Sarah Haddad" };
+        const advances = "/company/salaries?view=advances";
+        expect(describe(note("salary_advance_requested", ask, { subjectType: "salary_advance", subjectId: 12 }), sup))
+            .toMatchObject({ text: "Sarah Haddad asks for a salary advance.", route: `${advances}&advance=12` });
+        expect(describe(note("salary_advance_withdrawn", ask, { subjectType: "salary_advance", subjectId: 12 }), sup))
+            .toMatchObject({ text: "Sarah Haddad took back their request for a salary advance.", route: `${advances}&advance=12` });
+        expect(describe(note("salary_advance_unsettled", ask, { subjectType: "salary_advance", subjectId: 12 }), sup))
+            .toMatchObject({ text: "Sarah Haddad left with a salary advance still to pay back.", route: advances });
+
+        expect(describe(note("salary_advance_approved", {}), designer)).toMatchObject({ text: "Your salary advance was approved.", route: "/design/profile" });
+        expect(describe(note("salary_advance_declined", {}), designer)).toMatchObject({ text: "Your request for a salary advance was declined.", route: "/design/profile" });
+        expect(describe(note("salary_advance_recorded", {}), designer)).toMatchObject({ text: "A salary advance was recorded for you.", route: "/design/profile" });
+        // an admin's own page is among their people, a super admin's in the company area
+        expect(describe(note("salary_advance_approved", {}), admin).route).toBe("/design/people/2");
+        expect(describe(note("salary_advance_approved", {}), sup).route).toBe("/company/profile");
+        expect(describe(note("salary_advance_recorded", { amount: 400 }), designer).text).not.toMatch(/\d/);
     });
 
     it("tell staff what a client wrote in a project's portal, and open its discussion", () => {

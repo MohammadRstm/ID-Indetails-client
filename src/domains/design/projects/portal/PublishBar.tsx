@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { errorMessage, toApiError } from "@/api/errors";
+import { toApiError } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import Panel from "@/shared/components/Data/Panel";
 import { toast } from "@/shared/components/Feedback/toast";
 import Modal from "@/shared/components/Overlays/Modal";
@@ -106,7 +107,7 @@ function PublishModal({ projectId, content, onClose }: ModalProps) {
         <Modal title="Publish to your client?" onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{publish.error ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(publish.error)}</span> : null}</div>
+                    <div className="grow">{publish.error ? <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={publish.error} /></span> : null}</div>
                     <button type="button" className="btn" onClick={onClose}>Cancel</button>
                     <button type="button" className="btn btn-primary" disabled={publish.isPending || !content.canPublish} onClick={() => void submit()}>Publish changes</button>
                 </>
@@ -136,7 +137,7 @@ function DiscardModal({ projectId, content, onClose }: ModalProps) {
         <Modal title="Discard changes?" onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{discard.error ? <span className="err" role="alert"><Icon name="alert" />{errorMessage(discard.error)}</span> : null}</div>
+                    <div className="grow">{discard.error ? <span className="err" role="alert"><Icon name="alert" /><ErrorMessage error={discard.error} /></span> : null}</div>
                     <button type="button" className="btn" onClick={onClose}>Keep the drafts</button>
                     <button type="button" className="btn btn-danger" disabled={discard.isPending} onClick={() => void submit()}>Discard changes</button>
                 </>

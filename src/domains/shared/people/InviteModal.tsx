@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import type { Schemas } from "@/api/types";
 import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
@@ -14,7 +14,6 @@ import { Segmented } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Modal from "@/shared/components/Overlays/Modal";
-import { money } from "@/shared/format/money";
 import { DOMAIN_LABEL } from "@/shared/format/labels";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
@@ -76,8 +75,6 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
         return done;
     });
     const [role, setRole] = useState<Role>(fixed === "website" ? "admin" : initialRole);
-    // an hourly cost only means something where people log hours: Design is paid per hour by default
-    const [basis, setBasis] = useState<"hourly" | "monthly">(design ? "hourly" : "monthly");
     const [amount, setAmount] = useState(0);
     // a salary's overtime rate follows the salary until it is typed over
     const [typedOvertime, setTypedOvertime] = useState<number | null>(null);
@@ -85,15 +82,14 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     const [sent, setSent] = useState<Schemas["InvitationResponse"] | null>(null);
     // admins and super admins are paid a fixed monthly salary, which their invitation must carry
     const fixedSalary = hasFixedSalary(role);
-    // site staff log no hours: a month's salary, never an hourly rate
+    // site staff log no hours, so they earn no overtime either
     const siteStaff = !fixedSalary && domain === "execution";
-    const monthly = fixedSalary || siteStaff || basis === "monthly";
     const setsPay = permissions.has(P.EMPLOYEE_PAY_MANAGE);
-    // only a salaried Design employee earns overtime at a rate of its own; the API gives everyone else its suggestion
-    const setsOvertime = setsPay && monthly && !fixedSalary && !siteStaff;
+    // only a Design employee earns overtime at a rate of its own; the API gives everyone else its suggestion
+    const setsOvertime = setsPay && !fixedSalary && !siteStaff;
     const overtimeRate = typedOvertime ?? suggestedOvertimeRate(amount, overtimeHours);
     const emailError = !email.trim() ? "Enter their work email." : !isEmail(email) && "Enter an email like name@company.com.";
-    const payError = setsPay && !(amount > 0) && (fixedSalary ? "Enter their monthly salary." : `Enter their pay ${monthly ? "per month" : "per hour"}.`);
+    const payError = setsPay && !(amount > 0) && "Enter their monthly salary.";
     const overtimeError = setsOvertime && amount > 0
         && (!(overtimeRate > 0) ? "Enter their overtime rate." : overtimeRate > amount && "The overtime rate can't be more than the salary.");
     const team = teams.find((t) => String(t.id) === teamId);
@@ -102,10 +98,9 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
     const departmentError = needsDepartment && !teamId && "Choose the department they work in.";
 
     function choose(next: Joins) {
-        // another business: its own departments, and its usual way of paying
+        // another business: its own departments
         setChosen(next);
         setTeamId("");
-        setBasis(next === "design" ? "hourly" : "monthly");
         if (next === "website") setRole("admin");
     }
 
@@ -115,7 +110,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
         invite.mutate({
             email: email.trim(), role, domainCode: role === "super_admin" ? null : domain, teamId: teamId ? +teamId : null,
             position: position.trim() || null,
-            pay: setsPay ? { basis: monthly ? "monthly" : "hourly", amount, currency, ...(setsOvertime ? { overtimeRate } : {}) } : null,
+            pay: setsPay ? { amount, currency, ...(setsOvertime ? { overtimeRate } : {}) } : null,
         }, { onSuccess: setSent });
     }
 
@@ -158,7 +153,7 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
             sub={`They get an invitation and appear in the ${fixed === "website" ? "staff" : fixed ? "employee" : "people"} list straight away.`} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{invite.error ? <span className="err"><Icon name="alert" />{errorMessage(invite.error)}</span> : null}</div>
+                    <div className="grow">{invite.error ? <span className="err"><Icon name="alert" /><ErrorMessage error={invite.error} /></span> : null}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-primary" disabled={invite.isPending} onClick={send}>{invite.isPending ? "Sending…" : "Send invitation"}</button>
                 </>
@@ -194,31 +189,21 @@ export default function InviteModal({ domain: fixed, initialRole = "employee", o
                         {setsPay && (
                             <div className="field">
                                 <div className="spread" style={{ alignItems: "center" }}>
-                                    <label className="label required" htmlFor="ae-rate" style={{ margin: 0 }}>{fixedSalary ? "Monthly salary" : "Pay"}</label>
-                                    {fixedSalary ? <span className="badge">Fixed salary</span>
-                                        : siteStaff ? <span className="badge">Per month</span>
-                                            : <Segmented value={basis} onChange={setBasis} aria-label="Pay basis" options={[{ value: "hourly", label: "Per hour" }, { value: "monthly", label: "Per month" }]} />}
+                                    <label className="label required" htmlFor="ae-rate" style={{ margin: 0 }}>Monthly salary</label>
+                                    {fixedSalary && <span className="badge">Fixed salary</span>}
                                 </div>
                                 <div className="grid g-2 mt-s">
                                     <div className="field">
                                         <AmountField id="ae-rate" value={amount} currency={currency} onChange={setAmount} onCurrency={setCurrency} onBlur={errors.touch("pay")} />
                                         {errors.show("pay", payError) ? <FieldError message={errors.show("pay", payError)} />
-                                            : <div className="hint">{fixedSalary ? "The same every month: admins log no hours, so no overtime. Never shown to them." : `${monthly ? "Monthly salary." : "Paid per hour worked."} Never shown to the employee.`}</div>}
+                                            : <div className="hint">{fixedSalary ? "The same every month: admins log no hours, so no overtime. Never shown to them." : "An hour of it is the salary ÷ the month's paid hours. Never shown to the employee."}</div>}
                                     </div>
-                                    {setsOvertime ? (
+                                    {setsOvertime && (
                                         <div className="field">
                                             <label className="label required" htmlFor="ae-overtime" style={{ margin: 0 }}>Overtime rate</label>
                                             <AmountField id="ae-overtime" value={overtimeRate} currency={currency} currencies={false} onChange={setTypedOvertime} onBlur={errors.touch("overtime")} />
                                             {errors.show("overtime", overtimeError) ? <FieldError message={errors.show("overtime", overtimeError)} />
                                                 : <div className="hint">An hour of overtime, × the company's overtime multiplier. Suggested: the salary ÷ {overtimeHours} h.</div>}
-                                        </div>
-                                    ) : !monthly && (
-                                        <div className="field">
-                                            <div className="u">A month of {overtimeHours} hours is</div>
-                                            <div className="mono" style={{ paddingTop: 4, fontSize: 14, fontWeight: 650 }}>
-                                                {amount ? `${money.fmt(amount * overtimeHours, currency)} / month` : "-"}
-                                            </div>
-                                            <div className="hint">Overtime is paid at this rate × the company's overtime multiplier.</div>
                                         </div>
                                     )}
                                 </div>

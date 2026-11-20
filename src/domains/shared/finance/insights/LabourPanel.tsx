@@ -132,7 +132,7 @@ function Projects({ labour: l, domain, tiles }: { labour: LabourInsight; domain:
                                     <div className="pname">
                                         <ProjectTile icon={tiles?.get(p.projectId)?.icon} tint={tiles?.get(p.projectId)?.tint} size="sm" />
                                         {/* internal work has no Insights tab: its costs are on its Financials tab */}
-                                        <ProjectLink domain={domain} id={p.projectId} title={p.title} query={p.billingType === "internal" ? "tab=financials" : "tab=insights"} />
+                                        <ProjectLink domain={domain} id={p.projectId} title={p.title} code={p.code} query={p.billingType === "internal" ? "tab=financials" : "tab=insights"} />
                                         {p.billingType === "internal" && <span className="badge">Internal</span>}
                                     </div>
                                 </td>

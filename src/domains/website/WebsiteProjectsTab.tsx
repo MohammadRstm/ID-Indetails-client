@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { loadFailed } from "@/api/queryState";
 import Panel from "@/shared/components/Data/Panel";
 import { Badge, StatusBadge } from "@/shared/components/Data/Pills";
@@ -152,7 +152,7 @@ function ConveyorPanel({ data }: { data: WebsiteProjects }) {
                         : addable.length === 0 ? <span className="muted">Publish a project to add it to the strip.</span>
                             : <Select value="" aria-label="Add to the strip" searchable onChange={(v) => set([...ids, +v])}
                                 options={[{ value: "", label: "Add a published project…", disabled: true }, ...addable.map((p) => ({ value: String(p.id), label: p.title }))]} />}
-                    {save.error != null && <span className="err" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(save.error)}</span>}
+                    {save.error != null && <span className="err" style={{ fontSize: 12 }}><Icon name="alert" /><ErrorMessage error={save.error} /></span>}
                 </div>
             )}
         </Panel>

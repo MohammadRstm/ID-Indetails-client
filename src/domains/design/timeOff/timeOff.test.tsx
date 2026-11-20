@@ -112,18 +112,20 @@ describe("the employee's time off", () => {
     });
 
     it("tells them on their home when they are off today", async () => {
-        renderApp("/design/projects", sarah, mine(
+        renderApp("/design/log-hours", sarah, mine(
             request({ id: 1, firstDay: "2026-11-08", lastDay: "2026-11-11", status: "approved", isPaid: true }),
             request({ id: 2, firstDay: "2026-12-01", lastDay: "2026-12-03", status: "approved", isPaid: false }),
         ), ...workHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: /^Alert/ }));
         expect(await screen.findByText(`You're off until ${fmtDate("2026-11-11")}.`)).toBeInTheDocument();
     });
 
     it("tells them on their home about their next approved time off, and not about one that is only waiting", async () => {
-        renderApp("/design/projects", sarah, mine(
+        renderApp("/design/log-hours", sarah, mine(
             request({ id: 1, firstDay: "2026-11-20", lastDay: "2026-11-21" }),
             request({ id: 2, firstDay: "2026-12-01", lastDay: "2026-12-03", status: "approved", isPaid: false }),
         ), ...workHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: /^Alert/ }));
         expect(await screen.findByText(`Time off from ${fmtDate("2026-12-01")} to ${fmtDate("2026-12-03")}.`)).toBeInTheDocument();
         expect(screen.queryByText(/You're off until/)).not.toBeInTheDocument();
     });

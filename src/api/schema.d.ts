@@ -2457,6 +2457,136 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/company/overhead/one-offs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    month?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OneOffExpenseListResponse"];
+                        "text/json": components["schemas"]["OneOffExpenseListResponse"];
+                        "text/plain": components["schemas"]["OneOffExpenseListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SaveOneOffExpenseRequest"];
+                    "application/json": components["schemas"]["SaveOneOffExpenseRequest"];
+                    "text/json": components["schemas"]["SaveOneOffExpenseRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OneOffExpenseResponse"];
+                        "text/json": components["schemas"]["OneOffExpenseResponse"];
+                        "text/plain": components["schemas"]["OneOffExpenseResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company/overhead/one-offs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SaveOneOffExpenseRequest"];
+                    "application/json": components["schemas"]["SaveOneOffExpenseRequest"];
+                    "text/json": components["schemas"]["SaveOneOffExpenseRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OneOffExpenseResponse"];
+                        "text/json": components["schemas"]["OneOffExpenseResponse"];
+                        "text/plain": components["schemas"]["OneOffExpenseResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/company/overview": {
         parameters: {
             query?: never;
@@ -3934,6 +4064,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/employees/{userId}/pay/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ChangePayRequest"];
+                    "application/json": components["schemas"]["ChangePayRequest"];
+                    "text/json": components["schemas"]["ChangePayRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PayPreviewResponse"];
+                        "text/json": components["schemas"]["PayPreviewResponse"];
+                        "text/plain": components["schemas"]["PayPreviewResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/employees/{userId}/photo": {
         parameters: {
             query?: never;
@@ -4645,6 +4820,43 @@ export interface paths {
             responses: {
                 /** @description OK */
                 200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FileResponse"];
+                        "text/json": components["schemas"]["FileResponse"];
+                        "text/plain": components["schemas"]["FileResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/files/voice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Created */
+                201: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -8362,6 +8574,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ReportBugRequest"];
+                    "application/json": components["schemas"]["ReportBugRequest"];
+                    "text/json": components["schemas"]["ReportBugRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/invitations/accept": {
         parameters: {
             query?: never;
@@ -11210,6 +11461,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{projectId}/meetings/invitees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MeetingInviteeResponse"][];
+                        "text/json": components["schemas"]["MeetingInviteeResponse"][];
+                        "text/plain": components["schemas"]["MeetingInviteeResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{projectId}/payment": {
         parameters: {
             query?: never;
@@ -13251,6 +13541,47 @@ export interface paths {
                         "application/json": components["schemas"]["ProjectContributorDetailResponse"];
                         "text/json": components["schemas"]["ProjectContributorDetailResponse"];
                         "text/plain": components["schemas"]["ProjectContributorDetailResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/next-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Check?: string;
+                    Domain?: string;
+                    ProjectId?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NextProjectCodeResponse"];
+                        "text/json": components["schemas"]["NextProjectCodeResponse"];
+                        "text/plain": components["schemas"]["NextProjectCodeResponse"];
                     };
                 };
             };
@@ -17016,6 +17347,12 @@ export interface components {
             amount?: number;
             note?: null | string;
         };
+        ApproveSalaryAdvanceRequest: {
+            /** Format: double */
+            amount?: null | number;
+            months?: components["schemas"]["PlannedMonthRequest"][];
+            note?: null | string;
+        };
         ApproveTimeOffRequest: {
             isPaid?: boolean;
             note?: null | string;
@@ -17030,6 +17367,11 @@ export interface components {
             suggestion?: null | number;
             text?: string;
             voice?: null | components["schemas"]["ProtonVoiceTurnRequest"];
+        };
+        AskSalaryAdvanceRequest: {
+            /** Format: double */
+            amount?: number;
+            reason?: string;
         };
         AskTimeOffRequest: {
             /** Format: date */
@@ -17143,7 +17485,7 @@ export interface components {
         /** @enum {unknown} */
         BillingType: "client" | "internal";
         /** @enum {unknown} */
-        BlockedChangeKind: "expense" | "material_add" | "material_update" | "labour_week" | "work_entry_create" | "work_entry_update" | "payment" | "pricing" | "boq_agree" | "boq_withdraw" | "work_entry_department" | "design_vo";
+        BlockedChangeKind: "expense" | "material_add" | "material_update" | "labour_week" | "work_entry_create" | "work_entry_update" | "payment" | "pricing" | "boq_agree" | "boq_withdraw" | "work_entry_department" | "design_vo" | "pay_change";
         BlockedChangeResponse: {
             /** Format: date-time */
             decidedAt: null | string;
@@ -17152,16 +17494,27 @@ export interface components {
             /** Format: int64 */
             id: number;
             kind: components["schemas"]["BlockedChangeKind"];
+            person?: null | components["schemas"]["PersonRefResponse"];
             /** Format: double */
             profitNow: number;
             /** Format: int64 */
             projectId: number;
+            projects?: null | components["schemas"]["BlockedProjectResponse"][];
             projectTitle: string;
             /** Format: date-time */
             requestedAt: string;
             requestedBy: components["schemas"]["PersonRefResponse"];
             status: components["schemas"]["BlockedChangeStatus"];
             summary: string;
+        };
+        BlockedProjectResponse: {
+            /** Format: double */
+            profitIfForced: null | number;
+            /** Format: double */
+            profitNow: number;
+            /** Format: int64 */
+            projectId: number;
+            title: string;
         };
         /** @enum {unknown} */
         BlockedChangeStatus: "pending" | "forced" | "dismissed";
@@ -17343,6 +17696,7 @@ export interface components {
             /** Format: int64 */
             logoFileId: null | number;
             name: null | string;
+            supportWhatsApp: string;
         };
         /** @enum {unknown} */
         BridgeStepKind: "base_price" | "variation_orders" | "settlement" | "paid_ahead" | "supervision" | "permits" | "labour" | "expenses" | "site_expenses" | "ground_labour" | "pocket";
@@ -17399,7 +17753,6 @@ export interface components {
         ChangePayRequest: {
             /** Format: double */
             amount?: number;
-            basis?: components["schemas"]["PayBasis"];
             currency?: string;
             /** Format: date */
             effectiveFrom?: null | string;
@@ -17663,6 +18016,8 @@ export interface components {
         };
         CompanyMonthResponse: {
             /** Format: double */
+            advanceWriteOffs: number;
+            /** Format: double */
             expenses: number;
             /** Format: double */
             fixedSalaries: number;
@@ -17676,6 +18031,8 @@ export interface components {
             month: string;
             /** Format: double */
             netProfit: number;
+            /** Format: double */
+            oneOffExpenses: number;
             /** Format: double */
             overhead: number;
             /** Format: double */
@@ -17692,6 +18049,8 @@ export interface components {
         CompanyOverviewResponse: {
             /** Format: double */
             adminSalaries: number;
+            /** Format: double */
+            advanceWriteOffs: number;
             /** Format: int32 */
             clientsServed: number;
             /** Format: double */
@@ -17699,6 +18058,8 @@ export interface components {
             /** Format: double */
             cost: number;
             domains: components["schemas"]["DomainOverviewResponse"][];
+            /** Format: double */
+            expenses: number;
             /** Format: double */
             fixedSalaries: number;
             /** Format: date */
@@ -17709,6 +18070,8 @@ export interface components {
             invoiced: number;
             /** Format: double */
             netProfit: number;
+            /** Format: double */
+            oneOffExpenses: number;
             /** Format: double */
             outstanding: number;
             /** Format: double */
@@ -17724,8 +18087,10 @@ export interface components {
             /** Format: date */
             to: string;
             unconvertedAdminSalaries: components["schemas"]["CurrencyTotalResponse"][];
+            unconvertedAdvanceWriteOffs: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedFixedSalaries: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedInvoices: components["schemas"]["UnconvertedInvoicesResponse"][];
+            unconvertedOneOffExpenses: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedOverhead: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedOvertimePremium: components["schemas"]["CurrencyTotalResponse"][];
             unconvertedPaidLeave: components["schemas"]["CurrencyTotalResponse"][];
@@ -17752,6 +18117,7 @@ export interface components {
             weekStart: number;
         };
         CompletedProjectResponse: {
+            code: string;
             /** Format: date */
             completedOn: string;
             /** Format: int32 */
@@ -17769,6 +18135,12 @@ export interface components {
         CompleteProjectRequest: {
             keepPaidAhead?: boolean;
             settleOwed?: null | components["schemas"]["OwedSettlement"];
+        };
+        ContactErrorRequest: {
+            /** Format: date-time */
+            at?: string;
+            message?: null | string;
+            ref?: null | string;
         };
         /** @enum {unknown} */
         ContactKind: "email" | "phone";
@@ -17880,6 +18252,9 @@ export interface components {
         };
         CreateProjectRequest: {
             billingType?: components["schemas"]["BillingType"];
+            buildingCode?: null | string;
+            /** Format: double */
+            cfaPrice?: null | number;
             /** Format: int64 */
             clientId?: null | number;
             departmentIds?: null | number[];
@@ -17890,6 +18265,7 @@ export interface components {
             location?: null | string;
             /** Format: int64 */
             ownerId?: null | number;
+            projectCode?: null | string;
             /** Format: double */
             projectFee?: null | number;
             /** Format: double */
@@ -17955,12 +18331,14 @@ export interface components {
             day: string;
             /** Format: int32 */
             minutes: number;
+            tint: null | string;
         };
         DeactivateEmployeeRequest: {
             /** Format: date */
             lastWorkingDay?: null | string;
         };
         DeadlineProjectResponse: {
+            code: string;
             icon: null | string;
             /** Format: int64 */
             id: number;
@@ -18213,8 +18591,12 @@ export interface components {
             weeklySummary: boolean;
         };
         EditProjectFill: {
+            /** @description 1 to 10 letters or digits, usually the name's initials. */
+            buildingCode: null | string;
             description: null | string;
             location: null | string;
+            /** @description ID26Q4001. */
+            projectCode: null | string;
             /** Format: date */
             targetDate: null | string;
             title: null | string;
@@ -18392,7 +18774,7 @@ export interface components {
             projectId: null | number;
         };
         /** @enum {unknown} */
-        FileKind: "image" | "video";
+        FileKind: "image" | "video" | "audio";
         FileRenameFill: {
             /** Format: int64 */
             projectId: null | number;
@@ -18469,6 +18851,7 @@ export interface components {
         FinanceProjectResponse: {
             billingType: components["schemas"]["BillingType"];
             clientName: null | string;
+            code: string;
             cost: components["schemas"]["ProjectCostResponse"];
             /** Format: double */
             costPerHour: number;
@@ -18601,7 +18984,6 @@ export interface components {
         InvitationPayRequest: {
             /** Format: double */
             amount?: number;
-            basis?: components["schemas"]["PayBasis"];
             currency?: string;
             /** Format: date */
             effectiveFrom?: null | string;
@@ -18696,6 +19078,7 @@ export interface components {
             termsDays?: null | number;
         };
         InvoiceProjectResponse: {
+            code: string;
             /** Format: int64 */
             id: number;
             location: null | string;
@@ -18847,6 +19230,7 @@ export interface components {
         };
         LabourProjectResponse: {
             billingType: components["schemas"]["BillingType"];
+            code: string;
             /** Format: double */
             labourShare: null | number;
             /** Format: int64 */
@@ -18980,6 +19364,14 @@ export interface components {
             startMinute: null | number;
             topic: null | string;
         };
+        MeetingInviteeResponse: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: int64 */
+            photoFileId: null | number;
+            team: null | string;
+        };
         MeetingPersonResponse: {
             /** Format: int64 */
             id: number;
@@ -19106,6 +19498,7 @@ export interface components {
             meetings: components["schemas"]["MeetingResponse"][];
             /** Format: int32 */
             overtimeMinutes: number;
+            waiting: components["schemas"]["WaitingHoursResponse"][];
         };
         MyExcuseResponse: {
             days: string[];
@@ -19200,6 +19593,7 @@ export interface components {
         MyProjectResponse: {
             acceptsWork: boolean;
             clientName: null | string;
+            code: string;
             contributors: components["schemas"]["ContributorResponse"][];
             /** Format: date-time */
             createdAt: string;
@@ -19277,6 +19671,38 @@ export interface components {
             /** Format: int32 */
             projects: number;
         };
+        MySalaryAdvanceResponse: {
+            /** Format: double */
+            amount: number;
+            /** Format: double */
+            askedAmount: null | number;
+            /** Format: date-time */
+            cancelledAt: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            currency: string;
+            /** Format: date-time */
+            decidedAt: null | string;
+            decisionNote: null | string;
+            /** Format: date */
+            givenOn: null | string;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            left: null | number;
+            months: components["schemas"]["SalaryAdvanceMonthResponse"][];
+            reason: null | string;
+            settledKind: null | components["schemas"]["SalaryAdvanceSettlement"];
+            /** Format: date */
+            settledOn: null | string;
+            status: components["schemas"]["SalaryAdvanceStatus"];
+        };
+        MySalaryAdvancesResponse: {
+            canAsk: boolean;
+            cannotAskBecause: null | string;
+            currency: null | string;
+            items: components["schemas"]["MySalaryAdvanceResponse"][];
+        };
         MyScheduleDayResponse: {
             /** Format: date */
             date: string;
@@ -19324,6 +19750,8 @@ export interface components {
             projects: null | number;
         };
         NewProjectFill: {
+            /** @description Only when the user gives one: 1 to 10 letters or digits. Left out, the form suggests the name's initials. */
+            buildingCode: null | string;
             /**
              * Format: int64
              * @description An id from find or another tool.
@@ -19331,6 +19759,8 @@ export interface components {
             clientId: null | number;
             description: null | string;
             location: null | string;
+            /** @description Only when the user gives one: ID26Q4001. Left out, the form suggests the next code. */
+            projectCode: null | string;
             /** Format: date */
             targetDate: null | string;
             title: null | string;
@@ -19354,6 +19784,10 @@ export interface components {
             unit?: null | string;
             /** Format: double */
             unitCost?: null | number;
+        };
+        NextProjectCodeResponse: {
+            projectCode: string;
+            takenBy: null | components["schemas"]["ProjectCodeHolderResponse"];
         };
         /** @enum {unknown} */
         NotificationCategory: "work" | "requirements" | "projects" | "meetings" | "sites" | "money" | "people" | "messages";
@@ -19413,6 +19847,27 @@ export interface components {
             projectId: number;
             projectTitle: string;
         };
+        OneOffExpenseListResponse: {
+            isOpen: boolean;
+            items: components["schemas"]["OneOffExpenseResponse"][];
+            /** Format: date */
+            month: string;
+            totals: components["schemas"]["CurrencyTotalResponse"][];
+        };
+        OneOffExpenseResponse: {
+            /** Format: double */
+            amount: number;
+            canEdit: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            currency: string;
+            group: components["schemas"]["OverheadGroupSummaryResponse"];
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: date */
+            spentOn: string;
+        };
         OutsideScopeResponse: {
             /** Format: date */
             from: string;
@@ -19468,6 +19923,7 @@ export interface components {
         OverheadMonthResponse: {
             /** Format: date */
             month: string;
+            oneOffTotals: components["schemas"]["CurrencyTotalResponse"][];
             totals: components["schemas"]["CurrencyTotalResponse"][];
         };
         OverheadResponse: {
@@ -19678,8 +20134,6 @@ export interface components {
             /** Format: int32 */
             totalCount: number;
         };
-        /** @enum {unknown} */
-        PayBasis: "hourly" | "monthly";
         PaymentFill: {
             /** Format: double */
             amount: null | number;
@@ -19726,10 +20180,45 @@ export interface components {
             voidedAt: null | string;
             voidReason: null | string;
         };
+        PayPreviewMonthResponse: {
+            /** Format: double */
+            advanceAfter: number;
+            /** Format: double */
+            advanceBefore: number;
+            advanceCurrency: null | string;
+            currencyAfter: null | string;
+            currencyBefore: null | string;
+            /** Format: date */
+            month: string;
+            /** Format: double */
+            salaryAfter: null | number;
+            /** Format: double */
+            salaryBefore: null | number;
+        };
+        PayPreviewProjectResponse: {
+            /** Format: double */
+            labourAfter: number;
+            /** Format: double */
+            labourBefore: number;
+            /** Format: double */
+            profitAfter: number;
+            /** Format: double */
+            profitBefore: number;
+            /** Format: int64 */
+            projectId: number;
+            reachesZero: boolean;
+            title: string;
+        };
+        PayPreviewResponse: {
+            /** Format: date */
+            effectiveFrom: string;
+            months: components["schemas"]["PayPreviewMonthResponse"][];
+            projects: components["schemas"]["PayPreviewProjectResponse"][];
+            replaces: components["schemas"]["PayResponse"][];
+        };
         PayResponse: {
             /** Format: double */
             amount: number;
-            basis: components["schemas"]["PayBasis"];
             /** Format: date-time */
             createdAt: string;
             /** Format: int64 */
@@ -19742,6 +20231,10 @@ export interface components {
             note: null | string;
             /** Format: double */
             overtimeRate: number;
+            /** Format: date-time */
+            supersededAt?: null | string;
+            /** Format: int64 */
+            supersededById?: null | number;
         };
         PeriodCostResponse: {
             /** Format: double */
@@ -19870,6 +20363,12 @@ export interface components {
             description?: string;
             /** Format: date */
             sendOn?: string;
+        };
+        PlannedMonthRequest: {
+            /** Format: double */
+            amount: number;
+            /** Format: date */
+            month: string;
         };
         PocketContributionRequest: {
             /** Format: double */
@@ -20372,6 +20871,16 @@ export interface components {
             /** Format: int64 */
             id: number;
         };
+        ProjectCodeHolderResponse: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+        };
+        ProjectColorResponse: {
+            hex: string;
+            name: string;
+            takenBy: null | components["schemas"]["ProjectCodeHolderResponse"];
+        };
         ProjectContributorDetailResponse: {
             /** Format: int32 */
             entries: number;
@@ -20388,6 +20897,11 @@ export interface components {
             weekly: components["schemas"]["WeekTotalResponse"][];
         };
         ProjectContributorResponse: {
+            /**
+             * Format: int32
+             * @default 0
+             */
+            breakMinutes?: number;
             /** Format: int32 */
             entries: number;
             labourCost: null | components["schemas"]["LabourCostResponse"];
@@ -20670,6 +21184,8 @@ export interface components {
             billing: components["schemas"]["ProjectBillingResponse"];
             /** Format: double */
             cashProfit: null | number;
+            /** Format: double */
+            cfaPrice: null | number;
             cost: components["schemas"]["ProjectCostResponse"];
             /** Format: double */
             costPerHour: number;
@@ -20743,7 +21259,6 @@ export interface components {
             tvaRate: null | number;
         };
         ProjectPayPersonResponse: {
-            basis: null | components["schemas"]["PayBasis"];
             currency: string;
             email: string;
             /** Format: int32 */
@@ -20770,6 +21285,7 @@ export interface components {
         };
         ProjectPayProjectResponse: {
             client: null | string;
+            code: string;
             /** Format: int32 */
             normalMinutes: number;
             /** Format: int32 */
@@ -20800,6 +21316,7 @@ export interface components {
         /** @enum {unknown} */
         ProjectPayUnit: "week" | "month" | "quarter";
         ProjectProfitResponse: {
+            code: string;
             /** Format: double */
             cost: number;
             /** Format: double */
@@ -20824,7 +21341,9 @@ export interface components {
         ProjectReportSection: "summary" | "info" | "timeline" | "work" | "expenses" | "financials" | "billing" | "client" | "log";
         ProjectResponse: {
             billingType: components["schemas"]["BillingType"];
+            buildingCode: string;
             client: null | components["schemas"]["ProjectClientResponse"];
+            code: string;
             /** Format: date-time */
             completedAt: null | string;
             /** Format: date-time */
@@ -20847,6 +21366,7 @@ export interface components {
             photoFileId: null | number;
             /** Format: int32 */
             progressPct: number;
+            projectCode: string;
             staff: null | components["schemas"]["PersonRefResponse"][];
             /** Format: date */
             startDate: string;
@@ -20858,6 +21378,7 @@ export interface components {
             title: string;
         };
         ProjectRiskGroupResponse: {
+            code: string;
             /** Format: int64 */
             projectId: number;
             risks: components["schemas"]["ProjectRiskResponse"][];
@@ -20901,7 +21422,9 @@ export interface components {
         ProjectStatus: "active" | "hold" | "completed" | "archived";
         ProjectSummaryResponse: {
             billingType: components["schemas"]["BillingType"];
+            buildingCode: string;
             client: null | components["schemas"]["ProjectClientResponse"];
+            code: string;
             description: null | string;
             domain: string;
             icon: null | string;
@@ -20914,6 +21437,7 @@ export interface components {
             photoFileId: null | number;
             /** Format: int32 */
             progressPct: number;
+            projectCode: string;
             /** Format: date */
             startDate: string;
             status: components["schemas"]["ProjectStatus"];
@@ -21231,7 +21755,7 @@ export interface components {
         /** @enum {unknown} */
         ProtonMessageRole: "user" | "proton";
         /** @enum {unknown} */
-        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_profile" | "pocket" | "site_logs" | "daily_log" | "my_sites" | "website_projects" | "website_analytics" | "website_services" | "website_locations" | "website_contact" | "website_site" | "website_staff" | null;
+        ProtonPage: "dashboard" | "projects" | "clients" | "people" | "financials" | "meetings" | "activity" | "reports" | "company_overview" | "company_expenses" | "settings" | "notifications" | "messages" | "help" | "schedules" | "salaries" | "project_pay" | "proton_budget" | "company_settings" | "company_profile" | "launcher" | "my_work" | "my_profile" | "pocket" | "site_logs" | "daily_log" | "my_sites" | "website_projects" | "website_analytics" | "website_services" | "website_locations" | "website_contact" | "website_site" | "website_staff" | "calendar" | null;
         ProtonPageContext: {
             area: string;
             /** Format: int64 */
@@ -21320,7 +21844,7 @@ export interface components {
             unit: components["schemas"]["ProtonUnit"];
         };
         /** @enum {unknown} */
-        ProtonSettingsSection: "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "admins" | "data" | "labels" | null;
+        ProtonSettingsSection: "general" | "time" | "finance" | "projects" | "notifications" | "teams" | "admins" | "data" | "labels" | "contact" | null;
         ProtonSourceResponse: {
             comparedWith: null | string;
             label: string;
@@ -21562,6 +22086,16 @@ export interface components {
             receivedOn?: null | string;
             reference?: null | string;
         };
+        RecordSalaryAdvanceRequest: {
+            /** Format: double */
+            amount?: number;
+            /** Format: date */
+            givenOn?: null | string;
+            months?: components["schemas"]["PlannedMonthRequest"][];
+            note?: null | string;
+            /** Format: int64 */
+            userId?: number;
+        };
         RefreshRequest: {
             installedApp?: boolean;
         };
@@ -21583,15 +22117,15 @@ export interface components {
         };
         ReportBugFill: {
             description: null | string;
-            steps: null | string;
-            title: null | string;
+            details: null | string;
         };
         ReportBugRequest: {
             description?: string;
+            details?: null | string;
+            error?: null | components["schemas"]["ContactErrorRequest"];
+            installedApp?: null | boolean;
             page?: null | string;
             recentErrors?: components["schemas"]["ReportedErrorRequest"][];
-            steps?: null | string;
-            title?: string;
         };
         ReportClientResponse: {
             /** Format: int64 */
@@ -21609,6 +22143,7 @@ export interface components {
             status?: number;
         };
         ReportMatrixProjectResponse: {
+            code: string;
             /** Format: int64 */
             projectId: number;
             title: string;
@@ -21660,6 +22195,7 @@ export interface components {
             userId: number;
         };
         ReportProjectResponse: {
+            code: string;
             /** Format: int32 */
             entries: number;
             /** Format: int32 */
@@ -21728,6 +22264,7 @@ export interface components {
             projects: number;
         };
         RunningProjectResponse: {
+            code: string;
             /** Format: int32 */
             days: number;
             /** Format: int64 */
@@ -21737,6 +22274,7 @@ export interface components {
             title: string;
         };
         SalariesResponse: {
+            advances: components["schemas"]["SalaryAdvanceSummaryResponse"];
             inProgress: boolean;
             /** Format: date */
             month: string;
@@ -21747,6 +22285,89 @@ export interface components {
             totals: components["schemas"]["SalaryTotalResponse"][];
             withoutPay: components["schemas"]["PersonWithoutPayResponse"][];
         };
+        SalaryAdvanceMonthResponse: {
+            closed: boolean;
+            /** Format: date */
+            month: string;
+            /** Format: double */
+            planned: number;
+            /** Format: double */
+            taken: null | number;
+        };
+        SalaryAdvanceMonthsRequest: {
+            months?: components["schemas"]["PlannedMonthRequest"][];
+        };
+        SalaryAdvanceNoteRequest: {
+            note?: null | string;
+        };
+        SalaryAdvancePersonResponse: {
+            departmentName: null | string;
+            domain: null | string;
+            /** Format: int64 */
+            id: number;
+            /** Format: date */
+            leftOn: null | string;
+            name: string;
+            /** Format: int64 */
+            photoFileId: null | number;
+            role: string;
+        };
+        SalaryAdvanceResponse: {
+            /** Format: double */
+            amount: number;
+            /** Format: double */
+            askedAmount: null | number;
+            behind: boolean;
+            canCancel: boolean;
+            canChange: boolean;
+            canDecide: boolean;
+            /** Format: date-time */
+            cancelledAt: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            currency: string;
+            /** Format: date-time */
+            decidedAt: null | string;
+            decidedByName: null | string;
+            decisionNote: null | string;
+            /** Format: date */
+            givenOn: null | string;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            left: null | number;
+            months: components["schemas"]["SalaryAdvanceMonthResponse"][];
+            person: components["schemas"]["SalaryAdvancePersonResponse"];
+            reason: null | string;
+            recordedByName: null | string;
+            /** Format: double */
+            repaid: null | number;
+            settlement: null | components["schemas"]["SalaryAdvanceSettlementResponse"];
+            status: components["schemas"]["SalaryAdvanceStatus"];
+            unsettled: boolean;
+        };
+        /** @enum {unknown} */
+        SalaryAdvanceSettlement: "cash" | "written_off";
+        SalaryAdvanceSettlementResponse: {
+            /** Format: double */
+            amount: number;
+            kind: components["schemas"]["SalaryAdvanceSettlement"];
+            note: null | string;
+            settledByName: null | string;
+            /** Format: date */
+            settledOn: string;
+        };
+        /** @enum {unknown} */
+        SalaryAdvanceStatus: "pending" | "approved" | "declined" | "withdrawn" | "cancelled";
+        SalaryAdvanceSummaryResponse: {
+            left: components["schemas"]["CurrencyAmountResponse"][];
+            /** Format: int32 */
+            pending: number;
+            /** Format: int32 */
+            unsettled: number;
+        };
+        /** @enum {unknown} */
+        SalaryAdvanceView: "pending" | "open" | "closed";
         SalaryDayResponse: {
             /** Format: date */
             date: string;
@@ -21754,24 +22375,35 @@ export interface components {
             requiredMinutes: number;
         };
         SalaryDetailResponse: {
+            advances: components["schemas"]["SalaryAdvanceResponse"][];
             /** Format: int32 */
             deductionMinutes: number;
             excuses: components["schemas"]["HourExcuseResponse"][];
             inProgress: boolean;
             missedDays: string[];
             overtimeWork: components["schemas"]["OvertimeWorkResponse"][];
-            /** Format: int32 */
-            paidBreakDays: number;
-            /** Format: double */
-            paidBreakPay: number;
+            parts: components["schemas"]["SalaryPartResponse"][];
             projects: components["schemas"]["SalaryProjectResponse"][];
             salary: components["schemas"]["SalaryRowResponse"];
             timeOff: components["schemas"]["MonthTimeOffResponse"][];
-            /** Format: double */
-            timeOffPay: number;
             workingDays: components["schemas"]["SalaryDayResponse"][];
         };
+        SalaryPartResponse: {
+            /** Format: int32 */
+            days: number;
+            /** Format: date */
+            from: string;
+            /** Format: double */
+            overtimeRate: number;
+            /** Format: double */
+            pay: number;
+            /** Format: double */
+            salary: number;
+            /** Format: date */
+            to: string;
+        };
         SalaryProjectResponse: {
+            code: string;
             currency: string;
             /** Format: int32 */
             entries: number;
@@ -21791,10 +22423,11 @@ export interface components {
         };
         SalaryRowResponse: {
             /** Format: double */
+            advanceRepayment: null | number;
+            /** Format: double */
             amount: number;
             /** Format: double */
             basePay: number;
-            basis: components["schemas"]["PayBasis"];
             behind: boolean;
             /** Format: int32 */
             countedMinutes: null | number;
@@ -21833,6 +22466,8 @@ export interface components {
             overtimeRate: number;
             /** Format: int32 */
             overtimeThresholdMinutes: null | number;
+            /** @description The pay changed during the month: its days are paid at more than one salary (the detail's parts). */
+            payChanged?: boolean;
             /** Format: int64 */
             photoFileId: null | number;
             position: null | string;
@@ -21841,6 +22476,8 @@ export interface components {
             /** Format: int32 */
             shortMinutes: null | number;
             team: null | components["schemas"]["TeamSummaryResponse"];
+            /** Format: double */
+            toHandOver: number;
             /** Format: double */
             total: number;
             tracksHours: boolean;
@@ -21859,8 +22496,6 @@ export interface components {
             /** Format: int32 */
             normalMinutes: number;
             /** Format: int32 */
-            onMonthlySalary: number;
-            /** Format: int32 */
             overtimeMinutes: number;
             /** Format: int32 */
             overtimePaidMinutes: number;
@@ -21873,6 +22508,8 @@ export interface components {
         };
         SalaryTotalResponse: {
             /** Format: double */
+            advanceRepayment: number;
+            /** Format: double */
             basePay: number;
             currency: string;
             /** Format: double */
@@ -21884,12 +22521,13 @@ export interface components {
             /** Format: int32 */
             people: number;
             /** Format: double */
+            toHandOver: number;
+            /** Format: double */
             total: number;
         };
         SalaryYearMonthResponse: {
             /** Format: double */
             amount: number;
-            basis: components["schemas"]["PayBasis"];
             currency: string;
             /** Format: date */
             month: string;
@@ -22018,6 +22656,16 @@ export interface components {
             /** Format: int32 */
             quietToMinute?: null | number;
         };
+        SaveOneOffExpenseRequest: {
+            /** Format: double */
+            amount?: number;
+            currency?: string;
+            /** Format: int64 */
+            groupId?: number;
+            name?: string;
+            /** Format: date */
+            spentOn?: string;
+        };
         SaveProtonMemoryRequest: {
             /** Format: uuid */
             conversationId?: string;
@@ -22031,6 +22679,8 @@ export interface components {
         };
         SaveSiteLogRequest: {
             body?: string;
+            /** Format: int64 */
+            voiceFileId?: null | number;
         };
         SaveWorkEntryRequest: {
             /** Format: int64 */
@@ -22120,6 +22770,7 @@ export interface components {
             position: null | string;
         };
         SearchProjectResponse: {
+            code: string;
             domain: string;
             icon: null | string;
             /** Format: int64 */
@@ -22197,6 +22848,10 @@ export interface components {
             /** Format: int32 */
             startMinute?: number;
             workDays?: number[];
+        };
+        SettleSalaryAdvanceRequest: {
+            kind?: components["schemas"]["SalaryAdvanceSettlement"];
+            note?: null | string;
         };
         /** @enum {unknown} */
         SiteExpenseCategory: "materials" | "contractor" | "equipment" | "fees" | "other";
@@ -22295,6 +22950,7 @@ export interface components {
             project: components["schemas"]["SiteLogProjectResponse"];
             /** Format: date-time */
             updatedAt: null | string;
+            voiceNote: null | components["schemas"]["FileResponse"];
         };
         SiteMoneyTimelineResponse: {
             currency: string;
@@ -22427,6 +23083,10 @@ export interface components {
             /** Format: int32 */
             count: number;
             status: components["schemas"]["ProjectStatus"];
+        };
+        SwapProjectColorRequest: {
+            /** Format: int64 */
+            otherProjectId?: number;
         };
         SubmitLabourWeekRequest: {
             days?: components["schemas"]["LabourDayRequest"][];
@@ -22695,11 +23355,15 @@ export interface components {
             tvaRate?: null | number;
         };
         UpdateProjectRequest: {
+            buildingCode?: null | string;
+            /** Format: double */
+            cfaPrice?: null | number;
             description?: null | string;
             icon?: null | string;
             location?: null | string;
             /** Format: int64 */
             ownerId?: number;
+            projectCode?: null | string;
             /** Format: date */
             startDate?: null | string;
             /** Format: date */
@@ -22780,6 +23444,18 @@ export interface components {
         };
         VoidRequest: {
             reason?: string;
+        };
+        WaitingHoursResponse: {
+            description: string;
+            /** Format: date-time */
+            endedAt: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            projectId: number;
+            projectTitle: string;
+            /** Format: date-time */
+            startedAt: string;
         };
         WatermarkCheckResponse: {
             /** Format: double */

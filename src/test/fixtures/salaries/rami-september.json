@@ -9,8 +9,7 @@
       "id": 14,
       "name": "Visualisation"
     },
-    "basis": "hourly",
-    "amount": 14,
+    "amount": 2464,
     "currency": "USD",
     "hourlyRate": 14,
     "overtimeRate": 14,
@@ -38,11 +37,12 @@
     "fullMonthEstimate": null,
     "overtimePaidMinutes": 0,
     "overtimeThresholdMinutes": null,
-    "countedMinutes": null
+    "countedMinutes": null,
+    "advanceRepayment": null,
+    "toHandOver": 2118.67
   },
   "inProgress": true,
-  "paidBreakDays": 18,
-  "paidBreakPay": 252,
+  "advances": [],
   "deductionMinutes": 0,
   "missedDays": [
     "2026-09-08",
@@ -172,8 +172,8 @@
     }
   ],
   "excuses": [],
+  "parts": [],
   "timeOff": [],
-  "timeOffPay": 0,
   "workingDays": [
     {
       "date": "2026-09-01",

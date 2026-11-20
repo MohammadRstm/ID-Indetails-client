@@ -4,7 +4,6 @@
   "currentPay": {
     "id": 8,
     "effectiveFrom": "2026-01-01",
-    "basis": "monthly",
     "amount": 1600,
     "currency": "USD",
     "overtimeRate": 8.7,

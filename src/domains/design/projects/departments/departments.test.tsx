@@ -229,14 +229,20 @@ describe("hours waiting for a department", () => {
     const designer: Reader = { userId: 4, isAdmin: false, logsWork: true, domain: "design" };
     const studio = { id: 5, title: "Studio Nour brand space", domain: "design", icon: null, tint: null };
 
-    it("ask the owner to add it, and tell the logger when they went through or why not", () => {
+    it("ask for approval, and tell the logger whether they were approved, turned down, went through, or why not", () => {
         const waiting = note("log_department_blocked", { projectTitle: studio.title, personName: "Sarah Haddad", departmentName: "Structure" }, { project: studio });
         expect(words(waiting, owner)).toMatchObject({
-            text: "Sarah Haddad's hours on Studio Nour brand space wait for Structure",
-            sub: "Add Structure to the project to let them through",
+            text: "Sarah Haddad's hours on Studio Nour brand space wait for approval",
+            sub: "Structure isn't part of the project: approve the hours or turn them down",
             route: "/design/projects/5?departments=edit",
         });
-        expect(words({ ...waiting, count: 3 }, owner).text).toBe("3 logs on Studio Nour brand space wait for Structure");
+        expect(words({ ...waiting, count: 3 }, owner).text).toBe("3 logs on Studio Nour brand space wait for approval");
+        // the kept log itself opens, to approve or turn down
+        expect(words({ ...waiting, subjectType: "blocked_change", subjectId: 12 }, owner).route).toBe("/design/projects/5?blocked=12");
+        expect(words(note("work_entry_released", { projectTitle: studio.title, released: true, approved: true }, { project: studio }), designer).text)
+            .toBe("Your hours on Studio Nour brand space were approved");
+        expect(words(note("work_entry_released", { projectTitle: studio.title, released: false, turnedDown: true }, { project: studio }), designer).text)
+            .toBe("Your hours on Studio Nour brand space were turned down");
 
         expect(words(note("work_entry_released", { projectTitle: studio.title, released: true }, { project: studio }), designer))
             .toMatchObject({ text: "Your hours waiting on Studio Nour brand space went through", route: "/design/my-work" });

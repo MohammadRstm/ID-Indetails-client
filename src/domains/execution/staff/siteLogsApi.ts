@@ -9,6 +9,9 @@ export type MySite = Schemas["MySiteResponse"];
 /** What a daily log may hold, as the API keeps it (SiteTeamRules.MaxLogLength). */
 export const SITE_LOG_MAX = 2000;
 
+/** A log needs words, a voice note, or both. */
+export const SITE_LOG_EMPTY = "Write what happened or record a voice note.";
+
 export type SiteLogFilters = { projectId?: number | null; userId?: number | null; from?: string; to?: string; search?: string; page?: number; pageSize?: number };
 
 const logsKey = ["site-logs"] as const;
@@ -39,17 +42,17 @@ export function useMySites(enabled = true) {
 export function useWriteSiteLog() {
     const invalidate = useInvalidate();
     return useMutation({
-        mutationFn: async ({ projectId, body }: { projectId: number; body: string }) =>
-            (await http.post<SiteLog>(`/projects/${projectId}/site-logs`, { body })).data,
+        mutationFn: async ({ projectId, ...log }: { projectId: number } & Schemas["SaveSiteLogRequest"]) =>
+            (await http.post<SiteLog>(`/projects/${projectId}/site-logs`, log)).data,
         onSuccess: () => { void invalidate(logsKey); },
     });
 }
 
-/** The writer changes a log on the day it was written. */
+/** The writer changes a log on the day it was written; `voiceFileId` null removes its voice note, the same id keeps it. */
 export function useEditSiteLog() {
     const invalidate = useInvalidate();
     return useMutation({
-        mutationFn: async ({ id, body }: { id: number; body: string }) => (await http.put<SiteLog>(`/site-logs/${id}`, { body })).data,
+        mutationFn: async ({ id, ...log }: { id: number } & Schemas["SaveSiteLogRequest"]) => (await http.put<SiteLog>(`/site-logs/${id}`, log)).data,
         onSuccess: () => { void invalidate(logsKey); },
     });
 }

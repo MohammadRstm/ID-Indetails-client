@@ -14,8 +14,7 @@
           "id": 12,
           "name": "Architecture"
         },
-        "basis": "hourly",
-        "amount": 8,
+        "amount": 1344,
         "currency": "USD",
         "hourlyRate": 8,
         "overtimeRate": 8,
@@ -43,7 +42,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 0
       },
       {
         "userId": 5,
@@ -55,8 +56,7 @@
           "id": 13,
           "name": "Interiors"
         },
-        "basis": "hourly",
-        "amount": 12,
+        "amount": 2016,
         "currency": "USD",
         "hourlyRate": 12,
         "overtimeRate": 12,
@@ -84,7 +84,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 0
       },
       {
         "userId": 7,
@@ -96,8 +98,7 @@
           "id": 12,
           "name": "Architecture"
         },
-        "basis": "hourly",
-        "amount": 9,
+        "amount": 1512,
         "currency": "USD",
         "hourlyRate": 9,
         "overtimeRate": 9,
@@ -125,7 +126,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 0
       },
       {
         "userId": 2,
@@ -134,7 +137,6 @@
         "role": "admin",
         "domain": "design",
         "team": null,
-        "basis": "monthly",
         "amount": 3200,
         "currency": "USD",
         "hourlyRate": 18.4619,
@@ -163,7 +165,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 3200
       },
       {
         "userId": 4,
@@ -175,7 +179,6 @@
           "id": 12,
           "name": "Architecture"
         },
-        "basis": "monthly",
         "amount": 2000,
         "currency": "USD",
         "hourlyRate": 11.5387,
@@ -204,7 +207,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 61.5
       },
       {
         "userId": 6,
@@ -216,8 +221,7 @@
           "id": 14,
           "name": "Visualisation"
         },
-        "basis": "hourly",
-        "amount": 14,
+        "amount": 2352,
         "currency": "USD",
         "hourlyRate": 14,
         "overtimeRate": 14,
@@ -245,7 +249,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 0
       },
       {
         "userId": 3,
@@ -257,7 +263,6 @@
           "id": 13,
           "name": "Interiors"
         },
-        "basis": "monthly",
         "amount": 1800,
         "currency": "USD",
         "hourlyRate": 10.3848,
@@ -286,7 +291,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 55.35
       },
       {
         "userId": 9,
@@ -298,7 +305,6 @@
           "id": 14,
           "name": "Visualisation"
         },
-        "basis": "monthly",
         "amount": 1600,
         "currency": "USD",
         "hourlyRate": 9.2309,
@@ -327,7 +333,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 49.21
       },
       {
         "userId": 12,
@@ -339,7 +347,6 @@
           "id": 15,
           "name": "Site"
         },
-        "basis": "monthly",
         "amount": 1100,
         "currency": "USD",
         "hourlyRate": 6.3463,
@@ -368,7 +375,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 1100
       },
       {
         "userId": 10,
@@ -377,7 +386,6 @@
         "role": "admin",
         "domain": "execution",
         "team": null,
-        "basis": "monthly",
         "amount": 2800,
         "currency": "USD",
         "hourlyRate": 16.1542,
@@ -406,7 +414,9 @@
         "fullMonthEstimate": null,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 2800
       }
     ],
     "page": 1,
@@ -421,12 +431,13 @@
       "overtimePay": 0,
       "deduction": 5233.94,
       "total": 11266.06,
-      "earnedSoFar": 11266.06
+      "earnedSoFar": 11266.06,
+      "advanceRepayment": 0,
+      "toHandOver": 11266.06
     }
   ],
   "summary": {
     "people": 13,
-    "onMonthlySalary": 9,
     "normalMinutes": 0,
     "overtimeMinutes": 0,
     "madeUpMinutes": 0,
@@ -434,6 +445,11 @@
     "shortMinutes": 61740,
     "expectedMinutes": 61740,
     "overtimePaidMinutes": 0
+  },
+  "advances": {
+    "pending": 0,
+    "left": [],
+    "unsettled": 0
   },
   "withoutPay": []
 }

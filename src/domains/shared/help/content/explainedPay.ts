@@ -58,7 +58,7 @@ export const explainedPay: Article[] = [
             list(
                 "Work past midnight counts on the day it started; the minutes after midnight are outside your hours, so they're overtime.",
                 "Overtime depends on your whole day across all projects, not one entry.",
-                (f) => `Overtime is paid at the overtime rate set with the pay × ${orFact(f.multiplier, "the company's overtime multiplier")}: an hourly rate itself, or for a salary the salary ÷ 184 unless set otherwise, whatever the month.`,
+                (f) => `Overtime is paid at the overtime rate set with the pay × ${orFact(f.multiplier, "the company's overtime multiplier")}: the salary ÷ 184 unless set otherwise, whatever the month.`,
             ),
             only(or(tracksOwnHours, seesSalaries), note("For Design employees, overtime first makes up any hours missing that month; only what's left is paid as overtime. The part that made up hours is paid as normal hours.")),
             only(seesSalaries, note("From November 2026 a salary's overtime is paid only for the hours counted past 184 in the month (everything logged, overtime or not, plus paid leave), or past the month's expected hours when those are more. Joining mid-month doesn't lower it. The latest overtime is the part paid.")),
@@ -98,7 +98,7 @@ export const explainedPay: Article[] = [
         category: "pay",
         // employees don't see their pay, nor how it's worked out
         who: or(seesSalaries, has(P.EMPLOYEE_PAY_MANAGE)),
-        summary: "Pay is a monthly salary or an hourly rate, plus overtime, minus any deductions. It is worked out fresh from the records each time.",
+        summary: "Pay is a monthly salary, plus overtime, minus any deductions. It is worked out fresh from the records each time.",
         ask: ["how is pay calculated", "salary calculation", "hourly rate", "monthly salary", "pay", "184", "overtime rate", "31 days", "28 days", "pro rata", "overtime pay", "base pay"],
         blocks: [
             para("**A monthly salary**"),
@@ -110,13 +110,8 @@ export const explainedPay: Article[] = [
                 "From November 2026. Counted: everything logged, overtime or not, plus paid leave; unpaid leave doesn't count. Joining mid-month doesn't lower the threshold, and the latest overtime is the part paid. The overtime logged under it is still shown, and still makes up missing hours."),
             formula("Overtime rate of a salary = salary ÷ 184, unless set otherwise",
                 "Set with the pay, and the same every month while that pay lasts: a $4,232 salary's overtime starts from $23 an hour. An admin can type another rate when setting the pay, and a pay change gets a new one."),
-            para("**An hourly rate**"),
-            formula("Pay = (hours inside your hours + hours made up) × rate + the paid break of each working day you worked + overtime pay",
-                "The break is paid on top, for every working day with some work inside your hours. With no break set, the whole day is logged instead, so nothing is added."),
-            formula("Overtime pay = overtime hours (after any making up) × overtime rate × the company's multiplier",
-                "Hourly pay has no 184-hour threshold: all its overtime is paid."),
             list(
-                "The pay in force at the month's end prices a salaried month, even after a mid-month raise; hourly work is priced at each day's rate.",
+                "Each day is paid at the salary in force that day: a raise from the 15th pays the days before it at the old salary and the rest at the new one.",
                 "Pay is per currency and never converted.",
                 "Nothing is stored: a late excuse or a pay change dated in the past changes the figures at once.",
             ),
@@ -132,11 +127,10 @@ export const explainedPay: Article[] = [
         title: "Deductions: missed hours and unpaid leave",
         category: "pay",
         who: or(seesSalaries, has(P.EMPLOYEE_PAY_MANAGE)),
-        summary: "On a monthly salary, a month that ends short loses the missing hours, and a whole missed day costs the whole paid day, break included.",
+        summary: "A month that ends short loses the missing hours, and a whole missed day costs the whole paid day, break included.",
         ask: ["deduction", "deducted", "missed day", "missing hours", "unpaid leave", "salary cut", "why was my pay lower", "short month"],
         blocks: [
             list(
-                "Only a monthly salary is deducted; an hourly rate simply pays the hours worked.",
                 "Missed hours are deducted once the month has ended and is still short.",
                 "A whole missed working day costs the full paid day, break included; missing hours on days you did work cost only those hours.",
                 "The deduction never goes above the month's base pay.",

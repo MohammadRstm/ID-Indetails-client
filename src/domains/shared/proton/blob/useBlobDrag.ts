@@ -8,16 +8,17 @@ type Press = { id: number; startX: number; startY: number; fromX: number; fromY:
 
 /**
  * Dragging the blob with a mouse, a finger or a pen (pointer capture, so it follows even off the button). A press
- * that doesn't move is a click; one that does is a drag, and the click that follows it is swallowed.
+ * that doesn't move is a click; one that does is a drag, and the click that follows it is swallowed. `bottom` is the
+ * room kept clear at the foot of the window (a phone's bottom bar): the blob can't be dragged onto it.
  */
-export function useBlobDrag(at: { x: number; y: number }, size: number, onDrop: (x: number, y: number) => void, onTap: () => void) {
+export function useBlobDrag(at: { x: number; y: number }, size: number, onDrop: (x: number, y: number) => void, onTap: () => void, bottom = 0) {
     const press = useRef<Press | null>(null);
     const dragged = useRef(false);
     const [dragAt, setDragAt] = useState<{ x: number; y: number } | null>(null);
 
     const clamp = (x: number, y: number) => ({
         x: Math.min(Math.max(0, x), window.innerWidth - size),
-        y: Math.min(Math.max(0, y), window.innerHeight - size),
+        y: Math.min(Math.max(0, y), window.innerHeight - bottom - size),
     });
 
     return {

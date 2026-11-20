@@ -5,7 +5,7 @@ import { dayKey, fmtDayDateY, fmtDur, fmtHourLabel, fmtTime } from "@/shared/for
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { meetingTitle } from "../../../shared/meetings/meetingsApi";
-import { dayStart, teamColors, type Day, type DayItem, type History, type Meeting } from "./history";
+import { dayStart, type Day, type DayItem, type History, type Meeting } from "./history";
 import { firstName, list } from "./words";
 
 /*
@@ -59,7 +59,6 @@ function stagesOf(items: Item[], meetings: Meeting[]): Stage[] {
 }
 
 function layout(day: Day, h: History) {
-    const teamColor = teamColors(h);
     const items: Item[] = day.items
         .map((it) => ({ ...it, team: it.entry.team || "Other", name: h.people.get(it.entry.userId)?.name ?? it.entry.userName }))
         .sort((a, b) => a.s - b.s || a.e - b.e);
@@ -84,7 +83,7 @@ function layout(day: Day, h: History) {
     const teams: { name: string; color: string; items: Item[]; people: number[]; cards: Card<Item>[]; rows: number }[] = [];
     for (const it of items) {
         let t = teams.find((x) => x.name === it.team);
-        if (!t) teams.push((t = { name: it.team, color: teamColor(it.team), items: [], people: [], cards: [], rows: 1 }));
+        if (!t) teams.push((t = { name: it.team, color: h.color, items: [], people: [], cards: [], rows: 1 }));
         t.items.push(it);
         if (!t.people.includes(it.entry.userId)) t.people.push(it.entry.userId);
     }
@@ -100,7 +99,7 @@ function layout(day: Day, h: History) {
         return { it: m, x, trueW, w: Math.max(CARD_MIN, trueW), row: 0 };
     });
     const mRows = mCards.length ? pack(mCards) : 0;
-    return { items, meetings, teams, mCards, mRows, lo, hi, X, width: (hi - lo) * HOUR_PX, stages: stagesOf(items, meetings), teamColor };
+    return { items, meetings, teams, mCards, mRows, lo, hi, X, width: (hi - lo) * HOUR_PX, stages: stagesOf(items, meetings) };
 }
 
 type DayStoryProps = { history: History; projectTitle: string; dayKey: string; onEntry: (id: number) => void; onClose: () => void };
@@ -217,10 +216,7 @@ export default function DayStory({ history: h, projectTitle, dayKey: initial, on
                     {last != null && <span><span className="muted">Last work ended</span> <b className="mono">{fmtTime(last)}</b></span>}
                     {peak >= 2 && <span><span className="muted">Busiest</span> <b>{peak} tasks at once</b></span>}
                     <span className="grow" />
-                    <span className="ds-legend">
-                        {L.teams.map((t) => <span key={t.name}><i style={{ background: t.color }} />{t.name}</span>)}
-                        {L.meetings.length > 0 && <span><i className="mtg" />Meeting</span>}
-                    </span>
+                    {L.meetings.length > 0 && <span className="ds-legend"><span><i className="mtg" />Meeting</span></span>}
                 </div>
 
                 {L.stages.length > 0 && (
@@ -235,7 +231,7 @@ export default function DayStory({ history: h, projectTitle, dayKey: initial, on
                                         <div className="ds-stage-what">
                                             {s.idle && <span className="muted">No one working</span>}
                                             {s.teams.map((t, j) => (
-                                                <span key={t} className="ds-dep">{j > 0 && <span className="ds-plus">+</span>}<i style={{ background: L.teamColor(t) }} /><b>{t}</b></span>
+                                                <span key={t} className="ds-dep">{j > 0 && <span className="ds-plus">+</span>}<i style={{ background: h.color }} /><b>{t}</b></span>
                                             ))}
                                             {s.meetings.map((m) => (
                                                 <span key={m.id} className="ds-dep">{s.teams.length > 0 && <span className="ds-plus">+</span>}<Icon name="calendar" /><b>Meeting</b></span>

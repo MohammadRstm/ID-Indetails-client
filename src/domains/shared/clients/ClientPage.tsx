@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { errorMessage, isStatus } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { useDomain } from "@/app/routing/domainContext";
@@ -308,7 +309,7 @@ function ClientView({ client }: { client: Client }) {
                 <Modal title={canDelete ? `Delete ${client.displayName}?` : "This client can't be deleted"} onClose={() => setShowDelete(false)}
                     foot={
                         <>
-                            <div className="grow">{remove.error ? <span className="err"><Icon name="alert" />{errorMessage(remove.error)}</span> : null}</div>
+                            <div className="grow">{remove.error ? <span className="err"><Icon name="alert" /><ErrorMessage error={remove.error} /></span> : null}</div>
                             <button className="btn" onClick={() => setShowDelete(false)}>Cancel</button>
                             {canDelete ? (
                                 <button className="btn btn-danger" disabled={remove.isPending} onClick={() => remove.mutate(undefined, {

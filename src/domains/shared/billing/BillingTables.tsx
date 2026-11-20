@@ -41,7 +41,7 @@ export function InvoiceTable({ invoices, showProject, showClient, tiles, onOpen 
                             <tr key={inv.id} className={cx("click", voided && "voided")} {...clickable(() => onOpen(inv))}>
                                 <td className="mono nowrap" style={{ fontWeight: 600 }}>{inv.number ?? "Draft"}</td>
                                 {showProject && (
-                                    <td><div className="pname"><ProjectTile icon={tiles?.get(inv.project.id)?.icon} tint={tiles?.get(inv.project.id)?.tint} photo={tiles?.get(inv.project.id)?.photo} size="sm" /><span className="trunc">{inv.project.title}</span></div></td>
+                                    <td><div className="pname"><ProjectTile icon={tiles?.get(inv.project.id)?.icon} tint={tiles?.get(inv.project.id)?.tint} photo={tiles?.get(inv.project.id)?.photo} size="sm" /><div style={{ minWidth: 0 }}><div className="trunc">{inv.project.title}</div>{inv.project.code && <div className="muted mono" style={{ fontSize: 11 }}>{inv.project.code}</div>}</div></div></td>
                                 )}
                                 {showClient && <td className="trunc">{inv.client.displayName}</td>}
                                 <td className="muted nowrap">{inv.issuedAt ? fmtDate(inv.issuedAt) : "-"}</td>
@@ -72,6 +72,8 @@ type PaymentTableProps = {
 
 /** Payments with how they arrived and what they were against (the prototype's BL.PaymentTable). */
 export function PaymentTable({ payments, showProject, tiles, onOpen, actions }: PaymentTableProps) {
+    // account labels are an Execution site's: a list of Design payments has no column for them
+    const labels = payments.some((p) => p.domain === "execution");
     return (
         <div className="tbl-wrap">
             <table className="tbl tbl-min-sm">
@@ -79,7 +81,7 @@ export function PaymentTable({ payments, showProject, tiles, onOpen, actions }: 
                     <tr>
                         <th className="nowrap">Received</th>
                         {showProject && <th>Project</th>}
-                        <th>Invoice</th><th>Method</th><th>Reference</th><th>Account label</th><th className="r">Amount</th>
+                        <th>Invoice</th><th>Method</th><th>Reference</th>{labels && <th>Account label</th>}<th className="r">Amount</th>
                         {actions && <th />}
                     </tr>
                 </thead>
@@ -90,7 +92,7 @@ export function PaymentTable({ payments, showProject, tiles, onOpen, actions }: 
                             <tr key={p.id} className={cx(p.voidedAt && "voided", open && "click")} {...clickable(open)}>
                                 <td className="nowrap">{fmtDateY(p.receivedOn)}</td>
                                 {showProject && (
-                                    <td><div className="pname"><ProjectTile icon={tiles?.get(p.project.id)?.icon} tint={tiles?.get(p.project.id)?.tint} photo={tiles?.get(p.project.id)?.photo} size="sm" /><span className="trunc">{p.project.title}</span></div></td>
+                                    <td><div className="pname"><ProjectTile icon={tiles?.get(p.project.id)?.icon} tint={tiles?.get(p.project.id)?.tint} photo={tiles?.get(p.project.id)?.photo} size="sm" /><div style={{ minWidth: 0 }}><div className="trunc">{p.project.title}</div>{p.project.code && <div className="muted mono" style={{ fontSize: 11 }}>{p.project.code}</div>}</div></div></td>
                                 )}
                                 <td className="mono">{p.invoiceNumber ?? <span className="badge">On account</span>}</td>
                                 <td className="muted">{PAYMENT_METHODS[p.method] ?? p.method}</td>
@@ -100,7 +102,7 @@ export function PaymentTable({ payments, showProject, tiles, onOpen, actions }: 
                                         <span className="badge cur-chip" style={{ marginLeft: 6 }} title={`Received as ${money.fmt(p.amount, p.currency)} at ${fmtNumber(p.fxRate)}/$`}>{p.currency}</span>
                                     )}
                                 </td>
-                                <td className="muted trunc">{p.accountLabel?.name ?? "-"}</td>
+                                {labels && <td className="muted trunc">{p.accountLabel?.name ?? "-"}</td>}
                                 <td className="r mono">{money.fmt(p.amountUsd)}</td>
                                 {actions && <td className="r"><PaymentActions payment={p} /></td>}
                             </tr>

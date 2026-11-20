@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { RankBars } from "@/shared/components/Charts/Bars";
 import Columns from "@/shared/components/Charts/Columns";
 import Figure from "@/shared/components/Charts/Figure";
@@ -105,7 +105,7 @@ function RemoveExpense({ project, expense, onClose }: { project: Project; expens
         <Modal title="Remove this expense?" sub={project.title} onClose={onClose}
             foot={
                 <>
-                    <div className="grow">{remove.error ? <span className="err"><Icon name="alert" />{errorMessage(remove.error)}</span> : null}</div>
+                    <div className="grow">{remove.error ? <span className="err"><Icon name="alert" /><ErrorMessage error={remove.error} /></span> : null}</div>
                     <button className="btn" onClick={onClose}>Cancel</button>
                     <button className="btn btn-danger" disabled={remove.isPending} onClick={() => remove.mutate(expense.id, {
                         onSuccess: () => { toast({ text: "Expense removed", sub: expense.label, icon: "trash" }); onClose(); },

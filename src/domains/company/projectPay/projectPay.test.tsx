@@ -43,7 +43,7 @@ describe("Project pay", () => {
         expect(within(villa).getAllByRole("row").map((r) => r.classList.contains("pp-dept") ? r.textContent : null).filter(Boolean))
             .toEqual(["Interiors", "Visualisation"]);
         expect(within(rowOf(villa, "Sarah Haddad")).getByText(`salary ${money.exact(1800)}/mo`)).toBeInTheDocument();
-        expect(within(rowOf(villa, "Lina Saad")).getByText("hourly")).toBeInTheDocument();
+        expect(within(rowOf(villa, "Lina Saad")).getByText(`salary ${money.exact(2112)}/mo`)).toBeInTheDocument();
         expect(within(villa).getByText("Pay", { selector: ".pp-chip span" }).parentElement).toHaveTextContent(money.exact(280.2));
     });
 
@@ -78,7 +78,7 @@ describe("Project pay", () => {
         renderApp("/company/project-pay", rana, handler, ...companyPayHandlers);
         await screen.findByText("Villa Mounir interiors", { selector: ".pp-title" });
         await userEvent.click(screen.getByLabelText("Project"));
-        await userEvent.click(await screen.findByRole("option", { name: "Cedar Bank branch refresh" }));
+        await userEvent.click(await screen.findByRole("option", { name: "ID26Q3003-CBBR · Cedar Bank branch refresh" }));
         await waitFor(() => expect(last().get("projectId")).toBe("3"));
     });
 

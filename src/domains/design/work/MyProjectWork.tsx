@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router";
-import { errorMessage } from "@/api/errors";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { canOpen } from "@/app/routing/routeTable";
@@ -11,17 +10,19 @@ import Panel from "@/shared/components/Data/Panel";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
-import { toast } from "@/shared/components/Feedback/toast";
 import { Avatars, PersonAvatar } from "@/shared/components/Identity/People";
-import MenuButton from "@/shared/components/Overlays/MenuButton";
-import { fmtDate, fmtDateY, fmtH, relDay } from "@/shared/format/time";
+import { chartColors } from "@/shared/format/color";
+import { dayKey, fmtDate, fmtDateY, fmtH, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../shared/projects/projectsApi";
+import EntryActions from "./EntryActions";
+import { useDeleteWithUndo } from "./useDeleteWithUndo";
 import EntryRow from "./EntryRow";
 import { openLogWork } from "./logWorkStore";
-import { useDeleteEntry, useMyProjects, useMyProjectWork, useRestoreEntry, type WorkEntry } from "./workApi";
+import { useMyProjects, useMyProjectWork, type WorkEntry } from "./workApi";
 import { loadFailed } from "@/api/queryState";
+import type { Schemas } from "@/api/types";
 
 /*
  * The person's own work on a Design project (the prototype's P.EmpProject), the parts of the project page that
@@ -49,7 +50,7 @@ export function MyTeamLine({ project }: { project: Project }) {
     const shown = permissions.has(P.WORK_ENTRY_VIEW_OWN) && !permissions.has(P.WORK_ENTRY_VIEW_ALL);
     const mine = useMyProjects(shown).data?.find((p) => p.id === project.id);
     if (!shown || !mine?.contributors.length) return null;
-    return <span className="row" style={{ gap: 6 }}>Team <Avatars people={mine.contributors} max={5} /></span>;
+    return <Avatars people={mine.contributors} max={5} />;
 }
 
 /**
@@ -85,20 +86,25 @@ export function MyProjectWork({ project }: { project: Project }) {
             <div className="stack">
                 <Figure title="Your hours per week" sub="On this project.">
                     {!w ? <SkeletonLines lines={4} /> : (
-                        <Columns height={150} labelEvery={2} format={(v) => `${Math.round(v)}h`}
-                            data={w.weekly.map((x) => ({ label: fmtDate(x.weekStart), tip: `Week of ${fmtDateY(x.weekStart)}`, value: x.minutes / 60 }))} />
+                        <div style={chartColors(project.tint)}>
+                            <Columns height={150} labelEvery={2} format={(v) => `${Math.round(v)}h`}
+                                data={w.weekly.map((x) => ({ label: fmtDate(x.weekStart), tip: `Week of ${fmtDateY(x.weekStart)}`, value: x.minutes / 60 }))} />
+                        </div>
                     )}
                 </Figure>
 
                 {!seesAll && (
                     <Panel title="Team activity" sub="What your teammates have been working on." bodyStyle={{ paddingTop: 2 }}
                         foot={<span className="muted">Teammates' hours stay private - only admins see per-person totals.</span>}>
-                        {!w ? <SkeletonLines lines={3} /> : w.team.length ? w.team.map((t, i) => (
-                            <div key={`${t.personId}-${t.startedAt}-${i}`} className="mini-row" style={{ alignItems: "flex-start" }}>
-                                <PersonAvatar person={{ id: t.personId, name: t.personName }} size={26} />
+                        {!w ? <SkeletonLines lines={3} /> : w.team.length ? teamRows(w.team).map((g) => (
+                            <div key={g.key} className="mini-row" style={{ alignItems: "flex-start" }}>
+                                <PersonAvatar person={{ id: g.personId, name: g.personName }} size={26} />
                                 <div className="grow" style={{ minWidth: 0 }}>
-                                    <div style={{ fontSize: "12.5px" }}><b>{t.personName.split(" ")[0]}</b> · {relDay(t.startedAt)}</div>
-                                    <div className="muted clamp2" style={{ fontSize: "11.5px" }}>{t.description}</div>
+                                    <div style={{ fontSize: "12.5px" }}>
+                                        <b>{g.personName.split(" ")[0]}</b> · {g.days === 1 ? relDay(g.to) : <>{fmtDate(g.from)} – {fmtDate(g.to)} <span className="muted">· {g.days} days</span></>}
+                                    </div>
+                                    {g.tasks.slice(0, SHOWN_TASKS).map((task) => <div key={task} className="muted clamp2" style={{ fontSize: "11.5px" }}>{task}</div>)}
+                                    {g.tasks.length > SHOWN_TASKS && <div className="muted" style={{ fontSize: "11.5px" }}>and {g.tasks.length - SHOWN_TASKS} more</div>}
                                 </div>
                             </div>
                         )) : <p className="muted">No one else has logged work here yet.</p>}
@@ -109,19 +115,41 @@ export function MyProjectWork({ project }: { project: Project }) {
     );
 }
 
+const SHOWN_TASKS = 3;
+
+const sameTasks = (a: string[], b: string[]) => a.length === b.length && a.every((task, i) => task === b[i]);
+
+type TeamRow = { key: string; personId: number; personName: string; from: string; to: string; days: number; tasks: string[] };
+
+/**
+ * The team's latest work, newest first, one row per teammate per day with each different task named once. Days in a
+ * row where a teammate did the same tasks fold into one row with the dates ("Nov 6 – Nov 13 · 6 days"), so a week on
+ * one drawing reads as one line. Only what they worked on and when, never for how long.
+ */
+function teamRows(team: Schemas["MyProjectWorkResponse"]["team"]): TeamRow[] {
+    const days = new Map<string, TeamRow>();
+    for (const t of team) {
+        const key = `${t.personId}-${dayKey(t.startedAt)}`;
+        const day = days.get(key) ?? { key, personId: t.personId, personName: t.personName, from: t.startedAt, to: t.startedAt, days: 1, tasks: [] };
+        if (t.description && !day.tasks.includes(t.description)) day.tasks.push(t.description);
+        days.set(key, day);
+    }
+    const rows: TeamRow[] = [];
+    for (const day of days.values()) {
+        const prev = rows[rows.length - 1];
+        if (prev && prev.personId === day.personId && sameTasks(prev.tasks, day.tasks)) {
+            prev.from = day.from;
+            prev.days += 1;
+        } else rows.push({ ...day });
+    }
+    return rows;
+}
+
 /** "Your recent work": the person's latest entries here, each editable while the edit window lasts. */
 function RecentWork({ projectId, entries, total, canLog }: { projectId: number; entries?: WorkEntry[]; total: number; canLog: boolean }) {
     const navigate = useNavigate();
     const myWork = canOpen(usePermissions(), "design", "my-work");
-    const remove = useDeleteEntry();
-    const restore = useRestoreEntry();
-
-    function del(e: WorkEntry) {
-        remove.mutate(e.id, {
-            onSuccess: () => toast({ text: "Entry deleted", icon: "trash", actionLabel: "Undo", action: () => restore.mutate(e.id) }),
-            onError: (err) => toast({ text: "That entry wasn't deleted", sub: errorMessage(err), icon: "alert" }),
-        });
-    }
+    const del = useDeleteWithUndo();
 
     return (
         <Panel title="Your recent work" sub="Every entry keeps the exact start and end time you recorded." bodyStyle={{ paddingTop: 2 }}
@@ -129,16 +157,7 @@ function RecentWork({ projectId, entries, total, canLog }: { projectId: number; 
             foot={total > 12 && myWork && <button className="btn btn-sm btn-quiet" onClick={() => navigate(`/design/my-work?project=${projectId}`)}>See all {total} entries in My work</button>}>
             {!entries ? <SkeletonLines lines={4} /> : entries.slice(0, 12).map((e) => (
                 <EntryRow key={e.id} entry={e} showProject={false} showCreated canAttach
-                    right={e.canEdit && canLog ? (
-                        <MenuButton icon="dots" label="Entry actions" width={170}>
-                            {(close) => (
-                                <div>
-                                    <button className="pop-item" onClick={() => { close(); openLogWork({ edit: e }); }}><Icon name="edit" />Edit entry</button>
-                                    <button className="pop-item" onClick={() => { close(); del(e); }}><Icon name="trash" />Delete</button>
-                                </div>
-                            )}
-                        </MenuButton>
-                    ) : null} />
+                    right={canLog ? <EntryActions entry={e} onDelete={del} /> : null} />
             ))}
             {entries && entries.length === 0 && (
                 <Empty art="time" title="You haven't logged work here yet" text="Record what you did and the exact hours you spent - it takes about ten seconds."

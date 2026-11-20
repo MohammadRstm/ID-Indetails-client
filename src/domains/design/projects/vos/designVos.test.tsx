@@ -1,12 +1,15 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+import { printFile } from "@/api/download";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P } from "@/app/permissions/codes";
 import { fixtures } from "@/test/fixtures";
 import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
 import { personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
+
+vi.mock("@/api/download", async (original) => ({ ...(await original<typeof import("@/api/download")>()), printFile: vi.fn(async () => undefined) }));
 
 const project = projectWork.project;
 const path = `/design/projects/${project.id}`;
@@ -30,6 +33,15 @@ describe("a Design project's variation orders", () => {
         expect(within(rows[0]).getByText("Waiting for the client")).toBeInTheDocument();
         expect(within(rows[1]).getByText("In the price")).toBeInTheDocument();
         expect(within(rows[1]).getByText(/Architecture/)).toBeInTheDocument();
+    });
+
+    it("print a variation order's PDF from its menu", async () => {
+        vi.mocked(printFile).mockClear();
+        renderApp(`${path}?tab=vos`, rana, ...projectWorkHandlers);
+        const row = within(await list()).getAllByRole("listitem")[0];
+        await userEvent.click(within(row).getByRole("button", { name: `Actions for ${pending.number}` }));
+        await userEvent.click(await screen.findByRole("button", { name: "Print" }));
+        await waitFor(() => expect(printFile).toHaveBeenCalledWith(`/design-vos/${pending.id}/pdf`, undefined, expect.stringMatching(/\.pdf$/)));
     });
 
     it("are no tab for an admin who doesn't see the money", async () => {

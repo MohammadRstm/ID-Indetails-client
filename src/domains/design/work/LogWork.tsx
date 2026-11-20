@@ -1,28 +1,30 @@
 import { useState, type FormEvent } from "react";
 import { errorMessage } from "@/api/errors";
 import FormFailure from "@/domains/shared/projects/FormFailure";
+import { projectLabel } from "@/domains/shared/projects/projectCodes";
 import { useCurrentUser } from "@/app/session/useSession";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
+import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
+import CharCount from "@/shared/components/Forms/CharCount";
 import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
-import { dayKey, fmtDayDate, fmtDur, fmtH, fmtRange, minutesOfDay } from "@/shared/format/time";
+import { dayKey, fmtDayDate, fmtDayDateY, fmtDur, fmtH, fmtRange, minutesOfDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 import { useAttachment } from "./attachments";
 import { AttachmentField } from "./AttachmentField";
-import { checkLog, companyNow, DAY, DEFAULT_START, defaultSlot, isoAt, movesFor, restoreOf, spanOn, workHoursOf, type Moves } from "./day";
+import { checkLog, companyNow, DAY, DEFAULT_START, DESCRIPTION_MAX, defaultSlot, isoAt, movesFor, restoreOf, spanOn, workHoursOf, type Moves } from "./day";
 import DayChips from "./DayChips";
 import DragDay from "./DragDay";
 import { closeLogWork, type LogWorkOptions } from "./logWorkStore";
-import OvertimeWarning from "./OvertimeWarning";
 import { ScopeCheck } from "./Scope";
 import TimeRange from "./TimeRange";
 import { startTimer } from "./timer";
 import {
-    entryBody, loggableProjects, useDomainSettings, useMyDay, useMyProjects, useMySchedule, isKeptLog, useOvertimeFor, useSaveEntry, useUndoLog,
+    entryBody, loggableProjects, useDeleteEntry, useDomainSettings, useMyDay, useMyProjects, useMySchedule, isKeptLog, useOvertimeFor, useSaveEntry, useUndoLog,
     type DomainSettings, type MyProject, type WorkEntry,
 } from "./workApi";
 
@@ -86,6 +88,8 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
     const [slotFor, setSlotFor] = useState<string | null>(null);
     const attachment = useAttachment(ed?.attachment ?? null);
     const save = useSaveEntry();
+    const remove = useDeleteEntry();
+    const [removing, setRemoving] = useState(false);
     const undo = useUndoLog();
     const day = useMyDay(date);
     const schedule = useMySchedule(date);
@@ -119,7 +123,9 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
     });
 
     if (slotFor && slotFor === date && day.data && !day.isPlaceholderData && day.data.date.slice(0, 10) === date) {
-        const sl = defaultSlot(day.data.entries.map((e) => spanOn(e, date)), workHoursOf(schedule.data?.day)?.s ?? DEFAULT_START, date === today, nowMin);
+        // hours waiting for approval hold their time too
+        const taken = [...day.data.entries, ...(day.data.waiting ?? [])].map((e) => spanOn(e, date));
+        const sl = defaultSlot(taken, workHoursOf(schedule.data?.day)?.s ?? DEFAULT_START, date === today, nowMin);
         setSlotFor(null);
         setStartMin(sl.s);
         setDuration(sl.d);
@@ -138,7 +144,13 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
     }) ?? (settings.requireDescription && !desc.trim() && touched ? "Say what you worked on." : null);
     // a project that stopped taking work (the timer ran on it) has to be picked again from the list
     const unlisted = !ed && !choices.some((c) => c.id === projectId);
-    const blocked = !!error || unlisted || (settings.requireDescription && !desc.trim()) || attachment.uploading || save.isPending;
+    const busy = attachment.uploading || save.isPending || removing;
+    // logged tasks moved, resized or deleted on the timeline. Without a new log written (nothing said, no file), only
+    // those changes are saved; with one, the new log goes in with them
+    const changed = Object.keys(swaps).length > 0 || deletes.length > 0;
+    const changesOnly = !ed && changed && !desc.trim() && !attachment.file;
+    const blocked = changesOnly ? busy : !!error || unlisted || (settings.requireDescription && !desc.trim()) || busy;
+    const shownError = changesOnly ? null : error;
 
     function pickDay(d: string) {
         setDate(d);
@@ -157,8 +169,46 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
         return back;
     }
 
+    /** Saves only what changed on the timeline: one moved task is saved with the others' moves and the deletions, in one go. */
+    async function saveChanges() {
+        const movedIds = Object.keys(swaps).map(Number);
+        const first = list.find((x) => x.id === movedIds[0]);
+        const n = movedIds.length + deletes.length;
+        const sub = `${fmtDayDate(startAt)} · ${n === 1 ? "1 logged task" : `${n} logged tasks`}`;
+        const back = movesBack();
+        try {
+            if (first) {
+                const rest = { ...swaps };
+                delete rest[first.id];
+                const at = swaps[first.id];
+                await save.mutateAsync({ id: first.id, body: entryBody(first, { startedAt: isoAt(date, at.s), endedAt: isoAt(date, at.e), moves: movesFor(date, rest), deletes }) });
+                const backRest = { ...back };
+                delete backRest[first.id];
+                closeLogWork();
+                toast({
+                    text: "Changes saved", sub, icon: "checkCircle", actionLabel: "Undo",
+                    action: () => undo.mutate({ restore: { id: first.id, body: { ...entryBody(first), moves: movesFor(date, backRest) } }, deleted: deletes }),
+                });
+                return;
+            }
+            setRemoving(true);
+            for (const id of deletes) await remove.mutateAsync(id);
+            closeLogWork();
+            toast({ text: "Changes saved", sub, icon: "checkCircle", actionLabel: "Undo", action: () => undo.mutate({ restore: null, deleted: deletes }) });
+        } catch (failure) {
+            // a refused save says why in the form's foot; a delete that failed says it here
+            if (!first) toast({ text: "Your changes weren't saved", sub: errorMessage(failure), icon: "alert" });
+        } finally {
+            setRemoving(false);
+        }
+    }
+
     function submit(e?: FormEvent) {
         e?.preventDefault();
+        if (changesOnly) {
+            if (!blocked) void saveChanges();
+            return;
+        }
         setTouched(true);
         if (blocked || projectId == null) return;
         const back = movesBack();
@@ -187,12 +237,12 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
             onError: (failure) => {
                 if (!isKeptLog(failure)) return;
                 closeLogWork();
-                toast({ text: `Your hours on ${title} are waiting for your department`, sub: errorMessage(failure), icon: "clock" });
+                toast({ text: "Your hours wait for approval", sub: `Your department isn't part of ${title}.`, icon: "clock" });
             },
         });
     }
 
-    const failure = save.error && !error && !isKeptLog(save.error) ? <FormFailure error={save.error} onForced={closeLogWork} /> : null;
+    const failure = save.error && !shownError && !isKeptLog(save.error) ? <FormFailure error={save.error} onForced={closeLogWork} /> : null;
     const required = preview?.requiredMinutes ?? schedule.data?.day.requiredMinutes;
 
     return (
@@ -201,45 +251,53 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
             foot={
                 <>
                     <div className="grow">
-                        {error ? <span className="err"><Icon name="alert" />{error}</span> : failure ? failure
+                        {shownError ? <span className="err"><Icon name="alert" />{shownError}</span> : failure ? failure
                             : <span className="muted">{fmtDayDate(startAt)} · <span className="mono">{fmtRange(startAt, endAt)}</span>{nextDay ? " (ends next day)" : ""}</span>}
                     </div>
                     <button className="btn" onClick={closeLogWork}>Cancel</button>
-                    <button className="btn btn-primary" disabled={attachment.uploading || save.isPending} onClick={() => submit()}>
-                        {ed ? "Save changes" : `Log ${fmtDur(duration)}`}{ot ? ` · ${fmtDur(ot)} overtime` : ""}
+                    <button className="btn btn-primary" disabled={busy} onClick={() => submit()}>
+                        {ed || changesOnly ? "Save changes" : `Log ${fmtDur(duration)}${changed ? " and save changes" : ""}`}
+                        {!changesOnly && ot ? ` · ${fmtDur(ot)} overtime` : ""}
                     </button>
                 </>
             }>
-            <form onSubmit={submit} {...proton.guard}>
+            <form className="log-form" onSubmit={submit} {...proton.guard}>
                 <FilledNote fields={proton.filled} />
                 <div className="grid g-2">
                     <div className="field">
                         <label className="label required" htmlFor="lw-project">Project</label>
                         <Select id="lw-project" value={projectId == null ? "" : String(projectId)} onChange={(v) => setProjectId(+v)}
-                            options={choices.map((p) => ({ value: String(p.id), label: p.title }))} />
+                            options={choices.map((p) => ({ value: String(p.id), label: projectLabel(p) }))} />
                         <div className="hint">Only active projects accept new work.</div>
                     </div>
-                    <div className="field">
-                        <label className="label required">Day</label>
-                        <DayChips value={date} onChange={pickDay} count={5} />
-                    </div>
+                    {/* a log already made keeps its day, as does one opened on a picked day: it is only named */}
+                    {ed || options.fixedDay ? (
+                        <div className="field">
+                            <div className="label">{ed ? "Logged on" : "Logging on"}</div>
+                            <div style={{ minHeight: 34, display: "flex", alignItems: "center", fontWeight: 600 }}>{fmtDayDateY(date)}</div>
+                        </div>
+                    ) : (
+                        <div className="field">
+                            <label className="label required">What day to log?</label>
+                            <DayChips value={date} onChange={pickDay} count={5} />
+                        </div>
+                    )}
                 </div>
 
                 <div className="field mt">
                     <label className={settings.requireDescription ? "label required" : "label"} htmlFor="lw-desc">What did you work on?</label>
-                    <textarea id="lw-desc" className="textarea" autoFocus
+                    <AutoGrowTextarea id="lw-desc" className="textarea" autoFocus minRows={2} maxRows={4} maxLength={DESCRIPTION_MAX}
                         placeholder={`${settings.requireDescription ? "" : "Optional - "}e.g. Detailed the kitchen joinery drawings for the client review`}
                         value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => setTouched(true)}
                         onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit(); }} />
+                    <CharCount length={desc.length} max={DESCRIPTION_MAX} />
                 </div>
-
-                <div className="mt"><ScopeCheck checked={outside} onChange={setOutside} /></div>
 
                 <AttachmentField state={attachment} />
 
                 <div className="panel mt" style={{ background: "var(--surface-2)" }}>
                     <div className="panel-body">
-                        <TimeRange date={date} startMin={startMin} duration={duration} preview={preview}
+                        <TimeRange date={date} startMin={startMin} duration={duration}
                             onChange={(s, d) => { setStartMin(s); setDuration(d); }} />
                         <div className="mt">
                             <DragDay date={date} startMin={startMin} duration={duration} projectId={projectId} ignoreId={ed?.id} swaps={swaps}
@@ -255,7 +313,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                     </div>
                 </div>
 
-                <OvertimeWarning date={date} duration={duration} preview={preview} scheduleDay={schedule.data?.day} />
+                <div className="mt"><ScopeCheck checked={outside} onChange={setOutside} /></div>
                 <div className="row mt-s" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                     <span className="hint">Tip: type “4pm”, “16:00” or “4:30p” - and ⌘/Ctrl + Enter to save.</span>
                     {settings.timerEnabled && !ed ? (

@@ -1,13 +1,10 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
-import { Delta, RankBars } from "@/shared/components/Charts/Bars";
-import Columns from "@/shared/components/Charts/Columns";
+import { Delta } from "@/shared/components/Charts/Bars";
 import DayRuler from "@/shared/components/Charts/DayRuler";
-import Figure from "@/shared/components/Charts/Figure";
 import { CalendarHeat } from "@/shared/components/Charts/Heat";
-import { ProjectTile } from "@/shared/components/Data/Bits";
 import { KpiStrip } from "@/shared/components/Data/Kpi";
 import { PageHead } from "@/shared/components/Data/Panel";
 import Empty from "@/shared/components/Feedback/Empty";
@@ -20,8 +17,9 @@ import useDebounce from "@/shared/hooks/useDebounce";
 import { quarterLabel, quarterOf, quarterStart } from "@/shared/format/periods";
 import { addDays, DAYS, dayKey, fmtDate, fmtDateY, fmtDayDateY, fmtDur, fmtDurShort, fmtH, fmtNumber, fmtRange, fmtTime, formatSettings, minutesOfDay, monthKey, partsOf, relDay, startOfWeek } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import MyDeadlines from "../../shared/requirements/MyDeadlines";
 import { companyNow } from "./day";
+import EntryActions from "./EntryActions";
+import { useDeleteWithUndo } from "./useDeleteWithUndo";
 import EntryRow from "./EntryRow";
 import { openLogWork } from "./logWorkStore";
 import { useMyEntries, useMyProjects, useMyWorkSummary, type WorkEntry } from "./workApi";
@@ -31,7 +29,6 @@ type Period = "week" | "month" | "quarter" | "all";
 
 /** Everything a Design employee has logged, and how it adds up (the prototype's DesignMyWork). */
 export default function MyWorkPage() {
-    const navigate = useNavigate();
     const permissions = usePermissions();
     const [params] = useSearchParams();
     const { today } = companyNow();
@@ -43,6 +40,7 @@ export default function MyWorkPage() {
     const [weekAnchor, setWeekAnchor] = useState(startOfWeek(today));
     const text = useDebounce({ value: search.trim(), debounceTimeMs: 250 });
     const canLog = permissions.has(P.WORK_ENTRY_CREATE);
+    const del = useDeleteWithUndo();
 
     const ranges: Record<Period, { label: string; from?: string }> = {
         week: { label: "This week", from: startOfWeek(today) },
@@ -52,18 +50,16 @@ export default function MyWorkPage() {
     };
     const range = ranges[period];
     const filter = { from: range.from, to: today, projectId: projectId === "all" ? undefined : +projectId, search: text || undefined };
-    // the totals are all-time; the one filtered by the range gives where the time went
+    // the totals are all-time
     const all = useMyWorkSummary();
-    const inRange = useMyWorkSummary(filter);
     const entries = useMyEntries({ ...filter, page: 1, pageSize: 100 });
     const active = useMyProjects().data?.filter((p) => p.status === "active").length;
     const s = all.data;
 
     const groups = groupByDay(entries.data?.items ?? []);
-    const daily = new Map((s?.daily ?? []).map((d) => [d.day, d.minutes]));
+    const daily = new Map((s?.daily ?? []).map((d) => [d.day, d]));
     const since = addDays(today, -180);
     const activeDays = (s?.daily ?? []).filter((d) => d.day > since && d.minutes > 0).length;
-    const weekly = (s?.weekly ?? []).slice(-12);
 
     return (
         <div className="page">
@@ -78,38 +74,28 @@ export default function MyWorkPage() {
                         key: "quarter", label: ranges.quarter.label, value: fmtH(s?.thisQuarterMinutes ?? 0),
                         delta: s && <Delta value={s.thisQuarterMinutes} prev={s.lastQuarterSameSpanMinutes} label="vs last quarter" />,
                     },
+                    {
+                        key: "overtime", label: "Overtime", value: <span className={s?.totalOvertimeMinutes ? "ot-text" : undefined}>{fmtH(s?.totalOvertimeMinutes ?? 0)}</span>,
+                        sub: <span>all time</span>,
+                    },
                     { key: "entries", label: "Work entries", value: fmtNumber(s?.entryCount ?? 0), sub: <span>avg {s?.entryCount ? fmtDur(s.totalMinutes / s.entryCount) : "-"}</span> },
                     { key: "projects", label: "Projects", value: s?.projectCount ?? 0, sub: <span>{active ?? 0} active right now</span> },
                 ]} />
             )}
 
-            <div className="mt"><MyDeadlines /></div>
-
-            <div className="grid g-8-4 mt">
-                <Figure title="Hours per week" sub="Your last 12 weeks."
-                    table={{ cols: [{ label: "Week of" }, { label: "Hours", right: true }, { label: "Entries", right: true }], rows: weekly.map((w) => [fmtDateY(w.weekStart), (w.minutes / 60).toFixed(1), w.entries]) }}>
-                    {!s ? <SkeletonLines lines={5} /> : (
-                        <Columns height={180} labelEvery={2} format={(v) => `${Math.round(v)}h`}
-                            data={weekly.map((w) => ({ label: fmtDate(w.weekStart), tip: `Week of ${fmtDateY(w.weekStart)}`, value: w.minutes / 60, note: `${w.entries} entries` }))} />
-                    )}
-                </Figure>
-                <Figure title="Where your time went" sub={range.label}>
-                    {loadFailed(inRange) ? <LoadError error={inRange.error} retry={() => inRange.refetch()} what="where your time went" /> : !inRange.data ? <SkeletonLines lines={5} /> : (
-                        <RankBars showPct onClick={(it) => navigate(`/design/projects/${it.id}`)}
-                            items={inRange.data.byProject.map((p) => ({
-                                id: p.projectId, label: p.title, value: p.minutes,
-                                node: <><ProjectTile icon={p.icon} tint={p.tint} size="sm" /><span className="trunc">{p.title}</span></>,
-                            }))} />
-                    )}
-                </Figure>
-            </div>
-
             <div className="panel mt">
                 <div className="panel-head">
-                    <div><div className="panel-title">Your activity</div><div className="panel-sub">Every day you logged work over the last six months.</div></div>
+                    <div><div className="panel-title">Your activity</div><div className="panel-sub">Every day you logged work over the last six months{canLog ? ". Click a day to see or add its logs" : ""}.</div></div>
                 </div>
                 <div className="panel-body">
-                    {!s ? <SkeletonLines lines={4} /> : <CalendarHeat weeks={27} value={(k) => daily.get(k) ?? 0} note={`${activeDays} active days in the last six months`} />}
+                    {/* larger days, centered in the panel, each opening Log work on its day; on a narrow screen it scrolls sideways */}
+                    {!s ? <SkeletonLines lines={4} /> : (
+                        <div style={{ width: "max-content", maxWidth: "100%", margin: "0 auto" }}>
+                            <CalendarHeat weeks={27} cell={24} value={(k) => daily.get(k)?.minutes ?? 0} color={(k) => daily.get(k)?.tint}
+                                note={`${activeDays} active days in the last six months`}
+                                onClick={canLog ? (day) => openLogWork({ date: day, fixedDay: true }) : undefined} />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -137,9 +123,9 @@ export default function MyWorkPage() {
                                             <span className="muted" style={{ fontSize: "11.5px" }}>{fmtDayDateY(g.key)}</span>
                                             <span className="day-total mono">{fmtDur(g.minutes)}</span>
                                         </div>
-                                        <DayRuler blocks={g.items.map((e) => ({ start: e.startedAt, end: e.endedAt }))} scale={false} />
+                                        <DayRuler blocks={g.items.map((e) => ({ start: e.startedAt, end: e.endedAt, color: e.project.tint ?? undefined }))} scale={false} />
                                         <div style={{ marginTop: 6 }}>
-                                            {g.items.map((e) => <EntryRow key={e.id} entry={e} canAttach />)}
+                                            {g.items.map((e) => <EntryRow key={e.id} entry={e} canAttach right={canLog ? <EntryActions entry={e} onDelete={del} /> : null} />)}
                                         </div>
                                     </div>
                                 ))}
@@ -228,12 +214,12 @@ function WeekCalendar({ anchor, setAnchor, today }: { anchor: string; setAnchor:
                                         return (
                                             <div key={d} className="grow" style={{ position: "relative", borderLeft: di ? "1px solid var(--line)" : 0, background: weekday === 0 || weekday === 6 ? "var(--surface-2)" : "transparent" }}>
                                                 {entries.filter((e) => dayKey(e.startedAt) === d).map((e) => {
-                                                    const tint = e.project.tint ?? "#0C6B69";
+                                                    const tint = e.project.tint ?? "var(--accent)";
                                                     const top = (minutesOfDay(e.startedAt) / 60 - DAY_START) * ROW;
                                                     return (
                                                         <div key={e.id} style={{
                                                             position: "absolute", top: Math.max(0, top), left: 3, right: 3, height: Math.max(16, (e.minutes / 60) * ROW),
-                                                            background: rgba(tint, 0.13), borderLeft: `2.5px solid ${tint}`, borderRadius: 4, padding: "3px 5px", overflow: "hidden", cursor: "default",
+                                                            background: `color-mix(in srgb, ${tint} 13%, transparent)`, borderLeft: `2.5px solid ${tint}`, borderRadius: 4, padding: "3px 5px", overflow: "hidden", cursor: "default",
                                                         }}
                                                             onMouseMove={(ev) => tip.show(ev, [{ big: e.project.title }, { k: "Time", v: fmtRange(e.startedAt, e.endedAt) }, { k: "Duration", v: fmtDur(e.minutes) }, e.description])}
                                                             onMouseLeave={tip.hide}>
@@ -256,10 +242,4 @@ function WeekCalendar({ anchor, setAnchor, today }: { anchor: string; setAnchor:
             </div>
         </div>
     );
-}
-
-/** A project tint, see-through (the prototype's HL.rgba). */
-function rgba(hex: string, alpha: number) {
-    const n = parseInt(hex.replace("#", ""), 16);
-    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
 }

@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { openContact } from "@/app/contact/contact";
 import { P } from "@/app/permissions/codes";
 import { accessLabel } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { hasSeveralAreas } from "@/app/routing/areas";
+import { homePath } from "@/app/routing/home";
 import { companyNav, domainNav, websiteNav, type NavItem } from "@/app/routing/routeTable";
 import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
 import Avatar from "@/shared/components/Identity/Avatar";
@@ -13,21 +14,23 @@ import { tip } from "@/shared/components/Overlays/tip";
 import Icon from "@/shared/icons/Icon";
 import { openLogWork } from "@/domains/design/work/logWorkStore";
 import { cx } from "@/shared/utils/cx";
-import { myProfilePath } from "./profilePath";
+import { contactPath } from "./contactPath";
+import { myAdvancesPath, myProfilePath } from "./profilePath";
 import InstallMenuItem from "@/app/pwa/InstallMenuItem";
 import PushMenuItem from "@/app/pwa/PushMenuItem";
-import ReportBugModal from "./ReportBugModal";
 import { useCompanySettings, useNavCounts } from "./shellQueries";
 import { areaBase, type ShellArea } from "./useArea";
 
 /**
  * A tab's name beside its icon while the sidebar shows icons only (a laptop-sized window): on hover or keyboard focus,
- * and only when the name itself is hidden.
+ * and only when the name itself is hidden from view.
  */
 function nameTip(name: string) {
     const show = (e: { currentTarget: HTMLElement }) => {
+        // the name is hidden by clipping it to a pixel (client.css), so a screen reader still reads it, or by display: none
         const label = e.currentTarget.querySelector(".nav-label, .side-cta-label");
-        if (label && getComputedStyle(label).display !== "none") return;
+        const style = label && getComputedStyle(label);
+        if (style && style.display !== "none" && style.position !== "absolute") return;
         const r = e.currentTarget.getBoundingClientRect();
         tip.show({ clientX: r.right - 4, clientY: r.top - 6 }, name);
     };
@@ -39,7 +42,6 @@ export default function Sidebar({ area }: { area: ShellArea }) {
     const permissions = usePermissions();
     const user = useCurrentUser();
     const { signOut } = useSession();
-    const [reporting, setReporting] = useState(false);
     const company = useCompanySettings();
     const domain = area.kind === "domain" ? area.domain : null;
     const counts = useNavCounts(domain, permissions);
@@ -56,6 +58,12 @@ export default function Sidebar({ area }: { area: ShellArea }) {
     const peopleItem = items.find((item) => item.key === "people");
     const profilePath = myProfilePath(permissions, area, user.id);
     const settingsItem = workspace.find((item) => item.key === "settings");
+    // Settings → Contact where the person has Settings, otherwise the Contact window
+    const contact = () => {
+        const path = contactPath(permissions, area);
+        if (path) navigate(path);
+        else openContact();
+    };
 
     const countOf = (item: NavItem) => (item.count ? counts[item.count] : undefined);
     const renderItem = (item: NavItem) => {
@@ -64,6 +72,7 @@ export default function Sidebar({ area }: { area: ShellArea }) {
             <button
                 key={item.key}
                 className={cx("nav-item", area.section === item.key && "on")}
+                aria-current={area.section === item.key ? "page" : undefined}
                 onClick={() => { tip.hide(); navigate(`${base}/${item.path}`); }}
                 {...nameTip(item.label)}
             >
@@ -76,13 +85,14 @@ export default function Sidebar({ area }: { area: ShellArea }) {
 
     return (
         <aside className="side">
-            <div className="side-head">
+            {/* the logo goes home: where the person lands after signing in */}
+            <Link className="side-head" to={homePath(permissions)} aria-label="Home" title="Home" onClick={() => tip.hide()}>
                 <Logo />
                 <div className="logo-text">
                     <div className="logo-name">ID InDetails</div>
                     <div className="logo-sub">{company.data?.name ?? ""}</div>
                 </div>
-            </div>
+            </Link>
 
             {canLog && (
                 <div className="side-cta">
@@ -118,8 +128,8 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                     align="left"
                     width={250}
                     hostClass="grow"
-                    trigger={(_, toggle) => (
-                        <button className="side-user" onClick={toggle}>
+                    trigger={(open, toggle) => (
+                        <button className="side-user" onClick={toggle} aria-expanded={open}>
                             <Avatar person={me} size={30} presence />
                             <div className="side-user-txt grow" style={{ minWidth: 0 }}>
                                 <div className="side-user-name trunc">{me.name}</div>
@@ -137,14 +147,17 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                                     <div className="muted trunc" style={{ fontSize: "11.5px" }}>{user.email}</div>
                                 </div>
                             </div>
-                            {peopleItem && (
-                                <button className="pop-item" onClick={() => { close(); navigate(`${base}/people`); }}>
-                                    <Icon name="user" />Browse employees
-                                </button>
-                            )}
                             {profilePath && (
                                 <button className="pop-item" onClick={() => { close(); navigate(profilePath); }}>
                                     <Icon name="user" />My profile
+                                </button>
+                            )}
+                            <button className="pop-item" onClick={() => { close(); navigate(myAdvancesPath(permissions, area)); }}>
+                                <Icon name="card" />Salary advances
+                            </button>
+                            {peopleItem && (
+                                <button className="pop-item" onClick={() => { close(); navigate(`${base}/people`); }}>
+                                    <Icon name="user" />Browse employees
                                 </button>
                             )}
                             {settingsItem && (
@@ -155,8 +168,8 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                             <button className="pop-item" onClick={() => { close(); navigate(`${base}/help`); }}>
                                 <Icon name="help" />Help
                             </button>
-                            <button className="pop-item" onClick={() => { close(); setReporting(true); }}>
-                                <Icon name="flag" />Report a bug
+                            <button className="pop-item" onClick={() => { close(); contact(); }}>
+                                <Icon name="mail" />Contact the developer
                             </button>
                             <PushMenuItem close={close} />
                             <InstallMenuItem close={close} />
@@ -168,7 +181,6 @@ export default function Sidebar({ area }: { area: ShellArea }) {
                     )}
                 </Popover>
             </div>
-            {reporting && <ReportBugModal onClose={() => setReporting(false)} />}
         </aside>
     );
 }

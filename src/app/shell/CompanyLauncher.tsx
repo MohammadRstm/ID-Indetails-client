@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Navigate, useNavigate } from "react-router";
 import { http } from "@/api/http";
 import type { Schemas } from "@/api/types";
@@ -13,9 +14,14 @@ import Logo from "@/shared/components/Identity/Logo";
 import Skeleton from "@/shared/components/Feedback/Skeleton";
 import { money } from "@/shared/format/money";
 import NotificationBell from "@/domains/shared/notifications/NotificationBell";
+import NotificationChime from "@/domains/shared/notifications/NotificationChime";
 import { companyToday } from "@/shared/format/time";
+import { useIsPhone } from "@/shared/hooks/useIsPhone";
 import Icon from "@/shared/icons/Icon";
+import BottomNav from "./BottomNav";
+import SearchPalette from "./SearchPalette";
 import { useCompanySettings } from "./shellQueries";
+import { useArea } from "./useArea";
 import { loadFailed } from "@/api/queryState";
 
 type Overview = Schemas["CompanyOverviewResponse"];
@@ -31,6 +37,9 @@ export default function CompanyLauncher() {
     const user = useCurrentUser();
     const { signOut } = useSession();
     const company = useCompanySettings();
+    const area = useArea();
+    const phone = useIsPhone();
+    const [searching, setSearching] = useState(false);
     const today = companyToday();
     const overview = useQuery({
         queryKey: ["company", "overview", `${today.slice(0, 7)}-01`, today],
@@ -42,6 +51,7 @@ export default function CompanyLauncher() {
 
     const both = permissions.visibleDomains.length === 2;
     return (
+        <>
         <div className="launcher">
             <div className="launcher-inner">
                 <div className="row" style={{ gap: 11, marginBottom: 26 }}>
@@ -52,7 +62,8 @@ export default function CompanyLauncher() {
                     </div>
                     <span className="grow" />
                     <ThemeToggle />
-                    <NotificationBell allPath="/company/notifications" />
+                    {/* a phone has Alerts in the bottom bar; the bell's sound stays */}
+                    {phone ? <NotificationChime /> : <NotificationBell allPath="/company/notifications" />}
                 </div>
 
                 <h1 className="launch-h">What would you like to manage?</h1>
@@ -148,5 +159,8 @@ export default function CompanyLauncher() {
                 </div>
             </div>
         </div>
+        <BottomNav area={area} onSearch={() => setSearching(true)} />
+        {searching && <SearchPalette area={area} onClose={() => setSearching(false)} />}
+        </>
     );
 }

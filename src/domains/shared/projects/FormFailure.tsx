@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { errorMessage, toApiError } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { toast } from "@/shared/components/Feedback/toast";
@@ -8,23 +9,26 @@ import { useForceBlockedChange } from "./blockedChangesApi";
 
 /**
  * A form's failure, in its footer. When the profit floor refused the change, whoever sees the project's money can
- * force it through here, after an are-you-sure; others are told who was asked to look.
+ * force it through here, after an are-you-sure; others are told who was asked to look. A held pay change is the super
+ * admins' alone to force.
  */
 export default function FormFailure({ error, onForced }: { error: unknown; onForced: () => void }) {
     const permissions = usePermissions();
     const force = useForceBlockedChange();
     const [sure, setSure] = useState(false);
     const failure = toApiError(error);
-    const id = failure.code === "profit_floor" ? failure.blockedChangeId : null;
+    const pay = failure.code === "pay_change_held";
+    const id = failure.code === "profit_floor" || pay ? failure.blockedChangeId : null;
+    const decides = pay ? permissions.role === "super_admin" : permissions.has(P.FINANCIAL_VIEW);
 
-    if (id == null || !permissions.has(P.FINANCIAL_VIEW)) {
-        return <span className="err"><Icon name="alert" />{errorMessage(error)}</span>;
+    if (id == null || !decides) {
+        return <span className="err"><Icon name="alert" /><ErrorMessage error={error} /></span>;
     }
 
     if (!sure) {
         return (
             <span className="err">
-                <Icon name="alert" />This would take the project to zero profit or below.
+                <Icon name="alert" />{pay ? "This pay change would take a project to zero profit or below." : "This would take the project to zero profit or below."}
                 <button className="btn btn-sm" onClick={() => setSure(true)}>Force it</button>
             </span>
         );

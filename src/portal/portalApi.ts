@@ -1,5 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { toApiError } from "@/api/errors";
+import { rememberError } from "@/api/recentErrors";
+import type { ContactSend } from "@/app/contact/contactApi";
 
 /*
  * The client portal talks to /api/portal with its own access token and its own refresh cookie (on
@@ -110,9 +112,15 @@ portalHttp.interceptors.response.use(
             if (auth) return portalHttp(config);
             onExpired();
         }
-        return Promise.reject(toApiError(error));
+        const failure = toApiError(error);
+        // kept, as the staff app keeps its own, for a message to the developer
+        rememberError(failure, config?.url ? `/api/portal/${config.url.replace(/^\//, "")}` : undefined);
+        return Promise.reject(failure);
     },
 );
+
+/** A client's message to the developer (Contact the developer). */
+export const sendFromClient: ContactSend = (message) => portalHttp.post("/contact", message);
 
 /** Calls that need no session: signing in, invitations and password resets. */
 export async function portalAnonymous<T>(url: string, body?: unknown): Promise<T> {

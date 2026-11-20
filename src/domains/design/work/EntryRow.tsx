@@ -55,7 +55,9 @@ export default function EntryRow({ entry: e, showProject = true, showPerson, sho
                     ev.target.value = "";
                 }} />
             )}
-            <div className={cx("entry", onOpen && "click")} title={onOpen ? "Open this entry" : undefined} {...clickable(onOpen ? () => onOpen(e) : undefined, "button")}>
+            {/* its left edge in its project's colour */}
+            <div className={cx("entry", e.project.tint && "pc", onOpen && "click")} style={e.project.tint ? { ["--pc" as string]: e.project.tint } : undefined}
+                title={onOpen ? "Open this entry" : undefined} {...clickable(onOpen ? () => onOpen(e) : undefined, "button")}>
                 <div className="entry-when">
                     <div className="entry-dur mono">{fmtDur(e.minutes)}</div>
                     <div className="entry-range mono">{fmtRange(e.startedAt, e.endedAt)}</div>

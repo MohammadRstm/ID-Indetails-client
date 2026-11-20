@@ -17,6 +17,8 @@ The web app for ID InDetails, the company's internal project, time and money pla
 
    The app is at http://localhost:5173. Vite proxies `/api`, `/hubs` and `/openapi` to the API, so the browser sees one origin and the refresh cookie works. To point it at another API, set `HOURLINE_API`.
 
+3. **Sign in as anyone.** Under the sign-in form, "Development only: sign in as" lists every account that can sign in, by kind (super admins, each domain's admins and employees, clients). Pick one and press **Sign in as**: no password needed. A client opens the portal. The picker is in the dev server only, never in a production build, and it needs the API running in Development (its `docs/authentication.md`, "Development sign-in").
+
 | Script | What it does |
 |---|---|
 | `npm run dev` | Development server |

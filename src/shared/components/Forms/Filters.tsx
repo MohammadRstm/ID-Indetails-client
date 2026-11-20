@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import Icon from "@/shared/icons/Icon";
 import type { IconName } from "@/shared/icons/icons";
 import { cx } from "@/shared/utils/cx";
@@ -55,6 +55,40 @@ export function ChipGroup<V extends string>({ value, options, onChange, ...rest 
                     {o.count != null && <span className="cnt">{o.count}</span>}
                 </button>
             ))}
+        </div>
+    );
+}
+
+type ChoiceListProps = {
+    value: string;
+    options: { value: string; label: string }[];
+    onChange: (value: string) => void;
+    "aria-label": string;
+    /** What the search box above a long list asks for ("Find a client"). */
+    findLabel: string;
+};
+
+/** More than this many options and the list gets a box to find one by name. */
+const FINDABLE_FROM = 8;
+
+/** One-of-many in a list that scrolls, for a long set of options (every client, every person); a long one can be searched. */
+export function ChoiceList({ value, options, onChange, findLabel, ...rest }: ChoiceListProps) {
+    const [q, setQ] = useState("");
+    const word = q.trim().toLowerCase();
+    const shown = word ? options.filter((o) => o.label.toLowerCase().includes(word)) : options;
+    return (
+        <div className="choices">
+            {options.length > FINDABLE_FROM && <SearchInput value={q} onChange={setQ} placeholder={findLabel} width="100%" />}
+            <div className="choice-list" role="radiogroup" aria-label={rest["aria-label"]}>
+                {shown.map((o) => (
+                    <button key={o.value} type="button" role="radio" aria-checked={value === o.value} className={cx("choice", value === o.value && "on")}
+                        onClick={() => onChange(o.value)}>
+                        <span className="trunc">{o.label}</span>
+                        {value === o.value && <Icon name="check" />}
+                    </button>
+                ))}
+                {shown.length === 0 && <div className="muted choice-empty">Nothing matches "{q.trim()}"</div>}
+            </div>
         </div>
     );
 }
