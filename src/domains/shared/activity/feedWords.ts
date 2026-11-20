@@ -132,6 +132,16 @@ const WORDS: Record<string, Words> = {
         text: (e) => (e.amount == null ? `updated ${project(e)}'s progress`
             : `set ${project(e)} progress to ${e.amount}%${e.prevAmount != null ? ` (was ${e.prevAmount}%)` : ""}`),
     },
+    // a department's planned hours: the payload names it as it was then, with the minutes planned and before (null for none)
+    department_plan_set: {
+        icon: "clock",
+        text: (e, p) => {
+            const department = str(p.department) ?? "a department";
+            const planned = num(p.plannedMinutes), was = num(p.prevPlannedMinutes);
+            return planned == null ? `cleared the planned hours of ${department} on ${project(e)}`
+                : `planned ${fmtH(planned)} for ${department} on ${project(e)}${was != null ? ` (was ${fmtH(was)})` : ""}`;
+        },
+    },
     requirement_added: { icon: "plus", text: (e, p) => `added${quoted(p.text)} to ${project(e)}'s requirements` },
     requirement_updated: { icon: "edit", text: (e, p) => `edited${quoted(p.text) || " a requirement"} on ${project(e)}` },
     requirement_done: { icon: "checkCircle", text: (e, p) => `completed${quoted(p.text) || " a requirement"} on ${project(e)}` },
@@ -158,6 +168,11 @@ const WORDS: Record<string, Words> = {
         icon: "card",
         text: (e) => (e.amount == null ? `changed the payment for ${project(e)}`
             : `changed the payment for ${project(e)} from ${money.fmt(e.prevAmount ?? 0)} to ${money.fmt(e.amount)}`),
+    },
+    // a new version of a project's cost budget: its total in the amount (financial:view), its number in the payload
+    budget_set: {
+        icon: "card",
+        text: (e, p) => `set ${num(p.version) != null ? `budget version ${num(p.version)}` : "a budget"} for ${project(e)}${dash(e.amount)}`,
     },
     project_fee_set: { icon: "card", text: (e) => `set ${project(e)}'s fee${e.amount == null ? "" : ` to ${money.fmt(e.amount)}`}` },
     permits_set: { icon: "card", text: (e) => `set ${project(e)}'s permits${e.amount == null ? "" : ` to ${money.fmt(e.amount)}`}` },

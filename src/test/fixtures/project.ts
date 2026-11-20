@@ -28,12 +28,15 @@ export const projectWork = {
     employee: employeeJson as unknown as Schemas["EmployeeResponse"],
     expenses: expensesJson as unknown as Schemas["ExpenseListResponse"],
     costTimeline: costTimelineJson as unknown as Schemas["ProjectCostTimelineResponse"],
-    /** Its departments as whoever sees the money reads them: Architecture over its budget, Interiors well within. */
+    /**
+     * Its departments as whoever sees the money reads them: Architecture over its budget and past its 40 planned hours,
+     * Interiors well within both.
+     */
     departments: {
         name: null,
         departments: [
             {
-                id: 12, name: "Architecture", share: 0.6,
+                id: 12, name: "Architecture", share: 0.6, plannedMinutes: 2400, loggedMinutes: 3000, progress: 1.25,
                 money: {
                     budget: 6000, cost: 6500, left: -500, minutes: 3000, unconverted: [],
                     people: [{
@@ -45,7 +48,7 @@ export const projectWork = {
                     }],
                 },
             },
-            { id: 13, name: "Interiors", share: 0.4, money: { budget: 4000, cost: 1000, left: 3000, minutes: 480, unconverted: [], people: [] } },
+            { id: 13, name: "Interiors", share: 0.4, plannedMinutes: 960, loggedMinutes: 480, progress: 0.5, money: { budget: 4000, cost: 1000, left: 3000, minutes: 480, unconverted: [], people: [] } },
         ],
         other: null,
     } as Schemas["ProjectDepartmentsResponse"],

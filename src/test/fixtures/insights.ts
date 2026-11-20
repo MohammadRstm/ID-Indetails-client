@@ -28,11 +28,12 @@ const design: Schemas["ProjectInsightResponse"] = {
         { kind: "labour", amount: -1915.48 },
         { kind: "expenses", amount: -155 },
     ],
-    // Interiors' hours include some paid in pounds with no rate on their day; the last row is hours in no department
+    // Interiors' hours include some paid in pounds with no rate on their day; the last row is hours in no department.
+    // Architecture has 80h planned and is past them; Interiors has no plan
     departments: [
-        { id: 12, name: "Architecture", share: 0.6, budget: 15600, cost: 1300, left: 14300, minutes: 6000, labourShare: 0.679, unconverted: [] },
-        { id: 13, name: "Interiors", share: 0.4, budget: 10400, cost: 515.48, left: 9884.52, minutes: 2910, labourShare: 0.269, unconverted: [{ amount: 4500000, currency: "LBP" }] },
-        { id: null, name: "Other hours", share: null, budget: 0, cost: 100, left: -100, minutes: 600, labourShare: 0.052, unconverted: [] },
+        { id: 12, name: "Architecture", share: 0.6, budget: 15600, cost: 1300, left: 14300, minutes: 6000, labourShare: 0.679, unconverted: [], plannedMinutes: 4800, progress: 1.25 },
+        { id: 13, name: "Interiors", share: 0.4, budget: 10400, cost: 515.48, left: 9884.52, minutes: 2910, labourShare: 0.269, unconverted: [{ amount: 4500000, currency: "LBP" }], plannedMinutes: null, progress: null },
+        { id: null, name: "Other hours", share: null, budget: 0, cost: 100, left: -100, minutes: 600, labourShare: 0.052, unconverted: [], plannedMinutes: null, progress: null },
     ],
     basis: { method: METHOD, assumptions: [MARGIN_RULE, PROJECTION], leftOut: [] },
 };

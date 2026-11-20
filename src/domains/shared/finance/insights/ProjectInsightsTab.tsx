@@ -9,6 +9,7 @@ import { SkeletonKpis, SkeletonLines } from "@/shared/components/Feedback/Skelet
 import { money } from "@/shared/format/money";
 import { fmtH } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
+import { PlannedHoursCell } from "../../../design/projects/departments/PlannedHours";
 import type { Project } from "../../projects/projectsApi";
 import { BasisNote, StandingBadge } from "./InsightParts";
 import WhatIfPanel from "./WhatIfPanel";
@@ -85,8 +86,12 @@ function Profitability({ insight: x }: { insight: ProjectInsight }) {
     );
 }
 
-/** A Design project's departments: each one's share of the price, its budget, what its hours cost, and its part of the labour. */
+/**
+ * A Design project's departments: each one's share of the price, its budget, what its hours cost, and its part of the
+ * labour; and its hours against those planned, once any department has a plan.
+ */
 function Departments({ departments }: { departments: DepartmentInsight[] }) {
+    const planned = departments.some((d) => d.plannedMinutes != null);
     return (
         <div className="panel mt" role="region" aria-label="Departments">
             <div className="panel-head">
@@ -103,13 +108,14 @@ function Departments({ departments }: { departments: DepartmentInsight[] }) {
                             <th className="r">Share</th>
                             <th className="r">Budget</th>
                             <th className="r">Hours</th>
+                            {planned && <th style={{ width: 150 }}>Planned hours</th>}
                             <th className="r">Cost</th>
                             <th className="r">Left</th>
                             <th style={{ width: 140 }}>Share of labour</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {departments.map((d) => <DepartmentRow key={d.id ?? "other"} department={d} />)}
+                        {departments.map((d) => <DepartmentRow key={d.id ?? "other"} department={d} planned={planned} />)}
                     </tbody>
                 </table>
             </div>
@@ -117,7 +123,7 @@ function Departments({ departments }: { departments: DepartmentInsight[] }) {
     );
 }
 
-function DepartmentRow({ department: d }: { department: DepartmentInsight }) {
+function DepartmentRow({ department: d, planned }: { department: DepartmentInsight; planned: boolean }) {
     const budgeted = d.share != null;
     const over = budgeted && d.left < 0;
     return (
@@ -129,6 +135,7 @@ function DepartmentRow({ department: d }: { department: DepartmentInsight }) {
             <td className="r mono">{d.share != null ? percentText(d.share * 100) : "-"}</td>
             <td className="r mono">{budgeted ? money.fmt(d.budget) : "-"}</td>
             <td className="r mono">{fmtH(d.minutes)}</td>
+            {planned && <td><PlannedHoursCell department={{ plannedMinutes: d.plannedMinutes, loggedMinutes: d.minutes, progress: d.progress }} /></td>}
             <td className={cx("r mono", over && "money down")}>
                 {money.fmt(d.cost)}
                 {d.unconverted.length > 0 && <div><MixedCurrency amounts={d.unconverted} /></div>}

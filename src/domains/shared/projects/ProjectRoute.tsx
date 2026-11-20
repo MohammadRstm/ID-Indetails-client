@@ -7,6 +7,7 @@ import ClientPortalTab from "../../design/projects/portal/ClientPortalTab";
 import ProjectFilesTab from "../../design/projects/portal/ProjectFilesTab";
 import ProjectHistoryTab from "../../design/projects/history/ProjectHistoryTab";
 import DesignVosTab from "../../design/projects/vos/DesignVosTab";
+import { PlannedHoursPanel } from "../../design/projects/departments/PlannedHours";
 import { LogWorkAction, MyProjectWork, MyTeamLine } from "../../design/work/MyProjectWork";
 import { ExecutionFinancials, SiteTeamLine } from "../../execution/projects/ExecutionOverview";
 import BillingBand from "../billing/BillingBand";
@@ -48,7 +49,16 @@ export default function ProjectRoute() {
     return <ProjectPage panels={PANELS[useDomain()]} />;
 }
 
-/** A Design project's Overview: the person's own work on it, or its progress for someone who sees nobody's work. */
+/**
+ * A Design project's Overview: the person's own work on it, or its progress for someone who sees nobody's work, then
+ * its departments' planned hours (whoever sees the money has them on the Financials tab instead).
+ */
 function DesignProjectOverview({ project }: { project: Project }) {
-    return usePermissions().has(P.WORK_ENTRY_VIEW_OWN) ? <MyProjectWork project={project} /> : <DesignProgress project={project} />;
+    const permissions = usePermissions();
+    return (
+        <>
+            {permissions.has(P.WORK_ENTRY_VIEW_OWN) ? <MyProjectWork project={project} /> : <DesignProgress project={project} />}
+            {!permissions.has(P.FINANCIAL_VIEW) && <PlannedHoursPanel project={project} />}
+        </>
+    );
 }

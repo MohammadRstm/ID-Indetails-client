@@ -10013,6 +10013,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{projectId}/departments/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["SetDepartmentPlanRequest"];
+                    "application/json": components["schemas"]["SetDepartmentPlanRequest"];
+                    "text/json": components["schemas"]["SetDepartmentPlanRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectDepartmentsResponse"];
+                        "text/json": components["schemas"]["ProjectDepartmentsResponse"];
+                        "text/plain": components["schemas"]["ProjectDepartmentsResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{projectId}/departments/shares": {
         parameters: {
             query?: never;
@@ -18345,6 +18390,10 @@ export interface components {
             /** Format: int32 */
             minutes: number;
             name: string;
+            /** Format: int32 */
+            plannedMinutes: null | number;
+            /** Format: double */
+            progress: null | number;
             /** Format: double */
             share: null | number;
             unconverted: components["schemas"]["CurrencyAmountResponse"][];
@@ -18378,6 +18427,12 @@ export interface components {
             minutes: number;
             months: components["schemas"]["DepartmentMonthResponse"][];
             person: components["schemas"]["PersonRefResponse"];
+        };
+        DepartmentPlanRequest: {
+            /** Format: double */
+            plannedHours: null | number;
+            /** Format: int64 */
+            teamId: number;
         };
         DepartmentShareRequest: {
             /** Format: int64 */
@@ -20948,8 +21003,14 @@ export interface components {
         ProjectDepartmentResponse: {
             /** Format: int64 */
             id: number;
+            /** Format: int32 */
+            loggedMinutes: null | number;
             money: null | components["schemas"]["DepartmentMoneyResponse"];
             name: string;
+            /** Format: int32 */
+            plannedMinutes: null | number;
+            /** Format: double */
+            progress: null | number;
             /** Format: double */
             share: null | number;
         };
@@ -22762,6 +22823,9 @@ export interface components {
             attachmentIds?: number[];
             body?: string;
             mentionIds?: number[];
+        };
+        SetDepartmentPlanRequest: {
+            departments?: components["schemas"]["DepartmentPlanRequest"][];
         };
         SetDepartmentSharesRequest: {
             reason?: null | string;

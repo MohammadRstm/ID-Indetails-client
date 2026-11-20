@@ -21,6 +21,7 @@ import { clickable } from "@/shared/utils/clickable";
 import { cx } from "@/shared/utils/cx";
 import type { Project } from "../../../shared/projects/projectsApi";
 import { DepartmentPicker } from "./DepartmentPicker";
+import { PlanHoursModal, PlannedHoursCell } from "./PlannedHours";
 import {
     sharePct, useDepartmentHistory, useProjectDepartments, useSetDepartments, useSetShares,
     type DepartmentChange, type DepartmentMoney, type ProjectDepartment,
@@ -34,17 +35,21 @@ const OTHER_NOTE = "Logged by people in no department, or in one no longer on th
 
 /**
  * "Departments" on a Design project's Financials tab: a row for each department with its share of the price, its
- * budget, what the hours logged in it cost (red when that's over the budget) and what's left. A row opens who logged
- * its hours and what each of them cost.
+ * budget, what the hours logged in it cost (red when that's over the budget), its planned hours with how far along they
+ * are, and what's left. A row opens who logged its hours and what each of them cost.
  */
 export default function DepartmentsPanel({ project, locked, onEditDepartments }: { project: Project; locked: boolean; onEditDepartments?: () => void }) {
     const permissions = usePermissions();
     const departments = useProjectDepartments(project.id);
-    const [dialog, setDialog] = useState<"shares" | "history" | null>(null);
+    const [dialog, setDialog] = useState<"shares" | "history" | "plan" | null>(null);
     const [opened, setOpened] = useState<ProjectDepartment | null>(null);
     const list = departments.data?.departments ?? [];
-    const other = departments.data?.other ? { id: 0, name: "Other hours", share: null, money: departments.data.other } : null;
+    const other = departments.data?.other
+        ? { id: 0, name: "Other hours", share: null, money: departments.data.other, plannedMinutes: null, loggedMinutes: null, progress: null }
+        : null;
     const canShare = !locked && permissions.has(P.FINANCIAL_WRITE) && list.length >= 2;
+    // planned hours are hours, not money: they stay open once the money is locked
+    const canPlan = permissions.has(P.PROJECT_EDIT) && list.length > 0;
     const edit = !locked ? onEditDepartments : undefined;
 
     return (
@@ -54,11 +59,12 @@ export default function DepartmentsPanel({ project, locked, onEditDepartments }:
                     <div className="panel-title">
                         Departments{departments.data?.name && <span className="badge" style={{ marginLeft: 8 }}>{departments.data.name}</span>}
                     </div>
-                    <div className="panel-sub">Each department's share of the payment before TVA, and what the hours logged in it cost. Open one for who logged them. Expenses stay with the project.</div>
+                    <div className="panel-sub">Each department's share of the payment before TVA, what the hours logged in it cost, and its hours against those planned. Open one for who logged them. Expenses stay with the project.</div>
                 </div>
                 <div className="panel-tools">
                     {list.length > 0 && <button className="btn btn-sm" onClick={() => setDialog("history")}><Icon name="clock" />History</button>}
                     {canShare && <button className="btn btn-sm" onClick={() => setDialog("shares")}><Icon name="edit" />Edit shares</button>}
+                    {canPlan && <button className="btn btn-sm" onClick={() => setDialog("plan")}><Icon name="clock" />Plan hours</button>}
                     {edit && <button className="btn btn-sm" onClick={edit}><Icon name="people" />Change departments</button>}
                 </div>
             </div>
@@ -79,6 +85,7 @@ export default function DepartmentsPanel({ project, locked, onEditDepartments }:
                                         <th className="r">Budget</th>
                                         <th style={{ width: 140 }}>Used</th>
                                         <th className="r">Hours</th>
+                                        <th style={{ width: 150 }}>Planned hours</th>
                                         <th className="r">Cost</th>
                                         <th className="r">Left</th>
                                         <th style={{ width: 28 }} />
@@ -93,6 +100,7 @@ export default function DepartmentsPanel({ project, locked, onEditDepartments }:
                     )}
             {dialog === "shares" && <SharesModal project={project} departments={list} onClose={() => setDialog(null)} />}
             {dialog === "history" && <HistoryModal project={project} onClose={() => setDialog(null)} />}
+            {dialog === "plan" && <PlanHoursModal project={project} departments={list} onClose={() => setDialog(null)} />}
             {opened && <DepartmentCostModal project={project} department={opened} onClose={() => setOpened(null)} />}
         </div>
     );
@@ -117,6 +125,7 @@ function DepartmentRow({ department: d, onOpen }: { department: ProjectDepartmen
             <td className="r mono">{budgeted ? money.fmt(m.budget) : "-"}</td>
             <td>{budgeted && <Bar value={m.budget > 0 ? (m.cost / m.budget) * 100 : 0} tone={over ? "loss" : undefined} />}</td>
             <td className="r mono">{fmtH(m.minutes)}</td>
+            <td>{budgeted && <PlannedHoursCell department={d} />}</td>
             <td className={cx("r mono", over && "money down")}>
                 {money.fmt(m.cost)}
                 {m.unconverted.length > 0 && <div><MixedCurrency amounts={m.unconverted} /></div>}

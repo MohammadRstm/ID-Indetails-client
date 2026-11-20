@@ -34,6 +34,7 @@ import PaymentSection from "../../shared/projects/PaymentSection";
 import FinancialBreakdown, { CostFigures } from "./money/FinancialBreakdown";
 import MoneyBand from "./money/MoneyBand";
 import DepartmentsPanel from "./departments/DepartmentsPanel";
+import { PlannedHoursPanel } from "./departments/PlannedHours";
 import BudgetPanel from "../../shared/finance/budget/BudgetPanel";
 import { useProjectExpenses } from "./money/moneyApi";
 import { clickable } from "@/shared/utils/clickable";
@@ -104,8 +105,12 @@ export function DesignFinancials({ project }: { project: Project }) {
     );
 }
 
-/** A Design project's Analytics tab, for those who see everyone's work: the work KPIs and the charts. */
+/**
+ * A Design project's Analytics tab, for those who see everyone's work: the work KPIs and the charts, and the
+ * departments' planned hours for whoever doesn't have them on the Financials tab.
+ */
 export function DesignAnalytics({ project }: { project: Project }) {
+    const seesMoney = usePermissions().has(P.FINANCIAL_VIEW);
     const [drawer, setDrawer] = useState<number | null>(null);
     const [entry, setEntry] = useState<number | null>(null);
     const all = useProjectWork(project.id, {});
@@ -117,6 +122,7 @@ export function DesignAnalytics({ project }: { project: Project }) {
                 : <Kpis project={project} work={all.data} />}
 
             <Analytics project={project} work={all.data} contributors={all.data?.contributors ?? []} onPerson={setDrawer} />
+            {!seesMoney && <PlannedHoursPanel project={project} />}
 
             {drawer != null && (
                 <ContributorDrawer projectId={project.id} projectTitle={project.title} personId={drawer} range={allRange} workQ=""
