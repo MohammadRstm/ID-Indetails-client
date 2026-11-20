@@ -628,6 +628,9 @@ table { line-height: normal; font-weight: normal; }
 .tabs .tab { position: relative; z-index: 1; padding: 8px 14px; border-bottom: 0; border-radius: 9px 9px 0 0; transition: color .15s ease, background-color .15s ease; }
 .tabs .tab:hover:not(.on) { background: color-mix(in srgb, var(--surface-3) 75%, transparent); }
 .tabs .tab.on { font-weight: 650; }
+/* the section's icon, before its name: quieter until the section is open */
+.tabs .tab .ic { width: 14px; height: 14px; margin-right: 6px; vertical-align: -2px; opacity: .8; }
+.tabs .tab.on .ic { opacity: 1; color: var(--accent); }
 .tabs-cover { position: absolute; top: 4px; bottom: 0; left: 0; z-index: 0; border-radius: 10px 10px 0 0; background: var(--surface);
   box-shadow: 0 -2px 6px -4px rgba(0, 0, 0, .12); pointer-events: none; }
 .tabs-cover::before, .tabs-cover::after { content: ""; position: absolute; bottom: 0; width: 10px; height: 10px; }

@@ -113,12 +113,12 @@ function FinancialsPage({ domain }: { domain: Domain }) {
                     ]} />
 
                     <Tabs value={tab} onChange={setTab} items={[
-                        { key: "overview", label: "Overview" },
-                        { key: "projects", label: "Projects", count: projects.data?.projects.length ?? null },
-                        { key: "clients", label: "Clients", count: clients.data?.length ?? null },
-                        { key: "billing", label: "Billing", count: invoiceCount ?? null },
-                        { key: "costs", label: "Costs" },
-                        { key: "insights", label: "Insights" },
+                        { key: "overview", label: "Overview", icon: "overview" },
+                        { key: "projects", label: "Projects", icon: "projects", count: projects.data?.projects.length ?? null },
+                        { key: "clients", label: "Clients", icon: "briefcase", count: clients.data?.length ?? null },
+                        { key: "billing", label: "Billing", icon: "file", count: invoiceCount ?? null },
+                        { key: "costs", label: "Costs", icon: "trendDown" },
+                        { key: "insights", label: "Insights", icon: "target" },
                     ]} />
 
                     {tab === "overview" && (s ? <OverviewTab summary={s} months={monthly.data} projects={projects.data} label={period.label} tiles={tiles}

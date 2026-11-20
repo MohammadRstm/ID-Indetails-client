@@ -23,6 +23,7 @@ import CompanyPeople from "./people/CompanyPeople";
 import { MeetingsBoard } from "../shared/meetings/Meetings";
 import { loadFailed } from "@/api/queryState";
 import HelpHint from "@/domains/shared/help/HelpHint";
+import type { IconName } from "@/shared/icons/icons";
 
 /** One amount per currency (costs come per source: materials, labour, expenses). */
 const merged = (amounts: { currency: string; amount: number }[]) =>
@@ -54,11 +55,11 @@ function Line({ label, value, strong, rule, sub, tone }: { label: string; value:
 export default function CompanyOverviewPage() {
     const permissions = usePermissions();
     const [params, setParams] = useSearchParams();
-    const tabs: { key: Tab; label: string }[] = [
-        { key: "overview", label: "Overview" },
-        ...(permissions.has(P.EMPLOYEE_VIEW) ? [{ key: "people" as const, label: "People" }] : []),
-        { key: "teams", label: "Departments" },
-        ...(permissions.has(P.MEETING_MANAGE) ? [{ key: "meetings" as const, label: "Meetings" }] : []),
+    const tabs: { key: Tab; label: string; icon: IconName }[] = [
+        { key: "overview", label: "Overview", icon: "overview" },
+        ...(permissions.has(P.EMPLOYEE_VIEW) ? [{ key: "people" as const, label: "People", icon: "people" as const }] : []),
+        { key: "teams", label: "Departments", icon: "building" },
+        ...(permissions.has(P.MEETING_MANAGE) ? [{ key: "meetings" as const, label: "Meetings", icon: "calendar" as const }] : []),
     ];
     const requested = params.get("tab");
     const tab = tabs.find((t) => t.key === requested)?.key ?? "overview";
