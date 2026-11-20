@@ -80,12 +80,12 @@ export default function ReportsPage() {
 
     const tabs = (
         <Tabs value={shownTab} onChange={setTab} items={[
-            { key: "overview" as const, label: "Overview" },
-            { key: "projects" as const, label: "By project", count: r?.byProject.length ?? null },
-            { key: "people" as const, label: "By employee", count: r?.byPerson.length ?? null },
-            ...(seesUtilization ? [{ key: "utilization" as const, label: "Utilization" }] : []),
-            ...(seesMoney ? [{ key: "money" as const, label: "Money" }] : []),
-            ...(seesWork ? [{ key: "entries" as const, label: "Work entries", count: r?.entryCount ?? null }] : []),
+            { key: "overview" as const, label: "Overview", icon: "overview" as const },
+            { key: "projects" as const, label: "By project", icon: "projects" as const, count: r?.byProject.length ?? null },
+            { key: "people" as const, label: "By employee", icon: "people" as const, count: r?.byPerson.length ?? null },
+            ...(seesUtilization ? [{ key: "utilization" as const, label: "Utilization", icon: "timer" as const }] : []),
+            ...(seesMoney ? [{ key: "money" as const, label: "Money", icon: "card" as const }] : []),
+            ...(seesWork ? [{ key: "entries" as const, label: "Work entries", icon: "list" as const, count: r?.entryCount ?? null }] : []),
         ]} />
     );
 
