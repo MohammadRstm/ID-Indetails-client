@@ -60,6 +60,7 @@ A feature usually needs the API and the client together: one `MR-<Topic>` branch
   - put the query key in `src/api/keys.ts`;
   - make the mutations that change that data invalidate it, e.g. billing changes also invalidate `keys.box`.
 - **Forms** show each validation error live, next to its field (`useFormErrors`, `FieldError`). Money amounts use `AmountField`, which shows commas as you type.
+- **Errors on screen:** show a failed request's message with `<ErrorMessage error={…} />` (or `ErrorText` for a message you already have, from `shared/components/Feedback/ErrorText.tsx`), so an unexpected failure links to Contact the developer. `FieldError`, `LoadError` and toasts already do.
 
 ### Working on the user's machines
 
@@ -88,11 +89,12 @@ This file is how every new session learns the project, so keep it true:
   - Edit JSON fixtures in `src/test/fixtures` by hand, with minimal diffs. Re-serialising them rewrites the whole file.
 - **ESLint `react-refresh/only-export-components`:** a component file exports only components. Put helpers and constants in a `*Api.ts` or a plain `.ts` file.
 - **`clickable(..., "link")`** sets `role="link"`. Wrap the element in another element if it must also be a `listitem`.
-- **Execution employees** (site staff) see only Daily log, My sites and Profile. Design-only pages use `designOnly(...)` in the route table, and Execution-only pages use `executionOnly(...)`.
+- **Pay** is a monthly salary for everyone: there is no hourly pay (15 November 2026). Admins, super admins and site staff earn no overtime (`paidMonthlyOnly` in `domains/design/pay/payRules.ts`). A pay change asks from when, may be backdated, and replaces any pay set from that day (the replaced entry stays in the history, `supersededAt`). The profile form shows the API's preview (`usePreviewPay`, `PayPreview.tsx`) before it saves, and never works pay out itself. A change that would take a running client project to zero profit comes back `pay_change_held`: `FormFailure` lets only super admins force it, and `BlockedChangeModal` shows every project it reaches.
+- **Execution employees** (site staff) see only Daily log, My sites, Profile and Settings (Appearance and Contact). Design-only pages use `designOnly(...)` in the route table, and Execution-only pages use `executionOnly(...)`.
 
 ## Commands
 
-- `npm run dev`: Vite at http://localhost:5173 (strict port). It proxies `/api`, `/hubs` (WebSocket) and `/openapi` to the API at `https://localhost:7187`, or to `HOURLINE_API` if set. The API must be running for the app to work. Tests don't need it.
+- `npm run dev`: Vite at http://localhost:5173 (strict port). It proxies `/api`, `/hubs` (WebSocket) and `/openapi` to the API at `https://localhost:7187`, or to `HOURLINE_API` if set. The API must be running for the app to work. Tests don't need it. The sign-in page then has the development account picker (`auth/DevAccountPicker.tsx`): it signs in as any account without its password, through the API's Development-only `/api/dev/*`. It is loaded only when `import.meta.env.DEV` and not in tests (`DevAccountPicker` in `app/routing/pages.ts`), so production builds don't contain it.
 - `npm run build`: `tsc -b` and then `vite build`.
 - `npm run lint`: ESLint. `npm run lint:summary` prints a short summary.
 - `npm test`: Vitest, run once. `npm run test:watch` re-runs on change.

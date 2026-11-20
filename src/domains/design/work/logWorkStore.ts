@@ -11,6 +11,8 @@ export type LogWorkOptions = {
     projectId?: number;
     /** "yyyy-MM-dd"; today when left out. */
     date?: string;
+    /** The day can't be changed: a day picked on My work's activity. */
+    fixedDay?: boolean;
     startMin?: number;
     endMin?: number;
     /** "Log overtime": opens on the end of the working day, up to now. */

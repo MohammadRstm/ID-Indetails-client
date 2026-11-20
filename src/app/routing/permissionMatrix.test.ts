@@ -27,22 +27,24 @@ function outcome(user: CurrentUser, domain: Domain, path: string): Outcome {
 
 const PATHS = [
     "overview", "projects", "projects/:id", "clients", "clients/:id", "people", "people/:id", "financials",
-    "my-work", "meetings", "activity", "reports", "profile", "settings", "notifications", "messages", "assistant/:chatId?", "help",
-    "daily-log", "sites", "site-logs", "pocket", "time-off", "boq-sites", "boq-sites/:id",
+    "my-work", "meetings", "calendar", "activity", "reports", "profile", "settings", "notifications", "messages", "assistant/:chatId?", "help",
+    "daily-log", "sites", "site-logs", "pocket", "time-off", "boq-sites", "boq-sites/:id", "advances", "log-hours", "requirements",
 ] as const;
 
 // one letter per path, in PATHS order: o open, h home, d denied (everyone here has Proton, so its page opens in their business)
-// admins set meetings from a tab on their Overview, super admins from the company overview: no Meetings page for them
+// admins set meetings from a tab on their Overview, super admins from the company overview: no Meetings or Calendar page for them
+// the Calendar is every employee's, in either business; Log hours is a Design employee's start page
+// Settings are everyone's: the theme and Contact the developer, and the sections each person may change
 const MATRIX: Record<PersonaName, Record<Domain, string>> = {
-    superAdmin:        { design: "oooooooohhoohooooo hhdd h dd", execution: "ooooodoohhddhooooo hhoo h dd" },
+    superAdmin:        { design: "oooooooohhhoohooooo hhdd h dd o hh", execution: "ooooodoohhhddhooooo hhoo h dd o hh" },
     // admins: no Financials until a super admin hands them the money
-    designAdmin:       { design: "ooooooodhhoohooooo hhdd h dd", execution: "hhhhhhhhhhhhhhhhhh hhhh h hh" },
-    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhh hhhh h hh", execution: "ooooododhhddhooooo hhod h dd" },
-    designEmployee:    { design: "doodddddooddodoooo dddd o dd", execution: "hhhhhhhhhhhhhhhhhh hhhh h hh" },
+    designAdmin:       { design: "ooooooodhhhoohooooo hhdd h dd o hh", execution: "hhhhhhhhhhhhhhhhhhh hhhh h hh h hh" },
+    executionAdmin:    { design: "hhhhhhhhhhhhhhhhhhh hhhh h hh h hh", execution: "ooooododhhhddhooooo hhod h dd o hh" },
+    designEmployee:    { design: "doodddddoooddoooooo dddd o dd o oo", execution: "hhhhhhhhhhhhhhhhhhh hhhh h hh h hh" },
     // site staff: their daily log and their sites, which open from My sites, not the project list
-    executionEmployee: { design: "hhhhhhhhhhhhhhhhhh hhhh h hh", execution: "ddodddddddddodoooo oodd d dd" },
+    executionEmployee: { design: "hhhhhhhhhhhhhhhhhhh hhhh h hh h hh", execution: "ddodddddddoddoooooo oodd d dd o dd" },
     // the website's staff belong to no business
-    websiteAdmin:      { design: "hhhhhhhhhhhhhhhhhh hhhh h hh", execution: "hhhhhhhhhhhhhhhhhh hhhh h hh" },
+    websiteAdmin:      { design: "hhhhhhhhhhhhhhhhhhh hhhh h hh h hh", execution: "hhhhhhhhhhhhhhhhhhh hhhh h hh h hh" },
 };
 
 const LETTER: Record<string, Outcome> = { o: "open", h: "home", d: "denied" };
@@ -83,10 +85,10 @@ describe("the permission matrix", () => {
     it("keeps the company area to those whose permissions reach it", () => {
         const company = (name: PersonaName) =>
             Object.fromEntries(companyRoutes.map((r) => [r.path, r.access(permissionsOf(personas[name])) ? "open" : "denied"]));
-        // a domain admin manages settings in their business: the company's Settings need the company area too
+        // a domain admin has Settings in their business: the company's need the company area
         const onlyInbox = {
             overview: "denied", overhead: "denied", salaries: "denied", "project-pay": "denied", schedules: "denied", "time-off": "denied", website: "open", proton: "denied", settings: "denied",
-            profile: "open", notifications: "open", messages: "open", "assistant/:chatId?": "open", help: "open",
+            profile: "open", advances: "open", notifications: "open", messages: "open", "assistant/:chatId?": "open", help: "open",
         };
         expect(company("superAdmin")).toEqual({ ...onlyInbox, overview: "open", overhead: "open", salaries: "open", "project-pay": "open", schedules: "open", "time-off": "open", proton: "open", settings: "open" });
         for (const name of ["designAdmin", "executionAdmin", "designEmployee", "executionEmployee"] as PersonaName[]) {
@@ -99,7 +101,7 @@ describe("the permission matrix", () => {
     it("opens the website area's pages by the website's permissions, and its staff to whoever may see people", () => {
         const website = (name: PersonaName) =>
             Object.fromEntries(websiteRoutes.map((r) => [r.path, r.access(permissionsOf(personas[name])) ? "open" : "denied"]));
-        const pages = { projects: "open", analytics: "open", services: "open", locations: "open", contact: "open", site: "open", profile: "open", notifications: "open", messages: "open", help: "open" };
+        const pages = { projects: "open", analytics: "open", services: "open", locations: "open", contact: "open", site: "open", settings: "open", profile: "open", advances: "open", notifications: "open", messages: "open", help: "open" };
         expect(website("superAdmin")).toEqual({ ...pages, staff: "open" });
         expect(website("websiteAdmin")).toEqual({ ...pages, staff: "denied" });
         // seeing the website's content isn't seeing its visitors

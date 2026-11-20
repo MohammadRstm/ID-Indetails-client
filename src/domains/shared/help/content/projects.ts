@@ -8,9 +8,11 @@ export const projects: Article[] = [
         category: "projects",
         who: has(P.PROJECT_CREATE),
         summary: "New project, at the top of any page, opens the form. Design projects are for a client or internal; Execution sites are always for a client.",
-        ask: ["new project", "create project", "add project", "start a project", "new site", "create site", "internal project"],
+        ask: ["new project", "create project", "add project", "start a project", "new site", "create site", "internal project", "project code", "building code"],
         blocks: [
             steps(step("Choose **New project** in the top bar (or on the Projects page).", "New project")),
+            para("Its **project code** (such as ID26Q4001: the year, the quarter and its number that quarter) and its **building code** (usually the name's initials) are filled in for you as you name it, and you can change either. Together they make its full code, ID26Q4001-VK, which you can search for."),
+            para("It also gets a **colour** of its own, picked for you so it differs from the other active and on-hold projects where it can. Its tile and the work logged on it are drawn in it. You can change it with the project's details."),
             only(and(sees("design"), has(P.FINANCIAL_VIEW)), para("**Design:** a client project has a client and the customer payment agreed with them (its revenue). An internal project has neither: it only collects costs.")),
             only(and(sees("design"), not(has(P.FINANCIAL_VIEW))), para("**Design:** a client project has a client; an internal project has none. The customer payment is left to a super admin, who sets it later.")),
             only(and(sees("execution"), has(P.PROJECT_PRICING_MANAGE)), para("**Execution:** a site is always for a client. You set its supervision rate (10% to begin with) and its TVA (11% to begin with). Its work price is not typed in: it is set when a bill of quantities is agreed with the client.")),
@@ -28,7 +30,7 @@ export const projects: Article[] = [
         category: "projects",
         who: has(P.PROJECT_EDIT),
         summary: "On the project, open More → Edit details. The owner can also be changed from the project's header, and the project's photo by clicking its tile.",
-        ask: ["edit project", "rename project", "change owner", "project owner", "change client", "project details", "change dates", "project photo", "project picture", "project image"],
+        ask: ["edit project", "rename project", "change owner", "project owner", "change client", "project details", "change dates", "project photo", "project picture", "project image", "project colour", "project color", "change colour"],
         blocks: [
             steps(step("Open the project, then **More → Edit details**.", "Projects", "the project", "More")),
             list(
@@ -36,6 +38,7 @@ export const projects: Article[] = [
                 "The new owner is told.",
                 "Once a project has an invoice or a payment, it can't move to another client or become internal: invoices and payments keep the client they were made for.",
                 "A finished project can't be edited until it is reopened.",
+                "**Colour**: pick one on the wheel (and its brightness on the slider), choose one of the swatches, or type a hex code such as #2F6FEB. The project's tile, its bars on the day timelines, My work and the reports, its own charts and its Timeline tab are drawn in it.",
                 "Click the project's tile beside its name to **Choose a photo** from your device. It then shows instead of the icon on the project's page, the projects list and wherever the project is listed. **Change photo** or **Take the photo off** go back to it there. Whoever sees the business sees the photo.",
             ),
             only(and(sees("design"), has(P.FINANCIAL_VIEW)), para("The customer payment (a Design project's agreed revenue) is the first thing on the **Financials** tab: its pencil changes it, with why it changes, and **History** lists every change. **More → Client & type** turns an internal project into client work, or client work into internal.")),

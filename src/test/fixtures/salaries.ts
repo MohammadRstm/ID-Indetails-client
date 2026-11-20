@@ -32,7 +32,7 @@ export const salaries = {
 
 type YearMonth = Schemas["SalaryYearMonthResponse"];
 const monthsOf2026 = Array.from({ length: 9 }, (_, i) => `2026-0${i + 1}-01`);
-const salaried = (month: string, total: number): YearMonth => ({ month, basis: "monthly", amount: 2000, currency: "USD", total });
+const salaried = (month: string, total: number): YearMonth => ({ month, amount: 2000, currency: "USD", total });
 const person = (userId: number, name: string, role: string, domain: string | null, months: YearMonth[]): Schemas["SalaryYearRowResponse"] =>
     ({ userId, name, email: `${name.split(" ")[0].toLowerCase()}@hourline.test`, role, domain, team: null, photoFileId: null, position: null, months });
 
@@ -45,8 +45,8 @@ export const salaryYear: Schemas["SalaryYearResponse"] = {
     months: monthsOf2026,
     rows: [
         person(3, "Sarah Haddad", "employee", "design", monthsOf2026.map((m) => salaried(m, m === "2026-09-01" ? 1800 : 2000))),
-        person(2, "Nadia Karam", "admin", "design", [{ month: "2026-09-01", basis: "monthly", amount: 2500, currency: "USD", total: 2500 }]),
-        person(12, "Hiba Saleh", "employee", "execution", [{ month: "2026-08-01", basis: "monthly", amount: 45_000_000, currency: "LBP", total: 45_000_000 }]),
+        person(2, "Nadia Karam", "admin", "design", [{ month: "2026-09-01", amount: 2500, currency: "USD", total: 2500 }]),
+        person(12, "Hiba Saleh", "employee", "execution", [{ month: "2026-08-01", amount: 45_000_000, currency: "LBP", total: 45_000_000 }]),
     ],
     totals: [
         ...monthsOf2026.map((month) => ({ month, currency: "USD", people: month === "2026-09-01" ? 2 : 1, total: month === "2026-09-01" ? 4300 : 2000 })),

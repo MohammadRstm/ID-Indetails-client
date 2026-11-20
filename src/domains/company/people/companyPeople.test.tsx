@@ -126,15 +126,15 @@ describe("the company's people", () => {
         expect(within(dialog).queryByText("Choose the department they work in.")).not.toBeInTheDocument();
         await userEvent.click(within(dialog).getByLabelText("Department"));
         await userEvent.click(screen.getByRole("option", { name: "Site" }));
-        expect(within(dialog).getByText("Enter their pay per month.")).toBeInTheDocument();
-        await userEvent.type(within(dialog).getByLabelText("Pay"), "900");
+        expect(within(dialog).getByText("Enter their monthly salary.")).toBeInTheDocument();
+        await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "900");
         // site staff log no hours, so they earn no overtime: the API keeps its suggested rate quietly
         expect(within(dialog).queryByLabelText("Overtime rate")).not.toBeInTheDocument();
         await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
         expect(await screen.findByRole("dialog", { name: "Invitation sent" })).toBeInTheDocument();
         expect(sent).toEqual([{
             email: "sami@id-indetails.test", role: "employee", domainCode: "execution", teamId: 15, position: null,
-            pay: { basis: "monthly", amount: 900, currency: "USD" },
+            pay: { amount: 900, currency: "USD" },
         }]);
     });
 
@@ -147,17 +147,22 @@ describe("the company's people", () => {
             http.get("/api/employees/43/pay", () => HttpResponse.json([])),
             http.put("/api/employees/43", () => HttpResponse.json(people.employee)),
             http.post("/api/employees/43/pay", async ({ request }) => { pays.push(await request.json()); return HttpResponse.json({}); }),
+            http.post("/api/employees/43/pay/preview", () => HttpResponse.json({
+                effectiveFrom: "2026-09-30", replaces: [], projects: [],
+                months: [{ month: "2026-09-01", salaryBefore: null, currencyBefore: null, salaryAfter: 4500, currencyAfter: "USD", advanceBefore: 0, advanceAfter: 0, advanceCurrency: null }],
+            })),
             ...handlers);
         const row = (await screen.findByText("Sami Khoury")).closest("tr") as HTMLElement;
         await userEvent.click(within(row).getByRole("button", { name: "More actions" }));
         await userEvent.click(screen.getByRole("button", { name: "Edit profile and pay…" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit Sami's profile" });
-        // a super admin's pay is a salary: no choice of hourly pay
+        // a super admin's pay is a fixed salary
         expect(await within(dialog).findByText("Fixed salary")).toBeInTheDocument();
-        expect(within(dialog).queryByRole("tablist", { name: "Pay basis" })).not.toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "4500");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        await within(dialog).findByRole("table", { name: "Salary by month" });
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-        await waitFor(() => expect(pays).toEqual([{ basis: "monthly", amount: 4500, currency: "USD", effectiveFrom: "2026-09-30" }]));
+        await waitFor(() => expect(pays).toEqual([{ amount: 4500, currency: "USD", effectiveFrom: "2026-09-30" }]));
     });
 
     it("changes another super admin's sign-in address, saying next to it when the address is taken", async () => {

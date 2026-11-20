@@ -17,6 +17,9 @@ export const DAY = 1440;
 export const MIN_ENTRY = 5;
 /** Where a day starts when the schedule doesn't say (9 AM). */
 export const DEFAULT_START = 9 * 60;
+
+/** "What did you work on?": at most this many characters, in a box that grows to 4 rows. */
+export const DESCRIPTION_MAX = 300;
 /** What a day off's timeline shows before anything is logged on it: 7 AM to 9 PM. */
 export const DAY_OFF_HOURS: [number, number] = [7 * 60, 21 * 60];
 
@@ -130,7 +133,7 @@ export function checkLog(o: LogCheck): string | null {
 export function trackEntry(e: WorkEntry, day: string): TrackEntry {
     const sp = spanOn(e, day);
     return {
-        id: e.id, s: sp.s, e: sp.e, description: e.description, projectTitle: e.project.title,
+        id: e.id, s: sp.s, e: sp.e, description: e.description, projectTitle: e.project.title, tint: e.project.tint,
         range: fmtRange(e.startedAt, e.endedAt), overtime: e.overtimeMinutes, locked: !e.canEdit,
     };
 }

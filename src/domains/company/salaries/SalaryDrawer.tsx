@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { AREAS } from "@/app/routing/areas";
 import { canOpen } from "@/app/routing/routeTable";
+import { useCurrentUser } from "@/app/session/useSession";
 import { ProjectTile } from "@/shared/components/Data/Bits";
 import { Kpi } from "@/shared/components/Data/Kpi";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -12,12 +14,15 @@ import Avatar from "@/shared/components/Identity/Avatar";
 import { Drawer } from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { companyToday, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange } from "@/shared/format/time";
+import Icon from "@/shared/icons/Icon";
 import { clickable } from "@/shared/utils/clickable";
 import { cx } from "@/shared/utils/cx";
 import { hasFixedSalary } from "@/domains/design/pay/payRules";
 import { useMyOvertime } from "@/domains/design/work/workApi";
-import { policyOn, useWorkingTime } from "@/domains/shared/settings/settingsApi";
+import { AdvanceStatusBadge } from "./AdvanceStatusBadge";
+import { amountOf, monthKey } from "./advanceMonths";
 import ExcuseHours from "./ExcuseHours";
+import { GiveAdvanceModal } from "./SalaryAdvanceWindows";
 import { useSalary, type SalaryDetail, type SalaryRow } from "./salariesApi";
 import { loadFailed } from "@/api/queryState";
 
@@ -45,8 +50,14 @@ export default function SalaryDrawer({ row, month, multiplier, onClose }: Salary
     const d = detail.data;
     const domain = row.domain as Domain | null;
     const profile = domain && canOpen(permissions, domain, `people/${row.userId}`) ? `/${domain}/people/${row.userId}` : null;
+    const me = useCurrentUser();
+    const [giving, setGiving] = useState(false);
+    // the API refuses an advance on one's own salary, so the button is left out of one's own row
+    const canGive = permissions.has(P.SALARY_ADVANCE_MANAGE) && me.id !== row.userId;
+    const advancesLink = (id?: number) => { onClose(); navigate(id == null ? "/company/salaries?view=advances" : `/company/salaries?view=advances&advance=${id}`); };
 
     return (
+        <>
         <Drawer title={row.name} onClose={onClose}
             head={
                 <div className="row" style={{ gap: 11 }}>
@@ -66,8 +77,11 @@ export default function SalaryDrawer({ row, month, multiplier, onClose }: Salary
             {loadFailed(detail) ? <LoadError error={detail.error} retry={() => detail.refetch()} what={`${row.name.split(" ")[0]}'s pay`} />
                 : !d ? <SkeletonLines lines={8} />
                     : <DetailBody detail={d} month={month} multiplier={multiplier} canExcuse={permissions.has(P.HOURS_EXCUSE)} seesWork={permissions.has(P.WORK_ENTRY_VIEW_ALL)}
+                        canGive={canGive} onGive={() => setGiving(true)} onAdvances={advancesLink}
                         openProject={(id) => canOpen(permissions, "design", `projects/${id}`) ? () => { onClose(); navigate(`/design/projects/${id}`); } : null} />}
         </Drawer>
+        {giving && <GiveAdvanceModal person={{ id: row.userId, name: row.name }} currency={row.currency} onClose={() => setGiving(false)} />}
+        </>
     );
 }
 
@@ -77,15 +91,19 @@ type BodyProps = {
     multiplier: number;
     canExcuse: boolean;
     seesWork: boolean;
+    /** Whether this person may be given an advance from here, and what to do about advances. */
+    canGive: boolean;
+    onGive: () => void;
+    /** Opens the Advances view, on one advance when it is given. */
+    onAdvances: (id?: number) => void;
     /** How to open a project from the list, when this person may. */
     openProject: (projectId: number) => (() => void) | null;
 };
 
-function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openProject }: BodyProps) {
+function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, canGive, onGive, onAdvances, openProject }: BodyProps) {
     const s = d.salary;
     const cur = s.currency;
     const ruled = s.expectedMinutes != null;
-    const monthly = s.basis === "monthly";
     const otLogged = s.overtimeMinutes + s.madeUpMinutes;
     const short = s.shortMinutes ?? 0;
     const wholeMonth = d.excuses.find((x) => x.kind === "whole_month");
@@ -125,7 +143,7 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openPro
                     <div className="mt-s"><ExcuseHours detail={d} month={month} canExcuse={canExcuse} /></div>
                 </div>
             )}
-            {!ruled && monthly && (canExcuse || d.excuses.length > 0) && (
+            {!ruled && (canExcuse || d.excuses.length > 0) && (
                 <div className="mt">
                     <div className="u" style={{ marginBottom: 6 }}>Unpaid leave</div>
                     <ExcuseHours detail={d} month={month} canExcuse={canExcuse} />
@@ -135,15 +153,19 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openPro
             <div className="mt">
                 <div className="u" style={{ marginBottom: 6 }}>How the pay adds up</div>
                 <div className="pay-lines">
-                    {monthly ? (
+                    {d.parts.length > 1 ? d.parts.map((p) => (
+                        // the pay changed this month: each stretch at the salary in force on its days
+                        <div key={p.from}>
+                            <span>{`${fmtDate(p.from)}–${fmtDate(p.to)} at ${cash(p.salary, cur)} a month · ${p.days} working day${p.days === 1 ? "" : "s"}`}</span>
+                            <span className="mono">{cash(p.pay, cur)}</span>
+                        </div>
+                    )) : (
                         <div>
                             <span>{s.proRated
                                 ? `Monthly salary ${cash(s.amount, cur)}, pro-rated · employed ${s.workingDaysPaid} of ${s.workingDays} working days${s.leftOn ? `, left ${fmtDate(s.leftOn)}` : ""}`
                                 : "Monthly salary"}</span>
                             <span className="mono">{cash(s.basePay + s.deduction, cur)}</span>
                         </div>
-                    ) : (
-                        <HourlyLines detail={d} month={month} />
                     )}
                     {s.deduction > 0 && (
                         <div className="down">
@@ -164,17 +186,20 @@ function DetailBody({ detail: d, month, multiplier, canExcuse, seesWork, openPro
                     )}
                     <div className="pay-total"><span>To pay</span><span className="mono">{cash(s.total, cur)}</span></div>
                 </div>
-                {monthly && (
-                    <div className="hint mt-s">
-                        Salaried: {s.proRated ? "the salary is pro-rated by the working days they were employed" : "the salary is paid in full"}.
-                        {" "}An hour this month is {cash(s.amount, cur)} ÷ the month's paid hours = {cash(s.hourlyRate, cur, true)}/h (it prices any deduction)
-                        {s.tracksHours ? `; overtime is paid at the overtime rate set with the pay, ${cash(s.overtimeRate, cur, true)}/h (the salary ÷ 184 unless set otherwise), whatever the month` : ""}
-                        {s.overtimeThresholdMinutes != null ? `, and only for the hours counted past ${fmtH(s.overtimeThresholdMinutes)} (everything logged plus paid leave; the latest overtime is the part paid)` : ""}.
-                        {s.deduction > 0 && d.missedDays.length > 0 && !d.inProgress ? " A whole day missed costs the full paid day, its break included." : ""}
-                    </div>
-                )}
+                <div className="hint mt-s">
+                    {d.parts.length > 1
+                        ? "Their pay changed this month: each working day is paid at the salary in force that day."
+                        : `Salaried: ${s.proRated ? "the salary is pro-rated by the working days they were employed" : "the salary is paid in full"}.`}
+                    {d.parts.length > 1
+                        ? ` An hour this month comes to ${cash(s.hourlyRate, cur, true)}/h, the days' rates together (it prices any hours deducted)`
+                        : ` An hour this month is ${cash(s.amount, cur)} ÷ the month's paid hours = ${cash(s.hourlyRate, cur, true)}/h (it prices any deduction)`}
+                    {s.tracksHours ? `; overtime is paid at the overtime rate set with the pay, ${cash(s.overtimeRate, cur, true)}/h (the salary ÷ 184 unless set otherwise), whatever the month` : ""}
+                    {s.overtimeThresholdMinutes != null ? `, and only for the hours counted past ${fmtH(s.overtimeThresholdMinutes)} (everything logged plus paid leave; the latest overtime is the part paid)` : ""}.
+                    {s.deduction > 0 && d.missedDays.length > 0 && !d.inProgress ? " A whole day missed costs the full paid day, its break included." : ""}
+                </div>
             </div>
 
+            {(canGive || (d.advances ?? []).length > 0) && <AdvanceSection detail={d} month={month} canGive={canGive} onGive={onGive} onAdvances={onAdvances} />}
             {s.tracksHours && d.projects.length > 0 && <HoursByProject detail={d} multiplier={multiplier} openProject={openProject} />}
             {s.tracksHours && seesWork && <OvertimeDays userId={s.userId} month={month} />}
         </>
@@ -211,7 +236,7 @@ function HoursByProject({ detail: d, multiplier, openProject }: { detail: Salary
                                             <div style={{ minWidth: 0 }}>
                                                 <div className="trunc" style={{ fontWeight: 600 }}>{p.title}</div>
                                                 <div className="muted" style={{ fontSize: "11.5px" }}>
-                                                    {p.entries} entr{p.entries === 1 ? "y" : "ies"}{p.madeUpMinutes ? ` · ${fmtH(p.madeUpMinutes)} made up` : ""}
+                                                    {p.code && <span className="mono">{p.code} · </span>}{p.entries} entr{p.entries === 1 ? "y" : "ies"}{p.madeUpMinutes ? ` · ${fmtH(p.madeUpMinutes)} made up` : ""}
                                                 </div>
                                             </div>
                                         </div>
@@ -226,44 +251,12 @@ function HoursByProject({ detail: d, multiplier, openProject }: { detail: Salary
                 </table>
             </div>
             <div className="hint mt-s">
-                {s.basis === "monthly" && s.overtimeThresholdMinutes != null
+                {s.overtimeThresholdMinutes != null
                     ? "Every hour, overtime too, is priced at the salary's rate that month: the overtime pay is for the month as a whole, so no project carries it."
-                    : s.basis === "monthly"
-                    ? `Hours are priced at the salary's rate that month, overtime at the overtime rate${multiplier !== 1 ? ` ×${multiplier}` : ""}.`
-                    : `Hours are priced at their rate on the day worked${multiplier !== 1 ? `, overtime at ×${multiplier}` : ""}.`}
-                {s.basis === "monthly"
-                    ? " The salary is paid whatever the projects, and its deductions belong to none, so these don't add up to it."
-                    : (d.paidBreakPay > 0 ? " Paid breaks belong to no project, so these don't add up to the pay." : "")}
+                    : `Hours are priced at the salary's rate that month, overtime at the overtime rate${multiplier !== 1 ? ` ×${multiplier}` : ""}.`}
+                {" The salary is paid whatever the projects, and its deductions belong to none, so these don't add up to it."}
             </div>
         </div>
-    );
-}
-
-/** Hours at the rate of the day they were worked, and the paid break of each working day worked. */
-function HourlyLines({ detail: d, month }: { detail: SalaryDetail; month: string }) {
-    const s = d.salary;
-    const cur = s.currency;
-    // the company's break that month (not the viewer's own schedule, which a salary:view holder may not have)
-    const breakMinutes = policyOn(useWorkingTime().data, `${month.slice(0, 7)}-01`)?.breakMinutes ?? 0;
-    return (
-        <>
-            <div>
-                <span>Normal hours · {fmtH(s.normalMinutes)}{s.madeUpMinutes ? ` + ${fmtH(s.madeUpMinutes)} made up from overtime` : ""} at {cash(s.hourlyRate, cur, true)}/h</span>
-                <span className="mono">{cash(s.basePay - d.paidBreakPay, cur)}</span>
-            </div>
-            {d.paidBreakPay > 0 && (
-                <div>
-                    <span>Paid breaks · {d.paidBreakDays} working day{d.paidBreakDays === 1 ? "" : "s"}{breakMinutes ? ` × ${fmtH(breakMinutes)}` : ""}</span>
-                    <span className="mono">{cash(d.paidBreakPay, cur)}</span>
-                </div>
-            )}
-            {d.timeOffPay > 0 && (
-                <div>
-                    <span>Paid time off</span>
-                    <span className="mono">{cash(d.timeOffPay, cur)}</span>
-                </div>
-            )}
-        </>
     );
 }
 
@@ -290,7 +283,7 @@ function OvertimeDays({ userId, month }: { userId: number; month: string }) {
                                         <b className="mono ot-text">{fmtDur(day.overtimeMinutes)}</b>
                                     </div>
                                     {day.entries.map((e) => (
-                                        <div key={e.workEntryId} className="ot-item" style={{ cursor: "default" }}>
+                                        <div key={e.workEntryId} className={cx("ot-item", e.projectTint && "pc")} style={{ cursor: "default", ["--pc" as string]: e.projectTint ?? undefined }}>
                                             <ProjectTile icon={e.projectIcon} tint={e.projectTint} size="sm" />
                                             <div className="grow" style={{ minWidth: 0 }}>
                                                 <div className="trunc">{e.description}</div>
@@ -306,6 +299,40 @@ function OvertimeDays({ userId, month }: { userId: number; month: string }) {
                             ))}
                         </div>
                     )}
+        </div>
+    );
+}
+
+/** The person's salary advances: each one's status, amount and what it takes this month, and a way to give another. */
+function AdvanceSection({ detail: d, month, canGive, onGive, onAdvances }: { detail: SalaryDetail; month: string; canGive: boolean; onGive: () => void; onAdvances: (id?: number) => void }) {
+    const advances = d.advances ?? [];
+    return (
+        <div className="mt">
+            <div className="spread">
+                <div className="u">Salary advance</div>
+                <div className="row" style={{ gap: 8 }}>
+                    {advances.length > 0 && <button type="button" className="btn btn-sm btn-quiet" onClick={() => onAdvances()}>See all</button>}
+                    {canGive && <button type="button" className="btn btn-sm" onClick={onGive}><Icon name="plus" />Give an advance</button>}
+                </div>
+            </div>
+            {advances.length === 0 ? <div className="hint mt-s">No salary advances.</div> : (
+                <div className="pay-lines mt-s">
+                    {advances.map((a) => {
+                        const thisMonth = a.months.find((m) => monthKey(m.month) === month.slice(0, 7));
+                        // what comes off as things stand (re-worked when pay changes), or the plan before it is worked out
+                        const takes = thisMonth ? (thisMonth.taken ?? thisMonth.planned) : null;
+                        return (
+                            <div key={a.id} {...clickable(() => onAdvances(a.id))} className="click" style={{ alignItems: "center" }}>
+                                <span className="row wrap" style={{ gap: 8 }}>
+                                    <AdvanceStatusBadge advance={{ status: a.status, left: a.left, settledKind: a.settlement?.kind }} />
+                                    <span className="mono">{amountOf(a.amount, a.currency)}</span>
+                                </span>
+                                <span className="mono muted">{takes != null ? `−${amountOf(takes, a.currency)} this month` : "nothing this month"}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }

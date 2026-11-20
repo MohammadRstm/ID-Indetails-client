@@ -7,6 +7,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { addMonths, companyToday, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange, monthKey } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import { cx } from "@/shared/utils/cx";
 import { useMyOvertime } from "./workApi";
 import { loadFailed } from "@/api/queryState";
 
@@ -72,7 +73,8 @@ export default function OvertimePanel({ userId }: OvertimePanelProps) {
                                             <b className="mono ot-text">{fmtDur(d.overtimeMinutes)}</b>
                                         </div>
                                         {d.entries.map((e) => (
-                                            <div key={e.workEntryId} className="ot-item" {...(linked ? {
+                                            <div key={e.workEntryId} className={cx("ot-item", e.projectTint && "pc")}
+                                                style={e.projectTint ? { ["--pc" as string]: e.projectTint } : undefined} {...(linked ? {
                                                 role: "link", tabIndex: 0, title: "Open this entry",
                                                 onClick: () => navigate(entryPath(e.workEntryId)),
                                                 onKeyDown: (ev: { key: string }) => { if (ev.key === "Enter") navigate(entryPath(e.workEntryId)); },

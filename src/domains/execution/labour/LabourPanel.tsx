@@ -2,7 +2,7 @@ import { useRef, useState, type KeyboardEvent } from "react";
 import { useSearchParams } from "react-router";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { useProtonForm } from "@/domains/shared/proton/formFill";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import FormFailure from "@/domains/shared/projects/FormFailure";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -168,7 +168,7 @@ function DefaultsBar({ projectId, defaults, onHistory, onNav }: { projectId: num
                 <span className="grow" />
                 {editable && changed && (
                     <div className="row" style={{ gap: 6, alignSelf: "flex-end" }}>
-                        {set.error && <span className="err" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(set.error)}</span>}
+                        {set.error && <span className="err" style={{ fontSize: 12 }}><Icon name="alert" /><ErrorMessage error={set.error} /></span>}
                         <button className="btn btn-sm" onClick={() => { setWorkers(String(cur.workers)); setPay(cur.dailyPay); }}>Reset</button>
                         <button className="btn btn-sm btn-primary" ref={saveRef} disabled={set.isPending} onClick={() => save()}
                             onKeyDown={(e) => {

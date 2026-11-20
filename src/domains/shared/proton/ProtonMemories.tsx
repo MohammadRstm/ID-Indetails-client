@@ -1,4 +1,4 @@
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { loadFailed } from "@/api/queryState";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
@@ -35,7 +35,7 @@ export default function ProtonMemories({ onBack }: { onBack: () => void }) {
                         ))}
                     </ul>
                 )}
-            {forget.error && <p className="err" role="alert">{errorMessage(forget.error)}</p>}
+            {forget.error && <p className="err" role="alert"><ErrorMessage error={forget.error} /></p>}
         </div>
     );
 }

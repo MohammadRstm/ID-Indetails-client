@@ -4,6 +4,7 @@ import { accountLabels, accountLabelsHandler } from "./accountLabels";
 import { accountFigures, accountHandlers } from "./account";
 import { billing } from "./billing";
 import { boqHandlers } from "./boqs";
+import { nextCodeHandler } from "./index";
 import invoicesJson from "./site/invoices.json";
 import labourDefaultsJson from "./site/labourDefaults.json";
 import labourWeekJson from "./site/labourWeek.json";
@@ -60,6 +61,7 @@ export const siteStaff = [
 })) as unknown as Schemas["EmployeeSummaryResponse"][];
 
 export const siteHandlers = [
+    nextCodeHandler,
     http.get("/api/projects/totals", () => HttpResponse.json({})),
     http.get("/api/projects/:id", ({ params }) => HttpResponse.json(losing(params.id) ? site.losingProject : site.project)),
     http.get("/api/projects/:id/site-expenses", ({ params }) => HttpResponse.json(losing(params.id) ? site.openExpenses : site.expenses)),
@@ -83,7 +85,7 @@ export const siteHandlers = [
     // a site's staff table reads each person's email and pay: Nour is paid monthly, Tarek's pay isn't sent
     http.get("/api/employees/:id", ({ params }) => {
         const person = siteStaff.find((p) => String(p.id) === params.id) ?? siteStaff[0];
-        const currentPay = person.id === 13 ? { id: 1, amount: 1800, currency: "USD", basis: "monthly", effectiveFrom: "2026-01-12", createdAt: "2026-01-12T08:00:00Z", createdById: 1 } : null;
+        const currentPay = person.id === 13 ? { id: 1, amount: 1800, currency: "USD", effectiveFrom: "2026-01-12", createdAt: "2026-01-12T08:00:00Z", createdById: 1 } : null;
         return HttpResponse.json({ ...person, currentPay, permissions: [] });
     }),
     http.get("/api/me/sites", () => HttpResponse.json([])),

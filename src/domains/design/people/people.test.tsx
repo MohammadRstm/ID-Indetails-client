@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -7,10 +7,24 @@ import { people, peopleHandlers } from "@/test/fixtures/people";
 import { workHandlers } from "@/test/fixtures/work";
 import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
+import { money } from "@/shared/format/money";
 
 // A Design admin a super admin has handed the money to: admins don't hold it by default
 const nadia = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const yara = people.employee;
+
+/** The API's preview of a pay change: September's salary before and after, and one project it re-prices. */
+function previews(bodies: unknown[] = [], replaces: unknown[] = []) {
+    return http.post("/api/employees/:id/pay/preview", async ({ request }) => {
+        bodies.push(await request.json());
+        return HttpResponse.json({
+            effectiveFrom: "2026-09-30",
+            replaces,
+            months: [{ month: "2026-09-01", salaryBefore: 1600, currencyBefore: "USD", salaryAfter: 1609.09, currencyAfter: "USD", advanceBefore: 0, advanceAfter: 0, advanceCurrency: null }],
+            projects: [{ projectId: 3, title: "Villa Mounir interiors", labourBefore: 900, labourAfter: 912.5, profitBefore: 4100, profitAfter: 4087.5, reachesZero: false }],
+        });
+    });
+}
 
 // Wednesday 30 September 2026, noon in Beirut
 beforeEach(() => {
@@ -117,18 +131,18 @@ describe("Add employee", () => {
         await userEvent.type(within(dialog).getByLabelText("Work email"), "amara@id-indetails.test");
         // pay is required for an employee when the admin sets pay: pressing Send says so
         await userEvent.click(send);
-        expect(within(dialog).getByText("Enter their pay per hour.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Enter their monthly salary.")).toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Position"), "Junior designer");
         await userEvent.click(within(dialog).getByLabelText("Department"));
         await userEvent.click(screen.getByRole("option", { name: "Interiors" }));
-        await userEvent.type(within(dialog).getByLabelText("Pay"), "12");
+        await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "1800");
         await userEvent.click(send);
 
         expect(await screen.findByRole("dialog", { name: "Invitation sent" })).toBeInTheDocument();
         const interiors = people.teams.find((t) => t.name === "Interiors")!;
         expect(bodies).toEqual([{
             email: "amara@id-indetails.test", role: "employee", domainCode: "design", teamId: interiors.id,
-            position: "Junior designer", pay: { basis: "hourly", amount: 12, currency: "USD" },
+            position: "Junior designer", pay: { amount: 1800, currency: "USD", overtimeRate: 9.78 },
         }]);
     });
 
@@ -136,7 +150,7 @@ describe("Add employee", () => {
         const bodies: unknown[] = [];
         renderApp("/design/people?invite=1", withPermissions(nadia, { revoke: [P.EMPLOYEE_PAY_MANAGE] }), sendsTo(bodies), ...peopleHandlers);
         const dialog = await screen.findByRole("dialog", { name: "Add employee" });
-        expect(within(dialog).queryByLabelText("Pay")).not.toBeInTheDocument();
+        expect(within(dialog).queryByLabelText("Monthly salary")).not.toBeInTheDocument();
         // only a super admin can invite a super admin
         expect(within(dialog).queryByRole("tab", { name: "Super admin" })).not.toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Work email"), "amara@id-indetails.test");
@@ -147,7 +161,7 @@ describe("Add employee", () => {
         expect(bodies).toEqual([expect.objectContaining({ role: "employee", domainCode: "design", pay: null })]);
     });
 
-    it("asks an admin's monthly salary: a fixed salary, never by the hour", async () => {
+    it("asks an admin's monthly salary: a fixed salary, with no overtime", async () => {
         const bodies: unknown[] = [];
         renderApp("/design/people?invite=1", nadia, sendsTo(bodies), ...peopleHandlers);
         const dialog = await screen.findByRole("dialog", { name: "Add employee" });
@@ -156,32 +170,29 @@ describe("Add employee", () => {
         // Design's admins belong to a department too
         await userEvent.click(within(dialog).getByLabelText("Department"));
         await userEvent.click(screen.getByRole("option", { name: "Interiors" }));
-        expect(within(dialog).queryByRole("tablist", { name: "Pay basis" })).not.toBeInTheDocument();
         expect(within(dialog).getByText("Fixed salary")).toBeInTheDocument();
+        expect(within(dialog).queryByLabelText("Overtime rate")).not.toBeInTheDocument();
         await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
         expect(within(dialog).getByText("Enter their monthly salary.")).toBeInTheDocument();
         await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "2500");
         await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
 
         await screen.findByRole("dialog", { name: "Invitation sent" });
-        expect(bodies).toEqual([expect.objectContaining({ role: "admin", domainCode: "design", pay: { basis: "monthly", amount: 2500, currency: "USD" } })]);
+        expect(bodies).toEqual([expect.objectContaining({ role: "admin", domainCode: "design", pay: { amount: 2500, currency: "USD" } })]);
     });
 
-    it("suggests a salaried employee's overtime rate, the salary ÷ 184, until it is typed over", async () => {
+    it("suggests an employee's overtime rate, the salary ÷ 184, until it is typed over", async () => {
         const bodies: unknown[] = [];
         renderApp("/design/people?invite=1", nadia, sendsTo(bodies), ...peopleHandlers);
         const dialog = await screen.findByRole("dialog", { name: "Add employee" });
         await userEvent.type(within(dialog).getByLabelText("Work email"), "lina@id-indetails.test");
-        // paid by the hour, their rate is their overtime rate: nothing to set
-        expect(within(dialog).queryByLabelText("Overtime rate")).not.toBeInTheDocument();
-        await userEvent.click(within(dialog).getByRole("tab", { name: "Per month" }));
-        await userEvent.type(within(dialog).getByLabelText("Pay"), "4232");
+        await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "4232");
         const overtime = within(dialog).getByLabelText("Overtime rate");
         expect(overtime).toHaveValue("23");
         await userEvent.clear(overtime);
         await userEvent.type(overtime, "25");
         // a changed salary leaves a typed rate alone
-        const pay = within(dialog).getByLabelText("Pay");
+        const pay = within(dialog).getByLabelText("Monthly salary");
         await userEvent.clear(pay);
         await userEvent.type(pay, "4600");
         expect(overtime).toHaveValue("25");
@@ -190,7 +201,7 @@ describe("Add employee", () => {
         await userEvent.click(within(dialog).getByRole("button", { name: "Send invitation" }));
 
         await screen.findByRole("dialog", { name: "Invitation sent" });
-        expect(bodies).toEqual([expect.objectContaining({ pay: { basis: "monthly", amount: 4600, currency: "USD", overtimeRate: 25 } })]);
+        expect(bodies).toEqual([expect.objectContaining({ pay: { amount: 4600, currency: "USD", overtimeRate: 25 } })]);
     });
 
     it("says why the invitation failed, next to the button", async () => {
@@ -296,28 +307,125 @@ describe("Someone's profile", () => {
         expect(updates).toEqual([]);
     });
 
-    it("saves an admin's edit, and new pay from a date", async () => {
+    it("lets the person place a new photo before it goes up, and sets the square they placed", async () => {
+        // jsdom opens no pictures and draws nothing: a wide photo, and a canvas that records what is cut from it
+        const draw = vi.fn();
+        vi.stubGlobal("createImageBitmap", vi.fn(async () => ({ width: 2000, height: 1000, close: () => {} })));
+        URL.createObjectURL = vi.fn(() => "blob:photo");
+        URL.revokeObjectURL = vi.fn();
+        vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({ drawImage: draw } as never);
+        vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((done) => done(new Blob(["square"], { type: "image/webp" })));
+        const uploads: string[] = [];
+        const photos: unknown[] = [];
+        try {
+            renderApp("/design/people/9", nadia,
+                // (the body isn't read here: jsdom's FormData isn't one msw can always parse; the unit test of the window checks the file)
+                http.post("/api/files", ({ request }) => {
+                    uploads.push(request.headers.get("content-type") ?? "");
+                    return HttpResponse.json({ id: 77, name: "photo.webp", mimeType: "image/webp", kind: "image", sizeBytes: 6, createdAt: "2026-09-30T09:00:00Z" }, { status: 201 });
+                }),
+                http.put("/api/employees/9", () => HttpResponse.json(yara)),
+                http.put("/api/employees/9/photo", async ({ request }) => { photos.push(await request.json()); return HttpResponse.json(yara); }),
+                ...peopleHandlers);
+            await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+            const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
+            fireEvent.change(dialog.querySelector("input[type=file]") as HTMLInputElement, { target: { files: [new File(["pixels"], "yara.jpg", { type: "image/jpeg" })] } });
+
+            // nothing goes up until it is placed
+            const placing = await screen.findByRole("dialog", { name: "Position your photo" });
+            expect(uploads).toEqual([]);
+            fireEvent.keyDown(within(placing).getByRole("group"), { key: "ArrowRight" });
+            await userEvent.click(within(placing).getByRole("button", { name: "Use this photo" }));
+
+            // the square cut from where it was placed goes up, not the photo as picked
+            await waitFor(() => expect(draw).toHaveBeenCalled());
+            await waitFor(() => expect(uploads).toHaveLength(1));
+            expect(uploads[0]).toMatch(/^multipart\/form-data/);
+            const [, x, y, side] = draw.mock.calls[0] as number[];
+            expect(x).toBeCloseTo(500 - 8 / 0.24, 3);
+            expect(y).toBeCloseTo(0, 3);
+            expect(side).toBeCloseTo(1000, 3);
+            await waitFor(() => expect(screen.queryByRole("dialog", { name: "Position your photo" })).not.toBeInTheDocument());
+
+            await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+            await waitFor(() => expect(photos).toEqual([{ fileId: 77 }]));
+        } finally {
+            vi.unstubAllGlobals();
+            vi.restoreAllMocks();
+        }
+    });
+
+    it("saves an admin's edit, and new pay from a date once its effect is shown", async () => {
         const updates: unknown[] = [];
         const pays: unknown[] = [];
+        const previewed: unknown[] = [];
         renderApp("/design/people/9", nadia,
             http.put("/api/employees/9", async ({ request }) => { updates.push(await request.json()); return HttpResponse.json(yara); }),
             http.post("/api/employees/9/pay", async ({ request }) => { pays.push(await request.json()); return HttpResponse.json(people.payHistory[0]); }),
+            previews(previewed),
             ...peopleHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
         const position = within(dialog).getByLabelText("Position");
         await userEvent.clear(position);
         await userEvent.type(position, "Senior visualiser");
-        const pay = await within(dialog).findByLabelText("Pay");
+        const pay = await within(dialog).findByLabelText("Monthly salary");
         await userEvent.clear(pay);
         await userEvent.type(pay, "1800");
         // the overtime rate follows the new salary: 1,800 ÷ 184
         expect(within(dialog).getByLabelText("Overtime rate")).toHaveValue("9.78");
-        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        expect(within(dialog).getByLabelText("From when")).toBeInTheDocument();
 
+        // the first press shows what the change does, and saves nothing yet
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        const months = await within(dialog).findByRole("table", { name: "Salary by month" });
+        expect(within(months).getByText(money.exact(1609.09))).toBeInTheDocument();
+        const projects = within(dialog).getByRole("table", { name: "Projects it re-prices" });
+        expect(within(projects).getByText("Villa Mounir interiors")).toBeInTheDocument();
+        expect(within(projects).getByText(money.exact(4087.5))).toBeInTheDocument();
+        expect(updates).toEqual([]);
+        expect(pays).toEqual([]);
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
         expect(updates).toEqual([{ firstName: "Yara", lastName: "Mansour", phone: yara.phone, position: "Senior visualiser", teamId: yara.team!.id }]);
-        expect(pays).toEqual([{ basis: "monthly", amount: 1800, currency: "USD", overtimeRate: 9.78, effectiveFrom: "2026-09-30" }]);
+        const body = { amount: 1800, currency: "USD", overtimeRate: 9.78, effectiveFrom: "2026-09-30" };
+        expect(previewed).toEqual([body]);
+        expect(pays).toEqual([body]);
+    });
+
+    it("goes back from the preview to change the pay, and previews it again", async () => {
+        const previewed: unknown[] = [];
+        renderApp("/design/people/9", nadia, previews(previewed), ...peopleHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
+        const pay = await within(dialog).findByLabelText("Monthly salary");
+        await userEvent.clear(pay);
+        await userEvent.type(pay, "1800");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        await within(dialog).findByRole("table", { name: "Salary by month" });
+        await userEvent.click(within(dialog).getByRole("button", { name: "Back" }));
+        await userEvent.clear(within(dialog).getByLabelText("Monthly salary"));
+        await userEvent.type(within(dialog).getByLabelText("Monthly salary"), "1900");
+        // a changed pay needs its own preview
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        await within(dialog).findByRole("table", { name: "Salary by month" });
+        expect(previewed).toHaveLength(2);
+    });
+
+    it("warns against a change of currency, which starts on the 1st", async () => {
+        const previewed: unknown[] = [];
+        renderApp("/design/people/9", nadia, previews(previewed), ...peopleHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
+        await within(dialog).findByLabelText("Monthly salary");
+        await userEvent.click(within(dialog).getAllByRole("button", { name: "Currency" })[0]);
+        await userEvent.click(screen.getByRole("option", { name: "LBP" }));
+        expect(within(dialog).getByText(/Changing currency is rarely right/)).toBeInTheDocument();
+        // today is the 30th: the change can't start until the 1st of a month
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        expect(within(dialog).getByText("A change of currency starts on the 1st of a month.")).toBeInTheDocument();
+        expect(previewed).toEqual([]);
     });
 
     it("changes only the overtime rate, as a pay change with the same salary", async () => {
@@ -325,6 +433,7 @@ describe("Someone's profile", () => {
         renderApp("/design/people/9", nadia,
             http.put("/api/employees/9", () => HttpResponse.json(yara)),
             http.post("/api/employees/9/pay", async ({ request }) => { pays.push(await request.json()); return HttpResponse.json(people.payHistory[0]); }),
+            previews(),
             ...peopleHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
@@ -332,9 +441,11 @@ describe("Someone's profile", () => {
         expect(overtime).toHaveValue("8.7");
         await userEvent.clear(overtime);
         await userEvent.type(overtime, "10");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        await within(dialog).findByRole("table", { name: "Salary by month" });
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
 
-        await waitFor(() => expect(pays).toEqual([{ basis: "monthly", amount: 1600, currency: "USD", overtimeRate: 10, effectiveFrom: "2026-09-30" }]));
+        await waitFor(() => expect(pays).toEqual([{ amount: 1600, currency: "USD", overtimeRate: 10, effectiveFrom: "2026-09-30" }]));
     });
 
     it("saves the profile of someone with no pay yet, and sets no pay", async () => {
@@ -347,7 +458,7 @@ describe("Someone's profile", () => {
             ...peopleHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
-        await within(dialog).findByLabelText("Pay");
+        await within(dialog).findByLabelText("Monthly salary");
         const position = within(dialog).getByLabelText("Position");
         await userEvent.clear(position);
         await userEvent.type(position, "Senior visualiser");
@@ -391,13 +502,16 @@ describe("Someone's profile", () => {
         renderApp("/design/people/9", withPermissions(nadia, { revoke: [P.EMPLOYEE_MANAGE] }),
             http.put("/api/employees/9", () => { updated = true; return HttpResponse.json(yara); }),
             http.post("/api/employees/9/pay", async ({ request }) => { pays.push(await request.json()); return HttpResponse.json(people.payHistory[0]); }),
+            previews(),
             ...peopleHandlers);
         await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit Yara's profile" });
-        const pay = await within(dialog).findByLabelText("Pay");
+        const pay = await within(dialog).findByLabelText("Monthly salary");
         expect(within(dialog).queryByLabelText("Position")).not.toBeInTheDocument();
         await userEvent.clear(pay);
         await userEvent.type(pay, "1800");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Review the pay change" }));
+        await within(dialog).findByRole("table", { name: "Salary by month" });
         await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
 
         await waitFor(() => expect(pays).toHaveLength(1));
@@ -448,7 +562,7 @@ describe("Your own profile", () => {
         await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit your profile" });
         expect(within(dialog).queryByLabelText("Position")).not.toBeInTheDocument();
-        expect(within(dialog).queryByLabelText("Pay")).not.toBeInTheDocument();
+        expect(within(dialog).queryByLabelText("Monthly salary")).not.toBeInTheDocument();
         const name = within(dialog).getByLabelText("Full name");
         await userEvent.clear(name);
         await userEvent.type(name, "Sarah Haddad");

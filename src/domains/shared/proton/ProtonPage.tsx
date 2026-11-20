@@ -67,6 +67,8 @@ export default function ProtonPage() {
 
     return (
         <div className="proton-page" data-proton-layer="">
+            {/* the page's heading for screen readers: the chat itself fills the screen */}
+            <h1 className="sr-only">Proton</h1>
             <aside className={cx("proton-page-list", listOpen && "open")} aria-label="Your chats with Proton">
                 <ChatList current={current} onPick={pick} onNew={startNew} />
             </aside>

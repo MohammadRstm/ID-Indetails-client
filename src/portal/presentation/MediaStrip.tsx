@@ -4,7 +4,7 @@ import { useReducedMotion } from "@/shared/hooks/useReducedMotion";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import type { PresentationItem } from "./presentationTypes";
-import { usePhone } from "./usePhone";
+import { useIsPhone } from "@/shared/hooks/useIsPhone";
 
 type Props<T extends PresentationItem> = {
     items: T[];
@@ -24,7 +24,7 @@ const UNMEASURED = 1000;
  * rest. Phones: a slider, swiped sideways or moved with its arrows, a card at a time.
  */
 export default function MediaStrip<T extends PresentationItem>(props: Props<T>) {
-    return usePhone() ? <Slider {...props} /> : <OneRow {...props} />;
+    return useIsPhone() ? <Slider {...props} /> : <OneRow {...props} />;
 }
 
 function OneRow<T extends PresentationItem>({ items, label, card }: Props<T>) {

@@ -3,16 +3,21 @@ import { errorMessage } from "@/api/errors";
 import { toast } from "@/shared/components/Feedback/toast";
 import ContextMenu from "@/shared/components/Overlays/ContextMenu";
 import { tip } from "@/shared/components/Overlays/tip";
-import { dayKey, fmtDur, fmtHourLabel, fmtRange, fmtTime, minutesOfDay } from "@/shared/format/time";
+import { dayKey, fmtDur, fmtHourLabel, fmtRange, minutesOfDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
+import { touchScreen } from "@/shared/utils/touchScreen";
 import { useCanChangeMeeting } from "../../shared/meetings/meetingsApi";
-import { checkLog, clamp, companyNow, DAY, DAY_OFF_HOURS, dayText, isoAt, movesFor, rangeFor, spanOn, wholeOn, workHoursOf, type Moves, type Span } from "./day";
+import { checkLog, clamp, companyNow, DAY, DAY_OFF_HOURS, isoAt, movesFor, rangeFor, spanOn, wholeOn, workHoursOf, type Moves, type Span } from "./day";
 import DayTrack, { type TrackEntry, type TrackMeeting } from "./DayTrack";
 import { BOX, dayModel, type Block, type DayTask, type Stuck } from "./dragModel";
-import { useDomainSettings, useMyDay, useMySchedule, useOvertimeFor, useResizeMeeting } from "./workApi";
+import { useDomainSettings, useMyDay, useMyProjects, useMySchedule, useOvertimeFor, useResizeMeeting } from "./workApi";
 
 type Mode = "draw" | "l" | "r" | "move" | "task-press" | "task" | "task-l" | "task-r" | "mtg-l" | "mtg-r";
+
+/** How long a finger rests on a logged task before Delete is offered, and how far it may wander meanwhile (px). */
+const HOLD_MS = 500;
+const HOLD_SLACK = 8;
 
 /** What is being dragged, and where it is so far. */
 type Drag = {
@@ -31,6 +36,8 @@ type Drag = {
     grab?: number;
     m0?: number;
     lastSwap?: number | null;
+    /** The carried block's full length: it shrinks to fit a short gap and grows back up to this. */
+    full?: number;
     // pushing
     swaps0?: Moves;
     base?: Block[];
@@ -60,8 +67,9 @@ type DragDayProps = {
  * The one way to pick a time on a timeline, wherever work is logged (the prototype's UI.DragDay). Press on
  * free time and drag to draw the entry; pressing on a logged task starts it where that task ends. Logged
  * tasks can be moved and resized (pushing their neighbours), and meetings' ends dragged. A logged task is
- * deleted from its right-click menu, or by selecting it (double-click, or Enter) and pressing Delete: it only
- * leaves the timeline, Ctrl+Z brings it back, and it is deleted when the log is saved.
+ * deleted from its right-click menu (on a phone, by holding a finger on it), or by selecting it (a click, or
+ * Enter) and pressing Delete: it only leaves the timeline, Ctrl+Z brings it back, and it is deleted when the log
+ * is saved.
  */
 export default function DragDay({ date, startMin, duration, projectId, ignoreId, swaps, onChange, deleted, onDeleted }: DragDayProps) {
     const { today, minute: nowMin } = companyNow();
@@ -70,17 +78,46 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
     const schedule = useMySchedule(date);
     const settings = useDomainSettings("design").data;
     const resize = useResizeMeeting();
+    // the time being drawn takes the colour of the project it is logged on
+    const selTint = useMyProjects().data?.find((p) => p.id === projectId)?.tint;
     const canChangeMeeting = useCanChangeMeeting();
     const [drag, setDrag] = useState<Drag | null>(null);
     const [selected, setSelected] = useState<number | null>(null);
     const [menu, setMenu] = useState<{ id: number; x: number; y: number } | null>(null);
+    // a finger resting on a logged task: where it went down, and the timer that offers Delete
+    const press = useRef<{ x: number; y: number; timer: ReturnType<typeof setTimeout> } | null>(null);
     const trackRef = useRef<HTMLDivElement>(null);
     const rootRef = useRef<HTMLDivElement>(null);
+    // the new box's own length: squeezed into a short gap it gets shorter, and grows back to this in a roomier one,
+    // until its length is set some other way (typed, drawn, stretched)
+    const boxFull = useRef(duration);
+    // where the new box was before any logged task moved: "Put back" returns it there too, so it never ends up
+    // over a task that went back
+    const boxBefore = useRef({ s: startMin, d: duration });
+    useEffect(() => {
+        if (Object.keys(swaps).length === 0) boxBefore.current = { s: startMin, d: duration };
+    }, [swaps, startMin, duration]);
+    // and before any logged task was deleted: "Bring them back" returns it there, clear of the tasks that come back
+    const boxBeforeDelete = useRef({ s: startMin, d: duration });
+    useEffect(() => {
+        if (deleted.length === 0) boxBeforeDelete.current = { s: startMin, d: duration };
+    }, [deleted, startMin, duration]);
+    const squeezed = useRef(false);
+    useEffect(() => {
+        if (squeezed.current) squeezed.current = false;
+        else boxFull.current = duration;
+    }, [duration]);
 
     const scheduleDay = schedule.data?.day;
     const workHours = workHoursOf(scheduleDay);
     const list = (day.data?.entries ?? []).filter((e) => e.id !== ignoreId && !deleted.includes(e.id));
-    const tasks: DayTask[] = list.map((e) => ({ id: e.id, span: spanOn(e, date), whole: wholeOn(e, date), locked: !e.canEdit }));
+    // hours waiting for approval (the logger's department isn't on that project): they hold their time, faded and locked;
+    // their ids are negative so they never stand for an entry
+    const waiting = day.data?.waiting ?? [];
+    const tasks: DayTask[] = [
+        ...list.map((e) => ({ id: e.id, span: spanOn(e, date), whole: wholeOn(e, date), locked: !e.canEdit })),
+        ...waiting.map((w) => ({ id: -w.id, span: spanOn(w, date), whole: wholeOn(w, date), locked: true })),
+    ];
 
     const taskMode = drag != null && (drag.mode === "task" || drag.mode === "task-l" || drag.mode === "task-r");
     const mtgMode = drag != null && (drag.mode === "mtg-l" || drag.mode === "mtg-r");
@@ -176,7 +213,8 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
         const original = tasks.find((t) => t.id === d.id)!.span;
         if (original.s === d.s && original.e === d.e) delete mv[d.id!];
         else mv[d.id!] = { s: d.s, e: d.e };
-        onChange(startMin, duration, mv);
+        // the new box may have traded places with the task
+        onChange(d.box ? d.box.s : startMin, d.box ? d.box.e - d.box.s : duration, mv);
     }
 
     /** The editable logged task an event happened on. */
@@ -189,12 +227,25 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
         el.focus();
     }
 
+    /** The menu with Delete, at the pointer; whatever the press would have done is dropped. */
+    function offerDelete(id: number, x: number, y: number) {
+        setDrag(null);
+        tip.hide();
+        setMenu({ id, x, y });
+    }
+
+    function cancelPress() {
+        if (press.current) clearTimeout(press.current.timer);
+        press.current = null;
+    }
+
+    // a right-click, or a long press where the browser makes one of it (Android)
     function openMenu(ev: MouseEvent<HTMLDivElement>) {
         const el = taskOf(ev.target);
         if (!el) return;
         ev.preventDefault();
-        tip.hide();
-        setMenu({ id: Number(el.getAttribute("data-eid")), x: ev.clientX, y: ev.clientY });
+        cancelPress();
+        offerDelete(Number(el.getAttribute("data-eid")), ev.clientX, ev.clientY);
     }
 
     // the selection goes with the focus, so Delete never removes a task the person has moved away from
@@ -206,7 +257,15 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
 
     function down(ev: PointerEvent<HTMLDivElement>) {
         if (ev.button !== 0) return;
+        cancelPress();
+        if (menu) setMenu(null);
         const t = ev.target as HTMLElement;
+        // a mouse press would focus the task or box the browser's way, scrolling the window to it: it is focused here
+        // without scrolling instead, so the window stays put under the pointer
+        if (ev.pointerType === "mouse") {
+            ev.preventDefault();
+            ((t.closest("[data-eid]") ?? t.closest(".dt-sel") ?? ev.currentTarget) as HTMLElement).focus({ preventScroll: true });
+        }
         if (selected != null && Number(taskOf(t)?.getAttribute("data-eid")) !== selected) setSelected(null);
         const handle = t.closest("[data-h]");
         const onBox = t.closest(".dt-sel");
@@ -235,12 +294,12 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
         }
         // an edge of the box
         if (handle && duration > 0) {
-            setDrag({ mode: handle.getAttribute("data-h") === "l" ? "l" : "r", s: selNow.s, e: selNow.e, swaps, swaps0: swaps, base: model.blocksNow(swaps) });
+            setDrag({ mode: handle.getAttribute("data-h") === "l" ? "l" : "r", s: selNow.s, e: selNow.e, s0: selNow.s, e0: selNow.e, swaps, swaps0: swaps });
             return;
         }
         // the box itself: carry it along
         if (onBox && duration > 0) {
-            setDrag({ mode: "move", grab: m - selNow.s, s: selNow.s, e: selNow.e, swaps, lastSwap: null });
+            setDrag({ mode: "move", grab: m - selNow.s, s: selNow.s, e: selNow.e, swaps, lastSwap: null, full: Math.max(boxFull.current, duration) });
             return;
         }
         // a logged task: dragging moves it; a plain click starts the new box after it
@@ -249,7 +308,15 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
             const id = Number(onTask.getAttribute("data-eid"));
             const sp = spans.find((x) => x.id === id);
             if (sp && sp.whole && !sp.locked) {
-                setDrag({ mode: "task-press", id, m0: m, grab: m - sp.s, s: sp.s, e: sp.e, swaps });
+                const saved = tasks.find((x) => x.id === id)!.span;
+                setDrag({ mode: "task-press", id, m0: m, grab: m - sp.s, s: sp.s, e: sp.e, swaps, lastSwap: null, full: saved.e - saved.s, box: duration > 0 ? selNow : null });
+                if (ev.pointerType !== "mouse") {
+                    // a finger held still offers Delete, as there is no right-click. No mouse events follow this
+                    // touch, so the menu isn't closed again by the same finger
+                    ev.preventDefault();
+                    const { clientX: x, clientY: y } = ev;
+                    press.current = { x, y, timer: setTimeout(() => { press.current = null; offerDelete(id, x, y); }, HOLD_MS) };
+                }
                 return;
             }
         }
@@ -266,6 +333,7 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
     }
 
     function move(ev: PointerEvent<HTMLDivElement>) {
+        if (press.current && Math.hypot(ev.clientX - press.current.x, ev.clientY - press.current.y) > HOLD_SLACK) cancelPress();
         if (!drag) return;
         const m = rawMin(ev), d = drag;
         const st = d.stuck ?? {};
@@ -274,22 +342,21 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
             const sd = model.stickTo(st.cur, m, model.edgesOf(spans));
             next = { ...d, cur: clamp(sd.v, d.lo!, d.hi!), stuck: { cur: sd.stuck } };
         } else if (d.mode === "l" || d.mode === "r") {
-            // resizing pushes neighbours, so only the working day's edges hold it
-            const sr = model.stickTo(st.edge, m, WD);
-            const rb = model.pushEdge(d.base!, BOX, d.mode, sr.v);
-            next = { ...d, stuck: { edge: sr.stuck } };
-            if (rb) Object.assign(next, { s: rb.s, e: rb.e, swaps: model.withPush(d.swaps0!, rb).swaps });
-        } else if (d.mode === "move") {
-            const bm = model.stickBlock(st, m - d.grab!, d.e - d.s, model.edgesOf(model.spansWith(d.swaps)));
-            const dm = { ...d, stuck: bm.stuck };
-            const moved = model.carry({ grab: d.grab!, s: d.s, e: d.e, swaps: d.swaps, lastSwap: d.lastSwap ?? null }, bm.want + d.grab!, true);
-            next = moved ? { ...dm, ...moved } : dm;
-        } else if (d.mode === "task-press" || d.mode === "task") {
+            // the box's edge runs through free time and into the task next to it, which gets shorter (and grows back);
+            // it holds at the working day's edges and where that task began
+            const sr = model.stickTo(st.edge, m, model.edgesOf(model.spansWith(d.swaps0!)));
+            const rb = model.stretchBox(d.swaps0!, { s: d.s0!, e: d.e0! }, d.mode, sr.v);
+            next = { ...d, stuck: { edge: sr.stuck }, s: rb.s, e: rb.e, swaps: rb.swaps };
+        } else if (d.mode === "move" || d.mode === "task-press" || d.mode === "task") {
+            // the new box or a logged task: anywhere there is room, past the others, trading places with what it lands on
             if (d.mode === "task-press" && Math.abs(m - d.m0!) < 5) return;
-            const tm = model.stickBlock(st, m - d.grab!, d.e - d.s, [...WD, ...model.obstaclesFor(d.id!, d.swaps).flatMap((x) => [x.s, x.e])]);
-            const dt: Drag = { ...d, mode: "task", stuck: tm.stuck };
-            const moved = model.carryTask({ id: d.id!, grab: d.grab!, s: d.s, e: d.e, swaps: d.swaps }, tm.want + d.grab!, true);
-            next = moved ? { ...dt, ...moved } : dt;
+            const box = d.mode === "move";
+            const base: Drag = box ? d : { ...d, mode: "task" };
+            const moved = model.carryBlock({
+                id: box ? BOX : d.id!, grab: d.grab!, s: d.s, e: d.e, full: d.full ?? d.e - d.s, swaps: d.swaps,
+                box: box ? null : d.box ?? null, lastSwap: d.lastSwap ?? null,
+            }, m);
+            next = moved ? { ...base, s: moved.s, e: moved.e, swaps: moved.swaps, box: box ? d.box : moved.box, lastSwap: moved.lastSwap } : base;
         } else if (d.mode === "mtg-l" || d.mode === "mtg-r") {
             const sm = model.stickTo(st.edge, m, WD);
             const nm = d.mode === "mtg-l" ? { s: clamp(sm.v, r[0], d.e - 5), e: d.e } : { s: d.s, e: clamp(sm.v, d.s + 5, r[1]) };
@@ -307,12 +374,15 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
     }
 
     function up() {
+        cancelPress();
         if (!drag) return;
         const d = drag;
         setDrag(null);
         if (d.mode === "mtg-l" || d.mode === "mtg-r") return resizeMeeting(d.id!, d.s0!, d.e0!, d.s, d.e);
         if (d.mode === "task-press") {
-            // a click, not a drag: the new box goes right after this task, keeping its length where it fits
+            // a click, not a drag: the task is selected (Delete then removes it), and the new box goes right after
+            // it, keeping its length where it fits
+            setSelected(d.id!);
             const ga = model.gapAround(d.e);
             if (d.e < limit && ga[1] - d.e >= 5) onChange(d.e, Math.max(5, Math.min(duration || 60, ga[1] - d.e)), d.swaps);
             else toast({ text: d.e >= limit ? "That task runs up to now, so there is nothing to add after it yet" : "There is no free time right after that task", icon: "info" });
@@ -331,7 +401,9 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
             else if (d.fromTask) onChange(d.a!, Math.max(5, Math.min(duration, d.hi! - d.a!)), d.swaps);
             return;
         }
-        onChange(d.s, d.e - d.s, d.swaps);
+        // the box carried (mode "move"): a squeeze into a short gap keeps its full length for later
+        if (d.e - d.s !== duration) squeezed.current = true;
+        onChange(d.s, d.e - d.s, model.tidy(d.swaps));
     }
 
     // Keyboard: Tab to the box or a logged task, then ← → move it five minutes (Ctrl: fifteen);
@@ -393,8 +465,8 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
             if (n) onChange(n.s, n.e - n.s, n.swaps);
             return;
         }
-        const rb = model.pushEdge(model.blocksNow(swaps), BOX, kind === "start" ? "l" : "r", (kind === "start" ? selNow.s : selNow.e) + step);
-        if (rb && (rb.s !== selNow.s || rb.e !== selNow.e)) onChange(rb.s, rb.e - rb.s, model.tidy(model.withPush(swaps, rb).swaps));
+        const rb = model.stretchBox(swaps, selNow, kind === "start" ? "l" : "r", (kind === "start" ? selNow.s : selNow.e) + step);
+        if (rb.s !== selNow.s || rb.e !== selNow.e) onChange(rb.s, rb.e - rb.s, rb.swaps);
     }
 
     const sel: Span = drag && taskMode && drag.box ? drag.box
@@ -430,10 +502,17 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
         const at = live[e.id];
         const sp = at ?? spanOn(e, date);
         return {
-            id: e.id, s: sp.s, e: sp.e, description: e.description, projectTitle: e.project.title, locked: !e.canEdit, moved: !!at,
+            id: e.id, s: sp.s, e: sp.e, description: e.description, projectTitle: e.project.title, tint: e.project.tint, locked: !e.canEdit, moved: !!at,
             range: at ? fmtRange(isoAt(date, at.s), isoAt(date, at.e)) : fmtRange(e.startedAt, e.endedAt), overtime: e.overtimeMinutes,
         };
     });
+    for (const w of waiting) {
+        const sp = spanOn(w, date);
+        shown.push({ id: -w.id, s: sp.s, e: sp.e, description: w.description || "Hours waiting", projectTitle: w.projectTitle, locked: true, pending: true,
+            range: fmtRange(w.startedAt, w.endedAt), overtime: 0 });
+    }
+    // a phone has no right-click and usually no keyboard: it holds to delete, and the keyboard's help is left out
+    const touch = touchScreen();
     const trackMeetings: TrackMeeting[] = meetings.map((x) => ({
         id: x.m.id, s: x.s, e: x.e, topic: x.m.topic, projectTitle: x.m.project?.title ?? "General meeting", setBy: x.m.createdBy?.name ?? null,
         range: fmtRange(isoAt(date, x.s), isoAt(date, x.e)), editable: canChangeMeeting(x.m),
@@ -455,7 +534,7 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
                 ) : <span className="dd-hint">Press on free time and drag</span>}
             </div>
             <DayTrack big lo={r[0]} hi={r[1]} workHours={workHours} entries={shown} meetings={trackMeetings} nowMin={isToday ? nowMin : null}
-                sel={sel} selBad={bad} selected={selected} editable held={held} ref={trackRef} onPointerDown={down} onPointerMove={move} onPointerUp={up}
+                sel={sel} selBad={bad} selTint={selTint} selected={selected} editable held={held} ref={trackRef} onPointerDown={down} onPointerMove={move} onPointerUp={up}
                 onDoubleClick={select} onContextMenu={openMenu} onKeyDown={key} onBlur={blur} />
             {menu && (
                 <ContextMenu x={menu.x} y={menu.y} label="Logged task" onClose={() => setMenu(null)}>
@@ -464,35 +543,25 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
                     </button>
                 </ContextMenu>
             )}
-            <div className="row wrap mt-s legend-row">
-                <span><i className="lg-e" />logged ({list.length}), drag to move, edges to resize (pushing neighbours along), right-click to delete</span>
-                <span><i className="lg-sel" />{ignoreId ? "this entry" : "new log"} - drag it to move, its edges to resize</span>
-                {meetings.length > 0 && <span><i className="lg-mtg" />meetings ({meetings.length}), drag their ends to resize</span>}
-                {workHours && <span><i className="lg-wd" />your working day, {dayText(scheduleDay)}</span>}
-                <span><i className="lg-ot" />{workHours ? "outside your working day" : "your day off"} · overtime</span>
-                {isToday && <span><i className="lg-now" />now {fmtTime(new Date())}</span>}
-            </div>
-            <div className="dd-keys"><Icon name="info" />Keyboard: Tab to a block, then <kbd>←</kbd> <kbd>→</kbd> move it 5 min (<kbd>Ctrl</kbd> for 15);
-                {" "}<kbd>Shift</kbd> + arrows change its end, <kbd>Alt</kbd> + arrows its start. Double-click a logged task (or <kbd>Enter</kbd>) to select it, then <kbd>Delete</kbd> removes it;
-                {" "}<kbd>Ctrl</kbd> + <kbd>Z</kbd> brings it back until you save.</div>
-            {gone.length > 0 && !drag && (
-                <div className="dd-swapped">
+            {/* hidden while dragging but still taking its room, so the window doesn't get shorter and jump */}
+            {gone.length > 0 && (
+                <div className="dd-swapped" style={drag ? { visibility: "hidden" } : undefined}>
                     <Icon name="trash" />
                     <span className="grow">
                         {gone.length === 1 ? `“${gone[0].description}” is deleted` : `${gone.length} logged tasks are deleted`} when you save this log
-                        {gone.length > 1 ? `: ${gone.map((e) => e.description).join("; ")}` : ""}. <kbd>Ctrl</kbd> + <kbd>Z</kbd> brings {gone.length === 1 ? "it" : "the last one"} back.
+                        {gone.length > 1 ? `: ${gone.map((e) => e.description).join("; ")}` : ""}.
+                        {!touch && <> <kbd>Ctrl</kbd> + <kbd>Z</kbd> brings {gone.length === 1 ? "it" : "the last one"} back.</>}
                     </span>
-                    <button type="button" className="link" onClick={() => onDeleted([])}>Bring {gone.length === 1 ? "it" : "them"} back</button>
+                    <button type="button" className="link" onClick={() => { onDeleted([]); onChange(boxBeforeDelete.current.s, boxBeforeDelete.current.d, swaps); }}>Bring {gone.length === 1 ? "it" : "them"} back</button>
                 </div>
             )}
-            {nSwapped > 0 && !drag && (
-                <div className="dd-swapped">
-                    <Icon name="refresh" />
-                    <span className="grow">
-                        {nSwapped === 1 ? "1 logged task moves" : `${nSwapped} logged tasks move`} when you save this log:{" "}
-                        {list.filter((e) => live[e.id]).map((e) => `${e.description} → ${fmtRange(isoAt(date, live[e.id].s), isoAt(date, live[e.id].e))}`).join("; ")}.
-                    </span>
-                    <button type="button" className="link" onClick={() => onChange(startMin, duration, {})}>Put {nSwapped === 1 ? "it" : "them"} back</button>
+            {/* the moved tasks show where they go on the track: only the way back is offered (what moves is in its tip) */}
+            {nSwapped > 0 && (
+                <div className="dd-putback" style={drag ? { visibility: "hidden" } : undefined}>
+                    <button type="button" className="btn btn-sm" onClick={() => onChange(boxBefore.current.s, boxBefore.current.d, {})}
+                        title={`Moves when you save: ${list.filter((e) => live[e.id]).map((e) => `${e.description} → ${fmtRange(isoAt(date, live[e.id].s), isoAt(date, live[e.id].e))}`).join("; ")}`}>
+                        <Icon name="refresh" />Put {nSwapped === 1 ? "the moved task" : `the ${nSwapped} moved tasks`} back
+                    </button>
                 </div>
             )}
         </div>

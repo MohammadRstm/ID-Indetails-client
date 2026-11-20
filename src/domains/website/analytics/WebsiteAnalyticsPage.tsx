@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { Banner } from "@/shared/components/Data/Bits";
 import Panel, { PageHead } from "@/shared/components/Data/Panel";
 import Empty from "@/shared/components/Feedback/Empty";
@@ -85,7 +85,7 @@ export default function WebsiteAnalyticsPage() {
 
             {query.isError && (
                 <Banner tone="attn" icon="alert" action={<button type="button" className="btn btn-sm" onClick={() => query.refetch()}>Try again</button>}>
-                    {errorMessage(query.error)}
+                    <ErrorMessage error={query.error} />
                 </Banner>
             )}
             {data?.thresholded && (

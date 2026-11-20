@@ -5,10 +5,11 @@ import { usePermissions } from "@/app/permissions/usePermissions";
 import { useCurrentUser } from "@/app/session/useSession";
 import { useReducedMotion } from "@/shared/hooks/useReducedMotion";
 import Icon from "@/shared/icons/Icon";
+import { cssPx } from "@/shared/utils/cssPx";
 import { cx } from "@/shared/utils/cx";
 import BlobFigure from "./blob/BlobFigure";
 import OrbFigure from "./orb/OrbFigure";
-import { clearOf, loadPrefs, placeOf, savePrefs, snapOf, type BlobPrefs, type Box } from "./blob/blobPosition";
+import { clearOf, loadPrefs, MARGIN, placeOf, savePrefs, snapOf, type BlobPrefs, type Box, type Frame } from "./blob/blobPosition";
 import { moodName, moodOf, STILL_LOOKING_AFTER_MS, WORKING_AFTER_MS } from "./blob/protonMood";
 import { useBlobDrag } from "./blob/useBlobDrag";
 import ProtonPanel, { type PanelLayout } from "./ProtonPanel";
@@ -65,8 +66,8 @@ function ProtonDock() {
         blob.current?.focus();
     };
     const place = placeOf(prefs, viewport, BLOB);
-    const drag = useBlobDrag(place, BLOB, (x, y) => change(snapOf(x, y, viewport, BLOB)), () => (proton.open ? close() : open()));
-    const clearY = useKeepClear({ x: place.x, y: place.y, width: BLOB, height: BLOB }, viewport.height);
+    const drag = useBlobDrag(place, BLOB, (x, y) => change(snapOf(x, y, viewport, BLOB)), () => (proton.open ? close() : open()), viewport.bottom);
+    const clearY = useKeepClear({ x: place.x, y: place.y, width: BLOB, height: BLOB }, viewport);
 
     useEffect(() => startFor(user.id), [user.id]);
 
@@ -178,16 +179,18 @@ function bubbleStyle(at: { x: number; y: number }, side: BlobPrefs["side"], view
     };
 }
 
-type Viewport = { width: number; height: number; visibleHeight: number };
+/** The window's size and how much of it the blob keeps clear of at the top and the foot (see Frame). */
+type Viewport = Required<Frame> & { visibleHeight: number };
 
 let viewportCache: Viewport | null = null;
 
 function readViewport(): Viewport {
-    const next = { width: window.innerWidth, height: window.innerHeight, visibleHeight: window.visualViewport?.height ?? window.innerHeight };
-    if (!viewportCache || viewportCache.width !== next.width || viewportCache.height !== next.height || viewportCache.visibleHeight !== next.visibleHeight) {
-        viewportCache = next;
-    }
-
+    const width = window.innerWidth, height = window.innerHeight, visibleHeight = window.visualViewport?.height ?? window.innerHeight;
+    const last = viewportCache;
+    if (last && last.width === width && last.height === height && last.visibleHeight === visibleHeight) return last;
+    // the top bar's height and the phone's bottom bar (with its home-indicator room) are the page's own: measured, and
+    // only when the window changed, which is also when a phone is turned round
+    viewportCache = { width, height, visibleHeight, top: cssPx("var(--top-h)", 54) + MARGIN, bottom: cssPx("var(--bottom-nav-h)", 0) };
     return viewportCache;
 }
 
@@ -230,9 +233,10 @@ function useMoodClock(proton: ProtonState): number {
  * Where the blob moves to so it doesn't sit on what the person is working with: the focused field (outside Proton),
  * a dialog's buttons, the message composer. Null when where it is is fine.
  */
-function useKeepClear(box: Box, viewportHeight: number): number | null {
+function useKeepClear(box: Box, frame: Pick<Frame, "height" | "top" | "bottom">): number | null {
     const [clearY, setClearY] = useState<number | null>(null);
     const { x, y, width, height } = box;
+    const { height: viewportHeight, top, bottom } = frame;
 
     useEffect(() => {
         const rect = (el: Element): Box => {
@@ -243,7 +247,7 @@ function useKeepClear(box: Box, viewportHeight: number): number | null {
             const active = document.activeElement;
             const obstacles = [...document.querySelectorAll(OBSTACLES)].map(rect);
             if (active && active !== document.body && !active.closest("[data-proton-layer]")) obstacles.unshift(rect(active));
-            const moved = clearOf({ x, y, width, height }, obstacles, { height: viewportHeight });
+            const moved = clearOf({ x, y, width, height }, obstacles, { height: viewportHeight, top, bottom });
             setClearY(moved === y ? null : moved);
         };
         document.addEventListener("focusin", update);
@@ -252,7 +256,7 @@ function useKeepClear(box: Box, viewportHeight: number): number | null {
             document.removeEventListener("focusin", update);
             document.removeEventListener("focusout", update);
         };
-    }, [x, y, width, height, viewportHeight]);
+    }, [x, y, width, height, viewportHeight, top, bottom]);
 
     return clearY;
 }

@@ -8,6 +8,7 @@ import { useDomain } from "@/app/routing/domainContext";
 import { useCurrentUser, fullName } from "@/app/session/useSession";
 import { MissingRecord } from "@/app/pages/NotFound";
 import { useDiscussionSummary } from "@/portal/discussion/discussionApi";
+import { ProjectTile } from "@/shared/components/Data/Bits";
 import { StatusBadge } from "@/shared/components/Data/Pills";
 import Tabs from "@/shared/components/Data/Tabs";
 import LoadError from "@/shared/components/Feedback/LoadError";
@@ -15,9 +16,11 @@ import Skeleton, { SkeletonKpis, SkeletonLines } from "@/shared/components/Feedb
 import { toast } from "@/shared/components/Feedback/toast";
 import { PersonAvatar, PersonName } from "@/shared/components/Identity/People";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
+import Modal from "@/shared/components/Overlays/Modal";
 import Popover from "@/shared/components/Overlays/Popover";
+import { DOMAIN_LABEL } from "@/shared/format/labels";
 import { money } from "@/shared/format/money";
-import { companyToday, dayKey, daysBetween, fmtDate, fmtDateY } from "@/shared/format/time";
+import { companyToday, dayKey, daysBetween, fmtDate, fmtDateY, fmtNumber } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { ClientBadge } from "../clients/ClientBits";
@@ -80,7 +83,7 @@ export type ProjectPanels = {
     timeline?: (project: Project) => ReactNode;
     /** Beside the project's own buttons, such as Log work. */
     actions?: (project: Project) => ReactNode;
-    /** On the line of facts under the title, such as the team. */
+    /** The team, among the project's details: avatars, or nothing. */
     meta?: (project: Project) => ReactNode;
 };
 
@@ -133,6 +136,8 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
     const [deleting, setDeleting] = useState(false);
     // its own link (?details=1), so Proton or a shared link can open it
     const [editing, setEditing] = useUrlFlag("details");
+    // the details, laid out, from the tile, title or code (?about=1)
+    const [about, setAbout] = useUrlFlag("about");
     // the report opens through the link too (?report=1), as the projects list's menu does
     const showReport = params.get("report") === "1";
     const setShowReport = (show: boolean) => {
@@ -248,55 +253,29 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
 
             <div className="page-head">
                 <div className="row start" style={{ gap: 13, minWidth: 0 }}>
-                    <ProjectPhoto project={project} canEdit={permissions.has(P.PROJECT_EDIT)} />
+                    {/* the tile, the title and the code open the project's details */}
+                    <button type="button" className="ptile-btn" onClick={() => setAbout(true)} aria-label="Project details"
+                        title={canEditDetails ? "See the project's details and change its photo" : "See the project's details"}>
+                        <ProjectTile icon={project.icon} tint={project.tint} photo={project.photoFileId} size="lg" />
+                        {/* whoever edits the project sees a pencil on hover: its photo is changed in the details */}
+                        {canEditDetails && <span className="ptile-pencil" aria-hidden="true"><Icon name="edit" /></span>}
+                    </button>
                     <div style={{ minWidth: 0 }}>
                         <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
-                            <h1 className="page-title">{project.title}</h1>
+                            <h1 className="page-title">
+                                <button type="button" className="proj-open" onClick={() => setAbout(true)} title="See the project's details">{project.title}</button>
+                            </h1>
+                            <button type="button" className="proj-open mono muted" style={{ fontSize: 13 }} onClick={() => setAbout(true)}
+                                title="Project code and building code: see the project's details">{project.code}</button>
                             {canChangeStatus ? (
                                 <MenuButton buttonClass="btn btn-sm" align="left" width={200} label="Project status"
                                     text={<span className="row" style={{ gap: 6 }}><StatusBadge status={project.status} /><Icon name="chevronDown" /></span>}>
                                     {(close) => <ProjectStatusItems project={project} close={close} onComplete={() => setShowDone(true)} />}
                                 </MenuButton>
                             ) : <StatusBadge status={project.status} />}
+                            <button type="button" className="btn btn-sm btn-quiet" onClick={() => setAbout(true)}><Icon name="info" />Details</button>
                         </div>
-                        {project.description && <div className="page-sub" style={{ maxWidth: "70ch" }}>{project.description}</div>}
-                        <div className="row wrap mt-s" style={{ gap: 14, fontSize: 12, color: "var(--ink-3)" }}>
-                            {project.location && <span className="row" style={{ gap: 6 }}><Icon name="pin" style={{ width: 14, height: 14 }} /><b className="sec">{project.location}</b></span>}
-                            <span className="row" style={{ gap: 6 }}><Icon name="calendar" style={{ width: 14, height: 14 }} />Started <b className="sec">{fmtDateY(project.startDate)}</b></span>
-                            {project.completedAt ? (
-                                <span className="row" style={{ gap: 6 }}><Icon name="checkCircle" style={{ width: 14, height: 14 }} />Completed <b className="sec">{fmtDateY(project.completedAt)}</b></span>
-                            ) : project.targetDate ? (
-                                <span className="row" style={{ gap: 6 }}><Icon name="target" style={{ width: 14, height: 14 }} />Target <b className="sec">{fmtDateY(project.targetDate)}</b></span>
-                            ) : null}
-                            <span className="row" style={{ gap: 6 }}><Icon name="clock" style={{ width: 14, height: 14 }} />{days} days</span>
-                            <OwnerLine project={project} />
-                            {panels.meta?.(project)}
-                            {project.client && (
-                                <span className="row" style={{ gap: 7 }}>Client
-                                    <ClientBadge client={{ id: project.client.id, displayName: project.client.displayName }} sub={false} link={permissions.has(P.CLIENT_VIEW)} />
-                                </span>
-                            )}
-                            {!site && (project.departments?.length ?? 0) > 0 && (
-                                <span className="row" style={{ gap: 6 }}>Departments
-                                    <b className="sec">{project.departmentsName ?? (project.departments ?? []).map((d) => d.name).join(", ")}</b>
-                                </span>
-                            )}
-                            {m && (project.billingType === "internal" ? (
-                                <span className="badge" title="No client and no payment - tracked as company cost">Internal project - no client</span>
-                            ) : site ? (
-                                <span className="row" style={{ gap: 6 }}>Received <b className="sec mono">{money.fmt(m.billing.received)}</b>
-                                    <span className="muted">·</span>{m.billing.paidAhead > 0 ? "Paid ahead" : "Owed"}
-                                    <b className="sec mono">{money.fmt(m.billing.paidAhead > 0 ? m.billing.paidAhead : m.billing.owed)}</b>
-                                    {m.isLocked && <LockedSince at={project.finalizedAt} />}
-                                    <SettledOwed money={m} />
-                                </span>
-                            ) : (
-                                <span className="row" style={{ gap: 6 }}>Payment <b className="sec mono">{money.fmt(m.revenue)}</b>
-                                    {m.isLocked && <LockedSince at={project.finalizedAt} />}
-                                    <SettledOwed money={m} />
-                                </span>
-                            ))}
-                        </div>
+                        {project.description && <div className="page-sub clamp2" style={{ maxWidth: "70ch" }}>{project.description}</div>}
                     </div>
                 </div>
                 <div className="page-actions">
@@ -419,6 +398,10 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
             {showReport && canReport && <ReportModal project={project} onClose={() => setShowReport(false)} />}
             {deleting && <DeleteProjectModal project={project} onClose={() => setDeleting(false)} />}
             {editing && canEditDetails && <EditProjectModal project={project} onClose={() => setEditing(false)} />}
+            {about && (
+                <ProjectDetailsModal project={project} panels={panels} days={days} onClose={() => setAbout(false)}
+                    onEdit={canEditDetails ? () => { params.delete("about"); params.set("details", "1"); setParams(params); } : null} />
+            )}
             {params.get("departments") === "edit" && canEditDepartments && (
                 <DepartmentsModal project={project} current={(project.departments ?? []).map((d) => d.id)} onClose={closeDepartments} />
             )}
@@ -427,6 +410,101 @@ function ProjectView({ project, panels }: { project: Project; panels: ProjectPan
 }
 
 /** What the client still owed when the project was completed, and whether it was excused or written off. */
+/**
+ * The project's details, laid out: what it is, its dates, its people and, for whoever sees the money, its money. Opened
+ * from the tile, title or code at the top of its page (?about=1), for Design projects and sites alike. Whoever edits
+ * projects changes its photo and owner here, and goes on to Edit details.
+ */
+function ProjectDetailsModal({ project, panels, days, onEdit, onClose }: {
+    project: Project; panels: ProjectPanels; days: number; onEdit: (() => void) | null; onClose: () => void;
+}) {
+    const permissions = usePermissions();
+    const site = project.domain === "execution";
+    const m = permissions.has(P.FINANCIAL_VIEW) ? project.money : null;
+    const departments = project.departmentsName ?? (project.departments ?? []).map((d) => d.name).join(", ");
+    return (
+        <Modal title="Project details" onClose={onClose}
+            foot={
+                <>
+                    <span className="grow" />
+                    {onEdit && <button className="btn" onClick={onEdit}><Icon name="edit" />Edit details</button>}
+                    <button className="btn btn-primary" onClick={onClose}>Close</button>
+                </>
+            }>
+            <div className="pd-head">
+                <ProjectPhoto project={project} canEdit={permissions.has(P.PROJECT_EDIT)} />
+                <div style={{ minWidth: 0 }}>
+                    <div className="row wrap" style={{ gap: 8 }}><span className="pd-title">{project.title}</span><StatusBadge status={project.status} /></div>
+                    <div className="mono muted" style={{ fontSize: 12 }}>{project.code}</div>
+                </div>
+            </div>
+            {project.description && <p className="pd-desc">{project.description}</p>}
+
+            <DetailsGroup title="About">
+                <Fact label="Business">{site ? "Execution site" : `${DOMAIN_LABEL[project.domain] ?? project.domain} project`}</Fact>
+                <Fact label="Location">{project.location}</Fact>
+                <Fact label="Client">
+                    {project.client
+                        ? <ClientBadge client={{ id: project.client.id, displayName: project.client.displayName }} sub={false} link={permissions.has(P.CLIENT_VIEW)} />
+                        : project.billingType === "internal" ? "Internal project - no client" : null}
+                </Fact>
+                {!site && <Fact label="Departments">{departments || null}</Fact>}
+            </DetailsGroup>
+
+            <DetailsGroup title="Dates">
+                <Fact label="Started">{fmtDateY(project.startDate)}</Fact>
+                {project.completedAt
+                    ? <Fact label="Completed">{fmtDateY(project.completedAt)}</Fact>
+                    : <Fact label="Target">{project.targetDate ? fmtDateY(project.targetDate) : null}</Fact>}
+                {project.status === "hold" && <Fact label="On hold since">{project.heldSince ? fmtDateY(project.heldSince) : null}</Fact>}
+                <Fact label={project.completedAt ? "Ran for" : "Running for"}>{days} days</Fact>
+            </DetailsGroup>
+
+            <DetailsGroup title="People">
+                <Fact label="Owner"><OwnerLine project={project} /></Fact>
+                <Fact label="Team">{panels.meta?.(project)}</Fact>
+            </DetailsGroup>
+
+            {/* for whoever sees the money (the API sends it to no one else) */}
+            {m && project.billingType !== "internal" && (
+                <DetailsGroup title="Money">
+                    {site ? (
+                        <>
+                            <Fact label="Received"><b className="mono">{money.fmt(m.billing.received)}</b></Fact>
+                            <Fact label={m.billing.paidAhead > 0 ? "Paid ahead" : "Owed"}>
+                                <b className="mono">{money.fmt(m.billing.paidAhead > 0 ? m.billing.paidAhead : m.billing.owed)}</b>
+                                {m.isLocked && <> <LockedSince at={project.finalizedAt} /></>}
+                                {" "}<SettledOwed money={m} />
+                            </Fact>
+                        </>
+                    ) : (
+                        <Fact label="Payment">
+                            <b className="mono">{money.fmt(m.revenue)}</b>
+                            {m.isLocked && <> <LockedSince at={project.finalizedAt} /></>}
+                            {" "}<SettledOwed money={m} />
+                        </Fact>
+                    )}
+                    <Fact label="CFA price">{m.cfaPrice != null ? <span className="mono" title="For reference - it is in no calculation">{fmtNumber(m.cfaPrice)} CFA</span> : null}</Fact>
+                </DetailsGroup>
+            )}
+        </Modal>
+    );
+}
+
+function DetailsGroup({ title, children }: { title: string; children: ReactNode }) {
+    return (
+        <section className="pd-group" aria-label={title}>
+            <h3 className="pd-group-title">{title}</h3>
+            <dl className="pd-facts">{children}</dl>
+        </section>
+    );
+}
+
+/** One fact; it hides itself when it has nothing to say (an empty value). */
+function Fact({ label, children }: { label: string; children: ReactNode }) {
+    return <div className="pd-fact"><dt>{label}</dt><dd>{children}</dd></div>;
+}
+
 function SettledOwed({ money: m }: { money: NonNullable<Project["money"]> }) {
     if (m.settledOwedUsd == null) return null;
     const excused = m.settledOwedAs === "excused";
@@ -469,7 +547,7 @@ function OwnerLine({ project }: { project: Project }) {
     }
 
     return (
-        <span className="row" style={{ gap: 6 }}>Owner
+        <span className="row" style={{ gap: 6 }}>
             <span className="row" style={{ gap: 5 }}>
                 <PersonAvatar person={owner} size={18} />
                 <b className="sec"><PersonName person={owner} /></b>

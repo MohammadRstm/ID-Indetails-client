@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { toast } from "@/shared/components/Feedback/toast";
@@ -114,7 +114,7 @@ export default function InvoiceEditor({ project, invoice: existing = null, onClo
             foot={
                 <>
                     <div className="grow mono" style={{ fontSize: "12.5px", fontWeight: 650 }}>
-                        {save.error ? <span className="err"><Icon name="alert" />{errorMessage(save.error)}</span>
+                        {save.error ? <span className="err"><Icon name="alert" /><ErrorMessage error={save.error} /></span>
                             : sayIncomplete || errors.show("lines", linesError) ? <span className="err"><Icon name="alert" />{linesError}</span> : money.exact(total)}
                     </div>
                     <button className="btn" onClick={onClose}>Cancel</button>

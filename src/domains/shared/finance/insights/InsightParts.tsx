@@ -24,10 +24,12 @@ export function BasisNote({ basis, label }: { basis: Schemas["InsightBasisRespon
     );
 }
 
-/** A project's title, linking to its page (at the tab given) when the viewer may open it. */
-export function ProjectLink({ domain, id, title, query }: { domain: Domain; id: number; title: string; query: string }) {
+/** A project's title, linking to its page (at the tab given) when the viewer may open it, and its full code after it. */
+export function ProjectLink({ domain, id, title, code, query }: { domain: Domain; id: number; title: string; code?: string; query: string }) {
     const permissions = usePermissions();
     const path = `projects/${id}`;
-    if (!canOpen(permissions, domain, path)) return <span style={{ fontWeight: 600 }}>{title}</span>;
-    return <Link to={`/${domain}/${path}?${query}`} style={{ fontWeight: 600 }}>{title}</Link>;
+    const name = canOpen(permissions, domain, path)
+        ? <Link to={`/${domain}/${path}?${query}`} style={{ fontWeight: 600 }}>{title}</Link>
+        : <span style={{ fontWeight: 600 }}>{title}</span>;
+    return code ? <>{name} <span className="muted mono" style={{ fontSize: 11 }}>{code}</span></> : name;
 }

@@ -13,6 +13,112 @@ import { renderApp } from "@/test/renderApp";
 const admin = withPermissions(personas.designAdmin, { grant: MONEY_AND_HIRING });
 const firstRow = async () => (await screen.findByText("Haddad Holdings HQ fit-out")).closest("tr")!;
 
+describe("the projects list's Filters panel", () => {
+    const openPanel = async () => {
+        await userEvent.click(await screen.findByRole("button", { name: /^Filters/ }));
+        return screen.findByRole("dialog", { name: "Filters" });
+    };
+    const headings = (panel: HTMLElement) => within(panel).getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+    /** What the page asks the API for, the newest request last. */
+    function listRequests() {
+        const asked: URLSearchParams[] = [];
+        const handler = http.get("/api/projects", ({ request }) => {
+            const q = new URL(request.url).searchParams;
+            if (q.get("pageSize") !== "1") asked.push(q);
+            return HttpResponse.json(fixtures.projects);
+        });
+        return { asked, handler };
+    }
+
+    it("holds every filter in one button, grouped, instead of a row of dropdowns", async () => {
+        renderApp("/design/projects", admin, ...projectHandlers);
+        await firstRow();
+        for (const label of ["Status", "Quarter", "Year", "Type", "Client", "Owner"]) expect(screen.queryByLabelText(label)).toBeNull();
+        // only the search, the Filters button and the sort are on the page
+        expect(screen.getByRole("textbox", { name: "Search projects or codes" })).toBeInTheDocument();
+        expect(screen.getByLabelText("Sort")).toBeInTheDocument();
+        expect(headings(await openPanel())).toEqual(["Status", "When", "Type", "Client", "Owner"]);
+    });
+
+    it("leaves out the groups the person may not use", async () => {
+        renderApp("/design/projects", withPermissions(admin, { revoke: [P.FINANCIAL_VIEW, P.CLIENT_VIEW, P.EMPLOYEE_VIEW] }), ...projectHandlers);
+        await firstRow();
+        expect(headings(await openPanel())).toEqual(["Status", "When"]);
+    });
+
+    it("narrows the list as choices are made, names what is on in chips under the bar, and takes one off", async () => {
+        const { asked, handler } = listRequests();
+        renderApp("/design/projects", admin, handler, ...projectHandlers);
+        await firstRow();
+        const panel = await openPanel();
+        await userEvent.click(await within(panel).findByRole("radio", { name: "Cedar Bank SAL" }));
+        await userEvent.click(within(panel).getByRole("button", { name: /^Completed/ }));
+        await waitFor(() => expect(asked.at(-1)!.get("clientId")).toBe("3"));
+        expect(asked.at(-1)!.get("status")).toBe("completed");
+
+        // the panel ends by saying how many projects are left, and closes
+        await userEvent.click(within(panel).getByRole("button", { name: /^Show \d+ projects?$/ }));
+        expect(screen.queryByRole("dialog", { name: "Filters" })).toBeNull();
+        expect(screen.getByRole("button", { name: "Filters, 2 on" })).toBeInTheDocument();
+        const chips = screen.getByRole("group", { name: "Filters that are on" });
+        expect(within(chips).getAllByRole("button").map((b) => b.getAttribute("aria-label"))).toEqual(["Remove filter: Completed", "Remove filter: Cedar Bank SAL", null]);
+
+        await userEvent.click(within(chips).getByRole("button", { name: "Remove filter: Cedar Bank SAL" }));
+        await waitFor(() => expect(asked.at(-1)!.get("clientId")).toBeNull());
+        expect(asked.at(-1)!.get("status")).toBe("completed");
+
+        // with nothing on, the list is the one already loaded at the start (no new request is needed for it)
+        await userEvent.click(screen.getByRole("button", { name: "Clear all" }));
+        await waitFor(() => expect(screen.queryByRole("group", { name: "Filters that are on" })).toBeNull());
+        expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
+        expect(await firstRow()).toBeInTheDocument();
+    });
+
+    it("clears the filters in the panel without clearing the search", async () => {
+        const { asked, handler } = listRequests();
+        renderApp("/design/projects", admin, handler, ...projectHandlers);
+        await firstRow();
+        await userEvent.type(screen.getByRole("textbox", { name: "Search projects or codes" }), "villa");
+        const panel = await openPanel();
+        await userEvent.click(within(panel).getByRole("button", { name: /^Archived/ }));
+        await waitFor(() => expect(asked.at(-1)!.get("status")).toBe("archived"));
+        expect(screen.getByRole("button", { name: "Filters, 1 on" })).toBeInTheDocument();
+
+        await userEvent.click(within(panel).getByRole("button", { name: "Clear filters" }));
+        await waitFor(() => expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument());
+        expect(screen.queryByRole("group", { name: "Filters that are on" })).toBeNull();
+        expect(screen.getByRole("textbox", { name: "Search projects or codes" })).toHaveValue("villa");
+    });
+
+    it("asks for a year only once a quarter is chosen", async () => {
+        const { asked, handler } = listRequests();
+        renderApp("/design/projects", admin, handler, ...projectHandlers);
+        await firstRow();
+        const panel = await openPanel();
+        expect(within(panel).queryByRole("group", { name: "Year" })).toBeNull();
+        await userEvent.click(within(panel).getByRole("button", { name: "Q3" }));
+        expect(within(await within(panel).findByRole("group", { name: "Year" })).getAllByRole("button")).toHaveLength(2);
+        await waitFor(() => expect(asked.at(-1)!.get("quarter")).toBe("3"));
+        expect(asked.at(-1)!.get("year")).not.toBeNull();
+    });
+
+    it("scrolls a long list of clients inside the panel, and finds one by name", async () => {
+        const many = Array.from({ length: 12 }, (_, i) => ({ ...fixtures.clients.items[0], id: 100 + i, displayName: `Client ${i + 1}` }));
+        renderApp("/design/projects", admin, http.get("/api/clients", () => HttpResponse.json({ ...fixtures.clients, items: many, totalCount: 12 })), ...projectHandlers);
+        await firstRow();
+        const panel = await openPanel();
+        const find = await within(panel).findByRole("textbox", { name: "Find a client" });
+        const clients = within(panel).getByRole("radiogroup", { name: "Client" });
+        expect(within(clients).getAllByRole("radio")).toHaveLength(14);
+        await userEvent.type(find, "client 11");
+        expect(within(clients).getAllByRole("radio").map((r) => r.textContent)).toEqual(["Client 11"]);
+        await userEvent.clear(find);
+        await userEvent.type(find, "zzz");
+        expect(within(clients).queryByRole("radio")).toBeNull();
+        expect(within(clients).getByText(/Nothing matches/)).toBeInTheDocument();
+    });
+});
+
 describe("the projects list", () => {
     it("shows the money to people with financial:view", async () => {
         renderApp("/design/projects", admin, ...projectHandlers);
@@ -115,7 +221,9 @@ describe("a project", () => {
         expect(await screen.findByRole("button", { name: /mark as done/i })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Project status" })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "More actions" })).toBeInTheDocument();
-        expect(within(document.querySelector(".page-head") as HTMLElement).getByText(/^Payment/)).toBeInTheDocument();
+        // the payment is among the project's details
+        await userEvent.click(screen.getByRole("button", { name: "Details" }));
+        expect(within(await screen.findByRole("dialog", { name: "Project details" })).getByText("Payment")).toBeInTheDocument();
     });
 
     it("only shows the status to everyone else", async () => {
@@ -215,9 +323,11 @@ describe("a new project and its details", () => {
                 return HttpResponse.json({ ...located, location: "Jounieh" });
             }),
             ...projectHandlers);
-        expect(await screen.findByText("Achrafieh, Beirut")).toBeInTheDocument();
-        await userEvent.click(screen.getByRole("button", { name: "More actions" }));
-        await userEvent.click(screen.getByRole("button", { name: "Edit details" }));
+        // where it is shows among its details, which lead on to Edit details
+        await userEvent.click(await screen.findByRole("button", { name: "Details" }));
+        const about = await screen.findByRole("dialog", { name: "Project details" });
+        expect(await within(about).findByText("Achrafieh, Beirut")).toBeInTheDocument();
+        await userEvent.click(within(about).getByRole("button", { name: "Edit details" }));
         const dialog = await screen.findByRole("dialog", { name: "Edit project details" });
         const where = within(dialog).getByLabelText(/Location/);
         await userEvent.clear(where);
@@ -392,5 +502,149 @@ describe("meetings", () => {
         renderApp("/design/meetings", withPermissions(personas.designEmployee, { revoke: [P.MEETING_CREATE] }), ...projectHandlers);
         await screen.findByText(/that already happened/);
         expect(screen.queryByRole("button", { name: /new meeting/i })).toBeNull();
+    });
+});
+
+describe("a project's codes", () => {
+    it("are suggested as a new project is named, and sent as they were typed", async () => {
+        const bodies: Record<string, unknown>[] = [];
+        renderApp("/design/projects?new=1", admin,
+            http.post("/api/projects", async ({ request }) => {
+                bodies.push((await request.json()) as Record<string, unknown>);
+                return HttpResponse.json({ ...fixtures.project, id: 77, title: "Villa Kadmous" }, { status: 201 });
+            }),
+            ...projectHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "New project" });
+        const code = within(dialog).getByLabelText("Project code");
+        const building = within(dialog).getByLabelText("Building code");
+        await waitFor(() => expect(code).toHaveValue("ID26Q4007"));
+        await userEvent.type(within(dialog).getByLabelText("Project name"), "Villa Kadmous");
+        expect(building).toHaveValue("VK");
+        expect(within(dialog).getByText("ID26Q4007-VK")).toBeInTheDocument();
+
+        // typed in, the building code stops following the name
+        await userEvent.type(building, "2");
+        await userEvent.type(within(dialog).getByLabelText("Project name"), " Finishing");
+        expect(building).toHaveValue("VK2");
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Internal" }));
+        await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
+        // left as suggested, the project code is the API's to give
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ title: "Villa Kadmous Finishing", projectCode: null, buildingCode: "VK2" })]));
+    });
+
+    it("say live when a project code is badly formed or already used, and offer the next one", async () => {
+        renderApp("/design/projects?new=1", admin,
+            http.get("/api/projects/next-code", ({ request }) => HttpResponse.json({
+                projectCode: "ID26Q4007",
+                takenBy: new URL(request.url).searchParams.get("check") === "ID26Q4003" ? { id: 3, title: "Cedar Bank branch refresh" } : null,
+            })),
+            ...projectHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "New project" });
+        const code = within(dialog).getByLabelText("Project code");
+        await waitFor(() => expect(code).toHaveValue("ID26Q4007"));
+
+        await userEvent.clear(code);
+        await userEvent.type(code, "id26q5");
+        await userEvent.tab();
+        expect(within(dialog).getByText(/^Use the form ID26Q4001/)).toBeInTheDocument();
+
+        await userEvent.clear(code);
+        await userEvent.type(code, "id26q4003");
+        expect(await within(dialog).findByText(/ID26Q4003 is already the code of Cedar Bank branch refresh/)).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Use ID26Q4007" }));
+        expect(code).toHaveValue("ID26Q4007");
+        expect(within(dialog).queryByText(/is already the code of/)).toBeNull();
+    });
+
+    it("show first in the projects table, and with the project's name on its page", async () => {
+        renderApp("/design/projects", admin, ...projectHandlers);
+        const row = await firstRow();
+        expect(within(row).getByText("ID26Q3001-HHHFO")).toBeInTheDocument();
+        expect(within(row).getAllByRole("cell")[0]).toHaveTextContent("ID26Q3001-HHHFO");
+    });
+
+    it("are changed with the rest of the details, and a code another project has is shown beside it", async () => {
+        const bodies: Record<string, unknown>[] = [];
+        renderApp("/design/projects/1", admin,
+            http.put("/api/projects/1", async ({ request }) => {
+                bodies.push((await request.json()) as Record<string, unknown>);
+                return HttpResponse.json({ type: "business_rule", code: "project_code_taken", message: "ID26Q3002 is already the code of Villa Mounir interiors.", traceId: "t" }, { status: 422 });
+            }),
+            ...projectHandlers);
+        expect(await screen.findByText("ID26Q3001-HHHFO")).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+        await userEvent.click(screen.getByRole("button", { name: "Edit details" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit project details" });
+        const code = within(dialog).getByLabelText("Project code");
+        expect(code).toHaveValue("ID26Q3001");
+        expect(within(dialog).getByLabelText("Building code")).toHaveValue("HHHFO");
+
+        await userEvent.clear(code);
+        await userEvent.type(code, "ID26Q3002");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ projectCode: "ID26Q3002", buildingCode: "HHHFO" })]));
+        expect(await within(dialog).findByText("ID26Q3002 is already the code of Villa Mounir interiors.")).toBeInTheDocument();
+    });
+});
+
+describe("the CFA price", () => {
+    // admins see project money once a super admin hands it to them
+    const noMoney = withPermissions(admin, { revoke: [P.FINANCIAL_VIEW] });
+    const priced = { ...fixtures.project, money: { ...fixtures.project.money!, cfaPrice: 15_000_000 } };
+
+    it("shows in the project's details and is changed there by whoever sees the money, in whole francs", async () => {
+        const edited: Record<string, unknown>[] = [];
+        renderApp("/design/projects/1", admin,
+            http.get("/api/projects/1", () => HttpResponse.json(priced)),
+            http.put("/api/projects/1", async ({ request }) => { edited.push((await request.json()) as Record<string, unknown>); return HttpResponse.json(priced); }),
+            ...projectHandlers);
+        // among the project's details, which open from its title
+        await userEvent.click(await screen.findByRole("button", { name: "Details" }));
+        const details = await screen.findByRole("dialog", { name: "Project details" });
+        expect(within(details).getByText("15,000,000 CFA")).toBeInTheDocument();
+        // and on to Edit details from there
+        await userEvent.click(within(details).getByRole("button", { name: "Edit details" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit project details" });
+        const field = within(dialog).getByLabelText(/CFA price/);
+        expect(field).toHaveValue("15,000,000");
+        await userEvent.clear(field);
+        // no cents in francs: the point is refused
+        await userEvent.type(field, "16500000.5");
+        expect((field as HTMLInputElement).value).not.toContain(".");
+        await userEvent.clear(field);
+        await userEvent.type(field, "16500000");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(edited).toEqual([expect.objectContaining({ cfaPrice: 16_500_000 })]));
+    });
+
+    it("is set when the project is created", async () => {
+        const created: Record<string, unknown>[] = [];
+        renderApp("/design/projects?new=1", admin,
+            http.post("/api/projects", async ({ request }) => {
+                created.push((await request.json()) as Record<string, unknown>);
+                return HttpResponse.json({ ...fixtures.project, id: 77, title: "Dakar offices" }, { status: 201 });
+            }),
+            ...projectHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "New project" });
+        await userEvent.type(within(dialog).getByLabelText("Project name"), "Dakar offices");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Internal" }));
+        await userEvent.type(within(dialog).getByLabelText(/CFA price/), "15000000");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Create project" }));
+        await waitFor(() => expect(created).toEqual([expect.objectContaining({ title: "Dakar offices", cfaPrice: 15_000_000 })]));
+    });
+
+    it("isn't there for someone who doesn't see the money, whose save leaves it as it is", async () => {
+        const edited: Record<string, unknown>[] = [];
+        renderApp("/design/projects/1", noMoney,
+            http.put("/api/projects/1", async ({ request }) => { edited.push((await request.json()) as Record<string, unknown>); return HttpResponse.json(fixtures.project); }),
+            ...projectHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+        await userEvent.click(screen.getByRole("button", { name: "Edit details" }));
+        const dialog = await screen.findByRole("dialog", { name: "Edit project details" });
+        expect(within(dialog).queryByLabelText(/CFA price/)).toBeNull();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(edited).toHaveLength(1));
+        expect(edited[0]).not.toHaveProperty("cfaPrice");
     });
 });

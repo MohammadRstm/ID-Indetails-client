@@ -12,7 +12,11 @@ export const keys = {
         list: (params: object) => ["projects", "list", params] as const,
         totals: (params: object) => ["projects", "totals", params] as const,
         counts: (domain: string) => ["projects", "counts", domain] as const,
+        /** The project form's suggested code, and who has the one typed: refreshed by every project change. */
+        nextCode: (domain: string, check: string, projectId: number | null) => ["projects", "next-code", domain, check, projectId] as const,
         detail: (id: number) => ["projects", "detail", id] as const,
+        /** The colour picker's thirty colours and who has each: refreshed by every project change. */
+        colors: (domain: string) => ["projects", "colors", domain] as const,
         /** Its profitability and its what-ifs: under the project, so every change to it refreshes them. */
         insights: (id: number) => ["projects", "detail", id, "insights"] as const,
         scenario: (id: number, levers: object) => ["projects", "detail", id, "insights", "scenario", levers] as const,
@@ -34,6 +38,7 @@ export const keys = {
         all: ["meetings"] as const,
         list: (params: object) => ["meetings", "list", params] as const,
         project: (projectId: number) => ["meetings", "project", projectId] as const,
+        invitees: (projectId: number) => ["meetings", "invitees", projectId] as const,
     },
     clients: {
         all: ["clients"] as const,
@@ -44,6 +49,10 @@ export const keys = {
     employees: {
         all: ["employees"] as const,
         list: (params: object) => ["employees", "list", params] as const,
+    },
+    /** Someone's own salary advances. Everyone's sit under Salaries (["company", "salaries", "advances"]). */
+    advances: {
+        mine: ["advances", "mine"] as const,
     },
     timeOff: {
         all: ["time-off"] as const,

@@ -375,7 +375,7 @@ export const explainedMoney: Article[] = [
             list(
                 "Company expenses and these salaries count for the share of each month's days the period covers: half of a month counts half its rent.",
                 "**Fixed salaries** are the pay of everyone who logs no hours: admins, super admins and site staff. No project carries it, so it's a company cost, taken off here instead.",
-                "**Paid leave** is what Design staff were paid for paid time off, on a salary or hourly pay. Nothing is logged for it, so no project carries it either.",
+                "**Paid leave** is what Design staff were paid for paid time off. Nothing is logged for it, so no project carries it either.",
                 "The **overtime premium** is what salaries paid for overtime past the month's threshold, beyond the hourly rate their projects carry those hours at.",
                 "**Outstanding** is as of today, whatever the period.",
                 "The monthly chart on Company expenses shows each month's profit before company expenses, and the net profit after them, the fixed salaries, paid leave and the overtime premium.",
@@ -413,6 +413,7 @@ export const explainedMoney: Article[] = [
                 "**Project created**, **status changed** and **new requirements**: about your business's projects, when it has project notifications on.",
                 "**You're the owner** of a project, and it's **nearly done** (90% of its requirements).",
                 "**Role, department, business, pay, permissions or schedule changed**, and **hours excused**: something about your account changed (never an amount).",
+                "**Invited to a meeting**, **meeting moved** and **meeting cancelled**: about a meeting you were invited to. **Meeting soon**: one you're in starts in 10 minutes.",
             ),
             only(has(P.WORK_ENTRY_CREATE), para("**Weekly summary**: on the first day of the week, how much you logged the week before. **Comment**: someone commented on one of your entries.")),
             only(has(P.WORK_ENTRY_VIEW_ALL), para("**Work logged**, or one **daily digest**: as the business's settings say.")),

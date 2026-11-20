@@ -6,6 +6,7 @@ import { projectWork, projectWorkHandlers } from "@/test/fixtures/project";
 import { site, siteHandlers } from "@/test/fixtures/site";
 import { MONEY_AND_HIRING, personas, withPermissions } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
+import { money } from "@/shared/format/money";
 
 const change = (over: object = {}) => ({
     id: 9, projectId: site.project.id, projectTitle: site.project.title, domain: "execution", kind: "expense",
@@ -60,5 +61,27 @@ describe("the profit floor", () => {
         await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
         await userEvent.click(within(dialog).getByRole("button", { name: "Dismiss" }));
         await waitFor(() => expect(calls).toEqual(["dismiss 9"]));
+    });
+
+    it("opens a held pay change with every project it reaches and what forcing it would leave", async () => {
+        const calls: string[] = [];
+        const held = change({
+            kind: "pay_change", summary: "Pay of Yara Mansour: 2,112.00 USD a month from 15 Jun 2026", person: { id: 9, name: "Yara Mansour" },
+            projects: [{ projectId: site.project.id, title: site.project.title, profitNow: 10, profitIfForced: -8 }],
+        });
+        renderApp(`/execution/projects/${site.project.id}?blocked=9`, personas.superAdmin,
+            http.get("/api/blocked-changes/:id", () => HttpResponse.json(held)),
+            http.post("/api/blocked-changes/:id/force", ({ params }) => { calls.push(`force ${String(params.id)}`); return HttpResponse.json({ ...held, status: "forced" }); }),
+            ...siteHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "A pay change was held" });
+        expect(await within(dialog).findByText("Pay of Yara Mansour: 2,112.00 USD a month from 15 Jun 2026")).toBeInTheDocument();
+        const reached = within(dialog).getByRole("table", { name: "Projects it reaches" });
+        expect(within(reached).getByText(site.project.title)).toBeInTheDocument();
+        expect(within(reached).getByText(money.exact(-8, "USD", { cents: true }))).toBeInTheDocument();
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Force…" }));
+        expect(within(dialog).getByText(/the employee is told their pay changed/)).toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Force it through" }));
+        await waitFor(() => expect(calls).toEqual(["force 9"]));
     });
 });

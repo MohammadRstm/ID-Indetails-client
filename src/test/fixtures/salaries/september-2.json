@@ -14,7 +14,6 @@
           "id": 8,
           "name": "Procurement"
         },
-        "basis": "monthly",
         "amount": 1200,
         "currency": "USD",
         "hourlyRate": 6.9232,
@@ -43,7 +42,9 @@
         "fullMonthEstimate": 1200,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 1200
       },
       {
         "userId": 11,
@@ -55,7 +56,6 @@
           "id": 15,
           "name": "Site"
         },
-        "basis": "monthly",
         "amount": 1500,
         "currency": "USD",
         "hourlyRate": 8.654,
@@ -84,7 +84,9 @@
         "fullMonthEstimate": 1500,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 1500
       },
       {
         "userId": 14,
@@ -96,7 +98,6 @@
           "id": 15,
           "name": "Site"
         },
-        "basis": "monthly",
         "amount": 1300,
         "currency": "USD",
         "hourlyRate": 7.5001,
@@ -125,7 +126,9 @@
         "fullMonthEstimate": 1300,
         "overtimePaidMinutes": 0,
         "overtimeThresholdMinutes": null,
-        "countedMinutes": null
+        "countedMinutes": null,
+        "advanceRepayment": null,
+        "toHandOver": 1300
       }
     ],
     "page": 2,
@@ -140,12 +143,13 @@
       "overtimePay": 224.13,
       "deduction": 0,
       "total": 23706.8,
-      "earnedSoFar": 22758.53
+      "earnedSoFar": 22758.53,
+      "advanceRepayment": 0,
+      "toHandOver": 23706.8
     }
   ],
   "summary": {
     "people": 13,
-    "onMonthlySalary": 9,
     "normalMinutes": 57880,
     "overtimeMinutes": 4310,
     "madeUpMinutes": 2930,
@@ -153,6 +157,11 @@
     "shortMinutes": 930,
     "expectedMinutes": 61740,
     "overtimePaidMinutes": 1380
+  },
+  "advances": {
+    "pending": 0,
+    "left": [],
+    "unsettled": 0
   },
   "withoutPay": []
 }

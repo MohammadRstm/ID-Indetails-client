@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { useCompanySettings } from "@/app/shell/shellQueries";
@@ -160,7 +160,7 @@ function Company({ settings: s }: { settings: CompanySettings }) {
                 </div>
                 {canEdit && changed && (
                     <div className="row mt-s" style={{ gap: 8, justifyContent: "flex-end" }}>
-                        {(save.error ?? saveEmail.error) != null && <span className="err" style={{ fontSize: 12 }}><Icon name="alert" />{errorMessage(save.error ?? saveEmail.error)}</span>}
+                        {(save.error ?? saveEmail.error) != null && <span className="err" style={{ fontSize: 12 }}><Icon name="alert" /><ErrorMessage error={save.error ?? saveEmail.error} /></span>}
                         <button className="btn btn-sm" onClick={() => { setName(s.name); setWebsite(s.website ?? ""); setAddress(s.address ?? ""); setContactEmail(s.contactEmail ?? ""); }}>Cancel</button>
                         <button className="btn btn-sm btn-primary" disabled={save.isPending || saveEmail.isPending} onClick={saveDetails}>Save</button>
                     </div>

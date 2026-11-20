@@ -6,6 +6,7 @@ export function snippet(m: Message | null | undefined): string {
     if (m.kind === "task_comment") return `Task comment${m.body ? `: ${m.body}` : ""}`;
     if (m.body) return m.body;
     const first = m.attachments[0];
+    if (first && (first.kind === "audio" || first.mimeType.startsWith("audio/"))) return "🎤 Voice message";
     return first ? (first.kind === "video" || first.mimeType.startsWith("video/") ? "📹 Video" : "📷 Photo") : "";
 }
 

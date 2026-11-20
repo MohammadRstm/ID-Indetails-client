@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
+import { downloadFile, printFile } from "@/api/download";
+import { errorMessage } from "@/api/errors";
 import type { Schemas } from "@/api/types";
 import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
@@ -9,6 +11,7 @@ import { canOpen } from "@/app/routing/routeTable";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
+import { toast } from "@/shared/components/Feedback/toast";
 import { SearchInput, Segmented } from "@/shared/components/Forms/Filters";
 import Avatar from "@/shared/components/Identity/Avatar";
 import { addDays, companyToday, DAYS, fmtDate, fmtH, fmtNumber, formatSettings, partsOf, startOfWeek } from "@/shared/format/time";
@@ -68,7 +71,8 @@ export default function SchedulesPage() {
     const [q, setQ] = useState("");
     const [editing, setEditing] = useState<PersonSchedule | null>(null);
     const search = useDebounce({ value: q.trim(), debounceTimeMs: 250 });
-    const schedules = useSchedules({ domain: domain === "all" ? null : domain, search });
+    const filters = { domain: domain === "all" ? null : domain, search };
+    const schedules = useSchedules(filters);
     const s = schedules.data;
     const domains = (["design", "execution"] as Domain[]).filter((d) => permissions.canSeeDomain(d));
     const today = companyToday();
@@ -92,12 +96,33 @@ export default function SchedulesPage() {
         if (params.has("schedule")) { params.delete("schedule"); setParams(params, { replace: true }); }
     };
 
+    // the page's own filters, for the PDF, the CSV and printing
+    const [working, setWorking] = useState(false);
+    async function output(what: "pdf" | "csv" | "print") {
+        const query = { domain: filters.domain, search: search || null };
+        setWorking(true);
+        try {
+            if (what === "pdf") await downloadFile("/company/schedules/pdf", `schedules-${today}.pdf`, query);
+            else if (what === "csv") await downloadFile("/company/schedules/export", `schedules-${today}.csv`, query);
+            else await printFile("/company/schedules/pdf", query, `schedules-${today}.pdf`);
+        } catch (e) {
+            toast({ text: what === "print" ? "The schedules weren't printed" : what === "pdf" ? "The schedules PDF wasn't downloaded" : "The schedules weren't exported", sub: errorMessage(e), icon: "alert" });
+        } finally {
+            setWorking(false);
+        }
+    }
+
     return (
         <div className="page">
             <div className="page-head">
                 <div>
                     <h1 className="page-title">Schedules<HelpHint article="working-day" label="a schedule">A person's own working days and hours. The break and the overtime rate still come from the company's settings.</HelpHint></h1>
                     <div className="page-sub">When each employee is expected to work, across both businesses</div>
+                </div>
+                <div className="page-actions">
+                    <button className="btn" disabled={!people.length || working} onClick={() => output("pdf")}><Icon name="download" />Download PDF</button>
+                    <button className="btn" disabled={!people.length || working} onClick={() => output("csv")}><Icon name="download" />Export CSV</button>
+                    <button className="btn" disabled={!people.length || working} onClick={() => output("print")}><Icon name="print" />Print</button>
                 </div>
             </div>
 

@@ -24,6 +24,8 @@ export const icons = {
   download: '<path d="M12 4v11.4"/><path d="M7.6 11.4 12 15.8l4.4-4.4"/><path d="M4.8 19.6h14.4"/>',
   // not in the prototype: download turned over, for choosing files to send
   upload: '<path d="M12 15.8V4.4"/><path d="M7.6 8.6 12 4.2l4.4 4.4"/><path d="M4.8 19.6h14.4"/>',
+  // not in the prototype: a printer, for the Print buttons beside Download PDF
+  print: '<path d="M7.4 8.6V3.8h9.2v4.8"/><path d="M7.4 17H5.8a1.4 1.4 0 0 1-1.4-1.4v-5.6a1.4 1.4 0 0 1 1.4-1.4h12.4a1.4 1.4 0 0 1 1.4 1.4v5.6a1.4 1.4 0 0 1-1.4 1.4h-1.6"/><path d="M7.4 14.4h9.2v5.8H7.4z"/>',
   file: '<path d="M13.6 3.4H6.8A1.4 1.4 0 0 0 5.4 4.8v14.4a1.4 1.4 0 0 0 1.4 1.4h10.4a1.4 1.4 0 0 0 1.4-1.4V8.2z"/><path d="M13.4 3.6v4.6h4.8"/><path d="M8.6 13h6.8"/><path d="M8.6 16.6h4.4"/>',
   // not in the prototype, drawn like file for the client portal's file cards: a PDF (the page draws it red), any other
   // type of file (a label for its extension), and a video

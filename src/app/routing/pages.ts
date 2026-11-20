@@ -41,6 +41,9 @@ const named = <M, K extends keyof M>(importer: () => Promise<M>, name: K) =>
 export const ClientPage = page(() => import("@/domains/shared/clients/ClientPage"));
 export const ClientsPage = page(() => import("@/domains/shared/clients/ClientsPage"));
 export const MeetingsPage = named(() => import("@/domains/shared/meetings/Meetings"), "MeetingsPage");
+export const LogHoursPage = named(() => import("@/domains/design/work/EmployeeHome"), "LogHoursPage");
+export const CalendarPage = named(() => import("@/domains/shared/meetings/CalendarPage"), "CalendarPage");
+export const AssignedRequirementsPage = named(() => import("@/domains/shared/requirements/AssignedRequirementsPage"), "AssignedRequirementsPage");
 export const ProjectRoute = page(() => import("@/domains/shared/projects/ProjectRoute"));
 export const ProjectsPage = page(() => import("@/domains/shared/projects/ProjectsPage"));
 export const MyWorkRoute = page(() => import("@/domains/shared/requirements/MyWorkRoute"));
@@ -52,7 +55,9 @@ export const BoqSitePage = page(() => import("@/domains/execution/boqs/BoqSitePa
 export const PocketPage = page(() => import("@/domains/execution/pocket/PocketPage"));
 export const SettingsPage = page(() => import("@/domains/shared/settings/SettingsPage"));
 export const CompanySettingsPage = named(() => import("@/domains/shared/settings/SettingsPage"), "CompanySettingsPage");
+export const WebsiteSettingsPage = named(() => import("@/domains/shared/settings/SettingsPage"), "WebsiteSettingsPage");
 export const CompanyProfilePage = page(() => import("@/domains/company/profile/CompanyProfilePage"));
+export const MySalaryAdvancesPage = page(() => import("@/domains/company/salaries/MySalaryAdvancesPage"));
 export const CompanyExpensesPage = page(() => import("@/domains/company/CompanyExpensesPage"));
 export const CompanyOverviewPage = page(() => import("@/domains/company/CompanyOverviewPage"));
 export const ProjectPayPage = page(() => import("@/domains/company/projectPay/ProjectPayPage"));
@@ -92,6 +97,9 @@ export const ForgotPasswordPage = page(() => import("@/auth/ForgotPasswordPage")
 export const ResetPasswordPage = page(() => import("@/auth/ResetPasswordPage"));
 export const AcceptInvitationPage = page(() => import("@/auth/AcceptInvitationPage"));
 export const ChangePasswordPage = page(() => import("@/auth/ChangePasswordPage"));
+// development only, and not in the tests (no API there): the sign-in page's picker that signs in as any account
+// without its password. A production build leaves it out, as it does the API's endpoints for it.
+export const DevAccountPicker = import.meta.env.DEV && import.meta.env.MODE !== "test" ? page(() => import("@/auth/DevAccountPicker")) : null;
 
 // the client portal: its own pages and session, apart from the staff app
 export const PortalRoot = page(() => import("@/portal/PortalRoot"));

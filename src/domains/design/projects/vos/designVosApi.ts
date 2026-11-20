@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { downloadFile } from "@/api/download";
+import { downloadFile, printFile } from "@/api/download";
 import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
 import type { Schemas } from "@/api/types";
@@ -86,3 +86,6 @@ export function parseAmount(text: string): number | null {
     if (!/^-?\d+(\.\d{1,2})?$/.test(clean)) return null;
     return Number(clean);
 }
+
+/** Prints that same PDF. */
+export const printDesignVoPdf = (vo: { id: number; number: string }) => printFile(`/design-vos/${vo.id}/pdf`, undefined, `${vo.number.toLowerCase()}.pdf`);

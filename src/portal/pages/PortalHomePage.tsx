@@ -119,7 +119,7 @@ function ProjectCard({ project }: { project: PortalProject }) {
     );
 }
 
-/** The project's first hero image (a calm block without one, or when it won't load), and the red dot of something new. */
+/** The project's first hero image (without one, or when it won't load, a block in the default project tint), and the red dot of something new. */
 function Cover({ project }: { project: PortalProject }) {
     const [failed, setFailed] = useState<string | null>(null);
     const url = project.heroUrl && project.heroUrl !== failed ? project.heroUrl : null;

@@ -79,6 +79,20 @@ export function useProject(id: number) {
     });
 }
 
+/**
+ * The code a new project of the domain would get now, and the project that already has the code being typed
+ * (`check`), if any: not the one being edited (`projectId`). Needs project:create or project:edit.
+ */
+export function useNextProjectCode(domain: string, check: string, projectId: number | null = null) {
+    return useQuery({
+        queryKey: keys.projects.nextCode(domain, check, projectId),
+        queryFn: async () => (await http.get<Schemas["NextProjectCodeResponse"]>("/projects/next-code", {
+            params: clean({ domain, check, projectId }),
+        })).data,
+        placeholderData: keepPreviousData,
+    });
+}
+
 export type CreateProjectBody = Schemas["CreateProjectRequest"];
 
 export function useCreateProject() {
@@ -93,6 +107,26 @@ export function useUpdateProject(id: number) {
     const invalidate = useInvalidate();
     return useMutation({
         mutationFn: async (body: Schemas["UpdateProjectRequest"]) => (await http.put<Project>(`/projects/${id}`, body)).data,
+        onSuccess: () => { void invalidate(keys.projects.all, keys.activity.all); },
+    });
+}
+
+export type ProjectColor = Schemas["ProjectColorResponse"];
+
+/** The palette's thirty colours, each with the business's open project that has it (project:create or project:edit). */
+export function useProjectColors(domain: string, enabled = true) {
+    return useQuery({
+        queryKey: keys.projects.colors(domain),
+        queryFn: async () => (await http.get<ProjectColor[]>("/projects/colors", { params: { domain } })).data,
+        enabled,
+    });
+}
+
+/** Trades colours with another project of the same business, both at once (project:edit). */
+export function useSwapProjectColor(id: number) {
+    const invalidate = useInvalidate();
+    return useMutation({
+        mutationFn: async (otherProjectId: number) => (await http.post<Project>(`/projects/${id}/swap-color`, { otherProjectId })).data,
         onSuccess: () => { void invalidate(keys.projects.all, keys.activity.all); },
     });
 }

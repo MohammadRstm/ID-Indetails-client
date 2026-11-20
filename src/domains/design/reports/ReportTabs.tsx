@@ -6,6 +6,7 @@ import { canOpen } from "@/app/routing/routeTable";
 import { CompositionBar, ProfitBars, RankBars, Spark } from "@/shared/components/Charts/Bars";
 import Columns from "@/shared/components/Charts/Columns";
 import Figure from "@/shared/components/Charts/Figure";
+import { projectLabel } from "@/domains/shared/projects/projectCodes";
 import { ProjectTile } from "@/shared/components/Data/Bits";
 import { Kpi } from "@/shared/components/Data/Kpi";
 import { MixedCurrency, Money } from "@/shared/components/Data/Money";
@@ -75,10 +76,10 @@ export function OverviewTab({ report, label, tiles, people }: TabProps) {
 
             <div className="grid g-2 mt">
                 <Figure title="Hours by project" sub={label}
-                    table={{ cols: [{ label: "Project" }, { label: "Hours", right: true }, { label: "Entries", right: true }], rows: report.byProject.map((p) => [p.title, fmtDur(p.minutes), p.entries]) }}>
+                    table={{ cols: [{ label: "Project" }, { label: "Hours", right: true }, { label: "Entries", right: true }], rows: report.byProject.map((p) => [projectLabel(p), fmtDur(p.minutes), p.entries]) }}>
                     <RankBars showPct onClick={(it) => open(`projects/${it.id}`)?.()}
                         items={report.byProject.slice(0, 8).map((p) => ({
-                            id: p.projectId, label: p.title, value: p.minutes,
+                            id: p.projectId, label: p.title, value: p.minutes, color: tiles.get(p.projectId)?.tint,
                             node: <><ProjectTile icon={tiles.get(p.projectId)?.icon} tint={tiles.get(p.projectId)?.tint} photo={tiles.get(p.projectId)?.photo} size="sm" /><span className="trunc">{p.title}</span></>,
                         }))} />
                 </Figure>
@@ -280,7 +281,7 @@ export function EntriesTab({ scope, label, people }: { scope: ReportScope; label
                             <thead><tr><th>Date</th><th>Time</th><th className="r">Duration</th><th className="r">Overtime</th><th>Employee</th><th>Project</th><th>Work</th></tr></thead>
                             <tbody>
                                 {rows.map((e) => (
-                                    <tr key={e.id}>
+                                    <tr key={e.id} className={e.project.tint ? "pc" : undefined} style={e.project.tint ? { ["--pc" as string]: e.project.tint } : undefined}>
                                         <td className="nowrap muted">{fmtDate(e.startedAt)}</td>
                                         <td className="mono nowrap">{fmtRange(e.startedAt, e.endedAt)}</td>
                                         <td className="r mono nowrap">{fmtDur(e.minutes)}</td>

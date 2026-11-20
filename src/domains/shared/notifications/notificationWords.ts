@@ -1,6 +1,6 @@
 import type { Schemas } from "@/api/types";
 import { AREAS } from "@/app/routing/areas";
-import { companyToday, daysBetween, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange, dayKey } from "@/shared/format/time";
+import { companyToday, daysBetween, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange, fmtTime, dayKey } from "@/shared/format/time";
 import type { IconName } from "@/shared/icons/icons";
 
 export type Notification = Schemas["NotificationResponse"];
@@ -36,7 +36,7 @@ const ROLE: Record<string, string> = { super_admin: "super admin", admin: "admin
 const BLOCKED_KIND: Record<string, string> = {
     expense: "An expense", material_add: "New expenses", material_update: "An expense change", labour_week: "A labour week",
     work_entry_create: "Logged hours", work_entry_update: "Changed hours", payment: "A lower payment", pricing: "A lower supervision rate",
-    boq_agree: "Agreeing a BOQ or VO", boq_withdraw: "Withdrawing the agreement of a BOQ or VO",
+    boq_agree: "Agreeing a BOQ or VO", boq_withdraw: "Withdrawing the agreement of a BOQ or VO", pay_change: "A pay change",
 };
 const areaLabel = (d: unknown) => AREAS[d as "design" | "execution"]?.label ?? "";
 
@@ -57,14 +57,20 @@ export function describe(note: Notification, reader: Reader): NotificationView {
     const logsWork = reader.logsWork && d === "design";
     // pages about the reader themself: an employee's own profile or pay; admins have none of their own
     const mine = !reader.isAdmin && reader.domain ? `/${reader.domain}/profile` : undefined;
+    // an admin's own page is among the people they manage; a super admin's is in the company area
+    const myPage = reader.isSuperAdmin ? "/company/profile" : mine ?? (reader.domain ? `/${reader.domain}/people/${reader.userId}` : undefined);
+    const advances = (id?: number) => `/company/salaries?view=advances${id ? `&advance=${id}` : ""}`;
     const by = note.actor ? `By ${who}` : undefined;
-    // admins keep meetings on their Overview's tab, super admins on the company overview's, Design employees on a page
+    // admins keep meetings on their Overview's tab, super admins on the company overview's, Design employees on a page,
+    // site staff on their calendar
     const meetings = reader.isSuperAdmin ? "/company/overview?tab=meetings"
         : !d ? undefined
             : reader.isAdmin ? `/${d}/overview?tab=meetings`
-                : d === "design" ? "/design/meetings" : undefined;
+                : d === "design" ? "/design/meetings" : "/execution/calendar";
     const when = s(p.startsAt) ? `${fmtDayDate(s(p.startsAt))} · ${fmtRange(s(p.startsAt), s(p.endsAt) || s(p.startsAt))}` : undefined;
     const topic = p.topic ? `: ${s(p.topic)}` : "";
+    // a project meeting's people are told its project; a general meeting has none
+    const onProject = title ? ` on ${title}` : "";
 
     switch (note.kind) {
         case "requirement_assigned":
@@ -102,12 +108,19 @@ export function describe(note: Notification, reader: Reader): NotificationView {
         case "log_department_blocked":
             return {
                 text: note.count > 1
-                    ? `${note.count} logs on ${title} wait for ${s(p.departmentName) || "a department"}`
-                    : `${s(p.personName) || who}'s hours on ${title} wait for ${s(p.departmentName) || "their department"}`,
-                sub: `Add ${s(p.departmentName) || "the department"} to the project to let them through`,
-                icon: "clock", route: project ? `${project}?departments=edit` : undefined,
+                    ? `${note.count} logs on ${title} wait for approval`
+                    : `${s(p.personName) || who}'s hours on ${title} wait for approval`,
+                sub: `${s(p.departmentName) || "Their department"} isn't part of the project: approve the hours or turn them down`,
+                icon: "clock",
+                route: project ? (note.subjectType === "blocked_change" && note.subjectId ? `${project}?blocked=${note.subjectId}` : `${project}?departments=edit`) : undefined,
             };
         case "work_entry_released":
+            if (p.turnedDown === true) {
+                return { text: `Your hours on ${title} were turned down`, sub: "They weren't logged", icon: "x", route: "/design/my-work" };
+            }
+            if (p.approved === true) {
+                return { text: `Your hours on ${title} were approved`, sub: "They're logged now: don't log them again", icon: "checkCircle", route: "/design/my-work" };
+            }
             return p.released === false
                 ? { text: `Your hours waiting on ${title} couldn't be added`, sub: `${s(p.reason)} Log them again.`.trim(), icon: "alert", route: "/design/my-work" }
                 : {
@@ -140,13 +153,19 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 sub: when && `${when}${p.topic ? ` · ${s(p.topic)}` : ""}`,
                 icon: "calendar", route: meetings,
             };
-        // a general meeting's attendees
+        // a general meeting's attendees, and a project meeting's invitees
         case "meeting_invited":
-            return { text: `${s(p.authorName) || who} invited you to a meeting${topic}`, sub: when, icon: "calendar", route: meetings };
+            return { text: `${s(p.authorName) || who} invited you to a meeting${onProject}${topic}`, sub: when, icon: "calendar", route: meetings };
         case "meeting_moved":
-            return { text: `${s(p.authorName) || who} moved a meeting${topic}`, sub: when && `Now ${when}`, icon: "calendar", route: meetings };
+            return { text: `${s(p.authorName) || who} moved a meeting${onProject}${topic}`, sub: when && `Now ${when}`, icon: "calendar", route: meetings };
         case "meeting_cancelled":
-            return { text: `${s(p.authorName) || who} cancelled a meeting${topic}`, sub: when, icon: "calendar", route: meetings };
+            return { text: `${s(p.authorName) || who} cancelled a meeting${onProject}${topic}`, sub: when, icon: "calendar", route: meetings };
+        // 10 minutes before it starts
+        case "meeting_soon":
+            return {
+                text: `Your meeting${onProject}${topic} starts${s(p.startsAt) ? ` at ${fmtTime(s(p.startsAt))}` : " soon"}`,
+                sub: when, icon: "calendar", route: meetings,
+            };
         case "materials_added":
             return { text: `${who} added ${plural(n(p.count), "expense")} to ${title}`, icon: "list", route: project };
         case "labour_week_submitted":
@@ -176,6 +195,15 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 sub: `${BLOCKED_KIND[s(p.kind)] ?? "A change"}${note.actor ? ` by ${who}` : ""} · force it or dismiss it`,
                 icon: "alert", route: project && note.subjectId ? `${project}?blocked=${note.subjectId}` : project,
             };
+        case "pay_change_held": {
+            // super admins only, and never an amount
+            const more = n(p.projectCount) > 1 ? ` and ${n(p.projectCount) - 1} more` : "";
+            return {
+                text: `${s(p.personName) || "Someone"}'s pay change was held at zero profit`,
+                sub: `It would take ${title}${more} to zero profit or below${note.actor ? ` · asked by ${who}` : ""} · force it or dismiss it`,
+                icon: "alert", route: project && note.subjectId ? `${project}?blocked=${note.subjectId}` : project,
+            };
+        }
         case "profit_low":
             return { text: `${title} is close to zero profit`, sub: `${n(p.marginPct)}% margin left`, icon: "trendUp", route: project };
         case "profit_at_zero":
@@ -337,6 +365,19 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             return { text: `${s(p.name) || who} is off until ${fmtDate(s(p.lastDay))}`, icon: "calendar", route: `/design/people/${n(p.userId)}` };
         case "time_off_back":
             return { text: `${s(p.name) || who} is back at work today`, icon: "calendar", route: `/design/people/${n(p.userId)}` };
+        // salary advances: never an amount. Super admins decide, the person hears the outcome
+        case "salary_advance_requested":
+            return { text: `${s(p.name) || who} asks for a salary advance.`, sub: "Approve or decline it", icon: "card", route: advances(note.subjectId ?? undefined) };
+        case "salary_advance_withdrawn":
+            return { text: `${s(p.name) || who} took back their request for a salary advance.`, icon: "card", route: advances(note.subjectId ?? undefined) };
+        case "salary_advance_approved":
+            return { text: "Your salary advance was approved.", sub: by, icon: "checkCircle", route: myPage };
+        case "salary_advance_declined":
+            return { text: "Your request for a salary advance was declined.", sub: by, icon: "card", route: myPage };
+        case "salary_advance_recorded":
+            return { text: "A salary advance was recorded for you.", sub: by, icon: "card", route: myPage };
+        case "salary_advance_unsettled":
+            return { text: `${s(p.name) || who} left with a salary advance still to pay back.`, sub: "Settle what is left", icon: "alert", route: advances() };
         case "boq_submitted":
             return {
                 text: `${s(p.authorName) || who} submitted ${s(p.title) ? `the draft “${s(p.title)}”` : "a BOQ draft"} on ${title}`,
