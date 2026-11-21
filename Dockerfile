@@ -26,8 +26,10 @@ FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine AS runtime
 USER root
 # nginx itself (CVE-2026-121810, CVE-2026-123007 and the rest fixed in 1.30.7) comes from nginx.org's own stable repository,
 # the one the image installed it from, until the image ships it. The image pins its nginx version and drops nginx.org's
-# signing key, so the key is fetched for this step and nginx (with any of its modules) is asked for at 1.30.7.
-RUN apk upgrade --no-cache pcre2 brotli-libs curl libcurl libexpat zlib musl musl-utils libxslt libxml2     && wget -q -O /etc/apk/keys/nginx_signing.rsa.pub https://nginx.org/keys/nginx_signing.rsa.pub     && apk add --no-cache -X "https://nginx.org/packages/alpine/v$(cut -d. -f1,2 /etc/alpine-release)/main"         "nginx=~1.30.7" $(apk info | grep '^nginx-module-' | sed 's/$/=~1.30.7/')     && rm -f /etc/apk/keys/nginx_signing.rsa.pub /etc/nginx/conf.d/default.conf     && nginx -v 2>&1 | grep -q 'nginx/1.30.7'
+# signing key, so the key is copied in for this step (kept in the repo, checked against the SHA-512 nginx's own images use:
+# nginx.org/keys stopped serving it on 22 November 2026) and nginx (with any of its modules) is asked for at 1.30.7.
+COPY deploy/nginx/nginx_signing.rsa.pub /etc/apk/keys/nginx_signing.rsa.pub
+RUN apk upgrade --no-cache pcre2 brotli-libs curl libcurl libexpat zlib musl musl-utils libxslt libxml2     && echo "e09fa32f0a0eab2b879ccbbc4d0e4fb9751486eedda75e35fac65802cc9faa266425edf83e261137a2f4d16281ce2c1a5f4502930fe75154723da014214f0655 */etc/apk/keys/nginx_signing.rsa.pub" | sha512sum -c -     && apk add --no-cache -X "https://nginx.org/packages/alpine/v$(cut -d. -f1,2 /etc/alpine-release)/main"         "nginx=~1.30.7" $(apk info | grep '^nginx-module-' | sed 's/$/=~1.30.7/')     && rm -f /etc/apk/keys/nginx_signing.rsa.pub /etc/nginx/conf.d/default.conf     && nginx -v 2>&1 | grep -q 'nginx/1.30.7'
 # The site and its security headers are templates, filled in when the container starts with API_UPSTREAM and
 # CONTENT_STORE_ORIGIN. The nginx image only fills in variables that are set, which is why the latter has a default below.
 COPY deploy/nginx/default.conf.template /etc/nginx/templates/default.conf.template
