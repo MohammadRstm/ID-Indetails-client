@@ -20,14 +20,14 @@ FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine AS runtime
 # The image's own example site is replaced by ours.
 # Packages with fixed high-severity CVEs are upgraded until the base image ships them: pcre2 (CVE-2026-103111, 10.49-r0),
 # brotli-libs (CVE-2026-111497, 1.2.1-r0), curl and libcurl (CVE-2026-92392, 8.23.0-r0), libexpat (CVE-2026-117610 and
-# CVE-2026-118370, 2.10.0-r0), zlib (CVE-2026-85091, 1.3.2-r1), musl and musl-utils (CVE-2026-107891, 1.2.6-r3). Only those,
+# CVE-2026-118370, 2.10.0-r0), zlib (CVE-2026-85091, 1.3.2-r1), musl and musl-utils (CVE-2026-107891, 1.2.6-r3), libxml2 (CVE-2026-86144, 2.13.9-r3). Only those,
 # as a full upgrade could replace nginx.org's nginx
 # with Alpine's.
 USER root
 # nginx itself (CVE-2026-121810, CVE-2026-123007 and the rest fixed in 1.30.7) comes from nginx.org's own stable repository,
 # the one the image installed it from, until the image ships it. The image pins its nginx version and drops nginx.org's
 # signing key, so the key is fetched for this step and nginx (with any of its modules) is asked for at 1.30.7.
-RUN apk upgrade --no-cache pcre2 brotli-libs curl libcurl libexpat zlib musl musl-utils libxslt     && wget -q -O /etc/apk/keys/nginx_signing.rsa.pub https://nginx.org/keys/nginx_signing.rsa.pub     && apk add --no-cache -X "https://nginx.org/packages/alpine/v$(cut -d. -f1,2 /etc/alpine-release)/main"         "nginx=~1.30.7" $(apk info | grep '^nginx-module-' | sed 's/$/=~1.30.7/')     && rm -f /etc/apk/keys/nginx_signing.rsa.pub /etc/nginx/conf.d/default.conf     && nginx -v 2>&1 | grep -q 'nginx/1.30.7'
+RUN apk upgrade --no-cache pcre2 brotli-libs curl libcurl libexpat zlib musl musl-utils libxslt libxml2     && wget -q -O /etc/apk/keys/nginx_signing.rsa.pub https://nginx.org/keys/nginx_signing.rsa.pub     && apk add --no-cache -X "https://nginx.org/packages/alpine/v$(cut -d. -f1,2 /etc/alpine-release)/main"         "nginx=~1.30.7" $(apk info | grep '^nginx-module-' | sed 's/$/=~1.30.7/')     && rm -f /etc/apk/keys/nginx_signing.rsa.pub /etc/nginx/conf.d/default.conf     && nginx -v 2>&1 | grep -q 'nginx/1.30.7'
 # The site and its security headers are templates, filled in when the container starts with API_UPSTREAM and
 # CONTENT_STORE_ORIGIN. The nginx image only fills in variables that are set, which is why the latter has a default below.
 COPY deploy/nginx/default.conf.template /etc/nginx/templates/default.conf.template
