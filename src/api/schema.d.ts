@@ -19668,6 +19668,27 @@ export interface components {
             /** Format: int32 */
             overtimeMinutes: number;
             waiting: components["schemas"]["WaitingHoursResponse"][];
+            excuse?: null | components["schemas"]["DayExcuseResponse"];
+        };
+        DayExcuseResponse: {
+            day: boolean;
+            /** Format: int32 */
+            monthMinutes: number;
+            wholeMonth: boolean;
+        };
+        ReopenedMonthResponse: {
+            month: string;
+            note: string;
+            /** Format: date */
+            openUntil: string;
+            /** Format: date-time */
+            reopenedAt: string;
+            reopenedBy: components["schemas"]["PersonRefResponse"];
+        };
+        ReopenMonthRequest: {
+            note?: null | string;
+            /** Format: date */
+            openUntil: string;
         };
         MyExcuseResponse: {
             days: string[];

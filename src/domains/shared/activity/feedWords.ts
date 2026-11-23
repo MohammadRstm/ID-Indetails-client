@@ -293,6 +293,16 @@ const WORDS: Record<string, Words> = {
     working_time_changed: { icon: "clock", text: (_e, p) => `changed the company's working hours${from(p.effectiveFrom)}` },
     hours_excused: { icon: "checkCircle", text: (e, p, names) => `excused ${subject(e, names)} for ${excused(p)}` },
     hours_excuse_removed: { icon: "x", text: (e, p, names) => `removed ${subject(e, names)}'s excuse for ${excused(p)}` },
+    hours_excuse_reduced: {
+        icon: "checkCircle",
+        text: (e, p, names) => {
+            const days = Array.isArray(p.days) ? p.days.length : 0;
+            const took = days ? `${days} ${days === 1 ? "day" : "days"}` : fmtH(num(p.minutes) ?? 0);
+            return `logged hours in place of an excuse: ${took} came off ${subject(e, names)}'s excuse in ${str(p.month) ? fmtMonthY(str(p.month)!) : "the month"}`;
+        },
+    },
+    month_reopened: { icon: "calendar", text: (_e, p) => `reopened ${str(p.month) ? fmtMonthY(str(p.month)!) : "a past month"} for logging${str(p.openUntil) ? ` until ${fmtDate(str(p.openUntil)!)}` : ""}` },
+    month_reopen_ended: { icon: "lock", text: (_e, p) => `locked ${str(p.month) ? fmtMonthY(str(p.month)!) : "a reopened month"} again` },
 
     // company expenses (the payload names the line; amounts only for financial:view)
     overhead_added: {

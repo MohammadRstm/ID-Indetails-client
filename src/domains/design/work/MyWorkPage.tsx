@@ -22,6 +22,7 @@ import EntryActions from "./EntryActions";
 import { useDeleteWithUndo } from "./useDeleteWithUndo";
 import EntryRow from "./EntryRow";
 import { openLogWork } from "./logWorkStore";
+import ReopenedMonthsBanner from "./ReopenedMonthsBanner";
 import { useMyEntries, useMyProjects, useMyWorkSummary, type WorkEntry } from "./workApi";
 import { loadFailed } from "@/api/queryState";
 
@@ -65,6 +66,7 @@ export default function MyWorkPage() {
         <div className="page">
             <PageHead title="My work" sub="Everything you have logged, and how it adds up."
                 actions={canLog && <button className="btn btn-primary" onClick={() => openLogWork()}><Icon name="plus" />Log work</button>} />
+            {canLog && <ReopenedMonthsBanner />}
 
             {loadFailed(all) ? <div className="panel"><div className="panel-body"><LoadError error={all.error} retry={() => all.refetch()} what="your totals" /></div></div> : (
                 <KpiStrip loading={!s} items={[

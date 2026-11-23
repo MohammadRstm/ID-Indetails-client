@@ -19,6 +19,7 @@ import { clickable } from "@/shared/utils/clickable";
 import { cx } from "@/shared/utils/cx";
 import { hasFixedSalary } from "@/domains/design/pay/payRules";
 import { useMyOvertime } from "@/domains/design/work/workApi";
+import { useReopenedMonths } from "@/domains/design/work/reopenedMonthsApi";
 import { AdvanceStatusBadge } from "./AdvanceStatusBadge";
 import { amountOf, monthKey } from "./advanceMonths";
 import ExcuseHours from "./ExcuseHours";
@@ -48,6 +49,8 @@ export default function SalaryDrawer({ row, month, multiplier, onClose }: Salary
     const permissions = usePermissions();
     const detail = useSalary(row.userId, month);
     const d = detail.data;
+    // a closed month a super admin reopened: its figures change as the missed hours are logged
+    const reopened = useReopenedMonths().data?.find((m) => m.month === month);
     const domain = row.domain as Domain | null;
     const profile = domain && canOpen(permissions, domain, `people/${row.userId}`) ? `/${domain}/people/${row.userId}` : null;
     const me = useCurrentUser();
@@ -70,7 +73,8 @@ export default function SalaryDrawer({ row, month, multiplier, onClose }: Salary
             }
             foot={
                 <>
-                    <div className="grow muted">{(d?.inProgress ?? month === companyToday().slice(0, 7)) ? "Month in progress - figures grow as work is logged." : "Closed month."}</div>
+                    <div className="grow muted">{(d?.inProgress ?? month === companyToday().slice(0, 7)) ? "Month in progress - figures grow as work is logged."
+                        : reopened ? `Reopened for logging until ${fmtDate(reopened.openUntil)} - figures change as missed hours are logged.` : "Closed month."}</div>
                     {profile && <button className="btn btn-sm" onClick={() => { onClose(); navigate(profile); }}>Open profile</button>}
                 </>
             }>

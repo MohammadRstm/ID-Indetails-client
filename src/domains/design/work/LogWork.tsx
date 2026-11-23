@@ -12,6 +12,7 @@ import Select from "@/shared/components/Forms/Select";
 import Modal from "@/shared/components/Overlays/Modal";
 import { dayKey, fmtDayDate, fmtDayDateY, fmtDur, fmtH, fmtRange, minutesOfDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import type { Schemas } from "@/api/types";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 import { useAttachment } from "./attachments";
@@ -263,6 +264,7 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
             }>
             <form className="log-form" onSubmit={submit} {...proton.guard}>
                 <FilledNote fields={proton.filled} />
+                {!ed && <ExcuseNote excuse={day.data?.date.slice(0, 10) === date ? day.data?.excuse : null} />}
                 <div className="grid g-2">
                     <div className="field">
                         <label className="label required" htmlFor="lw-project">Project</label>
@@ -344,4 +346,19 @@ function firstSlot(o: LogWorkOptions, day: string, entries: WorkEntry[], dayStar
         : isToday ? Math.max(10 * 60, Math.floor(nowMin / 15) * 15) : 12 * 60);
     const start = o.startMin ?? (o.overtime ? workEnd : Math.max(0, end - (isToday ? 120 : 180)));
     return { s: start, d: (end - start + DAY) % DAY || (o.overtime ? 60 : 120) };
+}
+
+/**
+ * Before logging on a day an excuse covers: the hours logged take the excuse's place, so nothing counts twice. A day
+ * excused loses this day; minutes excused in the month give way only for what the month no longer needs; a month
+ * excused in full stays as it is, and whoever excused it is told.
+ */
+function ExcuseNote({ excuse }: { excuse?: Schemas["DayExcuseResponse"] | null }) {
+    if (!excuse) return null;
+    const text = excuse.wholeMonth
+        ? "This whole month is excused for you. Logging here doesn't change that excuse: whoever gave it is told and decides."
+        : excuse.day
+            ? "You were excused on this day. Logging here takes this day off the excuse, so log the whole day you worked."
+            : `You have ${fmtH(excuse.monthMinutes)} excused this month. Hours you log in their place come off the excuse once the month no longer needs it.`;
+    return <div className="banner excuse-note" role="note"><Icon name="info" /><div className="grow">{text}</div></div>;
 }

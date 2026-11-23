@@ -1246,3 +1246,12 @@ button.pc-comments { border: 0; cursor: pointer; }
 .toast-info { background: color-mix(in srgb, var(--accent) 13%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 35%, var(--surface)); color: color-mix(in srgb, var(--accent) 72%, var(--ink)); }
 .toast-plain { background: var(--surface); border-color: var(--line-2); color: var(--ink); }
 .toast .toast-sub { opacity: .85; }
+
+/* Reopened months: the list and form in Settings, the banner on My work, and the log window's note about an excuse */
+.reopened-row { gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.reopened-row:last-child { border-bottom: 0; }
+.reopen-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; align-items: start; }
+@media (max-width: 720px) { .reopen-form { grid-template-columns: 1fr; } }
+.reopened-banner { align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.reopened-banner .date-in { width: 170px; }
+.excuse-note { margin-bottom: 12px; background: var(--accent-soft); border-color: transparent; color: var(--accent-ink); }
