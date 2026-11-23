@@ -17,6 +17,14 @@ type VoicePlayerProps = {
 
 const SPEEDS = [1, 1.5, 2] as const;
 
+/** Play and pause with rounded corners, softer than the icon set's sharp triangle. */
+const PlayShape = () => (
+    <svg className="voice-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.9c0-1 1.1-1.6 1.9-1.1l9.4 6c.8.5.8 1.7 0 2.2l-9.4 6c-.8.5-1.9-.1-1.9-1.1z" /></svg>
+);
+const PauseShape = () => (
+    <svg className="voice-glyph" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1.6" /><rect x="13.5" y="5" width="4" height="14" rx="1.6" /></svg>
+);
+
 /**
  * A voice note, as a voice app shows it: who recorded it, play or pause, its waveform with a dot to drag along it,
  * and its length (where it is, while it plays). The waveform comes from the recording itself, decoded once when the
@@ -123,7 +131,7 @@ export default function VoicePlayer({ fileId, src, person }: VoicePlayerProps) {
                 </div>
             )}
             <button type="button" className="voice-play" disabled={!url} onClick={toggle} aria-label={playing ? "Pause voice note" : "Play voice note"}>
-                <Icon name={playing ? "pause" : "play"} />
+                {playing ? <PauseShape /> : <PlayShape />}
             </button>
             <div className="voice-body">
                 <div className="voice-wave" ref={box} style={{ "--p": `${share}%` } as CSSProperties}>
