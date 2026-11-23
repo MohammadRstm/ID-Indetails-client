@@ -16,6 +16,7 @@ import ContactSection from "./ContactSection";
 import DataSettings from "./DataSettings";
 import FinanceSettings from "./FinanceSettings";
 import { NotificationSettings, ProjectSettings } from "./RuleSettings";
+import ReopenedMonthsPanel from "./ReopenedMonthsPanel";
 import { seesSettingsSection, type SettingsSection as Section } from "./settingsSections";
 import TeamsSettings from "./TeamsSettings";
 import TimeSettings from "./TimeSettings";
@@ -108,6 +109,7 @@ function Settings({ domain, choice }: { domain: Domain | null; choice?: Choice }
                     )}
                     {section === "general" && <CompanySettingsSection />}
                     {domain && section === "time" && <TimeSettings domain={domain} />}
+                    {domain === "design" && section === "time" && permissions.has(P.COMPANY_SETTINGS_MANAGE) && <ReopenedMonthsPanel />}
                     {domain && section === "finance" && <FinanceSettings domain={domain} />}
                     {domain && section === "projects" && <ProjectSettings domain={domain} />}
                     {domain && section === "notifications" && <NotificationSettings domain={domain} />}

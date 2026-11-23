@@ -331,6 +331,21 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                     : `${fmtH(n(p.minutes))} ${paid ? "excused" : "of unpaid leave"} in ${fmtMonthY(month)}`;
             return { text, sub: by, icon: "checkCircle", route: logsWork ? "/design/projects" : mine };
         }
+        case "hours_excuse_reduced": {
+            const month = fmtMonthY(s(p.month));
+            if (p.wholeMonth === true) {
+                return { text: `${who} logged hours in ${month}, which you excused in full`, sub: "The excuse stays: remove it if it no longer applies", icon: "alert", route: `/company/salaries?month=${s(p.month)}` };
+            }
+            const days = (p.days as unknown[] | undefined)?.length ?? 0;
+            const gave = days ? plural(days, "day") : fmtH(n(p.minutes));
+            return { text: `${who} logged hours an excuse you gave stood in for`, sub: `${gave} came off it in ${month}, so nothing counts twice`, icon: "checkCircle", route: `/company/salaries?month=${s(p.month)}` };
+        }
+        case "month_reopened":
+            return {
+                text: `${s(p.monthName) || fmtMonthY(s(p.month))} is open for logging`,
+                sub: `Log the hours you missed until ${s(p.openUntilName) || fmtDate(s(p.openUntil))}`,
+                icon: "calendar", route: logsWork ? "/design/my-work" : undefined,
+            };
         case "hours_short": {
             const people = (p.people as { name?: string; shortMinutes?: number }[] | undefined) ?? [];
             const count = n(p.count) || people.length;
