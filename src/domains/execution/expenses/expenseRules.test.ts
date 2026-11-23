@@ -63,8 +63,9 @@ describe("an expense's cost", () => {
                 name: "Crane", quantity: null, unit: null, unitCost: null, amount: 895000, supplier: "Clearview", note: null,
                 currency: "LBP", spentOn: "2026-09-28", category: "equipment", accountLabelId: 3,
             });
-        // a category it doesn't know is the default one
-        expect(entryOf(row({ name: "Glass", amount: "5", category: "gifts" })).category).toBe("materials");
+        // none picked is the default one; the business's own (Settings › Finance) go as they are, the API checking them
+        expect(entryOf(row({ name: "Glass", amount: "5", category: "" })).category).toBe("materials");
+        expect(entryOf(row({ name: "Tower", amount: "5", category: "scaffolding" })).category).toBe("scaffolding");
     });
 });
 

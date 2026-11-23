@@ -23051,7 +23051,29 @@ export interface components {
             note?: null | string;
         };
         /** @enum {unknown} */
-        SiteExpenseCategory: "materials" | "contractor" | "equipment" | "fees" | "other";
+        /** One of Execution's expense categories' codes (GET /api/expense-categories?domain=execution). */
+        SiteExpenseCategory: string;
+        ExpenseCategoryResponse: {
+            code: string;
+            domain: string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            removable?: null | boolean;
+            /** Format: int32 */
+            sortOrder: number;
+        };
+        AddExpenseCategoryRequest: {
+            domain: string;
+            name: string;
+        };
+        RenameExpenseCategoryRequest: {
+            name: string;
+        };
+        OrderExpenseCategoriesRequest: {
+            domain: string;
+            ids: number[];
+        };
         SiteExpenseEntryRequest: {
             /** Format: int64 */
             accountLabelId?: null | number;
