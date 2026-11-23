@@ -79,13 +79,13 @@ describe("the voice player", () => {
         const audio = container.querySelector("audio") as HTMLAudioElement;
         Object.defineProperty(audio, "duration", { configurable: true, value: 65 });
         fireEvent.durationChange(audio);
-        expect(screen.getByText("0:00 / 1:05")).toBeInTheDocument();
+        expect(screen.getByText("1:05")).toBeInTheDocument();
         await userEvent.click(screen.getByRole("button", { name: "Play voice note" }));
         expect(voice.play).toHaveBeenCalled();
         fireEvent.play(audio);
         Object.defineProperty(audio, "currentTime", { configurable: true, writable: true, value: 7 });
         fireEvent.timeUpdate(audio);
-        expect(screen.getByText("0:07 / 1:05")).toBeInTheDocument();
+        expect(screen.getByText("0:07")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Pause voice note" })).toBeInTheDocument();
     });
 
@@ -101,7 +101,19 @@ describe("the voice player", () => {
         duration = 12;
         fireEvent.durationChange(audio);
         expect(audio.currentTime).toBe(0);
-        expect(screen.getByText("0:00 / 0:12")).toBeInTheDocument();
+        expect(screen.getByText("0:12")).toBeInTheDocument();
+    });
+
+    it("draws the waveform, offers faster speeds while it plays, and shows who recorded it", async () => {
+        const { container } = render(<VoicePlayer src="blob:shape" person={{ name: "Nadia Karam" }} />, { wrapper: wrap });
+        const audio = container.querySelector("audio") as HTMLAudioElement;
+        // forty bars, drawn twice: the played copy is clipped where the note is
+        expect(container.querySelectorAll(".voice-bars i")).toHaveLength(80);
+        expect(container.querySelector(".voice-mic")).not.toBeNull();
+        fireEvent.play(audio);
+        await userEvent.click(screen.getByRole("button", { name: "Play at 1.5 times the speed" }));
+        expect(audio.playbackRate).toBe(1.5);
+        expect(screen.getByRole("button", { name: "Play at 2 times the speed" })).toHaveTextContent("1.5×");
     });
 
     it("says so when a saved voice note can't be loaded", async () => {

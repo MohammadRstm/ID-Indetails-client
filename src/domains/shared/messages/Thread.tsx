@@ -32,9 +32,9 @@ type File = Message["attachments"][number];
 
 const ROLE: Record<string, string> = { super_admin: "Super admin", admin: "Admin", employee: "Employee" };
 
-function Media({ file, className, onOpen }: { file: File; className?: string; onOpen?: () => void }) {
+function Media({ file, className, onOpen, sender }: { file: File; className?: string; onOpen?: () => void; sender?: Message["sender"] }) {
     const { url } = useFileUrl(file.id);
-    if (file.kind === "audio" || file.mimeType.startsWith("audio/")) return <VoicePlayer fileId={file.id} />;
+    if (file.kind === "audio" || file.mimeType.startsWith("audio/")) return <VoicePlayer fileId={file.id} person={sender} />;
     if (!url) return <div className={cx("msg-att", className)} style={{ width: 180, height: 120, background: "var(--surface-3)" }} />;
     return file.kind === "video" || file.mimeType.startsWith("video/")
         ? <video className="msg-att" src={url} controls />
@@ -104,7 +104,7 @@ function Body({ m, mine, showName, names, onReceipts }: { m: Message; mine: bool
                     {mentionParts(m.body, names).map((p, i) => (p.mention ? <span key={i} className="msg-mention">{p.text}</span> : p.text))}
                 </div>
             )}
-            {m.attachments.map((a) => <Media key={a.id} file={a} />)}
+            {m.attachments.map((a) => <Media key={a.id} file={a} sender={m.sender} />)}
             <div className="msg-time mono">
                 {/* sent by Proton for the sender, after they confirmed it: recipients should know */}
                 {m.viaProton && <span className="msg-via" title="Written with Proton and sent after the sender confirmed it">with Proton · </span>}
