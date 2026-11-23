@@ -75,15 +75,6 @@ const ANOMALIES: Record<ExpenseAnomalyKind, string> = {
 /** Why spending was called unusual, in plain words. */
 export const anomalyLabel = (kind: ExpenseAnomalyKind) => ANOMALIES[kind] ?? kind;
 
-/** Both domains' expense categories, as their forms name them: Design's project expenses and a site's expenses. */
-const CATEGORY_NAMES: Record<string, string> = {
-    assets: "Assets & licences", services: "Services", contractor: "Contractor", software: "Software", travel: "Travel", hardware: "Hardware",
-    materials: "Materials", equipment: "Equipment", fees: "Fees", other: "Other",
-};
-
-/** A category's name; an older one the forms no longer offer shows as it was saved. */
-export const categoryName = (code: string) => CATEGORY_NAMES[code] ?? (code.charAt(0).toUpperCase() + code.slice(1)).replace(/_/g, " ");
-
 /** The chart's colours for categories, darker and lighter in turn so neighbours stand apart. "Other" is always grey. */
 const CATEGORY_COLORS = ["var(--heat-4)", "var(--heat-1)", "var(--warn-mark)", "var(--heat-2)", "var(--done)", "var(--heat-3)"];
 

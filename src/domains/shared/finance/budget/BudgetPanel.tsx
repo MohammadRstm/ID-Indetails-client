@@ -20,6 +20,7 @@ import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import { useProjectDepartments } from "../../../design/projects/departments/departmentsApi";
 import type { Project } from "../../projects/projectsApi";
+import { useCategoryChoices } from "../expenseCategoriesApi";
 import {
     BUDGET_REASON_MAX, budgetLineKeys, currentAmount, useProjectBudget, useSetProjectBudget,
     type BudgetLine, type BudgetLineKey, type BudgetVersion, type ProjectBudget,
@@ -169,8 +170,9 @@ function HistoryModal({ project, history, onClose }: { project: Project; history
 function BudgetModal({ project, budget, onClose }: { project: Project; budget: ProjectBudget; onClose: () => void }) {
     const site = project.domain === "execution";
     const departments = useProjectDepartments(project.id, !site);
+    const siteCategories = useCategoryChoices("execution");
     const keysReady = site || !!departments.data;
-    const lineKeys = keysReady ? budgetLineKeys(project.domain, departments.data?.departments ?? []) : [];
+    const lineKeys = keysReady ? budgetLineKeys(project.domain, departments.data?.departments ?? [], siteCategories) : [];
     const today = companyToday();
     const save = useSetProjectBudget(project.id);
     const errors = useFormErrors();

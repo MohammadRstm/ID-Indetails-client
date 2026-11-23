@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { loadFailed } from "@/api/queryState";
+import { useCategoryName } from "@/domains/shared/finance/expenseCategoriesApi";
 import { P } from "@/app/permissions/codes";
 import type { Domain } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -19,7 +20,7 @@ import { cx } from "@/shared/utils/cx";
 import { BasisNote, ProjectLink } from "./InsightParts";
 import LabourPanel from "./LabourPanel";
 import {
-    anomalyLabel, categoryColors, categoryName, riskOf, TREND_MONTHS, useDomainRisks, useExpenseTrends,
+    anomalyLabel, categoryColors, riskOf, TREND_MONTHS, useDomainRisks, useExpenseTrends,
     type ExpenseAnomaly, type ExpenseTrends, type ProjectRiskGroup, type ProjectRiskKind, type ProjectRisks, type TrendMonths,
 } from "./domainInsightsApi";
 
@@ -142,6 +143,7 @@ type SpendingChartProps = { trends: ExpenseTrends | undefined; months: TrendMont
 
 /** Each month's spending stacked by category, as the API gives it, with its table twin. */
 function SpendingChart({ trends: t, months, domain, failed, picker }: SpendingChartProps) {
+    const categoryName = useCategoryName(domain);
     const colors = t ? categoryColors(t.categories) : [];
     const spent = t?.months.some((m) => m.total !== 0) ?? false;
     return (
@@ -204,6 +206,7 @@ function UnusualSpending({ trends: t, months, domain }: { trends: ExpenseTrends 
 }
 
 function AnomalyRow({ anomaly: a, domain }: { anomaly: ExpenseAnomaly; domain: Domain }) {
+    const categoryName = useCategoryName(domain);
     // a category's month is about the whole month; the others about the day an expense was spent
     const month = a.kind === "category_high";
     return (

@@ -17,6 +17,7 @@ import DataSettings from "./DataSettings";
 import FinanceSettings from "./FinanceSettings";
 import { NotificationSettings, ProjectSettings } from "./RuleSettings";
 import ReopenedMonthsPanel from "./ReopenedMonthsPanel";
+import ExpenseCategoriesPanel from "./ExpenseCategoriesPanel";
 import { seesSettingsSection, type SettingsSection as Section } from "./settingsSections";
 import TeamsSettings from "./TeamsSettings";
 import TimeSettings from "./TimeSettings";
@@ -111,6 +112,7 @@ function Settings({ domain, choice }: { domain: Domain | null; choice?: Choice }
                     {domain && section === "time" && <TimeSettings domain={domain} />}
                     {domain === "design" && section === "time" && permissions.has(P.COMPANY_SETTINGS_MANAGE) && <ReopenedMonthsPanel />}
                     {domain && section === "finance" && <FinanceSettings domain={domain} />}
+                    {(domain === "design" || domain === "execution") && section === "finance" && permissions.has(P.FINANCIAL_WRITE) && <ExpenseCategoriesPanel domain={domain} />}
                     {domain && section === "projects" && <ProjectSettings domain={domain} />}
                     {domain && section === "notifications" && <NotificationSettings domain={domain} />}
                     {domain && section === "teams" && <TeamsSettings domain={domain} />}

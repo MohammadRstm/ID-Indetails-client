@@ -4,6 +4,8 @@ import { toApiError } from "@/api/errors";
 import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
+import AddCategoryModal from "@/domains/shared/finance/AddCategoryModal";
+import { ADD_CATEGORY, useCategoryChoices } from "@/domains/shared/finance/expenseCategoriesApi";
 import FormFailure from "@/domains/shared/projects/FormFailure";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { useProtonForm } from "@/domains/shared/proton/formFill";
@@ -19,7 +21,7 @@ import type { Project } from "../../shared/projects/projectsApi";
 import { siteMoneyOf } from "../projects/siteMoney";
 import ExpenseGrid, { type GridRow } from "./ExpenseGrid";
 import {
-    BLOCK, blankRow, blankRows, CATEGORIES, COLS, costOf, CURRENCIES, entryOf, joinTotals, link, listTotals, pasteInto, rowOf, rowProblems, rowUsed,
+    BLOCK, blankRow, blankRows, COLS, costOf, CURRENCIES, entryOf, joinTotals, link, listTotals, pasteInto, rowOf, rowProblems, rowUsed,
     serverProblems, totalsOf, withServerProblems, writeTotals, type Choices, type ColKey, type Row,
 } from "./expenseRules";
 import { useAddExpenses, useAllExpenses } from "./expensesApi";
@@ -49,6 +51,10 @@ export default function ExpenseSheet({ project, onClose }: { project: Project; o
     // a saved batch leaves the sheet at once, so a failure further on never sends it twice
     const add = useAddExpenses(project.id, (count) => setRows((current) => dropSaved(current, count)));
     const [tried, setTried] = useState(false);
+    // the business's categories; whoever manages them adds one from a row's menu, and that row takes it
+    const categories = useCategoryChoices("execution");
+    const managesCategories = permissions.has(P.FINANCIAL_WRITE);
+    const [addingFor, setAddingFor] = useState<number | null>(null);
     // Proton types rows into the empty ones below what the person typed; a unit cost only when money actions are on and it was typed
     const proton = useProtonForm("materials", project.id, (fill) => {
         const given = fill.materials?.rows ?? [];
@@ -77,7 +83,8 @@ export default function ExpenseSheet({ project, onClose }: { project: Project; o
     const dollars = newTotals.find((t) => t.currency === "USD")?.total ?? 0;
     const pounds = newTotals.filter((t) => t.currency !== "USD");
     const recordedTotals = saved.data ? listTotals(saved.data.all) : [];
-    const choices: Choices = { currency: CURRENCIES, category: CATEGORIES };
+    const choices: Choices = { currency: CURRENCIES, category: categories };
+    const menus: Choices = managesCategories ? { ...choices, category: [...categories, { value: ADD_CATEGORY, label: "+ Add category…" }] } : choices;
 
     // a pound expense on a day with no exchange rate: about the sheet as a whole, not a cell, so it is said above the rows
     const noRate = toApiError(add.error).code === "exchange_rate_missing";
@@ -168,15 +175,17 @@ export default function ExpenseSheet({ project, onClose }: { project: Project; o
                 <SheetGrid first={N}>
                     <ExpenseGrid cols={cols} rows={shown} eager showBy={N > 0} minWidth={1240}
                         problems={[...recorded.map(() => null), ...problems]} tried={tried}
-                        choices={(_, k) => choices[k] ?? []}
+                        choices={(_, k) => menus[k] ?? []}
                         locked={(r) => r < N}
                         canDelete={(r) => r >= N}
-                        onCell={(r, k, v) => { if (r >= N) setCell(r - N, k, v); }}
+                        onCell={(r, k, v) => { if (r < N) return; if (k === "category" && v === ADD_CATEGORY) setAddingFor(r - N); else setCell(r - N, k, v); }}
                         onGrow={() => setRows((current) => current.concat(blankRows(BLOCK)))}
                         onPaste={(r, c, t) => { if (r >= N) { edited(); setRows((current) => grow(pasteInto(current, r - N, c, t, cols, choices))); } }}
                         onDelete={(r) => { if (r >= N) removeRow(r - N); }} />
                 </SheetGrid>
             )}
+            {addingFor != null && <AddCategoryModal domain="execution" onClose={() => setAddingFor(null)}
+                onDone={(c) => { setCell(addingFor, "category", c.code); setAddingFor(null); }} />}
         </Modal>
     );
 }

@@ -21,8 +21,9 @@ import type { Project } from "../../shared/projects/projectsApi";
 import { isSiteOpen } from "../projects/siteMoney";
 import ExpenseGrid, { type GridRow } from "./ExpenseGrid";
 import ExpenseSheet from "./ExpenseSheet";
+import { useCategoryChoices } from "@/domains/shared/finance/expenseCategoriesApi";
 import {
-    CATEGORIES, COLS, CURRENCIES, entryOf, firstProblem, link, listTotals, problems, rowOf, TOTAL_AT, writeTotals, type Choices, type ColKey, type CurrencyTotal, type Row,
+    COLS, CURRENCIES, entryOf, firstProblem, link, listTotals, problems, rowOf, TOTAL_AT, writeTotals, type Choices, type ColKey, type CurrencyTotal, type Row,
 } from "./expenseRules";
 import { useDeleteExpense, useExpenses, useUpdateExpense, type ExpenseQuery, type SiteExpense } from "./expensesApi";
 
@@ -63,9 +64,10 @@ export default function ExpensesPanel({ project }: { project: Project }) {
     const today = companyToday();
     const PERIODS = periods(today);
     const permissions = usePermissions();
+    const categories = useCategoryChoices("execution");
     const query: ExpenseQuery = {
         type: type || undefined, supplier: supplier || undefined, addedById: by ? +by : undefined,
-        category: CATEGORIES.find((c) => c.value === category)?.value,
+        category: category || undefined,
         from: PERIODS[period]?.[1], search: search || undefined, page, pageSize: PER_PAGE,
     };
     const list = useExpenses(project.id, query);
@@ -151,7 +153,7 @@ export default function ExpensesPanel({ project }: { project: Project }) {
         ...shownRow(e), id: e.id, by: e.addedBy.name,
     }));
     const locked = (r: number) => !items[r].canEdit;
-    const choices: Choices = { currency: CURRENCIES, category: CATEGORIES };
+    const choices: Choices = { currency: CURRENCIES, category: categories };
 
     const matching = d ? listTotals(d.matching) : [];
     const all = d ? listTotals(d.all) : [];
@@ -187,7 +189,7 @@ export default function ExpensesPanel({ project }: { project: Project }) {
                                     <Select className="select sm" aria-label="Filter by item" value={type} onChange={filter(setType)}
                                         options={[{ value: "", label: `All items (${d.types.length})` }, ...d.types.map((t) => ({ value: t.key, label: `${t.label} (${t.count})` }))]} />
                                     <Select className="select sm" aria-label="Filter by category" value={category} onChange={filter(setCategory)}
-                                        options={[{ value: "", label: "All categories" }, ...CATEGORIES]} />
+                                        options={[{ value: "", label: "All categories" }, ...categories]} />
                                     {d.suppliers.length > 0 && (
                                         <Select className="select sm" aria-label="Filter by supplier or payee" value={supplier} onChange={filter(setSupplier)}
                                             options={[{ value: "", label: "All suppliers / payees" }, ...d.suppliers.map((s) => ({ value: s.key, label: s.label }))]} />

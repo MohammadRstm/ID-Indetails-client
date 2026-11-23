@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
 import type { Schemas } from "@/api/types";
-import { CATEGORIES } from "../../../execution/expenses/expenseRules";
 
 export type ProjectBudget = Schemas["ProjectBudgetResponse"];
 export type BudgetVersion = Schemas["ProjectBudgetVersionResponse"];
@@ -15,20 +14,17 @@ export const BUDGET_REASON_MAX = 500;
 /** One line a budget can have: a Design department (teamId) or a category of cost. */
 export type BudgetLineKey = { id: string; teamId: number | null; category: string | null; name: string };
 
-/** A site's budget lines: its expense categories, then its ground labour. */
-const SITE_LINES: { category: string; name: string }[] = [
-    ...CATEGORIES.map((c) => ({ category: c.value as string, name: c.label })),
-    { category: "ground_labour", name: "Ground labour" },
-];
-
 const lineId = (teamId: number | null, category: string | null) => (teamId != null ? `team-${teamId}` : `cat-${category}`);
 
 /**
  * The lines a budget is set by: a Design project's departments, then its expenses; an Execution site's categories
- * of cost and its ground labour.
+ * expense categories (Settings › Finance) and its ground labour.
  */
-export function budgetLineKeys(domain: string, departments: { id: number; name: string }[]): BudgetLineKey[] {
-    if (domain === "execution") return SITE_LINES.map((l) => ({ id: lineId(null, l.category), teamId: null, category: l.category, name: l.name }));
+export function budgetLineKeys(domain: string, departments: { id: number; name: string }[], siteCategories: { value: string; label: string }[] = []): BudgetLineKey[] {
+    if (domain === "execution") {
+        return [...siteCategories.map((c) => ({ category: c.value, name: c.label })), { category: "ground_labour", name: "Ground labour" }]
+            .map((l) => ({ id: lineId(null, l.category), teamId: null, category: l.category, name: l.name }));
+    }
     return [
         ...departments.map((d) => ({ id: lineId(d.id, null), teamId: d.id, category: null, name: d.name })),
         { id: lineId(null, "expenses"), teamId: null, category: "expenses", name: "Expenses" },

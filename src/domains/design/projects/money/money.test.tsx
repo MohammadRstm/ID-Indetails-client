@@ -183,6 +183,31 @@ describe("a project's money", () => {
         await waitFor(() => expect(added).toEqual([{ label: "Taxi to the site", amount: 25, currency: "USD", category: "travel", spentOn: "2026-09-30" }]));
     });
 
+    it("adds a category from the expense's category menu, for whoever manages them, and picks it", async () => {
+        const added: unknown[] = [];
+        const categories: unknown[] = [];
+        renderApp(path, admin,
+            http.post("/api/expense-categories", async ({ request }) => {
+                categories.push(await request.json());
+                return HttpResponse.json({ id: 20, domain: "design", code: "printing", name: "Printing", sortOrder: 7, removable: true }, { status: 201 });
+            }),
+            http.post(`/api/projects/${project.id}/expenses`, async ({ request }) => { added.push(await request.json()); return HttpResponse.json(projectWork.expenses.items[0], { status: 201 }); }),
+            ...projectWorkHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: "Add expense" }));
+        const dialog = await screen.findByRole("dialog", { name: "Add project expense" });
+        await userEvent.type(within(dialog).getByLabelText("What was it?"), "Plans printed");
+        await userEvent.type(within(dialog).getByLabelText("Amount"), "40");
+        await userEvent.click(within(dialog).getByLabelText("Category"));
+        await userEvent.click(screen.getByRole("option", { name: "+ Add category…" }));
+        const window = await screen.findByRole("dialog", { name: "Add a category" });
+        await userEvent.type(within(window).getByLabelText("Name"), "Printing");
+        await userEvent.click(within(window).getByRole("button", { name: "Add category" }));
+        await waitFor(() => expect(categories).toEqual([{ domain: "design", name: "Printing" }]));
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: "Add a category" })).not.toBeInTheDocument());
+        await userEvent.click(within(dialog).getByRole("button", { name: "Add expense" }));
+        await waitFor(() => expect(added).toEqual([expect.objectContaining({ label: "Plans printed", category: "printing" })]));
+    });
+
     it("says so when a pound expense has no exchange rate for its day, and keeps the form", async () => {
         const NO_RATE = "There is no LBP exchange rate in force on 2026-09-30. Add one first, or record the expense in USD.";
         renderApp(path, admin,

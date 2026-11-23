@@ -16,15 +16,18 @@ import { useAddExpense } from "./moneyApi";
 import FilledNote from "@/domains/shared/proton/FilledNote";
 import { fillEmpty, useProtonForm } from "@/domains/shared/proton/formFill";
 import FormFailure from "@/domains/shared/projects/FormFailure";
-
-const EXPENSE_CATEGORIES = [
-    { value: "assets", label: "Assets & licences" }, { value: "services", label: "Services" }, { value: "contractor", label: "Contractor" },
-    { value: "software", label: "Software" }, { value: "travel", label: "Travel" }, { value: "hardware", label: "Hardware" }, { value: "other", label: "Other" },
-];
+import { P } from "@/app/permissions/codes";
+import { usePermissions } from "@/app/permissions/usePermissions";
+import AddCategoryModal from "@/domains/shared/finance/AddCategoryModal";
+import { ADD_CATEGORY, useCategoryChoices } from "@/domains/shared/finance/expenseCategoriesApi";
 
 /** A one-off cost that belongs to this project only (the prototype's PF.ExpenseModal). */
 export default function ExpenseModal({ project, onClose }: { project: Project; onClose: () => void }) {
     const add = useAddExpense(project.id);
+    // the business's own categories (Settings › Finance); whoever manages them adds one from the menu
+    const categories = useCategoryChoices("design");
+    const managesCategories = usePermissions().has(P.FINANCIAL_WRITE);
+    const [addingCategory, setAddingCategory] = useState(false);
     const today = companyToday();
     const [label, setLabel] = useState("");
     const [amount, setAmount] = useState(0);
@@ -41,7 +44,7 @@ export default function ExpenseModal({ project, onClose }: { project: Project; o
         if (v.amount != null && amount === 0) { setAmount(v.amount); done.push("amount"); }
         if (v.currency && v.currency !== currency && amount === 0) { setCurrency(v.currency); done.push("currency"); }
         if (v.date && v.date <= today && v.date !== date) { setDate(v.date); done.push("date"); }
-        if (v.category && v.category !== category && EXPENSE_CATEGORIES.some((c) => c.value === v.category)) { setCategory(v.category); done.push("category"); }
+        if (v.category && v.category !== category && categories.some((c) => c.value === v.category)) { setCategory(v.category); done.push("category"); }
         return done;
     });
     const labelError = !label.trim() && "Say what the money went on.";
@@ -88,7 +91,10 @@ export default function ExpenseModal({ project, onClose }: { project: Project; o
             </div>
             <div className="field mt">
                 <label className="label required" htmlFor="ex-cat">Category</label>
-                <Select id="ex-cat" value={category} onChange={setCategory} options={EXPENSE_CATEGORIES} />
+                <Select id="ex-cat" value={category} onChange={(v) => (v === ADD_CATEGORY ? setAddingCategory(true) : setCategory(v))}
+                    options={managesCategories ? [...categories, { value: ADD_CATEGORY, label: "+ Add category…" }] : categories} />
+                {addingCategory && <AddCategoryModal domain="design" onClose={() => setAddingCategory(false)}
+                    onDone={(c) => { setCategory(c.code); setAddingCategory(false); }} />}
             </div>
             {noRate && (
                 <div className="banner attn mt" role="alert">

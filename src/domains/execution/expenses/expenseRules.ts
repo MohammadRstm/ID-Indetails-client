@@ -3,7 +3,8 @@ import { AMOUNT, largest, QUANTITY, UNIT_COST, upTo } from "@/shared/format/limi
 import { money } from "@/shared/format/money";
 import { parseDateText } from "@/shared/format/parseDate";
 import { companyToday } from "@/shared/format/time";
-import type { SiteExpense, SiteExpenseCategory } from "./expensesApi";
+import { STARTING_CATEGORIES } from "@/domains/shared/finance/expenseCategoriesApi";
+import type { SiteExpense } from "./expensesApi";
 
 /*
  * An expense is an item and a cost: quantity × unit cost when both are known, otherwise a total typed in (a
@@ -17,11 +18,8 @@ export const UNITS = ["bag", "tonne", "m³", "m²", "m", "piece", "litre", "hour
 export type Choice = { value: string; label: string };
 
 export const CURRENCIES: Choice[] = [{ value: "USD", label: "USD" }, { value: "LBP", label: "LBP" }];
-export const CATEGORIES: (Choice & { value: SiteExpenseCategory })[] = [
-    { value: "materials", label: "Materials" }, { value: "contractor", label: "Contractor" }, { value: "equipment", label: "Equipment" },
-    { value: "fees", label: "Fees" }, { value: "other", label: "Other" },
-];
-const categoryOf = (value: string): SiteExpenseCategory => CATEGORIES.find((c) => c.value === value)?.value ?? "materials";
+/** The categories Execution started with: the sheet's until the business's own list (Settings › Finance) loads. */
+export const CATEGORIES: Choice[] = STARTING_CATEGORIES.execution;
 
 export type Row = {
     /** Which row it is, kept as rows come and go: an expense's own for a recorded one. */
@@ -201,7 +199,7 @@ export function entryOf(r: Row): Schemas["SiteExpenseEntryRequest"] {
     return {
         name: r.name.trim(), quantity: q || null, unit: text(r.unit), unitCost: uc || null,
         amount: q && uc ? null : pos(r.amount) || null, supplier: text(r.supplier), note: text(r.note),
-        currency: r.currency, spentOn: r.spentOn, category: categoryOf(r.category), accountLabelId: r.accountLabelId ? Number(r.accountLabelId) : null,
+        currency: r.currency, spentOn: r.spentOn, category: r.category || "materials", accountLabelId: r.accountLabelId ? Number(r.accountLabelId) : null,
     };
 }
 

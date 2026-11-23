@@ -11,7 +11,7 @@ import Icon from "@/shared/icons/Icon";
 import { useAccountLabels } from "../../shared/accountLabels/accountLabelsApi";
 import HelpHint from "../../shared/help/HelpHint";
 import type { Project } from "../../shared/projects/projectsApi";
-import { CATEGORIES } from "../expenses/expenseRules";
+import { useCategoryChoices, useCategoryName } from "@/domains/shared/finance/expenseCategoriesApi";
 import { pctOf } from "../projects/siteMoney";
 import { useAccountFigures, type AccountFigures } from "./accountApi";
 
@@ -30,6 +30,7 @@ const SOURCES: Record<AccountFigures["unconverted"][number]["source"], string> =
  */
 export default function AccountSection({ project, onSupervision }: { project: Project; onSupervision?: () => void }) {
     const query = useAccountFigures(project.id, true);
+    const categoryName = useCategoryName("execution");
     const f = query.data;
     if (loadFailed(query) || !f) {
         return (
@@ -88,7 +89,7 @@ export default function AccountSection({ project, onSupervision }: { project: Pr
             <Card title="Spending" sub="The site expenses, by category and by payee.">
                 <h3 className="sec-head">Spending by category</h3>
                 <RankBars unit="Spent" format={usd} empty="No site expenses with an exchange rate yet."
-                    items={f.byCategory.map((c) => ({ id: c.category, label: CATEGORIES.find((k) => k.value === c.category)?.label ?? c.category, value: c.spentUsd }))} />
+                    items={f.byCategory.map((c) => ({ id: c.category, label: categoryName(c.category), value: c.spentUsd }))} />
                 <PayeeSpending f={f} />
             </Card>
         </>
@@ -120,6 +121,7 @@ const PAYEES_PAGE = 15;
  */
 function PayeeSpending({ f }: { f: AccountFigures }) {
     const labels = useAccountLabels(true).data;
+    const categories = useCategoryChoices("execution");
     const [q, setQ] = useState("");
     const [category, setCategory] = useState("");
     const [label, setLabel] = useState("");
@@ -149,7 +151,7 @@ function PayeeSpending({ f }: { f: AccountFigures }) {
                             onChange={(e) => { setQ(e.target.value); setPage(1); }} />
                     </div>
                     <Select className="select sm" aria-label="Filter payees by category" value={category} onChange={filter(setCategory)}
-                        options={[{ value: "", label: "All categories" }, ...CATEGORIES]} />
+                        options={[{ value: "", label: "All categories" }, ...categories]} />
                     <Select className="select sm" aria-label="Filter payees by account label" value={label} onChange={filter(setLabel)}
                         options={[{ value: "", label: "All labels" }, ...(labels ?? []).map((l) => ({ value: String(l.id), label: l.archived ? `${l.name} (archived)` : l.name })), { value: "none", label: "No label" }]} />
                 </div>

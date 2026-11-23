@@ -1258,5 +1258,11 @@ button.pc-comments { border: 0; cursor: pointer; }
 .reopen-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; align-items: start; }
 @media (max-width: 720px) { .reopen-form { grid-template-columns: 1fr; } }
 .reopened-banner { align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+/* Settings › Finance: a business's expense categories, one row each */
+.cat-row { gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); align-items: flex-start; }
+.cat-row:last-child { border-bottom: 0; }
+.cat-move { display: flex; flex-direction: column; }
+.cat-move .icon-btn { width: 26px; height: 18px; }
+.cat-move .icon-btn:disabled, .cat-row .icon-btn:disabled { opacity: .35; cursor: default; }
 .reopened-banner .date-in { width: 170px; }
 .excuse-note { margin-bottom: 12px; background: var(--accent-soft); border-color: transparent; color: var(--accent-ink); }
