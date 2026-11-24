@@ -29,6 +29,9 @@ import {
     type DomainSettings, type MyProject, type WorkEntry,
 } from "./workApi";
 
+/** From this day the break counts in people's hours, so time inside them is never overtime (the API's `WorkWeek.BreakCountsFrom`). */
+const BREAK_COUNTS_FROM = "2026-12-01";
+
 /** Shows Log work wherever it was opened from. */
 /** Waits for what the form needs to open on a sensible time, then shows it. */
 export default function LogWorkModal({ options }: { options: LogWorkOptions }) {
@@ -248,7 +251,11 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
 
     return (
         <Modal surfaceId={ed ? undefined : "log_work"} size="md" title={ed ? "Edit work entry" : options.overtime ? "Log overtime" : "Log work"} onClose={closeLogWork}
-            sub={options.overtime ? `Work outside your working hours, on a day off, or past the ${required != null ? fmtH(required) : "hours"} your day asks for counts as overtime.` : "What you did, and exactly when you did it."}
+            sub={options.overtime
+                ? date >= BREAK_COUNTS_FROM
+                    ? "Work outside your working hours or on a day off counts as overtime."
+                    : `Work outside your working hours, on a day off, or past the ${required != null ? fmtH(required) : "hours"} your day asks for counts as overtime.`
+                : "What you did, and exactly when you did it."}
             foot={
                 <>
                     <div className="grow">
