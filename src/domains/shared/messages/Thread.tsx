@@ -21,13 +21,13 @@ import { LeaveGroupModal } from "./ChatGroupWindows";
 import GroupTile, { AnnouncementsTile, ChatGroupTile } from "./GroupTile";
 import { mentionParts, startsRun } from "./messageText";
 import {
-    chatKey, isGroupEvent, isVoiceMessage, useGroupMembers, useMarkChatRead, usePresence, useSendMessage, useTeamMembers, useThread,
+    chatKey, isGroupEvent, useGroupMembers, useMarkChatRead, usePresence, useSendMessage, useTeamMembers, useThread,
     type Chat, type ChatGroup, type Contact, type Message,
 } from "./messagesApi";
 import { playReceived, playSent } from "./messageSounds";
 import { OffBadge } from "../timeOff/OffBadge";
 import SoundToggle from "./SoundToggle";
-import VoiceMessageMenu from "./VoiceMessageMenu";
+import MessageMenu from "./MessageMenu";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
 import { usePageVisible } from "@/portal/discussion/usePageVisible";
@@ -41,10 +41,11 @@ const ROLE: Record<string, string> = { super_admin: "Super admin", admin: "Admin
 function Media({ file, className, onOpen, sender }: { file: File; className?: string; onOpen?: () => void; sender?: Message["sender"] }) {
     const { url } = useFileUrl(file.id);
     if (file.kind === "audio" || file.mimeType.startsWith("audio/")) return <VoicePlayer fileId={file.id} person={sender} />;
+    if (file.kind === "document") return <span className={cx("link", className)} {...clickable(onOpen, "button")}><Icon name="file" />{file.name}</span>;
     if (!url) return <div className={cx("msg-att", className)} style={{ width: 180, height: 120, background: "var(--surface-3)" }} />;
     return file.kind === "video" || file.mimeType.startsWith("video/")
         ? <video className="msg-att" src={url} controls />
-        : <img className={cx("msg-att", className)} src={url} alt={file.name} title={file.name} {...clickable(onOpen, "button")} />;
+        : <img className={cx("msg-att", onOpen && "zoom", className)} src={url} alt={file.name} title={onOpen ? `${file.name}: open full size` : file.name} {...clickable(onOpen, "button")} />;
 }
 
 /** An admin's comment on someone's work, shared to their team (the prototype's TaskCommentCard). */
@@ -101,24 +102,27 @@ function useOnScreen(ref: RefObject<HTMLElement | null>): boolean {
 }
 
 function Body({ m, mine, showName, names, onReceipts }: { m: Message; mine: boolean; showName: boolean; names: string[]; onReceipts: () => void }) {
+    // a photo opens full size, with a download
+    const [viewing, setViewing] = useState<File | null>(null);
     if (m.kind === "task_comment") return <TaskCard m={m} mine={mine} />;
     return (
         <div className={cx("msg-bubble", mine && "mine")}>
-            {/* the sender's own voice message has a menu, to delete it */}
-            {mine && isVoiceMessage(m) && <VoiceMessageMenu messageId={m.id} />}
+            {/* downloads of its files, and Delete on the sender's own */}
+            <MessageMenu message={m} mine={mine} />
             {showName && <div className="msg-sender"><PersonName person={{ id: m.sender.id, name: m.sender.name }} /></div>}
             {m.body && (
                 <div className="msg-text">
                     {mentionParts(m.body, names).map((p, i) => (p.mention ? <span key={i} className="msg-mention">{p.text}</span> : p.text))}
                 </div>
             )}
-            {m.attachments.map((a) => <Media key={a.id} file={a} sender={m.sender} />)}
+            {m.attachments.map((a) => <Media key={a.id} file={a} sender={m.sender} onOpen={() => setViewing(a)} />)}
             <div className="msg-time mono">
                 {/* sent by Proton for the sender, after they confirmed it: recipients should know */}
                 {m.viaProton && <span className="msg-via" title="Written with Proton and sent after the sender confirmed it">with Proton · </span>}
                 {fmtTime(m.createdAt)}
                 {mine && m.receipt && <Ticks receipt={m.receipt} onOpen={onReceipts} />}
             </div>
+            {viewing && <MediaLightbox file={viewing} onClose={() => setViewing(null)} />}
         </div>
     );
 }

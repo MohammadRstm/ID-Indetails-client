@@ -114,7 +114,7 @@ export const gettingStarted: Article[] = [
         category: "start",
         who: everyone,
         summary: "The chat icon at the top opens your chats: Announcements, your department's group chat, chat groups you're in and direct messages.",
-        ask: ["messages", "chat", "message someone", "department chat", "team chat", "group chat", "direct message", "mention", "announcements", "announcement", "company news", "delete voice message", "delete voice note", "unsend", "chat group", "new group", "create group", "leave group", "delete group", "add to group", "group photo"],
+        ask: ["messages", "chat", "message someone", "department chat", "team chat", "group chat", "direct message", "mention", "announcements", "announcement", "company news", "delete message", "delete voice message", "delete voice note", "unsend", "download photo", "download video", "download voice note", "full size photo", "chat group", "new group", "create group", "leave group", "delete group", "add to group", "group photo"],
         blocks: [
             list(
                 "**Announcements** comes first: everyone in the company reads it, and you are told on your phone when there's news.",
@@ -125,7 +125,8 @@ export const gettingStarted: Article[] = [
                 "In a group, type **@** and a name to mention someone.",
                 "On a computer, **Enter** sends and **Shift+Enter** starts a new line. On a phone, Enter starts a new line and the send button sends. The box grows as you write, up to five lines.",
                 "You can attach files and photos, or record a voice message.",
-                "Your own voice message has three dots in its corner: **Delete** removes it and its recording for everyone in the chat, with nothing left in its place. It can't be undone, and only voice messages can be deleted.",
+                "Click a photo to see it full size. Every photo, video and voice note has three dots in its corner with **Download**.",
+                "Your own messages have three dots too: **Delete** removes the message, with its photos, videos and voice notes, for everyone in the chat, with nothing left in its place. It can't be undone.",
             ),
             only(hasAny(P.MESSAGE_ANNOUNCE), para("You write in Announcements; everyone else only reads it.")),
             only(hasAny(P.MESSAGE_MANAGE_GROUPS), para("You make chat groups: **+** beside **Chat groups** starts one, with a name and anyone on staff, and you're in it too. **Manage group** in a group's three dots renames it, changes its photo, adds or takes people out, or deletes it with its whole history for everyone. **Every group** lists all of them, also the ones you aren't in: you can manage those, but you read a group only when you're in it.")),
