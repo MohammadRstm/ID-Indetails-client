@@ -2,29 +2,50 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { http } from "@/api/http";
 import type { Schemas } from "@/api/types";
 
-export type Conversation = Schemas["ConversationResponse"];
 export type Contact = Schemas["ContactResponse"];
 export type Message = Schemas["MessageResponse"];
 export type Receipt = Schemas["MessageReceiptResponse"];
 export type Receipts = Schemas["MessageReceiptsResponse"];
 
-/** A chat: a team's group chat, the direct chat with one person, or Announcements, which everyone reads. */
-export type Chat = { kind: "group"; teamId: number } | { kind: "dm"; userId: number } | { kind: "announcements" };
+// Custom chat groups came with the API's MR-Chat-Groups: these follow its shapes until `npm run api:types` is run
+// against an API that has them, which then gives the same types from schema.d.ts.
+/** A custom chat group as its members see it in their chats. */
+export type ChatGroup = { id: number; name: string; photoFileId: number | null; memberCount: number };
+/** A custom group for whoever manages groups, with its active members and whether the viewer is one of them. */
+export type ChatGroupDetail = { id: number; name: string; photoFileId: number | null; members: Contact[]; isMember: boolean; createdAt: string };
+export type Conversation = Omit<Schemas["ConversationResponse"], "type"> & {
+    type: Schemas["ConversationResponse"]["type"] | "custom_group";
+    group?: ChatGroup | null;
+};
 
-export const chatKey = (chat: Chat) => (chat.kind === "group" ? `group-${chat.teamId}` : chat.kind === "dm" ? `dm-${chat.userId}` : "announcements");
+/** A message that is a custom group's grey line: what changed in it, the words after its sender's name. */
+export const isGroupEvent = (m: Message) => m.kind === "group_event";
+
+/**
+ * A chat: a team's group chat, the direct chat with one person, Announcements, which everyone reads, or a custom
+ * group a super admin made of whoever they picked.
+ */
+export type Chat = { kind: "group"; teamId: number } | { kind: "dm"; userId: number } | { kind: "announcements" } | { kind: "custom"; groupId: number };
+
+export const chatKey = (chat: Chat) =>
+    chat.kind === "group" ? `group-${chat.teamId}` : chat.kind === "dm" ? `dm-${chat.userId}` : chat.kind === "custom" ? `custom-${chat.groupId}` : "announcements";
 const chatPath = (chat: Chat) =>
-    chat.kind === "group" ? `/messages/teams/${chat.teamId}` : chat.kind === "dm" ? `/messages/direct/${chat.userId}` : "/messages/announcements";
-/** A chat's address on the messages page: ?group=4, ?with=12 or ?announcements=1. */
+    chat.kind === "group" ? `/messages/teams/${chat.teamId}` : chat.kind === "dm" ? `/messages/direct/${chat.userId}`
+        : chat.kind === "custom" ? `/messages/groups/${chat.groupId}` : "/messages/announcements";
+/** A chat's address on the messages page: ?group=4, ?with=12, ?custom=7 or ?announcements=1. */
 export const chatQuery = (c: Conversation) =>
-    c.type === "announcements" ? "announcements=1" : c.type === "group" && c.team ? `group=${c.team.id}` : c.person ? `with=${c.person.id}` : "";
+    c.type === "announcements" ? "announcements=1" : c.type === "group" && c.team ? `group=${c.team.id}`
+        : c.type === "custom_group" && c.group ? `custom=${c.group.id}` : c.person ? `with=${c.person.id}` : "";
 export const chatOf = (c: Conversation): Chat | null =>
     c.type === "announcements" ? { kind: "announcements" }
-        : c.type === "group" && c.team ? { kind: "group", teamId: c.team.id } : c.person ? { kind: "dm", userId: c.person.id } : null;
+        : c.type === "group" && c.team ? { kind: "group", teamId: c.team.id }
+            : c.type === "custom_group" && c.group ? { kind: "custom", groupId: c.group.id }
+                : c.person ? { kind: "dm", userId: c.person.id } : null;
 
 // every key starts with "messages", so the live connection's signal refreshes all of them
 const messagesKey = ["messages"] as const;
 
-/** Announcements first, then every team chat the person is in and their direct chats, newest first. */
+/** Announcements first, then every team chat and custom group the person is in and their direct chats, newest first. */
 export function useConversations(enabled = true) {
     return useQuery({
         queryKey: [...messagesKey, "conversations"],
@@ -131,4 +152,76 @@ export function usePresence() {
         queryFn: async () => new Set((await http.get<Schemas["PresenceResponse"]>("/presence")).data.online),
         refetchInterval: 60_000,
     });
+}
+
+/** A custom group's active members: who can be mentioned in it, and who the manage window lists. */
+export function useGroupMembers(groupId: number | null) {
+    return useQuery({
+        queryKey: [...messagesKey, "members", "custom", groupId],
+        queryFn: async () => (await http.get<Contact[]>(`/messages/groups/${groupId}/members`)).data,
+        enabled: groupId != null,
+    });
+}
+
+/** Every custom group, with its members, for whoever manages groups (message:manage_groups). */
+export function useManagedGroups(enabled = true) {
+    return useQuery({
+        queryKey: [...messagesKey, "groups"],
+        queryFn: async () => (await http.get<ChatGroupDetail[]>("/messages/groups")).data,
+        enabled,
+    });
+}
+
+/** Every active member of staff, of any business: who can be put in a group. */
+export function useGroupCandidates(enabled = true) {
+    return useQuery({
+        queryKey: [...messagesKey, "groups", "people"],
+        queryFn: async () => (await http.get<Contact[]>("/messages/groups/people")).data,
+        enabled,
+        staleTime: 5 * 60_000,
+    });
+}
+
+/** Changing a group changes the chats, the members and the managing list: everything under "messages" but the contacts. */
+function useGroupChange<TVars, TResult>(mutationFn: (vars: TVars) => Promise<TResult>) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn,
+        // waited for, so a window that closes on success finds the chats already reloaded
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: messagesKey, predicate: (q) => q.queryKey[1] !== "contacts" }),
+    });
+}
+
+export function useCreateGroup() {
+    return useGroupChange(async (body: { name: string; memberIds: number[] }) => (await http.post<ChatGroupDetail>("/messages/groups", body)).data);
+}
+
+export function useRenameGroup(groupId: number) {
+    return useGroupChange(async (name: string) => (await http.put<ChatGroupDetail>(`/messages/groups/${groupId}`, { name })).data);
+}
+
+export function useAddGroupMembers(groupId: number) {
+    return useGroupChange(async (userIds: number[]) => (await http.post<ChatGroupDetail>(`/messages/groups/${groupId}/members`, { userIds })).data);
+}
+
+export function useRemoveGroupMember(groupId: number) {
+    return useGroupChange(async (userId: number) => (await http.delete<ChatGroupDetail>(`/messages/groups/${groupId}/members/${userId}`)).data);
+}
+
+/** A photo from an upload, or null to go back to the people icon. */
+export function useSetGroupPhoto(groupId: number) {
+    return useGroupChange(async (fileId: number | null) =>
+        (fileId == null
+            ? await http.delete<ChatGroupDetail>(`/messages/groups/${groupId}/photo`)
+            : await http.put<ChatGroupDetail>(`/messages/groups/${groupId}/photo`, { fileId })).data);
+}
+
+/** Deletes the group for everyone, its whole history with it. */
+export function useDeleteGroup(groupId: number) {
+    return useGroupChange(async () => { await http.delete(`/messages/groups/${groupId}`); });
+}
+
+/** The person leaves a group they are in: it goes from their chats, history included. */
+export function useLeaveGroup(groupId: number) {
+    return useGroupChange(async () => { await http.post(`/messages/groups/${groupId}/leave`); });
 }

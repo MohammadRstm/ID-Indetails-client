@@ -1296,6 +1296,11 @@ button.pc-comments { border: 0; cursor: pointer; }
 /* the sender's own words in a receipt email's preview, kept as typed */
 .mail-preview .receipt-note { white-space: pre-wrap; padding-left: 10px; border-left: 3px solid var(--line); }
 
+/* Messages: the "Chat groups" heading with its New group and menu buttons, and a custom group's grey lines */
+.msg-sec-actions { display: flex; align-items: center; gap: 2px; padding-bottom: 2px; }
+.msg-sec-actions .icon-btn { width: 24px; height: 24px; }
+.msg-event { align-self: center; margin: 8px auto; max-width: 80%; padding: 3px 10px; border-radius: 99px; background: var(--surface-2); color: var(--ink-3); font-size: 11.5px; text-align: center; }
+
 /* A photo or video in a chat: the bubble is as wide as the picture, so no background shows beside a narrow one, and
    the picture never runs wider than the bubble on a phone. Its cap is in viewport units, not a percentage, so the
    bubble can size itself to the capped picture. A photo opens full size. */

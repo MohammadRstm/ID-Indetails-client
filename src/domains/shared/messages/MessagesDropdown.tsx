@@ -7,9 +7,9 @@ import { OffBadge } from "../timeOff/OffBadge";
 import { PersonAvatar } from "@/shared/components/Identity/People";
 import { relTime } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
-import GroupTile, { AnnouncementsTile } from "./GroupTile";
+import GroupTile, { AnnouncementsTile, ChatGroupTile } from "./GroupTile";
 import { firstName, snippet } from "./messageText";
-import { chatQuery, useConversations, type Conversation } from "./messagesApi";
+import { chatQuery, isGroupEvent, useConversations, type Conversation } from "./messagesApi";
 import SoundToggle from "./SoundToggle";
 import { loadFailed } from "@/api/queryState";
 import { clickable } from "@/shared/utils/clickable";
@@ -34,13 +34,14 @@ export default function MessagesDropdown({ messagesPath, close }: { messagesPath
                                 return (
                                     <div key={chatQuery(c)} className={cx("notif", c.unread > 0 && "unread")} {...clickable(() => open(c), "button")}>
                                         {c.person ? <PersonAvatar person={{ id: c.person.id, name: c.person.name, photoFileId: c.person.photoFileId, domain: c.person.domain }} size={28} />
-                                            : c.type === "announcements" ? <AnnouncementsTile /> : <GroupTile domain={c.team?.domain ?? ""} />}
+                                            : c.type === "announcements" ? <AnnouncementsTile />
+                                                : c.group ? <ChatGroupTile photoFileId={c.group.photoFileId} /> : <GroupTile domain={c.team?.domain ?? ""} />}
                                         <div className="grow" style={{ minWidth: 0 }}>
                                             <div className="notif-txt trunc">
-                                                {c.person ? c.person.name : c.type === "announcements" ? "Announcements" : `${c.team?.name} · ${AREAS[c.team?.domain as "design"]?.label ?? ""}`}
+                                                {c.person ? c.person.name : c.type === "announcements" ? "Announcements" : c.group ? c.group.name : `${c.team?.name} · ${AREAS[c.team?.domain as "design"]?.label ?? ""}`}
                                                 {c.unreadMention && <> <span className="msg-mention-flag">@</span></>}
                                             </div>
-                                            <div className="muted trunc" style={{ fontSize: "11.5px" }}>{c.type !== "dm" ? `${firstName(last.sender.name)}: ` : ""}{snippet(last)}</div>
+                                            <div className="muted trunc" style={{ fontSize: "11.5px" }}>{c.type !== "dm" && !isGroupEvent(last) ? `${firstName(last.sender.name)}: ` : ""}{snippet(last)}</div>
                                             <div className="notif-meta">{relTime(last.createdAt)}{c.person && <> <OffBadge userId={c.person.id} /></>}</div>
                                         </div>
                                         {c.unread > 0 && <span className="dot dot-on" style={{ marginTop: 6 }} aria-label="Unread" />}

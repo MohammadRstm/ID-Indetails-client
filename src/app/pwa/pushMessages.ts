@@ -13,6 +13,8 @@ export type PushTarget = {
     section?: string;
     teamId?: number;
     userId?: number;
+    /** A custom chat group. */
+    groupId?: number;
     weekStart?: string;
     page?: string;
 };

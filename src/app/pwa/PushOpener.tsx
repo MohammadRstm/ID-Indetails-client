@@ -45,7 +45,7 @@ export default function PushOpener() {
             }
             if (push.kind === "message") {
                 const chat = target.page === "announcements" ? "announcements=1"
-                    : target.teamId ? `group=${target.teamId}` : target.userId ? `with=${target.userId}` : "";
+                    : target.teamId ? `group=${target.teamId}` : target.groupId ? `custom=${target.groupId}` : target.userId ? `with=${target.userId}` : "";
                 return `${base}/messages${chat ? `?${chat}` : ""}`;
             }
             if (target.type === "labour_week" && target.projectId) {

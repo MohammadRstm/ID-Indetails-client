@@ -16,9 +16,14 @@ import { dayKey, fmtDayDate, fmtDayDateY, fmtRange, fmtTime, relDay } from "@/sh
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import Composer from "./Composer";
-import GroupTile, { AnnouncementsTile } from "./GroupTile";
+import MenuButton from "@/shared/components/Overlays/MenuButton";
+import { LeaveGroupModal } from "./ChatGroupWindows";
+import GroupTile, { AnnouncementsTile, ChatGroupTile } from "./GroupTile";
 import { mentionParts, startsRun } from "./messageText";
-import { chatKey, useMarkChatRead, usePresence, useSendMessage, useTeamMembers, useThread, type Chat, type Contact, type Message } from "./messagesApi";
+import {
+    chatKey, isGroupEvent, useGroupMembers, useMarkChatRead, usePresence, useSendMessage, useTeamMembers, useThread,
+    type Chat, type ChatGroup, type Contact, type Message,
+} from "./messagesApi";
 import { playReceived, playSent } from "./messageSounds";
 import { OffBadge } from "../timeOff/OffBadge";
 import SoundToggle from "./SoundToggle";
@@ -126,6 +131,12 @@ type ThreadProps = {
     chat: Chat;
     person: Contact | null;
     team: { id: number; name: string; domain: string } | null;
+    /** A custom group, as the list of chats has it. */
+    group?: ChatGroup | null;
+    /** Opens the group's manage window, for whoever manages groups. */
+    onManage?: () => void;
+    /** The person left the group: the chat closes. */
+    onLeft?: () => void;
     meId: number;
     /** Back to the list of chats, where the two don't fit side by side (a phone). */
     onBack?: () => void;
@@ -136,11 +147,14 @@ type ThreadProps = {
  * it is marked read, and so is each new message. The sender's messages show their ticks, and under the newest one
  * whose receipts the caller sees, a team chat or Announcements says who has seen it.
  */
-export default function Thread({ chat, person, team, meId, onBack }: ThreadProps) {
+export default function Thread({ chat, person, team, group, meId, onBack, onManage, onLeft }: ThreadProps) {
     const navigate = useNavigate();
     const permissions = usePermissions();
     const thread = useThread(chat);
-    const members = useTeamMembers(chat.kind === "group" ? chat.teamId : null);
+    const teamMembers = useTeamMembers(chat.kind === "group" ? chat.teamId : null);
+    const groupMembers = useGroupMembers(chat.kind === "custom" ? chat.groupId : null);
+    const members = chat.kind === "custom" ? groupMembers : teamMembers;
+    const [leaving, setLeaving] = useState(false);
     const presence = usePresence();
     const send = useSendMessage(chat);
     const markRead = useMarkChatRead();
@@ -153,19 +167,20 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
     const markChat = markRead.mutate;
     const key = chatKey(chat);
     const loaded = !!thread.data;
-    const kind = chat.kind, id = chat.kind === "group" ? chat.teamId : chat.kind === "dm" ? chat.userId : 0;
+    const kind = chat.kind, id = chat.kind === "group" ? chat.teamId : chat.kind === "dm" ? chat.userId : chat.kind === "custom" ? chat.groupId : 0;
     // everyone reads Announcements; only message:announce writes in it
     const writes = kind !== "announcements" || permissions.has(P.MESSAGE_ANNOUNCE);
 
     // read up to the newest message, whenever a new one arrives, while the chat is on screen: what isn't looked at isn't read
     useEffect(() => {
-        if (loaded && onScreen) markChat(kind === "group" ? { kind, teamId: id } : kind === "dm" ? { kind, userId: id } : { kind });
+        if (loaded && onScreen) markChat(kind === "group" ? { kind, teamId: id } : kind === "dm" ? { kind, userId: id } : kind === "custom" ? { kind, groupId: id } : { kind });
     }, [kind, id, newest, loaded, onScreen, markChat]);
 
     // someone else's message arriving in the open chat chimes (marking it read keeps the badge from doing so)
     const seen = useRef<{ key: string; id: number } | null>(null);
     const latest = messages[messages.length - 1];
-    const fromOthers = !!latest && latest.sender.id !== meId;
+    // a grey line saying what changed in a group is no message to chime for
+    const fromOthers = !!latest && latest.sender.id !== meId && !isGroupEvent(latest);
     useEffect(() => {
         if (!loaded) return;
         const before = seen.current;
@@ -224,6 +239,17 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                             </div>
                         </div>
                     </div>
+                ) : chat.kind === "custom" ? (
+                    <div className="row" style={{ gap: 10, minWidth: 0 }}>
+                        <ChatGroupTile photoFileId={group?.photoFileId} />
+                        <div style={{ minWidth: 0 }}>
+                            <div className="trunc" style={{ fontWeight: 650 }}>{group?.name ?? "Group"}</div>
+                            <div className="muted trunc" style={{ fontSize: "11.5px" }}>
+                                {members.data ? `${members.data.length} member${members.data.length === 1 ? "" : "s"}` : ""}
+                                {onlineHere > 0 && <span className="msg-online"> · {onlineHere} online</span>}
+                            </div>
+                        </div>
+                    </div>
                 ) : chat.kind === "announcements" ? (
                     <div className="row" style={{ gap: 10 }}>
                         <AnnouncementsTile />
@@ -235,7 +261,21 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                 ) : null}
                 <div className="grow" />
                 <SoundToggle />
+                {chat.kind === "custom" && (
+                    <MenuButton icon="dots" label="Group actions" align="right" width={190}>
+                        {(close) => (
+                            <div>
+                                {onManage && <button className="pop-item" onClick={() => { close(); onManage(); }}><Icon name="settings" />Manage group</button>}
+                                <button className="pop-item danger" onClick={() => { close(); setLeaving(true); }}><Icon name="logout" />Leave group</button>
+                            </div>
+                        )}
+                    </MenuButton>
+                )}
             </div>
+            {leaving && chat.kind === "custom" && (
+                <LeaveGroupModal group={{ id: chat.groupId, name: group?.name ?? "this group" }} onClose={() => setLeaving(false)}
+                    onLeft={() => { setLeaving(false); onLeft?.(); }} />
+            )}
             <div className="msg-list" ref={listRef}>
                 {loadFailed(thread) ? <div className="mt"><LoadError error={thread.error} retry={() => thread.refetch()} what="the messages" /></div>
                     : !thread.data ? <div className="mt"><SkeletonLines lines={6} /></div> : (
@@ -252,6 +292,10 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                                 <div key={day.key} className="day-group">
                                     <div className="day-head"><h4>{relDay(day.key)}</h4><span className="muted" style={{ fontSize: 11 }}>{fmtDayDateY(day.key)}</span></div>
                                     {day.items.map((m, i) => {
+                                        // a custom group's grey line: who changed what, in the middle of the chat
+                                        if (isGroupEvent(m)) {
+                                            return <div key={m.id} className="msg-event">{m.sender.id === meId ? "You" : m.sender.name} {m.body} · {fmtTime(m.createdAt)}</div>;
+                                        }
                                         const mine = m.sender.id === meId;
                                         const first = startsRun(m, day.items[i - 1]);
                                         const open = () => setInfo(m.id);
@@ -282,7 +326,7 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                     )}
             </div>
             {writes ? (
-                <Composer key={key} draftKey={key} members={chat.kind === "group" ? members.data ?? [] : null} meId={meId} sending={send.isPending} error={send.error}
+                <Composer key={key} draftKey={key} members={chat.kind === "group" || chat.kind === "custom" ? members.data ?? [] : null} meId={meId} sending={send.isPending} error={send.error}
                     onSend={async (body) => {
                         const sent = await send.mutateAsync(body);
                         playSent();
