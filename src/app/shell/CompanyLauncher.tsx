@@ -9,7 +9,7 @@ import { AREAS, hasSeveralAreas } from "@/app/routing/areas";
 import { domainHome, homePath, websiteHome } from "@/app/routing/home";
 import { companyNav } from "@/app/routing/routeTable";
 import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
-import ThemeToggle from "@/shared/components/Buttons/ThemeToggle";
+import Avatar from "@/shared/components/Identity/Avatar";
 import Logo from "@/shared/components/Identity/Logo";
 import Skeleton from "@/shared/components/Feedback/Skeleton";
 import { money } from "@/shared/format/money";
@@ -19,6 +19,8 @@ import { companyToday } from "@/shared/format/time";
 import { useIsPhone } from "@/shared/hooks/useIsPhone";
 import Icon from "@/shared/icons/Icon";
 import BottomNav from "./BottomNav";
+import MessagesButton from "./MessagesButton";
+import { myProfilePath } from "./profilePath";
 import SearchPalette from "./SearchPalette";
 import { useCompanySettings } from "./shellQueries";
 import { useArea } from "./useArea";
@@ -28,7 +30,8 @@ type Overview = Schemas["CompanyOverviewResponse"];
 
 /**
  * Where someone who can reach several areas starts: pick Design, Execution or the company overview, or one of the
- * services (the website, and social media to come). Each card shows only to whoever may open it.
+ * services (the website, and social media to come). Each card shows only to whoever may open it. Above them are the
+ * person's own picture (opening their profile), name and email, and beside the logo Messages, the bell and Settings.
  */
 export default function CompanyLauncher() {
     const navigate = useNavigate();
@@ -50,6 +53,10 @@ export default function CompanyLauncher() {
     if (!hasSeveralAreas(permissions)) return <Navigate to={homePath(permissions)} replace />;
 
     const both = permissions.visibleDomains.length === 2;
+    const profile = myProfilePath(permissions, area, user.id);
+    // the company's Settings for whoever sees the company, otherwise their first business's (the theme is in both)
+    const settings = permissions.has(P.COMPANY_VIEW) ? "/company/settings" : `/${permissions.visibleDomains[0] ?? "design"}/settings`;
+    const picture = <Avatar person={{ name: fullName(user), photoFileId: user.photoFileId }} size={44} />;
     return (
         <>
         <div className="launcher">
@@ -61,15 +68,30 @@ export default function CompanyLauncher() {
                         <div className="logo-sub">{company.data?.name ?? ""}</div>
                     </div>
                     <span className="grow" />
-                    <ThemeToggle />
-                    {/* a phone has Alerts in the bottom bar; the bell's sound stays */}
-                    {phone ? <NotificationChime /> : <NotificationBell allPath="/company/notifications" />}
+                    {/* a phone has Chat and Alerts in the bottom bar; the bell's sound stays */}
+                    {phone ? <NotificationChime /> : (
+                        <>
+                            <MessagesButton messagesPath="/company/messages" />
+                            <NotificationBell allPath="/company/notifications" />
+                        </>
+                    )}
+                    <button className="icon-btn" onClick={() => navigate(settings)} aria-label="Settings" title="Settings">
+                        <Icon name="settings" />
+                    </button>
+                </div>
+
+                <div className="launch-me">
+                    {profile
+                        ? <button type="button" className="launch-me-pic" onClick={() => navigate(profile)} aria-label="Open your profile" title="Open your profile">{picture}</button>
+                        : picture}
+                    <div style={{ minWidth: 0 }}>
+                        <div className="launch-me-name trunc">{fullName(user)}</div>
+                        <div className="muted trunc" style={{ fontSize: 12.5 }}>{user.email}</div>
+                    </div>
                 </div>
 
                 <h1 className="launch-h">What would you like to manage?</h1>
-                <p className="muted" style={{ marginTop: 5 }}>
-                    Signed in as <b className="sec">{fullName(user)}</b>{both ? " · you can see both businesses." : "."}
-                </p>
+                {both && <p className="muted" style={{ marginTop: 5 }}>You can see both businesses.</p>}
 
                 <div className="launch-grid mt">
                     {permissions.visibleDomains.map((domain) => {

@@ -4,7 +4,7 @@ import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { OffBadge } from "../timeOff/OffBadge";
-import Avatar from "@/shared/components/Identity/Avatar";
+import { PersonAvatar } from "@/shared/components/Identity/People";
 import { relTime } from "@/shared/format/time";
 import { cx } from "@/shared/utils/cx";
 import GroupTile, { AnnouncementsTile } from "./GroupTile";
@@ -33,7 +33,7 @@ export default function MessagesDropdown({ messagesPath, close }: { messagesPath
                                 const last = c.lastMessage!;
                                 return (
                                     <div key={chatQuery(c)} className={cx("notif", c.unread > 0 && "unread")} {...clickable(() => open(c), "button")}>
-                                        {c.person ? <Avatar person={{ name: c.person.name, photoFileId: c.person.photoFileId }} size={28} />
+                                        {c.person ? <PersonAvatar person={{ id: c.person.id, name: c.person.name, photoFileId: c.person.photoFileId, domain: c.person.domain }} size={28} />
                                             : c.type === "announcements" ? <AnnouncementsTile /> : <GroupTile domain={c.team?.domain ?? ""} />}
                                         <div className="grow" style={{ minWidth: 0 }}>
                                             <div className="notif-txt trunc">

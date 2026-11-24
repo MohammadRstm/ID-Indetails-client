@@ -30,9 +30,12 @@ type Method = Schemas["PaymentMethod"];
 
 /**
  * Money a client sent, recorded after it arrived (the prototype's P.PaymentModal): against an open invoice
- * or on account, in dollars or in LBP at the day's rate. It changes what was collected, never the revenue.
+ * or on account, in dollars or in LBP at the day's rate. It changes what was collected, never the revenue. Once it is
+ * recorded, the receipt window follows (onRecorded), to tell the client the money arrived.
  */
-export default function RecordPaymentModal({ project, invoiceId: preset, onClose }: { project: Project; invoiceId?: number | null; onClose: () => void }) {
+export default function RecordPaymentModal({ project, invoiceId: preset, onClose, onRecorded }: {
+    project: Project; invoiceId?: number | null; onClose: () => void; onRecorded?: (payment: Schemas["PaymentResponse"]) => void;
+}) {
     const today = companyToday();
     const record = useRecordPayment(project.id);
     const invoiceQuery = useInvoices({ projectId: project.id, pageSize: 100 });
@@ -102,7 +105,8 @@ export default function RecordPaymentModal({ project, invoiceId: preset, onClose
                     sub: target ? (cents(left) <= 0 ? `${target.number} is now fully paid` : `${money.exact(left, "USD", { cents: true })} still outstanding`) : "Held as a credit until it is applied to an invoice",
                     icon: "card",
                 });
-                onClose();
+                if (onRecorded) onRecorded(pay);
+                else onClose();
             },
         });
     }

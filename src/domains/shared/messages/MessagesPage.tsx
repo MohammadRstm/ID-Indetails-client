@@ -8,7 +8,7 @@ import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { OffBadge } from "../timeOff/OffBadge";
-import Avatar from "@/shared/components/Identity/Avatar";
+import { PersonAvatar } from "@/shared/components/Identity/People";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 import GroupTile, { AnnouncementsTile } from "./GroupTile";
@@ -148,7 +148,7 @@ export default function MessagesPage() {
                                                 const online = presence.data?.has(p.id) ?? p.online ?? false;
                                                 return (
                                                     <div key={p.id} className={cx("msg-contact-row", chat && chatKey(chat) === chatKey(k) && "on")} {...clickable(() => select(k), "button")}>
-                                                        <Avatar person={{ name: p.name, photoFileId: p.photoFileId, online }} size={28} presence />
+                                                        <PersonAvatar person={{ id: p.id, name: p.name, photoFileId: p.photoFileId, online, domain: p.domain }} size={28} presence />
                                                         <div className="grow" style={{ minWidth: 0 }}>
                                                             <div className="trunc" style={{ fontWeight: 600 }}>{p.name}</div>
                                                             <div className="muted trunc" style={{ fontSize: 11 }} title={[p.position, super_ && p.domain ? areaLabel(p.domain) : null].filter(Boolean).join(" · ")}>

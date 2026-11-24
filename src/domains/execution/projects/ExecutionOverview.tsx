@@ -154,5 +154,5 @@ function SiteExpenses({ project }: { project: Project }) {
 /** "Team [avatars]" in the site's head: who records on it, latest first. */
 export function SiteTeamLine({ project }: { project: Project }) {
     if (!project.team?.count) return null;
-    return <Avatars people={project.team.people} max={5} />;
+    return <Avatars people={project.team.people} max={5} link />;
 }

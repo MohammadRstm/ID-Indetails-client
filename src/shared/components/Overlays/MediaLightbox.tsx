@@ -7,8 +7,11 @@ import Modal from "./Modal";
 
 export type Attachment = { id: number; name: string; mimeType: string; kind?: string };
 
-/** An attached photo or video, full size, with a download (the prototype's UI.MediaLightbox). */
-export default function MediaLightbox({ file, onClose }: { file: Attachment; onClose: () => void }) {
+/**
+ * An attached photo or video, full size, with a download (the prototype's UI.MediaLightbox). A profile or project photo
+ * is only looked at, so it has no download.
+ */
+export default function MediaLightbox({ file, onClose, download: canDownload = true }: { file: Attachment; onClose: () => void; download?: boolean }) {
     const { url, isError } = useFileUrl(file.id);
     const video = file.kind === "video" || file.mimeType.startsWith("video/");
 
@@ -21,7 +24,7 @@ export default function MediaLightbox({ file, onClose }: { file: Attachment; onC
         <Modal size="xl" flush scrimClass="lightbox-scrim" onClose={onClose}
             foot={
                 <>
-                    <button className="btn" onClick={download} disabled={!url}><Icon name="download" />Download</button>
+                    {canDownload && <button className="btn" onClick={download} disabled={!url}><Icon name="download" />Download</button>}
                     <button className="btn" onClick={onClose}>Close</button>
                 </>
             }>

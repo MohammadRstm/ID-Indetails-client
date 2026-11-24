@@ -320,7 +320,7 @@ function ProjectCard({ project: p, today, canLog, paused }: { project: MyProject
                 </div>
                 <div style={{ textAlign: "right" }}>
                     <div className="u">Team</div>
-                    <Avatars people={p.contributors} max={4} />
+                    <Avatars people={p.contributors} max={4} link />
                 </div>
             </div>
             <div className="spread">

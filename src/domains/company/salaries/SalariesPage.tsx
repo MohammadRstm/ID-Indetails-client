@@ -12,7 +12,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
 import { ChipGroup, SearchInput, Segmented } from "@/shared/components/Forms/Filters";
-import Avatar from "@/shared/components/Identity/Avatar";
+import { PersonAvatar } from "@/shared/components/Identity/People";
 import { money } from "@/shared/format/money";
 import { addMonths, companyToday, fmtDate, fmtDateY, fmtH, fmtMonthY } from "@/shared/format/time";
 import useDebounce from "@/shared/hooks/useDebounce";
@@ -381,7 +381,7 @@ function SalaryLine({ row: r, running, advances, onOpen }: { row: SalaryRow; run
         <tr className="click" {...clickable(onOpen)}>
             <td>
                 <div className="row" style={{ gap: 9, minWidth: 0 }}>
-                    <Avatar person={{ name: r.name, photoFileId: r.photoFileId }} size={28} />
+                    <PersonAvatar person={{ id: r.userId, name: r.name, photoFileId: r.photoFileId, domain: r.domain }} size={28} />
                     <div style={{ minWidth: 0 }}>
                         <div className="trunc" style={{ fontWeight: 600 }}>{r.name}</div>
                         <div className="muted trunc" style={{ fontSize: "11.5px" }}>{r.domain ? AREAS[r.domain as Domain]?.label ?? r.domain : "Company"} · {r.email}</div>

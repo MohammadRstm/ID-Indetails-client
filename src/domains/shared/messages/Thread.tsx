@@ -8,7 +8,7 @@ import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Avatar from "@/shared/components/Identity/Avatar";
-import { PersonName } from "@/shared/components/Identity/People";
+import { PersonAvatar, PersonName } from "@/shared/components/Identity/People";
 import MediaLightbox from "@/shared/components/Overlays/MediaLightbox";
 import VoicePlayer from "@/shared/voice/VoicePlayer";
 import { useFileUrl } from "@/shared/files/useFileUrl";
@@ -18,10 +18,11 @@ import { cx } from "@/shared/utils/cx";
 import Composer from "./Composer";
 import GroupTile, { AnnouncementsTile } from "./GroupTile";
 import { mentionParts, startsRun } from "./messageText";
-import { chatKey, useMarkChatRead, usePresence, useSendMessage, useTeamMembers, useThread, type Chat, type Contact, type Message } from "./messagesApi";
+import { chatKey, isVoiceMessage, useMarkChatRead, usePresence, useSendMessage, useTeamMembers, useThread, type Chat, type Contact, type Message } from "./messagesApi";
 import { playReceived, playSent } from "./messageSounds";
 import { OffBadge } from "../timeOff/OffBadge";
 import SoundToggle from "./SoundToggle";
+import VoiceMessageMenu from "./VoiceMessageMenu";
 import { clickable } from "@/shared/utils/clickable";
 import { loadFailed } from "@/api/queryState";
 import { usePageVisible } from "@/portal/discussion/usePageVisible";
@@ -98,6 +99,8 @@ function Body({ m, mine, showName, names, onReceipts }: { m: Message; mine: bool
     if (m.kind === "task_comment") return <TaskCard m={m} mine={mine} />;
     return (
         <div className={cx("msg-bubble", mine && "mine")}>
+            {/* the sender's own voice message has a menu, to delete it */}
+            {mine && isVoiceMessage(m) && <VoiceMessageMenu messageId={m.id} />}
             {showName && <div className="msg-sender"><PersonName person={{ id: m.sender.id, name: m.sender.name }} /></div>}
             {m.body && (
                 <div className="msg-text">
@@ -193,7 +196,8 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                 {person && who ? (
                     <div className={profile ? "msg-thread-person" : undefined} {...clickable(profile ? () => navigate(profile) : undefined, "link")} title={profile ? "View profile" : undefined}>
                         <div className="row" style={{ gap: 10 }}>
-                            <Avatar person={who} size={32} presence />
+                            {/* the whole head opens the profile where the viewer may open it; otherwise the picture shows the photo */}
+                            <PersonAvatar person={{ ...who, id: person.id, domain: person.domain }} size={32} presence link={!profile} />
                             <div style={{ minWidth: 0 }}>
                                 <div className="trunc" style={{ fontWeight: 650 }}>{person.name}</div>
                                 <div className="muted trunc" style={{ fontSize: "11.5px" }}>
@@ -254,7 +258,7 @@ export default function Thread({ chat, person, team, meId, onBack }: ThreadProps
                                             return (
                                                 <Fragment key={m.id}>
                                                     <div className={cx("msg-row", first && "first")}>
-                                                        <div className="msg-av">{first && <Avatar person={{ name: m.sender.name, photoFileId: m.sender.photoFileId }} size={30} />}</div>
+                                                        <div className="msg-av">{first && <PersonAvatar person={m.sender} size={30} />}</div>
                                                         <Body m={m} mine={false} showName={first} names={names} onReceipts={open} />
                                                     </div>
                                                     {seen}

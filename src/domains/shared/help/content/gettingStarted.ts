@@ -85,6 +85,7 @@ export const gettingStarted: Article[] = [
                 step("Pick the business, or the company pages."),
             ),
             para("You can also type **Go to Design** or **Go to Execution** in the search (Ctrl+K)."),
+            para("The start screen shows your picture, name and email: click your picture to open your profile. Beside the logo are **Messages**, the bell and **Settings** (the light or dark theme is in Settings)."),
             links(link("Open Home", { path: "/company" })),
         ],
     },
@@ -113,7 +114,7 @@ export const gettingStarted: Article[] = [
         category: "start",
         who: everyone,
         summary: "The chat icon at the top opens your chats: Announcements, your department's group chat and direct messages.",
-        ask: ["messages", "chat", "message someone", "department chat", "team chat", "group chat", "direct message", "mention", "announcements", "announcement", "company news"],
+        ask: ["messages", "chat", "message someone", "department chat", "team chat", "group chat", "direct message", "mention", "announcements", "announcement", "company news", "delete voice message", "delete voice note", "unsend"],
         blocks: [
             list(
                 "**Announcements** comes first: everyone in the company reads it, and you are told on your phone when there's news.",
@@ -121,7 +122,8 @@ export const gettingStarted: Article[] = [
                 "Direct messages are between two people. Use **Find people or groups** to start one.",
                 "In a group, type **@** and a name to mention someone.",
                 "On a computer, **Enter** sends and **Shift+Enter** starts a new line. On a phone, Enter starts a new line and the send button sends. The box grows as you write, up to five lines.",
-                "You can attach files and photos.",
+                "You can attach files and photos, or record a voice message.",
+                "Your own voice message has three dots in its corner: **Delete** removes it and its recording for everyone in the chat, with nothing left in its place. It can't be undone, and only voice messages can be deleted.",
             ),
             only(hasAny(P.MESSAGE_ANNOUNCE), para("You write in Announcements; everyone else only reads it.")),
             links(link("Open messages", { here: "messages" })),
@@ -132,14 +134,18 @@ export const gettingStarted: Article[] = [
         title: "Your name, phone and photo",
         category: "start",
         who: everyone,
-        summary: "Open your profile and choose Edit profile to change your name, phone number or photo.",
-        ask: ["edit profile", "change photo", "profile picture", "avatar", "phone number", "change my name", "my profile"],
+        summary: "Open your profile and choose Edit profile to change your name, phone number or photo. Clicking someone else's picture opens their profile, or their photo.",
+        ask: ["edit profile", "change photo", "profile picture", "avatar", "phone number", "change my name", "my profile", "see someone's profile", "full screen photo", "click a picture"],
         blocks: [
             steps(
                 step("Open **My profile** from the menu under your name.", "My profile"),
                 step("Choose **Edit profile**, make the change and save."),
             ),
             only(isEmployee, note("Your position, department and pay are set by an admin.")),
+            list(
+                "Click someone else's picture anywhere in the app (a chat, a list of people, a notification) to open their profile. If you can't open profiles, their photo opens full screen instead, when they have one. Your own picture opens nothing.",
+                "On a profile, click the photo to see it full screen.",
+            ),
             links(link("Open my profile", { profile: true })),
         ],
     },

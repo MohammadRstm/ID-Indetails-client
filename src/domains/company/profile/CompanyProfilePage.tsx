@@ -4,7 +4,7 @@ import { accessLabel } from "@/app/permissions/permissions";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { fullName, useCurrentUser } from "@/app/session/useSession";
 import { SwitchRow } from "@/shared/components/Forms/Filters";
-import Avatar from "@/shared/components/Identity/Avatar";
+import ProfilePicture from "@/shared/components/Identity/ProfilePicture";
 import { DOMAIN_LABEL, plural } from "@/shared/format/labels";
 import { fmtDateY } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -36,7 +36,7 @@ export default function CompanyProfilePage() {
         <div className="page">
             <div className="page-head">
                 <div className="row start" style={{ gap: 15, minWidth: 0 }}>
-                    <Avatar person={{ name, photoFileId: me.photoFileId, online: true }} size={72} presence />
+                    <ProfilePicture person={{ name, photoFileId: me.photoFileId, online: true }} size={72} presence />
                     <div style={{ minWidth: 0 }}>
                         <h1 className="page-title">{name}</h1>
                         <div className="page-sub">{[me.position, access].filter(Boolean).join(" · ")}</div>

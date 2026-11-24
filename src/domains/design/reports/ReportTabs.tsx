@@ -184,7 +184,7 @@ export function PeopleTab({ report, label, people }: TabProps) {
                             const person = personOf(people, r.userId, r.name);
                             return (
                                 <tr key={r.userId} className={cx(open(`people/${r.userId}`) && "click")} {...clickable(open(`people/${r.userId}`))}>
-                                    <td><PersonLine person={person} size={26} sub={person.team ?? false} /></td>
+                                    <td><PersonLine person={person} size={26} link sub={person.team ?? false} /></td>
                                     {r.cells.map((mins, i) => {
                                         const lvl = mins ? Math.min(4, Math.max(1, Math.ceil((mins / Math.max(1, r.totalMinutes)) * 4))) : 0;
                                         return (

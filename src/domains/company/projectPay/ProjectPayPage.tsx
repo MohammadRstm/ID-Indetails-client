@@ -13,8 +13,7 @@ import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
 import { Segmented } from "@/shared/components/Forms/Filters";
 import Select from "@/shared/components/Forms/Select";
-import Avatar from "@/shared/components/Identity/Avatar";
-import { PersonName } from "@/shared/components/Identity/People";
+import { PersonAvatar, PersonName } from "@/shared/components/Identity/People";
 import { money } from "@/shared/format/money";
 import { companyToday, fmtDate, fmtH, fmtNumber } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -227,7 +226,7 @@ function PersonRow({ row }: { row: ProjectPayPerson }) {
         <tr className="pp-emp">
             <td>
                 <div className="row" style={{ gap: 9, minWidth: 0 }}>
-                    <Avatar person={{ name: row.name, photoFileId: row.photoFileId }} size={26} />
+                    <PersonAvatar person={{ id: row.userId, name: row.name, photoFileId: row.photoFileId, domain: "design" }} size={26} />
                     <div style={{ minWidth: 0 }}>
                         <div className="trunc" style={{ fontWeight: 600 }}><PersonName person={{ id: row.userId, name: row.name, domain: "design" }} /></div>
                         <div className="muted trunc" style={{ fontSize: 11 }}>{row.position ?? ""}</div>

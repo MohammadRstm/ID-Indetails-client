@@ -100,7 +100,7 @@ describe("a Design project, by permission", () => {
         const details = await screen.findByRole("dialog", { name: "Project details" });
         expect(within(details).getByText(projectWork.project.client!.displayName)).toBeInTheDocument();
         expect(within(details).queryByRole("link", { name: new RegExp(projectWork.project.client!.displayName) })).toBeNull();
-        for (const name of ["Edit details", "Change owner", "Project photo"]) expect(within(details).queryByRole("button", { name })).toBeNull();
+        for (const name of ["Edit details", "Change owner", "Change the project photo"]) expect(within(details).queryByRole("button", { name })).toBeNull();
         await userEvent.click(within(details).getAllByRole("button", { name: "Close" }).at(-1)!);
         expect(screen.queryByText("Contributors")).toBeNull();
         expect(asked).toEqual([]);

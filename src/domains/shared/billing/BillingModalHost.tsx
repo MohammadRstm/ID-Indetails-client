@@ -5,13 +5,14 @@ import { usePermissions } from "@/app/permissions/usePermissions";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Modal from "@/shared/components/Overlays/Modal";
 import { useProject, type Project } from "../projects/projectsApi";
-import { useInvoice } from "./billingApi";
+import { useInvoice, usePayment } from "./billingApi";
 import AutoInvoiceModal from "./AutoInvoiceModal";
 import { useBillingLinks } from "./billingLinks";
 import InvoiceEditor from "./InvoiceEditor";
 import InvoiceModal from "./InvoiceModal";
 import RecordPaymentModal from "./RecordPaymentModal";
 import SendInvoiceModal from "./SendInvoiceModal";
+import SendReceiptModal from "./SendReceiptModal";
 
 function Loading({ onClose }: { onClose: () => void }) {
     return <Modal size="md" title="Loading…" onClose={onClose}><SkeletonLines lines={5} /></Modal>;
@@ -48,9 +49,15 @@ function PayFor({ invoiceId, project }: { invoiceId: number | null; project?: Pr
     if (projectId == null) return <Loading onClose={links.close} />;
     return (
         <WithProject project={project} projectId={projectId} onClose={links.close}>
-            {(p) => <RecordPaymentModal project={p} invoiceId={invoiceId} onClose={links.close} />}
+            {(p) => <RecordPaymentModal project={p} invoiceId={invoiceId} onClose={links.close} onRecorded={(pay) => links.receipt(pay.id)} />}
         </WithProject>
     );
+}
+
+function ReceiptById({ paymentId }: { paymentId: number }) {
+    const links = useBillingLinks();
+    const payment = usePayment(paymentId).data;
+    return payment ? <SendReceiptModal payment={payment} onClose={links.close} /> : <Loading onClose={links.close} />;
 }
 
 /**
@@ -84,6 +91,7 @@ export default function BillingModalHost({ project }: { project?: Project }) {
     }
     if (id("edit") != null && permissions.has(P.INVOICE_CREATE)) return <EditDraft invoiceId={id("edit")!} project={project} />;
     if (id("send") != null && permissions.has(P.INVOICE_SEND)) return <SendById invoiceId={id("send")!} />;
+    if (id("receipt") != null && permissions.has(P.PAYMENT_RECORD)) return <ReceiptById paymentId={id("receipt")!} />;
     if (pay && permissions.has(P.PAYMENT_RECORD)) {
         const invoiceId = pay === "1" ? null : id("pay");
         return project || invoiceId != null ? <PayFor invoiceId={invoiceId} project={project} /> : null;

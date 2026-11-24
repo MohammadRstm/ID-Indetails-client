@@ -9,15 +9,14 @@ import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
 import ThemeToggle from "@/shared/components/Buttons/ThemeToggle";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Popover from "@/shared/components/Overlays/Popover";
-import MessagesDropdown from "@/domains/shared/messages/MessagesDropdown";
 import NotificationBell from "@/domains/shared/notifications/NotificationBell";
 import NotificationChime from "@/domains/shared/notifications/NotificationChime";
 import TimerControl from "@/domains/design/work/TimerControl";
 import { useIsPhone } from "@/shared/hooks/useIsPhone";
 import Icon from "@/shared/icons/Icon";
 import { toggleTheme, useTheme } from "@/shared/theme";
-import { cx } from "@/shared/utils/cx";
 import { contactPath } from "./contactPath";
+import MessagesButton from "./MessagesButton";
 import { myAdvancesPath, myProfilePath } from "./profilePath";
 import InstallMenuItem from "@/app/pwa/InstallMenuItem";
 import PushMenuItem from "@/app/pwa/PushMenuItem";
@@ -45,7 +44,6 @@ export default function TopBar({ area, onMenu, onSearch, sideShown = true }: Top
     useArrivalChime(badges.messages?.unread);
     const base = areaBase(area);
     const me = { name: fullName(user), photoFileId: user.photoFileId, online: true };
-    const unreadMessages = badges.messages?.unread ?? 0;
     const profilePath = myProfilePath(permissions, area, user.id);
     const items = area.kind === "domain" ? domainNav(permissions, area.domain) : area.kind === "website" ? websiteNav(permissions) : companyNav(permissions);
     // Settings → Contact where the person has Settings, otherwise the Contact window
@@ -91,19 +89,7 @@ export default function TopBar({ area, onMenu, onSearch, sideShown = true }: Top
 
                         <ThemeToggle />
 
-                        <Popover
-                            align="right"
-                            trigger={(open, toggle) => (
-                                <button className={cx("icon-btn", open && "on")} onClick={toggle} aria-label="Messages">
-                                    <Icon name="chat" />
-                                    {unreadMessages > 0 && (
-                                        <span className="msg-badge">{badges.messages?.mention ? "@" : unreadMessages > 9 ? "9+" : unreadMessages}</span>
-                                    )}
-                                </button>
-                            )}
-                        >
-                            {(close) => <MessagesDropdown messagesPath={`${base}/messages`} close={close} />}
-                        </Popover>
+                        <MessagesButton messagesPath={`${base}/messages`} />
 
                         <NotificationBell allPath={`${base}/notifications`} />
                     </>

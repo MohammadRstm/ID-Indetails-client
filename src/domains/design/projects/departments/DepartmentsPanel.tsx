@@ -179,7 +179,7 @@ function DepartmentCostModal({ project, department: d, onClose }: { project: Pro
                         <tbody>
                             {people.map((p) => (
                                 <tr key={p.person.id} aria-label={p.person.name} title={p.months.map(monthLine).join("\n")}>
-                                    <td><PersonLine person={{ id: p.person.id, name: p.person.name }} size={24} sub={false} /></td>
+                                    <td><PersonLine person={{ id: p.person.id, name: p.person.name }} size={24} link sub={false} /></td>
                                     <td className="r mono">{fmtH(p.minutes)}</td>
                                     <td className="r mono">{rateOf(p.months)}</td>
                                     <td><Bar value={m.cost > 0 ? (p.cost / m.cost) * 100 : 0} /></td>

@@ -1266,3 +1266,27 @@ button.pc-comments { border: 0; cursor: pointer; }
 .cat-move .icon-btn:disabled, .cat-row .icon-btn:disabled { opacity: .35; cursor: default; }
 .reopened-banner .date-in { width: 170px; }
 .excuse-note { margin-bottom: 12px; background: var(--accent-soft); border-color: transparent; color: var(--accent-ink); }
+
+/* Project details: the photo opens full screen; whoever edits projects changes it from the pencil on its corner */
+.ptile-edit { position: relative; display: inline-grid; flex: none; align-self: start; }
+.ptile-edit > .pop-host { position: absolute; right: -7px; bottom: -7px; }
+.ptile-corner { width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 2px solid var(--surface); background: var(--accent); color: #fff;
+  display: grid; place-items: center; cursor: pointer; }
+.ptile-corner .ic { width: 11px; height: 11px; }
+.ptile-corner:hover, .ptile-corner.on, .ptile-corner:focus-visible { box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* The launcher: the person's own picture, name and email above the question; the picture opens their profile */
+.launch-me { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; min-width: 0; }
+.launch-me-pic { padding: 0; border: 0; background: none; border-radius: 50%; cursor: pointer; display: inline-flex; flex: none; }
+.launch-me-pic:hover, .launch-me-pic:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.launch-me-name { font-weight: 650; font-size: 15px; }
+
+/* The sender's own voice message: three dots in its top corner, shown on hover or focus (always on touch screens) */
+.msg-more { position: absolute; top: 1px; right: 3px; z-index: 1; }
+.msg-more .icon-btn { width: 24px; height: 24px; opacity: 0; transition: opacity .12s ease; }
+.msg-more .icon-btn .ic { width: 15px; height: 15px; }
+.msg-bubble:hover .msg-more .icon-btn, .msg-more .icon-btn:focus-visible, .msg-more .icon-btn.on { opacity: 1; }
+@media (hover: none) { .msg-more .icon-btn { opacity: 1; } }
+
+/* the sender's own words in a receipt email's preview, kept as typed */
+.mail-preview .receipt-note { white-space: pre-wrap; padding-left: 10px; border-left: 3px solid var(--line); }

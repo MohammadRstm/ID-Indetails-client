@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import Avatar from "@/shared/components/Identity/Avatar";
+import { PersonAvatar } from "@/shared/components/Identity/People";
 import { useFileUrl } from "@/shared/files/useFileUrl";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
@@ -12,7 +12,8 @@ type VoicePlayerProps = {
     /** Or a recording not sent yet (an object URL). */
     src?: string;
     /** Who recorded it: their photo with a microphone, as a voice app shows it. */
-    person?: { name: string; photoFileId?: number | null };
+    /** Who sent it: their picture opens their profile or photo, as anywhere else (not the viewer's own). */
+    person?: { id?: number; name: string; photoFileId?: number | null };
 };
 
 const SPEEDS = [1, 1.5, 2] as const;
@@ -124,7 +125,7 @@ export default function VoicePlayer({ fileId, src, person }: VoicePlayerProps) {
                 <div className="voice-who">
                     {playing || speed !== 1 ? speedButton : (
                         <>
-                            <Avatar person={{ name: person.name, photoFileId: person.photoFileId ?? null }} size={40} />
+                            <PersonAvatar person={{ id: person.id ?? 0, name: person.name, photoFileId: person.photoFileId ?? null }} size={40} link={person.id != null} />
                             <span className="voice-mic" aria-hidden="true"><Icon name="mic" /></span>
                         </>
                     )}

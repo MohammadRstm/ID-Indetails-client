@@ -96,6 +96,20 @@ export function useSendMessage(chat: Chat | null) {
     });
 }
 
+/** A message that carries a voice note: the only kind its sender can delete. */
+export function isVoiceMessage(m: Message): boolean {
+    return m.kind === "text" && m.attachments.some((a) => a.kind === "audio" || a.mimeType.startsWith("audio/"));
+}
+
+/** Deletes the caller's own voice message for everyone, its recording too (`DELETE /api/messages/{id}`). */
+export function useDeleteMessage() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (messageId: number) => { await http.delete(`/messages/${messageId}`); },
+        onSuccess: () => { void queryClient.invalidateQueries({ queryKey: messagesKey, predicate: (q) => q.queryKey[1] !== "contacts" && q.queryKey[1] !== "members" }); },
+    });
+}
+
 /** Who is online now (for the dots beside names). Nothing says when it changes, so it is asked again each minute. */
 export function usePresence() {
     return useQuery({

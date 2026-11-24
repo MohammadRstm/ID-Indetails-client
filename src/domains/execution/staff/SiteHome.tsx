@@ -160,7 +160,7 @@ function SiteCard({ project: p, summary: s, failed, paused }: { project: Project
                 </div>
                 <div style={{ textAlign: "right" }}>
                     <div className="u">Team</div>
-                    <Avatars people={p.team?.people ?? []} max={4} />
+                    <Avatars people={p.team?.people ?? []} max={4} link />
                 </div>
             </div>
             <div className="spread">

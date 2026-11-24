@@ -1,5 +1,5 @@
 import { ProjectTile } from "@/shared/components/Data/Bits";
-import Avatar from "@/shared/components/Identity/Avatar";
+import { PersonAvatar } from "@/shared/components/Identity/People";
 import { relTime } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
@@ -27,7 +27,7 @@ export default function NotificationItem({ note, onOpen }: { note: Notification;
 
     return (
         <div className={cx("notif", unread && "unread")} {...clickable(click, "button")}>
-            {note.actor ? <Avatar person={{ name: note.actor.name, photoFileId: note.actor.photoFileId }} size={28} />
+            {note.actor ? <PersonAvatar person={{ id: note.actor.id, name: note.actor.name, photoFileId: note.actor.photoFileId }} size={28} />
                 : note.project ? <ProjectTile icon={note.project.icon} tint={note.project.tint} />
                     : <span className="feed-ic"><Icon name={view.icon} /></span>}
             <div className="grow" style={{ minWidth: 0 }}>
