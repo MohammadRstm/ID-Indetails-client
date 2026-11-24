@@ -103,10 +103,11 @@ export function canDeleteMessage(m: Message): boolean {
 
 type Attachment = Message["attachments"][number];
 
-/** What each file of a message is called in its menu: "photo", "video" or "voice note", numbered when there are several of a kind. */
+/** What each file of a message is called in its menu: "photo", "video", "voice note" or "document", numbered when there are several of a kind. */
 export function fileLabels(files: Attachment[]): { file: Attachment; label: string }[] {
     const kindOf = (f: Attachment) => (f.kind === "audio" || f.mimeType.startsWith("audio/") ? "voice note"
-        : f.kind === "video" || f.mimeType.startsWith("video/") ? "video" : "photo");
+        : f.kind === "video" || f.mimeType.startsWith("video/") ? "video"
+            : f.kind === "document" ? "document" : "photo");
     return files.map((file, i) => {
         const kind = kindOf(file);
         const same = files.filter((f) => kindOf(f) === kind);
