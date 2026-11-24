@@ -1292,8 +1292,9 @@ button.pc-comments { border: 0; cursor: pointer; }
 .mail-preview .receipt-note { white-space: pre-wrap; padding-left: 10px; border-left: 3px solid var(--line); }
 
 /* A photo or video in a chat: the bubble is as wide as the picture, so no background shows beside a narrow one, and
-   the picture never runs wider than the bubble on a phone. A photo opens full size. */
-.msg-att { max-width: min(280px, 100%); }
+   the picture never runs wider than the bubble on a phone. Its cap is in viewport units, not a percentage, so the
+   bubble can size itself to the capped picture. A photo opens full size. */
+.msg-att { max-width: min(280px, 55vw); }
 .msg-att.zoom { cursor: zoom-in; }
 .msg-bubble:has(> .msg-att) { width: fit-content; padding: 3px; }
 .msg-bubble:has(> .msg-att) > .msg-att { margin-top: 0; }
