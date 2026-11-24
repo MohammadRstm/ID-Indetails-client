@@ -7,11 +7,13 @@ import { isDocument, uploadAll, uploadFile, uploadingLabel } from "./upload";
 describe("uploading files", () => {
     it("sends a work entry's document, as it is, to the documents route", async () => {
         const routes: string[] = [];
-        server.use(http.post("/api/files/document", async ({ request }) => {
-            routes.push("document");
-            const sent = (await request.formData()).get("file") as File;
-            return HttpResponse.json({ id: 9, name: sent.name, mimeType: "application/pdf", kind: "document", sizeBytes: sent.size, createdAt: "2026-11-24T10:00:00Z" }, { status: 201 });
-        }));
+        server.use(
+            http.post("/api/files/document", () => {
+                routes.push("document");
+                return HttpResponse.json({ id: 9, name: "Schedule.PDF", mimeType: "application/pdf", kind: "document", sizeBytes: 8, createdAt: "2026-11-24T10:00:00Z" }, { status: 201 });
+            }),
+            http.post("/api/files", () => { routes.push("media"); return HttpResponse.json({}, { status: 201 }); }),
+        );
         const pdf = new File(["%PDF-1.7"], "Schedule.PDF", { type: "application/pdf" });
 
         const stored = await uploadFile(pdf);
