@@ -108,7 +108,7 @@ function AdvanceList({ list, onOpen, onAct }: { list: (typeof LISTS)[number]; on
                                             {data.items.map((a) => (
                                                 <tr key={a.id} className="click" {...clickable(() => onOpen(a.id))}>
                                                     <td>
-                                                        <PersonLine person={{ id: a.person.id, name: a.person.name, photoFileId: a.person.photoFileId }} link={false} sub={a.person.departmentName ?? false} />
+                                                        <PersonLine person={{ id: a.person.id, name: a.person.name, photoFileId: a.person.photoFileId }} link sub={a.person.departmentName ?? false} />
                                                         {a.reason && <div className="muted" style={{ fontSize: 11.5, marginTop: 4 }}>{a.reason}</div>}
                                                     </td>
                                                     <td className="r mono nowrap">

@@ -1,7 +1,9 @@
-import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
+import { useContext, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router";
+import { SessionContext } from "@/app/session/sessionContext";
 import { cx } from "@/shared/utils/cx";
 import Avatar, { type AvatarPerson } from "./Avatar";
+import PhotoLightbox from "./PhotoLightbox";
 import { useProfilePath } from "./useProfilePath";
 
 export type Person = AvatarPerson & {
@@ -11,20 +13,32 @@ export type Person = AvatarPerson & {
     domain?: string | null;
 };
 
-function ProfileLink({ person, className, children }: { person: Person; className: string; children: ReactNode }) {
+/**
+ * A name or picture that opens the person's profile, where the viewer may open it. A picture is never the viewer's own,
+ * and for whoever can't open profiles it opens the person's photo full screen instead (when they have one).
+ */
+function ProfileLink({ person, className, picture, children }: { person: Person; className: string; picture?: boolean; children: ReactNode }) {
     const path = useProfilePath(person.id, person.domain);
+    const myId = useContext(SessionContext)?.user?.id;
     const navigate = useNavigate();
-    if (!path) return <>{children}</>;
-    // Only the name or picture opens the profile: a clickable row underneath keeps its own click.
+    const [viewing, setViewing] = useState(false);
+    const photo = picture && !path ? person.photoFileId ?? null : null;
+    if ((picture && person.id === myId) || (!path && photo == null)) return <>{children}</>;
+    // Only the name or picture opens it: a clickable row underneath keeps its own click.
     const open = (e: MouseEvent | KeyboardEvent) => {
         e.stopPropagation();
-        navigate(path);
+        if (path) navigate(path);
+        else setViewing(true);
     };
     return (
-        <span className={cx("plink", className)} role="link" tabIndex={0} title={`Open ${person.name}'s profile`}
-            onClick={open} onKeyDown={(e) => e.key === "Enter" && open(e)}>
-            {children}
-        </span>
+        <>
+            <span className={cx("plink", className)} role={path ? "link" : "button"} tabIndex={0}
+                title={path ? `Open ${person.name}'s profile` : `See ${person.name}'s photo`}
+                onClick={open} onKeyDown={(e) => e.key === "Enter" && open(e)}>
+                {children}
+            </span>
+            {photo != null && viewing && <PhotoLightbox fileId={photo} name={person.name} onClose={() => setViewing(false)} />}
+        </>
     );
 }
 
@@ -38,10 +52,10 @@ export function PersonName({ person, text, bold }: { person: Person; text?: stri
     );
 }
 
-/** An avatar that links to the profile. */
+/** An avatar that opens the profile, or the photo full screen for whoever can't open profiles; never the viewer's own. */
 export function PersonAvatar({ person, size, presence, link = true }: { person: Person; size?: number; presence?: boolean; link?: boolean }) {
     const avatar = <Avatar person={person} size={size} presence={presence} />;
-    return link ? <ProfileLink person={person} className="plink-av">{avatar}</ProfileLink> : avatar;
+    return link ? <ProfileLink person={person} className="plink-av" picture>{avatar}</ProfileLink> : avatar;
 }
 
 /** Avatar, name and a sub-line (their position by default) (the prototype's UI.PersonLine). */

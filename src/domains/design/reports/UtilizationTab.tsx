@@ -164,7 +164,7 @@ function PersonRows({ person: p, known, open, onToggle }: PersonRowsProps) {
                         <button type="button" className="icon-btn" aria-expanded={open} aria-label={`${open ? "Hide" : "Show"} ${p.name}'s projects`} onClick={onToggle}>
                             <Icon name={open ? "chevronDown" : "chevronRight"} />
                         </button>
-                        <PersonLine person={known ?? { id: p.userId, name: p.name }} size={24} sub={false} />
+                        <PersonLine person={known ?? { id: p.userId, name: p.name }} size={24} link sub={false} />
                     </div>
                 </td>
                 <td className="muted">{p.department ?? "No department"}</td>

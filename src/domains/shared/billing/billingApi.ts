@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import { downloadFile } from "@/api/download";
 import { toApiError } from "@/api/errors";
 import { http } from "@/api/http";
 import { keys, useInvalidate } from "@/api/keys";
@@ -13,6 +14,7 @@ export type Payment = Schemas["PaymentResponse"];
 export const billingKeys = {
     invoices: (params: object) => ["invoices", "list", params] as const,
     payments: (params: object) => ["payments", "list", params] as const,
+    payment: (id: number) => ["payments", "one", id] as const,
 };
 
 type ListParams = { projectId?: number; clientId?: number; domain?: string; status?: string; overdue?: boolean; page?: number; pageSize?: number };
@@ -133,6 +135,37 @@ export function useRecordPayment(projectId: number) {
         mutationFn: async (body: Schemas["RecordPaymentRequest"]) => (await http.post<Payment>(`/projects/${projectId}/payments`, body)).data,
         onSuccess: refresh,
     });
+}
+
+/** One payment (financial:view). */
+export function usePayment(id: number | null) {
+    return useQuery({
+        queryKey: billingKeys.payment(id ?? 0),
+        queryFn: async () => (await http.get<Payment>(`/payments/${id}`)).data,
+        enabled: id != null,
+    });
+}
+
+/** The longest note a receipt's email takes, as the API checks it. */
+export const RECEIPT_NOTE_MAX = 1000;
+
+/** The receipt email's opening, as the API writes it, for the window to show before it is sent. */
+export function receiptIntro(projectTitle: string, receivedOn: string): string {
+    return `Thank you for your payment for ${projectTitle}. This is to confirm that we received it on ${receivedOn}. Your receipt is attached as a PDF for your records.`;
+}
+
+/** Emails a payment's receipt to the client with its PDF; the API notes it in the project's activity (payment:record). */
+export function useEmailReceipt() {
+    const invalidate = useInvalidate();
+    return useMutation({
+        mutationFn: async ({ id, to, note }: { id: number; to: string; note?: string }) => { await http.post(`/payments/${id}/receipt/email`, { to, note }); },
+        onSuccess: () => { void invalidate(keys.activity.all); },
+    });
+}
+
+/** Saves a payment's receipt as a PDF, made by the API (payment:record). Records nothing. */
+export function downloadReceipt(paymentId: number): Promise<void> {
+    return downloadFile(`/payments/${paymentId}/receipt`, `receipt-r-${paymentId}.pdf`);
 }
 
 /** Puts a payment received on account against one of the project's issued invoices (payment:record). */

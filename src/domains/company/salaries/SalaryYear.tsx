@@ -4,7 +4,7 @@ import { Money } from "@/shared/components/Data/Money";
 import Empty from "@/shared/components/Feedback/Empty";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
-import Avatar from "@/shared/components/Identity/Avatar";
+import { PersonAvatar } from "@/shared/components/Identity/People";
 import { money } from "@/shared/format/money";
 import { MONTHS } from "@/shared/format/time";
 import { clickable } from "@/shared/utils/clickable";
@@ -74,7 +74,7 @@ function YearLine({ row: r, months, onMonth }: { row: SalaryYearRow; months: str
         <tr>
             <td>
                 <div className="row" style={{ gap: 9, minWidth: 0 }}>
-                    <Avatar person={{ name: r.name, photoFileId: r.photoFileId }} size={28} />
+                    <PersonAvatar person={{ id: r.userId, name: r.name, photoFileId: r.photoFileId, domain: r.domain }} size={28} />
                     <div style={{ minWidth: 0 }}>
                         <div className="trunc" style={{ fontWeight: 600 }}>{r.name}</div>
                         <div className="muted trunc" style={{ fontSize: "11.5px" }}>

@@ -50,7 +50,7 @@ export function MyTeamLine({ project }: { project: Project }) {
     const shown = permissions.has(P.WORK_ENTRY_VIEW_OWN) && !permissions.has(P.WORK_ENTRY_VIEW_ALL);
     const mine = useMyProjects(shown).data?.find((p) => p.id === project.id);
     if (!shown || !mine?.contributors.length) return null;
-    return <Avatars people={mine.contributors} max={5} />;
+    return <Avatars people={mine.contributors} max={5} link />;
 }
 
 /**

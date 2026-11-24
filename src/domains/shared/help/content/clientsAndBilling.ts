@@ -164,6 +164,7 @@ export const billing: Article[] = [
             steps(
                 step("Open the project, then **More → Record a client payment** (or **Record payment** on an invoice).", "Projects", "the project", "More"),
                 step("Enter the **Amount received**, its currency and **Date received**, **How it arrived**, and **Against which invoice?** (or none). If you like, file it under an **Account label**."),
+                step("Once it is recorded, **Send a receipt** opens, to tell the client the money arrived (or choose **Not now**)."),
             ),
             list(
                 "Payments are in USD or LBP. LBP is converted at the rate you type, or the company rate for the day it was received.",
@@ -173,7 +174,28 @@ export const billing: Article[] = [
             ),
             only(sees("execution"), note("An Execution site can have one initial payment, recorded when the site is created or later.")),
         ],
-        related: ["apply-payment", "payment-labels", "billing-terms", "exchange-rates"],
+        related: ["payment-receipt", "apply-payment", "payment-labels", "billing-terms", "exchange-rates"],
+    },
+    {
+        id: "payment-receipt",
+        title: "Sending a payment receipt",
+        category: "billing",
+        who: has(P.PAYMENT_RECORD),
+        summary: "Right after a payment is recorded, or from the payment's ⋯ menu: Send receipt… emails the client a receipt, or downloads it as a PDF.",
+        ask: ["receipt", "payment receipt", "send receipt", "receipt pdf", "confirm payment", "proof of payment", "thank client for payment"],
+        blocks: [
+            steps(
+                step("Record the payment: **Send a receipt** opens straight after. For an earlier payment, open its **⋯** menu and choose **Send receipt…** or **Download receipt**."),
+                step("Choose **Email** or **PDF**. For an email, check the address (the client's saved emails are offered) and, if you like, add **Your note**."),
+            ),
+            list(
+                "The receipt shows this payment, the project's total, what has been paid so far (this payment included) and what is still to pay. While a site's price isn't agreed yet, it shows only what was paid.",
+                "The email thanks the client, puts your note under its opening and carries the receipt as a PDF. It is signed with your name.",
+                "An emailed receipt is noted in the project's activity; a downloaded one isn't.",
+                "A voided payment has no receipt.",
+            ),
+        ],
+        related: ["record-payment", "apply-payment"],
     },
     {
         id: "payment-labels",

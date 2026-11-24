@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { toApiError } from "@/api/errors";
+import { errorMessage, toApiError } from "@/api/errors";
 import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { P } from "@/app/permissions/codes";
 import { usePermissions } from "@/app/permissions/usePermissions";
@@ -12,27 +12,42 @@ import Modal from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { fmtDate } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
-import { useApplyPayment, useInvoices, useSetPaymentLabel, useVoidPayment, type Payment } from "./billingApi";
+import { downloadReceipt, useApplyPayment, useInvoices, useSetPaymentLabel, useVoidPayment, type Payment } from "./billingApi";
+import { useBillingLinks } from "./billingLinks";
 
 /**
  * Correcting a payment, which the prototype couldn't do: putting money received on account against one of the
  * project's issued invoices (payment:record), filing it under another account label (payment:record, and
  * financial:view to see the payment answered), or voiding one recorded in error (payment:void). A voided
- * payment stays in the register with its reason, and keeps its label.
+ * payment stays in the register with its reason, and keeps its label. A live payment's receipt is emailed or
+ * downloaded from here too, by whoever records payments.
  */
 export default function PaymentActions({ payment }: { payment: Payment }) {
     const permissions = usePermissions();
+    const links = useBillingLinks();
     const [dialog, setDialog] = useState<"apply" | "label" | "void" | null>(null);
     const canApply = !payment.voidedAt && payment.invoiceId == null && permissions.has(P.PAYMENT_RECORD);
     // account labels are an Execution site's only
     const canLabel = !payment.voidedAt && payment.domain === "execution" && permissions.hasAll(P.PAYMENT_RECORD, P.FINANCIAL_VIEW);
     const canVoid = !payment.voidedAt && permissions.has(P.PAYMENT_VOID);
-    if (!canApply && !canLabel && !canVoid) return null;
+    const canReceipt = !payment.voidedAt && permissions.hasAll(P.PAYMENT_RECORD, P.FINANCIAL_VIEW);
+    if (!canApply && !canLabel && !canVoid && !canReceipt) return null;
+
+    async function download() {
+        try {
+            await downloadReceipt(payment.id);
+        } catch (e) {
+            toast({ text: "The receipt wasn't downloaded", sub: errorMessage(e), icon: "alert" });
+        }
+    }
+
     return (
         <span onClick={(e) => e.stopPropagation()}>
             <MenuButton icon="dots" label={`Payment of ${fmtDate(payment.receivedOn)} actions`} width={210}>
                 {(close) => (
                     <div>
+                        {canReceipt && <button className="pop-item" onClick={() => { close(); links.receipt(payment.id); }}><Icon name="mail" />Send receipt…</button>}
+                        {canReceipt && <button className="pop-item" onClick={() => { close(); void download(); }}><Icon name="download" />Download receipt</button>}
                         {canApply && <button className="pop-item" onClick={() => { close(); setDialog("apply"); }}><Icon name="file" />Apply to an invoice…</button>}
                         {canLabel && <button className="pop-item" onClick={() => { close(); setDialog("label"); }}><Icon name="edit" />Label…</button>}
                         {canVoid && <button className="pop-item" onClick={() => { close(); setDialog("void"); }}><Icon name="x" />Void payment…</button>}

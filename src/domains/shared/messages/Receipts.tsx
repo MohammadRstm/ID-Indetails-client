@@ -1,6 +1,7 @@
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import Avatar from "@/shared/components/Identity/Avatar";
+import { PersonAvatar } from "@/shared/components/Identity/People";
 import Modal from "@/shared/components/Overlays/Modal";
 import { fmtTime, relDay } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
@@ -52,7 +53,7 @@ function People({ title, hint, people, empty }: { title: string; hint?: string; 
             </div>
             {people.length === 0 ? <div className="muted receipt-empty">{empty}</div> : people.map((p) => (
                 <div key={p.id} className="receipt-row">
-                    <Avatar person={{ name: p.name, photoFileId: p.photoFileId }} size={26} />
+                    <PersonAvatar person={{ id: p.id, name: p.name, photoFileId: p.photoFileId }} size={26} />
                     <span className="grow trunc">{p.name}</span>
                     {p.at && <span className="muted mono receipt-at">{when(p.at)}</span>}
                 </div>

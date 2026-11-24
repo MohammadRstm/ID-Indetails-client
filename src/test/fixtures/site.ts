@@ -76,6 +76,7 @@ export const siteHandlers = [
     http.get("/api/projects/:id/requirements", () => HttpResponse.json(site.requirements)),
     http.get("/api/projects/:id/meetings", () => HttpResponse.json([])),
     http.get("/api/payments", () => HttpResponse.json(site.payments)),
+    http.get("/api/payments/:id", ({ params }) => HttpResponse.json(site.payments.items.find((p) => String(p.id) === params.id) ?? site.payments.items[0])),
     http.get("/api/invoices", () => HttpResponse.json(site.invoices)),
     // the Execution employees who can oversee a site; nobody else
     http.get("/api/employees", ({ request }) => {

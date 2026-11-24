@@ -10,7 +10,7 @@ import { ProjectTile } from "@/shared/components/Data/Bits";
 import { Kpi } from "@/shared/components/Data/Kpi";
 import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
-import Avatar from "@/shared/components/Identity/Avatar";
+import { PersonAvatar } from "@/shared/components/Identity/People";
 import { Drawer } from "@/shared/components/Overlays/Modal";
 import { money } from "@/shared/format/money";
 import { companyToday, fmtDate, fmtDayDate, fmtDur, fmtH, fmtMonthY, fmtRange } from "@/shared/format/time";
@@ -64,7 +64,7 @@ export default function SalaryDrawer({ row, month, multiplier, onClose }: Salary
         <Drawer title={row.name} onClose={onClose}
             head={
                 <div className="row" style={{ gap: 11 }}>
-                    <Avatar person={{ name: row.name, photoFileId: row.photoFileId }} size={40} />
+                    <PersonAvatar person={{ id: row.userId, name: row.name, photoFileId: row.photoFileId, domain: row.domain }} size={40} />
                     <div>
                         <div className="modal-title">{row.name}</div>
                         <div className="modal-sub">{[row.position, domain ? AREAS[domain].label : null, fmtMonthY(month)].filter(Boolean).join(" · ")}</div>

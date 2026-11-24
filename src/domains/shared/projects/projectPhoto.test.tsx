@@ -40,7 +40,7 @@ describe("a project's photo", () => {
     it("is chosen from the device in the project's details and set on the project", async () => {
         const api = photoApi();
         renderApp(`/design/projects/${project.id}?about=1`, admin, ...api.handlers, ...projectHandlers);
-        await userEvent.click(await screen.findByRole("button", { name: "Project photo" }));
+        await userEvent.click(await screen.findByRole("button", { name: "Change the project photo" }));
         // no photo yet: there is nothing to take off
         expect(screen.queryByRole("button", { name: "Take the photo off" })).not.toBeInTheDocument();
         await userEvent.click(screen.getByRole("button", { name: "Choose a photo" }));
@@ -52,9 +52,9 @@ describe("a project's photo", () => {
     it("shows instead of the icon tile, and can be taken off", async () => {
         const api = photoApi(60);
         renderApp(`/design/projects/${project.id}?about=1`, admin, ...api.handlers, ...projectHandlers);
-        const button = await screen.findByRole("button", { name: "Project photo" });
-        await waitFor(() => expect(button.querySelector(".ptile-photo img")).not.toBeNull());
-        await userEvent.click(button);
+        const photo = await screen.findByRole("button", { name: "See the project's photo full screen" });
+        await waitFor(() => expect(photo.querySelector(".ptile-photo img")).not.toBeNull());
+        await userEvent.click(screen.getByRole("button", { name: "Change the project photo" }));
         expect(screen.getByRole("button", { name: "Change photo" })).toBeInTheDocument();
         await userEvent.click(screen.getByRole("button", { name: "Take the photo off" }));
         await waitFor(() => expect(api.calls).toEqual([{ call: "DELETE" }]));
@@ -77,7 +77,7 @@ describe("a project's photo", () => {
         it("is placed before it goes up: dragged and zoomed in a square like the tile", async () => {
             const api = photoApi();
             renderApp(`/design/projects/${project.id}?about=1`, admin, ...api.handlers, ...projectHandlers);
-            await userEvent.click(await screen.findByRole("button", { name: "Project photo" }));
+            await userEvent.click(await screen.findByRole("button", { name: "Change the project photo" }));
             await userEvent.click(screen.getByRole("button", { name: "Choose a photo" }));
             await userEvent.upload(screen.getByLabelText("Project photo file"), new File(["x"], "villa.jpg", { type: "image/jpeg" }));
 
@@ -93,7 +93,7 @@ describe("a project's photo", () => {
         it("already on the project, is moved: opened again, placed and put back", async () => {
             const api = photoApi(60);
             renderApp(`/design/projects/${project.id}?about=1`, admin, ...api.handlers, ...projectHandlers);
-            await userEvent.click(await screen.findByRole("button", { name: "Project photo" }));
+            await userEvent.click(await screen.findByRole("button", { name: "Change the project photo" }));
             await userEvent.click(screen.getByRole("button", { name: "Move the photo" }));
 
             const placing = await screen.findByRole("dialog", { name: "Position the photo" });
@@ -105,7 +105,7 @@ describe("a project's photo", () => {
         it("is left as it was when the placing is cancelled", async () => {
             const api = photoApi(60);
             renderApp(`/design/projects/${project.id}?about=1`, admin, ...api.handlers, ...projectHandlers);
-            await userEvent.click(await screen.findByRole("button", { name: "Project photo" }));
+            await userEvent.click(await screen.findByRole("button", { name: "Change the project photo" }));
             await userEvent.click(screen.getByRole("button", { name: "Move the photo" }));
             const placing = await screen.findByRole("dialog", { name: "Position the photo" });
             await userEvent.click(within(placing).getByRole("button", { name: "Cancel" }));
@@ -114,10 +114,22 @@ describe("a project's photo", () => {
         });
     });
 
-    it("is only changed by whoever edits projects: an employee sees the tile alone", async () => {
+    it("is only changed by whoever edits projects: an employee can only look at it, full screen", async () => {
         const api = photoApi(60);
         renderApp(`/design/projects/${project.id}?about=1`, personas.designEmployee, ...api.handlers, ...projectHandlers);
         expect(await screen.findByRole("dialog", { name: "Project details" })).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Project photo" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Change the project photo" })).not.toBeInTheDocument();
+
+        await userEvent.click(await screen.findByRole("button", { name: "See the project's photo full screen" }));
+        expect(await screen.findByRole("img", { name: project.title })).toBeInTheDocument();
+        // only looked at: a project's photo isn't downloaded from here
+        expect(screen.queryByRole("button", { name: "Download" })).not.toBeInTheDocument();
+    });
+
+    it("without a photo, shows its icon and nothing to open full screen", async () => {
+        const api = photoApi();
+        renderApp(`/design/projects/${project.id}?about=1`, admin, ...api.handlers, ...projectHandlers);
+        expect(await screen.findByRole("button", { name: "Change the project photo" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "See the project's photo full screen" })).not.toBeInTheDocument();
     });
 });

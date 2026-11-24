@@ -191,7 +191,7 @@ export default function CompanyTimeOffPage() {
                                                 {data.items.map((r) => (
                                                     <tr key={r.id}>
                                                         <td>
-                                                            {r.person ? <PersonLine person={{ id: r.person.id, name: r.person.name, photoFileId: r.person.photoFileId }} sub={r.person.departmentName ?? false} /> : "-"}
+                                                            {r.person ? <PersonLine person={{ id: r.person.id, name: r.person.name, photoFileId: r.person.photoFileId }} link sub={r.person.departmentName ?? false} /> : "-"}
                                                         </td>
                                                         <td>
                                                             <b>{periodOf(r)}</b>

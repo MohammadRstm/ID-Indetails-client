@@ -13,7 +13,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
 import { SearchInput, Segmented } from "@/shared/components/Forms/Filters";
-import Avatar from "@/shared/components/Identity/Avatar";
+import { PersonAvatar } from "@/shared/components/Identity/People";
 import { addDays, companyToday, DAYS, fmtDate, fmtH, fmtNumber, formatSettings, partsOf, startOfWeek } from "@/shared/format/time";
 import useDebounce from "@/shared/hooks/useDebounce";
 import Icon from "@/shared/icons/Icon";
@@ -179,7 +179,7 @@ export default function SchedulesPage() {
                                                         <tr key={p.userId} className="sc-row" style={editable ? undefined : { cursor: "default" }} {...clickable(editable ? () => setEditing(p) : undefined)}>
                                                             <td className="sc-who">
                                                                 <div className="row" style={{ gap: 9, minWidth: 0 }}>
-                                                                    <Avatar person={{ name: p.name, photoFileId: p.photoFileId }} size={26} />
+                                                                    <PersonAvatar person={{ id: p.userId, name: p.name, photoFileId: p.photoFileId, domain: p.domain }} size={26} />
                                                                     <div style={{ minWidth: 0 }}>
                                                                         <div className="trunc" style={{ fontWeight: 600 }}>{p.name}</div>
                                                                         <div className="muted trunc" style={{ fontSize: 11 }}>

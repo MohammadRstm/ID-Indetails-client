@@ -4,6 +4,7 @@ import { errorMessage } from "@/api/errors";
 import { ProjectTile } from "@/shared/components/Data/Bits";
 import { toast } from "@/shared/components/Feedback/toast";
 import PhotoPositioner from "@/shared/components/Forms/PhotoPositioner";
+import PhotoLightbox from "@/shared/components/Identity/PhotoLightbox";
 import MenuButton from "@/shared/components/Overlays/MenuButton";
 import { uploadFile } from "@/shared/files/upload";
 import Icon from "@/shared/icons/Icon";
@@ -13,9 +14,10 @@ import { useSetProjectPhoto, type Project } from "./projectsApi";
 type Placing = { file: File; moving: boolean };
 
 /**
- * The project's tile at the top of its page: its own photo when it has one, its icon otherwise. Whoever edits projects
- * clicks it to choose a photo from their device, change it, move it in its square or take it off. A photo is placed
- * (dragged and zoomed) before it goes up, and is cut to the square the tile shows.
+ * The project's tile in its details: its own photo when it has one, its icon otherwise. Clicking the photo opens it
+ * full screen. Whoever edits projects chooses a photo from their device, changes it, moves it in its square or takes it
+ * off from the pencil on its corner. A photo is placed (dragged and zoomed) before it goes up, and is cut to the square
+ * the tile shows.
  */
 export default function ProjectPhoto({ project, canEdit }: { project: Project; canEdit: boolean }) {
     const setPhoto = useSetProjectPhoto(project.id);
@@ -23,8 +25,15 @@ export default function ProjectPhoto({ project, canEdit }: { project: Project; c
     const [placing, setPlacing] = useState<Placing | null>(null);
     const [opening, setOpening] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [viewing, setViewing] = useState(false);
     const tile = <ProjectTile icon={project.icon} tint={project.tint} photo={project.photoFileId} size="lg" />;
-    if (!canEdit) return tile;
+    const photo = project.photoFileId != null ? (
+        <>
+            <button type="button" className="ptile-btn" onClick={() => setViewing(true)} aria-label="See the project's photo full screen">{tile}</button>
+            {viewing && <PhotoLightbox fileId={project.photoFileId} name={project.title} onClose={() => setViewing(false)} />}
+        </>
+    ) : tile;
+    if (!canEdit) return photo;
     const busy = uploading || opening || setPhoto.isPending;
 
     async function save(file: File, moving: boolean) {
@@ -62,9 +71,9 @@ export default function ProjectPhoto({ project, canEdit }: { project: Project; c
     }
 
     return (
-        <>
-            <MenuButton buttonClass="ptile-btn" align="left" width={200} label="Project photo"
-                text={<>{tile}<span className="ptile-pencil" aria-hidden="true"><Icon name="edit" /></span></>}>
+        <span className="ptile-edit">
+            {photo}
+            <MenuButton buttonClass="ptile-corner" icon="edit" align="left" width={200} label="Change the project photo">
                 {(close) => (
                     <div>
                         <button className="pop-item" disabled={busy} onClick={() => { close(); input.current?.click(); }}>
@@ -90,9 +99,9 @@ export default function ProjectPhoto({ project, canEdit }: { project: Project; c
                     file={placing.file}
                     frame="square"
                     onCancel={() => setPlacing(null)}
-                    onDone={(photo) => { setPlacing(null); void save(photo, placing.moving); }}
+                    onDone={(placed) => { setPlacing(null); void save(placed, placing.moving); }}
                 />
             )}
-        </>
+        </span>
     );
 }

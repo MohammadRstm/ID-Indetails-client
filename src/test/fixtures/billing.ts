@@ -43,6 +43,9 @@ export const billingHandlers = [
         const q = new URL(request.url).searchParams;
         return HttpResponse.json(q.get("invoiceId") ? billing.issuedPayments : billing.domainPayments);
     }),
+    // one payment, for its receipt: one of the lists' own, the first by default
+    http.get("/api/payments/:id", ({ params }) => HttpResponse.json(
+        [...billing.domainPayments.items, ...billing.issuedPayments.items].find((p) => String(p.id) === params.id) ?? billing.domainPayments.items[0])),
     http.get("/api/billing-settings/:domain", () => HttpResponse.json(billing.settings)),
     http.get("/api/exchange-rates", () => HttpResponse.json(billing.rates)),
     http.get("/api/finance/design/billing", () => HttpResponse.json(billing.financeBilling)),

@@ -24,7 +24,7 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import Skeleton, { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import DateInput from "@/shared/components/Forms/DateInput";
 import { toast } from "@/shared/components/Feedback/toast";
-import Avatar from "@/shared/components/Identity/Avatar";
+import ProfilePicture from "@/shared/components/Identity/ProfilePicture";
 import { money } from "@/shared/format/money";
 import { quarterOf, quarterStart } from "@/shared/format/periods";
 import { dayKey, fmtDate, fmtDateY, fmtDayDateY, fmtDur, fmtH, fmtNumber, relDay } from "@/shared/format/time";
@@ -137,7 +137,7 @@ function Profile({ person, self, extra }: { person: ProfilePerson; self: boolean
 
             <div className="page-head">
                 <div className="row start" style={{ gap: 15, minWidth: 0 }}>
-                    <Avatar person={avatar} size={72} presence />
+                    <ProfilePicture person={avatar} size={72} presence />
                     <div style={{ minWidth: 0 }}>
                         <h1 className="page-title">{name}</h1>
                         <div className="page-sub">{[person.position, person.team?.name].filter(Boolean).join(" · ") || " "}</div>
