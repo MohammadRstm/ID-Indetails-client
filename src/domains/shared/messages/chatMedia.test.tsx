@@ -7,7 +7,7 @@ import { personas } from "@/test/personas";
 import { renderApp } from "@/test/renderApp";
 
 const rana = personas.superAdmin;
-const photo = { id: 61, name: "site-crack.jpg", mimeType: "image/jpeg", kind: "image", sizeBytes: 10, createdAt: "2026-09-30T08:20:00Z" };
+const photo = { id: 61, name: "site-crack.jpg", mimeType: "image/jpeg", kind: "image" as const, sizeBytes: 10, createdAt: "2026-09-30T08:20:00Z" };
 const withPhoto = message(93, people.nadia, null, "2026-09-30T08:20:00Z", { attachments: [photo] });
 const files = http.get("/api/files/:id", () => new HttpResponse(new Blob(["x"], { type: "image/jpeg" })));
 
@@ -23,7 +23,10 @@ describe("A photo in a chat", () => {
     it("opens full size when clicked, with a download", async () => {
         renderApp("/design/messages?with=2", rana,
             http.get("/api/messages/direct/2", () => HttpResponse.json({ items: [withPhoto], hasMore: false })), files, ...messageHandlers);
-        await userEvent.click(await screen.findByRole("button", { name: "site-crack.jpg: open full size" }));
+        // the photo is a button named by its file, and says it opens full size
+        const open = await screen.findByRole("button", { name: "site-crack.jpg" });
+        expect(open).toHaveAttribute("title", "site-crack.jpg: open full size");
+        await userEvent.click(open);
         const lightbox = await screen.findByRole("dialog");
         expect(within(lightbox).getByRole("img", { name: "site-crack.jpg" })).toBeInTheDocument();
         expect(within(lightbox).getByRole("button", { name: "Download" })).toBeInTheDocument();
