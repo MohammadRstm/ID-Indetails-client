@@ -40,28 +40,29 @@ export const explainedPay: Article[] = [
         title: "What counts as overtime",
         category: "pay",
         who: or(logs, has(P.WORK_ENTRY_VIEW_ALL), seesSalaries),
-        summary: "Overtime is time outside your hours, all the time worked on a day off, and time inside your hours beyond what the day requires.",
+        summary: "Overtime is time outside your hours and all the time worked on a day off. From 1 December 2026, time inside your hours is never overtime: past the required hours it is your break, worked.",
         ask: ["overtime", "what is overtime", "how is overtime calculated", "extra hours", "weekend", "after hours", "late"],
         blocks: [
             para("It is worked out for each person and day (the day an entry starts on), against their schedule that day:"),
             list(
                 "**A day off**: every minute is overtime.",
                 "**A working day**: minutes before the start or after the end are overtime.",
-                "And if the minutes inside the hours add up to more than the day requires, the extra is overtime too (taken from the latest entries).",
+                "**Inside your hours** from 1 December 2026: never overtime. Logging past the required hours inside them means you worked your break, so a full 9 to 5 is 8 hours of normal work, with no break added and no overtime.",
+                "Until then, minutes inside the hours past what the day requires were overtime too (taken from the latest entries).",
             ),
-            formula("Overtime = the time outside your hours + the time inside them beyond what the day requires",
+            formula("Overtime = the time outside your hours (from 1 December 2026)",
                 (f) => (f.hasBreak === false && f.day
                     ? `Logging all of ${f.day} on a working day is exactly what the day requires: none of it is overtime, only time before or after it.`
                     : f.day && f.required
-                        ? `Logging all of ${f.day} on a working day puts ${f.paid ?? "the whole day"} inside your hours against ${f.required} required, so the difference is overtime, paid on top of the paid break.`
-                        : "Logging all of 9:00 AM to 5:00 PM on a 9-to-5 day puts 8 hours inside your hours against 7 required: 1 hour is overtime, paid on top of the paid break.")),
+                        ? `Logging ${f.required} inside ${f.day} takes your break, which counts in your hours: ${f.paid ?? "the whole day"}. Logging all of ${f.day} is your break worked: still ${f.paid ?? "the whole day"}, no overtime. ${f.required} inside and an hour after is an hour of overtime.`
+                        : "Logging 7 hours inside 9:00 AM to 5:00 PM takes your break, which counts in your hours: 8. Logging all of 9 to 5 is your break worked: still 8, no overtime. 7 hours inside and an hour after 5:00 PM is 1 hour of overtime.")),
             list(
                 "Work past midnight counts on the day it started; the minutes after midnight are outside your hours, so they're overtime.",
                 "Overtime depends on your whole day across all projects, not one entry.",
                 (f) => `Overtime is paid at the overtime rate set with the pay × ${orFact(f.multiplier, "the company's overtime multiplier")}: the salary ÷ 184 unless set otherwise, whatever the month.`,
             ),
             only(or(tracksOwnHours, seesSalaries), note("For Design employees, overtime first makes up any hours missing that month; only what's left is paid as overtime. The part that made up hours is paid as normal hours.")),
-            only(seesSalaries, note("From November 2026 a salary's overtime is paid only for the hours counted past 184 in the month (everything logged, overtime or not, plus paid leave), or past the month's expected hours when those are more. Joining mid-month doesn't lower it. The latest overtime is the part paid.")),
+            only(seesSalaries, note("From November 2026 a salary's overtime is paid only for the hours counted past 184 in the month (everything logged, overtime or not, plus paid leave, and from December the break taken each day), or past the month's expected hours when those are more. Joining mid-month doesn't lower it. The latest overtime is the part paid.")),
         ],
         related: ["working-day", "hours-balance", "pay", "overtime-rate"],
     },
@@ -74,7 +75,7 @@ export const explainedPay: Article[] = [
         ask: ["hours balance", "expected hours", "made up", "short", "behind", "on track", "missing hours", "missed days", "hours ledger"],
         blocks: [
             list(
-                "**Expected**: the required hours of each of the month's working days, from the day the person joined (and to their last day, if they left). While the month runs, it counts up to yesterday.",
+                "**Expected**: the required hours of each of the month's working days, from the day the person joined (and to their last day, if they left). While the month runs, it counts up to yesterday. From 1 December 2026 the break counts too (8 hours on a 9 to 5): the break you take is added to your hours in, and on a short day the company covers the rest of it.",
                 "**Excused**: hours and days a super admin excused; they count as done.",
                 "**In hours**: work inside the person's hours.",
                 "**Made up**: overtime used to cover missing hours, paid as normal hours.",
