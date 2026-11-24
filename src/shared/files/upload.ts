@@ -9,11 +9,18 @@ export type UploadOptions = {
     onProgress?: (fraction: number) => void;
 };
 
-/** Uploads a photo (made small first) or a video, for attaching its id afterwards. */
+/** The documents a work entry takes (the API's `POST /api/files/document`): PDF, Word, Excel, PowerPoint and CSV. */
+export const DOCUMENT_EXTENSIONS = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".csv"];
+
+/** Whether a picked file is one of those documents, by its name (a browser may not know an Office file's type). */
+export const isDocument = (file: File) => DOCUMENT_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext));
+
+/** Uploads a photo (made small first), a video, or a document, for attaching its id afterwards. */
 export async function uploadFile(file: File, { maxEdge, onProgress }: UploadOptions = {}): Promise<Schemas["FileResponse"]> {
     const form = new FormData();
-    form.append("file", await preparePicture(file, maxEdge));
-    const response = await http.post<Schemas["FileResponse"]>("/files", form, {
+    const asDocument = isDocument(file);
+    form.append("file", asDocument ? file : await preparePicture(file, maxEdge));
+    const response = await http.post<Schemas["FileResponse"]>(asDocument ? "/files/document" : "/files", form, {
         onUploadProgress: onProgress && ((e) => onProgress(e.total ? e.loaded / e.total : 0)),
     });
     onProgress?.(1);

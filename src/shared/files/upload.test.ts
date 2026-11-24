@@ -2,9 +2,29 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { server } from "@/test/server";
 import { preparePicture } from "./preparePicture";
-import { uploadAll, uploadingLabel } from "./upload";
+import { isDocument, uploadAll, uploadFile, uploadingLabel } from "./upload";
 
 describe("uploading files", () => {
+    it("sends a work entry's document, as it is, to the documents route", async () => {
+        const routes: string[] = [];
+        server.use(
+            http.post("/api/files/document", () => {
+                routes.push("document");
+                return HttpResponse.json({ id: 9, name: "Schedule.PDF", mimeType: "application/pdf", kind: "document", sizeBytes: 8, createdAt: "2026-11-24T10:00:00Z" }, { status: 201 });
+            }),
+            http.post("/api/files", () => { routes.push("media"); return HttpResponse.json({}, { status: 201 }); }),
+        );
+        const pdf = new File(["%PDF-1.7"], "Schedule.PDF", { type: "application/pdf" });
+
+        const stored = await uploadFile(pdf);
+
+        expect(routes).toEqual(["document"]);
+        expect(stored).toMatchObject({ kind: "document", name: "Schedule.PDF", sizeBytes: 8 });
+        // by the name: a browser may not know an Office file's type
+        expect(isDocument(new File(["x"], "quantities.xlsx", { type: "" }))).toBe(true);
+        expect(isDocument(new File(["x"], "site.png", { type: "image/png" }))).toBe(false);
+    });
+
     it("sends several a few at a time, answering their ids in the order picked, and says how far it has got", async () => {
         let atOnce = 0;
         let most = 0;

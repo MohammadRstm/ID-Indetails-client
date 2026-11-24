@@ -18914,7 +18914,7 @@ export interface components {
             projectId: null | number;
         };
         /** @enum {unknown} */
-        FileKind: "image" | "video" | "audio";
+        FileKind: "image" | "video" | "audio" | "document";
         FileRenameFill: {
             /** Format: int64 */
             projectId: null | number;
