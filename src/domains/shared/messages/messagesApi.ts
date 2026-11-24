@@ -96,12 +96,26 @@ export function useSendMessage(chat: Chat | null) {
     });
 }
 
-/** A message that carries a voice note: the only kind its sender can delete. */
-export function isVoiceMessage(m: Message): boolean {
-    return m.kind === "text" && m.attachments.some((a) => a.kind === "audio" || a.mimeType.startsWith("audio/"));
+/** Whether its sender may delete it: any message but a shared work comment, which belongs to the comment. */
+export function canDeleteMessage(m: Message): boolean {
+    return m.kind === "text";
 }
 
-/** Deletes the caller's own voice message for everyone, its recording too (`DELETE /api/messages/{id}`). */
+type Attachment = Message["attachments"][number];
+
+/** What each file of a message is called in its menu: "photo", "video", "voice note" or "document", numbered when there are several of a kind. */
+export function fileLabels(files: Attachment[]): { file: Attachment; label: string }[] {
+    const kindOf = (f: Attachment) => (f.kind === "audio" || f.mimeType.startsWith("audio/") ? "voice note"
+        : f.kind === "video" || f.mimeType.startsWith("video/") ? "video"
+            : f.kind === "document" ? "document" : "photo");
+    return files.map((file, i) => {
+        const kind = kindOf(file);
+        const same = files.filter((f) => kindOf(f) === kind);
+        return { file, label: same.length > 1 ? `${kind} ${files.slice(0, i + 1).filter((f) => kindOf(f) === kind).length}` : kind };
+    });
+}
+
+/** Deletes the caller's own message for everyone, its files too (`DELETE /api/messages/{id}`). */
 export function useDeleteMessage() {
     const queryClient = useQueryClient();
     return useMutation({

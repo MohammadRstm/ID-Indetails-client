@@ -96,49 +96,50 @@ describe("Voice messages", () => {
         expect(snippet(note)).toBe("🎤 Voice message");
     });
 
-    describe("deleting one", () => {
+    describe("their menu", () => {
         const mine = message(92, { ...people.nadia, id: rana.id, name: "Rana Khoury" }, null, "2026-09-30T08:40:00Z", { attachments: [savedVoice(92)] });
         const theirs = message(91, people.nadia, null, "2026-09-30T08:30:00Z", { attachments: [savedVoice(91)] });
         const thread = (deleted: number[]) => [
             http.get("/api/messages/direct/2", () => HttpResponse.json({ items: [theirs, mine].filter((m) => !deleted.includes(m.id)), hasMore: false })),
             http.get("/api/files/:id", () => new HttpResponse(new Blob(["x"], { type: "audio/webm" }))),
         ];
+        const menus = () => screen.findAllByRole("button", { name: "Message actions" });
 
-        it("is the sender's own, from the three dots on it: asked first, then gone for everyone", async () => {
+        it("deletes the sender's own: asked first, then gone for everyone", async () => {
             const deleted: number[] = [];
             renderApp("/design/messages?with=2", rana,
                 http.delete("/api/messages/:id", ({ params }) => { deleted.push(Number(params.id)); return new HttpResponse(null, { status: 204 }); }),
                 ...thread(deleted), ...messageHandlers);
-            // only the sender's own voice message has the menu
-            await userEvent.click(await screen.findByRole("button", { name: "Voice message actions" }));
-            expect(screen.getAllByRole("button", { name: "Voice message actions" })).toHaveLength(1);
+            // the newest message is Rana's own voice note
+            const own = (await menus()).at(-1)!;
+            await userEvent.click(own);
             await userEvent.click(screen.getByRole("button", { name: "Delete" }));
 
-            const ask = await screen.findByRole("dialog", { name: "Delete this voice message?" });
-            expect(within(ask).getByText("It's deleted for everyone in the chat, with its recording. This can't be undone.")).toBeInTheDocument();
+            const ask = await screen.findByRole("dialog", { name: "Delete this message?" });
+            expect(within(ask).getByText(/It's deleted for everyone in the chat, with its photos, videos and voice notes\./)).toBeInTheDocument();
             await userEvent.click(within(ask).getByRole("button", { name: "Delete" }));
             await waitFor(() => expect(deleted).toEqual([92]));
-            expect(await screen.findByText("Voice message deleted")).toBeInTheDocument();
-            await waitFor(() => expect(screen.queryByRole("button", { name: "Voice message actions" })).not.toBeInTheDocument());
+            expect(await screen.findByText("Message deleted")).toBeInTheDocument();
         });
 
-        it("can be kept, and a refusal shows in the question", async () => {
+        it("downloads someone else's voice note, without a Delete", async () => {
+            renderApp("/design/messages?with=2", rana, ...thread([]), ...messageHandlers);
+            await userEvent.click((await menus())[0]);
+            expect(screen.getByRole("button", { name: "Download voice note" })).toBeInTheDocument();
+            expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+        });
+
+        it("keeps the message when asked, and shows a refusal in the question", async () => {
             renderApp("/design/messages?with=2", rana,
-                http.delete("/api/messages/:id", () => HttpResponse.json({ code: "forbidden", message: "Only the person who sent a voice message can delete it." }, { status: 403 })),
+                http.delete("/api/messages/:id", () => HttpResponse.json({ code: "forbidden", message: "Only the person who sent a message can delete it." }, { status: 403 })),
                 ...thread([]), ...messageHandlers);
-            await userEvent.click(await screen.findByRole("button", { name: "Voice message actions" }));
+            await userEvent.click((await menus()).at(-1)!);
             await userEvent.click(screen.getByRole("button", { name: "Delete" }));
-            const ask = await screen.findByRole("dialog", { name: "Delete this voice message?" });
+            const ask = await screen.findByRole("dialog", { name: "Delete this message?" });
             await userEvent.click(within(ask).getByRole("button", { name: "Delete" }));
-            expect(await within(ask).findByText("Only the person who sent a voice message can delete it.")).toBeInTheDocument();
+            expect(await within(ask).findByText("Only the person who sent a message can delete it.")).toBeInTheDocument();
             await userEvent.click(within(ask).getByRole("button", { name: "Keep it" }));
-            await waitFor(() => expect(screen.queryByRole("dialog", { name: "Delete this voice message?" })).not.toBeInTheDocument());
-        });
-
-        it("isn't offered for a text message", async () => {
-            renderApp("/design/messages?with=2", rana, ...messageHandlers);
-            expect(await screen.findByText("Yes, after lunch.")).toBeInTheDocument();
-            expect(screen.queryByRole("button", { name: "Voice message actions" })).not.toBeInTheDocument();
+            await waitFor(() => expect(screen.queryByRole("dialog", { name: "Delete this message?" })).not.toBeInTheDocument());
         });
     });
 });
