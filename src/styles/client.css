@@ -1281,7 +1281,7 @@ button.pc-comments { border: 0; cursor: pointer; }
 .launch-me-pic:hover, .launch-me-pic:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .launch-me-name { font-weight: 650; font-size: 15px; }
 
-/* The sender's own voice message: three dots in its top corner, shown on hover or focus (always on touch screens) */
+/* A message's three dots (downloads, and Delete on the sender's own) in its top corner, shown on hover or focus (always on touch screens) */
 .msg-more { position: absolute; top: 1px; right: 3px; z-index: 1; }
 .msg-more .icon-btn { width: 24px; height: 24px; opacity: 0; transition: opacity .12s ease; }
 .msg-more .icon-btn .ic { width: 15px; height: 15px; }
@@ -1290,3 +1290,15 @@ button.pc-comments { border: 0; cursor: pointer; }
 
 /* the sender's own words in a receipt email's preview, kept as typed */
 .mail-preview .receipt-note { white-space: pre-wrap; padding-left: 10px; border-left: 3px solid var(--line); }
+
+/* A photo or video in a chat: the bubble is as wide as the picture, so no background shows beside a narrow one, and
+   the picture never runs wider than the bubble on a phone. A photo opens full size. */
+.msg-att { max-width: min(280px, 100%); }
+.msg-att.zoom { cursor: zoom-in; }
+.msg-bubble:has(> .msg-att) { width: fit-content; padding: 3px; }
+.msg-bubble:has(> .msg-att) > .msg-att { margin-top: 0; }
+.msg-bubble:has(> .msg-att) > .msg-att + .msg-att { margin-top: 3px; }
+.msg-bubble:has(> .msg-att) > .msg-sender, .msg-bubble:has(> .msg-att) > .msg-text { padding: 4px 7px 0; }
+.msg-bubble:has(> .msg-att) > .msg-time { padding: 0 7px 3px; }
+/* over a picture, the three dots need a backing to be seen */
+.msg-bubble:has(> .msg-att) .msg-more .icon-btn { background: rgba(9, 15, 16, .5); color: #fff; }
