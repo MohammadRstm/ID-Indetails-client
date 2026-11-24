@@ -1258,6 +1258,11 @@ button.pc-comments { border: 0; cursor: pointer; }
 .reopen-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; align-items: start; }
 @media (max-width: 720px) { .reopen-form { grid-template-columns: 1fr; } }
 .reopened-banner { align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+/* a work entry's document: in Log work, and opened full size */
+.attach-doc { gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--r1); max-width: 360px; }
+.lightbox-doc { width: min(960px, 92vw); height: 78vh; border: 0; background: #fff; }
+.lightbox-file { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 48px 24px; }
+.lightbox-file .ic { width: 40px; height: 40px; }
 /* Settings › Finance: a business's expense categories, one row each */
 .cat-row { gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); align-items: flex-start; }
 .cat-row:last-child { border-bottom: 0; }
