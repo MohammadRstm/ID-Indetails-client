@@ -1,4 +1,5 @@
 import { AREAS } from "@/app/routing/areas";
+import { ProjectTile } from "@/shared/components/Data/Bits";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
 
@@ -15,4 +16,9 @@ export default function GroupTile({ domain, size }: { domain: string; size?: "sm
             <Icon name={area?.icon ?? "people"} />
         </div>
     );
+}
+
+/** A custom group's tile: its photo, or a people icon in a colour of its own, apart from the businesses' team chats. */
+export function ChatGroupTile({ photoFileId, size }: { photoFileId?: number | null; size?: "sm" | "lg" }) {
+    return <ProjectTile icon="people" tint="var(--ok)" photo={photoFileId} size={size} />;
 }

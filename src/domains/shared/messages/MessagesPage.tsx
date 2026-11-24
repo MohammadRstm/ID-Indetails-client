@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { P } from "@/app/permissions/codes";
 import { useSearchParams } from "react-router";
 import { usePermissions } from "@/app/permissions/usePermissions";
 import { AREAS } from "@/app/routing/areas";
@@ -11,7 +12,9 @@ import { OffBadge } from "../timeOff/OffBadge";
 import { PersonAvatar } from "@/shared/components/Identity/People";
 import Icon from "@/shared/icons/Icon";
 import { cx } from "@/shared/utils/cx";
-import GroupTile, { AnnouncementsTile } from "./GroupTile";
+import MenuButton from "@/shared/components/Overlays/MenuButton";
+import { AllGroupsModal, ManageGroupModal, NewGroupModal } from "./ChatGroupWindows";
+import GroupTile, { AnnouncementsTile, ChatGroupTile } from "./GroupTile";
 import Thread from "./Thread";
 import { chatKey, chatOf, useContacts, useConversations, usePresence, type Chat, type Conversation } from "./messagesApi";
 import { loadFailed } from "@/api/queryState";
@@ -22,12 +25,13 @@ import { lastSeenWords } from "./lastSeenWords";
 const LEVELS = [{ role: "super_admin", label: "Super admins" }, { role: "admin", label: "Admins" }, { role: "employee", label: "Employees" }];
 const areaLabel = (d: string | null | undefined) => (d ? AREAS[d as "design"]?.label ?? "" : "");
 
-/** The chat asked for in the address (?group=4, ?with=12, ?announcements=1), or none. */
+/** The chat asked for in the address (?group=4, ?with=12, ?custom=7, ?announcements=1), or none. */
 function chatFrom(params: URLSearchParams): Chat | null {
     if (params.get("announcements") === "1") return { kind: "announcements" };
-    const group = Number(params.get("group")), person = Number(params.get("with"));
+    const group = Number(params.get("group")), person = Number(params.get("with")), custom = Number(params.get("custom"));
     if (Number.isInteger(group) && group > 0) return { kind: "group", teamId: group };
     if (Number.isInteger(person) && person > 0) return { kind: "dm", userId: person };
+    if (Number.isInteger(custom) && custom > 0) return { kind: "custom", groupId: custom };
     return null;
 }
 
@@ -70,7 +74,7 @@ export default function MessagesPage() {
     useEffect(() => {
         if (!fallbackKey) return;
         const [kind, id] = fallbackKey.split("-");
-        setParams(kind === "announcements" ? { announcements: "1" } : kind === "group" ? { group: id } : { with: id }, { replace: true });
+        setParams(kind === "announcements" ? { announcements: "1" } : kind === "group" ? { group: id } : kind === "custom" ? { custom: id } : { with: id }, { replace: true });
     }, [fallbackKey, setParams]);
     const byChat = new Map(list.flatMap((c) => { const k = chatOf(c); return k ? [[chatKey(k), c] as const] : []; }));
     const open = chat ? byChat.get(chatKey(chat)) : undefined;
@@ -82,12 +86,20 @@ export default function MessagesPage() {
     const people = (contacts.data ?? []).filter((c) => !q || c.name.toLowerCase().includes(q));
     const select = (next: Chat) => {
         setReading(true);
-        setParams(next.kind === "announcements" ? { announcements: "1" } : next.kind === "group" ? { group: String(next.teamId) } : { with: String(next.userId) });
+        setParams(next.kind === "announcements" ? { announcements: "1" } : next.kind === "group" ? { group: String(next.teamId) }
+            : next.kind === "custom" ? { custom: String(next.groupId) } : { with: String(next.userId) });
     };
     const announcements = list.find((c) => c.type === "announcements");
     const showAnnouncements = !!announcements && (!q || "announcements".includes(q));
     const person = chat?.kind === "dm" ? (contacts.data ?? []).find((c) => c.id === chat.userId) ?? open?.person ?? null : null;
     const team = chat?.kind === "group" ? open?.team ?? null : null;
+    const group = chat?.kind === "custom" ? open?.group ?? null : null;
+    // custom groups the person is in, by name; anyone with message:manage_groups makes and manages them
+    const customGroups = list.filter((c) => c.type === "custom_group" && c.group && (!q || c.group.name.toLowerCase().includes(q)))
+        .sort((a, b) => a.group!.name.localeCompare(b.group!.name));
+    const managesGroups = permissions.has(P.MESSAGE_MANAGE_GROUPS);
+    const [groupWindow, setGroupWindow] = useState<{ kind: "new" } | { kind: "all" } | { kind: "manage"; groupId: number } | null>(null);
+    const closeChat = () => { setParams({}); setReading(false); };
 
     const count = (c: Conversation | undefined) => (c && c.unread > 0 ? <span className={cx("msg-count", c.unreadMention && "mention")}>{c.unreadMention ? "@" : c.unread}</span> : null);
 
@@ -116,6 +128,39 @@ export default function MessagesPage() {
                                         {count(announcements)}
                                     </div>
                                 )}
+                                {(customGroups.length > 0 || managesGroups) && (
+                                    <div className="msg-sec-label msg-sec-actions">
+                                        <span className="grow">Chat groups</span>
+                                        {managesGroups && (
+                                            <>
+                                                <button type="button" className="icon-btn" aria-label="New group" title="New group" onClick={() => setGroupWindow({ kind: "new" })}><Icon name="plus" /></button>
+                                                <MenuButton icon="dots" label="More about chat groups" align="right" width={190}>
+                                                    {(close) => (
+                                                        <div>
+                                                            <button className="pop-item" onClick={() => { close(); setGroupWindow({ kind: "all" }); }}><Icon name="people" />Every group</button>
+                                                        </div>
+                                                    )}
+                                                </MenuButton>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                                {customGroups.map((c) => {
+                                    const k: Chat = { kind: "custom", groupId: c.group!.id };
+                                    return (
+                                        <div key={chatKey(k)} className={cx("msg-contact-row", chat && chatKey(chat) === chatKey(k) && "on")} {...clickable(() => select(k), "button")}>
+                                            <ChatGroupTile photoFileId={c.group!.photoFileId} size="sm" />
+                                            <div className="grow" style={{ minWidth: 0 }}>
+                                                <div className="trunc" style={{ fontWeight: 600 }}>{c.group!.name}</div>
+                                                <div className="muted trunc" style={{ fontSize: 11 }}>
+                                                    {(c.onlineCount ?? 0) > 0 && <><span className="msg-online">{c.onlineCount} online</span> · </>}
+                                                    {c.group!.memberCount} {c.group!.memberCount === 1 ? "member" : "members"}
+                                                </div>
+                                            </div>
+                                            {count(c)}
+                                        </div>
+                                    );
+                                })}
                                 {groups.length > 0 && <div className="msg-sec-label">Groups</div>}
                                 {groups.map((c) => {
                                     const k: Chat = { kind: "group", teamId: c.team!.id };
@@ -163,16 +208,29 @@ export default function MessagesPage() {
                                         </div>
                                     );
                                 })}
-                                {!showAnnouncements && groups.length === 0 && people.length === 0 && <Empty art="search" title="No matches" />}
+                                {!showAnnouncements && customGroups.length === 0 && groups.length === 0 && people.length === 0 && <Empty art="search" title="No matches" />}
                             </>
                         )}
                 </div>
 
                 <div className="msg-thread">
                     {!chat ? (conversations.data ? <Empty art="done" title="Pick a conversation" text="Choose someone or a group from the list to start." /> : null)
-                        : <Thread key={chatKey(chat)} chat={chat} person={person} team={team} meId={me.id} onBack={() => setReading(false)} />}
+                        : <Thread key={chatKey(chat)} chat={chat} person={person} team={team} group={group} meId={me.id} onBack={() => setReading(false)}
+                            onManage={managesGroups && chat.kind === "custom" ? () => setGroupWindow({ kind: "manage", groupId: chat.groupId }) : undefined}
+                            onLeft={closeChat} />}
                 </div>
             </div>
+            {groupWindow?.kind === "new" && (
+                <NewGroupModal meId={me.id} onClose={() => setGroupWindow(null)}
+                    onCreated={(id) => { setGroupWindow(null); select({ kind: "custom", groupId: id }); }} />
+            )}
+            {groupWindow?.kind === "all" && (
+                <AllGroupsModal onClose={() => setGroupWindow(null)} onManage={(id) => setGroupWindow({ kind: "manage", groupId: id })} />
+            )}
+            {groupWindow?.kind === "manage" && (
+                <ManageGroupModal groupId={groupWindow.groupId} onClose={() => setGroupWindow(null)}
+                    onDeleted={() => { if (chat?.kind === "custom" && chat.groupId === groupWindow.groupId) closeChat(); setGroupWindow(null); }} />
+            )}
         </div>
     );
 }

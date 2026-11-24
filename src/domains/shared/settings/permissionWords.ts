@@ -58,6 +58,7 @@ export const PERMISSION_SECTIONS: PermissionSection[] = [
             { title: "Payroll & schedules", codes: [P.SALARY_VIEW, P.SALARY_ADVANCE_MANAGE, P.HOURS_EXCUSE, P.TIME_OFF_DECIDE, P.SCHEDULE_MANAGE, P.WORKING_TIME_MANAGE] },
             { title: "Company settings & rates", codes: [P.COMPANY_SETTINGS_MANAGE, P.EXCHANGE_RATE_MANAGE] },
             { title: "Announcements", codes: [P.MESSAGE_ANNOUNCE] },
+            { title: "Chat groups", codes: [P.MESSAGE_MANAGE_GROUPS] },
         ],
     },
     {

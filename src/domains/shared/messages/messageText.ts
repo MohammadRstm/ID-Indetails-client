@@ -4,6 +4,8 @@ import type { Message } from "./messagesApi";
 export function snippet(m: Message | null | undefined): string {
     if (!m) return "";
     if (m.kind === "task_comment") return `Task comment${m.body ? `: ${m.body}` : ""}`;
+    // a custom group's grey line: who changed what ("Rana added Sara Haddad")
+    if (m.kind === "group_event") return `${firstName(m.sender.name)} ${m.body ?? ""}`;
     if (m.body) return m.body;
     const first = m.attachments[0];
     if (first && (first.kind === "audio" || first.mimeType.startsWith("audio/"))) return "🎤 Voice message";
@@ -28,8 +30,9 @@ export function mentionParts(text: string, names: string[]): { text: string; men
     return out;
 }
 
-/** A message starts a new run unless the same person wrote the one before within five minutes. */
+/** A message starts a new run unless the same person wrote the one before within five minutes. Cards and grey lines stand apart. */
 export function startsRun(m: Message, prev: Message | undefined): boolean {
-    return !prev || prev.sender.id !== m.sender.id || prev.kind === "task_comment" || m.kind === "task_comment"
+    const apart = (x: Message) => x.kind === "task_comment" || x.kind === "group_event";
+    return !prev || prev.sender.id !== m.sender.id || apart(prev) || apart(m)
         || new Date(m.createdAt).getTime() - new Date(prev.createdAt).getTime() > 5 * 60_000;
 }

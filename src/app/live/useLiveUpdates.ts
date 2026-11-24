@@ -6,12 +6,12 @@ import { secondsLeft } from "@/api/tokenExpiry";
 import { tokenStore } from "@/api/tokenStore";
 import { refreshDiscussion } from "@/portal/discussion/discussionApi";
 
-/** Which chat changed: a team's, the direct chat with a person, or Announcements. */
-export type LiveChat = { teamId?: number | null; userId?: number | null; announcements?: boolean };
+/** Which chat changed: a team's, the direct chat with a person, Announcements, or a custom group. */
+export type LiveChat = { teamId?: number | null; userId?: number | null; announcements?: boolean; groupId?: number | null };
 
 /** The thread's key of the chat a signal names (as messagesApi keys it). */
 const threadOf = (chat?: LiveChat) =>
-    chat?.teamId ? `group-${chat.teamId}` : chat?.userId ? `dm-${chat.userId}` : chat?.announcements ? "announcements" : null;
+    chat?.teamId ? `group-${chat.teamId}` : chat?.userId ? `dm-${chat.userId}` : chat?.groupId ? `custom-${chat.groupId}` : chat?.announcements ? "announcements" : null;
 
 const RETRY_MS = 15_000;
 /** The client discussions of every project, as the staff's pages key them. */
