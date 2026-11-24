@@ -84,8 +84,10 @@ describe("Correcting a payment", () => {
         renderApp(path, withPermissions(admin, { revoke: [P.PAYMENT_VOID] }), ...billingHandlers, ...financialsHandlers);
         const panel = await received();
         await within(panel).findByText("ID-2026-002");
-        // nothing to apply, no void, and a Design payment has no account label to file: no menu at all
-        expect(within(panel).queryByRole("button", { name: /^Payment of .* actions$/ })).not.toBeInTheDocument();
+        // nothing to apply, no void, and a Design payment has no account label to file: only its receipt
+        await userEvent.click(within(panel).getAllByRole("button", { name: /^Payment of .* actions$/ })[0]);
+        expect(screen.getByRole("button", { name: "Send receipt…" })).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Apply to an invoice…" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Void payment…" })).not.toBeInTheDocument();
     });
 });

@@ -64,7 +64,8 @@ describe("A payment's receipt", () => {
         expect(within(dialog).getByText(/Thank you for your payment for .* This is to confirm that we received it on Sep 28, 2026\./)).toBeInTheDocument();
 
         await userEvent.type(within(dialog).getByLabelText(/Your note/), "Thanks for the quick transfer.");
-        expect(within(dialog).getByText("Thanks for the quick transfer.")).toBeInTheDocument();
+        // the preview shows the note as the email will
+        expect(dialog.querySelector(".mail-preview .receipt-note")).toHaveTextContent("Thanks for the quick transfer.");
         await userEvent.click(within(dialog).getByRole("button", { name: "Send email" }));
         await waitFor(() => expect(api.emailed).toEqual([{ id: paid.id, to: "mounir.aoun@mail.test", note: "Thanks for the quick transfer." }]));
         expect(await screen.findByText("Receipt emailed to mounir.aoun@mail.test")).toBeInTheDocument();
