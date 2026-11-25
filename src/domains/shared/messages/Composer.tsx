@@ -4,6 +4,8 @@ import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Icon from "@/shared/icons/Icon";
 import { uploadFile } from "@/domains/design/work/workApi";
+import { ATTACH_ACCEPT } from "@/shared/files/upload";
+import { fileSize } from "./messagesApi";
 import { enterSends } from "@/shared/utils/enterSends";
 import RecordingBar from "@/shared/voice/RecordingBar";
 import { uploadVoice } from "@/shared/voice/uploadVoice";
@@ -11,7 +13,8 @@ import { useVoiceRecorder } from "@/shared/voice/useVoiceRecorder";
 import { clearDraft, onDraft, peekDraft } from "@/domains/shared/proton/formFill";
 import type { Contact } from "./messagesApi";
 
-type Picked = { id: number; name: string; video: boolean; preview: string };
+/** A photo or video is previewed; any other file is shown by its name and size. */
+type Picked = { id: number; name: string; video: boolean; document: boolean; size: number; preview: string };
 
 type ComposerProps = {
     /** In a group, "@" offers its members. */
@@ -89,7 +92,8 @@ export default function Composer({ members, meId, sending, error, onSend, draftK
         const saved = await Promise.all(chosen.map(async (f): Promise<Picked | null> => {
             try {
                 const file = await uploadFile(f);
-                return { id: file.id, name: file.name, video: f.type.startsWith("video/"), preview: URL.createObjectURL(f) };
+                const isFile = file.kind === "document";
+                return { id: file.id, name: file.name, video: file.kind === "video", document: isFile, size: file.sizeBytes, preview: isFile ? "" : URL.createObjectURL(f) };
             } catch (e) {
                 setUploadError(errorMessage(e));
                 return null;
@@ -102,7 +106,7 @@ export default function Composer({ members, meId, sending, error, onSend, draftK
 
     function remove(id: number) {
         const f = files.find((x) => x.id === id);
-        if (f) URL.revokeObjectURL(f.preview);
+        if (f?.preview) URL.revokeObjectURL(f.preview);
         setFiles(files.filter((x) => x.id !== id));
     }
 
@@ -159,8 +163,9 @@ export default function Composer({ members, meId, sending, error, onSend, draftK
             {files.length > 0 && (
                 <div className="msg-attach-preview">
                     {files.map((f) => (
-                        <div key={f.id} className="msg-attach-thumb">
-                            {f.video ? <video src={f.preview} /> : <img src={f.preview} alt={f.name} />}
+                        <div key={f.id} className={f.document ? "msg-attach-file" : "msg-attach-thumb"}>
+                            {f.document ? <><Icon name="file" /><span className="trunc">{f.name}</span><span className="muted">{fileSize(f.size)}</span></>
+                                : f.video ? <video src={f.preview} /> : <img src={f.preview} alt={f.name} />}
                             <button className="icon-btn" onClick={() => remove(f.id)} aria-label={`Remove ${f.name}`}><Icon name="x" /></button>
                         </div>
                     ))}
@@ -182,7 +187,7 @@ export default function Composer({ members, meId, sending, error, onSend, draftK
                 </div>
             ) : (
             <div className="msg-composer">
-                <input ref={fileRef} type="file" accept="image/*,video/*" multiple hidden onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
+                <input ref={fileRef} type="file" accept={ATTACH_ACCEPT} multiple hidden onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
                 <button className="icon-btn" aria-label="Attach file" disabled={files.length >= MAX_FILES} onClick={() => fileRef.current?.click()}><Icon name="attach" /></button>
                 <AutoGrowTextarea className="input grow" minRows={1} maxRows={5} placeholder="Message…" aria-label="Message" value={text}
                     onChange={(e) => onText(e.target.value, e.target.selectionStart)}
