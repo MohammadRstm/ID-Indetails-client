@@ -178,7 +178,7 @@ export const work: Article[] = [
                 step("Choose **Remind** beside a person, or **Remind all** to remind everyone who is left."),
             ),
             list(
-                "The list is everyone who has logged nothing since Monday. Someone who logs work drops off it.",
+                "The list is everyone who has logged nothing since the week started. Someone who logs work drops off it.",
                 "A reminder is a notification asking them to log their hours for this week, from you by name.",
                 "Each person can be reminded **once a day**. Someone already reminded today shows **Reminded today**, and Remind all skips them.",
                 "**Logged**, **Expected so far** and **Overtime** show for whoever may see everyone's work.",

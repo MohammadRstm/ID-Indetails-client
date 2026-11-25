@@ -20,7 +20,7 @@ export type NotLoggingPerson = {
 };
 
 export type NotLogging = {
-    /** The Monday of this week. */
+    /** The first day of this week, as the company sets its week. */
     weekStart: string;
     today: string;
     people: NotLoggingPerson[];
