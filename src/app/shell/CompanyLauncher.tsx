@@ -11,6 +11,7 @@ import { companyNav } from "@/app/routing/routeTable";
 import { fullName, useCurrentUser, useSession } from "@/app/session/useSession";
 import Avatar from "@/shared/components/Identity/Avatar";
 import Logo from "@/shared/components/Identity/Logo";
+import { COMPANY_MARK, COMPANY_MARK_BOX } from "@/shared/components/Identity/companyMark";
 import Skeleton from "@/shared/components/Feedback/Skeleton";
 import { money } from "@/shared/format/money";
 import NotificationBell from "@/domains/shared/notifications/NotificationBell";
@@ -32,6 +33,7 @@ type Overview = Schemas["CompanyOverviewResponse"];
  * Where someone who can reach several areas starts: pick Design, Execution or the company overview, or one of the
  * services (the website, and social media to come). Each card shows only to whoever may open it. Above them are the
  * person's own picture (opening their profile), name and email, and beside the logo Messages, the bell and Settings.
+ * Behind it all, the company's mark and name, large and faintly green.
  */
 export default function CompanyLauncher() {
     const navigate = useNavigate();
@@ -60,6 +62,7 @@ export default function CompanyLauncher() {
     return (
         <>
         <div className="launcher">
+            <Backdrop />
             <div className="launcher-inner">
                 <div className="row" style={{ gap: 11, marginBottom: 26 }}>
                     <Logo size={32} />
@@ -184,5 +187,24 @@ export default function CompanyLauncher() {
         <BottomNav area={area} onSearch={() => setSearching(true)} />
         {searching && <SearchPalette area={area} onClose={() => setSearching(false)} />}
         </>
+    );
+}
+
+/**
+ * The company's mark and name behind the launcher, as on its logo, tinted with the accent green, and half of the mark
+ * coming in from each side (up on the left, down on the right), fading out towards the middle as on the PDFs a client
+ * receives. Decoration only.
+ */
+function Backdrop() {
+    const mark = (className: string) => <svg viewBox={COMPANY_MARK_BOX} className={className}><path d={COMPANY_MARK} /></svg>;
+    return (
+        <div className="launch-backdrop" aria-hidden="true">
+            <div className="launch-backdrop-center">
+                {mark("launch-backdrop-mark")}
+                <div className="launch-backdrop-name">ID-INDETAILS</div>
+            </div>
+            {mark("launch-ring left")}
+            {mark("launch-ring right")}
+        </div>
     );
 }
