@@ -116,6 +116,8 @@ export const keys = {
         overview: (period: string) => ["dashboard", "overview", period] as const,
         domain: (domain: string) => ["dashboard", domain] as const,
         deadlines: (domain: string) => ["dashboard", domain, "deadlines"] as const,
+        /** The employees who have logged nothing this week, with who was reminded today. */
+        notLogging: ["dashboard", "not-logging"] as const,
     },
     search: (q: string) => ["search", q] as const,
     /** Whether this browser gets the signed-in person's notifications (app/pwa/push.ts). */

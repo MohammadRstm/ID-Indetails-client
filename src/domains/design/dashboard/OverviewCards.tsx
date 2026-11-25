@@ -123,7 +123,7 @@ export function FollowupsCard({ items, deadlines, deadlinesFailed, loading }: Fo
             {expanded && (
                 <div id="fu-body" className="panel-body fu-body" style={{ paddingTop: 4 }}>
                     {loading ? <SkeletonLines lines={4} /> : items.map((a) => {
-                        const go = a.projectId != null ? open(`projects/${a.projectId}`) : undefined;
+                        const go = a.projectId != null ? open(`projects/${a.projectId}`) : a.to ? open(a.to) : undefined;
                         return (
                             <div key={a.key} className="mini-row" style={{ alignItems: "flex-start", cursor: go ? "pointer" : "default" }} {...clickable(go, "button")}>
                                 <span className="feed-ic" style={TONE[a.tone]}><Icon name={a.icon} /></span>

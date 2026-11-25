@@ -138,6 +138,12 @@ export function describe(note: Notification, reader: Reader): NotificationView {
                 text: `You logged ${fmtH(n(p.loggedMinutes))} of the ${fmtH(n(p.requiredMinutes))} ${fmtDate(s(p.day))} asked for`,
                 sub: "You can still log the rest this month", icon: "clock", route: "/design/my-work",
             };
+        // an admin asked them, from the Overview's "not logged this week" page, to log their hours
+        case "hours_reminder":
+            return {
+                text: `${s(p.senderName) || who} wants you to log your hours for this week now.`,
+                sub: p.weekStart ? `Nothing logged since ${fmtDate(s(p.weekStart))}` : undefined, icon: "clock", route: "/design/log-hours",
+            };
         case "hours_missed_list": {
             const people = (p.people as { name?: string; loggedMinutes?: number; requiredMinutes?: number }[] | undefined) ?? [];
             return {

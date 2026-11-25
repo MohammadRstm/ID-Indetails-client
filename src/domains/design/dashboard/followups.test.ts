@@ -26,6 +26,8 @@ describe("the overview's follow-ups", () => {
             ["Villa Mounir interiors has been on hold for 12 days", "Resume it or close it out"],
             ["5 employees have not logged work this week", "Sarah Haddad, Omar Fares, Lina Saad +2 more"],
         ]);
+        // the people who haven't logged lead to their own page; a project's item opens the project
+        expect(items.map((f) => [f.projectId, f.to])).toEqual([[1, undefined], [1, undefined], [1, undefined], [null, "overview/not-logging"]]);
     });
 
     it("puts money that is owed first and client work without cover last, six at most", () => {
