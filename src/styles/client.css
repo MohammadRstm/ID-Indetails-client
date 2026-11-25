@@ -1292,7 +1292,8 @@ button.pc-comments { border: 0; cursor: pointer; }
 .launch-ring { position: absolute; height: min(62vh, 560px); width: auto; fill: currentColor; opacity: .16; }
 .launch-ring.left { left: 0; top: 6vh; transform: translateX(-50%); -webkit-mask-image: linear-gradient(to right, transparent 49%, #000 50%, transparent 96%); mask-image: linear-gradient(to right, transparent 49%, #000 50%, transparent 96%); }
 .launch-ring.right { right: 0; bottom: 6vh; transform: translateX(50%); -webkit-mask-image: linear-gradient(to left, transparent 49%, #000 50%, transparent 96%); mask-image: linear-gradient(to left, transparent 49%, #000 50%, transparent 96%); }
-@media (max-width: 720px) { .launch-ring { height: 42vh; opacity: .12; } }
+/* a phone keeps only the centred mark: the side rings crowd its narrow screen */
+@media (max-width: 720px) { .launch-ring { display: none; } }
 .launch-backdrop-name { font-weight: 800; font-size: min(7vh, 11vw, 64px); letter-spacing: .04em; line-height: 1; white-space: nowrap; }
 :root[data-theme="dark"] .launch-backdrop-center { opacity: .12; }
 :root[data-theme="dark"] .launch-ring { opacity: .22; }
