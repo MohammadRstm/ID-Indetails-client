@@ -48,8 +48,10 @@ server {
         gzip off;
     }
 
-    # Uploads: up to 100 MB (FileRules.MaxVideoBytes) plus the form around them, streamed to the API.
-    location = /api/files {
+    # Uploads: photos and videos (POST /api/files), voice notes (/api/files/voice) and other files such as PDFs
+    # (/api/files/document), up to 100 MB (FileRules.MaxVideoBytes) plus the form around them, streamed to the API.
+    # A regex, so all three routes get it; downloads (/api/files/{id}) stay under /api/ above.
+    location ~ ^/api/files(/voice|/document)?$ {
         proxy_pass ${API_UPSTREAM};
         proxy_http_version 1.1;
         proxy_set_header Host $host;
