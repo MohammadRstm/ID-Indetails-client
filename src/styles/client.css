@@ -1282,6 +1282,20 @@ button.pc-comments { border: 0; cursor: pointer; }
 
 /* The launcher: the person's own picture, name and email above the question; the picture opens their profile */
 .launch-me { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; min-width: 0; }
+/* the company's mark and name behind the launcher, faintly green; never in the way of a click */
+.launcher { position: relative; overflow: hidden; isolation: isolate; }
+.launcher-inner { position: relative; z-index: 1; }
+.launch-backdrop { position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--accent); }
+.launch-backdrop-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2.5vh; opacity: .085; }
+.launch-backdrop-mark { height: min(72vh, 640px); width: auto; fill: currentColor; }
+/* half of the mark on each side, cut by the edge and fading inwards, as on the PDFs */
+.launch-ring { position: absolute; height: min(62vh, 560px); width: auto; fill: currentColor; opacity: .16; }
+.launch-ring.left { left: 0; top: 6vh; transform: translateX(-50%); -webkit-mask-image: linear-gradient(to right, transparent 49%, #000 50%, transparent 96%); mask-image: linear-gradient(to right, transparent 49%, #000 50%, transparent 96%); }
+.launch-ring.right { right: 0; bottom: 6vh; transform: translateX(50%); -webkit-mask-image: linear-gradient(to left, transparent 49%, #000 50%, transparent 96%); mask-image: linear-gradient(to left, transparent 49%, #000 50%, transparent 96%); }
+@media (max-width: 720px) { .launch-ring { height: 42vh; opacity: .12; } }
+.launch-backdrop-name { font-weight: 800; font-size: min(7vh, 11vw, 64px); letter-spacing: .04em; line-height: 1; white-space: nowrap; }
+:root[data-theme="dark"] .launch-backdrop-center { opacity: .12; }
+:root[data-theme="dark"] .launch-ring { opacity: .22; }
 .launch-me-pic { padding: 0; border: 0; background: none; border-radius: 50%; cursor: pointer; display: inline-flex; flex: none; }
 .launch-me-pic:hover, .launch-me-pic:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .launch-me-name { font-weight: 650; font-size: 15px; }
