@@ -26,7 +26,7 @@ describe("Not logged this week", () => {
         for (const user of [personas.designAdmin, personas.superAdmin]) {
             const { unmount } = renderApp("/design/overview/not-logging", user, serve(list(person(4, "Sarah Haddad"), person(6, "Elie Khoury", { expectedMinutes: 480 }))));
             expect(await screen.findByRole("heading", { name: "Not logged this week" })).toBeInTheDocument();
-            expect(screen.getByText("Nothing logged since Mon, Sep 28 · 2 employees")).toBeInTheDocument();
+            expect(await screen.findByText("Nothing logged since Mon, Sep 28 · 2 employees")).toBeInTheDocument();
             const sarah = within(await rowOf("Sarah Haddad"));
             expect(sarah.getByText("sarah@example.com")).toBeInTheDocument();
             expect(sarah.getByText("0m")).toBeInTheDocument();
