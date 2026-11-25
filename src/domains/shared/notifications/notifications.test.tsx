@@ -83,6 +83,9 @@ group("A notification's words", () => {
         // a reminder the next morning: logging stays open all month
         expect(describe(note("hours_missed", { day: "2026-09-29", loggedMinutes: 180, requiredMinutes: 420 }), designer))
             .toMatchObject({ text: "You logged 3h of the 7h Sep 29 asked for", sub: "You can still log the rest this month", route: "/design/my-work" });
+        // an admin asking them to log their hours opens their Log hours page
+        expect(describe(note("hours_reminder", { senderName: "Nadia Karam", weekStart: "2026-09-28" }), designer))
+            .toMatchObject({ text: "Nadia Karam wants you to log your hours for this week now.", sub: "Nothing logged since Sep 28", route: "/design/log-hours" });
         // a general meeting: the employee's Meetings page, an admin's Overview tab, a super admin's company overview tab
         const invited = note("meeting_invited", { authorName: "Nadia Karam", topic: "Studio planning", startsAt: "2026-10-02T08:00:00Z", endsAt: "2026-10-02T09:00:00Z" }, { actor: nadia });
         expect(describe(invited, designer)).toMatchObject({ text: "Nadia Karam invited you to a meeting: Studio planning", route: "/design/meetings" });

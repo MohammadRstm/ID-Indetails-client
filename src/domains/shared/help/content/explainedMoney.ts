@@ -426,6 +426,7 @@ export const explainedMoney: Article[] = [
             only(money, para("**Invoice issued**, **payment recorded**, **invoice overdue**, **draft waiting** (unsent 3 days after it was made), **project closed** (with its final margin), **close to zero profit** (10% of the agreed amount or less), **at zero profit** and **change stopped**: an expense, site expenses, labour, hours, a lower payment, or agreeing or withdrawing a BOQ or VO that would have taken a client project to zero profit or below wasn't saved, and you can force it through or dismiss it.")),
             only(has(P.INVOICE_SEND), para("**Reminder due**: an overdue invoice's client has no email address, so chase it yourself.")),
             only(has(P.INVOICE_CREATE, P.INVOICE_SEND), para("**Sent automatically**, **send due** and **send failed**: about invoices you scheduled.")),
+            only(has(P.WORK_ENTRY_VIEW_OWN), para("**Hours reminder**: an admin asked you to log your hours for this week.")),
             only(has(P.SALARY_VIEW), para("**Hours short**: on the 1st, who ended last month short of hours.")),
             note("You're never notified about something you did yourself, and no notification carries an amount."),
         ],

@@ -158,6 +158,17 @@ describe("Overview", () => {
         expect(screen.queryByText("Arranging this page")).not.toBeInTheDocument();
     });
 
+    it("links the employees who haven't logged this week to the page that lists them", async () => {
+        const work = { ...overview.overview, attention: [{ kind: "not_logging", projectId: null, title: null, days: null, progressPct: null, count: 2, people: [{ id: 4, name: "Sarah Haddad" }, { id: 6, name: "Elie Khoury" }] }] };
+        renderApp("/design/overview", personas.designAdmin,
+            http.get("/api/reports/overview", () => HttpResponse.json(work)),
+            http.get("/api/reports/not-logging", () => HttpResponse.json({ weekStart: "2026-09-28", today: "2026-09-30", people: [] })),
+            ...overviewHandlers);
+        await userEvent.click(await screen.findByRole("button", { name: /2 employees have not logged work this week/ }));
+        await waitFor(() => expect(window.location.pathname).toBe("/design/overview/not-logging"));
+        expect(await screen.findByRole("heading", { name: "Not logged this week" })).toBeInTheDocument();
+    });
+
     it("needs report:view", async () => {
         renderApp("/design/overview", withPermissions(nadia, { revoke: [P.REPORT_VIEW] }), ...overviewHandlers);
         expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();

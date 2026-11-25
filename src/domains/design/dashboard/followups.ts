@@ -3,7 +3,10 @@ import { money } from "@/shared/format/money";
 import { addDays, fmtDate } from "@/shared/format/time";
 import type { IconName } from "@/shared/icons/icons";
 
-export type Followup = { key: string; icon: IconName; tone: "warn" | "ok" | "info"; text: string; sub: string; projectId: number | null };
+export type Followup = { key: string; icon: IconName; tone: "warn" | "ok" | "info"; text: string; sub: string; projectId: number | null;
+    /** A page of the business to open instead of a project, e.g. the list behind the item. */
+    to?: string;
+};
 
 type WorkItem = Schemas["AttentionItemResponse"];
 type MoneyItem = Schemas["MoneyAttentionResponse"];
@@ -26,7 +29,7 @@ function workFollowup(a: WorkItem, i: number, today: string, targetOf: (projectI
             const n = a.count ?? a.people?.length ?? 0;
             const names = (a.people ?? []).map((p) => p.name);
             return {
-                key, icon: "people", tone: "info", projectId: null,
+                key, icon: "people", tone: "info", projectId: null, to: "overview/not-logging",
                 text: `${n} employee${n === 1 ? " has" : "s have"} not logged work this week`,
                 sub: `${names.join(", ")}${n > names.length ? ` +${n - names.length} more` : ""}`,
             };

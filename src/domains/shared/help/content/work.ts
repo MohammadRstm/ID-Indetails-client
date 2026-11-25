@@ -165,6 +165,29 @@ export const work: Article[] = [
         related: ["progress"],
     },
     {
+        id: "not-logging",
+        title: "Reminding people who haven't logged this week",
+        category: "work",
+        who: and(sees("design"), has(P.REPORT_VIEW)),
+        summary: "Needs attention lists the employees who have logged nothing this week. Open it to send each of them, or all of them, a reminder to log their hours.",
+        ask: ["not logged", "not logging", "haven't logged", "hasn't logged work", "remind to log hours", "hours reminder", "remind employee", "remind all",
+            "needs attention", "who hasn't logged this week"],
+        blocks: [
+            steps(
+                step("On the **Overview**, open the card **Needs attention & deadlines** and choose the line saying that employees haven't logged work this week.", "Overview"),
+                step("Choose **Remind** beside a person, or **Remind all** to remind everyone who is left."),
+            ),
+            list(
+                "The list is everyone who has logged nothing since the week started. Someone who logs work drops off it.",
+                "A reminder is a notification asking them to log their hours for this week, from you by name.",
+                "Each person can be reminded **once a day**. Someone already reminded today shows **Reminded today**, and Remind all skips them.",
+                "**Logged**, **Expected so far** and **Overtime** show for whoever may see everyone's work.",
+            ),
+            links(link("Open the overview", { business: "overview", only: "design" })),
+        ],
+        related: ["log-work"],
+    },
+    {
         id: "meetings",
         title: "Setting up a meeting",
         category: "work",

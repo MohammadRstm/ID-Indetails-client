@@ -28,6 +28,7 @@ import {
     ProtonPage,
     MyProfilePage,
     MyWorkRoute,
+    NotLoggingPage,
     NotificationsPage,
     OverviewRoute,
     PeoplePage,
@@ -123,6 +124,12 @@ export const domainRoutes: DomainRoute[] = [
         path: "overview",
         nav: { label: (d) => (d === "execution" ? "Dashboard" : "Overview"), icon: "overview" },
         admin: { element: <OverviewRoute />, access: all(P.REPORT_VIEW) },
+    },
+    {
+        // the employees who have logged nothing this week, reached from the Overview's Needs attention
+        path: "overview/not-logging",
+        navKey: "overview",
+        admin: { element: <NotLoggingPage />, access: designOnly(all(P.REPORT_VIEW)) },
     },
     {
         // money set aside from sites by hand, paid back to sites that run short
