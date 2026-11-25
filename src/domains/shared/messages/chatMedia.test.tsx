@@ -19,6 +19,30 @@ beforeEach(() => {
     URL.revokeObjectURL = vi.fn();
 });
 
+describe("A file in a chat", () => {
+    const pdf = { id: 71, name: "Holiday schedule.pdf", mimeType: "application/pdf", kind: "document" as const, sizeBytes: 2.4 * 1024 * 1024, createdAt: "2026-09-30T08:20:00Z" };
+
+    it("shows as a card with its name and size, opens in place, and downloads from the menu", async () => {
+        const downloaded: string[] = [];
+        renderApp("/design/messages?with=2", rana,
+            http.get("/api/messages/direct/2", () => HttpResponse.json({ items: [message(94, people.nadia, null, "2026-09-30T08:20:00Z", { attachments: [pdf] })], hasMore: false })),
+            http.get("/api/files/:id", ({ params }) => { downloaded.push(String(params.id)); return new HttpResponse(new Blob(["%PDF"], { type: "application/pdf" })); }),
+            ...messageHandlers);
+        const card = await screen.findByRole("button", { name: /Holiday schedule\.pdf/ });
+        expect(card).toHaveTextContent("2.4 MB");
+        await userEvent.click(card);
+        const viewer = await screen.findByRole("dialog");
+        expect(await within(viewer).findByTitle("Holiday schedule.pdf")).toBeInTheDocument();
+        expect(within(viewer).getByRole("button", { name: "Download" })).toBeInTheDocument();
+        await userEvent.keyboard("{Escape}");
+
+        await userEvent.click(screen.getByRole("button", { name: "Message actions" }));
+        downloaded.length = 0;
+        await userEvent.click(screen.getByRole("button", { name: "Download file" }));
+        await waitFor(() => expect(downloaded).toEqual(["71"]));
+    });
+});
+
 describe("A photo in a chat", () => {
     it("opens full size when clicked, with a download", async () => {
         renderApp("/design/messages?with=2", rana,

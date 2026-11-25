@@ -9,11 +9,27 @@ export type UploadOptions = {
     onProgress?: (fraction: number) => void;
 };
 
-/** The documents a work entry takes (the API's `POST /api/files/document`): PDF, Word, Excel, PowerPoint and CSV. */
-export const DOCUMENT_EXTENSIONS = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".csv"];
+/**
+ * The other files a work entry or a chat takes (the API's `POST /api/files/document`, up to 50 MB): documents, ZIP,
+ * CAD drawings and 3D models. Programs and web pages never are.
+ */
+export const DOCUMENT_EXTENSIONS = [
+    ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".csv", ".txt", ".zip",
+    ".dwg", ".dxf", ".rvt", ".ifc", ".skp", ".3dm", ".glb", ".gltf", ".obj", ".fbx", ".stl", ".3ds", ".max", ".blend", ".usdz", ".dae",
+];
 
-/** Whether a picked file is one of those documents, by its name (a browser may not know an Office file's type). */
-export const isDocument = (file: File) => DOCUMENT_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext));
+/** Photos and videos, by name, for a browser that doesn't know the type (a HEIC photo often). */
+const MEDIA_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".mp4", ".m4v", ".mov", ".webm"];
+
+/** Whether a picked file goes as a file rather than a photo or video: anything that isn't one is a file. */
+export const isDocument = (file: File) => {
+    const name = file.name.toLowerCase();
+    const media = file.type.startsWith("image/") || file.type.startsWith("video/") || MEDIA_EXTENSIONS.some((ext) => name.endsWith(ext));
+    return !media;
+};
+
+/** What a file picker offers: photos, videos and every other file taken. */
+export const ATTACH_ACCEPT = ["image/*", "video/*", ...DOCUMENT_EXTENSIONS].join(",");
 
 /** Uploads a photo (made small first), a video, or a document, for attaching its id afterwards. */
 export async function uploadFile(file: File, { maxEdge, onProgress }: UploadOptions = {}): Promise<Schemas["FileResponse"]> {

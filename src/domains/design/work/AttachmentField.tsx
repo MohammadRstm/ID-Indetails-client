@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { ErrorMessage } from "@/shared/components/Feedback/ErrorText";
 import { useFileUrl } from "@/shared/files/useFileUrl";
-import { DOCUMENT_EXTENSIONS } from "@/shared/files/upload";
+import { ATTACH_ACCEPT } from "@/shared/files/upload";
 import Icon from "@/shared/icons/Icon";
 import type { AttachmentState } from "./attachments";
 
@@ -9,7 +9,7 @@ import type { AttachmentState } from "./attachments";
 function useFilePicker(onPick: (f: File) => void) {
     const ref = useRef<HTMLInputElement>(null);
     const input = (
-        <input ref={ref} type="file" accept={["image/*", "video/*", ...DOCUMENT_EXTENSIONS].join(",")} hidden onChange={(e) => {
+        <input ref={ref} type="file" accept={ATTACH_ACCEPT} hidden onChange={(e) => {
             const f = e.target.files?.[0];
             if (f) onPick(f);
             e.target.value = "";
@@ -40,7 +40,7 @@ export function AttachmentField({ state }: { state: AttachmentState }) {
                 </div>
             ) : (
                 <button type="button" className="btn btn-sm btn-quiet attach-btn" disabled={state.uploading} onClick={picker.open}>
-                    <Icon name="attach" />{state.uploading ? "Uploading…" : "Attach a photo, video or document"}
+                    <Icon name="attach" />{state.uploading ? "Uploading…" : "Attach a photo, video or file"}
                 </button>
             )}
             {state.error && <div className="err mt-s"><Icon name="alert" /><ErrorMessage error={state.error} /></div>}

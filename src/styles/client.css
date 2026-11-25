@@ -1305,6 +1305,15 @@ button.pc-comments { border: 0; cursor: pointer; }
    the picture never runs wider than the bubble on a phone. Its cap is in viewport units, not a percentage, so the
    bubble can size itself to the capped picture. A photo opens full size. */
 .msg-att { max-width: min(280px, 55vw); }
+/* a file in a message, and one waiting in the composer: its name and size */
+.msg-file { display: flex; align-items: center; gap: 10px; width: min(300px, 62vw); margin-top: 6px; padding: 9px 11px; border: 1px solid var(--line); border-radius: var(--r1); background: var(--surface); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.msg-file:hover { background: var(--surface-3); }
+.msg-file > .ic { flex: none; width: 20px; height: 20px; color: var(--ink-2); }
+.msg-file-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.msg-file-text b { font-weight: 600; font-size: 13px; }
+.msg-file-text span { font-size: 11.5px; color: var(--ink-3); }
+.msg-attach-file { display: flex; align-items: center; gap: 6px; max-width: 220px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--r1); font-size: 12px; }
+.msg-attach-file .icon-btn { width: 24px; height: 24px; }
 .msg-att.zoom { cursor: zoom-in; }
 .msg-bubble:has(> .msg-att) { width: fit-content; padding: 3px; }
 .msg-bubble:has(> .msg-att) > .msg-att { margin-top: 0; }

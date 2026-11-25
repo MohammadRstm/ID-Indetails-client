@@ -128,12 +128,18 @@ type Attachment = Message["attachments"][number];
 export function fileLabels(files: Attachment[]): { file: Attachment; label: string }[] {
     const kindOf = (f: Attachment) => (f.kind === "audio" || f.mimeType.startsWith("audio/") ? "voice note"
         : f.kind === "video" || f.mimeType.startsWith("video/") ? "video"
-            : f.kind === "document" ? "document" : "photo");
+            : f.kind === "document" ? "file" : "photo");
     return files.map((file, i) => {
         const kind = kindOf(file);
         const same = files.filter((f) => kindOf(f) === kind);
         return { file, label: same.length > 1 ? `${kind} ${files.slice(0, i + 1).filter((f) => kindOf(f) === kind).length}` : kind };
     });
+}
+
+/** A file's size in words: "840 KB", "3.2 MB". */
+export function fileSize(bytes: number): string {
+    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /** Deletes the caller's own message for everyone, its files too (`DELETE /api/messages/{id}`). */

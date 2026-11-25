@@ -21,7 +21,7 @@ import { LeaveGroupModal } from "./ChatGroupWindows";
 import GroupTile, { AnnouncementsTile, ChatGroupTile } from "./GroupTile";
 import { mentionParts, startsRun } from "./messageText";
 import {
-    chatKey, isGroupEvent, useGroupMembers, useMarkChatRead, usePresence, useSendMessage, useTeamMembers, useThread,
+    chatKey, fileSize, isGroupEvent, useGroupMembers, useMarkChatRead, usePresence, useSendMessage, useTeamMembers, useThread,
     type Chat, type ChatGroup, type Contact, type Message,
 } from "./messagesApi";
 import { playReceived, playSent } from "./messageSounds";
@@ -41,7 +41,15 @@ const ROLE: Record<string, string> = { super_admin: "Super admin", admin: "Admin
 function Media({ file, className, onOpen, sender }: { file: File; className?: string; onOpen?: () => void; sender?: Message["sender"] }) {
     const { url } = useFileUrl(file.id);
     if (file.kind === "audio" || file.mimeType.startsWith("audio/")) return <VoicePlayer fileId={file.id} person={sender} />;
-    if (file.kind === "document") return <span className={cx("link", className)} {...clickable(onOpen, "button")}><Icon name="file" />{file.name}</span>;
+    if (file.kind === "document") {
+        return (
+            <button type="button" className={cx("msg-file", className)} onClick={onOpen} title={`${file.name}: open or download`}>
+                <Icon name="file" />
+                <span className="msg-file-text"><b className="trunc">{file.name}</b><span>{fileSize(file.sizeBytes)}</span></span>
+                <Icon name="download" />
+            </button>
+        );
+    }
     if (!url) return <div className={cx("msg-att", className)} style={{ width: 180, height: 120, background: "var(--surface-3)" }} />;
     return file.kind === "video" || file.mimeType.startsWith("video/")
         ? <video className="msg-att" src={url} controls />
