@@ -147,12 +147,17 @@ function useWorkChanged() {
 }
 
 /**
- * Hours kept instead of logged: the logger's department isn't on the project yet. They go through once it is added and
- * the logger hears it, so the form closes as if saved, saying so.
+ * Hours kept instead of logged: the logger's department isn't on the project yet, or the day is part of their time off.
+ * They wait for approval and the logger hears the outcome, so the form closes as if saved, saying so.
  */
 export function isKeptLog(error: unknown) {
     const failure = toApiError(error);
-    return failure.code === "department_not_on_project" && failure.blockedChangeId != null;
+    return (failure.code === "department_not_on_project" || failure.code === "time_off_hours_held") && failure.blockedChangeId != null;
+}
+
+/** Kept because the day is part of the logger's own time off: a super admin approves them, as overtime or not. */
+export function isDayOffLog(error: unknown) {
+    return isKeptLog(error) && toApiError(error).code === "time_off_hours_held";
 }
 
 export function useSaveEntry() {

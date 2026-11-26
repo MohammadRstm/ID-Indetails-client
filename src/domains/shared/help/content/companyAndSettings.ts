@@ -200,7 +200,8 @@ export const company: Article[] = [
             ),
             list(
                 "The first decision wins. If another super admin decided first, you're told it was already decided.",
-                "Every day from the first to the last counts as time off: the person can't log hours, and an Off flag shows on them.",
+                "Every day from the first to the last counts as time off, and an Off flag shows on the person. They still log hours on other days.",
+                "Hours they log on a day of their time off wait for you: open the notification and choose **Approve as overtime** (every minute is overtime), **Approve as normal hours** (they count like any hours; the day off stays paid or unpaid) or **Decline**. Once approved, they can change those hours freely.",
                 "Pay and days taken count only their working days. Paid: as a normal day. Unpaid: a monthly salary loses the full paid day.",
                 "Meetings they are already in stay as they are; the approve dialog lists them so you can move them.",
                 "A request still pending when its first day comes expires, and the person is told. You're reminded the day before.",

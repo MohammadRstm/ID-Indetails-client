@@ -124,7 +124,7 @@ function useAlerts(): Alert[] {
         const approved = (requests ?? []).filter((r) => r.status === "approved" && r.lastDay >= today);
         const now = approved.find((r) => r.firstDay <= today);
         const next = approved.filter((r) => r.firstDay > today).sort((a, b) => a.firstDay.localeCompare(b.firstDay))[0];
-        if (now) alerts.push({ key: "off", icon: "sun", text: <><b>You're off until {fmtDate(now.lastDay)}.</b> Hours can't be logged on your time off.</> });
+        if (now) alerts.push({ key: "off", icon: "sun", text: <><b>You're off until {fmtDate(now.lastDay)}.</b> Hours you log on your time off wait for a super admin's approval.</> });
         else if (next) alerts.push({ key: "off", icon: "sun", text: <><b>Time off from {fmtDate(next.firstDay)} to {fmtDate(next.lastDay)}.</b> It is approved.</> });
     }
     return alerts;

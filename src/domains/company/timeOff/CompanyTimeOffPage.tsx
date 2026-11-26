@@ -78,7 +78,7 @@ function ApproveModal({ request, isPaid, onClose }: { request: TimeOff; isPaid: 
                 </>
             }>
             <p className="muted" style={{ marginTop: 0 }}>
-                {plural(request.workingDays, "working day")} {isPaid ? "will be paid as normal days" : "will not be paid"}. They can't log hours on these days, and their department and the super admins are told when it starts.
+                {plural(request.workingDays, "working day")} {isPaid ? "will be paid as normal days" : "will not be paid"}. Hours they log on these days wait for your approval, and their department and the super admins are told when it starts.
             </p>
             {meetings.length > 0 && (
                 <div className="banner hold" role="alert" aria-label="Meetings during the time off">

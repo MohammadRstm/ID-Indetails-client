@@ -128,8 +128,25 @@ group("A notification's words", () => {
         // the alerts open the People page on that person, where their sessions can be ended
         expect(describe(note("time_off_online", { name: "Sarah Haddad", userId: 4, lastDay: "2026-10-16" }), sup))
             .toMatchObject({ text: "Sarah Haddad is on time off but is using the app", icon: "alert", route: "/company/overview?tab=people&person=4" });
+        // older alerts (about the person) still read as they did
         expect(describe(note("time_off_hours", { name: "Sarah Haddad", userId: 4, lastDay: "2026-10-16" }), sup))
             .toMatchObject({ text: "Sarah Haddad is on time off but tried to log hours", icon: "alert", route: "/company/overview?tab=people&person=4" });
+        // hours on a day off wait for approval: they open on the project, to approve or decline
+        expect(describe(note("time_off_hours", { name: "Sarah Haddad", userId: 4, day: "2026-10-14" }, { project, subjectType: "blocked_change", subjectId: 12 }), sup))
+            .toMatchObject({
+                text: "Sarah Haddad logged hours on a day of their time off on Studio Nour brand space",
+                sub: "Oct 14: approve them as overtime or as normal hours, or decline them",
+                icon: "clock", route: "/design/projects/5?blocked=12",
+            });
+        const decided = (over: object) => note("time_off_hours_decided", { projectTitle: project.title, day: "2026-10-14", approved: true, asOvertime: false, waiting: false, ...over }, { project });
+        expect(describe(decided({ asOvertime: true }), designer)).toMatchObject({
+            text: "Your hours on Studio Nour brand space on Oct 14 were approved as overtime", sub: "They're logged now: don't log them again", route: "/design/my-work",
+        });
+        expect(describe(decided({}), designer).text).toBe("Your hours on Studio Nour brand space on Oct 14 were approved");
+        expect(describe(decided({ waiting: true }), designer).sub).toBe("They still wait for another approval before they're logged");
+        expect(describe(decided({ approved: false }), designer)).toMatchObject({
+            text: "Your hours on Studio Nour brand space on Oct 14 were declined", sub: "They weren't logged: that day is part of your time off", icon: "x",
+        });
 
         expect(describe(note("time_off_approved", { ...ask, isPaid: true }), designer)).toMatchObject({ text: "Your time off from Oct 12 to Oct 16 was approved (paid)", route: "/design/time-off" });
         expect(describe(note("time_off_approved", { ...ask, isPaid: false }), designer).text).toBe("Your time off from Oct 12 to Oct 16 was approved (unpaid)");
