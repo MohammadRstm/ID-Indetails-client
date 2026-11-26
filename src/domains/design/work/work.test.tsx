@@ -97,10 +97,40 @@ describe("logging work", () => {
             moves: [],
         });
         const logged = (await screen.findByText(`1h 00m logged on ${work.myProjects[0].title}`)).closest(".toast") as HTMLElement;
-        expect(screen.queryByRole("dialog", { name: /log work/i })).toBeNull();
-        // Undo still works with the form gone
+        // the window stays open for the next log: it says what went in, and the description is empty again
+        expect(screen.getByRole("dialog", { name: /log work/i })).toBe(dialog);
+        expect(within(dialog).getByRole("status")).toHaveTextContent(`1h 00m logged on ${work.myProjects[0].title}`);
+        expect(within(dialog).getByLabelText("What did you work on?")).toHaveValue("");
+        // Undo works from the toast too
         await userEvent.click(within(logged).getByRole("button", { name: "Undo" }));
         await waitFor(() => expect(deleted).toEqual(["999"]));
+    });
+
+    it("stays open after a log, so the next one starts where it ended", async () => {
+        const bodies: Record<string, unknown>[] = [];
+        renderApp("/design/log-hours", sarah,
+            http.post("/api/work-entries", async ({ request }) => {
+                const body = (await request.json()) as Record<string, unknown>;
+                bodies.push(body);
+                return HttpResponse.json({ ...work.day.entries[0], id: 990 + bodies.length, minutes: 60, startedAt: body.startedAt, endedAt: body.endedAt });
+            }),
+            ...workHandlers);
+        await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
+        const dialog = await logWindow();
+        // yesterday, so the next log isn't in the future
+        await userEvent.click(within(dialog).getByRole("button", { name: "Yesterday" }));
+        await userEvent.type(within(dialog).getByLabelText("What did you work on?"), "Lounge elevations");
+        await userEvent.click(await within(dialog).findByRole("button", { name: /^Log / }));
+        await waitFor(() => expect(bodies).toHaveLength(1));
+
+        await waitFor(() => expect(within(dialog).getByLabelText("What did you work on?")).toHaveValue(""));
+        await userEvent.type(within(dialog).getByLabelText("What did you work on?"), "Kitchen joinery");
+        await userEvent.click(await within(dialog).findByRole("button", { name: /^Log / }));
+        await waitFor(() => expect(bodies).toHaveLength(2));
+        expect(bodies[1]).toMatchObject({ description: "Kitchen joinery", startedAt: bodies[0].endedAt });
+        // and it closes as before when they're done
+        await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: /log work/i })).toBeNull());
     });
 
     it("closes when someone else signs in from another tab", async () => {
@@ -306,12 +336,14 @@ describe("deleting a logged task on the Log work timeline", () => {
         await waitFor(() => expect(posted).toHaveLength(1));
         expect(posted[0]).toMatchObject({ description: "Redid the schedule", deletes: [74] });
         expect(sent).toEqual([]);
-        await waitFor(() => expect(screen.queryByRole("dialog", { name: /log work/i })).toBeNull());
+        // the window stays open, ready for the next log
+        await waitFor(() => expect(within(dialog).getByLabelText("What did you work on?")).toHaveValue(""));
 
         await ctrlZ();
         expect(sent).toEqual([]);
 
-        const logged = (await screen.findByText(/logged on/)).closest(".toast") as HTMLElement;
+        // the toast (the window says it too)
+        const logged = (await screen.findAllByText(/logged on/)).map((el) => el.closest(".toast")).find(Boolean) as HTMLElement;
         await userEvent.click(within(logged).getByRole("button", { name: "Undo" }));
         await waitFor(() => expect(sent).toEqual(["delete 999", "restore 74"]));
     });

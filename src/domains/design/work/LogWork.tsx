@@ -94,6 +94,8 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
     const save = useSaveEntry();
     const remove = useDeleteEntry();
     const [removing, setRemoving] = useState(false);
+    // the log just saved: the window stays open for the next one, and says what went in
+    const [justLogged, setJustLogged] = useState<string | null>(null);
     const undo = useUndoLog();
     const day = useMyDay(date);
     const schedule = useMySchedule(date);
@@ -223,10 +225,27 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
             moves: movesFor(date, swaps), deletes,
         };
         const title = project?.title ?? "the project";
+        // a new log leaves the window open, ready for the next: same project and day, starting where this one ends
+        function next(note: string, taken?: { startedAt: string; endedAt: string }) {
+            const spans = list.map((e) => spanOn(e, date));
+            if (taken) spans.push(spanOn(taken, date));
+            const slot = defaultSlot(spans, workHoursOf(schedule.data?.day)?.s ?? DEFAULT_START, date === today, nowMin);
+            setStartMin(slot.s);
+            setDuration(slot.d);
+            setDesc("");
+            setTouched(false);
+            setOutside(false);
+            setSwaps({});
+            setDeletes([]);
+            attachment.clear();
+            save.reset();
+            setJustLogged(note);
+            document.getElementById("lw-desc")?.focus();
+        }
         save.mutate({ id: ed?.id, body }, {
             onSuccess: (saved) => {
-                closeLogWork();
                 if (ed) {
+                    closeLogWork();
                     toast({
                         text: "Entry updated", sub: `${title} · ${fmtDayDate(startAt)} · ${fmtRange(startAt, endAt)}`, icon: "checkCircle",
                         actionLabel: "Undo", action: () => undo.mutate({ restore: { id: ed.id, body: { ...entryBody(ed), moves: movesFor(date, back) } }, deleted: deletes }),
@@ -237,10 +256,11 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
                     text: `${fmtDur(saved.minutes)} logged on ${title}`, sub: `${fmtDayDate(startAt)} · ${fmtRange(startAt, endAt)}`, icon: "checkCircle",
                     actionLabel: "Undo", action: () => undo.mutate({ id: saved.id, restore, deleted: deletes }),
                 });
+                next(`${fmtDur(saved.minutes)} logged on ${title}, ${fmtRange(startAt, endAt)}.`, saved);
             },
             onError: (failure) => {
                 if (!isKeptLog(failure)) return;
-                closeLogWork();
+                next(`Your ${fmtRange(startAt, endAt)} on ${title} waits for approval.`, { startedAt: startAt, endedAt: endAt });
                 toast({
                     text: "Your hours wait for approval",
                     sub: isDayOffLog(failure) ? "That day is part of your time off: a super admin approves them." : `Your department isn't part of ${title}.`,
@@ -275,6 +295,11 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
             }>
             <form className="log-form" onSubmit={submit} {...proton.guard}>
                 <FilledNote fields={proton.filled} />
+                {justLogged && (
+                    <div className="banner ok logged-note" role="status">
+                        <Icon name="checkCircle" /><div className="grow">{justLogged} Log another below, or close the window when you're done.</div>
+                    </div>
+                )}
                 {!ed && <ExcuseNote excuse={day.data?.date.slice(0, 10) === date ? day.data?.excuse : null} />}
                 <div className="grid g-2">
                     <div className="field">
