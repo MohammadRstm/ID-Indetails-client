@@ -111,7 +111,8 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
     const scheduleDay = schedule.data?.day;
     const workHours = workHoursOf(scheduleDay);
     const list = (day.data?.entries ?? []).filter((e) => e.id !== ignoreId && !deleted.includes(e.id));
-    // hours waiting for approval (the logger's department isn't on that project): they hold their time, faded and locked;
+    // hours waiting for approval (the logger's department isn't on that project, or a day of their time off): they hold
+    // their time, faded and locked;
     // their ids are negative so they never stand for an entry
     const waiting = day.data?.waiting ?? [];
     const tasks: DayTask[] = [
@@ -509,7 +510,7 @@ export default function DragDay({ date, startMin, duration, projectId, ignoreId,
     for (const w of waiting) {
         const sp = spanOn(w, date);
         shown.push({ id: -w.id, s: sp.s, e: sp.e, description: w.description || "Hours waiting", projectTitle: w.projectTitle, locked: true, pending: true,
-            range: fmtRange(w.startedAt, w.endedAt), overtime: 0 });
+            pendingWhy: w.dayOff ? "a day of your time off" : "your department isn't on the project", range: fmtRange(w.startedAt, w.endedAt), overtime: 0 });
     }
     // a phone has no right-click and usually no keyboard: it holds to delete, and the keyboard's help is left out
     const touch = touchScreen();

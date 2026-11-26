@@ -17,8 +17,10 @@ export type TrackEntry = Span & {
     locked: boolean;
     moved?: boolean;
     isNew?: boolean;
-    /** Hours waiting for approval (the logger's department isn't on the project): faded, and nothing goes in their place. */
+    /** Hours waiting for approval (the logger's department isn't on the project, or a day of their time off): faded, and nothing goes in their place. */
     pending?: boolean;
+    /** Why they wait, for the tooltip. */
+    pendingWhy?: string;
 };
 
 export type TrackMeeting = Span & { id: number; topic: string | null; projectTitle: string; setBy: string | null; range: string; editable: boolean };
@@ -94,7 +96,7 @@ export default function DayTrack({
                             tabIndex={canEdit ? 0 : undefined} role={canEdit ? "button" : undefined}
                             aria-pressed={canEdit ? selected === e.id : undefined}
                             aria-label={canEdit ? `${e.description}, ${e.range}. Left and right arrows move it; Shift with an arrow changes its end, Alt its start; Enter selects it and Delete then removes it.` : undefined}
-                            onMouseMove={(ev) => tip.show(ev, [{ big: e.description }, e.pending ? { k: "Status", v: "Pending approval" } : null,
+                            onMouseMove={(ev) => tip.show(ev, [{ big: e.description }, e.pending ? { k: "Status", v: e.pendingWhy ? `Pending approval: ${e.pendingWhy}` : "Pending approval" } : null,
                                 { k: "Project", v: e.projectTitle }, { k: "Time", v: e.range }, e.overtime ? { k: "Overtime", v: fmtDur(e.overtime) } : null])}
                             onMouseLeave={tip.hide}>
                             {big && pct(e.e) - pct(e.s) > 9 && <span className="trunc">{e.description}</span>}

@@ -85,3 +85,51 @@ describe("the profit floor", () => {
         await waitFor(() => expect(calls).toEqual(["force 9"]));
     });
 });
+
+describe("hours on a day of time off", () => {
+    const held = change({
+        projectId: projectWork.project.id, projectTitle: projectWork.project.title, domain: "design", kind: "work_entry_time_off",
+        summary: "Hours logged on a day off: 3h 00m on 26 Nov 2026", requestedBy: { id: 4, name: "Sarah Haddad" }, profitNow: 1000,
+    });
+
+    /** Answers the held hours' calls, keeping each one's path and body. */
+    const heldHandlers = (calls: unknown[]) => [
+        http.get("/api/blocked-changes/:id", () => HttpResponse.json(held)),
+        http.post("/api/blocked-changes/:id/force", async ({ request, params }) => {
+            calls.push({ force: Number(params.id), body: await request.json() });
+            return HttpResponse.json({ ...held, status: "forced" });
+        }),
+        http.post("/api/blocked-changes/:id/dismiss", ({ params }) => { calls.push({ dismiss: Number(params.id) }); return HttpResponse.json({ ...held, status: "dismissed" }); }),
+    ];
+
+    it("lets a super admin approve them as overtime", async () => {
+        const calls: unknown[] = [];
+        renderApp(`/design/projects/${projectWork.project.id}?blocked=9`, personas.superAdmin, ...heldHandlers(calls), ...projectWorkHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "Hours on a day off" });
+        expect(await within(dialog).findByText("Hours logged on a day off: 3h 00m on 26 Nov 2026")).toBeInTheDocument();
+        expect(within(dialog).getByText(/Sarah Haddad logged these hours on a day of their time off/)).toBeInTheDocument();
+        // not about money: no profit, and no forcing past the floor
+        expect(within(dialog).queryByText("Profit today")).not.toBeInTheDocument();
+        expect(within(dialog).queryByRole("button", { name: "Force…" })).not.toBeInTheDocument();
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Approve as overtime" }));
+        await waitFor(() => expect(calls).toEqual([{ force: 9, body: { asOvertime: true } }]));
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: "Hours on a day off" })).not.toBeInTheDocument());
+    });
+
+    it("lets a super admin approve them as normal hours", async () => {
+        const calls: unknown[] = [];
+        renderApp(`/design/projects/${projectWork.project.id}?blocked=9`, personas.superAdmin, ...heldHandlers(calls), ...projectWorkHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "Hours on a day off" });
+        await userEvent.click(await within(dialog).findByRole("button", { name: "Approve as normal hours" }));
+        await waitFor(() => expect(calls).toEqual([{ force: 9, body: { asOvertime: false } }]));
+    });
+
+    it("lets a super admin decline them", async () => {
+        const calls: unknown[] = [];
+        renderApp(`/design/projects/${projectWork.project.id}?blocked=9`, personas.superAdmin, ...heldHandlers(calls), ...projectWorkHandlers);
+        const dialog = await screen.findByRole("dialog", { name: "Hours on a day off" });
+        await userEvent.click(await within(dialog).findByRole("button", { name: "Decline" }));
+        await waitFor(() => expect(calls).toEqual([{ dismiss: 9 }]));
+    });
+});

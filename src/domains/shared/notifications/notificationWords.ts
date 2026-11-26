@@ -37,6 +37,7 @@ const BLOCKED_KIND: Record<string, string> = {
     expense: "An expense", material_add: "New expenses", material_update: "An expense change", labour_week: "A labour week",
     work_entry_create: "Logged hours", work_entry_update: "Changed hours", payment: "A lower payment", pricing: "A lower supervision rate",
     boq_agree: "Agreeing a BOQ or VO", boq_withdraw: "Withdrawing the agreement of a BOQ or VO", pay_change: "A pay change",
+    work_entry_time_off: "Hours on a day off",
 };
 const areaLabel = (d: unknown) => AREAS[d as "design" | "execution"]?.label ?? "";
 
@@ -373,7 +374,26 @@ export function describe(note: Notification, reader: Reader): NotificationView {
         case "time_off_online":
             return { text: `${s(p.name) || who} is on time off but is using the app`, sub: p.lastDay ? `Off until ${fmtDate(s(p.lastDay))}` : undefined, icon: "alert", route: `/company/overview?tab=people&person=${n(p.userId)}` };
         case "time_off_hours":
-            return { text: `${s(p.name) || who} is on time off but tried to log hours`, sub: p.lastDay ? `Off until ${fmtDate(s(p.lastDay))}` : undefined, icon: "alert", route: `/company/overview?tab=people&person=${n(p.userId)}` };
+            // before 26 November 2026 it only said someone off had tried to log hours (subject: the person)
+            if (note.subjectType !== "blocked_change") {
+                return { text: `${s(p.name) || who} is on time off but tried to log hours`, sub: p.lastDay ? `Off until ${fmtDate(s(p.lastDay))}` : undefined, icon: "alert", route: `/company/overview?tab=people&person=${n(p.userId)}` };
+            }
+            return {
+                text: `${s(p.name) || who} logged hours on a day of their time off${title ? ` on ${title}` : ""}`,
+                sub: `${p.day ? `${fmtDate(s(p.day))}: a` : "A"}pprove them as overtime or as normal hours, or decline them`,
+                icon: "clock", route: project && note.subjectId ? `${project}?blocked=${note.subjectId}` : undefined,
+            };
+        case "time_off_hours_decided": {
+            const hours = `Your hours${title ? ` on ${title}` : ""}${p.day ? ` on ${fmtDate(s(p.day))}` : ""}`;
+            if (p.approved !== true) {
+                return { text: `${hours} were declined`, sub: "They weren't logged: that day is part of your time off", icon: "x", route: "/design/my-work" };
+            }
+            return {
+                text: `${hours} were approved${p.asOvertime === true ? " as overtime" : ""}`,
+                sub: p.waiting === true ? "They still wait for another approval before they're logged" : "They're logged now: don't log them again",
+                icon: "checkCircle", route: "/design/my-work",
+            };
+        }
         case "time_off_approved":
             return { text: `Your time off from ${fmtDate(s(p.firstDay))} to ${fmtDate(s(p.lastDay))} was approved (${p.isPaid ? "paid" : "unpaid"})`, sub: by, icon: "checkCircle", route: "/design/time-off" };
         case "time_off_declined":

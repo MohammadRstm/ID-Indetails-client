@@ -29,3 +29,13 @@ function useDecide(action: "force" | "dismiss") {
 export const useForceBlockedChange = () => useDecide("force");
 
 export const useDismissBlockedChange = () => useDecide("dismiss");
+
+/** Approves hours someone logged on a day of their time off, as overtime or as normal hours; once. */
+export function useApproveDayOffHours() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, asOvertime }: { id: number; asOvertime: boolean }) =>
+            (await http.post<BlockedChange>(`/blocked-changes/${id}/force`, { asOvertime })).data,
+        onSuccess: () => queryClient.invalidateQueries(),
+    });
+}

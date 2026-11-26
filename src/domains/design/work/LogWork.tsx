@@ -25,7 +25,7 @@ import { ScopeCheck } from "./Scope";
 import TimeRange from "./TimeRange";
 import { startTimer } from "./timer";
 import {
-    entryBody, loggableProjects, useDeleteEntry, useDomainSettings, useMyDay, useMyProjects, useMySchedule, isKeptLog, useOvertimeFor, useSaveEntry, useUndoLog,
+    entryBody, loggableProjects, useDeleteEntry, useDomainSettings, useMyDay, useMyProjects, useMySchedule, isDayOffLog, isKeptLog, useOvertimeFor, useSaveEntry, useUndoLog,
     type DomainSettings, type MyProject, type WorkEntry,
 } from "./workApi";
 
@@ -241,7 +241,11 @@ function LogWorkForm({ options, firstDay, projects, settings, dayEntries, daySta
             onError: (failure) => {
                 if (!isKeptLog(failure)) return;
                 closeLogWork();
-                toast({ text: "Your hours wait for approval", sub: `Your department isn't part of ${title}.`, icon: "clock" });
+                toast({
+                    text: "Your hours wait for approval",
+                    sub: isDayOffLog(failure) ? "That day is part of your time off: a super admin approves them." : `Your department isn't part of ${title}.`,
+                    icon: "clock",
+                });
             },
         });
     }

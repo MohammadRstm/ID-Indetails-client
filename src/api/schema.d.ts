@@ -898,7 +898,13 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/*+json": null | components["schemas"]["ForceBlockedChangeRequest"];
+                    "application/json": null | components["schemas"]["ForceBlockedChangeRequest"];
+                    "text/json": null | components["schemas"]["ForceBlockedChangeRequest"];
+                };
+            };
             responses: {
                 /** @description OK */
                 200: {
@@ -17555,7 +17561,7 @@ export interface components {
         /** @enum {unknown} */
         BillingType: "client" | "internal";
         /** @enum {unknown} */
-        BlockedChangeKind: "expense" | "material_add" | "material_update" | "labour_week" | "work_entry_create" | "work_entry_update" | "payment" | "pricing" | "boq_agree" | "boq_withdraw" | "work_entry_department" | "design_vo" | "pay_change";
+        BlockedChangeKind: "expense" | "material_add" | "material_update" | "labour_week" | "work_entry_create" | "work_entry_update" | "payment" | "pricing" | "boq_agree" | "boq_withdraw" | "work_entry_department" | "design_vo" | "pay_change" | "work_entry_time_off";
         BlockedChangeResponse: {
             /** Format: date-time */
             decidedAt: null | string;
@@ -19076,6 +19082,9 @@ export interface components {
             /** Format: int64 */
             projectId: number;
             title: string;
+        };
+        ForceBlockedChangeRequest: {
+            asOvertime?: null | boolean;
         };
         ForgotPasswordRequest: {
             email?: string;
@@ -23665,6 +23674,7 @@ export interface components {
             reason?: string;
         };
         WaitingHoursResponse: {
+            dayOff: boolean;
             description: string;
             /** Format: date-time */
             endedAt: string;
