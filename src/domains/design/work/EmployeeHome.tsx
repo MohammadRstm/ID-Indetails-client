@@ -17,7 +17,7 @@ import { addDays, DAYS, dayKey, daysBetween, fmtDate, fmtDayDate, fmtDur, fmtH, 
 import Icon from "@/shared/icons/Icon";
 import type { IconName } from "@/shared/icons/icons";
 import GreetingHead from "../../shared/projects/GreetingHead";
-import { useMyTimeOff } from "../../shared/timeOff/timeOffApi";
+import { timeOffOn, useMyTimeOff } from "../../shared/timeOff/timeOffApi";
 import { companyNow, workHoursOf } from "./day";
 import { openLogWork } from "./logWorkStore";
 import OvertimePanel from "./OvertimePanel";
@@ -112,7 +112,9 @@ function useAlerts(): Alert[] {
             text: <><b>{fmtMonthY(last.month)} closed {fmtH(last.shortMinutes)} short.</b> Unless it's excused, the month stays marked short.</>,
         });
     }
-    if (settings?.logReminder && workHours && nowMin >= 15 * 60 && summary && !summary.todayMinutes && permissions.has(P.WORK_ENTRY_CREATE)) {
+    // a day of time off asks for nothing, so no reminder to log it
+    const offToday = timeOffOn(requests, today) != null;
+    if (settings?.logReminder && workHours && !offToday && nowMin >= 15 * 60 && summary && !summary.todayMinutes && permissions.has(P.WORK_ENTRY_CREATE)) {
         alerts.push({
             key: "today", icon: "bell",
             text: <><b>Nothing logged today yet.</b> Add what you worked on before you finish: Log work takes a few seconds.</>,

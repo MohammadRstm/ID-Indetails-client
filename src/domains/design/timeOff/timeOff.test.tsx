@@ -118,6 +118,10 @@ describe("the employee's time off", () => {
         ), ...workHandlers);
         await userEvent.click(await screen.findByRole("button", { name: /^Alert/ }));
         expect(await screen.findByText(`You're off until ${fmtDate("2026-11-11")}.`)).toBeInTheDocument();
+        // a day off asks for no hours: neither the reminder to log nor today's hint
+        expect(await screen.findByText(`You're on time off until ${fmtDate("2026-11-11")}: no hours are expected today.`)).toBeInTheDocument();
+        expect(screen.queryByText(/Nothing logged today yet/)).not.toBeInTheDocument();
+        expect(screen.queryByText(/Nothing logged yet today/)).not.toBeInTheDocument();
     });
 
     it("tells them on their home about their next approved time off, and not about one that is only waiting", async () => {
