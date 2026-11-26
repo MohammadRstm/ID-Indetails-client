@@ -117,6 +117,8 @@ describe("logging work", () => {
             ...workHandlers);
         await userEvent.click((await screen.findAllByRole("button", { name: "Log work" }))[0]);
         const dialog = await logWindow();
+        // yesterday, so the next log isn't in the future
+        await userEvent.click(within(dialog).getByRole("button", { name: "Yesterday" }));
         await userEvent.type(within(dialog).getByLabelText("What did you work on?"), "Lounge elevations");
         await userEvent.click(await within(dialog).findByRole("button", { name: /^Log / }));
         await waitFor(() => expect(bodies).toHaveLength(1));
@@ -340,7 +342,8 @@ describe("deleting a logged task on the Log work timeline", () => {
         await ctrlZ();
         expect(sent).toEqual([]);
 
-        const logged = (await screen.findByText(/logged on/)).closest(".toast") as HTMLElement;
+        // the toast (the window says it too)
+        const logged = (await screen.findAllByText(/logged on/)).map((el) => el.closest(".toast")).find(Boolean) as HTMLElement;
         await userEvent.click(within(logged).getByRole("button", { name: "Undo" }));
         await waitFor(() => expect(sent).toEqual(["delete 999", "restore 74"]));
     });
