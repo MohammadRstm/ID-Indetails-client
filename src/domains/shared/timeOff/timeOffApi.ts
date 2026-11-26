@@ -23,6 +23,15 @@ export function useMyTimeOff() {
     return useQuery({ queryKey: keys.timeOff.mine(), queryFn: async () => (await http.get<TimeOff[]>("/me/time-off")).data });
 }
 
+/**
+ * The granted time off a day falls in, if any: an approved request's days, or those taken before one was ended or
+ * rejected (its `endedOn` and after are working days again), as the API counts them.
+ */
+export function timeOffOn(requests: TimeOff[] | undefined, day: string): TimeOff | null {
+    return (requests ?? []).find((r) => r.firstDay <= day && day <= r.lastDay
+        && (r.status === "approved" || ((r.status === "ended" || r.status === "rejected") && r.endedOn != null && day < r.endedOn))) ?? null;
+}
+
 export function useAskTimeOff() {
     const done = useInvalidateTimeOff();
     return useMutation({
