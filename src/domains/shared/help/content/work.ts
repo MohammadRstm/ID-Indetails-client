@@ -53,7 +53,7 @@ export const work: Article[] = [
             list(
                 "Time off is for whole days. It starts tomorrow at the earliest, and no more than 6 months ahead.",
                 "A request can't overlap time off you already asked for, or days that were excused.",
-                "Until someone decides, you can **Withdraw** it. After that only a super admin can take it back.",
+                "Until someone decides, you can **Withdraw** it. After that only a super admin can take it back, or change its days or pay; you're told, with the reason.",
                 "While you're on approved time off you can't log hours, and your colleagues see only that you're off, never why or whether it's paid.",
                 "Only you and the super admins see the reason, and whether it is paid or unpaid.",
                 "If a request is still waiting when its first day comes, it expires and you're told.",

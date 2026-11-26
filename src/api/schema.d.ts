@@ -15471,6 +15471,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/time-off/{id}/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/*+json": components["schemas"]["ChangeTimeOffRequest"];
+                    "application/json": components["schemas"]["ChangeTimeOffRequest"];
+                    "text/json": components["schemas"]["ChangeTimeOffRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TimeOffResponse"];
+                        "text/json": components["schemas"]["TimeOffResponse"];
+                        "text/plain": components["schemas"]["TimeOffResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/time-off/away": {
         parameters: {
             query?: never;
@@ -17900,6 +17945,14 @@ export interface components {
             role?: string;
             /** Format: int64 */
             teamId?: null | number;
+        };
+        ChangeTimeOffRequest: {
+            /** Format: date */
+            firstDay?: string;
+            isPaid?: boolean;
+            /** Format: date */
+            lastDay?: string;
+            reason?: string;
         };
         ChatPersonResponse: {
             /** Format: int64 */

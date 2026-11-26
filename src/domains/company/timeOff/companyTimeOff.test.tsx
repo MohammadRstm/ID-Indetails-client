@@ -137,6 +137,48 @@ describe("the super admins' time off", () => {
         expect(asked).toContain("past");
     });
 
+    it("changes approved time off, even after it is over, checking the fields as they are filled", async () => {
+        const sent: unknown[] = [];
+        const finished = request({ id: 9, reason: "Finished", firstDay: "2026-11-05", lastDay: "2026-11-06", status: "approved", isPaid: true, daysTaken: 2, workingDays: 2 });
+        renderApp("/company/time-off", rana, listHandler({ past: [finished] }),
+            http.post("/api/time-off/:id/change", async ({ params, request: r }) => {
+                sent.push({ id: Number(params.id), ...(await r.json() as object) });
+                return HttpResponse.json(request({ id: 9, status: "approved", firstDay: "2026-11-03", lastDay: "2026-11-06", isPaid: false }));
+            }));
+        await userEvent.click(await screen.findByRole("tab", { name: /Past/ }));
+        const row = rowOf(await screen.findByText("Finished"));
+        expect(within(row).queryByRole("button", { name: "Reject" })).not.toBeInTheDocument();
+        await userEvent.click(within(row).getByRole("button", { name: "Change" }));
+        const dialog = await screen.findByRole("dialog", { name: "Change the time off" });
+        expect(dialog).toHaveTextContent("The days can be in the past, closed months included");
+
+        // nothing changed yet, and no reason: both are said next to their fields
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save the change" }));
+        expect(within(dialog).getByText("Change the days or whether it is paid.")).toBeInTheDocument();
+        expect(within(dialog).getByText("Say why the time off is changing.")).toBeInTheDocument();
+
+        await userEvent.click(within(dialog).getByRole("tab", { name: "Unpaid" }));
+        expect(within(dialog).queryByText("Change the days or whether it is paid.")).not.toBeInTheDocument();
+        await userEvent.type(within(dialog).getByLabelText("Reason"), "Off from Tuesday");
+        expect(within(dialog).queryByText("Say why the time off is changing.")).not.toBeInTheDocument();
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save the change" }));
+        await waitFor(() => expect(sent).toEqual([{ id: 9, firstDay: "2026-11-05", lastDay: "2026-11-06", isPaid: false, reason: "Off from Tuesday" }]));
+    });
+
+    it("shows the days the API refuses, such as days that hold hours", async () => {
+        const approved = request({ id: 8, reason: "Coming up", status: "approved", isPaid: true });
+        const refused = { type: "business", code: "time_off_hours_logged", message: "They logged hours on 13 Nov 2026: remove or move those hours first.", errors: null };
+        renderApp("/company/time-off", rana, listHandler({ current: [approved] }),
+            http.post("/api/time-off/:id/change", () => HttpResponse.json(refused, { status: 422 })));
+        await userEvent.click(await screen.findByRole("tab", { name: /Current & upcoming/ }));
+        await userEvent.click(within(rowOf(await screen.findByText("Coming up"))).getByRole("button", { name: "Change" }));
+        const dialog = await screen.findByRole("dialog", { name: "Change the time off" });
+        await userEvent.click(within(dialog).getByRole("tab", { name: "Unpaid" }));
+        await userEvent.type(within(dialog).getByLabelText("Reason"), "Started earlier");
+        await userEvent.click(within(dialog).getByRole("button", { name: "Save the change" }));
+        expect(await within(dialog).findByText("They logged hours on 13 Nov 2026: remove or move those hours first.")).toBeInTheDocument();
+    });
+
     it("shows the API's message when someone else decided first", async () => {
         renderApp("/company/time-off", rana, listHandler({ pending: [request()] }),
             http.post("/api/time-off/:id/approve", () => HttpResponse.json(decided, { status: 422 })));

@@ -72,6 +72,17 @@ export function useRejectTimeOff() {
     });
 }
 
+export type ChangeTimeOff = Schemas["ChangeTimeOffRequest"];
+
+/** Corrects approved time off: its days (past ones too) and whether it is paid, with why. */
+export function useChangeTimeOff() {
+    const done = useInvalidateTimeOff();
+    return useMutation({
+        mutationFn: async ({ id, ...body }: { id: number } & Required<ChangeTimeOff>) => (await http.post<TimeOff>(`/time-off/${id}/change`, body)).data,
+        onSuccess: done,
+    });
+}
+
 /** Who is off on any day from `from` to `to` (both "yyyy-MM-dd"; today by default): never why, nor whether it is paid. */
 export function useAway(from?: string, to?: string) {
     const first = from ?? companyToday();

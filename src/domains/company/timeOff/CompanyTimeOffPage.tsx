@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { errorMessage } from "@/api/errors";
+import { errorMessage, toApiError } from "@/api/errors";
 import { loadFailed } from "@/api/queryState";
 import Pager from "@/shared/components/Data-Tables/Pager";
 import { PageHead } from "@/shared/components/Data/Panel";
@@ -9,16 +9,18 @@ import LoadError from "@/shared/components/Feedback/LoadError";
 import { SkeletonLines } from "@/shared/components/Feedback/Skeleton";
 import { toast } from "@/shared/components/Feedback/toast";
 import AutoGrowTextarea from "@/shared/components/Forms/AutoGrowTextarea";
+import DateInput from "@/shared/components/Forms/DateInput";
 import { FieldError } from "@/shared/components/Forms/Field";
+import { Segmented } from "@/shared/components/Forms/Filters";
 import { PersonLine } from "@/shared/components/Identity/People";
 import Modal from "@/shared/components/Overlays/Modal";
 import { plural } from "@/shared/format/labels";
-import { companyToday, fmtDayDate, fmtDateY, fmtRange } from "@/shared/format/time";
+import { companyToday, daysBetween, fmtDayDate, fmtDateY, fmtRange } from "@/shared/format/time";
 import { useFormErrors } from "@/shared/hooks/useFormErrors";
 import Icon from "@/shared/icons/Icon";
 import { TimeOffDecisionNotes, TimeOffStatusBadge } from "../../shared/timeOff/TimeOffStatusBadge";
 import {
-    TIME_OFF_NOTE_MAX, useApproveTimeOff, useDeclineTimeOff, useRejectTimeOff, useTimeOffList, type TimeOff, type TimeOffView,
+    TIME_OFF_NOTE_MAX, useApproveTimeOff, useChangeTimeOff, useDeclineTimeOff, useRejectTimeOff, useTimeOffList, type TimeOff, type TimeOffView,
 } from "../../shared/timeOff/timeOffApi";
 import type { IconName } from "@/shared/icons/icons";
 
@@ -158,9 +160,91 @@ function RejectModal({ request, onClose }: { request: TimeOff; onClose: () => vo
     );
 }
 
-type Deciding = { kind: "approve"; request: TimeOff; isPaid: boolean } | { kind: "decline" | "reject"; request: TimeOff };
+/**
+ * Corrects approved time off, coming up, under way or over: its days (past ones too, closed months included) and
+ * whether it is paid. The API refuses days that hold hours, other time off or a hand excuse, and names them.
+ */
+function ChangeModal({ request, onClose }: { request: TimeOff; onClose: () => void }) {
+    const change = useChangeTimeOff();
+    const [firstDay, setFirstDay] = useState(request.firstDay);
+    const [lastDay, setLastDay] = useState(request.lastDay);
+    const [isPaid, setIsPaid] = useState(request.isPaid ?? true);
+    const [reason, setReason] = useState("");
+    const errors = useFormErrors();
+    const refused = change.error ? toApiError(change.error) : null;
+    const name = request.person?.name ?? "The employee";
 
-/** Everyone's time off for the super admins (time_off:decide): decide the pending requests and take back approved ones. */
+    const unchanged = firstDay === request.firstDay && lastDay === request.lastDay && isPaid === request.isPaid;
+    const firstError = !firstDay ? "Pick the first day." : unchanged && "Change the days or whether it is paid.";
+    const lastError = !lastDay ? "Pick the last day." : firstDay && lastDay < firstDay ? "The last day can't be before the first day." : false;
+    const reasonError = !reason.trim() ? "Say why the time off is changing." : reason.trim().length > TIME_OFF_NOTE_MAX && `At most ${TIME_OFF_NOTE_MAX} characters.`;
+    const days = firstDay && lastDay && lastDay >= firstDay ? daysBetween(firstDay, lastDay) + 1 : 0;
+
+    function pickFirst(day: string) {
+        errors.touch("firstDay")();
+        setFirstDay(day);
+        if (day && lastDay && lastDay < day) setLastDay(day);
+    }
+
+    function pickLast(day: string) {
+        errors.touch("lastDay")();
+        setLastDay(day);
+    }
+
+    function submit() {
+        if (change.isPending) return;
+        if (firstError || lastError || reasonError) return errors.tried();
+        change.mutate({ id: request.id, firstDay, lastDay, isPaid, reason: reason.trim() }, {
+            onSuccess: () => {
+                toast({ text: "Time off changed", sub: `${name}, ${fmtDateY(firstDay)} to ${fmtDateY(lastDay)}, ${isPaid ? "paid" : "unpaid"}`, icon: "checkCircle" });
+                onClose();
+            },
+        });
+    }
+
+    const fields = refused?.fieldErrors ?? {};
+    const shownAtFoot = refused && !fields.firstDay && !fields.lastDay && !fields.reason;
+    return (
+        <Modal size="sm" title="Change the time off" sub={`${name}, ${periodOf(request)}`} onClose={onClose}
+            foot={
+                <>
+                    <div className="grow">{shownAtFoot && <FieldError message={errorMessage(change.error)} />}</div>
+                    <button className="btn" onClick={onClose}>Cancel</button>
+                    <button className="btn btn-primary" disabled={change.isPending} onClick={submit}><Icon name="check" />Save the change</button>
+                </>
+            }>
+            <p className="muted" style={{ marginTop: 0 }}>
+                The days can be in the past, closed months included. Pay, the hours ledger and the reminders follow the new days at once, as a pay change dated back does. {name} is told, with your reason.
+            </p>
+            <div className="field">
+                <label className="label required" htmlFor="time-off-change-first">First day</label>
+                <DateInput id="time-off-change-first" className="input" value={firstDay} onChange={pickFirst} placeholder="First day" />
+                <FieldError message={errors.show("firstDay", firstError) ?? fields.firstDay} />
+            </div>
+            <div className="field mt">
+                <label className="label required" htmlFor="time-off-change-last">Last day</label>
+                <DateInput id="time-off-change-last" className="input" value={lastDay} min={firstDay || undefined} onChange={pickLast} placeholder="Last day" />
+                {days > 0 && <div className="hint">{plural(days, "day")} from {fmtDateY(firstDay)} to {fmtDateY(lastDay)}. New days can't hold hours already logged, other time off or days excused on Salaries.</div>}
+                <FieldError message={errors.show("lastDay", lastError) ?? fields.lastDay} />
+            </div>
+            <div className="field mt">
+                <span className="label">Pay</span>
+                <Segmented aria-label="Paid or unpaid" value={isPaid ? "paid" : "unpaid"} onChange={(v) => { errors.touch("firstDay")(); setIsPaid(v === "paid"); }}
+                    options={[{ value: "paid", label: "Paid" }, { value: "unpaid", label: "Unpaid" }]} />
+            </div>
+            <div className="field mt">
+                <label className="label required" htmlFor="time-off-change-reason">Reason</label>
+                <AutoGrowTextarea id="time-off-change-reason" className="input" minRows={2} maxRows={6} maxLength={TIME_OFF_NOTE_MAX} value={reason}
+                    placeholder="e.g. Off from Tuesday, asked only from Thursday." onChange={(e) => setReason(e.target.value)} onBlur={errors.touch("reason")} />
+                <FieldError message={errors.show("reason", reasonError) ?? fields.reason} />
+            </div>
+        </Modal>
+    );
+}
+
+type Deciding = { kind: "approve"; request: TimeOff; isPaid: boolean } | { kind: "decline" | "reject" | "change"; request: TimeOff };
+
+/** Everyone's time off for the super admins (time_off:decide): decide the pending requests, and change or take back approved ones. */
 export default function CompanyTimeOffPage() {
     const [view, setView] = useState<TimeOffView>("pending");
     const [page, setPage] = useState(1);
@@ -173,7 +257,7 @@ export default function CompanyTimeOffPage() {
 
     return (
         <div className="page">
-            <PageHead title="Time off" sub="Requests from Design employees. Approve with pay or without, or decline. Approved time off can be taken back until its last day." />
+            <PageHead title="Time off" sub="Requests from Design employees. Approve with pay or without, or decline. Approved time off can be changed, or taken back until its last day." />
             <Tabs value={view} onChange={(next) => { setView(next); setPage(1); }}
                 items={VIEWS.map((v) => ({ key: v.key, label: v.label, icon: v.icon, count: v.key === view ? data?.totalCount : undefined }))} />
             <div className="panel mt" ref={anchor} aria-label={current.label}>
@@ -215,6 +299,9 @@ export default function CompanyTimeOffPage() {
                                                                         <button className="btn btn-sm" onClick={() => setDeciding({ kind: "decline", request: r })}>Decline</button>
                                                                     </>
                                                                 )}
+                                                                {r.status === "approved" && (
+                                                                    <button className="btn btn-sm" onClick={() => setDeciding({ kind: "change", request: r })}>Change</button>
+                                                                )}
                                                                 {r.status === "approved" && r.lastDay >= today && (
                                                                     <button className="btn btn-sm" onClick={() => setDeciding({ kind: "reject", request: r })}>Reject</button>
                                                                 )}
@@ -232,6 +319,7 @@ export default function CompanyTimeOffPage() {
             {deciding?.kind === "approve" && <ApproveModal request={deciding.request} isPaid={deciding.isPaid} onClose={() => setDeciding(null)} />}
             {deciding?.kind === "decline" && <DeclineModal request={deciding.request} onClose={() => setDeciding(null)} />}
             {deciding?.kind === "reject" && <RejectModal request={deciding.request} onClose={() => setDeciding(null)} />}
+            {deciding?.kind === "change" && <ChangeModal request={deciding.request} onClose={() => setDeciding(null)} />}
         </div>
     );
 }

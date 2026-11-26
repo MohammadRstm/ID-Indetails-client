@@ -60,6 +60,8 @@ describe("what the activity feed says", () => {
         expect(off("time_off_declined", {})).toBe("declined time off for Sarah Haddad from Oct 12 to Oct 16");
         expect(off("time_off_expired", {})).toBe("Sarah Haddad's request for time off from Oct 12 to Oct 16 expired undecided");
         expect(off("time_off_rejected", { endedOn: "2026-10-14" })).toBe("took back Sarah Haddad's time off from Oct 14");
+        expect(off("time_off_changed", { isPaid: false, previousFirstDay: "2026-10-14", reason: "Off from Monday" }))
+            .toBe("changed Sarah Haddad's time off: now Oct 12 to Oct 16 without pay (Off from Monday)");
         expect(off("time_off_ended", { endedOn: "2026-10-14" })).toBe("Sarah Haddad's time off was cut short on Oct 14");
     });
 
