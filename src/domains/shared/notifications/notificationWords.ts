@@ -378,6 +378,8 @@ export function describe(note: Notification, reader: Reader): NotificationView {
             return { text: `Your time off from ${fmtDate(s(p.firstDay))} to ${fmtDate(s(p.lastDay))} was approved (${p.isPaid ? "paid" : "unpaid"})`, sub: by, icon: "checkCircle", route: "/design/time-off" };
         case "time_off_declined":
             return { text: `Your time off from ${fmtDate(s(p.firstDay))} to ${fmtDate(s(p.lastDay))} was declined`, sub: by, icon: "calendar", route: "/design/time-off" };
+        case "time_off_changed":
+            return { text: `Your time off is now ${fmtDate(s(p.firstDay))} to ${fmtDate(s(p.lastDay))} (${p.isPaid ? "paid" : "unpaid"})`, sub: s(p.reason) || by, icon: "calendar", route: "/design/time-off" };
         case "time_off_rejected":
             return { text: `Your time off was taken back from ${fmtDate(s(p.endedOn))}`, sub: `It was ${fmtDate(s(p.firstDay))} to ${fmtDate(s(p.lastDay))}`, icon: "calendar", route: "/design/time-off" };
         case "time_off_expired":

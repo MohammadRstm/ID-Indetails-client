@@ -84,6 +84,10 @@ const WORDS: Record<string, Words> = {
     time_off_declined: { icon: "x", text: (e, p, names) => `declined time off for ${subject(e, names)}${offDays(p)}` },
     time_off_expired: { icon: "clock", text: (e, p, names) => `${subject(e, names)}'s request for time off${offDays(p)} expired undecided` },
     time_off_rejected: { icon: "refresh", text: (e, p, names) => `took back ${subject(e, names)}'s time off${str(p.endedOn) ? ` from ${fmtDate(str(p.endedOn)!)}` : ""}` },
+    time_off_changed: {
+        icon: "edit",
+        text: (e, p, names) => `changed ${subject(e, names)}'s time off${str(p.firstDay) && str(p.lastDay) ? `: now ${fmtDate(str(p.firstDay)!)} to ${fmtDate(str(p.lastDay)!)}` : ""}${withPay(p)}${str(p.reason) ? ` (${str(p.reason)})` : ""}`,
+    },
     time_off_ended: { icon: "refresh", text: (e, p, names) => `${subject(e, names)}'s time off was cut short${str(p.endedOn) ? ` on ${fmtDate(str(p.endedOn)!)}` : ""}` },
 
     // projects
