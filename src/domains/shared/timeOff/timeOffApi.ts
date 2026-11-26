@@ -23,6 +23,15 @@ export function useMyTimeOff() {
     return useQuery({ queryKey: keys.timeOff.mine(), queryFn: async () => (await http.get<TimeOff[]>("/me/time-off")).data });
 }
 
+/**
+ * The granted time off a day falls in, if any: an approved request's days, or those taken before one was ended or
+ * rejected (its `endedOn` and after are working days again), as the API counts them.
+ */
+export function timeOffOn(requests: TimeOff[] | undefined, day: string): TimeOff | null {
+    return (requests ?? []).find((r) => r.firstDay <= day && day <= r.lastDay
+        && (r.status === "approved" || ((r.status === "ended" || r.status === "rejected") && r.endedOn != null && day < r.endedOn))) ?? null;
+}
+
 export function useAskTimeOff() {
     const done = useInvalidateTimeOff();
     return useMutation({
@@ -68,6 +77,17 @@ export function useRejectTimeOff() {
     const done = useInvalidateTimeOff();
     return useMutation({
         mutationFn: async ({ id, ...body }: { id: number; note?: string }) => (await http.post<TimeOff>(`/time-off/${id}/reject`, body)).data,
+        onSuccess: done,
+    });
+}
+
+export type ChangeTimeOff = Schemas["ChangeTimeOffRequest"];
+
+/** Corrects approved time off: its days (past ones too) and whether it is paid, with why. */
+export function useChangeTimeOff() {
+    const done = useInvalidateTimeOff();
+    return useMutation({
+        mutationFn: async ({ id, ...body }: { id: number } & Required<ChangeTimeOff>) => (await http.post<TimeOff>(`/time-off/${id}/change`, body)).data,
         onSuccess: done,
     });
 }

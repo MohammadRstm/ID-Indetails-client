@@ -152,6 +152,8 @@ group("A notification's words", () => {
         expect(describe(note("time_off_approved", { ...ask, isPaid: false }), designer).text).toBe("Your time off from Oct 12 to Oct 16 was approved (unpaid)");
         expect(describe(note("time_off_declined", ask), designer)).toMatchObject({ text: "Your time off from Oct 12 to Oct 16 was declined", route: "/design/time-off" });
         expect(describe(note("time_off_rejected", { ...ask, endedOn: "2026-10-14" }), designer)).toMatchObject({ text: "Your time off was taken back from Oct 14", route: "/design/time-off" });
+        expect(describe(note("time_off_changed", { ...ask, isPaid: false, previousFirstDay: "2026-10-14", reason: "Off from Monday" }), designer))
+            .toMatchObject({ text: "Your time off is now Oct 12 to Oct 16 (unpaid)", sub: "Off from Monday", route: "/design/time-off" });
         expect(describe(note("time_off_expired", ask), designer)).toMatchObject({ text: "Your request for time off from Oct 12 expired undecided", route: "/design/time-off" });
 
         expect(describe(note("time_off_starts", { name: "Sarah Haddad", userId: 4, lastDay: "2026-10-16" }), admin)).toMatchObject({ text: "Sarah Haddad is off until Oct 16", route: "/design/people/4" });

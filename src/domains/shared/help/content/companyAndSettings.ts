@@ -191,8 +191,8 @@ export const company: Article[] = [
         title: "Deciding on time off requests",
         category: "company",
         who: has(P.TIME_OFF_DECIDE),
-        summary: "Time off lists what Design employees asked for. Approve with pay or without, or decline; approved time off can be rejected until its last day.",
-        ask: ["time off", "approve time off", "decline time off", "reject time off", "pto", "vacation", "leave requests", "holiday", "paid leave", "unpaid leave"],
+        summary: "Time off lists what Design employees asked for. Approve with pay or without, or decline; approved time off can be changed, or rejected until its last day.",
+        ask: ["time off", "approve time off", "decline time off", "reject time off", "change time off", "wrong time off days", "pto", "vacation", "leave requests", "holiday", "paid leave", "unpaid leave"],
         blocks: [
             steps(
                 step("Open **Time off** and stay on **Pending**.", "Company", "Time off"),
@@ -206,6 +206,7 @@ export const company: Article[] = [
                 "Meetings they are already in stay as they are; the approve dialog lists them so you can move them.",
                 "A request still pending when its first day comes expires, and the person is told. You're reminded the day before.",
                 "**Reject** takes approved time off back until its last day. Days before today stay time off; today and after become normal work days.",
+                "**Change** fixes approved time off, even after it is over: new first and last days, and paid or unpaid, with a reason. The days can be in the past, closed months included; pay and the hours ledger follow at once. New days can't hold hours already logged (remove or move them first), other time off, or days excused on Salaries. The person is told, with your reason.",
                 "Their department and the super admins are told when time off starts. Only you and the person see the reason and whether it's paid.",
             ),
             links(link("Open time off", { company: "time-off" })),
