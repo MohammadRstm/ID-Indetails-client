@@ -611,30 +611,37 @@ table { line-height: normal; font-weight: normal; }
 .pd-head { display: flex; align-items: center; gap: 12px; }
 .pd-title { font-size: 16px; font-weight: 700; }
 .pd-desc { margin: 12px 0 0; color: var(--ink-2); line-height: 1.55; white-space: pre-wrap; }
-.pd-group { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
-.pd-group-title { margin: 0 0 8px; font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); }
-.pd-facts { display: grid; gap: 8px; margin: 0; }
-.pd-fact { display: grid; grid-template-columns: 130px 1fr; gap: 12px; align-items: center; font-size: 13px; }
+/* the details in cards, two a row: a clear heading each, a row per fact */
+.pd-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.pd-groups > .pd-group:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.pd-group { padding: 12px 14px 6px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+.pd-group-title { display: flex; align-items: center; gap: 9px; margin: 0 0 4px; font-size: 14px; font-weight: 650; color: var(--ink); letter-spacing: -.01em; }
+.pd-group-ic { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-ink); flex: none; }
+.pd-group-ic .ic { width: 15px; height: 15px; }
+.pd-facts { display: grid; margin: 0; }
+.pd-fact { display: grid; grid-template-columns: 104px 1fr; gap: 10px; align-items: center; padding: 9px 0; font-size: 13px; }
+.pd-fact + .pd-fact { border-top: 1px solid var(--line); }
 .pd-fact:has(> dd:empty) { display: none; }
 .pd-fact dt { color: var(--ink-3); }
-.pd-fact dd { margin: 0; min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; }
-@media (max-width: 640px) { .pd-fact { grid-template-columns: 1fr; gap: 2px; } }
+.pd-fact dd { margin: 0; min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; color: var(--ink); font-weight: 500; }
+.pd-money .pd-fact dd > b.mono { font-size: 15px; }
+@media (max-width: 640px) {
+  .pd-groups { grid-template-columns: 1fr; }
+  .pd-fact { grid-template-columns: 96px 1fr; }
+}
 
-/* Section tabs (Tabs): the open one is a card that grows out of the strip under the row, curving into it where they meet,
-   as a browser's tab grows out of its toolbar; it glides to whichever is chosen */
-.tabs { position: relative; padding-top: 4px; border-bottom: 0; }
-.tabs-scroll::after { content: ""; display: block; height: 8px; border-radius: 0 0 9px 9px; background: var(--surface);
-  box-shadow: 0 1px 0 var(--line), 0 3px 6px -4px rgba(0, 0, 0, .1); }
-/* every section sits on a card, its icon to the left of its name; the open one is tinted like the breadcrumbs' current page */
-.tabs .tab { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-bottom: 0;
-  border-radius: 9px 9px 0 0; background: var(--surface); color: var(--ink-2); transition: color .15s ease, background-color .15s ease; }
-.tabs .tab:hover:not(.on) { background: color-mix(in srgb, var(--surface-3) 70%, var(--surface)); color: var(--ink); }
+/* Section tabs (Tabs): one bar holding every section; the open one's tint glides between them */
+.tabs { position: relative; gap: 2px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04); }
+/* the sections share the bar: no card of their own, the icon to the left of the name; the open one takes the tint */
+.tabs .tab { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border: 0;
+  border-radius: 9px; background: transparent; color: var(--ink-2); white-space: nowrap; transition: color .15s ease, background-color .15s ease; }
+.tabs .tab:hover:not(.on) { background: color-mix(in srgb, var(--surface-3) 70%, transparent); color: var(--ink); }
 .tabs .tab.on { background: transparent; color: var(--accent-ink); font-weight: 650; }
 /* each section's icon in its own colour (Tabs sets --tab-ic) */
 .tabs .tab .ic { width: 14px; height: 14px; color: var(--tab-ic, currentColor); }
-.tabs-cover { position: absolute; top: 4px; bottom: 0; left: 0; z-index: 0; border-radius: 10px 10px 0 0;
-  background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--surface);
-  box-shadow: 0 -2px 6px -4px rgba(0, 0, 0, .12); pointer-events: none; }
+.tabs-cover { position: absolute; top: 4px; bottom: 4px; left: 0; z-index: 0; border-radius: 9px; background: var(--accent-soft);
+  pointer-events: none; }
 .tabs-cover.glides { transition: transform .32s cubic-bezier(.3, .7, .2, 1), width .32s cubic-bezier(.3, .7, .2, 1); }
 @media (prefers-reduced-motion: reduce) { .tabs-cover.glides { transition: none; } }
 

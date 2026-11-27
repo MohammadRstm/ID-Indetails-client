@@ -22,6 +22,7 @@ import { DOMAIN_LABEL } from "@/shared/format/labels";
 import { money } from "@/shared/format/money";
 import { companyToday, dayKey, daysBetween, fmtDate, fmtDateY, fmtNumber } from "@/shared/format/time";
 import Icon from "@/shared/icons/Icon";
+import type { IconName } from "@/shared/icons/icons";
 import { cx } from "@/shared/utils/cx";
 import { ClientBadge } from "../clients/ClientBits";
 import ProjectInsightsTab from "../finance/insights/ProjectInsightsTab";
@@ -423,7 +424,7 @@ function ProjectDetailsModal({ project, panels, days, onEdit, onClose }: {
     const m = permissions.has(P.FINANCIAL_VIEW) ? project.money : null;
     const departments = project.departmentsName ?? (project.departments ?? []).map((d) => d.name).join(", ");
     return (
-        <Modal title="Project details" onClose={onClose}
+        <Modal title="Project details" size="md" onClose={onClose}
             foot={
                 <>
                     <span className="grow" />
@@ -440,7 +441,8 @@ function ProjectDetailsModal({ project, panels, days, onEdit, onClose }: {
             </div>
             {project.description && <p className="pd-desc">{project.description}</p>}
 
-            <DetailsGroup title="About">
+            <div className="pd-groups">
+            <DetailsGroup title="About" icon="info">
                 <Fact label="Business">{site ? "Execution site" : `${DOMAIN_LABEL[project.domain] ?? project.domain} project`}</Fact>
                 <Fact label="Location">{project.location}</Fact>
                 <Fact label="Client">
@@ -451,7 +453,7 @@ function ProjectDetailsModal({ project, panels, days, onEdit, onClose }: {
                 {!site && <Fact label="Departments">{departments || null}</Fact>}
             </DetailsGroup>
 
-            <DetailsGroup title="Dates">
+            <DetailsGroup title="Dates" icon="calendar">
                 <Fact label="Started">{fmtDateY(project.startDate)}</Fact>
                 {project.completedAt
                     ? <Fact label="Completed">{fmtDateY(project.completedAt)}</Fact>
@@ -460,14 +462,14 @@ function ProjectDetailsModal({ project, panels, days, onEdit, onClose }: {
                 <Fact label={project.completedAt ? "Ran for" : "Running for"}>{days} days</Fact>
             </DetailsGroup>
 
-            <DetailsGroup title="People">
+            <DetailsGroup title="People" icon="people">
                 <Fact label="Owner"><OwnerLine project={project} /></Fact>
                 <Fact label="Team">{panels.meta?.(project)}</Fact>
             </DetailsGroup>
 
             {/* for whoever sees the money (the API sends it to no one else) */}
             {m && project.billingType !== "internal" && (
-                <DetailsGroup title="Money">
+                <DetailsGroup title="Money" icon="card" money>
                     {site ? (
                         <>
                             <Fact label="Received"><b className="mono">{money.fmt(m.billing.received)}</b></Fact>
@@ -487,14 +489,16 @@ function ProjectDetailsModal({ project, panels, days, onEdit, onClose }: {
                     <Fact label="CFA price">{m.cfaPrice != null ? <span className="mono" title="For reference - it is in no calculation">{fmtNumber(m.cfaPrice)} CFA</span> : null}</Fact>
                 </DetailsGroup>
             )}
+            </div>
         </Modal>
     );
 }
 
-function DetailsGroup({ title, children }: { title: string; children: ReactNode }) {
+/** One card of facts under a clear heading; the money card's values read larger. */
+function DetailsGroup({ title, icon, money: isMoney, children }: { title: string; icon: IconName; money?: boolean; children: ReactNode }) {
     return (
-        <section className="pd-group" aria-label={title}>
-            <h3 className="pd-group-title">{title}</h3>
+        <section className={cx("pd-group", isMoney && "pd-money")} aria-label={title}>
+            <h3 className="pd-group-title"><span className="pd-group-ic" aria-hidden="true"><Icon name={icon} /></span>{title}</h3>
             <dl className="pd-facts">{children}</dl>
         </section>
     );
